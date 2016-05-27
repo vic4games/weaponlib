@@ -9,11 +9,15 @@ buildscript {
             name = "sonatype"
             url = "https://oss.sonatype.org/content/repositories/snapshots/"
         }
-        flatDir dirs: '/Users/victor-jr/Development/proguard5.2.1/lib'
+        maven {
+            name = "proguard"
+            url = "http://mvnrepository.com/artifact/net.sf.proguard"
+        }
+        //flatDir dirs: '/Users/victor-jr/Development/proguard5.2.1/lib'
     }
     dependencies {
         classpath 'net.minecraftforge.gradle:ForgeGradle:1.2-SNAPSHOT'
-        classpath ':proguard:'
+        classpath 'net.sf.proguard:proguard-gradle:5.2.1'
     }
 }
 
@@ -44,6 +48,10 @@ dependencies {
     // for more info...
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
+ 
+    //compile group: 'net.sf.proguard', name: 'proguard-base', version: '5.2.1'
+    //compile group: 'net.sf.proguard', name: 'proguard-parent', version: '5.2.1', ext: 'pom'
+
 
 }
 
