@@ -14,6 +14,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
+import com.google.common.util.concurrent.AtomicDouble;
+
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
@@ -498,7 +500,7 @@ public class Weapon extends Item {
 		
 		WeaponInstanceStorage weaponInstanceStorage = getWeaponInstanceStorage(player);
 		if(weaponInstanceStorage != null) {
-			weaponInstanceStorage.recoil = recoil;
+			weaponInstanceStorage.setRecoil(recoil);
 		}
 	}
 	
@@ -628,10 +630,11 @@ public class Weapon extends Item {
 		
 		ItemAttachment<Weapon> nextAttachment = nextCompatibleAttachment(attachmentCategory, currentAttachment, player, itemStack);
 
+		if(currentAttachment != null && currentAttachment.getRemove() != null) {
+			currentAttachment.getRemove().apply(currentAttachment, this, player);
+		}
+		
 		if(nextAttachment != null && nextAttachment.getApply() != null) {
-			if(currentAttachment != null && currentAttachment.getRemove() != null) {
-				currentAttachment.getRemove().apply(currentAttachment, this, player);
-			}
 			nextAttachment.getApply().apply(nextAttachment, this, player);
 		}
 		
@@ -820,16 +823,17 @@ public class Weapon extends Item {
 		private long lastShotFiredAt;
 		private int shots;
 		private float zoom;
-		private float recoil;
+		private AtomicDouble recoil;
 		
 		private AtomicReference<WeaponInstanceState> state;
 
 		public WeaponInstanceStorage(WeaponInstanceState state, int currentAmmo, float zoom, float recoil) {
 			this.currentAmmo = new AtomicInteger(currentAmmo);
 			this.reloadingStopsAt = new AtomicLong();
+			this.recoil = new AtomicDouble(recoil);
 			this.state = new AtomicReference<>(state);
 			this.zoom = zoom;
-			this.recoil = recoil;
+			//this.recoil = recoil;
 		}
 
 		public WeaponInstanceState getState() {
@@ -849,11 +853,11 @@ public class Weapon extends Item {
 		}
 
 		public float getRecoil() {
-			return recoil;
+			return (float)recoil.get();
 		}
 
 		public void setRecoil(float recoil) {
-			this.recoil = recoil;
+			this.recoil.set(recoil);
 		}
 	}
 	
@@ -881,10 +885,10 @@ public class Weapon extends Item {
 			modContext.getChannel().sendToServer(new TryFireMessage(true));
 			modContext.runSyncTick(() -> player.playSound(isSilencerOn(player.getHeldItem()) ? builder.silencedShootSound : builder.shootSound, 1F, 1F));
 			
-			player.rotationPitch = player.rotationPitch - storage.recoil;						
+			player.rotationPitch = player.rotationPitch - storage.getRecoil();						
 			float rotationYawFactor = -1.0f + random.nextFloat() * 2.0f;
 			//System.out.println("Recoil: " + storage.recoil);
-			player.rotationYaw = player.rotationYaw + storage.recoil * rotationYawFactor;
+			player.rotationYaw = player.rotationYaw + storage.getRecoil() * rotationYawFactor;
 			storage.lastShotFiredAt = System.currentTimeMillis();
 			storage.shots++;
 		}
