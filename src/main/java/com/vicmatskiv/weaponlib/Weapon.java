@@ -34,6 +34,7 @@ import net.minecraftforge.client.IItemRenderer;
 public class Weapon extends Item {
 	
 	private static final String ACTIVE_ATTACHMENT_TAG = "ActiveAttachments";
+	private static final String SELECTED_ATTACHMENT_INDEXES_TAG = "SelectedAttachments";
 	private static final String PREVIOUSLY_SELECTED_ATTACHMENT_TAG = "PreviouslySelectedAttachments";
 	
 	private static final String SHOT_COUNTER_TAG = "ShotCounter";
@@ -531,6 +532,10 @@ public class Weapon extends Item {
 	void enterAttachmentSelectionMode(ItemStack itemStack) {
 		ensureItemStack(itemStack);
 		int activeAttachmentsIds[] = ensureActiveAttachments(itemStack);
+		
+		int selectedAttachmentIndexes[] = new int[AttachmentCategory.values.length];
+		itemStack.stackTagCompound.setIntArray(SELECTED_ATTACHMENT_INDEXES_TAG, selectedAttachmentIndexes);
+		
 		itemStack.stackTagCompound.setIntArray(PREVIOUSLY_SELECTED_ATTACHMENT_TAG, 
 				Arrays.copyOf(activeAttachmentsIds, activeAttachmentsIds.length));
 		
@@ -616,17 +621,17 @@ public class Weapon extends Item {
 		
 		int[] activeAttachmentsIds = ensureActiveAttachments(itemStack);
 		int activeAttachmentIdForThisCategory = activeAttachmentsIds[attachmentCategory.ordinal()];
-		ItemAttachment<Weapon> item = null;
+		ItemAttachment<Weapon> currentAttachment = null;
 		if(activeAttachmentIdForThisCategory > 0) {
-			item = (ItemAttachment<Weapon>) Item.getItemById(activeAttachmentIdForThisCategory);
-			if(item != null && item.getRemove() != null) {
-				item.getRemove().apply(item, this, player);
-			}
+			currentAttachment = (ItemAttachment<Weapon>) Item.getItemById(activeAttachmentIdForThisCategory);
 		}
 		
-		ItemAttachment<Weapon> nextAttachment = nextCompatibleAttachment(attachmentCategory, item, player);
+		ItemAttachment<Weapon> nextAttachment = nextCompatibleAttachment(attachmentCategory, currentAttachment, player, itemStack);
 
 		if(nextAttachment != null && nextAttachment.getApply() != null) {
+			if(currentAttachment != null && currentAttachment.getRemove() != null) {
+				currentAttachment.getRemove().apply(currentAttachment, this, player);
+			}
 			nextAttachment.getApply().apply(nextAttachment, this, player);
 		}
 		
@@ -634,34 +639,79 @@ public class Weapon extends Item {
 		
 		itemStack.stackTagCompound.setIntArray(ACTIVE_ATTACHMENT_TAG, activeAttachmentsIds);
 	}
-	
-	private ItemAttachment<Weapon> nextCompatibleAttachment(AttachmentCategory category, Item currentAttachment, EntityPlayer player) {
 		
-		ItemAttachment<Weapon> nextAttachment = null;
-		boolean foundCurrent = false;
-		for (int i = 0; i < 36; i++) {
-			ItemStack itemStack = player.inventory.getStackInSlot(i);
-			if(itemStack != null) {
-				if(itemStack.getItem() instanceof ItemAttachment) {
-					@SuppressWarnings("unchecked")
-					ItemAttachment<Weapon> attachmentItemFromInventory = (ItemAttachment<Weapon>) itemStack.getItem();
-					
-					if(attachmentItemFromInventory.getCategory() == category 
-							&& builder.compatibleAttachments.containsKey(attachmentItemFromInventory)) {
+	@SuppressWarnings("unchecked")
+	private ItemAttachment<Weapon> nextCompatibleAttachment(AttachmentCategory category, Item currentAttachment, EntityPlayer player, ItemStack itemStack) {
+		int[] selectedAttachmentIndexes = itemStack.stackTagCompound.getIntArray(SELECTED_ATTACHMENT_INDEXES_TAG);
+		if(selectedAttachmentIndexes == null || selectedAttachmentIndexes.length != AttachmentCategory.values.length) {
+			return null;
+		}
 
-						if(foundCurrent || currentAttachment == null) {
-							nextAttachment = attachmentItemFromInventory;
-							break;
-						} else if(currentAttachment == attachmentItemFromInventory) {
-							foundCurrent = true;
-						}
-					}
+		int activeIndex = selectedAttachmentIndexes[category.ordinal()];
+		
+		/*
+		 * 0 - original attachment
+		 * 1 - 36 - attachments from inventory
+		 * -1 - no attachment
+		 */
+		
+
+		/*
+		 * No original attachment (0), no compatible attachments, starting from 0
+		 *    currentIndex: 0 -> -1
+		 *    
+		 * No original attachment (0), no compatible attachments, starting from -1
+		 *    currentIndex: -1 -> 0
+		 *    
+		 *    
+		 * No original attachment (0), compatible attachment found
+		 *    currentIndex: 0 -> [1 - 36]
+		 * 
+		 * No original attachment (0), compatible attachment found, starting from [1 - 35]
+		 *    currentIndex: [1 - 35] -> [1 - 35] + 1
+		 *    
+		 * No original attachment (0), compatible attachment found, starting from [36]
+		 *    currentIndex: 36 -> 37 -> -1
+		 *    
+		 * No original attachment (0), compatible attachment found, starting from [-1]
+		 *    currentIndex: -1 -> 0 (visual effect: no change, switching from no attachment to no attachment)
+		 * 
+		 */
+		
+		int currentIndex = activeIndex + 1;
+		
+		ItemAttachment<Weapon> nextCompatibleAttachment = null;
+		for(; currentIndex <= 36; currentIndex++) {
+			System.out.println("Current index: " + currentIndex);
+			if(currentIndex == 0) {
+				// Select original attachment that was there prior to entering attachment mode
+				int previouslySelectedAttachmentIds[] = itemStack.stackTagCompound.getIntArray(PREVIOUSLY_SELECTED_ATTACHMENT_TAG);
+				nextCompatibleAttachment = (ItemAttachment<Weapon>) Item.getItemById(previouslySelectedAttachmentIds[category.ordinal()]);
+				if(nextCompatibleAttachment != null) {
+					// if original attachment existed, exit, iterate till found one
+					// reason: never stop on original attachment (index 0) if it's null
+					break;
+				} else {
+					continue;
 				}
 			}
-			
+			ItemStack slotItemStack = player.inventory.getStackInSlot(currentIndex - 1);
+			if(slotItemStack != null && slotItemStack.getItem() instanceof ItemAttachment) {
+				ItemAttachment<Weapon> attachmentItemFromInventory = (ItemAttachment<Weapon>) slotItemStack.getItem();
+				if(attachmentItemFromInventory.getCategory() == category && builder.compatibleAttachments.containsKey(attachmentItemFromInventory)
+						&& attachmentItemFromInventory != currentAttachment) {
+					nextCompatibleAttachment = attachmentItemFromInventory;
+					break;
+				}
+			}
+		}
+		if(nextCompatibleAttachment == null) {
+			currentIndex = -1;
 		}
 		
-		return nextAttachment;
+		selectedAttachmentIndexes[category.ordinal()] = currentIndex;
+		itemStack.stackTagCompound.setIntArray(SELECTED_ATTACHMENT_INDEXES_TAG, selectedAttachmentIndexes);
+		return nextCompatibleAttachment;
 	}
 	
 	public ItemAttachment<Weapon> getActiveAttachment (ItemStack itemStack, AttachmentCategory category) {
