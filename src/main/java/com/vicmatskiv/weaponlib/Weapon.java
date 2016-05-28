@@ -682,7 +682,7 @@ public class Weapon extends Item {
 		
 		ItemAttachment<Weapon> nextCompatibleAttachment = null;
 		for(; currentIndex <= 36; currentIndex++) {
-			System.out.println("Current index: " + currentIndex);
+			
 			if(currentIndex == 0) {
 				// Select original attachment that was there prior to entering attachment mode
 				int previouslySelectedAttachmentIds[] = itemStack.stackTagCompound.getIntArray(PREVIOUSLY_SELECTED_ATTACHMENT_TAG);

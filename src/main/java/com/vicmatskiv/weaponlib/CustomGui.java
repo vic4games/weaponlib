@@ -89,12 +89,22 @@ public class CustomGui extends Gui {
 
 			mc.entityRenderer.setupOverlayRendering();
 
-			String text = "Ammo: " + weaponItem.getCurrentAmmo(mc.thePlayer) + "/" + weaponItem.getAmmoCapacity();
-			int x = width - 80;
-			int y = 10;
-			int color = 0xFFFFFF;
-			fontRender.drawStringWithShadow(text, x, y, color);
 			
+			int color = 0xFFFFFF;
+			
+			if(weaponItem.getState(weapon) == Weapon.STATE_MODIFYING) {
+				fontRender.drawStringWithShadow("Attachment selection mode. Press [f] to exit.", 10, 10, color);
+				fontRender.drawStringWithShadow("Press [up] to change scope", width / 2 - 40, 60, color);
+				fontRender.drawStringWithShadow("Press [left] to change silencer", 10, height / 2 - 10, color);
+				fontRender.drawStringWithShadow("Press [right] to change skin", width / 2 + 60, height / 2 - 20, color);
+				fontRender.drawStringWithShadow("Press [down] to change grip", 10, height - 40, color);
+			} else {
+				String text = "Ammo: " + weaponItem.getCurrentAmmo(mc.thePlayer) + "/" + weaponItem.getAmmoCapacity();
+				int x = width - 80;
+				int y = 10;
+
+				fontRender.drawStringWithShadow(text, x, y, color);
+			}
 			event.setCanceled(true);
 		}
 		
