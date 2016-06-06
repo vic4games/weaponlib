@@ -15,6 +15,8 @@ public class ItemAttachment<T> extends Item {
 	private ApplyHandler<T> apply;
 	private ApplyHandler<T> remove;
 	private List<Tuple<ModelBase, String>> texturedModels = new ArrayList<>();
+	private CustomRenderer postRenderer;
+	private CustomRenderer preRenderer;
 	
 	private List<Weapon> compatibleWeapons = new ArrayList<>();
 	
@@ -84,5 +86,21 @@ public class ItemAttachment<T> extends Item {
 	public void addInformation(ItemStack itemStack, EntityPlayer entityPlayer, List info, boolean p_77624_4_) {
 		info.add("Compatible guns:");
 		compatibleWeapons.forEach((weapon) -> info.add(weapon.getName()));
+	}
+	
+	public void setPostRenderer(CustomRenderer postRenderer) {
+		this.postRenderer = postRenderer;
+	}
+
+	public CustomRenderer getPostRenderer() {
+		return postRenderer;
+	}
+
+	public CustomRenderer getPreRenderer() {
+		return preRenderer;
+	}
+
+	public void setPreRenderer(CustomRenderer preRenderer) {
+		this.preRenderer = preRenderer;
 	}
 }

@@ -55,6 +55,7 @@ public class Weapon extends Item {
 	private static final String RESUME_TIMER_TAG = "ResumeTimer";
 	private static final String RELOADING_TIMER_TAG = "ReloadingTimer";
 	private static final String ACTIVE_TEXTURE_INDEX_TAG = "ActiveTextureIndex";
+	private static final String LASER_ON_TAG = "LaserOn";
 	
 	private static final String AMMO_TAG = "Ammo";
 	private static final String PERSISTENT_STATE_TAG = "PersistentState";
@@ -1032,5 +1033,18 @@ public class Weapon extends Item {
 		if(builder.blockImpactHandler != null) {
 			builder.blockImpactHandler.onImpact(world, player, entity, position);
 		}
+	}
+
+	public boolean isLaserOn(ItemStack itemStack) {
+		if(itemStack.stackTagCompound == null) {
+			return false;
+		}
+		return itemStack.stackTagCompound.getBoolean(LASER_ON_TAG);
+	}
+
+	public void switchLaser(ItemStack itemStack) {
+		ensureItemStack(itemStack);
+		boolean current = itemStack.stackTagCompound.getBoolean(LASER_ON_TAG);
+		itemStack.stackTagCompound.setBoolean(LASER_ON_TAG, !current);
 	}
 }

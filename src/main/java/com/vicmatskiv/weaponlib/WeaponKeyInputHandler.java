@@ -29,7 +29,11 @@ public class WeaponKeyInputHandler {
     		if(itemStack != null && itemStack.getItem() instanceof Weapon) {
     			((Weapon) itemStack.getItem()).initiateReload(itemStack, player);
     		}
-        } 
+        }
+        
+        else if(KeyBindings.laserSwitchKey.isPressed()) {
+        	channel.sendToServer(new LaserSwitchMessage()); 
+        }
         
         else if(KeyBindings.attachmentKey.isPressed()) {
         	EntityPlayer player = entityPlayerSupplier.apply(null);
@@ -53,6 +57,6 @@ public class WeaponKeyInputHandler {
         
         else if(KeyBindings.leftArrowKey.isPressed()) {
         	channel.sendToServer(new ChangeAttachmentMessage(AttachmentCategory.SILENCER)); 
-        } 
+        }
     }
 }

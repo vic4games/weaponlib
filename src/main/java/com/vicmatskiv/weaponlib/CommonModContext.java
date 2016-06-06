@@ -47,6 +47,12 @@ public class CommonModContext implements ModContext {
 		channel.registerMessage(TryFireMessageHandler.class,
 				TryFireMessage.class, 11, Side.SERVER);
 		
+		channel.registerMessage(LaserSwitchMessageHandler.class,
+				LaserSwitchMessage.class, 12, Side.SERVER);
+		
+		channel.registerMessage(LaserSwitchMessageHandler.class,
+				LaserSwitchMessage.class, 13, Side.CLIENT);
+		
 		FMLCommonHandler.instance().bus().register(new WeaponKeyInputHandler((ctx) -> getPlayer(ctx), 
 				channel));
 	}

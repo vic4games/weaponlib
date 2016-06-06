@@ -1,10 +1,9 @@
 package com.vicmatskiv.weaponlib;
 
-import net.minecraft.client.settings.KeyBinding;
-
 import org.lwjgl.input.Keyboard;
 
 import cpw.mods.fml.client.registry.ClientRegistry;
+import net.minecraft.client.settings.KeyBinding;
 
 public class KeyBindings {
 
@@ -14,10 +13,14 @@ public class KeyBindings {
 	public static KeyBinding downArrowKey;
 	public static KeyBinding leftArrowKey;
 	public static KeyBinding rightArrowKey;
+	public static KeyBinding laserSwitchKey;
 
 	public static void init() {
 		
 		reloadKey = new KeyBinding("key.reload", Keyboard.KEY_R,
+				"key.categories.weaponlib");
+		
+		laserSwitchKey = new KeyBinding("key.laser", Keyboard.KEY_L,
 				"key.categories.weaponlib");
 		
 		attachmentKey = new KeyBinding("key.attachment", Keyboard.KEY_F,
@@ -41,5 +44,6 @@ public class KeyBindings {
 		ClientRegistry.registerKeyBinding(downArrowKey);
 		ClientRegistry.registerKeyBinding(leftArrowKey);
 		ClientRegistry.registerKeyBinding(rightArrowKey);
+		ClientRegistry.registerKeyBinding(laserSwitchKey);
 	}
 }

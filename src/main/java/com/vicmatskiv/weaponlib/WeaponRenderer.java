@@ -1,18 +1,28 @@
 package com.vicmatskiv.weaponlib;
 
+import java.nio.FloatBuffer;
 import java.util.List;
+import java.util.Random;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityClientPlayerMP;
 import net.minecraft.client.model.ModelBase;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.Vec3;
 import net.minecraftforge.client.IItemRenderer;
+import net.minecraftforge.client.IItemRenderer.ItemRenderType;
 
+import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.util.vector.Matrix4f;
+import org.lwjgl.util.vector.Vector4f;
 
 
 public class WeaponRenderer  implements IItemRenderer{
@@ -194,9 +204,108 @@ public class WeaponRenderer  implements IItemRenderer{
 		builder.model.render(null,  0.0F, 0.0f, -0.4f, 0.0f, 0.0f, 0.08f);
 		if(builder.model instanceof ModelWithAttachments) {
 			List<CompatibleAttachment<Weapon>> attachments = ((Weapon) item.getItem()).getActiveAttachments(item);
-			((ModelWithAttachments)builder.model).renderAttachments(builder.modId, attachments , null,  0.0F, 0.0f, -0.4f, 0.0f, 0.0f, 0.08f);
+			((ModelWithAttachments)builder.model).renderAttachments(builder.modId, item, 
+					type, attachments , null,  0.0F, 0.0f, -0.4f, 0.0f, 0.0f, 0.08f);
 		}
 		
 		GL11.glPopMatrix();
+	   
+	}
+
+//	private double getDistanceFromItemToTarget(EntityClientPlayerMP player, double itemX, double itemY, double itemZ) {
+//		FloatBuffer buf = BufferUtils.createFloatBuffer(16);
+//
+//	    // Get current modelview matrix:
+//	    GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, buf);
+//
+//	    // Rewind buffer. Not sure if this is needed, but it can't hurt.
+//	    buf.rewind();
+//
+//	    // Create a Matrix4f.
+//	    Matrix4f mat = new Matrix4f();
+//
+//	    // Load matrix from buf into the Matrix4f.
+//	    mat.load(buf);
+//	    
+//	    Vec3 absolutePlayerPosition = player.getPosition(1);
+//	    Vector4f startOfRay = new Vector4f((float)itemX, (float)itemY, (float)itemZ, 1f); //(float)pos.xCoord, (float)pos.yCoord, (float)pos.zCoord, 1f);
+//		Vector4f relativeRayStartPosition = new Vector4f();
+//		Matrix4f.transform(mat, startOfRay, relativeRayStartPosition);
+//		
+//		
+//		
+//		//MovingObjectPosition mouseOver = Minecraft.getMinecraft().objectMouseOver;
+//		//System.out.println("Mouse over: " + mouseOver);
+//		
+//
+//		
+//		Vec3 targetPosition = player.rayTrace(1000, 1f).hitVec;
+//		
+//		
+//		Vec3 absoluteRayStartPos = absolutePlayerPosition.addVector(relativeRayStartPosition.x, relativeRayStartPosition.y, relativeRayStartPosition.z); //.addVector(-itemX, -itemY, -itemZ);
+//		
+//		
+//		//MovingObjectPosition result = Minecraft.getMinecraft().theWorld.rayTraceBlocks(absoluteRayStartPos, absoluteRayEndPos);
+//
+//		
+//		double distance = absoluteRayStartPos.distanceTo(targetPosition);
+//		
+//		Vector4f endOfRay = new Vector4f((float)itemX, (float)itemY, (float)itemZ - (float)distance, 1f);
+//		
+//		Vector4f relativeRayEndPosition = new Vector4f();
+//		Matrix4f.transform(mat, endOfRay, relativeRayEndPosition);
+//		
+//		Vec3 absoluteRayEndPos = absolutePlayerPosition.addVector(relativeRayEndPosition.x, relativeRayEndPosition.y, relativeRayEndPosition.z);
+//		
+//		if(System.currentTimeMillis() % 1000 == 0) {
+//			System.out.println("Relative item pos: " + relativeRayStartPosition.x + ", " + relativeRayStartPosition.y + ", " + relativeRayStartPosition.z);
+////			if(result != null) {
+////				System.out.println("Hit info " + result.hitInfo);
+////			} else {
+////				System.out.println("No trace found");
+////			}
+//			
+//			System.out.println("Absolute item pos: " + absoluteRayStartPos);
+//			System.out.println("Distance to target: " + distance);
+//			System.out.println("Ray end position: " + absoluteRayEndPos);
+//			System.out.println("Target position:  " + targetPosition);
+//		}
+//		return distance + 100;
+//	}
+
+	private void getMatrix(EntityClientPlayerMP player, String msg) {
+		// Create FloatBuffer that can hold 16 values.
+		    FloatBuffer buf = BufferUtils.createFloatBuffer(16);
+
+		    // Get current modelview matrix:
+		    GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, buf);
+
+		    // Rewind buffer. Not sure if this is needed, but it can't hurt.
+		    buf.rewind();
+
+		    // Create a Matrix4f.
+		    Matrix4f mat = new Matrix4f();
+
+		    // Load matrix from buf into the Matrix4f.
+		    mat.load(buf);
+		    
+		    //System.out.println("Current matrix " + msg + ": " + mat);
+		    
+		    Vec3 pos = player.getPosition(1);
+		    Vector4f currentPos = new Vector4f(0f, 0f, 0f, 1f); //(float)pos.xCoord, (float)pos.yCoord, (float)pos.zCoord, 1f);
+			Vector4f dest = new Vector4f();
+			Matrix4f.transform(mat, currentPos, dest);
+			//System.out.println("Relative item pos: " + dest.x + ", " + dest.y + ", " + dest.z);
+			MovingObjectPosition mouseOver = Minecraft.getMinecraft().objectMouseOver;
+			//System.out.println("Mouse over: " + mouseOver);
+			
+			Vec3 targetPosition = player.rayTrace(1000, 1f).hitVec;
+			
+			
+			Vec3 absoluteItemPos = pos.addVector(dest.x, dest.y, dest.z);
+			System.out.println("Absolute item pos: " + absoluteItemPos);
+			
+			double distance = absoluteItemPos.distanceTo(targetPosition);
+			System.out.println("Distance to target: " + distance);
 	}
 }

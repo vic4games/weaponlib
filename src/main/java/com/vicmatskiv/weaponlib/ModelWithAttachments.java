@@ -6,7 +6,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.entity.Entity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.client.IItemRenderer.ItemRenderType;
 
 import org.lwjgl.opengl.GL11;
 
@@ -32,7 +34,7 @@ public class ModelWithAttachments extends ModelBase {
 		model.rotateAngleZ = z;
 	}
 	
-	public void renderAttachments(String modId, List<CompatibleAttachment<Weapon>> attachments, Entity entity, float f, float f1, float f2, float f3, float f4, float f5) {
+	public void renderAttachments(String modId, ItemStack itemStack, ItemRenderType type, List<CompatibleAttachment<Weapon>> attachments, Entity entity, float f, float f1, float f2, float f3, float f4, float f5) {
 		for(CompatibleAttachment<?> compatibleAttachment: attachments) {
 			if(compatibleAttachment != null) {
 				for(Tuple<ModelBase, String> texturedModel: compatibleAttachment.getAttachment().getTexturedModels()) {
@@ -43,7 +45,14 @@ public class ModelWithAttachments extends ModelBase {
 						compatibleAttachment.getPositioning().accept(texturedModel.getU());
 					}
 					texturedModel.getU().render(entity, f, f1, f2, f3, f4, f5);
+					
+					CustomRenderer postRenderer = compatibleAttachment.getAttachment().getPostRenderer();
+					if(postRenderer != null) {
+						postRenderer.render(type, itemStack);
+					}
+					
 					GL11.glPopMatrix();
+
 				}
 			}
 		}
