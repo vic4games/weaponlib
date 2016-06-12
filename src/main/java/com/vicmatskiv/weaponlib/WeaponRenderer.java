@@ -1,31 +1,34 @@
 package com.vicmatskiv.weaponlib;
 
 import java.nio.FloatBuffer;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Random;
+import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.EntityClientPlayerMP;
-import net.minecraft.client.model.ModelBase;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.MovingObjectPosition;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.Vec3;
-import net.minecraftforge.client.IItemRenderer;
-import net.minecraftforge.client.IItemRenderer.ItemRenderType;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector4f;
 
+import com.vicmatskiv.weaponlib.animation.PositionProvider;
+import com.vicmatskiv.weaponlib.animation.RenderStateManager;
 
-public class WeaponRenderer  implements IItemRenderer{
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityClientPlayerMP;
+import net.minecraft.client.model.ModelBase;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.Vec3;
+import net.minecraftforge.client.IItemRenderer;
+
+
+public class WeaponRenderer implements IItemRenderer, PositionProvider<RenderableState> {
+	
+	
 
 	public static class Builder {
 		private ModelBase model;
@@ -38,6 +41,7 @@ public class WeaponRenderer  implements IItemRenderer{
 		private Consumer<ItemStack> inventoryPositioning;
 		private BiConsumer<EntityPlayer, ItemStack> thirdPersonPositioning;
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioning;
+		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningZooming;
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningRunning;
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningModifying;
 		private String modId;
@@ -97,6 +101,11 @@ public class WeaponRenderer  implements IItemRenderer{
 			return this;
 		}
 		
+		public Builder withFirstPersonPositioningZooming(BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningZooming) {
+			this.firstPersonPositioningZooming = firstPersonPositioningZooming;
+			return this;
+		}
+		
 		public Builder withFirstPersonPositioningModifying(BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningModifying) {
 			this.firstPersonPositioningModifying = firstPersonPositioningModifying;
 			return this;
@@ -141,6 +150,8 @@ public class WeaponRenderer  implements IItemRenderer{
 	
 	private Builder builder;
 	
+	private Map<EntityPlayer, RenderStateManager<RenderableState>> firstPersonStateManagers = new HashMap<>();
+	
 	private WeaponRenderer (Builder builder)
 	{
 		this.builder = builder;
@@ -156,6 +167,28 @@ public class WeaponRenderer  implements IItemRenderer{
 	public boolean shouldUseRenderHelper(ItemRenderType type, ItemStack item, ItemRendererHelper helper)
 	{
 		return true;
+	}
+	
+	private RenderStateManager<RenderableState> getStateManager(EntityPlayer player, ItemStack item) {
+		RenderableState currentState = null;
+		if(((Weapon) item.getItem()).getState(item) == Weapon.STATE_MODIFYING && builder.firstPersonPositioningModifying != null) {
+			currentState = RenderableState.MODIFYING;
+		} else if(player.isSprinting() && builder.firstPersonPositioningRunning != null) {
+			currentState = RenderableState.RUNNING;
+		} else if(Weapon.isZoomed(item)) {
+			currentState = RenderableState.ZOOMING;
+		} else{
+			currentState = RenderableState.NORMAL;
+		}
+		
+		RenderStateManager<RenderableState> stateManager = firstPersonStateManagers.get(player);
+		if(stateManager == null) {
+			stateManager = new RenderStateManager<>(currentState, this);
+			firstPersonStateManagers.put(player, stateManager);
+		} else {
+			stateManager.setState(currentState, 250);
+		}
+		return stateManager;
 	}
 	
 	@Override
@@ -178,13 +211,15 @@ public class WeaponRenderer  implements IItemRenderer{
 			builder.thirdPersonPositioning.accept(player, item);
 			break;
 		case EQUIPPED_FIRST_PERSON:
-			if(((Weapon) item.getItem()).getState(item) == Weapon.STATE_MODIFYING && builder.firstPersonPositioningModifying != null) {
-				builder.firstPersonPositioningModifying.accept(player, item);
-			} else if(player.isSprinting() && builder.firstPersonPositioningRunning != null) {
-				builder.firstPersonPositioningRunning.accept(player, item);
-			} else{
-				builder.firstPersonPositioning.accept(player, item);
-			}
+//			if(((Weapon) item.getItem()).getState(item) == Weapon.STATE_MODIFYING && builder.firstPersonPositioningModifying != null) {
+//				builder.firstPersonPositioningModifying.accept(player, item);
+//			} else if(player.isSprinting() && builder.firstPersonPositioningRunning != null) {
+//				builder.firstPersonPositioningRunning.accept(player, item);
+//			} else{
+//				builder.firstPersonPositioning.accept(player, item);
+//			}
+			RenderStateManager<RenderableState> stateManager = getStateManager(player, item);
+			stateManager.getPosition().accept(player, item);
 			break;
 		default:
 		}
@@ -307,5 +342,22 @@ public class WeaponRenderer  implements IItemRenderer{
 			
 			double distance = absoluteItemPos.distanceTo(targetPosition);
 			System.out.println("Distance to target: " + distance);
+	}
+
+	@Override
+	public BiConsumer<EntityPlayer, ItemStack> getPositioning(RenderableState state) {
+		switch(state) {
+		case MODIFYING:
+			return builder.firstPersonPositioningModifying;
+		case RUNNING:
+			return builder.firstPersonPositioningRunning;
+		case NORMAL:
+			return builder.firstPersonPositioning;
+		case ZOOMING:
+			return builder.firstPersonPositioningZooming != null ? builder.firstPersonPositioningZooming : builder.firstPersonPositioning;
+		default:
+			break;
+		}
+		return null;
 	}
 }

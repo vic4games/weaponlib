@@ -790,6 +790,7 @@ public class Weapon extends Item {
 	}
 	
 	public static float reloadingProgress(EntityPlayer player, ItemStack itemStack) {
+		if(itemStack == null) return 0;
 		Weapon weapon = (Weapon) itemStack.getItem();
 		WeaponInstanceStorage storage = weapon.getWeaponInstanceStorage(player);
 		if(storage != null && storage.getState() == WeaponInstanceState.RELOADING) {
