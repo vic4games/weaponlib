@@ -103,6 +103,7 @@ public class RenderStateManager<State> {
 			int index = (int) Math.floorDiv(segmentCount * currentOffset, duration);
 			
 			if(index >= segmentCount) {
+				applyOnce(player, itemStack, matrices.get(index - 1), matrices.get(index), 1f);
 				return;
 			}
 			
