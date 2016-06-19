@@ -1,6 +1,5 @@
 package com.vicmatskiv.weaponlib;
 
-import java.nio.FloatBuffer;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -8,31 +7,28 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.util.vector.Matrix4f;
-import org.lwjgl.util.vector.Vector4f;
 
-import com.vicmatskiv.weaponlib.animation.PositionProvider;
 import com.vicmatskiv.weaponlib.animation.RenderStateManager;
+import com.vicmatskiv.weaponlib.animation.Transition;
+import com.vicmatskiv.weaponlib.animation.TransitionProvider;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityClientPlayerMP;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.Vec3;
 import net.minecraftforge.client.IItemRenderer;
 import scala.actors.threadpool.Arrays;
 
 
-public class WeaponRenderer implements IItemRenderer, PositionProvider<RenderableState> {
+public class WeaponRenderer implements IItemRenderer, TransitionProvider<RenderableState> {
 	
-	
+	private static final int DEFAULT_ANIMATION_DURATION = 250;
 
 	public static class Builder {
+		
 		private ModelBase model;
 		private String textureName;
 		private float weaponProximity;
@@ -47,9 +43,8 @@ public class WeaponRenderer implements IItemRenderer, PositionProvider<Renderabl
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningRunning;
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningModifying;
 		
-		private List<BiConsumer<EntityPlayer, ItemStack>> firstPersonPositioningReloading;
+		private List<Transition> firstPersonPositioningReloading;
 		private String modId;
-		private long reloadingAnimationDuration;
 		
 		public Builder withModId(String modId) {
 			this.modId = modId;
@@ -113,9 +108,8 @@ public class WeaponRenderer implements IItemRenderer, PositionProvider<Renderabl
 		
 		@SafeVarargs
 		@SuppressWarnings("unchecked")
-		public final Builder withFirstPersonPositioningReloading(long duration, BiConsumer<EntityPlayer, ItemStack> ...firstPersonPositioningReloading) {
-			this.reloadingAnimationDuration = duration;
-			this.firstPersonPositioningReloading = Arrays.asList(firstPersonPositioningReloading);
+		public final Builder withFirstPersonPositioningReloading(Transition ...transitions) {
+			this.firstPersonPositioningReloading = Arrays.asList(transitions);
 			return this;
 		}
 		
@@ -150,7 +144,7 @@ public class WeaponRenderer implements IItemRenderer, PositionProvider<Renderabl
 			}
 			
 			if(firstPersonPositioningReloading == null) {
-				firstPersonPositioningReloading = Collections.singletonList(firstPersonPositioning);
+				firstPersonPositioningReloading = Collections.singletonList(new Transition(firstPersonPositioning, DEFAULT_ANIMATION_DURATION));
 			}
 			
 			if(thirdPersonPositioning == null) {
@@ -188,14 +182,12 @@ public class WeaponRenderer implements IItemRenderer, PositionProvider<Renderabl
 	
 	private RenderStateManager<RenderableState> getStateManager(EntityPlayer player, ItemStack itemStack) {
 		RenderableState currentState = null;
-		long animationDuration = 250;
 		if(((Weapon) itemStack.getItem()).getState(itemStack) == Weapon.STATE_MODIFYING && builder.firstPersonPositioningModifying != null) {
 			currentState = RenderableState.MODIFYING;
 		} else if(player.isSprinting() && builder.firstPersonPositioningRunning != null) {
 			currentState = RenderableState.RUNNING;
 		} else if(Weapon.isReloading(player, itemStack)) {
 			currentState = RenderableState.RELOADING;
-			animationDuration = builder.reloadingAnimationDuration;
 		} else if(Weapon.isZoomed(itemStack)) {
 			currentState = RenderableState.ZOOMING;
 		} else{
@@ -207,7 +199,7 @@ public class WeaponRenderer implements IItemRenderer, PositionProvider<Renderabl
 			stateManager = new RenderStateManager<>(currentState, this);
 			firstPersonStateManagers.put(player, stateManager);
 		} else {
-			stateManager.setState(currentState, animationDuration);
+			stateManager.setState(currentState, true);
 		}
 		return stateManager;
 	}
@@ -267,118 +259,22 @@ public class WeaponRenderer implements IItemRenderer, PositionProvider<Renderabl
 		GL11.glPopMatrix();
 	   
 	}
-
-//	private double getDistanceFromItemToTarget(EntityClientPlayerMP player, double itemX, double itemY, double itemZ) {
-//		FloatBuffer buf = BufferUtils.createFloatBuffer(16);
-//
-//	    // Get current modelview matrix:
-//	    GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, buf);
-//
-//	    // Rewind buffer. Not sure if this is needed, but it can't hurt.
-//	    buf.rewind();
-//
-//	    // Create a Matrix4f.
-//	    Matrix4f mat = new Matrix4f();
-//
-//	    // Load matrix from buf into the Matrix4f.
-//	    mat.load(buf);
-//	    
-//	    Vec3 absolutePlayerPosition = player.getPosition(1);
-//	    Vector4f startOfRay = new Vector4f((float)itemX, (float)itemY, (float)itemZ, 1f); //(float)pos.xCoord, (float)pos.yCoord, (float)pos.zCoord, 1f);
-//		Vector4f relativeRayStartPosition = new Vector4f();
-//		Matrix4f.transform(mat, startOfRay, relativeRayStartPosition);
-//		
-//		
-//		
-//		//MovingObjectPosition mouseOver = Minecraft.getMinecraft().objectMouseOver;
-//		//System.out.println("Mouse over: " + mouseOver);
-//		
-//
-//		
-//		Vec3 targetPosition = player.rayTrace(1000, 1f).hitVec;
-//		
-//		
-//		Vec3 absoluteRayStartPos = absolutePlayerPosition.addVector(relativeRayStartPosition.x, relativeRayStartPosition.y, relativeRayStartPosition.z); //.addVector(-itemX, -itemY, -itemZ);
-//		
-//		
-//		//MovingObjectPosition result = Minecraft.getMinecraft().theWorld.rayTraceBlocks(absoluteRayStartPos, absoluteRayEndPos);
-//
-//		
-//		double distance = absoluteRayStartPos.distanceTo(targetPosition);
-//		
-//		Vector4f endOfRay = new Vector4f((float)itemX, (float)itemY, (float)itemZ - (float)distance, 1f);
-//		
-//		Vector4f relativeRayEndPosition = new Vector4f();
-//		Matrix4f.transform(mat, endOfRay, relativeRayEndPosition);
-//		
-//		Vec3 absoluteRayEndPos = absolutePlayerPosition.addVector(relativeRayEndPosition.x, relativeRayEndPosition.y, relativeRayEndPosition.z);
-//		
-//		if(System.currentTimeMillis() % 1000 == 0) {
-//			System.out.println("Relative item pos: " + relativeRayStartPosition.x + ", " + relativeRayStartPosition.y + ", " + relativeRayStartPosition.z);
-////			if(result != null) {
-////				System.out.println("Hit info " + result.hitInfo);
-////			} else {
-////				System.out.println("No trace found");
-////			}
-//			
-//			System.out.println("Absolute item pos: " + absoluteRayStartPos);
-//			System.out.println("Distance to target: " + distance);
-//			System.out.println("Ray end position: " + absoluteRayEndPos);
-//			System.out.println("Target position:  " + targetPosition);
-//		}
-//		return distance + 100;
-//	}
-
-	private void getMatrix(EntityClientPlayerMP player, String msg) {
-		// Create FloatBuffer that can hold 16 values.
-		    FloatBuffer buf = BufferUtils.createFloatBuffer(16);
-
-		    // Get current modelview matrix:
-		    GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, buf);
-
-		    // Rewind buffer. Not sure if this is needed, but it can't hurt.
-		    buf.rewind();
-
-		    // Create a Matrix4f.
-		    Matrix4f mat = new Matrix4f();
-
-		    // Load matrix from buf into the Matrix4f.
-		    mat.load(buf);
-		    
-		    //System.out.println("Current matrix " + msg + ": " + mat);
-		    
-		    Vec3 pos = player.getPosition(1);
-		    Vector4f currentPos = new Vector4f(0f, 0f, 0f, 1f); //(float)pos.xCoord, (float)pos.yCoord, (float)pos.zCoord, 1f);
-			Vector4f dest = new Vector4f();
-			Matrix4f.transform(mat, currentPos, dest);
-			//System.out.println("Relative item pos: " + dest.x + ", " + dest.y + ", " + dest.z);
-			MovingObjectPosition mouseOver = Minecraft.getMinecraft().objectMouseOver;
-			//System.out.println("Mouse over: " + mouseOver);
-			
-			Vec3 targetPosition = player.rayTrace(1000, 1f).hitVec;
-			
-			
-			Vec3 absoluteItemPos = pos.addVector(dest.x, dest.y, dest.z);
-			System.out.println("Absolute item pos: " + absoluteItemPos);
-			
-			double distance = absoluteItemPos.distanceTo(targetPosition);
-			System.out.println("Distance to target: " + distance);
-	}
+	
 
 	@Override
-	public List<BiConsumer<EntityPlayer, ItemStack>> getPositioning(RenderableState state) {
+	public List<Transition> getPositioning(RenderableState state) {
 		switch(state) {
 		case MODIFYING:
-			return Collections.singletonList(builder.firstPersonPositioningModifying);
+			return Collections.singletonList(new Transition(builder.firstPersonPositioningModifying, DEFAULT_ANIMATION_DURATION));
 		case RUNNING:
-			return Collections.singletonList(builder.firstPersonPositioningRunning);
+			return Collections.singletonList(new Transition(builder.firstPersonPositioningRunning, DEFAULT_ANIMATION_DURATION));
 		case RELOADING:
 			return builder.firstPersonPositioningReloading;
 		case NORMAL:
-			return Collections.singletonList(builder.firstPersonPositioning);
+			return Collections.singletonList(new Transition(builder.firstPersonPositioning, DEFAULT_ANIMATION_DURATION));
 		case ZOOMING:
-			return Collections.singletonList(
-					builder.firstPersonPositioningZooming != null ? builder.firstPersonPositioningZooming : builder.firstPersonPositioning);
+			return Collections.singletonList(new Transition(
+					builder.firstPersonPositioningZooming != null ? builder.firstPersonPositioningZooming : builder.firstPersonPositioning, DEFAULT_ANIMATION_DURATION));
 		default:
 			break;
 		}
