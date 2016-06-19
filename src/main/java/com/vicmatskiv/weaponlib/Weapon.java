@@ -527,6 +527,10 @@ public class Weapon extends Item {
 	int getState(ItemStack itemStack) {
 		return itemStack.stackTagCompound.getInteger(STATE_TAG);
 	}
+	
+	long getReloadingTimeout() {
+		return builder.reloadingTimeout;
+	}
 
 	void setState(ItemStack itemStack, int newState) {
 		itemStack.stackTagCompound.setInteger(STATE_TAG, newState);
@@ -801,6 +805,12 @@ public class Weapon extends Item {
 		} else {
 			return 0;
 		}
+	}
+	
+	public static boolean isReloading(EntityPlayer player, ItemStack itemStack) {
+		Weapon weapon = (Weapon) itemStack.getItem();
+		WeaponInstanceStorage storage = weapon.getWeaponInstanceStorage(player);
+		return storage != null && storage.getState() == WeaponInstanceState.RELOADING;
 	}
 
 	@Override

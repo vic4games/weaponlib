@@ -1,8 +1,10 @@
 package com.vicmatskiv.weaponlib.animation;
 
 import java.nio.FloatBuffer;
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 import java.util.function.BiConsumer;
 
@@ -32,7 +34,8 @@ public class RenderStateManager<State> {
 
 		@Override
 		public void apply(EntityPlayer player, ItemStack itemStack) {
-			positioningManager.getPositioning(state).accept(player, itemStack);
+			List<BiConsumer<EntityPlayer, ItemStack>> positioning = positioningManager.getPositioning(state);
+			positioning.get(positioning.size() - 1).accept(player, itemStack);
 		}
 		
 		@Override
@@ -47,15 +50,34 @@ public class RenderStateManager<State> {
 		private long endTime;
 		private long duration;
 		
-		private State fromState;
-		private State toState;
-		private Matrix4f beforeMatrix;
-		private Matrix4f afterMatrix;
+//		private State fromState;
+//		private State toState;
+//		private Matrix4f beforeMatrix;
+//		private Matrix4f afterMatrix;
+		
+		private List<Matrix4f> matrices;
+		private int currentIndex;
+		
+		private int segmentCount;
+		private float segmentLength;
+		private float segmentDuration;
+		
+		private List<BiConsumer<EntityPlayer, ItemStack>> fromPositioning;
+		private List<BiConsumer<EntityPlayer, ItemStack>> toPositioning;
 		
 		TransitionedPositioning(State fromState, State toState, long duration) {
-			this.fromState = fromState;
-			this.toState = toState;
+//			this.fromState = fromState;
+//			this.toState = toState;
 			this.duration = duration;
+			
+			fromPositioning = positioningManager.getPositioning(fromState);
+			toPositioning = positioningManager.getPositioning(toState);
+			
+			segmentCount = toPositioning.size();
+			segmentLength = (float)duration / segmentCount;
+			segmentDuration = duration / segmentCount;
+			
+			matrices = new ArrayList<>(toPositioning.size() + 1);
 		}
 		
 		@Override
@@ -66,12 +88,43 @@ public class RenderStateManager<State> {
 		
 		@Override
 		public void apply(EntityPlayer player, ItemStack itemStack) {
+			
 			if(startTime == 0) {
 				startTime = System.currentTimeMillis();
 				endTime = startTime + duration;
-				beforeMatrix = getMatrixForState(fromState, player, itemStack);
-				afterMatrix = getMatrixForState(toState, player, itemStack);
+				
+				matrices.add(getMatrixForPositioning(fromPositioning.get(fromPositioning.size() - 1), player, itemStack));
+				for(BiConsumer<EntityPlayer, ItemStack> p: toPositioning) {
+					matrices.add(getMatrixForPositioning(p, player, itemStack));
+				}
 			}
+			
+			long currentOffset = System.currentTimeMillis() - startTime;
+			int index = (int) Math.floorDiv(segmentCount * currentOffset, duration);
+			
+			if(index >= segmentCount) {
+				return;
+			}
+			
+			if(index != currentIndex) {
+//				System.out.println("Switch!");
+				currentIndex = index;
+			}
+			
+
+			
+			float segmentOffset = currentOffset - index * segmentLength;
+			float segmentProgress = (float)segmentOffset / (segmentDuration);
+			
+//			System.out.println("Offset: " + currentOffset + ", index: " + index 
+//					+ ", offset: " + segmentOffset
+//					+ ", progress: " + segmentProgress);
+			
+			applyOnce(player, itemStack, matrices.get(index), matrices.get(index + 1), segmentProgress);
+		}
+
+		private void applyOnce(EntityPlayer player, ItemStack itemStack, Matrix4f beforeMatrix, Matrix4f afterMatrix, float progress) {
+			
 			/*
 			 * 
 			 * progress = (endTime - startTime) / duration
@@ -79,7 +132,7 @@ public class RenderStateManager<State> {
 			 * current = start + (end - start) * progress = start * (1 - progress)  + end * progress;
 			 */
 			
-			float progress = (float)(System.currentTimeMillis() - startTime) / (float)duration;
+			//float progress = (float)(System.currentTimeMillis() - startTime) / (float)duration;
 			
 			Matrix4f m1 = scale(beforeMatrix, 1 - progress); //start * (1 - progress)
 			Matrix4f m2 = scale(afterMatrix, progress);
@@ -119,11 +172,11 @@ public class RenderStateManager<State> {
 			return result;
 		}
 		
-		private Matrix4f getMatrixForState(State state, EntityPlayer player, ItemStack itemStack) {
+		private Matrix4f getMatrixForPositioning(BiConsumer<EntityPlayer, ItemStack> positioning, EntityPlayer player, ItemStack itemStack) {
 			GL11.glPushMatrix();
 			GL11.glMatrixMode(GL11.GL_MODELVIEW);
 			FloatBuffer buf = BufferUtils.createFloatBuffer(16);
-			positioningManager.getPositioning(state).accept(player, itemStack);
+			positioning.accept(player, itemStack);
 			GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, buf);
 			buf.rewind();
 			Matrix4f matrix = new Matrix4f();
@@ -131,6 +184,19 @@ public class RenderStateManager<State> {
 			GL11.glPopMatrix();
 			return matrix;
 		}
+		
+//		private Matrix4f getMatrixForState(State state, EntityPlayer player, ItemStack itemStack) {
+//			GL11.glPushMatrix();
+//			GL11.glMatrixMode(GL11.GL_MODELVIEW);
+//			FloatBuffer buf = BufferUtils.createFloatBuffer(16);
+//			positioningManager.getPositioning(state).accept(player, itemStack);
+//			GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, buf);
+//			buf.rewind();
+//			Matrix4f matrix = new Matrix4f();
+//			matrix.load(buf);  
+//			GL11.glPopMatrix();
+//			return matrix;
+//		}
 	}
 	
 	private State currentState;

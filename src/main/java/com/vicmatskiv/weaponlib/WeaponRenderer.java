@@ -1,6 +1,7 @@
 package com.vicmatskiv.weaponlib;
 
 import java.nio.FloatBuffer;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +25,7 @@ import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Vec3;
 import net.minecraftforge.client.IItemRenderer;
+import scala.actors.threadpool.Arrays;
 
 
 public class WeaponRenderer implements IItemRenderer, PositionProvider<RenderableState> {
@@ -44,7 +46,10 @@ public class WeaponRenderer implements IItemRenderer, PositionProvider<Renderabl
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningZooming;
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningRunning;
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningModifying;
+		
+		private List<BiConsumer<EntityPlayer, ItemStack>> firstPersonPositioningReloading;
 		private String modId;
+		private long reloadingAnimationDuration;
 		
 		public Builder withModId(String modId) {
 			this.modId = modId;
@@ -106,6 +111,14 @@ public class WeaponRenderer implements IItemRenderer, PositionProvider<Renderabl
 			return this;
 		}
 		
+		@SafeVarargs
+		@SuppressWarnings("unchecked")
+		public final Builder withFirstPersonPositioningReloading(long duration, BiConsumer<EntityPlayer, ItemStack> ...firstPersonPositioningReloading) {
+			this.reloadingAnimationDuration = duration;
+			this.firstPersonPositioningReloading = Arrays.asList(firstPersonPositioningReloading);
+			return this;
+		}
+		
 		public Builder withFirstPersonPositioningModifying(BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningModifying) {
 			this.firstPersonPositioningModifying = firstPersonPositioningModifying;
 			return this;
@@ -134,6 +147,10 @@ public class WeaponRenderer implements IItemRenderer, PositionProvider<Renderabl
 						GL11.glTranslatef(0F, -1.2F, 0F);
 					}
 				};
+			}
+			
+			if(firstPersonPositioningReloading == null) {
+				firstPersonPositioningReloading = Collections.singletonList(firstPersonPositioning);
 			}
 			
 			if(thirdPersonPositioning == null) {
@@ -169,13 +186,17 @@ public class WeaponRenderer implements IItemRenderer, PositionProvider<Renderabl
 		return true;
 	}
 	
-	private RenderStateManager<RenderableState> getStateManager(EntityPlayer player, ItemStack item) {
+	private RenderStateManager<RenderableState> getStateManager(EntityPlayer player, ItemStack itemStack) {
 		RenderableState currentState = null;
-		if(((Weapon) item.getItem()).getState(item) == Weapon.STATE_MODIFYING && builder.firstPersonPositioningModifying != null) {
+		long animationDuration = 250;
+		if(((Weapon) itemStack.getItem()).getState(itemStack) == Weapon.STATE_MODIFYING && builder.firstPersonPositioningModifying != null) {
 			currentState = RenderableState.MODIFYING;
 		} else if(player.isSprinting() && builder.firstPersonPositioningRunning != null) {
 			currentState = RenderableState.RUNNING;
-		} else if(Weapon.isZoomed(item)) {
+		} else if(Weapon.isReloading(player, itemStack)) {
+			currentState = RenderableState.RELOADING;
+			animationDuration = builder.reloadingAnimationDuration;
+		} else if(Weapon.isZoomed(itemStack)) {
 			currentState = RenderableState.ZOOMING;
 		} else{
 			currentState = RenderableState.NORMAL;
@@ -186,7 +207,7 @@ public class WeaponRenderer implements IItemRenderer, PositionProvider<Renderabl
 			stateManager = new RenderStateManager<>(currentState, this);
 			firstPersonStateManagers.put(player, stateManager);
 		} else {
-			stateManager.setState(currentState, 250);
+			stateManager.setState(currentState, animationDuration);
 		}
 		return stateManager;
 	}
@@ -345,16 +366,19 @@ public class WeaponRenderer implements IItemRenderer, PositionProvider<Renderabl
 	}
 
 	@Override
-	public BiConsumer<EntityPlayer, ItemStack> getPositioning(RenderableState state) {
+	public List<BiConsumer<EntityPlayer, ItemStack>> getPositioning(RenderableState state) {
 		switch(state) {
 		case MODIFYING:
-			return builder.firstPersonPositioningModifying;
+			return Collections.singletonList(builder.firstPersonPositioningModifying);
 		case RUNNING:
-			return builder.firstPersonPositioningRunning;
+			return Collections.singletonList(builder.firstPersonPositioningRunning);
+		case RELOADING:
+			return builder.firstPersonPositioningReloading;
 		case NORMAL:
-			return builder.firstPersonPositioning;
+			return Collections.singletonList(builder.firstPersonPositioning);
 		case ZOOMING:
-			return builder.firstPersonPositioningZooming != null ? builder.firstPersonPositioningZooming : builder.firstPersonPositioning;
+			return Collections.singletonList(
+					builder.firstPersonPositioningZooming != null ? builder.firstPersonPositioningZooming : builder.firstPersonPositioning);
 		default:
 			break;
 		}
