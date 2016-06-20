@@ -1,5 +1,6 @@
 package com.vicmatskiv.weaponlib;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -20,7 +21,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.IItemRenderer;
-import scala.actors.threadpool.Arrays;
 
 
 public class WeaponRenderer implements IItemRenderer, TransitionProvider<RenderableState> {
