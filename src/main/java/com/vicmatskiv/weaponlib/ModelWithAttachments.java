@@ -41,6 +41,7 @@ public class ModelWithAttachments extends ModelBase {
 					Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(modId 
 							+ ":textures/models/" + texturedModel.getV()));
 					GL11.glPushMatrix();
+					GL11.glPushAttrib(GL11.GL_ENABLE_BIT);
 					if(compatibleAttachment.getPositioning() != null) {
 						compatibleAttachment.getPositioning().accept(texturedModel.getU());
 					}
@@ -50,7 +51,7 @@ public class ModelWithAttachments extends ModelBase {
 					if(postRenderer != null) {
 						postRenderer.render(type, itemStack);
 					}
-					
+					GL11.glPopAttrib();
 					GL11.glPopMatrix();
 
 				}

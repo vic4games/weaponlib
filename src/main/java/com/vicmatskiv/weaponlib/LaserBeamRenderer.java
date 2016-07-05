@@ -11,6 +11,9 @@ import net.minecraftforge.client.IItemRenderer.ItemRenderType;
 
 public class LaserBeamRenderer implements CustomRenderer {
 	
+	private float leftOffset = 0.3f;
+	private float forwardOffset = 0.1f;
+	
 	public LaserBeamRenderer() {
 		
 	}
@@ -26,7 +29,7 @@ public class LaserBeamRenderer implements CustomRenderer {
 		if(weapon.isLaserOn(itemStack) && (
 				type == ItemRenderType.EQUIPPED || type == ItemRenderType.EQUIPPED_FIRST_PERSON || type == ItemRenderType.ENTITY)) {
 			GL11.glPushMatrix();
-			GL11.glPushAttrib(GL11.GL_ENABLE_BIT);
+			GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
 			GL11.glDisable(GL11.GL_CULL_FACE);
 			GL11.glDisable(GL11.GL_LIGHTING);
 			GL11.glDisable(GL11.GL_TEXTURE_2D);
@@ -44,22 +47,26 @@ public class LaserBeamRenderer implements CustomRenderer {
 
 			long time = System.currentTimeMillis();
 			Random random = new Random(time - time % 300);
-			float start = -0.1f;
+			float start = forwardOffset;
 			float length = 100;
 
 			float end = 0;
 			for(int i = 0; i < 100 && start < length && end < length; i++) {
-				tessellator.addVertex(0.2, -0, start);
+				tessellator.addVertex(leftOffset, 0, start);
 				tessellator.setBrightness(15728880);
 				end = start - ( 1 + random.nextFloat() * 2);
 				if(end > length) end = length;
-				tessellator.addVertex(0.2, -0, end);
+				tessellator.addVertex(leftOffset, 0, end);
 				start = end + random.nextFloat() * 0.5f;
 			}
 
 			tessellator.draw();
+			
+			
+			//tessellator.setBrightness(0);
 
 			GL11.glDepthMask(true);
+			
 			GL11.glPopAttrib();
 
 			GL11.glPopMatrix();
