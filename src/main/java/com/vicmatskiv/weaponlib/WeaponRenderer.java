@@ -186,7 +186,7 @@ public class WeaponRenderer implements IItemRenderer, TransitionProvider<Rendera
 			currentState = RenderableState.MODIFYING;
 		} else if(player.isSprinting() && builder.firstPersonPositioningRunning != null) {
 			currentState = RenderableState.RUNNING;
-		} else if(Weapon.isReloading(player, itemStack)) {
+		} else if(Weapon.isReloadingConfirmed(player, itemStack)) {
 			currentState = RenderableState.RELOADING;
 		} else if(Weapon.isZoomed(itemStack)) {
 			currentState = RenderableState.ZOOMING;

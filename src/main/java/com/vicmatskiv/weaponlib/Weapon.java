@@ -17,7 +17,6 @@ import java.util.function.Consumer;
 import com.google.common.util.concurrent.AtomicDouble;
 
 import net.minecraft.block.Block;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.creativetab.CreativeTabs;
@@ -794,24 +793,10 @@ public class Weapon extends Item {
 		return activeAttachmentIdForThisCategory > 0;
 	}
 	
-	public static float reloadingProgress(EntityPlayer player, ItemStack itemStack) {
-		if(itemStack == null) return 0;
+	public static boolean isReloadingConfirmed(EntityPlayer player, ItemStack itemStack) {
 		Weapon weapon = (Weapon) itemStack.getItem();
 		WeaponInstanceStorage storage = weapon.getWeaponInstanceStorage(player);
-		if(storage != null && storage.getState() == WeaponInstanceState.RELOADING) {
-			long totalWorldTime = Minecraft.getMinecraft().theWorld.getTotalWorldTime();
-			long timeLeftToReload = storage.reloadingStopsAt.get() - totalWorldTime;
-			float progress = timeLeftToReload > 0 ? 1.0f - (float)timeLeftToReload / weapon.builder.reloadingTimeout : 0;
-			return progress;
-		} else {
-			return 0;
-		}
-	}
-	
-	public static boolean isReloading(EntityPlayer player, ItemStack itemStack) {
-		Weapon weapon = (Weapon) itemStack.getItem();
-		WeaponInstanceStorage storage = weapon.getWeaponInstanceStorage(player);
-		return storage != null && storage.getState() == WeaponInstanceState.RELOADING;
+		return storage != null && storage.getState() == WeaponInstanceState.RELOAD_CONFIRMED;
 	}
 
 	@Override
@@ -826,7 +811,7 @@ public class Weapon extends Item {
 
 	Random random = new Random();
 	
-	public static enum WeaponInstanceState { READY, SHOOTING, RELOADING, PAUSED, MODIFYING };
+	public static enum WeaponInstanceState { READY, SHOOTING, RELOAD_REQUESTED, RELOAD_CONFIRMED, PAUSED, MODIFYING };
 	
 	private Map<UUID, WeaponInstanceStorage> weaponInstanceStorages = new IdentityHashMap<>();
 	
@@ -950,9 +935,10 @@ public class Weapon extends Item {
 	public void initiateReload(ItemStack itemStack, EntityPlayer player) {
 		WeaponInstanceStorage storage = getWeaponInstanceStorage(player);
 		if(storage == null) return;
-		if(storage.getState() != WeaponInstanceState.RELOADING && storage.currentAmmo.get() < builder.ammoCapacity) {
+		if(storage.getState() != WeaponInstanceState.RELOAD_REQUESTED 
+				&& storage.getState() != WeaponInstanceState.RELOAD_CONFIRMED &&storage.currentAmmo.get() < builder.ammoCapacity) {
 			storage.reloadingStopsAt.set(player.worldObj.getTotalWorldTime() + MAX_RELOAD_TIMEOUT_TICKS);
-			storage.setState(WeaponInstanceState.RELOADING);
+			storage.setState(WeaponInstanceState.RELOAD_REQUESTED);
 			modContext.getChannel().sendToServer(new ReloadMessage(this));
 		}
 	}
@@ -961,9 +947,10 @@ public class Weapon extends Item {
 	public void completeReload(ItemStack itemStack, EntityPlayer player, int ammo, boolean quietly) {
 		WeaponInstanceStorage storage = getWeaponInstanceStorage(player);
 		if(storage == null) return;
-		if(storage.getState() == WeaponInstanceState.RELOADING) {
+		if(storage.getState() == WeaponInstanceState.RELOAD_REQUESTED) {
 			storage.currentAmmo.set(ammo);
 			if(ammo > 0 && !quietly) {
+				storage.setState(WeaponInstanceState.RELOAD_CONFIRMED);
 				long reloadingStopsAt = player.worldObj.getTotalWorldTime() + builder.reloadingTimeout;
 				storage.reloadingStopsAt.set(reloadingStopsAt);
 				player.playSound(builder.reloadSound, 1.0F, 1.0F);
@@ -994,7 +981,7 @@ public class Weapon extends Item {
 	public void tick(EntityPlayer player) {
 		WeaponInstanceStorage storage = getWeaponInstanceStorage(player);
 		if(storage != null) {
-			if(storage.getState() == WeaponInstanceState.RELOADING) {
+			if(storage.getState() == WeaponInstanceState.RELOAD_REQUESTED || storage.getState() == WeaponInstanceState.RELOAD_CONFIRMED) {
 				long totalWorldTime = player.worldObj.getTotalWorldTime();
 				if(storage.reloadingStopsAt.get() <= totalWorldTime) {
 					storage.setState(WeaponInstanceState.READY);
