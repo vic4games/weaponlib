@@ -463,6 +463,7 @@ public class Weapon extends Item {
 	
 	@Override
 	public void onUpdate(ItemStack itemStack, World world, Entity entity, int p_77663_4_, boolean active) {
+		ensureItemStack(itemStack);
 		float currentZoom = itemStack.stackTagCompound.getFloat(ZOOM_TAG);
 		if (currentZoom != 1.0f && entity.isSprinting()) {
 			itemStack.stackTagCompound.setFloat(ZOOM_TAG, 1.0f);
