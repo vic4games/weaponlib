@@ -8,19 +8,22 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import net.minecraft.client.Minecraft;
+//import net.minecraft.client.entity.EntityClientPlayerMP;
+import net.minecraft.client.model.ModelBase;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.client.IItemRenderer;
+
 import org.lwjgl.opengl.GL11;
 
 import com.vicmatskiv.weaponlib.animation.RenderStateManager;
 import com.vicmatskiv.weaponlib.animation.Transition;
 import com.vicmatskiv.weaponlib.animation.TransitionProvider;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.EntityClientPlayerMP;
-import net.minecraft.client.model.ModelBase;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.client.IItemRenderer;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 
 
 public class WeaponRenderer implements IItemRenderer, TransitionProvider<RenderableState> {
@@ -107,7 +110,6 @@ public class WeaponRenderer implements IItemRenderer, TransitionProvider<Rendera
 		}
 		
 		@SafeVarargs
-		@SuppressWarnings("unchecked")
 		public final Builder withFirstPersonPositioningReloading(Transition ...transitions) {
 			this.firstPersonPositioningReloading = Arrays.asList(transitions);
 			return this;
@@ -161,11 +163,12 @@ public class WeaponRenderer implements IItemRenderer, TransitionProvider<Rendera
 	
 	private Builder builder;
 	
-	private Map<EntityPlayer, RenderStateManager<RenderableState>> firstPersonStateManagers = new HashMap<>();
+	private Map<EntityPlayer, RenderStateManager<RenderableState>> firstPersonStateManagers;
 	
 	private WeaponRenderer (Builder builder)
 	{
 		this.builder = builder;
+		this.firstPersonStateManagers = new HashMap<>();
 	}
 	
 	@Override
@@ -204,13 +207,15 @@ public class WeaponRenderer implements IItemRenderer, TransitionProvider<Rendera
 		return stateManager;
 	}
 	
+	@SideOnly(Side.CLIENT)
 	@Override
 	public void renderItem(ItemRenderType type, ItemStack item, Object... data)
 	{
+		
 		GL11.glPushMatrix();
 		
 		GL11.glScaled(-1F, -1F, 1F);
-		EntityClientPlayerMP player = Minecraft.getMinecraft().thePlayer;
+		EntityPlayer player = Minecraft.getMinecraft().thePlayer;
 		switch (type)
 		{
 		case ENTITY:
