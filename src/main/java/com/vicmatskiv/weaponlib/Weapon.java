@@ -6,8 +6,10 @@ import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -844,17 +846,25 @@ public class Weapon extends Item {
 		private AtomicInteger currentAmmo;
 		private AtomicLong reloadingStopsAt;
 		private long lastShotFiredAt;
-		private int shots;
+		//private AtomicInteger recoiled;
+		//private int shots;
+		private int shotsInternal;
 		private float zoom;
 		private AtomicDouble recoil;
 		
 		private AtomicReference<WeaponInstanceState> state;
+		
+		private int recoilableShotCount;
+		private boolean recoiledForCurrentShot;
+		
+		private Queue<RenderableState> disposableRenderableStates = new ArrayBlockingQueue<RenderableState>(100);
 
 		public WeaponInstanceStorage(WeaponInstanceState state, int currentAmmo, float zoom, float recoil) {
 			this.currentAmmo = new AtomicInteger(currentAmmo);
 			this.reloadingStopsAt = new AtomicLong();
 			this.recoil = new AtomicDouble(recoil);
 			this.state = new AtomicReference<>(state);
+			//this.recoiled = new AtomicInteger();
 			this.zoom = zoom;
 			//this.recoil = recoil;
 		}
@@ -882,9 +892,78 @@ public class Weapon extends Item {
 		public void setRecoil(float recoil) {
 			this.recoil.set(recoil);
 		}
+		
+//		public int getAndDecrementShotsToRecoil() {
+//			int result = recoiled.getAndDecrement();
+//			//System.out.println("Recoil counter: " + result);
+//			return result;
+//		}
+		
+//		public void addShotsToRecoil() {
+//			recoiled.incrementAndGet();
+//		}
+//		
+//		public void decrementShotsToRecoil() {
+//			recoiled.decrementAndGet();
+//		}
+		
+		public synchronized void addRecoilableShot() {
+			if(recoilableShotCount < 0) {
+				recoilableShotCount = 0;
+			}
+			if(recoilableShotCount == 0) {
+				recoiledForCurrentShot = false;
+			}
+			recoilableShotCount++;
+		}
+		
+		public synchronized boolean hasRecoiled() {
+			return recoiledForCurrentShot;
+		}
+		
+		public synchronized boolean checkIfNotRecoiledAndRecoil() {
+			if(recoilableShotCount > 0) {
+				if(!recoiledForCurrentShot) {
+					recoilableShotCount--;
+					recoiledForCurrentShot = true;
+					return true;
+				} else {
+					return false;
+				}
+			} else {
+				return false;
+			}
+		}
+		
+		public synchronized void resetRecoiled() {
+			recoiledForCurrentShot = false;
+		}
+		
+		public void addShot() {
+			shotsInternal++;
+			
+			disposableRenderableStates.add(RenderableState.RECOILED);
+			disposableRenderableStates.add(RenderableState.SHOOTING);
+		}
+		
+		public RenderableState getNextDisposableRenderableState() {
+			return disposableRenderableStates.poll();
+		}
+		
+		public int getShots() {
+			return shotsInternal;
+		}
+		
+		public void resetShots() {
+			shotsInternal = 0;
+		}
+		
+		public void resetDisposableRenderableQueue() {
+			disposableRenderableStates.clear();
+		}
 	}
 	
-	private WeaponInstanceStorage getWeaponInstanceStorage(EntityPlayer player) {
+	protected WeaponInstanceStorage getWeaponInstanceStorage(EntityPlayer player) {
 		
 		if(player == null) return null;
 		return weaponInstanceStorages.computeIfAbsent(player.getPersistentID(), (w) ->
@@ -902,7 +981,7 @@ public class Weapon extends Item {
 		if(!player.isSprinting() 
 				&& (storage.getState() == WeaponInstanceState.READY || storage.getState() == WeaponInstanceState.SHOOTING)
 				&& readyToShootAccordingToFireRate
-				&& storage.shots < builder.maxShots
+				&& storage.getShots() < builder.maxShots
 				&& storage.currentAmmo.getAndAccumulate(0, (current, ignore) -> current > 0 ? current - 1 : 0) > 0) {
 			storage.setState(WeaponInstanceState.SHOOTING);
 			modContext.getChannel().sendToServer(new TryFireMessage(true));
@@ -910,10 +989,15 @@ public class Weapon extends Item {
 			
 			player.rotationPitch = player.rotationPitch - storage.getRecoil();						
 			float rotationYawFactor = -1.0f + random.nextFloat() * 2.0f;
-			//System.out.println("Recoil: " + storage.recoil);
+			//System.out.println("Firing...");
 			player.rotationYaw = player.rotationYaw + storage.getRecoil() * rotationYawFactor;
 			storage.lastShotFiredAt = System.currentTimeMillis();
-			storage.shots++;
+			//storage.recoiled.incrementAndGet();
+			// if current recoil counter < 0, reset to 0 and increment, otherwise simply increment it
+//			storage.recoiled.accumulateAndGet(1, (current, given) -> 
+//				{System.out.println("tryFire, current recoil: " + current); return current >= 0 ? current + 1 : 1;});
+			//storage.addRecoilableShot();
+			storage.addShot();
 		}
 	}
 
@@ -944,7 +1028,7 @@ public class Weapon extends Item {
 		if(storage == null) return;
 		//System.out.println("Trying to stop fire");
 		if(storage.getState() == WeaponInstanceState.SHOOTING) {
-			storage.shots = 0;
+			storage.resetShots();
 			if(storage.lastShotFiredAt + builder.pumpTimeoutMilliseconds <= System.currentTimeMillis()) {
 				//System.out.println("Timeout passed, getting ready");
 				storage.setState(WeaponInstanceState.READY);
@@ -1006,6 +1090,20 @@ public class Weapon extends Item {
 	public void tick(EntityPlayer player) {
 		WeaponInstanceStorage storage = getWeaponInstanceStorage(player);
 		if(storage != null) {
+			
+//			boolean readyToRecoilAccordingToFireRate = !storage.recoiled.get() && System.currentTimeMillis() - storage.lastShotFiredAt >= 25f / builder.fireRate
+//					&& !storage.recoiled.get() && System.currentTimeMillis() - storage.lastShotFiredAt < 100f / builder.fireRate;
+//			if(readyToRecoilAccordingToFireRate) {
+//				storage.recoiled.set(true);
+//				System.out.println("Recoiling...");
+//			}
+			
+			if(storage.getState() != WeaponInstanceState.SHOOTING && System.currentTimeMillis() - storage.lastShotFiredAt > 50) {
+				// When shooting stops, reset recoil counter to 0 after a timeout
+				//storage.recoiled.set(0);
+				storage.resetDisposableRenderableQueue();
+			}
+			
 			if(storage.getState() == WeaponInstanceState.RELOAD_REQUESTED || storage.getState() == WeaponInstanceState.RELOAD_CONFIRMED) {
 				long totalWorldTime = player.worldObj.getTotalWorldTime();
 				if(storage.reloadingStopsAt.get() <= totalWorldTime) {

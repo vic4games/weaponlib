@@ -8,6 +8,15 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import org.lwjgl.opengl.GL11;
+
+import com.vicmatskiv.weaponlib.Weapon.WeaponInstanceStorage;
+import com.vicmatskiv.weaponlib.animation.RenderStateManager;
+import com.vicmatskiv.weaponlib.animation.Transition;
+import com.vicmatskiv.weaponlib.animation.TransitionProvider;
+
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.Minecraft;
 //import net.minecraft.client.entity.EntityClientPlayerMP;
 import net.minecraft.client.model.ModelBase;
@@ -16,19 +25,11 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.IItemRenderer;
 
-import org.lwjgl.opengl.GL11;
-
-import com.vicmatskiv.weaponlib.animation.RenderStateManager;
-import com.vicmatskiv.weaponlib.animation.Transition;
-import com.vicmatskiv.weaponlib.animation.TransitionProvider;
-
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
-
 
 public class WeaponRenderer implements IItemRenderer, TransitionProvider<RenderableState> {
 	
 	private static final int DEFAULT_ANIMATION_DURATION = 250;
+	private static final int DEFAULT_RECOIL_ANIMATION_DURATION = 5;
 
 	public static class Builder {
 		
@@ -45,6 +46,7 @@ public class WeaponRenderer implements IItemRenderer, TransitionProvider<Rendera
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningZooming;
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningRunning;
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningModifying;
+		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningRecoiled;
 		
 		private List<Transition> firstPersonPositioningReloading;
 		private String modId;
@@ -109,6 +111,11 @@ public class WeaponRenderer implements IItemRenderer, TransitionProvider<Rendera
 			return this;
 		}
 		
+		public Builder withFirstPersonPositioningRecoiled(BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningRecoiled) {
+			this.firstPersonPositioningRecoiled = firstPersonPositioningRecoiled;
+			return this;
+		}
+		
 		@SafeVarargs
 		public final Builder withFirstPersonPositioningReloading(Transition ...transitions) {
 			this.firstPersonPositioningReloading = Arrays.asList(transitions);
@@ -149,6 +156,10 @@ public class WeaponRenderer implements IItemRenderer, TransitionProvider<Rendera
 				firstPersonPositioningReloading = Collections.singletonList(new Transition(firstPersonPositioning, DEFAULT_ANIMATION_DURATION));
 			}
 			
+			if(firstPersonPositioningRecoiled == null) {
+				firstPersonPositioningRecoiled = firstPersonPositioning;
+			}
+			
 			if(thirdPersonPositioning == null) {
 				thirdPersonPositioning = (player, itemStack) -> {
 					GL11.glTranslatef(-0.4F, 0.2F, 0.4F);
@@ -185,7 +196,8 @@ public class WeaponRenderer implements IItemRenderer, TransitionProvider<Rendera
 	
 	private RenderStateManager<RenderableState> getStateManager(EntityPlayer player, ItemStack itemStack) {
 		RenderableState currentState = null;
-		if(((Weapon) itemStack.getItem()).getState(itemStack) == Weapon.STATE_MODIFYING && builder.firstPersonPositioningModifying != null) {
+		Weapon weapon = (Weapon) itemStack.getItem();
+		if(weapon.getState(itemStack) == Weapon.STATE_MODIFYING && builder.firstPersonPositioningModifying != null) {
 			currentState = RenderableState.MODIFYING;
 		} else if(player.isSprinting() && builder.firstPersonPositioningRunning != null) {
 			currentState = RenderableState.RUNNING;
@@ -193,16 +205,44 @@ public class WeaponRenderer implements IItemRenderer, TransitionProvider<Rendera
 			currentState = RenderableState.RELOADING;
 		} else if(Weapon.isZoomed(itemStack)) {
 			currentState = RenderableState.ZOOMING;
-		} else{
-			currentState = RenderableState.NORMAL;
+		} else {
+			WeaponInstanceStorage storage = weapon.getWeaponInstanceStorage(player);
+
+			if(storage != null) {
+				currentState = storage.getNextDisposableRenderableState();
+			}
+			if(currentState == null) {
+				currentState = RenderableState.NORMAL;
+			} else {
+				//System.out.println("Rendering state " + currentState);
+			}
+			
+//			if(hasRecoiled) {
+//				currentState = RenderableState.RECOILED;
+//				System.out.println("Rendering recoiled state...");
+//			} else if(storage != null && storage.getState() == WeaponInstanceState.SHOOTING) {
+//				System.out.println("Rendering shooting state...");
+//				storage.resetRecoiled();
+//				currentState = RenderableState.SHOOTING;
+//			} else {
+//				System.out.println("Rendering normal state...");
+//				currentState = RenderableState.NORMAL;
+//			}
 		}
+		
+		RenderableState effectiveCurrentState = currentState;
+//		if(currentState == RenderableState.SHOOTING || currentState == RenderableState.RECOILED) {
+//			effectiveCurrentState = RenderableState.NORMAL;
+//		} else {
+//			effectiveCurrentState = currentState;
+//		}
 		
 		RenderStateManager<RenderableState> stateManager = firstPersonStateManagers.get(player);
 		if(stateManager == null) {
-			stateManager = new RenderStateManager<>(currentState, this);
+			stateManager = new RenderStateManager<>(effectiveCurrentState, this);
 			firstPersonStateManagers.put(player, stateManager);
 		} else {
-			stateManager.setState(currentState, true);
+			stateManager.setState(effectiveCurrentState, true);
 		}
 		return stateManager;
 	}
@@ -275,6 +315,10 @@ public class WeaponRenderer implements IItemRenderer, TransitionProvider<Rendera
 			return Collections.singletonList(new Transition(builder.firstPersonPositioningRunning, DEFAULT_ANIMATION_DURATION));
 		case RELOADING:
 			return builder.firstPersonPositioningReloading;
+		case RECOILED:
+			return Collections.singletonList(new Transition(builder.firstPersonPositioningRecoiled, DEFAULT_RECOIL_ANIMATION_DURATION));
+		case SHOOTING:
+			return Collections.singletonList(new Transition(builder.firstPersonPositioning, DEFAULT_RECOIL_ANIMATION_DURATION));
 		case NORMAL:
 			return Collections.singletonList(new Transition(builder.firstPersonPositioning, DEFAULT_ANIMATION_DURATION));
 		case ZOOMING:
