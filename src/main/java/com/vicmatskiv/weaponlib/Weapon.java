@@ -14,8 +14,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
-import com.google.common.util.concurrent.AtomicDouble;
-
 import net.minecraft.block.Block;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.renderer.texture.IIconRegister;
@@ -31,6 +29,8 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
 import net.minecraftforge.client.IItemRenderer;
+
+import com.google.common.util.concurrent.AtomicDouble;
 
 public class Weapon extends Item {
 	
@@ -442,24 +442,49 @@ public class Weapon extends Item {
 	@Override
 	public void registerIcons(IIconRegister register) {}
 	
-	@Override
 	public boolean onEntitySwing(EntityLivingBase entityLiving, ItemStack itemStack) {
+		return true;
+	}
+	
+//	@Override
+//	public boolean onEntitySwing(EntityLivingBase entityLiving, ItemStack itemStack) {
+//		ensureItemStack(itemStack);
+//		float currentZoom = itemStack.stackTagCompound.getFloat(ZOOM_TAG);
+//		if (currentZoom != 1.0f || entityLiving.isSprinting()) {
+//			itemStack.stackTagCompound.setFloat(ZOOM_TAG, 1.0f);
+//			itemStack.stackTagCompound.setBoolean(AIMED_TAG, false);
+//		} else {
+//			WeaponInstanceStorage weaponInstanceStorage = getWeaponInstanceStorage((EntityPlayer) entityLiving);
+//			if(weaponInstanceStorage != null) {
+//				itemStack.stackTagCompound.setFloat(ZOOM_TAG, weaponInstanceStorage.getZoom());
+//			}
+//			
+//			itemStack.stackTagCompound.setBoolean(AIMED_TAG, true);
+//		}
+//		return true;
+//	}
+	
+	
+	
+	@Override
+	public ItemStack onItemRightClick(ItemStack itemStack, World p_77659_2_,
+			EntityPlayer entityPlayer) {
 		ensureItemStack(itemStack);
 		float currentZoom = itemStack.stackTagCompound.getFloat(ZOOM_TAG);
-		if (currentZoom != 1.0f || entityLiving.isSprinting()) {
+		if (currentZoom != 1.0f || entityPlayer.isSprinting()) {
 			itemStack.stackTagCompound.setFloat(ZOOM_TAG, 1.0f);
 			itemStack.stackTagCompound.setBoolean(AIMED_TAG, false);
 		} else {
-			WeaponInstanceStorage weaponInstanceStorage = getWeaponInstanceStorage((EntityPlayer) entityLiving);
+			WeaponInstanceStorage weaponInstanceStorage = getWeaponInstanceStorage(entityPlayer);
 			if(weaponInstanceStorage != null) {
 				itemStack.stackTagCompound.setFloat(ZOOM_TAG, weaponInstanceStorage.getZoom());
 			}
 			
 			itemStack.stackTagCompound.setBoolean(AIMED_TAG, true);
 		}
-		return true;
+		return super.onItemRightClick(itemStack, p_77659_2_, entityPlayer);
 	}
-	
+
 	@Override
 	public void onUpdate(ItemStack itemStack, World world, Entity entity, int p_77663_4_, boolean active) {
 		ensureItemStack(itemStack);
