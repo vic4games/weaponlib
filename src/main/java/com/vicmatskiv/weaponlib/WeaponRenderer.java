@@ -5,11 +5,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.lwjgl.opengl.GL11;
 
+import com.vicmatskiv.weaponlib.Weapon.WeaponInstanceState;
 import com.vicmatskiv.weaponlib.Weapon.WeaponInstanceStorage;
 import com.vicmatskiv.weaponlib.animation.RenderStateManager;
 import com.vicmatskiv.weaponlib.animation.Transition;
@@ -47,6 +49,9 @@ public class WeaponRenderer implements IItemRenderer, TransitionProvider<Rendera
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningRunning;
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningModifying;
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningRecoiled;
+		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningShooting;
+		
+		private Random random = new Random();
 		
 		private List<Transition> firstPersonPositioningReloading;
 		private String modId;
@@ -116,6 +121,11 @@ public class WeaponRenderer implements IItemRenderer, TransitionProvider<Rendera
 			return this;
 		}
 		
+		public Builder withFirstPersonPositioningShooting(BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningShooting) {
+			this.firstPersonPositioningShooting = firstPersonPositioningShooting;
+			return this;
+		}
+		
 		@SafeVarargs
 		public final Builder withFirstPersonPositioningReloading(Transition ...transitions) {
 			this.firstPersonPositioningReloading = Arrays.asList(transitions);
@@ -158,6 +168,20 @@ public class WeaponRenderer implements IItemRenderer, TransitionProvider<Rendera
 			
 			if(firstPersonPositioningRecoiled == null) {
 				firstPersonPositioningRecoiled = firstPersonPositioning;
+			}
+			
+			if(firstPersonPositioningShooting == null) {
+				//firstPersonPositioningShooting = firstPersonPositioning;
+				
+				firstPersonPositioningShooting = (player, itemStack) -> {
+					firstPersonPositioning.accept(player, itemStack);
+
+					float xRandomOffset = 0.05f * (random.nextFloat() - 0.5f) * 2;
+					float yRandomOffset = 0.05f * (random.nextFloat() - 0.5f) * 2;
+					float zRandomOffset = 0.05f * (random.nextFloat() - 0.5f) * 2;
+					GL11.glTranslatef(xRandomOffset, yRandomOffset, zRandomOffset);
+					//System.out.println("Rendering randomized shooting position...");
+				};
 			}
 			
 			if(thirdPersonPositioning == null) {
@@ -210,6 +234,9 @@ public class WeaponRenderer implements IItemRenderer, TransitionProvider<Rendera
 
 			if(storage != null) {
 				currentState = storage.getNextDisposableRenderableState();
+				if(currentState == null && storage.getState() == WeaponInstanceState.SHOOTING) {
+					currentState = RenderableState.SHOOTING;
+				}
 			}
 			if(currentState == null) {
 				currentState = RenderableState.NORMAL;
@@ -318,7 +345,7 @@ public class WeaponRenderer implements IItemRenderer, TransitionProvider<Rendera
 		case RECOILED:
 			return Collections.singletonList(new Transition(builder.firstPersonPositioningRecoiled, DEFAULT_RECOIL_ANIMATION_DURATION));
 		case SHOOTING:
-			return Collections.singletonList(new Transition(builder.firstPersonPositioning, DEFAULT_RECOIL_ANIMATION_DURATION));
+			return Collections.singletonList(new Transition(builder.firstPersonPositioningShooting, DEFAULT_RECOIL_ANIMATION_DURATION));
 		case NORMAL:
 			return Collections.singletonList(new Transition(builder.firstPersonPositioning, DEFAULT_ANIMATION_DURATION));
 		case ZOOMING:
