@@ -940,10 +940,10 @@ public class Weapon extends Item {
 		}
 		
 		public void addShot() {
-			shotsInternal++;
-			
-			disposableRenderableStates.add(RenderableState.RECOILED);
-			disposableRenderableStates.add(RenderableState.SHOOTING);
+			if(shotsInternal++ == 0) {
+				disposableRenderableStates.add(RenderableState.RECOILED);
+			}
+			//disposableRenderableStates.add(RenderableState.SHOOTING);
 		}
 		
 		public RenderableState getNextDisposableRenderableState() {
