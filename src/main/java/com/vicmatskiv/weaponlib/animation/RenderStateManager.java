@@ -196,10 +196,10 @@ public class RenderStateManager<State> {
 	public RenderStateManager(State initialState, TransitionProvider<State> positioningManager) {
 		this.positioningManager = positioningManager;
 		this.positioningQueue = new LinkedList<>();
-		setState(initialState, false);
+		setState(initialState, false, true);
 	}
 	
-	public void setState(State newState, boolean animated) {
+	public void setState(State newState, boolean animated, boolean immediate) {
 		if(newState == null) {
 			throw new IllegalArgumentException("State cannot be null");
 		}
@@ -208,6 +208,10 @@ public class RenderStateManager<State> {
 			return;
 		}
 
+		if(immediate) {
+			positioningQueue.clear();
+		}
+		
 		if(animated) {
 			positioningQueue.add(new TransitionedPositioning(currentState, newState));
 		}

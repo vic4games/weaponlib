@@ -229,6 +229,8 @@ public class WeaponRenderer implements IItemRenderer, TransitionProvider<Rendera
 			currentState = RenderableState.RELOADING;
 		} else if(Weapon.isZoomed(itemStack)) {
 			currentState = RenderableState.ZOOMING;
+		} else if(weapon.getState(itemStack) == Weapon.STATE_READY) {
+			currentState = RenderableState.NORMAL;
 		} else {
 			WeaponInstanceStorage storage = weapon.getWeaponInstanceStorage(player);
 
@@ -243,33 +245,18 @@ public class WeaponRenderer implements IItemRenderer, TransitionProvider<Rendera
 			} else {
 				//System.out.println("Rendering state " + currentState);
 			}
-			
-//			if(hasRecoiled) {
-//				currentState = RenderableState.RECOILED;
-//				System.out.println("Rendering recoiled state...");
-//			} else if(storage != null && storage.getState() == WeaponInstanceState.SHOOTING) {
-//				System.out.println("Rendering shooting state...");
-//				storage.resetRecoiled();
-//				currentState = RenderableState.SHOOTING;
-//			} else {
-//				System.out.println("Rendering normal state...");
-//				currentState = RenderableState.NORMAL;
-//			}
+
 		}
 		
-		RenderableState effectiveCurrentState = currentState;
-//		if(currentState == RenderableState.SHOOTING || currentState == RenderableState.RECOILED) {
-//			effectiveCurrentState = RenderableState.NORMAL;
-//		} else {
-//			effectiveCurrentState = currentState;
-//		}
+		//System.out.println("Rendering state " + currentState);
+		
 		
 		RenderStateManager<RenderableState> stateManager = firstPersonStateManagers.get(player);
 		if(stateManager == null) {
-			stateManager = new RenderStateManager<>(effectiveCurrentState, this);
+			stateManager = new RenderStateManager<>(currentState, this);
 			firstPersonStateManagers.put(player, stateManager);
 		} else {
-			stateManager.setState(effectiveCurrentState, true);
+			stateManager.setState(currentState, true, currentState == RenderableState.SHOOTING);
 		}
 		return stateManager;
 	}

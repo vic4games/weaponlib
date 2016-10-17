@@ -38,7 +38,7 @@ class ClientWeaponTicker extends Thread {
 					if(currentWeapon != null && !safeGlobals.guiOpen.get() && !isInteracting()) {
 						currentWeapon.clientTryFire(player);
 					}
-				} else if(mouseWasPressed) {
+				} else /*if(mouseWasPressed)*/ {
 					mouseWasPressed = false;
 					if(currentWeapon != null) {
 						currentWeapon.clientTryStopFire(player);
