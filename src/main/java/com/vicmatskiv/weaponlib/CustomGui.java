@@ -5,9 +5,13 @@ import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.entity.Render;
+import net.minecraft.client.renderer.entity.RenderManager;
+import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.client.event.RenderHandEvent;
 
 import org.lwjgl.opengl.GL11;
 
@@ -21,6 +25,21 @@ public class CustomGui extends Gui {
 	}
 
 	private static final int BUFF_ICON_SIZE = 256;
+	
+	
+//	@SubscribeEvent
+//	public void renderHandEvent(RenderHandEvent par1RenderHandEvent)
+//	{
+//	    System.out.println("Rendering player hand");
+////	    GL11.glPushMatrix();
+////	    Render render = RenderManager.instance.getEntityRenderObject(this.mc.thePlayer);
+////        RenderPlayer renderplayer = (RenderPlayer)render;
+////        float f10 = 1.0F;
+////        //GL11.glScalef(f10, f10, f10);
+////        GL11.glTranslatef(-1f, -1f, -1f);
+////        renderplayer.renderFirstPersonArm(this.mc.thePlayer);
+////        GL11.glPopMatrix();
+//	}
 	
 	@SubscribeEvent
 	public void onRenderHud(RenderGameOverlayEvent.Pre event) {

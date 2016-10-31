@@ -1,5 +1,6 @@
 package com.vicmatskiv.weaponlib;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -13,22 +14,28 @@ import org.lwjgl.opengl.GL11;
 
 import com.vicmatskiv.weaponlib.Weapon.WeaponInstanceState;
 import com.vicmatskiv.weaponlib.Weapon.WeaponInstanceStorage;
-import com.vicmatskiv.weaponlib.animation.RenderStateManager;
+import com.vicmatskiv.weaponlib.animation.MultipartPositioning;
+import com.vicmatskiv.weaponlib.animation.MultipartPositioning.Positioner;
+import com.vicmatskiv.weaponlib.animation.MultipartRenderStateManager;
+import com.vicmatskiv.weaponlib.animation.MultipartTransition;
+import com.vicmatskiv.weaponlib.animation.MultipartTransitionProvider;
 import com.vicmatskiv.weaponlib.animation.Transition;
-import com.vicmatskiv.weaponlib.animation.TransitionProvider;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.AbstractClientPlayer;
 //import net.minecraft.client.entity.EntityClientPlayerMP;
 import net.minecraft.client.model.ModelBase;
+import net.minecraft.client.renderer.entity.RenderManager;
+import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.IItemRenderer;
 
 
-public class WeaponRenderer implements IItemRenderer, TransitionProvider<RenderableState> {
+public class WeaponRenderer implements IItemRenderer {
 	
 	private static final int DEFAULT_ANIMATION_DURATION = 250;
 	private static final int DEFAULT_RECOIL_ANIMATION_DURATION = 5;
@@ -44,6 +51,7 @@ public class WeaponRenderer implements IItemRenderer, TransitionProvider<Rendera
 		private Consumer<ItemStack> entityPositioning;
 		private Consumer<ItemStack> inventoryPositioning;
 		private BiConsumer<EntityPlayer, ItemStack> thirdPersonPositioning;
+		
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioning;
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningZooming;
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningRunning;
@@ -51,9 +59,25 @@ public class WeaponRenderer implements IItemRenderer, TransitionProvider<Rendera
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningRecoiled;
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningShooting;
 		
+		private BiConsumer<EntityPlayer, ItemStack> firstPersonLeftHandPositioning;
+		private BiConsumer<EntityPlayer, ItemStack> firstPersonLeftHandPositioningZooming;
+		private BiConsumer<EntityPlayer, ItemStack> firstPersonLeftHandPositioningRunning;
+		private BiConsumer<EntityPlayer, ItemStack> firstPersonLeftHandPositioningModifying;
+		private BiConsumer<EntityPlayer, ItemStack> firstPersonLeftHandPositioningRecoiled;
+		private BiConsumer<EntityPlayer, ItemStack> firstPersonLeftHandPositioningShooting;
+		
+		private BiConsumer<EntityPlayer, ItemStack> firstPersonRightHandPositioning;
+		private BiConsumer<EntityPlayer, ItemStack> firstPersonRightHandPositioningZooming;
+		private BiConsumer<EntityPlayer, ItemStack> firstPersonRightHandPositioningRunning;
+		private BiConsumer<EntityPlayer, ItemStack> firstPersonRightHandPositioningModifying;
+		private BiConsumer<EntityPlayer, ItemStack> firstPersonRightHandPositioningRecoiled;
+		private BiConsumer<EntityPlayer, ItemStack> firstPersonRightHandPositioningShooting;
+		
 		private Random random = new Random();
 		
 		private List<Transition> firstPersonPositioningReloading;
+		private List<Transition> firstPersonLeftHandPositioningReloading;
+		private List<Transition> firstPersonRightHandPositioningReloading;
 		private String modId;
 		
 		public Builder withModId(String modId) {
@@ -136,6 +160,73 @@ public class WeaponRenderer implements IItemRenderer, TransitionProvider<Rendera
 			this.firstPersonPositioningModifying = firstPersonPositioningModifying;
 			return this;
 		}
+		
+		
+		public Builder withFirstPersonHandPositioning(
+				BiConsumer<EntityPlayer, ItemStack> leftHand,
+				BiConsumer<EntityPlayer, ItemStack> rightHand) 
+		{
+			this.firstPersonLeftHandPositioning = leftHand;
+			this.firstPersonRightHandPositioning = rightHand;
+			return this;
+		}
+		
+		public Builder withFirstPersonHandPositioningRunning(
+				BiConsumer<EntityPlayer, ItemStack> leftHand,
+				BiConsumer<EntityPlayer, ItemStack> rightHand) 
+		{
+			this.firstPersonLeftHandPositioningRunning = leftHand;
+			this.firstPersonRightHandPositioningRunning = rightHand;
+			return this;
+		}
+		
+		public Builder withFirstPersonHandPositioningZooming(
+				BiConsumer<EntityPlayer, ItemStack> leftHand,
+				BiConsumer<EntityPlayer, ItemStack> rightHand)
+		{
+			this.firstPersonLeftHandPositioningZooming = leftHand;
+			this.firstPersonRightHandPositioningZooming = rightHand;
+			return this;
+		}
+		
+		public Builder withFirstPersonHandPositioningRecoiled(
+				BiConsumer<EntityPlayer, ItemStack> leftHand,
+				BiConsumer<EntityPlayer, ItemStack> rightHand)
+		{
+			this.firstPersonLeftHandPositioningRecoiled = leftHand;
+			this.firstPersonRightHandPositioningRecoiled = rightHand;
+			return this;
+		}
+		
+		public Builder withFirstPersonHandPositioningShooting(
+				BiConsumer<EntityPlayer, ItemStack> leftHand,
+				BiConsumer<EntityPlayer, ItemStack> rightHand)
+		{
+			this.firstPersonLeftHandPositioningShooting = leftHand;
+			this.firstPersonRightHandPositioningShooting = rightHand;
+			return this;
+		}
+		
+		@SafeVarargs
+		public final Builder withFirstPersonLeftHandPositioningReloading(Transition ...transitions) {
+			this.firstPersonLeftHandPositioningReloading = Arrays.asList(transitions);
+			return this;
+		}
+		
+		@SafeVarargs
+		public final Builder withFirstPersonRightHandPositioningReloading(Transition ...transitions) {
+			this.firstPersonRightHandPositioningReloading = Arrays.asList(transitions);
+			return this;
+		}
+		
+		public Builder withFirstPersonHandPositioningModifying(
+				BiConsumer<EntityPlayer, ItemStack> leftHand,
+				BiConsumer<EntityPlayer, ItemStack> rightHand)
+		{
+			this.firstPersonLeftHandPositioningModifying = leftHand;
+			this.firstPersonRightHandPositioningModifying = rightHand;
+			return this;
+		}
 
 		public WeaponRenderer build() {
 			if(modId == null) {
@@ -162,12 +253,24 @@ public class WeaponRenderer implements IItemRenderer, TransitionProvider<Rendera
 				};
 			}
 			
+			if(firstPersonPositioningZooming == null) {
+				firstPersonPositioningZooming = firstPersonPositioning;
+			}
+			
 			if(firstPersonPositioningReloading == null) {
 				firstPersonPositioningReloading = Collections.singletonList(new Transition(firstPersonPositioning, DEFAULT_ANIMATION_DURATION));
 			}
 			
 			if(firstPersonPositioningRecoiled == null) {
 				firstPersonPositioningRecoiled = firstPersonPositioning;
+			}
+			
+			if(firstPersonPositioningRunning == null) {
+				firstPersonPositioningRunning = firstPersonPositioning;
+			}
+			
+			if(firstPersonPositioningModifying == null) {
+				firstPersonPositioningModifying = firstPersonPositioning;
 			}
 			
 			if(firstPersonPositioningShooting == null) {
@@ -192,18 +295,81 @@ public class WeaponRenderer implements IItemRenderer, TransitionProvider<Rendera
 				};
 			}
 			
+			// Left hand positioning
+			
+			if(firstPersonLeftHandPositioning == null) {
+				firstPersonLeftHandPositioning = (player, itemStack) -> {};
+			}
+			
+			if(firstPersonLeftHandPositioningReloading == null) {
+				firstPersonLeftHandPositioningReloading = Collections.singletonList(new Transition(firstPersonLeftHandPositioning, DEFAULT_ANIMATION_DURATION));
+			}
+			
+			if(firstPersonLeftHandPositioningRecoiled == null) {
+				firstPersonLeftHandPositioningRecoiled = firstPersonLeftHandPositioning;
+			}
+			
+			if(firstPersonLeftHandPositioningShooting == null) {
+				firstPersonLeftHandPositioningShooting = firstPersonLeftHandPositioning;
+			}
+			
+			if(firstPersonLeftHandPositioningZooming == null) {
+				firstPersonLeftHandPositioningZooming = firstPersonLeftHandPositioning;
+			}
+			
+			if(firstPersonLeftHandPositioningRunning == null) {
+				firstPersonLeftHandPositioningRunning = firstPersonLeftHandPositioning;
+			}
+			
+			if(firstPersonLeftHandPositioningModifying == null) {
+				firstPersonLeftHandPositioningModifying = firstPersonLeftHandPositioning;
+			}
+			
+			// Right hand positioning
+			
+			if(firstPersonRightHandPositioning == null) {
+				firstPersonRightHandPositioning = (player, itemStack) -> {};
+			}
+			
+			if(firstPersonRightHandPositioningReloading == null) {
+				firstPersonRightHandPositioningReloading = Collections.singletonList(new Transition(firstPersonRightHandPositioning, DEFAULT_ANIMATION_DURATION));
+			}
+
+			if(firstPersonRightHandPositioningRecoiled == null) {
+				firstPersonRightHandPositioningRecoiled = firstPersonRightHandPositioning;
+			}
+
+			if(firstPersonRightHandPositioningShooting == null) {
+				firstPersonRightHandPositioningShooting = firstPersonRightHandPositioning;
+			}
+			
+			if(firstPersonRightHandPositioningZooming == null) {
+				firstPersonRightHandPositioningZooming = firstPersonRightHandPositioning;
+			}
+			
+			if(firstPersonRightHandPositioningRunning == null) {
+				firstPersonRightHandPositioningRunning = firstPersonRightHandPositioning;
+			}
+			
+			if(firstPersonRightHandPositioningModifying == null) {
+				firstPersonRightHandPositioningModifying = firstPersonRightHandPositioning;
+			}
+			
 			return new WeaponRenderer(this);
 		}
 	}
 	
 	private Builder builder;
 	
-	private Map<EntityPlayer, RenderStateManager<RenderableState>> firstPersonStateManagers;
+	private Map<EntityPlayer, MultipartRenderStateManager<RenderableState, Part, RenderContext>> firstPersonStateManagers;
+		
+	private MultipartTransitionProvider<RenderableState, Part, RenderContext> weaponTransitionProvider;
 	
 	private WeaponRenderer (Builder builder)
 	{
 		this.builder = builder;
 		this.firstPersonStateManagers = new HashMap<>();
+		this.weaponTransitionProvider = new WeaponPositionProvider();
 	}
 	
 	@Override
@@ -218,7 +384,7 @@ public class WeaponRenderer implements IItemRenderer, TransitionProvider<Rendera
 		return true;
 	}
 	
-	private RenderStateManager<RenderableState> getStateManager(EntityPlayer player, ItemStack itemStack) {
+	private MultipartRenderStateManager<RenderableState, Part, RenderContext> getStateManager(EntityPlayer player, ItemStack itemStack) {
 		RenderableState currentState = null;
 		Weapon weapon = (Weapon) itemStack.getItem();
 		if(weapon.getState(itemStack) == Weapon.STATE_MODIFYING && builder.firstPersonPositioningModifying != null) {
@@ -242,18 +408,13 @@ public class WeaponRenderer implements IItemRenderer, TransitionProvider<Rendera
 			}
 			if(currentState == null) {
 				currentState = RenderableState.NORMAL;
-			} else {
-				//System.out.println("Rendering state " + currentState);
 			}
-
 		}
 		
-		//System.out.println("Rendering state " + currentState);
 		
-		
-		RenderStateManager<RenderableState> stateManager = firstPersonStateManagers.get(player);
+		MultipartRenderStateManager<RenderableState, Part, RenderContext> stateManager = firstPersonStateManagers.get(player);
 		if(stateManager == null) {
-			stateManager = new RenderStateManager<>(currentState, this);
+			stateManager = new MultipartRenderStateManager<>(currentState, weaponTransitionProvider, Part.WEAPON);
 			firstPersonStateManagers.put(player, stateManager);
 		} else {
 			stateManager.setState(currentState, true, currentState == RenderableState.SHOOTING);
@@ -265,11 +426,13 @@ public class WeaponRenderer implements IItemRenderer, TransitionProvider<Rendera
 	@Override
 	public void renderItem(ItemRenderType type, ItemStack item, Object... data)
 	{
+	    
 		
 		GL11.glPushMatrix();
 		
 		GL11.glScaled(-1F, -1F, 1F);
 		EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+		RenderContext renderContext = new RenderContext(player, item);
 		switch (type)
 		{
 		case ENTITY:
@@ -283,15 +446,28 @@ public class WeaponRenderer implements IItemRenderer, TransitionProvider<Rendera
 			builder.thirdPersonPositioning.accept(player, item);
 			break;
 		case EQUIPPED_FIRST_PERSON:
-//			if(((Weapon) item.getItem()).getState(item) == Weapon.STATE_MODIFYING && builder.firstPersonPositioningModifying != null) {
-//				builder.firstPersonPositioningModifying.accept(player, item);
-//			} else if(player.isSprinting() && builder.firstPersonPositioningRunning != null) {
-//				builder.firstPersonPositioningRunning.accept(player, item);
-//			} else{
-//				builder.firstPersonPositioning.accept(player, item);
-//			}
-			RenderStateManager<RenderableState> stateManager = getStateManager(player, item);
-			stateManager.getPosition().accept(player, item);
+
+			MultipartRenderStateManager<RenderableState, Part, RenderContext> weaponRenderStateManager = getStateManager(player, item);
+			MultipartPositioning<Part, RenderContext> multipartPositioning = weaponRenderStateManager.getPositioning();
+			
+			Positioner<Part, RenderContext> positioner = multipartPositioning.getPositioner();
+			
+			positioner.position(Part.WEAPON, renderContext);
+			
+			
+			RenderPlayer render = (RenderPlayer) RenderManager.instance.getEntityRenderObject(player);
+			Minecraft.getMinecraft().getTextureManager().bindTexture(((AbstractClientPlayer) player).getLocationSkin());
+			
+			GL11.glPushMatrix();
+			positioner.position(Part.LEFT_HAND, renderContext);
+			render.renderFirstPersonArm(player);
+			GL11.glPopMatrix();
+			
+			GL11.glPushMatrix();
+			positioner.position(Part.RIGHT_HAND, renderContext);
+			render.renderFirstPersonArm(player);
+			GL11.glPopMatrix();
+	        
 			break;
 		default:
 		}
@@ -319,28 +495,102 @@ public class WeaponRenderer implements IItemRenderer, TransitionProvider<Rendera
 	   
 	}
 	
-
-	@Override
-	public List<Transition> getPositioning(RenderableState state) {
-		switch(state) {
-		case MODIFYING:
-			return Collections.singletonList(new Transition(builder.firstPersonPositioningModifying, DEFAULT_ANIMATION_DURATION));
-		case RUNNING:
-			return Collections.singletonList(new Transition(builder.firstPersonPositioningRunning, DEFAULT_ANIMATION_DURATION));
-		case RELOADING:
-			return builder.firstPersonPositioningReloading;
-		case RECOILED:
-			return Collections.singletonList(new Transition(builder.firstPersonPositioningRecoiled, DEFAULT_RECOIL_ANIMATION_DURATION));
-		case SHOOTING:
-			return Collections.singletonList(new Transition(builder.firstPersonPositioningShooting, DEFAULT_RECOIL_ANIMATION_DURATION));
-		case NORMAL:
-			return Collections.singletonList(new Transition(builder.firstPersonPositioning, DEFAULT_ANIMATION_DURATION));
-		case ZOOMING:
-			return Collections.singletonList(new Transition(
-					builder.firstPersonPositioningZooming != null ? builder.firstPersonPositioningZooming : builder.firstPersonPositioning, DEFAULT_ANIMATION_DURATION));
-		default:
-			break;
-		}
-		return null;
+	private enum Part {
+		WEAPON, RIGHT_HAND, LEFT_HAND
+	};
+	
+	private BiConsumer<Part, RenderContext> createWeaponPartPositionFunction(BiConsumer<EntityPlayer, ItemStack> weaponPositionFunction) {
+		return (part, context) -> weaponPositionFunction.accept(context.player, context.weapon);
 	}
+	
+	private class RenderContext {
+		EntityPlayer player;
+		ItemStack weapon;
+		public RenderContext(EntityPlayer player, ItemStack weapon) {
+			this.player = player;
+			this.weapon = weapon;
+		}
+	}
+	
+	private List<MultipartTransition<Part, RenderContext>> getComplexTransition(List<Transition> wt, List<Transition> lht, List<Transition> rht) {
+		List<MultipartTransition<Part, RenderContext>> result = new ArrayList<>();
+		for(int i = 0; i < wt.size(); i++) {
+			Transition p = wt.get(i);
+			Transition l = lht.get(i);
+			Transition r = rht.get(i);
+			
+			MultipartTransition<Part, RenderContext> t = new MultipartTransition<Part, RenderContext>(p.getDuration(), p.getPause())
+					.withPartPositionFunction(Part.WEAPON, createWeaponPartPositionFunction(p.getPositioning()))
+					.withPartPositionFunction(Part.LEFT_HAND, createWeaponPartPositionFunction(l.getPositioning()))
+					.withPartPositionFunction(Part.RIGHT_HAND, createWeaponPartPositionFunction(r.getPositioning()));
+			
+			result.add(t);
+		}
+		return result;
+	}
+	
+	private List<MultipartTransition<Part, RenderContext>> getSimpleTransition(
+			BiConsumer<EntityPlayer, ItemStack> w,
+			BiConsumer<EntityPlayer, ItemStack> lh,
+			BiConsumer<EntityPlayer, ItemStack> rh,
+			int duration) {
+		MultipartTransition<Part, RenderContext> mt = new MultipartTransition<Part, RenderContext>(duration, 0)
+				.withPartPositionFunction(Part.WEAPON, createWeaponPartPositionFunction(w))
+				.withPartPositionFunction(Part.LEFT_HAND, createWeaponPartPositionFunction(lh))
+				.withPartPositionFunction(Part.RIGHT_HAND, createWeaponPartPositionFunction(rh));
+		return Collections.singletonList(mt);
+	}
+	
+	private class WeaponPositionProvider implements MultipartTransitionProvider<RenderableState, Part, RenderContext> {
+
+		@Override
+		public List<MultipartTransition<Part, RenderContext>> getPositioning(RenderableState state) {
+			switch(state) {
+			case MODIFYING:
+				return getSimpleTransition(builder.firstPersonPositioningModifying,
+						builder.firstPersonLeftHandPositioningModifying,
+						builder.firstPersonRightHandPositioningModifying,
+						DEFAULT_ANIMATION_DURATION);
+			case RUNNING:
+				return getSimpleTransition(builder.firstPersonPositioningRunning,
+						builder.firstPersonLeftHandPositioningRunning,
+						builder.firstPersonRightHandPositioningRunning,
+						DEFAULT_ANIMATION_DURATION);
+			case RELOADING:
+				return getComplexTransition(builder.firstPersonPositioningReloading, 
+						builder.firstPersonLeftHandPositioningReloading,
+						builder.firstPersonRightHandPositioningReloading);
+			case RECOILED:
+				return getSimpleTransition(builder.firstPersonPositioningRecoiled, 
+						builder.firstPersonLeftHandPositioningRecoiled,
+						builder.firstPersonRightHandPositioningRecoiled,
+						DEFAULT_RECOIL_ANIMATION_DURATION);
+			case SHOOTING:
+				return getSimpleTransition(builder.firstPersonPositioningShooting, 
+						builder.firstPersonLeftHandPositioningShooting,
+						builder.firstPersonRightHandPositioningShooting,
+						DEFAULT_RECOIL_ANIMATION_DURATION); // TODO: is it really recoil duration
+			case NORMAL:
+				return getSimpleTransition(builder.firstPersonPositioning, 
+						builder.firstPersonLeftHandPositioning,
+						builder.firstPersonRightHandPositioning,
+						DEFAULT_ANIMATION_DURATION);
+			case ZOOMING:
+				return getSimpleTransition(builder.firstPersonPositioningZooming, 
+						builder.firstPersonLeftHandPositioningZooming,
+						builder.firstPersonRightHandPositioningZooming,
+						DEFAULT_ANIMATION_DURATION);
+			default:
+				break;
+			}
+			return null;
+		}
+
+		@Override
+		public List<Part> getParts() {
+			return Arrays.asList(Part.values());
+		}
+	}
+
+	
 }
