@@ -31,7 +31,7 @@ import net.minecraftforge.client.IItemRenderer;
 public class WeaponRenderer implements IItemRenderer, TransitionProvider<RenderableState> {
 	
 	private static final int DEFAULT_ANIMATION_DURATION = 250;
-	private static final int DEFAULT_RECOIL_ANIMATION_DURATION = 5;
+	private static final int DEFAULT_RECOIL_ANIMATION_DURATION = 100;
 
 	public static class Builder {
 		
