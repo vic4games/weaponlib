@@ -31,7 +31,7 @@ class ClientWeaponTicker extends Thread {
 			try {
 				Weapon currentWeapon = getCurrentWeapon();
 				EntityClientPlayerMP player = FMLClientHandler.instance().getClientPlayerEntity();
-				if(Mouse.isCreated() && Mouse.isButtonDown(1)) {
+				if(Mouse.isCreated() && Mouse.isButtonDown(0)) {
 					if(!mouseWasPressed) {
 						mouseWasPressed = true;
 					}
