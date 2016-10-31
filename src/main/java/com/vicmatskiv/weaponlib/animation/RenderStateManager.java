@@ -34,7 +34,7 @@ public class RenderStateManager<State> {
 
 		@Override
 		public void apply(EntityPlayer player, ItemStack itemStack) {
-			List<Transition> positioning = positioningManager.getPositioning(state);
+			List<Transition> positioning = transitionProvider.getPositioning(state);
 			positioning.get(positioning.size() - 1).getPositioning().accept(player, itemStack);
 		}
 		
@@ -58,8 +58,8 @@ public class RenderStateManager<State> {
 		private List<Transition> toPositioning;
 		
 		TransitionedPositioning(State fromState, State toState) {
-			fromPositioning = positioningManager.getPositioning(fromState);
-			toPositioning = positioningManager.getPositioning(toState);
+			fromPositioning = transitionProvider.getPositioning(fromState);
+			toPositioning = transitionProvider.getPositioning(toState);
 			
 			segmentCount = toPositioning.size();
 			
@@ -189,17 +189,17 @@ public class RenderStateManager<State> {
 	
 	private State currentState;
 	
-	private TransitionProvider<State> positioningManager;
+	private TransitionProvider<State> transitionProvider;
 	
 	private Deque<Positioning> positioningQueue;
 
-	public RenderStateManager(State initialState, TransitionProvider<State> positioningManager) {
-		this.positioningManager = positioningManager;
+	public RenderStateManager(State initialState, TransitionProvider<State> transitionProvider) {
+		this.transitionProvider = transitionProvider;
 		this.positioningQueue = new LinkedList<>();
-		setState(initialState, false);
+		setState(initialState, false, true);
 	}
 	
-	public void setState(State newState, boolean animated) {
+	public void setState(State newState, boolean animated, boolean immediate) {
 		if(newState == null) {
 			throw new IllegalArgumentException("State cannot be null");
 		}
@@ -208,6 +208,10 @@ public class RenderStateManager<State> {
 			return;
 		}
 
+		if(immediate) {
+			positioningQueue.clear();
+		}
+		
 		if(animated) {
 			positioningQueue.add(new TransitionedPositioning(currentState, newState));
 		}

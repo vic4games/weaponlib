@@ -815,6 +815,7 @@ public class Weapon extends Item {
 	}
 	
 	private boolean isSilencerOn(ItemStack itemStack) {
+		if(itemStack.stackTagCompound == null) return false;
 		int[] activeAttachmentsIds = ensureActiveAttachments(itemStack);
 		int activeAttachmentIdForThisCategory = activeAttachmentsIds[AttachmentCategory.SILENCER.ordinal()];
 		return activeAttachmentIdForThisCategory > 0;
@@ -985,7 +986,10 @@ public class Weapon extends Item {
 				&& storage.currentAmmo.getAndAccumulate(0, (current, ignore) -> current > 0 ? current - 1 : 0) > 0) {
 			storage.setState(WeaponInstanceState.SHOOTING);
 			modContext.getChannel().sendToServer(new TryFireMessage(true));
-			modContext.runSyncTick(() -> player.playSound(isSilencerOn(player.getHeldItem()) ? builder.silencedShootSound : builder.shootSound, 1F, 1F));
+			ItemStack heldItem = player.getHeldItem();
+			modContext.runSyncTick(() -> {
+				player.playSound(isSilencerOn(heldItem) ? builder.silencedShootSound : builder.shootSound, 1F, 1F);
+			});
 			
 			player.rotationPitch = player.rotationPitch - storage.getRecoil();						
 			float rotationYawFactor = -1.0f + random.nextFloat() * 2.0f;
@@ -998,6 +1002,8 @@ public class Weapon extends Item {
 //				{System.out.println("tryFire, current recoil: " + current); return current >= 0 ? current + 1 : 1;});
 			//storage.addRecoilableShot();
 			storage.addShot();
+		} else {
+			storage.setState(WeaponInstanceState.READY);
 		}
 	}
 
@@ -1024,6 +1030,7 @@ public class Weapon extends Item {
 
 	public void clientTryStopFire(EntityPlayer player) {
 		//EntityPlayer player = FMLClientHandler.instance().getClientPlayerEntity();
+		//System.out.println("Trying to stop fire");
 		WeaponInstanceStorage storage = getWeaponInstanceStorage(player);
 		if(storage == null) return;
 		//System.out.println("Trying to stop fire");
@@ -1036,6 +1043,7 @@ public class Weapon extends Item {
 				storage.setState(WeaponInstanceState.PAUSED);
 				//System.out.println("Timeout not passed, waiting");
 			}
+			//System.out.println("Weapon state set to " + storage.getState());
 			modContext.getChannel().sendToServer(new TryFireMessage(false));
 		}
 	}
@@ -1097,6 +1105,8 @@ public class Weapon extends Item {
 //				storage.recoiled.set(true);
 //				System.out.println("Recoiling...");
 //			}
+			
+			//System.out.println("Ticking weapon state " + storage.getState());
 			
 			if(storage.getState() != WeaponInstanceState.SHOOTING && System.currentTimeMillis() - storage.lastShotFiredAt > 50) {
 				// When shooting stops, reset recoil counter to 0 after a timeout
