@@ -977,9 +977,9 @@ public class Weapon extends Item {
 //				{System.out.println("tryFire, current recoil: " + current); return current >= 0 ? current + 1 : 1;});
 			//storage.addRecoilableShot();
 			storage.addShot();
-		} else {
+		} /*else {
 			storage.setState(WeaponInstanceState.READY);
-		}
+		}*/
 	}
 
 
