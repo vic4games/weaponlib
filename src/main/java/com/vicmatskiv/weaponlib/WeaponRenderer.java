@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import org.lwjgl.opengl.GL11;
 
@@ -302,7 +303,7 @@ public class WeaponRenderer implements IItemRenderer {
 			}
 			
 			if(firstPersonLeftHandPositioningReloading == null) {
-				firstPersonLeftHandPositioningReloading = Collections.singletonList(new Transition(firstPersonLeftHandPositioning, DEFAULT_ANIMATION_DURATION));
+				firstPersonLeftHandPositioningReloading = firstPersonPositioningReloading.stream().map(t -> new Transition((p, i) -> {}, 0)).collect(Collectors.toList());
 			}
 			
 			if(firstPersonLeftHandPositioningRecoiled == null) {
@@ -332,7 +333,8 @@ public class WeaponRenderer implements IItemRenderer {
 			}
 			
 			if(firstPersonRightHandPositioningReloading == null) {
-				firstPersonRightHandPositioningReloading = Collections.singletonList(new Transition(firstPersonRightHandPositioning, DEFAULT_ANIMATION_DURATION));
+				//firstPersonRightHandPositioningReloading = Collections.singletonList(new Transition(firstPersonRightHandPositioning, DEFAULT_ANIMATION_DURATION));
+				firstPersonRightHandPositioningReloading = firstPersonPositioningReloading.stream().map(t -> new Transition((p, i) -> {}, 0)).collect(Collectors.toList());
 			}
 
 			if(firstPersonRightHandPositioningRecoiled == null) {
