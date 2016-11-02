@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 
 import org.lwjgl.opengl.GL11;
 
-import com.vicmatskiv.weaponlib.Weapon.WeaponInstanceState;
 import com.vicmatskiv.weaponlib.Weapon.WeaponInstanceStorage;
 import com.vicmatskiv.weaponlib.animation.MultipartPositioning;
 import com.vicmatskiv.weaponlib.animation.MultipartPositioning.Positioner;
@@ -278,7 +277,7 @@ public class WeaponRenderer implements IItemRenderer {
 				//firstPersonPositioningShooting = firstPersonPositioning;
 				
 				firstPersonPositioningShooting = (player, itemStack) -> {
-					firstPersonPositioning.accept(player, itemStack);
+					//firstPersonPositioning.accept(player, itemStack);
 
 					float xRandomOffset = 0.05f * (random.nextFloat() - 0.5f) * 2;
 					float yRandomOffset = 0.05f * (random.nextFloat() - 0.5f) * 2;
@@ -386,7 +385,20 @@ public class WeaponRenderer implements IItemRenderer {
 		return true;
 	}
 	
-	private MultipartRenderStateManager<RenderableState, Part, RenderContext> getStateManager(EntityPlayer player, ItemStack itemStack) {
+	private static class StateManagerTuple {
+		MultipartRenderStateManager<RenderableState, Part, RenderContext> stateManager;
+		boolean randomized;
+		public StateManagerTuple(MultipartRenderStateManager<RenderableState, Part, RenderContext> stateManager,
+				boolean randomized) {
+			super();
+			this.stateManager = stateManager;
+			this.randomized = randomized;
+		}
+		
+	}
+	
+	private StateManagerTuple getStateManager(EntityPlayer player, ItemStack itemStack) {
+		boolean randomized = false;
 		RenderableState currentState = null;
 		Weapon weapon = (Weapon) itemStack.getItem();
 		if(weapon.getState(itemStack) == Weapon.STATE_MODIFYING && builder.firstPersonPositioningModifying != null) {
@@ -404,9 +416,13 @@ public class WeaponRenderer implements IItemRenderer {
 
 			if(storage != null) {
 				currentState = storage.getNextDisposableRenderableState();
-				if(currentState == null && storage.getState() == WeaponInstanceState.SHOOTING) {
-					currentState = RenderableState.SHOOTING;
+				if(currentState == RenderableState.SHOOTING) {
+					currentState = RenderableState.NORMAL;
+					randomized = true;
 				}
+//				if(currentState == null && storage.getState() == WeaponInstanceState.SHOOTING) {
+//					currentState = RenderableState.SHOOTING;
+//				}
 			}
 			if(currentState == null) {
 				currentState = RenderableState.NORMAL;
@@ -421,7 +437,8 @@ public class WeaponRenderer implements IItemRenderer {
 		} else {
 			stateManager.setState(currentState, true, currentState == RenderableState.SHOOTING);
 		}
-		return stateManager;
+		
+		return new StateManagerTuple(stateManager, randomized);
 	}
 	
 	@SideOnly(Side.CLIENT)
@@ -449,13 +466,16 @@ public class WeaponRenderer implements IItemRenderer {
 			break;
 		case EQUIPPED_FIRST_PERSON:
 
-			MultipartRenderStateManager<RenderableState, Part, RenderContext> weaponRenderStateManager = getStateManager(player, item);
-			MultipartPositioning<Part, RenderContext> multipartPositioning = weaponRenderStateManager.getPositioning();
+			StateManagerTuple tuple = getStateManager(player, item);
+			MultipartPositioning<Part, RenderContext> multipartPositioning = tuple.stateManager.getPositioning();
 			
 			Positioner<Part, RenderContext> positioner = multipartPositioning.getPositioner();
 			
-			positioner.position(Part.WEAPON, renderContext);
+			if(tuple.randomized) {
+				builder.firstPersonPositioningShooting.accept(player, item);
+			}
 			
+			positioner.position(Part.WEAPON, renderContext);
 			
 			RenderPlayer render = (RenderPlayer) RenderManager.instance.getEntityRenderObject(player);
 			Minecraft.getMinecraft().getTextureManager().bindTexture(((AbstractClientPlayer) player).getLocationSkin());
