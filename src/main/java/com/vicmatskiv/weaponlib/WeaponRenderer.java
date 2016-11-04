@@ -19,6 +19,7 @@ import com.vicmatskiv.weaponlib.animation.MultipartPositioning.Positioner;
 import com.vicmatskiv.weaponlib.animation.MultipartRenderStateManager;
 import com.vicmatskiv.weaponlib.animation.MultipartTransition;
 import com.vicmatskiv.weaponlib.animation.MultipartTransitionProvider;
+import com.vicmatskiv.weaponlib.animation.Randomizer;
 import com.vicmatskiv.weaponlib.animation.Transition;
 
 import cpw.mods.fml.relauncher.Side;
@@ -366,6 +367,8 @@ public class WeaponRenderer implements IItemRenderer {
 		
 	private MultipartTransitionProvider<RenderableState, Part, RenderContext> weaponTransitionProvider;
 	
+	private Randomizer randomizer = new Randomizer();
+	
 	private WeaponRenderer (Builder builder)
 	{
 		this.builder = builder;
@@ -466,14 +469,23 @@ public class WeaponRenderer implements IItemRenderer {
 			break;
 		case EQUIPPED_FIRST_PERSON:
 
+			
 			StateManagerTuple tuple = getStateManager(player, item);
 			MultipartPositioning<Part, RenderContext> multipartPositioning = tuple.stateManager.getPositioning();
 			
 			Positioner<Part, RenderContext> positioner = multipartPositioning.getPositioner();
 			
 			if(tuple.randomized) {
-				builder.firstPersonPositioningShooting.accept(player, item);
+				randomizer.setInterval(50);
+			} else {
+				randomizer.setInterval(3000);
 			}
+			
+			randomizer.update();
+			
+//			if(tuple.randomized) {
+//				builder.firstPersonPositioningShooting.accept(player, item);
+//			}
 			
 			positioner.position(Part.WEAPON, renderContext);
 			
