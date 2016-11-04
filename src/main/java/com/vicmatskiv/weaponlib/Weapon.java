@@ -843,6 +843,18 @@ public class Weapon extends Item {
 	
 	private Map<UUID, WeaponInstanceStorage> weaponInstanceStorages = new IdentityHashMap<>();
 	
+	private static class ExpirableRenderableState {
+		private RenderableState state;
+		private long expiresAt;
+		private boolean singleUse;
+
+		public ExpirableRenderableState(RenderableState state, long expiresAt, boolean singleUse) {
+			this.state = state;
+			this.expiresAt = expiresAt;
+			this.singleUse = singleUse;
+		}
+	}
+	
 	static class WeaponInstanceStorage {
 		private AtomicInteger currentAmmo;
 		private AtomicLong reloadingStopsAt;
@@ -852,22 +864,26 @@ public class Weapon extends Item {
 		private int shotsInternal;
 		private float zoom;
 		private AtomicDouble recoil;
+		private float fireRate;
 		
 		private AtomicReference<WeaponInstanceState> state;
 		
 		private int recoilableShotCount;
 		private boolean recoiledForCurrentShot;
+		private boolean singleUse;
 		
-		private Queue<RenderableState> disposableRenderableStates = new ArrayBlockingQueue<RenderableState>(100);
+		private Queue<ExpirableRenderableState> disposableRenderableStates = new ArrayBlockingQueue<>(100);
 
-		public WeaponInstanceStorage(WeaponInstanceState state, int currentAmmo, float zoom, float recoil) {
+		public WeaponInstanceStorage(WeaponInstanceState state, int currentAmmo, float zoom, float recoil, float fireRate, boolean singleUse) {
 			this.currentAmmo = new AtomicInteger(currentAmmo);
 			this.reloadingStopsAt = new AtomicLong();
 			this.recoil = new AtomicDouble(recoil);
 			this.state = new AtomicReference<>(state);
 			//this.recoiled = new AtomicInteger();
 			this.zoom = zoom;
+			this.fireRate = fireRate;
 			//this.recoil = recoil;
+			this.singleUse = singleUse;
 		}
 
 		public WeaponInstanceState getState() {
@@ -942,13 +958,30 @@ public class Weapon extends Item {
 		
 		public void addShot() {
 			if(shotsInternal++ == 0) {
-				disposableRenderableStates.add(RenderableState.RECOILED);
+				//disposableRenderableStates.add(RenderableState.RECOILED);
 			}
 			//disposableRenderableStates.add(RenderableState.SHOOTING);
+			disposableRenderableStates.add(new ExpirableRenderableState(
+					RenderableState.SHOOTING, System.currentTimeMillis() + (long) (50f / fireRate), singleUse));
 		}
 		
+		/**
+		 * Retrives next available valid state. Expired states are discarded internally.
+		 * Single use states are discarded after the first use.
+		 * 
+		 * @return
+		 */
 		public RenderableState getNextDisposableRenderableState() {
-			return disposableRenderableStates.poll();
+			ExpirableRenderableState ers;
+			while((ers = disposableRenderableStates.peek()) != null) {
+				if(System.currentTimeMillis() <= ers.expiresAt) {
+					if(ers.singleUse) disposableRenderableStates.poll();
+					break;
+				} else {
+					disposableRenderableStates.poll();
+				}
+			}
+			return ers != null ? ers.state : RenderableState.NORMAL;
 		}
 		
 		public int getShots() {
@@ -959,9 +992,9 @@ public class Weapon extends Item {
 			shotsInternal = 0;
 		}
 		
-		public void resetDisposableRenderableQueue() {
-			disposableRenderableStates.clear();
-		}
+//		public void resetDisposableRenderableQueue() {
+//			disposableRenderableStates.clear();
+//		}
 	}
 	
 	protected WeaponInstanceStorage getWeaponInstanceStorage(EntityPlayer player) {
@@ -970,7 +1003,8 @@ public class Weapon extends Item {
 		return weaponInstanceStorages.computeIfAbsent(player.getPersistentID(), (w) ->
 			player.getHeldItem().stackTagCompound != null ?
 					new WeaponInstanceStorage(WeaponInstanceState.values()[player.getHeldItem().stackTagCompound.getInteger(PERSISTENT_STATE_TAG)], 
-					player.getHeldItem().stackTagCompound.getInteger(AMMO_TAG), builder.zoom, player.getHeldItem().stackTagCompound.getFloat(RECOIL_TAG)) : null);
+					player.getHeldItem().stackTagCompound.getInteger(AMMO_TAG), builder.zoom, 
+					player.getHeldItem().stackTagCompound.getFloat(RECOIL_TAG), builder.fireRate, builder.maxShots == 1) : null);
 	}
 
 	public void clientTryFire(EntityPlayer player) {
@@ -1033,7 +1067,6 @@ public class Weapon extends Item {
 		//System.out.println("Trying to stop fire");
 		WeaponInstanceStorage storage = getWeaponInstanceStorage(player);
 		if(storage == null) return;
-		//System.out.println("Trying to stop fire");
 		if(storage.getState() == WeaponInstanceState.SHOOTING) {
 			storage.resetShots();
 			if(storage.lastShotFiredAt + builder.pumpTimeoutMilliseconds <= System.currentTimeMillis()) {
@@ -1111,7 +1144,7 @@ public class Weapon extends Item {
 			if(storage.getState() != WeaponInstanceState.SHOOTING && System.currentTimeMillis() - storage.lastShotFiredAt > 50) {
 				// When shooting stops, reset recoil counter to 0 after a timeout
 				//storage.recoiled.set(0);
-				storage.resetDisposableRenderableQueue();
+				//storage.resetDisposableRenderableQueue();
 			}
 			
 			if(storage.getState() == WeaponInstanceState.RELOAD_REQUESTED || storage.getState() == WeaponInstanceState.RELOAD_CONFIRMED) {
@@ -1126,6 +1159,8 @@ public class Weapon extends Item {
 				storage.setState(WeaponInstanceState.READY);
 			}
 		}
+		
+		//System.out.println("Storage state: " + storage.getState());
 	}
 
 	public void switchClientAttachmentSelectionMode(ItemStack itemStack, EntityPlayer player) {

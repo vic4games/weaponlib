@@ -27,19 +27,24 @@ class ClientWeaponTicker extends Thread {
 	
 	public void run() {
 		
+		int currentItemIndex = safeGlobals.currentItemIndex.get();
 		while(running.get()) {
 			try {
 				Weapon currentWeapon = getCurrentWeapon();
 				EntityClientPlayerMP player = FMLClientHandler.instance().getClientPlayerEntity();
+
 				if(Mouse.isCreated() && Mouse.isButtonDown(0)) {
+					// Capture the current item index
+					currentItemIndex = safeGlobals.currentItemIndex.get();
 					if(!mouseWasPressed) {
 						mouseWasPressed = true;
 					}
 					if(currentWeapon != null && !safeGlobals.guiOpen.get() && !isInteracting()) {
 						currentWeapon.clientTryFire(player);
 					}
-				} else /*if(mouseWasPressed)*/ {
+				} else if(mouseWasPressed || currentItemIndex != safeGlobals.currentItemIndex.get()) { // if switched item while pressing mouse down and then released
 					mouseWasPressed = false;
+					currentItemIndex = safeGlobals.currentItemIndex.get();
 					if(currentWeapon != null) {
 						currentWeapon.clientTryStopFire(player);
 					}

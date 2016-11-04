@@ -28,6 +28,9 @@ public class ClientEventHandler {
 		} else if(event.phase == Phase.END) {
 			mainLoopLock.unlock();
 			safeGlobals.objectMouseOver.set(Minecraft.getMinecraft().objectMouseOver);
+			if(Minecraft.getMinecraft().thePlayer != null) {
+				safeGlobals.currentItemIndex.set(Minecraft.getMinecraft().thePlayer.inventory.currentItem);
+			}
 		}
 	}
 
