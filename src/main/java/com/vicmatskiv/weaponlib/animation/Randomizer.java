@@ -23,6 +23,31 @@ public class Randomizer {
 		reset();
 	}
 	
+	public void setIntervalAndAmplitude(long interval, float amplitude) {
+		boolean reset = false;
+		if(interval != this.interval) {
+			if(interval == 0) {
+				// Stop
+				afterMatrix = beforeMatrix = currentMatrix = getMatrixForPositioning(() -> {});
+			} else {
+				reset = true;
+			}
+		}
+		if(amplitude != this.amplitude) {
+			if(amplitude == 0) {
+				// Stop
+				afterMatrix = beforeMatrix = currentMatrix = getMatrixForPositioning(() -> {});
+			} else {
+				reset = true;
+			}
+		}
+		if(reset) {
+			reset();
+		}
+		this.interval = interval;
+		this.amplitude = amplitude;
+	}
+	
 	public void setInterval(long interval) {
 		
 		if(interval != this.interval) {

@@ -38,6 +38,11 @@ import net.minecraftforge.client.IItemRenderer;
 
 public class WeaponRenderer implements IItemRenderer {
 	
+	private static final int DEFAULT_RANDOMIZING_INTERVAL = 3000;
+	private static final int DEFAULT_RANDOMIZING_FIRING_INTERVAL = 50;
+	private static final float DEFAULT_ZOOM_AMPLITUDE = 0.01f;
+	private static final float DEFAULT_RANDOMIZING_AMPLITUDE = 0.06f;
+	
 	private static final int DEFAULT_ANIMATION_DURATION = 250;
 	private static final int DEFAULT_RECOIL_ANIMATION_DURATION = 100;
 
@@ -390,18 +395,20 @@ public class WeaponRenderer implements IItemRenderer {
 	
 	private static class StateManagerTuple {
 		MultipartRenderStateManager<RenderableState, Part, RenderContext> stateManager;
-		boolean randomized;
+		int randomizeInterval;
+		float amplitude = 0.04f;
 		public StateManagerTuple(MultipartRenderStateManager<RenderableState, Part, RenderContext> stateManager,
-				boolean randomized) {
-			super();
+				int randomizeInterval, float amplitude) {
 			this.stateManager = stateManager;
-			this.randomized = randomized;
+			this.randomizeInterval = randomizeInterval;
+			this.amplitude = amplitude;
 		}
 		
 	}
 	
 	private StateManagerTuple getStateManager(EntityPlayer player, ItemStack itemStack) {
-		boolean randomized = false;
+		int randomizeInterval = DEFAULT_RANDOMIZING_INTERVAL;
+		float amplitude = DEFAULT_RANDOMIZING_AMPLITUDE;
 		RenderableState currentState = null;
 		Weapon weapon = (Weapon) itemStack.getItem();
 		if(weapon.getState(itemStack) == Weapon.STATE_MODIFYING && builder.firstPersonPositioningModifying != null) {
@@ -411,6 +418,17 @@ public class WeaponRenderer implements IItemRenderer {
 		} else if(Weapon.isReloadingConfirmed(player, itemStack)) {
 			currentState = RenderableState.RELOADING;
 		} else if(Weapon.isZoomed(itemStack)) {
+			WeaponInstanceStorage storage = weapon.getWeaponInstanceStorage(player);
+
+			if(storage != null) {
+				currentState = storage.getNextDisposableRenderableState();
+				if(currentState == RenderableState.SHOOTING) {
+					currentState = RenderableState.ZOOMING;
+					randomizeInterval = DEFAULT_RANDOMIZING_FIRING_INTERVAL;
+				}
+				
+				amplitude = DEFAULT_ZOOM_AMPLITUDE;
+			}
 			currentState = RenderableState.ZOOMING;
 		} else if(weapon.getState(itemStack) == Weapon.STATE_READY) {
 			currentState = RenderableState.NORMAL;
@@ -421,11 +439,9 @@ public class WeaponRenderer implements IItemRenderer {
 				currentState = storage.getNextDisposableRenderableState();
 				if(currentState == RenderableState.SHOOTING) {
 					currentState = RenderableState.NORMAL;
-					randomized = true;
+					randomizeInterval = DEFAULT_RANDOMIZING_FIRING_INTERVAL;
 				}
-//				if(currentState == null && storage.getState() == WeaponInstanceState.SHOOTING) {
-//					currentState = RenderableState.SHOOTING;
-//				}
+
 			}
 			if(currentState == null) {
 				currentState = RenderableState.NORMAL;
@@ -441,7 +457,7 @@ public class WeaponRenderer implements IItemRenderer {
 			stateManager.setState(currentState, true, currentState == RenderableState.SHOOTING);
 		}
 		
-		return new StateManagerTuple(stateManager, randomized);
+		return new StateManagerTuple(stateManager, randomizeInterval, amplitude);
 	}
 	
 	@SideOnly(Side.CLIENT)
@@ -475,11 +491,7 @@ public class WeaponRenderer implements IItemRenderer {
 			
 			Positioner<Part, RenderContext> positioner = multipartPositioning.getPositioner();
 			
-			if(tuple.randomized) {
-				randomizer.setInterval(50);
-			} else {
-				randomizer.setInterval(3000);
-			}
+			randomizer.setIntervalAndAmplitude(tuple.randomizeInterval, tuple.amplitude);
 			
 			randomizer.update();
 			
