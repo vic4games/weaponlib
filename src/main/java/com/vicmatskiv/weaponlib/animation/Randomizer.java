@@ -7,7 +7,7 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Matrix4f;
 
-public class Randomizer {
+final class Randomizer {
 	
 	private Random random = new Random();
 	
@@ -15,76 +15,55 @@ public class Randomizer {
 	private Matrix4f afterMatrix;
 	private Matrix4f currentMatrix;
 	private long startTime;
-	private long interval = 3000;
+	private float rate = 0.25f;
 	private float amplitude = 0.04f;
+	
+	// Valid bias range: from 
+	private float xbias = 0f;
+	private float ybias = 0f;
+	private float zbias = 0f;
 	
 	public Randomizer() {
 		this.currentMatrix = getMatrixForPositioning(() -> {});
-		reset();
+		next();
 	}
 	
-	public void setIntervalAndAmplitude(long interval, float amplitude) {
-		boolean reset = false;
-		if(interval != this.interval) {
-			if(interval == 0) {
-				// Stop
-				afterMatrix = beforeMatrix = currentMatrix = getMatrixForPositioning(() -> {});
-			} else {
-				reset = true;
-			}
+	private boolean reconfigure(float rate, float amplitude) {
+		if(rate == this.rate && amplitude == this.amplitude) {
+			return false;
 		}
-		if(amplitude != this.amplitude) {
-			if(amplitude == 0) {
-				// Stop
-				afterMatrix = beforeMatrix = currentMatrix = getMatrixForPositioning(() -> {});
-			} else {
-				reset = true;
-			}
-		}
-		if(reset) {
-			reset();
-		}
-		this.interval = interval;
-		this.amplitude = amplitude;
-	}
-	
-	public void setInterval(long interval) {
 		
-		if(interval != this.interval) {
-			if(interval == 0) {
+		boolean reconfigured = false;
+		if(rate != this.rate || amplitude != this.amplitude) {
+			if(rate == 0f && amplitude == 0f) {
 				// Stop
 				afterMatrix = beforeMatrix = currentMatrix = getMatrixForPositioning(() -> {});
 			} else {
-				reset();
+				reconfigured = true;
 			}
 		}
-		this.interval = interval;
-	}
-	
-	public void setAmplitude(float amplitude) {
-		if(amplitude != this.amplitude) {
-			if(amplitude == 0) {
-				// Stop
-				afterMatrix = beforeMatrix = currentMatrix = getMatrixForPositioning(() -> {});
-			} else {
-				reset();
-			}
-		}
+		
+		this.rate = rate;
 		this.amplitude = amplitude;
+		
+		if(reconfigured) {
+			next();
+		}
+		
+		return reconfigured;
 	}
 	
-	public void reset() {
+	private void next() {
 		beforeMatrix = currentMatrix;
-		afterMatrix = createRandom();
+		afterMatrix = createRandomMatrix();
 		startTime = System.currentTimeMillis();
 	}
 
-	private Matrix4f createRandom() {
+	private Matrix4f createRandomMatrix() {
 		Runnable c = () -> {
-
-			float xRandomOffset = amplitude * (random.nextFloat() - 0.5f) * 2;
-			float yRandomOffset = amplitude * (random.nextFloat() - 0.5f) * 2;
-			float zRandomOffset = amplitude * (random.nextFloat() - 0.5f) * 2;
+			float xRandomOffset = amplitude * ((random.nextFloat() - 0.5f) * 2 + xbias);
+			float yRandomOffset = amplitude * ((random.nextFloat() - 0.5f) * 2 + ybias);
+			float zRandomOffset = amplitude * ((random.nextFloat() - 0.5f) * 2 + zbias);
 			GL11.glTranslatef(xRandomOffset, yRandomOffset, zRandomOffset);
 		};
 		return getMatrixForPositioning(c);
@@ -104,17 +83,21 @@ public class Randomizer {
 		return matrix;
 	}
 	
-	public void update() {
+	public void update(float rate, float amplitude) {
+		reconfigure(rate, amplitude);
 		
-		if(interval == 0 || amplitude == 0) {
+		if(rate == 0f || amplitude == 0f) {
 			return;
 		}
 		
 		long currentTime = System.currentTimeMillis();
 		
-		float progress = (float)(currentTime - startTime) / interval;
+		// long interval = (long) (1000f / rate);
+		// E.g: current time 10, start time 0, rate 25 ( 1 iteration per 40ms), progress = (10 - 0) * 25 / 1000 = 0.25
+		float progress = (currentTime - startTime) * rate / 1000;
+				
 		if(progress >= 1) {
-			reset();
+			next();
 			progress = 0f;
 		}
 		

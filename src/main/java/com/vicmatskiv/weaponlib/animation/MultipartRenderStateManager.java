@@ -15,6 +15,7 @@ import org.lwjgl.util.vector.Matrix4f;
 
 public class MultipartRenderStateManager<State, Part, Context> {
 
+	private Randomizer randomizer;
 	
 	private class StaticPositioning implements MultipartPositioning<Part, Context> {
 		
@@ -23,12 +24,6 @@ public class MultipartRenderStateManager<State, Part, Context> {
 		public StaticPositioning(State state) {
 			this.state = state;
 		}
-
-//		@Override
-//		public void position(Part part, Context context) {
-//			List<MultipartTransition<Part, Context>> transitions = transitionProvider.getPositioning(state);
-//			transitions.get(transitions.size() - 1).position(part, context);
-//		}
 		
 		@Override
 		public boolean isExpired(Queue<MultipartPositioning<Part, Context>> positioningQueue) {
@@ -38,7 +33,18 @@ public class MultipartRenderStateManager<State, Part, Context> {
 		@Override
 		public Positioner<Part, Context> getPositioner() {
 			List<MultipartTransition<Part, Context>> transitions = transitionProvider.getPositioning(state);
-			return (p, c) -> transitions.get(transitions.size() - 1).position(p, c);
+			return new Positioner<Part, Context>() {
+
+				@Override
+				public void position(Part part, Context context) {
+					transitions.get(transitions.size() - 1).position(part, context);
+				}
+				
+				@Override
+				public void randomize(float rate, float amplitude) {
+					randomizer.update(rate, amplitude);
+				}
+			};
 		}
 	}
 	
@@ -64,7 +70,6 @@ public class MultipartRenderStateManager<State, Part, Context> {
 		TransitionedPositioning(State fromState, State toState) {
 			fromPositioning = transitionProvider.getPositioning(fromState);
 			toPositioning = transitionProvider.getPositioning(toState);
-			
 			segmentCount = toPositioning.size();
 		}
 		
@@ -89,44 +94,55 @@ public class MultipartRenderStateManager<State, Part, Context> {
 			
 			long currentTime = System.currentTimeMillis();
 			long currentDuration = toPositioning.get(currentIndex).getDuration();
-			
 			long currentPause = toPositioning.get(currentIndex).getPause();
-			
 			
 			if(currentStartTime == 0) {
 				currentStartTime = currentTime;
-
-			} else if(/*part == mainPart && */ currentTime > currentStartTime + currentDuration + currentPause) {
+			} else if(currentTime > currentStartTime + currentDuration + currentPause) {
 				currentIndex++;
 				currentStartTime = currentTime;
 			}
 			
 			long currentOffset = currentTime - currentStartTime;
 			
-			
 			if(currentIndex >= segmentCount) {
-//				applyOnce(part, context, partData.matrices.get(currentIndex - 1), 
-//						partData.matrices.get(currentIndex), 1f);
 				expired = true;
-				return (p, c) -> {
-					PartData partData = getPartData(p, c);
-					applyOnce(p, c, partData.matrices.get(currentIndex - 1), partData.matrices.get(currentIndex), 1f);
+				return new Positioner<Part, Context>() {
+
+					@Override
+					public void position(Part part, Context context) {
+						PartData partData = getPartData(part, context);
+						applyOnce(part, context, partData.matrices.get(currentIndex - 1), partData.matrices.get(currentIndex), 1f);
+					}
+					
+					@Override
+					public void randomize(float rate, float amplitude) {
+						randomizer.update(0f, 0f);
+					}
 				};
 			}
 
 			float currentProgress = (float)currentOffset / currentDuration;
-			
-			//System.out.println("Part: " + part + ", progress: " + currentProgress);
-			
+						
 			if(currentProgress > 1f) {
 				currentProgress = 1f;
 			}
 
 			float finalCurrentProgress = currentProgress;
-			return (p, c) -> {
-				PartData partData = getPartData(p, c);
-				applyOnce(p, c, partData.matrices.get(currentIndex), 
-					partData.matrices.get(currentIndex + 1), finalCurrentProgress);};
+			
+			return new Positioner<Part, Context> () {
+				@Override
+				public void position(Part part, Context context) {
+					PartData partData = getPartData(part, context);
+					applyOnce(part, context, partData.matrices.get(currentIndex), 
+						partData.matrices.get(currentIndex + 1), finalCurrentProgress);
+				}
+				
+				@Override
+				public void randomize(float rate, float amplitude) {
+					randomizer.update(0f, 0f);
+				}
+			};
 		}
 
 		private void applyOnce(Part part, Context context, Matrix4f beforeMatrix, Matrix4f afterMatrix, float progress) {
@@ -225,6 +241,7 @@ public class MultipartRenderStateManager<State, Part, Context> {
 		this.transitionProvider = transitionProvider;
 		this.mainPart = mainPart;
 		this.positioningQueue = new LinkedList<>();
+		this.randomizer = new Randomizer();
 		setState(initialState, false, true);
 	}
 	
@@ -249,7 +266,7 @@ public class MultipartRenderStateManager<State, Part, Context> {
 		currentState = newState;
 	}
 	
-	public MultipartPositioning<Part, Context> getPositioning() {
+	public MultipartPositioning<Part, Context> nextPositioning() {
 		MultipartPositioning<Part, Context> result = null;
 		while(!positioningQueue.isEmpty()) {
 			MultipartPositioning<Part, Context> p = positioningQueue.poll();
@@ -264,11 +281,4 @@ public class MultipartRenderStateManager<State, Part, Context> {
 		}
 		return result;
 	}
-	
-//	public BiConsumer<EntityPlayer, ItemStack> getPosition() {
-//		return (p, i) -> {
-//			getPositioning().apply(p, i);
-//		};
-//	}
-//	
 }

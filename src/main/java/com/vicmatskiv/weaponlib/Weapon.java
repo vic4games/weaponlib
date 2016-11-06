@@ -16,6 +16,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
+import com.google.common.util.concurrent.AtomicDouble;
+
 import net.minecraft.block.Block;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.renderer.texture.IIconRegister;
@@ -31,8 +33,6 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
 import net.minecraftforge.client.IItemRenderer;
-
-import com.google.common.util.concurrent.AtomicDouble;
 
 public class Weapon extends Item {
 	
@@ -846,12 +846,10 @@ public class Weapon extends Item {
 	private static class ExpirableRenderableState {
 		private RenderableState state;
 		private long expiresAt;
-		private boolean singleUse;
 
-		public ExpirableRenderableState(RenderableState state, long expiresAt, boolean singleUse) {
+		public ExpirableRenderableState(RenderableState state, long expiresAt) {
 			this.state = state;
 			this.expiresAt = expiresAt;
-			this.singleUse = singleUse;
 		}
 	}
 	
@@ -870,11 +868,11 @@ public class Weapon extends Item {
 		
 		private int recoilableShotCount;
 		private boolean recoiledForCurrentShot;
-		private boolean singleUse;
+		
 		
 		private Queue<ExpirableRenderableState> disposableRenderableStates = new ArrayBlockingQueue<>(100);
 
-		public WeaponInstanceStorage(WeaponInstanceState state, int currentAmmo, float zoom, float recoil, float fireRate, boolean singleUse) {
+		public WeaponInstanceStorage(WeaponInstanceState state, int currentAmmo, float zoom, float recoil, float fireRate) {
 			this.currentAmmo = new AtomicInteger(currentAmmo);
 			this.reloadingStopsAt = new AtomicLong();
 			this.recoil = new AtomicDouble(recoil);
@@ -883,7 +881,6 @@ public class Weapon extends Item {
 			this.zoom = zoom;
 			this.fireRate = fireRate;
 			//this.recoil = recoil;
-			this.singleUse = singleUse;
 		}
 
 		public WeaponInstanceState getState() {
@@ -910,19 +907,6 @@ public class Weapon extends Item {
 			this.recoil.set(recoil);
 		}
 		
-//		public int getAndDecrementShotsToRecoil() {
-//			int result = recoiled.getAndDecrement();
-//			//System.out.println("Recoil counter: " + result);
-//			return result;
-//		}
-		
-//		public void addShotsToRecoil() {
-//			recoiled.incrementAndGet();
-//		}
-//		
-//		public void decrementShotsToRecoil() {
-//			recoiled.decrementAndGet();
-//		}
 		
 		public synchronized void addRecoilableShot() {
 			if(recoilableShotCount < 0) {
@@ -962,7 +946,7 @@ public class Weapon extends Item {
 			}
 			//disposableRenderableStates.add(RenderableState.SHOOTING);
 			disposableRenderableStates.add(new ExpirableRenderableState(
-					RenderableState.SHOOTING, System.currentTimeMillis() + (long) (50f / fireRate), singleUse));
+					RenderableState.SHOOTING, System.currentTimeMillis() + (long) (50f / fireRate)));
 		}
 		
 		/**
@@ -975,7 +959,7 @@ public class Weapon extends Item {
 			ExpirableRenderableState ers;
 			while((ers = disposableRenderableStates.peek()) != null) {
 				if(System.currentTimeMillis() <= ers.expiresAt) {
-					if(ers.singleUse) disposableRenderableStates.poll();
+					//if(ers.singleUse) disposableRenderableStates.poll();
 					break;
 				} else {
 					disposableRenderableStates.poll();
@@ -1004,7 +988,7 @@ public class Weapon extends Item {
 			player.getHeldItem().stackTagCompound != null ?
 					new WeaponInstanceStorage(WeaponInstanceState.values()[player.getHeldItem().stackTagCompound.getInteger(PERSISTENT_STATE_TAG)], 
 					player.getHeldItem().stackTagCompound.getInteger(AMMO_TAG), builder.zoom, 
-					player.getHeldItem().stackTagCompound.getFloat(RECOIL_TAG), builder.fireRate, builder.maxShots == 1) : null);
+					player.getHeldItem().stackTagCompound.getFloat(RECOIL_TAG), builder.fireRate) : null);
 	}
 
 	public void clientTryFire(EntityPlayer player) {

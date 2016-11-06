@@ -19,7 +19,6 @@ import com.vicmatskiv.weaponlib.animation.MultipartPositioning.Positioner;
 import com.vicmatskiv.weaponlib.animation.MultipartRenderStateManager;
 import com.vicmatskiv.weaponlib.animation.MultipartTransition;
 import com.vicmatskiv.weaponlib.animation.MultipartTransitionProvider;
-import com.vicmatskiv.weaponlib.animation.Randomizer;
 import com.vicmatskiv.weaponlib.animation.Transition;
 
 import cpw.mods.fml.relauncher.Side;
@@ -38,10 +37,13 @@ import net.minecraftforge.client.IItemRenderer;
 
 public class WeaponRenderer implements IItemRenderer {
 	
-	private static final int DEFAULT_RANDOMIZING_INTERVAL = 3000;
-	private static final int DEFAULT_RANDOMIZING_FIRING_INTERVAL = 50;
-	private static final float DEFAULT_ZOOM_AMPLITUDE = 0.01f;
-	private static final float DEFAULT_RANDOMIZING_AMPLITUDE = 0.06f;
+	private static final float DEFAULT_RANDOMIZING_RATE = 0.33f;
+	private static final float DEFAULT_RANDOMIZING_FIRING_RATE = 20;
+	private static final float DEFAULT_RANDOMIZING_ZOOM_RATE = 0.25f;
+	
+	private static final float DEFAULT_NORMAL_RANDOMIZING_AMPLITUDE = 0.06f;
+	private static final float DEFAULT_ZOOM_RANDOMIZING_AMPLITUDE = 0.01f;
+	private static final float DEFAULT_FIRING_RANDOMIZING_AMPLITUDE = 0.06f;
 	
 	private static final int DEFAULT_ANIMATION_DURATION = 250;
 	private static final int DEFAULT_RECOIL_ANIMATION_DURATION = 100;
@@ -86,6 +88,14 @@ public class WeaponRenderer implements IItemRenderer {
 		private List<Transition> firstPersonRightHandPositioningReloading;
 		private String modId;
 		
+		private float normalRandomizingRate = DEFAULT_RANDOMIZING_RATE; // movements per second, e.g. 0.25 = 0.25 movements per second = 1 movement in 3 minutes
+		private float firingRandomizingRate = DEFAULT_RANDOMIZING_FIRING_RATE; // movements per second, e.g. 20 = 20 movements per second = 1 movement in 50 ms
+		private float zoomRandomizingRate = DEFAULT_RANDOMIZING_ZOOM_RATE;
+		
+		private float normalRandomizingAmplitude = DEFAULT_NORMAL_RANDOMIZING_AMPLITUDE;
+		private float zoomRandomizingAmplitude = DEFAULT_ZOOM_RANDOMIZING_AMPLITUDE;
+		private float firingRandomizingAmplitude = DEFAULT_FIRING_RANDOMIZING_AMPLITUDE;
+		
 		public Builder withModId(String modId) {
 			this.modId = modId;
 			return this;
@@ -93,6 +103,36 @@ public class WeaponRenderer implements IItemRenderer {
 		
 		public Builder withModel(ModelBase model) {
 			this.model = model;
+			return this;
+		}
+		
+		public Builder withNormalRandomizingRate(float normalRandomizingRate) {
+			this.normalRandomizingRate = normalRandomizingRate;
+			return this;
+		}
+		
+		public Builder withZoomRandomizingRate(float zoomRandomizingRate) {
+			this.zoomRandomizingRate = zoomRandomizingRate;
+			return this;
+		}
+		
+		public Builder withFiringRandomizingRate(float firingRandomizingRate) {
+			this.firingRandomizingRate = firingRandomizingRate;
+			return this;
+		}
+		
+		public Builder withFiringRandomizingAmplitude(float firingRandomizingAmplitude) {
+			this.firingRandomizingAmplitude = firingRandomizingAmplitude;
+			return this;
+		}
+		
+		public Builder withNormalRandomizingAmplitude(float firingRandomizingRate) {
+			this.firingRandomizingRate = firingRandomizingRate;
+			return this;
+		}
+		
+		public Builder withZoomRandomizingAmplitude(float zoomRandomizingAmplitude) {
+			this.zoomRandomizingAmplitude = zoomRandomizingAmplitude;
 			return this;
 		}
 		
@@ -372,7 +412,7 @@ public class WeaponRenderer implements IItemRenderer {
 		
 	private MultipartTransitionProvider<RenderableState, Part, RenderContext> weaponTransitionProvider;
 	
-	private Randomizer randomizer = new Randomizer();
+	//private Randomizer randomizer = new Randomizer();
 	
 	private WeaponRenderer (Builder builder)
 	{
@@ -393,22 +433,22 @@ public class WeaponRenderer implements IItemRenderer {
 		return true;
 	}
 	
-	private static class StateManagerTuple {
+	private static class StateDescriptor {
 		MultipartRenderStateManager<RenderableState, Part, RenderContext> stateManager;
-		int randomizeInterval;
+		float rate;
 		float amplitude = 0.04f;
-		public StateManagerTuple(MultipartRenderStateManager<RenderableState, Part, RenderContext> stateManager,
-				int randomizeInterval, float amplitude) {
+		public StateDescriptor(MultipartRenderStateManager<RenderableState, Part, RenderContext> stateManager,
+				float rate, float amplitude) {
 			this.stateManager = stateManager;
-			this.randomizeInterval = randomizeInterval;
+			this.rate = rate;
 			this.amplitude = amplitude;
 		}
 		
 	}
 	
-	private StateManagerTuple getStateManager(EntityPlayer player, ItemStack itemStack) {
-		int randomizeInterval = DEFAULT_RANDOMIZING_INTERVAL;
-		float amplitude = DEFAULT_RANDOMIZING_AMPLITUDE;
+	private StateDescriptor getStateDescriptor(EntityPlayer player, ItemStack itemStack) {
+		float amplitude = builder.normalRandomizingAmplitude;
+		float rate = builder.normalRandomizingRate;
 		RenderableState currentState = null;
 		Weapon weapon = (Weapon) itemStack.getItem();
 		if(weapon.getState(itemStack) == Weapon.STATE_MODIFYING && builder.firstPersonPositioningModifying != null) {
@@ -424,11 +464,12 @@ public class WeaponRenderer implements IItemRenderer {
 				currentState = storage.getNextDisposableRenderableState();
 				if(currentState == RenderableState.SHOOTING) {
 					currentState = RenderableState.ZOOMING;
-					randomizeInterval = DEFAULT_RANDOMIZING_FIRING_INTERVAL;
+					rate = builder.firingRandomizingRate;
+				} else {
+					rate = builder.zoomRandomizingRate;
 				}
-				
-				amplitude = DEFAULT_ZOOM_AMPLITUDE;
 			}
+			amplitude = builder.zoomRandomizingAmplitude; // Zoom amplitude is enforced even when firing
 			currentState = RenderableState.ZOOMING;
 		} else if(weapon.getState(itemStack) == Weapon.STATE_READY) {
 			currentState = RenderableState.NORMAL;
@@ -439,7 +480,8 @@ public class WeaponRenderer implements IItemRenderer {
 				currentState = storage.getNextDisposableRenderableState();
 				if(currentState == RenderableState.SHOOTING) {
 					currentState = RenderableState.NORMAL;
-					randomizeInterval = DEFAULT_RANDOMIZING_FIRING_INTERVAL;
+					rate = builder.firingRandomizingRate;
+					amplitude = builder.firingRandomizingAmplitude;
 				}
 
 			}
@@ -457,15 +499,13 @@ public class WeaponRenderer implements IItemRenderer {
 			stateManager.setState(currentState, true, currentState == RenderableState.SHOOTING);
 		}
 		
-		return new StateManagerTuple(stateManager, randomizeInterval, amplitude);
+		return new StateDescriptor(stateManager, rate, amplitude);
 	}
 	
 	@SideOnly(Side.CLIENT)
 	@Override
 	public void renderItem(ItemRenderType type, ItemStack item, Object... data)
 	{
-	    
-		
 		GL11.glPushMatrix();
 		
 		GL11.glScaled(-1F, -1F, 1F);
@@ -484,20 +524,13 @@ public class WeaponRenderer implements IItemRenderer {
 			builder.thirdPersonPositioning.accept(player, item);
 			break;
 		case EQUIPPED_FIRST_PERSON:
-
 			
-			StateManagerTuple tuple = getStateManager(player, item);
-			MultipartPositioning<Part, RenderContext> multipartPositioning = tuple.stateManager.getPositioning();
+			StateDescriptor stateDescriptor = getStateDescriptor(player, item);
+			MultipartPositioning<Part, RenderContext> multipartPositioning = stateDescriptor.stateManager.nextPositioning();
 			
 			Positioner<Part, RenderContext> positioner = multipartPositioning.getPositioner();
-			
-			randomizer.setIntervalAndAmplitude(tuple.randomizeInterval, tuple.amplitude);
-			
-			randomizer.update();
-			
-//			if(tuple.randomized) {
-//				builder.firstPersonPositioningShooting.accept(player, item);
-//			}
+						
+			positioner.randomize(stateDescriptor.rate, stateDescriptor.amplitude);
 			
 			positioner.position(Part.WEAPON, renderContext);
 			
