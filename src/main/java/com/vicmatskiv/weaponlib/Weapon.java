@@ -121,6 +121,10 @@ public class Weapon extends Item {
 		private ImpactHandler blockImpactHandler;
 		private long pumpTimeoutMilliseconds;
 		
+		private float inaccuracy = WeaponSpawnEntity.DEFAULT_INACCURACY;
+		
+		private int pellets = 1;
+		
 		public Builder withModId(String modId) {
 			this.modId = modId;
 			return this;
@@ -278,6 +282,11 @@ public class Weapon extends Item {
 			this.spawnEntityGravityVelocity = spawnEntityGravityVelocity;
 			return this;
 		}
+		
+		public Builder withInaccuracy(float inaccuracy) {
+			this.inaccuracy = inaccuracy;
+			return this;
+		}
 
 		public Builder withRenderer(IItemRenderer renderer) {
 			this.renderer = renderer;
@@ -338,15 +347,14 @@ public class Weapon extends Item {
 			return this;
 		}
 		
-//		public Builder withSpawnEntityClass(Class<? extends WeaponSpawnEntity> spawnEntityClass) {
-//			this.spawnEntityClass = spawnEntityClass;
-//			return this;
-//		}
-		
-//		public Builder withSpawnEntity(Function<EntityPlayer, ? extends WeaponSpawnEntity> spawnEntityWith) {
-//			this.spawnEntityWith = spawnEntityWith;
-//			return this;
-//		}
+		public Builder withPellets(int pellets) {
+			if(pellets < 1) {
+				throw new IllegalArgumentException("Pellet count must be >= 1");
+			}
+			this.pellets = pellets;
+			return this;
+		}
+
 		
 		public Weapon build(ModContext modContext) {
 			if(modId == null) {
@@ -378,7 +386,9 @@ public class Weapon extends Item {
 			}
 			
 			if(spawnEntityWith == null) {
-				spawnEntityWith = (weapon, player) -> new WeaponSpawnEntity(weapon, player.worldObj, player, spawnEntitySpeed,
+				
+				spawnEntityWith = (weapon, player) -> {
+					WeaponSpawnEntity spawnEntity = new WeaponSpawnEntity(weapon, player.worldObj, player, spawnEntitySpeed,
 						spawnEntityGravityVelocity, spawnEntityDamage, spawnEntityExplosionRadius) {
 
 							@Override
@@ -390,7 +400,15 @@ public class Weapon extends Item {
 							protected float func_70182_d() {
 								return spawnEntitySpeed;
 							}
+							
+							@Override
+							float getInaccuracy() {
+								return inaccuracy;
+							}
 					
+					};
+
+					return spawnEntity;
 				};
 			}
 			
@@ -1033,7 +1051,9 @@ public class Weapon extends Item {
 				itemStack.stackTagCompound.setBoolean(AIMED_TAG, true);
 			}
 			itemStack.stackTagCompound.setInteger(AMMO_TAG, currentAmmo - 1);
-			player.worldObj.spawnEntityInWorld(builder.spawnEntityWith.apply(this, player));
+			for(int i = 0; i < builder.pellets; i++) {
+				player.worldObj.spawnEntityInWorld(builder.spawnEntityWith.apply(this, player));
+			}
 			player.worldObj.playSoundToNearExcept(player, isSilencerOn(itemStack) ? builder.silencedShootSound : builder.shootSound, 1.0F, 1.0F);
 		} else {
 			System.err.println("Invalid state: attempted to fire a weapon without ammo");

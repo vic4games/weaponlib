@@ -7,6 +7,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.projectile.EntityThrowable;
 import net.minecraft.item.Item;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.MovingObjectPosition.MovingObjectType;
 import net.minecraft.world.World;
@@ -14,6 +15,7 @@ import cpw.mods.fml.common.registry.IEntityAdditionalSpawnData;
 
 public class WeaponSpawnEntity extends EntityThrowable implements IEntityAdditionalSpawnData {
 	
+	static final float DEFAULT_INACCURACY = 1f;
 	private float explosionRadius = 0.1F;
 	private float damage = 6f;
 	private float speed;
@@ -22,7 +24,6 @@ public class WeaponSpawnEntity extends EntityThrowable implements IEntityAdditio
 
 	public WeaponSpawnEntity(World world) {
 		super(world);
-//		setSize(0.5f, 0.5f);
 	}
 
 
@@ -32,13 +33,7 @@ public class WeaponSpawnEntity extends EntityThrowable implements IEntityAdditio
 	 */
 	public WeaponSpawnEntity(World par1World, EntityLivingBase arg1EntityLivingBase) {
 		super(par1World, arg1EntityLivingBase);
-//		setSize(0.5f, 0.5f);
 	}
-	
-//	public WeaponSpawnEntity(World par1World, EntityLivingBase arg1EntityLivingBase, float damage, float gravityVelocity,
-//			float explosionRadius) {
-//		this(par1World, arg1EntityLivingBase, damage, gravityVelocity, explosionRadius, DEFAULT_SPEED);
-//	}
 	
 	public WeaponSpawnEntity(Weapon weapon, 
 			World par1World, 
@@ -90,7 +85,28 @@ public class WeaponSpawnEntity extends EntityThrowable implements IEntityAdditio
 			this.setDead();
 		}
 	}
-
+	
+	@Override
+	public void setThrowableHeading(double motionX, double motionY, double motionZ, float velocity, float ignoredInaccuracy)
+    {
+        float f2 = MathHelper.sqrt_double(motionX * motionX + motionY * motionY + motionZ * motionZ);
+        motionX /= (double)f2;
+        motionY /= (double)f2;
+        motionZ /= (double)f2;
+        float inaccuracy = getInaccuracy();
+        motionX += this.rand.nextGaussian() * 0.007499999832361937D * (double)inaccuracy;
+        motionY += this.rand.nextGaussian() * 0.007499999832361937D * (double)inaccuracy;
+        motionZ += this.rand.nextGaussian() * 0.007499999832361937D * (double)inaccuracy;
+        motionX *= (double)velocity;
+        motionY *= (double)velocity;
+        motionZ *= (double)velocity;
+        this.motionX = motionX;
+        this.motionY = motionY;
+        this.motionZ = motionZ;
+        float f3 = MathHelper.sqrt_double(motionX * motionX + motionZ * motionZ);
+        this.prevRotationYaw = this.rotationYaw = (float)(Math.atan2(motionX, motionZ) * 180.0D / Math.PI);
+        this.prevRotationPitch = this.rotationPitch = (float)(Math.atan2(motionY, (double)f3) * 180.0D / Math.PI);
+    }
 
 	@Override
 	public void writeSpawnData(ByteBuf buffer) {
@@ -108,6 +124,10 @@ public class WeaponSpawnEntity extends EntityThrowable implements IEntityAdditio
 		gravityVelocity = buffer.readFloat();
 		damage = buffer.readFloat();
 		explosionRadius = buffer.readFloat();
+	}
+	
+	float getInaccuracy() {
+		return DEFAULT_INACCURACY;
 	}
 	
 	Weapon getWeapon() {
