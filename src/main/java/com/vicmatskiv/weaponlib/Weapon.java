@@ -36,6 +36,7 @@ import net.minecraftforge.client.IItemRenderer;
 
 public class Weapon extends Item {
 	
+	private static final float DEFAULT_PLAYER_ZOOM_WALK_SPEED = 0.05f;
 	private static final String ACTIVE_ATTACHMENT_TAG = "ActiveAttachments";
 	private static final String SELECTED_ATTACHMENT_INDEXES_TAG = "SelectedAttachments";
 	private static final String PREVIOUSLY_SELECTED_ATTACHMENT_TAG = "PreviouslySelectedAttachments";
@@ -492,9 +493,12 @@ public class Weapon extends Item {
 		ensureItemStack(itemStack);
 		float currentZoom = itemStack.stackTagCompound.getFloat(ZOOM_TAG);
 		if (currentZoom != 1.0f || entityPlayer.isSprinting()) {
+			float DEFAULT_PLAYER_NORMAL_WALK_SPEED = 0.1f;
+			entityPlayer.capabilities.setPlayerWalkSpeed(DEFAULT_PLAYER_NORMAL_WALK_SPEED);
 			itemStack.stackTagCompound.setFloat(ZOOM_TAG, 1.0f);
 			itemStack.stackTagCompound.setBoolean(AIMED_TAG, false);
 		} else {
+			entityPlayer.capabilities.setPlayerWalkSpeed(DEFAULT_PLAYER_ZOOM_WALK_SPEED);
 			WeaponInstanceStorage weaponInstanceStorage = getWeaponInstanceStorage(entityPlayer);
 			if(weaponInstanceStorage != null) {
 				itemStack.stackTagCompound.setFloat(ZOOM_TAG, weaponInstanceStorage.getZoom());
