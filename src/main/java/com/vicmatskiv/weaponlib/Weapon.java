@@ -24,6 +24,8 @@ import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
@@ -36,7 +38,9 @@ import net.minecraftforge.client.IItemRenderer;
 
 public class Weapon extends Item {
 	
-	private static final float DEFAULT_PLAYER_ZOOM_WALK_SPEED = 0.05f;
+	private static final UUID SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER_UUID = UUID.fromString("8efa8469-0256-4f8e-bdd9-3e7b23970663");
+	private static final AttributeModifier SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER = (new AttributeModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER_UUID, "Slow Down While Zooming", -0.5, 2)).setSaved(false);
+
 	private static final String ACTIVE_ATTACHMENT_TAG = "ActiveAttachments";
 	private static final String SELECTED_ATTACHMENT_INDEXES_TAG = "SelectedAttachments";
 	private static final String PREVIOUSLY_SELECTED_ATTACHMENT_TAG = "PreviouslySelectedAttachments";
@@ -488,24 +492,26 @@ public class Weapon extends Item {
 	
 	
 	@Override
-	public ItemStack onItemRightClick(ItemStack itemStack, World p_77659_2_,
-			EntityPlayer entityPlayer) {
+	public ItemStack onItemRightClick(ItemStack itemStack, World p_77659_2_, EntityPlayer entityPlayer) {
 		ensureItemStack(itemStack);
+		
 		float currentZoom = itemStack.stackTagCompound.getFloat(ZOOM_TAG);
+		
 		if (currentZoom != 1.0f || entityPlayer.isSprinting()) {
-			float DEFAULT_PLAYER_NORMAL_WALK_SPEED = 0.1f;
-			entityPlayer.capabilities.setPlayerWalkSpeed(DEFAULT_PLAYER_NORMAL_WALK_SPEED);
 			itemStack.stackTagCompound.setFloat(ZOOM_TAG, 1.0f);
 			itemStack.stackTagCompound.setBoolean(AIMED_TAG, false);
+			entityPlayer.getEntityAttribute(SharedMonsterAttributes.movementSpeed).removeModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER);
 		} else {
-			entityPlayer.capabilities.setPlayerWalkSpeed(DEFAULT_PLAYER_ZOOM_WALK_SPEED);
 			WeaponInstanceStorage weaponInstanceStorage = getWeaponInstanceStorage(entityPlayer);
 			if(weaponInstanceStorage != null) {
 				itemStack.stackTagCompound.setFloat(ZOOM_TAG, weaponInstanceStorage.getZoom());
 			}
-			
+			entityPlayer.getEntityAttribute(SharedMonsterAttributes.movementSpeed).applyModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER);
+
 			itemStack.stackTagCompound.setBoolean(AIMED_TAG, true);
 		}
+		
+		
 		return super.onItemRightClick(itemStack, p_77659_2_, entityPlayer);
 	}
 
@@ -516,6 +522,7 @@ public class Weapon extends Item {
 		if (currentZoom != 1.0f && entity.isSprinting()) {
 			itemStack.stackTagCompound.setFloat(ZOOM_TAG, 1.0f);
 			itemStack.stackTagCompound.setBoolean(AIMED_TAG, false);
+			((EntityLivingBase) entity).getEntityAttribute(SharedMonsterAttributes.movementSpeed).removeModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER);
 		}
 	}
 	
