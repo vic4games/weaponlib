@@ -1,15 +1,18 @@
 package com.vicmatskiv.weaponlib;
 
+import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.client.IItemRenderer;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.common.MinecraftForge;
 import cpw.mods.fml.client.registry.RenderingRegistry;
 import cpw.mods.fml.common.FMLCommonHandler;
+import cpw.mods.fml.common.ObfuscationReflectionHelper;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import cpw.mods.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import cpw.mods.fml.common.registry.EntityRegistry;
@@ -24,6 +27,11 @@ public class ClientModContext extends CommonModContext {
 	@Override
 	public void init(Object mod, SimpleNetworkWrapper channel) {
 		super.init(mod, channel);
+		
+		List<IResourcePack> DefaultResourcePacks = ObfuscationReflectionHelper.getPrivateValue(
+				Minecraft.class, Minecraft.getMinecraft(), "defaultResourcePacks", "defaultResourcePacks") ; 
+        DefaultResourcePacks.add(new WeaponResourcePack()) ;
+        
 		//this.mod = mod;
 		SafeGlobals safeGlobals = new SafeGlobals();
 		

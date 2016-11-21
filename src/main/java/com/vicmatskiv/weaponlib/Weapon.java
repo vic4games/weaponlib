@@ -19,7 +19,9 @@ import java.util.function.Consumer;
 import com.google.common.util.concurrent.AtomicDouble;
 
 import net.minecraft.block.Block;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
+import net.minecraft.client.particle.EntityFX;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
@@ -33,6 +35,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.client.IItemRenderer;
 
@@ -1019,7 +1022,7 @@ public class Weapon extends Item {
 					player.getHeldItem().stackTagCompound.getInteger(AMMO_TAG), builder.zoom, 
 					player.getHeldItem().stackTagCompound.getFloat(RECOIL_TAG), builder.fireRate) : null);
 	}
-
+	
 	public void clientTryFire(EntityPlayer player) {
 		
 		WeaponInstanceStorage storage = getWeaponInstanceStorage(player);
@@ -1040,18 +1043,39 @@ public class Weapon extends Item {
 			
 			player.rotationPitch = player.rotationPitch - storage.getRecoil();						
 			float rotationYawFactor = -1.0f + random.nextFloat() * 2.0f;
-			//System.out.println("Firing...");
 			player.rotationYaw = player.rotationYaw + storage.getRecoil() * rotationYawFactor;
 			storage.lastShotFiredAt = System.currentTimeMillis();
-			//storage.recoiled.incrementAndGet();
-			// if current recoil counter < 0, reset to 0 and increment, otherwise simply increment it
-//			storage.recoiled.accumulateAndGet(1, (current, given) -> 
-//				{System.out.println("tryFire, current recoil: " + current); return current >= 0 ? current + 1 : 1;});
-			//storage.addRecoilableShot();
+			
+			spawnSmokeParticle(player);
+			
 			storage.addShot();
-		} /*else {
-			storage.setState(WeaponInstanceState.READY);
-		}*/
+		}
+	}
+
+	private void spawnSmokeParticle(EntityPlayer player) {
+				
+		double motionX = player.worldObj.rand.nextGaussian() * 0.005D;
+		double motionY = player.worldObj.rand.nextGaussian() * 0.01D;
+		double motionZ = player.worldObj.rand.nextGaussian() * 0.005D;
+		
+		Vec3 look = player.getLookVec();
+		float distance = 0.3F;
+		double dx = player.posX + (look.xCoord * distance) + (player.worldObj.rand.nextFloat() * 2.0F - 1) * 0.1f;
+		double dy = player.posY + player.getEyeHeight() + (player.worldObj.rand.nextFloat() * 2.0F - 1) * 0.1f;
+		double dz = player.posZ + (look.zCoord * distance) + (player.worldObj.rand.nextFloat() * 2.0F - 1) * 0.1f;
+		// now spawn your entity with (dx, dy, dz) as its position
+		
+		EntityFX smokeParticle = new SmokeFX(
+				player.worldObj, 
+				dx, //player.posX + (0.1f * (player.worldObj.rand.nextFloat() * 2.0F - 1) + 0.4) * look.xCoord, 
+		        dy, //player.posY + (player.worldObj.rand.nextFloat()  * player.height / 5) * look.yCoord, 
+		        dz, //player.posZ + (player.worldObj.rand.nextFloat() - 1) * look.zCoord, 
+		        2.0f,
+		      (float)motionX, 
+		      (float)motionY, 
+		      (float)motionZ);
+		
+		Minecraft.getMinecraft().effectRenderer.addEffect(smokeParticle);
 	}
 
 
