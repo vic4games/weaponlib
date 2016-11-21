@@ -133,6 +133,8 @@ public class Weapon extends Item {
 		
 		private int pellets = 1;
 		
+		private float flashIntensity = 0.7f;
+		
 		public Builder withModId(String modId) {
 			this.modId = modId;
 			return this;
@@ -360,6 +362,14 @@ public class Weapon extends Item {
 				throw new IllegalArgumentException("Pellet count must be >= 1");
 			}
 			this.pellets = pellets;
+			return this;
+		}
+		
+		public Builder withFlashIntencity(float flashIntensity) {
+			if(flashIntensity < 0f || flashIntensity > 1f) {
+				throw new IllegalArgumentException("Invalid flash intencity");
+			}
+			this.flashIntensity = flashIntensity;
 			return this;
 		}
 
@@ -1037,6 +1047,7 @@ public class Weapon extends Item {
 			storage.setState(WeaponInstanceState.SHOOTING);
 			modContext.getChannel().sendToServer(new TryFireMessage(true));
 			ItemStack heldItem = player.getHeldItem();
+			
 			modContext.runSyncTick(() -> {
 				player.playSound(isSilencerOn(heldItem) ? builder.silencedShootSound : builder.shootSound, 1F, 1F);
 			});
@@ -1044,9 +1055,14 @@ public class Weapon extends Item {
 			player.rotationPitch = player.rotationPitch - storage.getRecoil();						
 			float rotationYawFactor = -1.0f + random.nextFloat() * 2.0f;
 			player.rotationYaw = player.rotationYaw + storage.getRecoil() * rotationYawFactor;
-			storage.lastShotFiredAt = System.currentTimeMillis();
+			
+			if(builder.flashIntensity > 0) {
+				spawnFlashParticle(player);
+			}
 			
 			spawnSmokeParticle(player);
+			
+			storage.lastShotFiredAt = System.currentTimeMillis();
 			
 			storage.addShot();
 		}
@@ -1054,22 +1070,21 @@ public class Weapon extends Item {
 
 	private void spawnSmokeParticle(EntityPlayer player) {
 				
-		double motionX = player.worldObj.rand.nextGaussian() * 0.005D;
-		double motionY = player.worldObj.rand.nextGaussian() * 0.01D;
-		double motionZ = player.worldObj.rand.nextGaussian() * 0.005D;
+		double motionX = player.worldObj.rand.nextGaussian() * 0.003D;
+		double motionY = player.worldObj.rand.nextGaussian() * 0.003D;
+		double motionZ = player.worldObj.rand.nextGaussian() * 0.003D;
 		
 		Vec3 look = player.getLookVec();
 		float distance = 0.3F;
-		double dx = player.posX + (look.xCoord * distance) + (player.worldObj.rand.nextFloat() * 2.0F - 1) * 0.1f;
-		double dy = player.posY + player.getEyeHeight() + (player.worldObj.rand.nextFloat() * 2.0F - 1) * 0.1f;
-		double dz = player.posZ + (look.zCoord * distance) + (player.worldObj.rand.nextFloat() * 2.0F - 1) * 0.1f;
-		// now spawn your entity with (dx, dy, dz) as its position
+		double posX = player.posX + (look.xCoord * distance) + (player.worldObj.rand.nextFloat() * 2.0F - 1) * 0.1f;
+		double posY = player.posY + (look.yCoord * distance) + (player.worldObj.rand.nextFloat() * 2.0F - 1) * 0.1f;
+		double posZ = player.posZ + (look.zCoord * distance) + (player.worldObj.rand.nextFloat() * 2.0F - 1) * 0.1f;
 		
 		EntityFX smokeParticle = new SmokeFX(
 				player.worldObj, 
-				dx, //player.posX + (0.1f * (player.worldObj.rand.nextFloat() * 2.0F - 1) + 0.4) * look.xCoord, 
-		        dy, //player.posY + (player.worldObj.rand.nextFloat()  * player.height / 5) * look.yCoord, 
-		        dz, //player.posZ + (player.worldObj.rand.nextFloat() - 1) * look.zCoord, 
+				posX,
+		        posY, 
+		        posZ,
 		        2.0f,
 		      (float)motionX, 
 		      (float)motionY, 
@@ -1077,7 +1092,38 @@ public class Weapon extends Item {
 		
 		Minecraft.getMinecraft().effectRenderer.addEffect(smokeParticle);
 	}
-
+	
+	private void spawnFlashParticle(EntityPlayer player) {
+		
+		float distance = 0.5f;
+		float xOffset = 0.1f;
+		float yOffset = 0.1f;
+		float scale = 1.5f;
+		float positionRandomizationFactor = 0.01f;
+		
+		Vec3 look = player.getLookVec();
+		
+		float motionX = (float)player.worldObj.rand.nextGaussian() * 0.01f;
+		float motionY = (float)player.worldObj.rand.nextGaussian() * 0.01f;
+		float motionZ = (float)player.worldObj.rand.nextGaussian() * 0.01f;
+		
+		double posX = player.posX + (look.xCoord * distance) + (player.worldObj.rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor + (-look.zCoord * xOffset);
+		double posY = player.posY + (look.yCoord * distance) + (player.worldObj.rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor - yOffset;
+		double posZ = player.posZ + (look.zCoord * distance) + (player.worldObj.rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor + (look.xCoord * xOffset);
+		
+		EntityFX smokeParticle = new FlashFX(
+				player.worldObj, 
+				posX,
+				posY,
+				posZ,
+				scale,
+				builder.flashIntensity,
+				motionX, 
+				motionY, 
+				motionZ);
+		
+		Minecraft.getMinecraft().effectRenderer.addEffect(smokeParticle);
+	}
 
 	public void tryFire(EntityPlayer player, ItemStack itemStack) {
 		int currentAmmo = itemStack.stackTagCompound.getInteger(AMMO_TAG);
