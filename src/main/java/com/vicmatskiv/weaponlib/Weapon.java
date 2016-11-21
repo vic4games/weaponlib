@@ -365,7 +365,7 @@ public class Weapon extends Item {
 			return this;
 		}
 		
-		public Builder withFlashIntencity(float flashIntensity) {
+		public Builder withFlashIntensity(float flashIntensity) {
 			if(flashIntensity < 0f || flashIntensity > 1f) {
 				throw new IllegalArgumentException("Invalid flash intencity");
 			}
