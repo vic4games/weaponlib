@@ -29,7 +29,7 @@ public class ClientModContext extends CommonModContext {
 		super.init(mod, channel);
 		
 		List<IResourcePack> DefaultResourcePacks = ObfuscationReflectionHelper.getPrivateValue(
-				Minecraft.class, Minecraft.getMinecraft(), "defaultResourcePacks", "Field_110449_ao") ; 
+				Minecraft.class, Minecraft.getMinecraft(), "defaultResourcePacks", "field_110449_ao") ; 
         DefaultResourcePacks.add(new WeaponResourcePack()) ;
         
 		//this.mod = mod;
