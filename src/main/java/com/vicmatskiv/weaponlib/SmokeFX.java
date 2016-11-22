@@ -13,7 +13,11 @@ public class SmokeFX extends EntityFX {
 	private static final double SMOKE_SCALE_FACTOR = 1.0005988079071D;
 	
 	private static final String DEFAULT_PARTICLES_TEXTURE = "textures/particle/particles.png";
-	private static final String SMOKE_TEXTURE = "weaponlib:/com/vicmatskiv/weaponlib/resources/smoke.png";
+	private static final String SMOKE_TEXTURE = "weaponlib:/com/vicmatskiv/weaponlib/resources/smokes.png";
+	
+	private int imageIndex;
+	
+    private static final int imagesPerRow = 4;
 		
 	public SmokeFX(World par1World, double positionX, double positionY, double positionZ, float scale, 
 			float motionX, float motionY, float motionZ)
@@ -36,6 +40,8 @@ public class SmokeFX extends EntityFX {
 		this.particleScale *= 1.4F;
 		this.particleScale *= scale;
 		this.particleMaxAge = 50 + (int)(this.rand.nextFloat() * 30);
+		
+        this.imageIndex = this.rand.nextInt() % imagesPerRow;
 	}
 	
 	@Override
@@ -87,10 +93,34 @@ public class SmokeFX extends EntityFX {
         
         tesselator.setColorRGBA_F(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha);
         
-        tesselator.addVertexWithUV((double)(f11 - par3 * f10 - par6 * f10), (double)(f12 - par4 * f10), (double)(f13 - par5 * f10 - par7 * f10), 1, 1); //(double)f7, (double)f9); // a
-        tesselator.addVertexWithUV((double)(f11 - par3 * f10 + par6 * f10), (double)(f12 + par4 * f10), (double)(f13 - par5 * f10 + par7 * f10), 1, 0); //(double)f7, (double)f8); // b
-        tesselator.addVertexWithUV((double)(f11 + par3 * f10 + par6 * f10), (double)(f12 + par4 * f10), (double)(f13 + par5 * f10 + par7 * f10), 0, 0); //(double)f6, (double)f8); // c
-        tesselator.addVertexWithUV((double)(f11 + par3 * f10 - par6 * f10), (double)(f12 - par4 * f10), (double)(f13 + par5 * f10 - par7 * f10), 0, 1); //(double)f6, (double)f9); // d
+        // Single row setup
+
+
+        /*
+         *  (cU, cV)   (bU, bV)
+         * 
+         *  (dU, dV)   (aU, aV)
+         * 
+         */
+        float uWidth = 1f / imagesPerRow;
+        
+		float aU = (imageIndex + 1) * uWidth; // imageIndex = 0, imagesPerRow = 2, aU = 0.5; imageIndex = 1, aU = 1
+			// imagesPerRow = 4; imageIndex = 1; aU = 2/4 = 0.5
+        float aV = 1f;
+        
+        float bU = (imageIndex + 1) * uWidth;
+        float bV = 0f;
+        
+        float cU = imageIndex * uWidth; // imageIndex = 0, imagesPerRow = 2, cU = 0; imageIndex = 1, cU = 0.5
+        float cV = 0f;
+        
+        float dU = imageIndex * uWidth;
+        float dV = 1f;
+        
+        tesselator.addVertexWithUV((double)(f11 - par3 * f10 - par6 * f10), (double)(f12 - par4 * f10), (double)(f13 - par5 * f10 - par7 * f10), aU, aV); //1, 1); //(double)f7, (double)f9); // a
+        tesselator.addVertexWithUV((double)(f11 - par3 * f10 + par6 * f10), (double)(f12 + par4 * f10), (double)(f13 - par5 * f10 + par7 * f10), bU, bV); //1, 0); //(double)f7, (double)f8); // b
+        tesselator.addVertexWithUV((double)(f11 + par3 * f10 + par6 * f10), (double)(f12 + par4 * f10), (double)(f13 + par5 * f10 + par7 * f10), cU, cV); //0, 0); //(double)f6, (double)f8); // c
+        tesselator.addVertexWithUV((double)(f11 + par3 * f10 - par6 * f10), (double)(f12 - par4 * f10), (double)(f13 + par5 * f10 - par7 * f10), dU, dV); //0, 1); //(double)f6, (double)f9); // d
     	
     	tesselator.draw();
     	

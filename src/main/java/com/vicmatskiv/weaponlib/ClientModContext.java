@@ -22,15 +22,14 @@ public class ClientModContext extends CommonModContext {
 	private ClientEventHandler clientEventHandler;
 	private Lock mainLoopLock = new ReentrantLock();
 	private int modEntityID;
-	//private Object mod;
 	
 	@Override
 	public void init(Object mod, SimpleNetworkWrapper channel) {
 		super.init(mod, channel);
 		
-		List<IResourcePack> DefaultResourcePacks = ObfuscationReflectionHelper.getPrivateValue(
+		List<IResourcePack> defaultResourcePacks = ObfuscationReflectionHelper.getPrivateValue(
 				Minecraft.class, Minecraft.getMinecraft(), "defaultResourcePacks", "field_110449_ao") ; 
-        DefaultResourcePacks.add(new WeaponResourcePack()) ;
+        defaultResourcePacks.add(new WeaponResourcePack()) ;
         
 		//this.mod = mod;
 		SafeGlobals safeGlobals = new SafeGlobals();

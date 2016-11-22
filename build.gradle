@@ -73,6 +73,11 @@ processResources
     from(sourceSets.main.resources.srcDirs) {
         exclude 'mcmod.info'
     }
+    
+    from ('src/main/java') {
+        include '**/*.png'
+    }
+    
 }
 
 
