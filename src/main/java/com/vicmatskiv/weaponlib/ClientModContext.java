@@ -1,5 +1,6 @@
 package com.vicmatskiv.weaponlib;
 
+import java.lang.reflect.Field;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -28,9 +29,13 @@ public class ClientModContext extends CommonModContext {
 	public void init(Object mod, SimpleNetworkWrapper channel) {
 		super.init(mod, channel);
 		
-		List<IResourcePack> DefaultResourcePacks = ObfuscationReflectionHelper.getPrivateValue(
-				Minecraft.class, Minecraft.getMinecraft(), "defaultResourcePacks", "Field_110449_ao") ; 
-        DefaultResourcePacks.add(new WeaponResourcePack()) ;
+		List<IResourcePack> defaultResourcePacks = ObfuscationReflectionHelper.getPrivateValue(
+				Minecraft.class, Minecraft.getMinecraft(), "defaultResourcePacks", "field_110449_ao") ; 
+        defaultResourcePacks.add(new WeaponResourcePack()) ;
+        
+        for(Field f: Minecraft.class.getFields()) {
+        	System.out.println("Field: " + f.getName() + ", type: " + f.getType());
+        }
         
 		//this.mod = mod;
 		SafeGlobals safeGlobals = new SafeGlobals();
