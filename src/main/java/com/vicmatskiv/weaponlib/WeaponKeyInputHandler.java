@@ -13,9 +13,13 @@ public class WeaponKeyInputHandler {
 	
 	private SimpleNetworkWrapper channel;
 	private Function<MessageContext, EntityPlayer> entityPlayerSupplier;
+	private AttachmentManager attachmentManager;
 	
-	public WeaponKeyInputHandler(Function<MessageContext, EntityPlayer> entityPlayerSupplier, SimpleNetworkWrapper channel) {
+	public WeaponKeyInputHandler(Function<MessageContext, EntityPlayer> entityPlayerSupplier, 
+			AttachmentManager attachmentManager,
+			SimpleNetworkWrapper channel) {
 		this.entityPlayerSupplier = entityPlayerSupplier;
+		this.attachmentManager = attachmentManager;
 		this.channel = channel;
 	}
 
@@ -39,7 +43,7 @@ public class WeaponKeyInputHandler {
         	EntityPlayer player = entityPlayerSupplier.apply(null);
     		ItemStack itemStack = player.getHeldItem();
     		if(itemStack != null && itemStack.getItem() instanceof Weapon) {
-    			((Weapon) itemStack.getItem()).switchClientAttachmentSelectionMode(itemStack, player);
+    			attachmentManager.switchClientAttachmentSelectionMode(itemStack, player);
     		}
         } 
         

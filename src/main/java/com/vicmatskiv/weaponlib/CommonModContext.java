@@ -1,21 +1,25 @@
 package com.vicmatskiv.weaponlib;
 
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraftforge.client.IItemRenderer;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import cpw.mods.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
-
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraftforge.client.IItemRenderer;
+import net.minecraftforge.common.MinecraftForge;
 
 public class CommonModContext implements ModContext {
 	
 	protected SimpleNetworkWrapper channel;
+	
+	private AttachmentManager attachmentManager;
 
 	@Override
 	public void init(Object mod, SimpleNetworkWrapper channel) {
 		this.channel = channel;
+		
+		this.attachmentManager = new AttachmentManager(this);
 		
 		channel.registerMessage(new ReloadMessageHandler((ctx) -> getServerPlayer(ctx)),
 				ReloadMessage.class, 1, Side.SERVER);
@@ -23,16 +27,16 @@ public class CommonModContext implements ModContext {
 		channel.registerMessage(new ReloadMessageHandler((ctx) -> getPlayer(ctx)),
 				ReloadMessage.class, 2, Side.CLIENT);
 		
-		channel.registerMessage(AttachmentModeMessageHandler.class,
+		channel.registerMessage(new AttachmentModeMessageHandler(attachmentManager),
 				AttachmentModeMessage.class, 3, Side.SERVER);
 		
-		channel.registerMessage(AttachmentModeMessageHandler.class,
+		channel.registerMessage(new AttachmentModeMessageHandler(attachmentManager),
 				AttachmentModeMessage.class, 4, Side.CLIENT);
 		
-		channel.registerMessage(ChangeAttachmentMessageHandler.class,
+		channel.registerMessage(new ChangeAttachmentMessageHandler(attachmentManager),
 				ChangeAttachmentMessage.class, 5, Side.SERVER);
 		
-		channel.registerMessage(ChangeAttachmentMessageHandler.class,
+		channel.registerMessage(new ChangeAttachmentMessageHandler(attachmentManager),
 				ChangeAttachmentMessage.class, 6, Side.CLIENT);
 		
 		channel.registerMessage(ChangeTextureMessageHandler.class,
@@ -53,8 +57,10 @@ public class CommonModContext implements ModContext {
 		channel.registerMessage(LaserSwitchMessageHandler.class,
 				LaserSwitchMessage.class, 13, Side.CLIENT);
 		
+		MinecraftForge.EVENT_BUS.register(attachmentManager); 
+		
 		FMLCommonHandler.instance().bus().register(new WeaponKeyInputHandler((ctx) -> getPlayer(ctx), 
-				channel));
+				attachmentManager, channel));
 	}
 
 	@Override
@@ -78,6 +84,11 @@ public class CommonModContext implements ModContext {
 	@Override
 	public void runSyncTick(Runnable runnable) {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public AttachmentManager getAttachmentManager() {
+		return attachmentManager;
 	}
 	
 	

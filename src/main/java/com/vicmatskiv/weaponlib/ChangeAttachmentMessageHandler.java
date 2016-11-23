@@ -8,6 +8,12 @@ import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import cpw.mods.fml.relauncher.Side;
 
 public class ChangeAttachmentMessageHandler implements IMessageHandler<ChangeAttachmentMessage, IMessage> {
+	
+	private AttachmentManager attachmentManager;
+
+	public ChangeAttachmentMessageHandler(AttachmentManager attachmentManager) {
+		this.attachmentManager = attachmentManager;
+	}
 
 	@Override
 	public IMessage onMessage(ChangeAttachmentMessage message, MessageContext ctx) {
@@ -17,8 +23,7 @@ public class ChangeAttachmentMessageHandler implements IMessageHandler<ChangeAtt
 			ItemStack itemStack = player.getHeldItem();
 			if(itemStack != null && itemStack.getItem() instanceof Weapon) {
 				if(((Weapon) itemStack.getItem()).getState(itemStack) == Weapon.STATE_MODIFYING) {
-					//System.out.println("changed attachment of category " + message.getAttachmentCategory());
-					((Weapon) itemStack.getItem()).changeAttachment(message.getAttachmentCategory(), itemStack, player);
+					attachmentManager.changeAttachment(message.getAttachmentCategory(), itemStack, player);
 				}
 			}
 		}

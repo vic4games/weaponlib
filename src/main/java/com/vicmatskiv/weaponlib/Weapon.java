@@ -1,64 +1,35 @@
 package com.vicmatskiv.weaponlib;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
-import java.util.Random;
 import java.util.UUID;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
 
-import com.google.common.util.concurrent.AtomicDouble;
-
-import net.minecraft.block.Block;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
-import net.minecraft.client.particle.EntityFX;
 import net.minecraft.client.renderer.texture.IIconRegister;
-import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.MovingObjectPosition;
-import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
-import net.minecraftforge.client.IItemRenderer;
 
 public class Weapon extends Item {
 	
 	private static final UUID SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER_UUID = UUID.fromString("8efa8469-0256-4f8e-bdd9-3e7b23970663");
 	private static final AttributeModifier SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER = (new AttributeModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER_UUID, "Slow Down While Zooming", -0.5, 2)).setSaved(false);
 
-	private static final String ACTIVE_ATTACHMENT_TAG = "ActiveAttachments";
-	private static final String SELECTED_ATTACHMENT_INDEXES_TAG = "SelectedAttachments";
-	private static final String PREVIOUSLY_SELECTED_ATTACHMENT_TAG = "PreviouslySelectedAttachments";
-	
 	private static final String SHOT_COUNTER_TAG = "ShotCounter";
-	public static final String ZOOM_TAG = "Zoomed";
-	public static final String RECOIL_TAG = "Recoil";
+	static final String ZOOM_TAG = "Zoomed";
+	private static final String RECOIL_TAG = "Recoil";
 	static final String AIMED_TAG = "Aimed";
-	
-	private static final int RESUME_TIMEOUT_TICKS = 4;
-	
-	private static final int DEFAULT_RELOADING_TIMEOUT_TICKS = 10;
-	
-	@SuppressWarnings("unused")
-	private static final String RECOIL_TIMER_TAG = "RecoilTimer";
+		
+	static final int DEFAULT_RELOADING_TIMEOUT_TICKS = 10;
 	
 	private static final String STOP_TIMER_TAG = "StopTimer";
 	private static final String RESUME_TIMER_TAG = "ResumeTimer";
@@ -67,407 +38,33 @@ public class Weapon extends Item {
 	private static final String LASER_ON_TAG = "LaserOn";
 	
 	private static final String AMMO_TAG = "Ammo";
-	private static final String PERSISTENT_STATE_TAG = "PersistentState";
+	static final String PERSISTENT_STATE_TAG = "PersistentState";
 	
-	private static final float DEFAULT_ZOOM = 0.75f;
-	private static final float DEFAULT_FIRE_RATE = 0.5f;
+	static final float DEFAULT_ZOOM = 0.75f;
+	static final float DEFAULT_FIRE_RATE = 0.5f;
 	
 	public static final String STATE_TAG = "State";
 	
-	public static final int STATE_READY = 0;
-	public static final int STATE_SHOOTING = 1;
-	public static final int STATE_PAUSED = 2;
-	public static final int STATE_RELOADING = 3;
-	public static final int STATE_MODIFYING = 4;
+	static final int STATE_READY = 0;
+	static final int STATE_SHOOTING = 1;
+	static final int STATE_PAUSED = 2;
+	static final int STATE_RELOADING = 3;
+	static final int STATE_MODIFYING = 4;
 	
-	public static final int VIEW_BOBBING_ON = 1;
-	public static final int VIEW_BOBBING_OFF = 2;
-	
-	public static final int INFINITE_AMMO = -1;
+	static final int INFINITE_AMMO = -1;
 	
 	private static final long MAX_RELOAD_TIMEOUT_TICKS = 60;
-	
-	public static class Builder {
-		
-		private static final float DEFAULT_SPAWN_ENTITY_SPEED = 10f;
-		private String name;
-		private List<String> textureNames = new ArrayList<>();
-		private int ammoCapacity = 1;
-		private float recoil = 1.0F;
-		private String shootSound;
-		private String silencedShootSound;
-		private String reloadSound;
-		@SuppressWarnings("unused")
-		private String exceededMaxShotsSound;
-		private ItemAmmo ammo;
-		private float fireRate = DEFAULT_FIRE_RATE;
-		private CreativeTabs creativeTab;
-		private IItemRenderer renderer;
-		private float zoom = DEFAULT_ZOOM;
-		private int maxShots = Integer.MAX_VALUE;
-		private String crosshair;
-		private String crosshairRunning;
-		private String crosshairZoomed;
-		private BiFunction<Weapon, EntityPlayer, ? extends WeaponSpawnEntity> spawnEntityWith;
-		private float spawnEntityDamage;
-		private float spawnEntityExplosionRadius;
-		private float spawnEntityGravityVelocity;
-		private int reloadingTimeout = DEFAULT_RELOADING_TIMEOUT_TICKS;
-		private String modId;
-		@SuppressWarnings("unused")
-		private int resumeTimeout = RESUME_TIMEOUT_TICKS;
-		
-		private boolean crosshairFullScreen = false;
-		private boolean crosshairZoomedFullScreen = false;
-		
-		private Map<ItemAttachment<Weapon>, CompatibleAttachment<Weapon>> compatibleAttachments = new HashMap<>();
-		private ModelBase ammoModel;
-		private String ammoModelTextureName;
-		
-		private float spawnEntitySpeed = DEFAULT_SPAWN_ENTITY_SPEED;
-		private Class<? extends WeaponSpawnEntity> spawnEntityClass;
-		private ImpactHandler blockImpactHandler;
-		private long pumpTimeoutMilliseconds;
-		
-		private float inaccuracy = WeaponSpawnEntity.DEFAULT_INACCURACY;
-		
-		private int pellets = 1;
-		
-		private float flashIntensity = 0.7f;
-		
-		public Builder withModId(String modId) {
-			this.modId = modId;
-			return this;
-		}
-		
-		public Builder withReloadingTime(int reloadingTime) {
-			this.reloadingTimeout = reloadingTime;
-			return this;
-		}
-		
-		public Builder withName(String name) {
-			this.name = name;
-			return this;
-		}
-		
-		public Builder withAmmoCapacity(int ammoCapacity) {
-			this.ammoCapacity = ammoCapacity;
-			return this;
-		}
-		
-		public Builder withRecoil(float recoil) {
-			this.recoil = recoil;
-			return this;
-		}
-		
-		public Builder withZoom(float zoom) {
-			this.zoom = zoom;
-			return this;
-		}
-		
-		public Builder withAmmo(ItemAmmo ammo) {
-			this.ammo = ammo;
-			return this;
-		}
-		
-		public Builder withMaxShots(int maxShots) {
-			this.maxShots = maxShots;
-			return this;
-		}
-		
-		public Builder withFireRate(float fireRate) {
-			if(fireRate >= 1 || fireRate <= 0) {
-				throw new IllegalArgumentException("Invalid fire rate " + fireRate);
-			}
-			this.fireRate = fireRate;
-			return this;
-		}
-		
-		public Builder withTextureNames(String...textureNames) {
-			if(modId == null) {
-				throw new IllegalStateException("ModId is not set");
-			}
-			for(String textureName: textureNames) {
-				this.textureNames.add(textureName + ".png");
-			}
-			return this;
-		}
-		
-		public Builder withCrosshair(String crosshair) {
-			if(modId == null) {
-				throw new IllegalStateException("ModId is not set");
-			}
-			this.crosshair = modId + ":" + "textures/crosshairs/" + crosshair + ".png";
-			return this;
-		}
-		
-		public Builder withCrosshair(String crosshair, boolean fullScreen) {
-			if(modId == null) {
-				throw new IllegalStateException("ModId is not set");
-			}
-			this.crosshair = modId + ":" + "textures/crosshairs/" + crosshair + ".png";
-			this.crosshairFullScreen = fullScreen;
-			return this;
-		}
-		
-		public Builder withCrosshairRunning(String crosshairRunning) {
-			if(modId == null) {
-				throw new IllegalStateException("ModId is not set");
-			}
-			this.crosshairRunning = modId + ":" + "textures/crosshairs/" + crosshairRunning + ".png";
-			return this;
-		}
-		
-		public Builder withCrosshairZoomed(String crosshairZoomed) {
-			return withCrosshairZoomed(crosshairZoomed, true);
-		}
-		
-		public Builder withCrosshairZoomed(String crosshairZoomed, boolean fullScreen) {
-			if(modId == null) {
-				throw new IllegalStateException("ModId is not set");
-			}
-			this.crosshairZoomed = modId + ":" + "textures/crosshairs/" + crosshairZoomed + ".png";
-			this.crosshairZoomedFullScreen = fullScreen;
-			return this;
-		}
-		
-		public Builder withShootSound(String shootSound) {
-			if(modId == null) {
-				throw new IllegalStateException("ModId is not set");
-			}
-			this.shootSound = modId + ":" + shootSound;
-			return this;
-		}
-		
-		public Builder withSilencedShootSound(String silencedShootSound) {
-			if(modId == null) {
-				throw new IllegalStateException("ModId is not set");
-			}
-			this.silencedShootSound = modId + ":" + silencedShootSound;
-			return this;
-		}
-		
-		public Builder withReloadSound(String reloadSound) {
-			if(modId == null) {
-				throw new IllegalStateException("ModId is not set");
-			}
-			this.reloadSound = modId + ":" + reloadSound;
-			return this;
-		}
-		
-		public Builder withExceededMaxShotsSound(String shootSound) {
-			if(modId == null) {
-				throw new IllegalStateException("ModId is not set");
-			}
-			this.exceededMaxShotsSound = modId + ":" + shootSound;
-			return this;
-		}
-		
-		public Builder withCreativeTab(CreativeTabs creativeTab) {
-			this.creativeTab = creativeTab;
-			return this;
-		}
-		
-//		public Builder withSpawnEntity(Function<EntityPlayer, WeaponSpawnEntity> spawnEntityWith) {
-//			this.spawnEntityWith = spawnEntityWith;
-//			return this;
-//		}
-		
-		public Builder withSpawnEntityDamage(float spawnEntityDamage) {
-			this.spawnEntityDamage = spawnEntityDamage;
-			return this;
-		}
-		
-		public Builder withSpawnEntitySpeed(float spawnEntitySpeed) {
-			this.spawnEntitySpeed = spawnEntitySpeed;
-			return this;
-		}
-		
-		public Builder withSpawnEntityExplosionRadius(float spawnEntityExplosionRadius) {
-			this.spawnEntityExplosionRadius = spawnEntityExplosionRadius;
-			return this;
-		}
-		
-		public Builder withSpawnEntityGravityVelocity(float spawnEntityGravityVelocity) {
-			this.spawnEntityGravityVelocity = spawnEntityGravityVelocity;
-			return this;
-		}
-		
-		public Builder withInaccuracy(float inaccuracy) {
-			this.inaccuracy = inaccuracy;
-			return this;
-		}
-
-		public Builder withRenderer(IItemRenderer renderer) {
-			this.renderer = renderer;
-			return this;
-		}
-		
-		public Builder withCompatibleAttachment(ItemAttachment<Weapon> attachment, Consumer<ModelBase> positioner) {
-			compatibleAttachments.put(attachment, new CompatibleAttachment<>(attachment, positioner));
-			return this;
-		}
-		
-		public Builder withCompatibleAttachment(ItemAttachment<Weapon> attachment, boolean isDefault, Consumer<ModelBase> positioner) {
-			compatibleAttachments.put(attachment, new CompatibleAttachment<>(attachment, positioner, isDefault));
-			return this;
-		}
-		
-		public Builder withCompatibleAttachment(AttachmentCategory category, ModelBase attachmentModel, String textureName,
-				Consumer<ModelBase> positioner) {
-			ItemAttachment<Weapon> item = new ItemAttachment<>(modId, category, attachmentModel, textureName, null);
-			compatibleAttachments.put(item, new CompatibleAttachment<>(item, positioner));
-			return this;
-		}
-		
-		public Builder withCompatibleAttachment(AttachmentCategory category, ModelBase attachmentModel, String textureName, String crosshair,
-				Consumer<ModelBase> positioner) {
-			ItemAttachment<Weapon> item = new ItemAttachment<>(modId, category, attachmentModel, textureName, crosshair);
-			compatibleAttachments.put(item, new CompatibleAttachment<>(item, positioner));
-			return this;
-		}
-		
-		public Builder withCompatibleAttachment(CompatibleAttachment<Weapon> compatibleAttachment) {
-			compatibleAttachments.put(compatibleAttachment.getAttachment(), compatibleAttachment);
-			return this;
-		}
-		
-		public Builder withResumeTimeout(int resumeTimeout) {
-			this.resumeTimeout = resumeTimeout;
-			return this;
-		}
-		
-		public Builder withSpawnEntityModel(ModelBase ammoModel) {
-			this.ammoModel = ammoModel;
-			return this;
-		}
-		
-		public Builder withSpawnEntityModelTexture(String ammoModelTextureName) {
-			this.ammoModelTextureName = modId + ":" + "textures/models/" + ammoModelTextureName + ".png";
-			return this;
-		}
-		
-		public Builder withSpawnEntityBlockImpactHandler(ImpactHandler impactHandler) {
-			this.blockImpactHandler = impactHandler;
-			return this;
-		}
-		
-		public Builder withPumpTimeout(long pumpTimeoutMilliseconds) {
-			this.pumpTimeoutMilliseconds = pumpTimeoutMilliseconds;
-			return this;
-		}
-		
-		public Builder withPellets(int pellets) {
-			if(pellets < 1) {
-				throw new IllegalArgumentException("Pellet count must be >= 1");
-			}
-			this.pellets = pellets;
-			return this;
-		}
-		
-		public Builder withFlashIntensity(float flashIntensity) {
-			if(flashIntensity < 0f || flashIntensity > 1f) {
-				throw new IllegalArgumentException("Invalid flash intencity");
-			}
-			this.flashIntensity = flashIntensity;
-			return this;
-		}
-
-		
-		public Weapon build(ModContext modContext) {
-			if(modId == null) {
-				throw new IllegalStateException("ModId is not set");
-			}
-			
-			if(name == null) {
-				throw new IllegalStateException("Weapon name not provided");
-			}
-			
-//			if(textureName == null) {
-//				textureName = modId + ":" + name;
-//			}
-			
-			if(shootSound == null) {
-				shootSound = modId + ":" + name;
-			}
-			
-			if(silencedShootSound == null) {
-				silencedShootSound = shootSound;
-			}
-			
-			if(reloadSound == null) {
-				reloadSound = modId + ":" + "reload";
-			}
-			
-			if(spawnEntityClass == null) {
-				spawnEntityClass = WeaponSpawnEntity.class;
-			}
-			
-			if(spawnEntityWith == null) {
-				
-				spawnEntityWith = (weapon, player) -> {
-					WeaponSpawnEntity spawnEntity = new WeaponSpawnEntity(weapon, player.worldObj, player, spawnEntitySpeed,
-						spawnEntityGravityVelocity, spawnEntityDamage, spawnEntityExplosionRadius) {
-
-							@Override
-							protected float getGravityVelocity() {
-								return spawnEntityGravityVelocity;
-							}
-
-							@Override
-							protected float func_70182_d() {
-								return spawnEntitySpeed;
-							}
-							
-							@Override
-							float getInaccuracy() {
-								return inaccuracy;
-							}
-					
-					};
-
-					return spawnEntity;
-				};
-			}
-			
-			if(crosshairRunning == null) {
-				crosshairRunning = crosshair;
-			}
-			
-			if(crosshairZoomed == null) {
-				crosshairZoomed = crosshair;
-			}
-			
-			if(blockImpactHandler == null) {
-				blockImpactHandler = (world, player, entity, position) -> {
-					Block block = world.getBlock(position.blockX, position.blockY, position.blockZ);
-					if(block == Blocks.glass || block == Blocks.glass_pane || block == Blocks.stained_glass 
-							|| block == Blocks.stained_glass_pane) {
-						world.func_147480_a(position.blockX, position.blockY, position.blockZ, true);
-					}
-				 };
-			}
-			
-			Weapon weapon = new Weapon(this, modContext);
-			weapon.setCreativeTab(creativeTab);
-			weapon.setUnlocalizedName(name);
-			if(ammo != null) {
-				ammo.addCompatibleWeapon(weapon);
-			}
-			for(ItemAttachment<Weapon> attachment: this.compatibleAttachments.keySet()) {
-				attachment.addCompatibleWeapon(weapon);
-			}
-			modContext.registerWeapon(name, weapon, renderer);
-			return weapon;
-		}
-
-	}
 	
 	private Builder builder;
 	
 	private ModContext modContext;
 
-	private Weapon(Builder builder, ModContext modContext) {
+	public static enum WeaponInstanceState { READY, SHOOTING, RELOAD_REQUESTED, RELOAD_CONFIRMED, PAUSED, MODIFYING };
+	
+	private Map<UUID, WeaponInstanceStorage> weaponInstanceStorages = new IdentityHashMap<>();
+	
+
+	Weapon(Builder builder, ModContext modContext) {
 		this.builder = builder;
 		this.modContext = modContext;
 		setMaxStackSize(1);
@@ -484,28 +81,8 @@ public class Weapon extends Item {
 		return true;
 	}
 	
-//	@Override
-//	public boolean onEntitySwing(EntityLivingBase entityLiving, ItemStack itemStack) {
-//		ensureItemStack(itemStack);
-//		float currentZoom = itemStack.stackTagCompound.getFloat(ZOOM_TAG);
-//		if (currentZoom != 1.0f || entityLiving.isSprinting()) {
-//			itemStack.stackTagCompound.setFloat(ZOOM_TAG, 1.0f);
-//			itemStack.stackTagCompound.setBoolean(AIMED_TAG, false);
-//		} else {
-//			WeaponInstanceStorage weaponInstanceStorage = getWeaponInstanceStorage((EntityPlayer) entityLiving);
-//			if(weaponInstanceStorage != null) {
-//				itemStack.stackTagCompound.setFloat(ZOOM_TAG, weaponInstanceStorage.getZoom());
-//			}
-//			
-//			itemStack.stackTagCompound.setBoolean(AIMED_TAG, true);
-//		}
-//		return true;
-//	}
-	
-	
-	
 	@Override
-	public ItemStack onItemRightClick(ItemStack itemStack, World p_77659_2_, EntityPlayer entityPlayer) {
+	public ItemStack onItemRightClick(ItemStack itemStack, World world, EntityPlayer entityPlayer) {
 		ensureItemStack(itemStack);
 		
 		float currentZoom = itemStack.stackTagCompound.getFloat(ZOOM_TAG);
@@ -524,8 +101,7 @@ public class Weapon extends Item {
 			itemStack.stackTagCompound.setBoolean(AIMED_TAG, true);
 		}
 		
-		
-		return super.onItemRightClick(itemStack, p_77659_2_, entityPlayer);
+		return super.onItemRightClick(itemStack, world, entityPlayer);
 	}
 
 	@Override
@@ -559,15 +135,12 @@ public class Weapon extends Item {
 	public void changeRecoil(EntityPlayer player, float factor) {
 		ItemStack itemStack = player.getHeldItem();
 		ensureItemStack(itemStack);
-		//float recoil = itemStack.stackTagCompound.getFloat(RECOIL_TAG) * factor;
 		float recoil = builder.recoil * factor;
 		itemStack.stackTagCompound.setFloat(RECOIL_TAG, recoil);
 		modContext.getChannel().sendTo(new ChangeSettingsMessage(this, recoil), (EntityPlayerMP) player);
-		//builder.recoil = builder.recoil * factor;
 	}
 	
-	public void clientChangeRecoil(EntityPlayer player, float recoil) {
-		
+	void clientChangeRecoil(EntityPlayer player, float recoil) {
 		WeaponInstanceStorage weaponInstanceStorage = getWeaponInstanceStorage(player);
 		if(weaponInstanceStorage != null) {
 			weaponInstanceStorage.setRecoil(recoil);
@@ -577,9 +150,8 @@ public class Weapon extends Item {
 	public void changeZoom(EntityPlayer player, float factor) {
 		WeaponInstanceStorage weaponInstanceStorage = getWeaponInstanceStorage(player);
 		if(weaponInstanceStorage != null) {
-			weaponInstanceStorage.zoom = builder.zoom * factor;
+			weaponInstanceStorage.setZoom(builder.zoom * factor);
 		}
-		//builder.zoom = builder.zoom * factor;
 	}
 	
 	int getShotCount(ItemStack itemStack) {
@@ -605,44 +177,14 @@ public class Weapon extends Item {
 		itemStack.stackTagCompound.setInteger(STATE_TAG, newState);
 	}
 	
-	void enterAttachmentSelectionMode(ItemStack itemStack) {
-		ensureItemStack(itemStack);
-		int activeAttachmentsIds[] = ensureActiveAttachments(itemStack);
-		
-		int selectedAttachmentIndexes[] = new int[AttachmentCategory.values.length];
-		itemStack.stackTagCompound.setIntArray(SELECTED_ATTACHMENT_INDEXES_TAG, selectedAttachmentIndexes);
-		
-		itemStack.stackTagCompound.setIntArray(PREVIOUSLY_SELECTED_ATTACHMENT_TAG, 
-				Arrays.copyOf(activeAttachmentsIds, activeAttachmentsIds.length));
-		
-		((Weapon) itemStack.getItem()).setState(itemStack, Weapon.STATE_MODIFYING);
-		itemStack.stackTagCompound.setInteger(PERSISTENT_STATE_TAG, WeaponInstanceState.MODIFYING.ordinal());
-	}
-	
-	void exitAttachmentSelectionMode(ItemStack itemStack, EntityPlayer player) {
-		ensureItemStack(itemStack);
-		
-		int activeAttachmentsIds[] = itemStack.stackTagCompound.getIntArray(ACTIVE_ATTACHMENT_TAG);
-		int previouslySelectedAttachmentIds[] = itemStack.stackTagCompound.getIntArray(PREVIOUSLY_SELECTED_ATTACHMENT_TAG);
-		for(int i = 0; i < activeAttachmentsIds.length; i++) {
-			if(activeAttachmentsIds[i] != previouslySelectedAttachmentIds[i]) {
-				Item newItem = Item.getItemById(activeAttachmentsIds[i]);
-				Item oldItem = Item.getItemById(previouslySelectedAttachmentIds[i]);
-				player.inventory.consumeInventoryItem(newItem);
-				if(!player.inventory.addItemStackToInventory(new ItemStack(oldItem))) {
-					System.err.println("Cannot add item back to the inventory: " + oldItem);
-				}
-			}
-		}
-		
-		((Weapon) itemStack.getItem()).setState(itemStack, Weapon.STATE_READY);
-		itemStack.stackTagCompound.setInteger(PERSISTENT_STATE_TAG, WeaponInstanceState.READY.ordinal());
+	Map<ItemAttachment<Weapon>, CompatibleAttachment<Weapon>> getCompatibleAttachments() {
+		return builder.compatibleAttachments;
 	}
 
 	String getCrosshair(ItemStack itemStack, EntityPlayer thePlayer) {
 		if(isZoomed(itemStack)) {
 			String crosshair = null;
-			ItemAttachment<Weapon> scopeAttachment = getActiveAttachment(itemStack, AttachmentCategory.SCOPE);
+			ItemAttachment<Weapon> scopeAttachment = modContext.getAttachmentManager().getActiveAttachment(itemStack, AttachmentCategory.SCOPE);
 			if(scopeAttachment != null) {
 				crosshair = scopeAttachment.getCrosshair();
 			}
@@ -670,7 +212,6 @@ public class Weapon extends Item {
 	
 	void changeTexture(ItemStack itemStack, EntityPlayer player) {
 		ensureItemStack(itemStack);
-		//System.out.println("Weapon changing texture");
 		int currentIndex = itemStack.stackTagCompound.getInteger(ACTIVE_TEXTURE_INDEX_TAG);
 		if(builder.textureNames.isEmpty()) {
 			return;
@@ -691,179 +232,12 @@ public class Weapon extends Item {
 		return builder.textureNames.get(itemStack.stackTagCompound.getInteger(ACTIVE_TEXTURE_INDEX_TAG));
 	}
 	
-	@SuppressWarnings("unchecked")
-	void changeAttachment(AttachmentCategory attachmentCategory, ItemStack itemStack, EntityPlayer player) {
-		ensureItemStack(itemStack);
-		
-		int[] activeAttachmentsIds = ensureActiveAttachments(itemStack);
-		int activeAttachmentIdForThisCategory = activeAttachmentsIds[attachmentCategory.ordinal()];
-		ItemAttachment<Weapon> currentAttachment = null;
-		if(activeAttachmentIdForThisCategory > 0) {
-			currentAttachment = (ItemAttachment<Weapon>) Item.getItemById(activeAttachmentIdForThisCategory);
-		}
-		
-		ItemAttachment<Weapon> nextAttachment = nextCompatibleAttachment(attachmentCategory, currentAttachment, player, itemStack);
-
-		if(currentAttachment != null && currentAttachment.getRemove() != null) {
-			currentAttachment.getRemove().apply(currentAttachment, this, player);
-		}
-		
-		if(nextAttachment != null && nextAttachment.getApply() != null) {
-			nextAttachment.getApply().apply(nextAttachment, this, player);
-		}
-		
-		activeAttachmentsIds[attachmentCategory.ordinal()] = Item.getIdFromItem(nextAttachment);;
-		
-		itemStack.stackTagCompound.setIntArray(ACTIVE_ATTACHMENT_TAG, activeAttachmentsIds);
-	}
-		
-	@SuppressWarnings("unchecked")
-	private ItemAttachment<Weapon> nextCompatibleAttachment(AttachmentCategory category, Item currentAttachment, EntityPlayer player, ItemStack itemStack) {
-		int[] selectedAttachmentIndexes = itemStack.stackTagCompound.getIntArray(SELECTED_ATTACHMENT_INDEXES_TAG);
-		if(selectedAttachmentIndexes == null || selectedAttachmentIndexes.length != AttachmentCategory.values.length) {
-			return null;
-		}
-
-		int activeIndex = selectedAttachmentIndexes[category.ordinal()];
-		
-		/*
-		 * 0 - original attachment
-		 * 1 - 36 - attachments from inventory
-		 * -1 - no attachment
-		 */
-		
-
-		/*
-		 * No original attachment (0), no compatible attachments, starting from 0
-		 *    currentIndex: 0 -> -1
-		 *    
-		 * No original attachment (0), no compatible attachments, starting from -1
-		 *    currentIndex: -1 -> 0
-		 *    
-		 *    
-		 * No original attachment (0), compatible attachment found
-		 *    currentIndex: 0 -> [1 - 36]
-		 * 
-		 * No original attachment (0), compatible attachment found, starting from [1 - 35]
-		 *    currentIndex: [1 - 35] -> [1 - 35] + 1
-		 *    
-		 * No original attachment (0), compatible attachment found, starting from [36]
-		 *    currentIndex: 36 -> 37 -> -1
-		 *    
-		 * No original attachment (0), compatible attachment found, starting from [-1]
-		 *    currentIndex: -1 -> 0 (visual effect: no change, switching from no attachment to no attachment)
-		 * 
-		 */
-		
-		int currentIndex = activeIndex + 1;
-		
-		ItemAttachment<Weapon> nextCompatibleAttachment = null;
-		for(; currentIndex <= 36; currentIndex++) {
-			
-			if(currentIndex == 0) {
-				// Select original attachment that was there prior to entering attachment mode
-				int previouslySelectedAttachmentIds[] = itemStack.stackTagCompound.getIntArray(PREVIOUSLY_SELECTED_ATTACHMENT_TAG);
-				nextCompatibleAttachment = (ItemAttachment<Weapon>) Item.getItemById(previouslySelectedAttachmentIds[category.ordinal()]);
-				if(nextCompatibleAttachment != null) {
-					// if original attachment existed, exit, iterate till found one
-					// reason: never stop on original attachment (index 0) if it's null
-					break;
-				} else {
-					continue;
-				}
-			}
-			ItemStack slotItemStack = player.inventory.getStackInSlot(currentIndex - 1);
-			if(slotItemStack != null && slotItemStack.getItem() instanceof ItemAttachment) {
-				ItemAttachment<Weapon> attachmentItemFromInventory = (ItemAttachment<Weapon>) slotItemStack.getItem();
-				if(attachmentItemFromInventory.getCategory() == category && builder.compatibleAttachments.containsKey(attachmentItemFromInventory)
-						&& attachmentItemFromInventory != currentAttachment) {
-					nextCompatibleAttachment = attachmentItemFromInventory;
-					break;
-				}
-			}
-		}
-		if(nextCompatibleAttachment == null) {
-			currentIndex = -1;
-		}
-		
-		selectedAttachmentIndexes[category.ordinal()] = currentIndex;
-		itemStack.stackTagCompound.setIntArray(SELECTED_ATTACHMENT_INDEXES_TAG, selectedAttachmentIndexes);
-		return nextCompatibleAttachment;
-	}
-	
-	public ItemAttachment<Weapon> getActiveAttachment (ItemStack itemStack, AttachmentCategory category) {
-		ensureItemStack(itemStack);
-		
-		ItemAttachment<Weapon> itemAttachment = null;
-		
-		int[] activeAttachmentsIds = ensureActiveAttachments(itemStack);
-		
-		for(int activeIndex: activeAttachmentsIds) {
-			if(activeIndex == 0) continue;
-			Item item = Item.getItemById(activeIndex);
-			if(item instanceof ItemAttachment) {
-				CompatibleAttachment<Weapon> compatibleAttachment = builder.compatibleAttachments.get(item);
-				if(compatibleAttachment != null && category == compatibleAttachment.getAttachment().getCategory()) {
-					itemAttachment = compatibleAttachment.getAttachment();
-					break;
-				}
-			}
-			
-		}
-		return itemAttachment;
-	}
-	
-	List<CompatibleAttachment<Weapon>> getActiveAttachments (ItemStack itemStack) {
-		ensureItemStack(itemStack);
-		
-		List<CompatibleAttachment<Weapon>> activeAttachments = new ArrayList<>();
-		
-		int[] activeAttachmentsIds = ensureActiveAttachments(itemStack);
-		
-		for(int activeIndex: activeAttachmentsIds) {
-			if(activeIndex == 0) continue;
-			Item item = Item.getItemById(activeIndex);
-			if(item instanceof ItemAttachment) {
-				CompatibleAttachment<Weapon> compatibleAttachment = builder.compatibleAttachments.get(item);
-				if(compatibleAttachment != null) {
-					activeAttachments.add(compatibleAttachment);
-				}
-				
-			}
-			
-		}
-		return activeAttachments;
-	}
-
-	private int[] ensureActiveAttachments(ItemStack itemStack) {
-		int activeAttachmentsIds[] = itemStack.stackTagCompound.getIntArray(ACTIVE_ATTACHMENT_TAG);
-		
-		if(activeAttachmentsIds == null || activeAttachmentsIds.length != AttachmentCategory.values.length) {
-			activeAttachmentsIds = new int[AttachmentCategory.values.length];
-			itemStack.stackTagCompound.setIntArray(ACTIVE_ATTACHMENT_TAG, activeAttachmentsIds);
-			for(CompatibleAttachment<Weapon> attachment: this.builder.compatibleAttachments.values()) {
-				if(attachment.isDefault()) {
-					activeAttachmentsIds[attachment.getAttachment().getCategory().ordinal()] = Item.getIdFromItem(attachment.getAttachment());
-				}
-			}
-		}
-		return activeAttachmentsIds;
-	}
-	
 	public static boolean isActiveAttachment(ItemStack itemStack, ItemAttachment<Weapon> attachment) {
 		Weapon weapon = (Weapon) itemStack.getItem();
-		int[] activeAttachmentsIds = weapon.ensureActiveAttachments(itemStack);
-		return Arrays.stream(activeAttachmentsIds).anyMatch((attachmentId) -> attachment == Item.getItemById(attachmentId));
+		return weapon.modContext.getAttachmentManager().isActiveAttachment(itemStack, attachment);
 	}
 	
-	private boolean isSilencerOn(ItemStack itemStack) {
-		if(itemStack.stackTagCompound == null) return false;
-		int[] activeAttachmentsIds = ensureActiveAttachments(itemStack);
-		int activeAttachmentIdForThisCategory = activeAttachmentsIds[AttachmentCategory.SILENCER.ordinal()];
-		return activeAttachmentIdForThisCategory > 0;
-	}
-	
-	public static boolean isReloadingConfirmed(EntityPlayer player, ItemStack itemStack) {
+	static boolean isReloadingConfirmed(EntityPlayer player, ItemStack itemStack) {
 		Weapon weapon = (Weapon) itemStack.getItem();
 		WeaponInstanceStorage storage = weapon.getWeaponInstanceStorage(player);
 		return storage != null && storage.getState() == WeaponInstanceState.RELOAD_CONFIRMED;
@@ -879,153 +253,9 @@ public class Weapon extends Item {
 				itemStack.stackTagCompound != null && itemStack.stackTagCompound.getBoolean(Weapon.AIMED_TAG);
 	}
 
-	Random random = new Random();
-	
-	public static enum WeaponInstanceState { READY, SHOOTING, RELOAD_REQUESTED, RELOAD_CONFIRMED, PAUSED, MODIFYING };
-	
-	private Map<UUID, WeaponInstanceStorage> weaponInstanceStorages = new IdentityHashMap<>();
-	
-	private static class ExpirableRenderableState {
-		private RenderableState state;
-		private long expiresAt;
-
-		public ExpirableRenderableState(RenderableState state, long expiresAt) {
-			this.state = state;
-			this.expiresAt = expiresAt;
-		}
-	}
-	
-	static class WeaponInstanceStorage {
-		private AtomicInteger currentAmmo;
-		private AtomicLong reloadingStopsAt;
-		private long lastShotFiredAt;
-		//private AtomicInteger recoiled;
-		//private int shots;
-		private int shotsInternal;
-		private float zoom;
-		private AtomicDouble recoil;
-		private float fireRate;
-		
-		private AtomicReference<WeaponInstanceState> state;
-		
-		private int recoilableShotCount;
-		private boolean recoiledForCurrentShot;
-		
-		
-		private Queue<ExpirableRenderableState> disposableRenderableStates = new ArrayBlockingQueue<>(100);
-
-		public WeaponInstanceStorage(WeaponInstanceState state, int currentAmmo, float zoom, float recoil, float fireRate) {
-			this.currentAmmo = new AtomicInteger(currentAmmo);
-			this.reloadingStopsAt = new AtomicLong();
-			this.recoil = new AtomicDouble(recoil);
-			this.state = new AtomicReference<>(state);
-			//this.recoiled = new AtomicInteger();
-			this.zoom = zoom;
-			this.fireRate = fireRate;
-			//this.recoil = recoil;
-		}
-
-		public WeaponInstanceState getState() {
-			return state.get();
-		}
-
-		public void setState(WeaponInstanceState state) {
-			this.state.set(state);
-		}
-		
-		public float getZoom() {
-			return zoom;
-		}
-		
-		public void setZoom(float zoom) {
-			this.zoom = zoom;
-		}
-
-		public float getRecoil() {
-			return (float)recoil.get();
-		}
-
-		public void setRecoil(float recoil) {
-			this.recoil.set(recoil);
-		}
-		
-		
-		public synchronized void addRecoilableShot() {
-			if(recoilableShotCount < 0) {
-				recoilableShotCount = 0;
-			}
-			if(recoilableShotCount == 0) {
-				recoiledForCurrentShot = false;
-			}
-			recoilableShotCount++;
-		}
-		
-		public synchronized boolean hasRecoiled() {
-			return recoiledForCurrentShot;
-		}
-		
-		public synchronized boolean checkIfNotRecoiledAndRecoil() {
-			if(recoilableShotCount > 0) {
-				if(!recoiledForCurrentShot) {
-					recoilableShotCount--;
-					recoiledForCurrentShot = true;
-					return true;
-				} else {
-					return false;
-				}
-			} else {
-				return false;
-			}
-		}
-		
-		public synchronized void resetRecoiled() {
-			recoiledForCurrentShot = false;
-		}
-		
-		public void addShot() {
-			if(shotsInternal++ == 0) {
-				//disposableRenderableStates.add(RenderableState.RECOILED);
-			}
-			//disposableRenderableStates.add(RenderableState.SHOOTING);
-			disposableRenderableStates.add(new ExpirableRenderableState(
-					RenderableState.SHOOTING, System.currentTimeMillis() + (long) (50f / fireRate)));
-		}
-		
-		/**
-		 * Retrives next available valid state. Expired states are discarded internally.
-		 * Single use states are discarded after the first use.
-		 * 
-		 * @return
-		 */
-		public RenderableState getNextDisposableRenderableState() {
-			ExpirableRenderableState ers;
-			while((ers = disposableRenderableStates.peek()) != null) {
-				if(System.currentTimeMillis() <= ers.expiresAt) {
-					//if(ers.singleUse) disposableRenderableStates.poll();
-					break;
-				} else {
-					disposableRenderableStates.poll();
-				}
-			}
-			return ers != null ? ers.state : RenderableState.NORMAL;
-		}
-		
-		public int getShots() {
-			return shotsInternal;
-		}
-		
-		public void resetShots() {
-			shotsInternal = 0;
-		}
-		
-//		public void resetDisposableRenderableQueue() {
-//			disposableRenderableStates.clear();
-//		}
-	}
-	
-	protected WeaponInstanceStorage getWeaponInstanceStorage(EntityPlayer player) {
-		
+	WeaponInstanceStorage getWeaponInstanceStorage(EntityPlayer player) {
 		if(player == null) return null;
+		
 		return weaponInstanceStorages.computeIfAbsent(player.getPersistentID(), (w) ->
 			player.getHeldItem().stackTagCompound != null ?
 					new WeaponInstanceStorage(WeaponInstanceState.values()[player.getHeldItem().stackTagCompound.getInteger(PERSISTENT_STATE_TAG)], 
@@ -1033,99 +263,42 @@ public class Weapon extends Item {
 					player.getHeldItem().stackTagCompound.getFloat(RECOIL_TAG), builder.fireRate) : null);
 	}
 	
-	public void clientTryFire(EntityPlayer player) {
+	void clientTryFire(EntityPlayer player) {
 		
 		WeaponInstanceStorage storage = getWeaponInstanceStorage(player);
 		if(storage == null) return;
 		
-		boolean readyToShootAccordingToFireRate = System.currentTimeMillis() - storage.lastShotFiredAt >= 50f / builder.fireRate;
+		boolean readyToShootAccordingToFireRate = System.currentTimeMillis() - storage.getLastShotFiredAt() >= 50f / builder.fireRate;
 		if(!player.isSprinting() 
 				&& (storage.getState() == WeaponInstanceState.READY || storage.getState() == WeaponInstanceState.SHOOTING)
 				&& readyToShootAccordingToFireRate
 				&& storage.getShots() < builder.maxShots
-				&& storage.currentAmmo.getAndAccumulate(0, (current, ignore) -> current > 0 ? current - 1 : 0) > 0) {
+				&& storage.getCurrentAmmo().getAndAccumulate(0, (current, ignore) -> current > 0 ? current - 1 : 0) > 0) {
 			storage.setState(WeaponInstanceState.SHOOTING);
 			modContext.getChannel().sendToServer(new TryFireMessage(true));
 			ItemStack heldItem = player.getHeldItem();
 			
 			modContext.runSyncTick(() -> {
-				player.playSound(isSilencerOn(heldItem) ? builder.silencedShootSound : builder.shootSound, 1F, 1F);
+				player.playSound(modContext.getAttachmentManager().isSilencerOn(heldItem) ? builder.silencedShootSound : builder.shootSound, 1F, 1F);
 			});
 			
 			player.rotationPitch = player.rotationPitch - storage.getRecoil();						
-			float rotationYawFactor = -1.0f + random.nextFloat() * 2.0f;
+			float rotationYawFactor = -1.0f + itemRand.nextFloat() * 2.0f;
 			player.rotationYaw = player.rotationYaw + storage.getRecoil() * rotationYawFactor;
 			
 			if(builder.flashIntensity > 0) {
-				spawnFlashParticle(player);
+				EffectManager.getInstance().spawnFlashParticle(player, builder.flashIntensity);
 			}
 			
-			spawnSmokeParticle(player);
+			EffectManager.getInstance().spawnSmokeParticle(player);
 			
-			storage.lastShotFiredAt = System.currentTimeMillis();
+			storage.setLastShotFiredAt(System.currentTimeMillis());
 			
 			storage.addShot();
 		}
 	}
 
-	private void spawnSmokeParticle(EntityPlayer player) {
-				
-		double motionX = player.worldObj.rand.nextGaussian() * 0.003D;
-		double motionY = player.worldObj.rand.nextGaussian() * 0.003D;
-		double motionZ = player.worldObj.rand.nextGaussian() * 0.003D;
-		
-		Vec3 look = player.getLookVec();
-		float distance = 0.3F;
-		double posX = player.posX + (look.xCoord * distance) + (player.worldObj.rand.nextFloat() * 2.0F - 1) * 0.1f;
-		double posY = player.posY + (look.yCoord * distance) + (player.worldObj.rand.nextFloat() * 2.0F - 1) * 0.1f;
-		double posZ = player.posZ + (look.zCoord * distance) + (player.worldObj.rand.nextFloat() * 2.0F - 1) * 0.1f;
-		
-		EntityFX smokeParticle = new SmokeFX(
-				player.worldObj, 
-				posX,
-		        posY, 
-		        posZ,
-		        2.0f,
-		      (float)motionX, 
-		      (float)motionY, 
-		      (float)motionZ);
-		
-		Minecraft.getMinecraft().effectRenderer.addEffect(smokeParticle);
-	}
-	
-	private void spawnFlashParticle(EntityPlayer player) {
-		
-		float distance = 0.5f;
-		float xOffset = 0.1f;
-		float yOffset = 0.1f;
-		float scale = 1.5f;
-		float positionRandomizationFactor = 0.01f;
-		
-		Vec3 look = player.getLookVec();
-		
-		float motionX = (float)player.worldObj.rand.nextGaussian() * 0.01f;
-		float motionY = (float)player.worldObj.rand.nextGaussian() * 0.01f;
-		float motionZ = (float)player.worldObj.rand.nextGaussian() * 0.01f;
-		
-		double posX = player.posX + (look.xCoord * distance) + (player.worldObj.rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor + (-look.zCoord * xOffset);
-		double posY = player.posY + (look.yCoord * distance) + (player.worldObj.rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor - yOffset;
-		double posZ = player.posZ + (look.zCoord * distance) + (player.worldObj.rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor + (look.xCoord * xOffset);
-		
-		EntityFX smokeParticle = new FlashFX(
-				player.worldObj, 
-				posX,
-				posY,
-				posZ,
-				scale,
-				builder.flashIntensity,
-				motionX, 
-				motionY, 
-				motionZ);
-		
-		Minecraft.getMinecraft().effectRenderer.addEffect(smokeParticle);
-	}
-
-	public void tryFire(EntityPlayer player, ItemStack itemStack) {
+	void tryFire(EntityPlayer player, ItemStack itemStack) {
 		int currentAmmo = itemStack.stackTagCompound.getInteger(AMMO_TAG);
 		if(currentAmmo > 0) {
 			if(!isZoomed(itemStack)) {
@@ -1135,59 +308,54 @@ public class Weapon extends Item {
 			for(int i = 0; i < builder.pellets; i++) {
 				player.worldObj.spawnEntityInWorld(builder.spawnEntityWith.apply(this, player));
 			}
-			player.worldObj.playSoundToNearExcept(player, isSilencerOn(itemStack) ? builder.silencedShootSound : builder.shootSound, 1.0F, 1.0F);
+			player.worldObj.playSoundToNearExcept(player, modContext.getAttachmentManager().isSilencerOn(itemStack) ? builder.silencedShootSound : builder.shootSound, 1.0F, 1.0F);
 		} else {
 			System.err.println("Invalid state: attempted to fire a weapon without ammo");
 		}
 	}
 	
-	public void tryStopFire(EntityPlayer player, ItemStack itemStack) {
+	void tryStopFire(EntityPlayer player, ItemStack itemStack) {
 		if(!isZoomed(itemStack)) {
 			itemStack.stackTagCompound.setBoolean(AIMED_TAG, false);
 		}
 	}
 
-	public void clientTryStopFire(EntityPlayer player) {
-		//EntityPlayer player = FMLClientHandler.instance().getClientPlayerEntity();
-		//System.out.println("Trying to stop fire");
+	void clientTryStopFire(EntityPlayer player) {
 		WeaponInstanceStorage storage = getWeaponInstanceStorage(player);
 		if(storage == null) return;
 		if(storage.getState() == WeaponInstanceState.SHOOTING) {
 			storage.resetShots();
-			if(storage.lastShotFiredAt + builder.pumpTimeoutMilliseconds <= System.currentTimeMillis()) {
-				//System.out.println("Timeout passed, getting ready");
+			if(storage.getLastShotFiredAt() + builder.pumpTimeoutMilliseconds <= System.currentTimeMillis()) {
 				storage.setState(WeaponInstanceState.READY);
 			} else {
 				storage.setState(WeaponInstanceState.PAUSED);
-				//System.out.println("Timeout not passed, waiting");
 			}
-			//System.out.println("Weapon state set to " + storage.getState());
 			modContext.getChannel().sendToServer(new TryFireMessage(false));
 		}
 	}
 
 	// Client
-	public void initiateReload(ItemStack itemStack, EntityPlayer player) {
+	void initiateReload(ItemStack itemStack, EntityPlayer player) {
 		WeaponInstanceStorage storage = getWeaponInstanceStorage(player);
 		if(storage == null) return;
 		if(storage.getState() != WeaponInstanceState.RELOAD_REQUESTED 
-				&& storage.getState() != WeaponInstanceState.RELOAD_CONFIRMED &&storage.currentAmmo.get() < builder.ammoCapacity) {
-			storage.reloadingStopsAt.set(player.worldObj.getTotalWorldTime() + MAX_RELOAD_TIMEOUT_TICKS);
+				&& storage.getState() != WeaponInstanceState.RELOAD_CONFIRMED &&storage.getCurrentAmmo().get() < builder.ammoCapacity) {
+			storage.getReloadingStopsAt().set(player.worldObj.getTotalWorldTime() + MAX_RELOAD_TIMEOUT_TICKS);
 			storage.setState(WeaponInstanceState.RELOAD_REQUESTED);
 			modContext.getChannel().sendToServer(new ReloadMessage(this));
 		}
 	}
 	
 	// Client
-	public void completeReload(ItemStack itemStack, EntityPlayer player, int ammo, boolean quietly) {
+	void completeReload(ItemStack itemStack, EntityPlayer player, int ammo, boolean quietly) {
 		WeaponInstanceStorage storage = getWeaponInstanceStorage(player);
 		if(storage == null) return;
 		if(storage.getState() == WeaponInstanceState.RELOAD_REQUESTED) {
-			storage.currentAmmo.set(ammo);
+			storage.getCurrentAmmo().set(ammo);
 			if(ammo > 0 && !quietly) {
 				storage.setState(WeaponInstanceState.RELOAD_CONFIRMED);
 				long reloadingStopsAt = player.worldObj.getTotalWorldTime() + builder.reloadingTimeout;
-				storage.reloadingStopsAt.set(reloadingStopsAt);
+				storage.getReloadingStopsAt().set(reloadingStopsAt);
 				player.playSound(builder.reloadSound, 1.0F, 1.0F);
 			} else {
 				storage.setState(WeaponInstanceState.READY);
@@ -1196,7 +364,7 @@ public class Weapon extends Item {
 	}
 	
 	// Server
-	public void reload(ItemStack itemStack, EntityPlayer player) {
+	void reload(ItemStack itemStack, EntityPlayer player) {
 		if (itemStack.stackTagCompound != null && !player.isSprinting()) {
 			if (player.inventory.consumeInventoryItem(builder.ammo)) {
 				long totalWorldTime = player.worldObj.getTotalWorldTime();
@@ -1213,71 +381,46 @@ public class Weapon extends Item {
 	}
 
 	// Client
-	public void tick(EntityPlayer player) {
+	void tick(EntityPlayer player) {
 		WeaponInstanceStorage storage = getWeaponInstanceStorage(player);
 		if(storage != null) {
 			
-//			boolean readyToRecoilAccordingToFireRate = !storage.recoiled.get() && System.currentTimeMillis() - storage.lastShotFiredAt >= 25f / builder.fireRate
-//					&& !storage.recoiled.get() && System.currentTimeMillis() - storage.lastShotFiredAt < 100f / builder.fireRate;
-//			if(readyToRecoilAccordingToFireRate) {
-//				storage.recoiled.set(true);
-//				System.out.println("Recoiling...");
-//			}
-			
-			//System.out.println("Ticking weapon state " + storage.getState());
-			
-			if(storage.getState() != WeaponInstanceState.SHOOTING && System.currentTimeMillis() - storage.lastShotFiredAt > 50) {
-				// When shooting stops, reset recoil counter to 0 after a timeout
-				//storage.recoiled.set(0);
-				//storage.resetDisposableRenderableQueue();
+			if(storage.getState() != WeaponInstanceState.SHOOTING && System.currentTimeMillis() - storage.getLastShotFiredAt() > 50) {
 			}
 			
 			if(storage.getState() == WeaponInstanceState.RELOAD_REQUESTED || storage.getState() == WeaponInstanceState.RELOAD_CONFIRMED) {
 				long totalWorldTime = player.worldObj.getTotalWorldTime();
-				if(storage.reloadingStopsAt.get() <= totalWorldTime) {
+				if(storage.getReloadingStopsAt().get() <= totalWorldTime) {
 					storage.setState(WeaponInstanceState.READY);
 				}
 			} else if(storage.getState() == WeaponInstanceState.PAUSED 
-					&& storage.lastShotFiredAt + builder.pumpTimeoutMilliseconds <= System.currentTimeMillis()) {
+					&& storage.getLastShotFiredAt() + builder.pumpTimeoutMilliseconds <= System.currentTimeMillis()) {
 				
-				//System.out.println("Timeout passed, getting ready");
 				storage.setState(WeaponInstanceState.READY);
 			}
 		}
 		
-		//System.out.println("Storage state: " + storage.getState());
-	}
-
-	public void switchClientAttachmentSelectionMode(ItemStack itemStack, EntityPlayer player) {
-		WeaponInstanceStorage storage = getWeaponInstanceStorage(player);
-		if(storage == null) return;
-		if(storage.getState() != WeaponInstanceState.MODIFYING) {
-			storage.setState(WeaponInstanceState.MODIFYING);
-		} else {
-			storage.setState(WeaponInstanceState.READY);
-		}
-    	modContext.getChannel().sendToServer(new AttachmentModeMessage());
 	}
 	
-	public int getCurrentAmmo(EntityPlayer player) {
+	int getCurrentAmmo(EntityPlayer player) {
 		WeaponInstanceStorage storage = getWeaponInstanceStorage(player);
 		if(storage == null) return 0;
-		return storage.currentAmmo.get();
+		return storage.getCurrentAmmo().get();
 	}
 
-	public int getAmmoCapacity() {
+	int getAmmoCapacity() {
 		return builder.ammoCapacity;
 	}
 
-	public ItemAmmo getAmmo() {
+	ItemAmmo getAmmo() {
 		return builder.ammo;
 	}
 	
-	public ModelBase getAmmoModel() {
+	ModelBase getAmmoModel() {
 		return builder.ammoModel;
 	}
 	
-	public String getAmmoModelTextureName() {
+	String getAmmoModelTextureName() {
 		return builder.ammoModelTextureName;
 	}
 	
@@ -1298,5 +441,9 @@ public class Weapon extends Item {
 		ensureItemStack(itemStack);
 		boolean current = itemStack.stackTagCompound.getBoolean(LASER_ON_TAG);
 		itemStack.stackTagCompound.setBoolean(LASER_ON_TAG, !current);
+	}
+
+	List<CompatibleAttachment<Weapon>> getActiveAttachments(ItemStack itemStack) {
+		return modContext.getAttachmentManager().getActiveAttachments(itemStack);
 	}
 }
