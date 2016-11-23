@@ -54,7 +54,7 @@ public class Weapon extends Item {
 		private float spawnEntityDamage;
 		private float spawnEntityExplosionRadius;
 		private float spawnEntityGravityVelocity;
-		int reloadingTimeout = Weapon.DEFAULT_RELOADING_TIMEOUT_TICKS;
+		long reloadingTimeout = Weapon.DEFAULT_RELOADING_TIMEOUT_TICKS;
 		private String modId;
 
 		boolean crosshairFullScreen = false;
@@ -80,7 +80,7 @@ public class Weapon extends Item {
 			return this;
 		}
 
-		public Builder withReloadingTime(int reloadingTime) {
+		public Builder withReloadingTime(long reloadingTime) {
 			this.reloadingTimeout = reloadingTime;
 			return this;
 		}
@@ -396,42 +396,31 @@ public class Weapon extends Item {
 			modContext.registerWeapon(name, weapon, renderer);
 			return weapon;
 		}
-
 	}
 
-	
 	private static final UUID SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER_UUID = UUID.fromString("8efa8469-0256-4f8e-bdd9-3e7b23970663");
 	private static final AttributeModifier SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER = (new AttributeModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER_UUID, "Slow Down While Zooming", -0.5, 2)).setSaved(false);
 
-	private static final String SHOT_COUNTER_TAG = "ShotCounter";
 	private static final String ZOOM_TAG = "Zoomed";
 	private static final String RECOIL_TAG = "Recoil";
 	private static final String AIMED_TAG = "Aimed";
-	private static final String STOP_TIMER_TAG = "StopTimer";
-	private static final String RESUME_TIMER_TAG = "ResumeTimer";
-	private static final String RELOADING_TIMER_TAG = "ReloadingTimer";
 	private static final String ACTIVE_TEXTURE_INDEX_TAG = "ActiveTextureIndex";
 	private static final String LASER_ON_TAG = "LaserOn";
 	private static final String AMMO_TAG = "Ammo";
-	static final String PERSISTENT_STATE_TAG = "PersistentState";
-	public static final String STATE_TAG = "State";
+	private static final String STATE_TAG = "State";
 
-	static final int DEFAULT_RELOADING_TIMEOUT_TICKS = 10;
-	static final float DEFAULT_ZOOM = 0.75f;
-	static final float DEFAULT_FIRE_RATE = 0.5f;
-	
-	static final int STATE_READY = 0;
-	static final int STATE_MODIFYING = 4;
-	
-	static final int INFINITE_AMMO = -1;
-	
+	private static final long DEFAULT_RELOADING_TIMEOUT_TICKS = 10;
 	private static final long MAX_RELOAD_TIMEOUT_TICKS = 60;
 	
+	private static final float DEFAULT_ZOOM = 0.75f;
+	
+	private static final float DEFAULT_FIRE_RATE = 0.5f;
+		
 	Builder builder;
 	
 	private ModContext modContext;
 
-	public static enum WeaponInstanceState { READY, SHOOTING, RELOAD_REQUESTED, RELOAD_CONFIRMED, PAUSED, MODIFYING };
+	public static enum State { READY, SHOOTING, RELOAD_REQUESTED, RELOAD_CONFIRMED, PAUSED, MODIFYING };
 	
 	Weapon(Builder builder, ModContext modContext) {
 		this.builder = builder;
@@ -508,12 +497,9 @@ public class Weapon extends Item {
 		if (itemStack.stackTagCompound == null) {
 			itemStack.stackTagCompound = new NBTTagCompound();
 			setAmmo(itemStack, 0);
-			itemStack.stackTagCompound.setInteger(SHOT_COUNTER_TAG, 0);
 			setZoom(itemStack, 1.0f);
 			setRecoil(itemStack, builder.recoil);
-			itemStack.stackTagCompound.setLong(STOP_TIMER_TAG, 0);
-			itemStack.stackTagCompound.setLong(RESUME_TIMER_TAG, 0);
-			setState(itemStack, STATE_READY);
+			setModifying(itemStack, false);
 		}
 	}
 	
@@ -577,12 +563,20 @@ public class Weapon extends Item {
 		return itemStack.stackTagCompound.getFloat(RECOIL_TAG);
 	}
 	
-	int getState(ItemStack itemStack) {
-		return itemStack.stackTagCompound.getInteger(STATE_TAG);
+	static void setModifying(ItemStack itemStack, boolean modifying) {
+		if(modifying) {
+			itemStack.stackTagCompound.setInteger(Weapon.STATE_TAG, State.MODIFYING.ordinal());
+		} else {
+			itemStack.stackTagCompound.setInteger(Weapon.STATE_TAG, State.READY.ordinal());
+		}
 	}
 	
-	void setState(ItemStack itemStack, int newState) {
-		itemStack.stackTagCompound.setInteger(STATE_TAG, newState);
+	static boolean isModifying(ItemStack itemStack) {
+		return itemStack.stackTagCompound.getInteger(Weapon.STATE_TAG) == State.MODIFYING.ordinal();
+	}
+	
+	static State getClientState(ItemStack itemStack) {
+		return State.values()[itemStack.stackTagCompound.getInteger(Weapon.STATE_TAG)];
 	}
 	
 	public void changeRecoil(EntityPlayer player, float factor) {
@@ -652,7 +646,7 @@ public class Weapon extends Item {
 	static boolean isReloadingConfirmed(EntityPlayer player, ItemStack itemStack) {
 		Weapon weapon = (Weapon) itemStack.getItem();
 		WeaponClientStorage storage = weapon.getWeaponClientStorage(player);
-		return storage != null && storage.getState() == WeaponInstanceState.RELOAD_CONFIRMED;
+		return storage != null && storage.getState() == State.RELOAD_CONFIRMED;
 	}
 
 	@Override
@@ -671,11 +665,11 @@ public class Weapon extends Item {
 		
 		boolean readyToShootAccordingToFireRate = System.currentTimeMillis() - storage.getLastShotFiredAt() >= 50f / builder.fireRate;
 		if(!player.isSprinting() 
-				&& (storage.getState() == WeaponInstanceState.READY || storage.getState() == WeaponInstanceState.SHOOTING)
+				&& (storage.getState() == State.READY || storage.getState() == State.SHOOTING)
 				&& readyToShootAccordingToFireRate
 				&& storage.getShots() < builder.maxShots
 				&& storage.getCurrentAmmo().getAndAccumulate(0, (current, ignore) -> current > 0 ? current - 1 : 0) > 0) {
-			storage.setState(WeaponInstanceState.SHOOTING);
+			storage.setState(State.SHOOTING);
 			modContext.getChannel().sendToServer(new TryFireMessage(true));
 			ItemStack heldItem = player.getHeldItem();
 			
@@ -724,12 +718,12 @@ public class Weapon extends Item {
 	void clientTryStopFire(EntityPlayer player) {
 		WeaponClientStorage storage = getWeaponClientStorage(player);
 		if(storage == null) return;
-		if(storage.getState() == WeaponInstanceState.SHOOTING) {
+		if(storage.getState() == State.SHOOTING) {
 			storage.resetShots();
 			if(storage.getLastShotFiredAt() + builder.pumpTimeoutMilliseconds <= System.currentTimeMillis()) {
-				storage.setState(WeaponInstanceState.READY);
+				storage.setState(State.READY);
 			} else {
-				storage.setState(WeaponInstanceState.PAUSED);
+				storage.setState(State.PAUSED);
 			}
 			modContext.getChannel().sendToServer(new TryFireMessage(false));
 		}
@@ -739,10 +733,10 @@ public class Weapon extends Item {
 	void initiateReload(ItemStack itemStack, EntityPlayer player) {
 		WeaponClientStorage storage = getWeaponClientStorage(player);
 		if(storage == null) return;
-		if(storage.getState() != WeaponInstanceState.RELOAD_REQUESTED 
-				&& storage.getState() != WeaponInstanceState.RELOAD_CONFIRMED &&storage.getCurrentAmmo().get() < builder.ammoCapacity) {
+		if(storage.getState() != State.RELOAD_REQUESTED 
+				&& storage.getState() != State.RELOAD_CONFIRMED &&storage.getCurrentAmmo().get() < builder.ammoCapacity) {
 			storage.getReloadingStopsAt().set(player.worldObj.getTotalWorldTime() + MAX_RELOAD_TIMEOUT_TICKS);
-			storage.setState(WeaponInstanceState.RELOAD_REQUESTED);
+			storage.setState(State.RELOAD_REQUESTED);
 			modContext.getChannel().sendToServer(new ReloadMessage(this));
 		}
 	}
@@ -751,15 +745,15 @@ public class Weapon extends Item {
 	void completeReload(ItemStack itemStack, EntityPlayer player, int ammo, boolean quietly) {
 		WeaponClientStorage storage = getWeaponClientStorage(player);
 		if(storage == null) return;
-		if(storage.getState() == WeaponInstanceState.RELOAD_REQUESTED) {
+		if(storage.getState() == State.RELOAD_REQUESTED) {
 			storage.getCurrentAmmo().set(ammo);
 			if(ammo > 0 && !quietly) {
-				storage.setState(WeaponInstanceState.RELOAD_CONFIRMED);
+				storage.setState(State.RELOAD_CONFIRMED);
 				long reloadingStopsAt = player.worldObj.getTotalWorldTime() + builder.reloadingTimeout;
 				storage.getReloadingStopsAt().set(reloadingStopsAt);
 				player.playSound(builder.reloadSound, 1.0F, 1.0F);
 			} else {
-				storage.setState(WeaponInstanceState.READY);
+				storage.setState(State.READY);
 			}
 		}
 	}
@@ -768,9 +762,8 @@ public class Weapon extends Item {
 	void reload(ItemStack itemStack, EntityPlayer player) {
 		if (itemStack.stackTagCompound != null && !player.isSprinting()) {
 			if (player.inventory.consumeInventoryItem(builder.ammo)) {
-				long totalWorldTime = player.worldObj.getTotalWorldTime();
-				itemStack.stackTagCompound.setLong(RELOADING_TIMER_TAG, totalWorldTime + builder.reloadingTimeout);
-				//setState(itemStack, STATE_RELOADING);
+				//long totalWorldTime = player.worldObj.getTotalWorldTime();
+				//itemStack.stackTagCompound.setLong(RELOADING_TIMER_TAG, totalWorldTime + builder.reloadingTimeout);
 				setAmmo(itemStack, builder.ammoCapacity);
 				modContext.getChannel().sendTo(new ReloadMessage(this, builder.ammoCapacity), (EntityPlayerMP) player);
 				player.worldObj.playSoundToNearExcept(player, builder.reloadSound, 1.0F, 1.0F);
@@ -786,15 +779,15 @@ public class Weapon extends Item {
 		WeaponClientStorage storage = getWeaponClientStorage(player);
 		if(storage != null) {
 			
-			if(storage.getState() == WeaponInstanceState.RELOAD_REQUESTED || storage.getState() == WeaponInstanceState.RELOAD_CONFIRMED) {
+			if(storage.getState() == State.RELOAD_REQUESTED || storage.getState() == State.RELOAD_CONFIRMED) {
 				long totalWorldTime = player.worldObj.getTotalWorldTime();
 				if(storage.getReloadingStopsAt().get() <= totalWorldTime) {
-					storage.setState(WeaponInstanceState.READY);
+					storage.setState(State.READY);
 				}
-			} else if(storage.getState() == WeaponInstanceState.PAUSED 
+			} else if(storage.getState() == State.PAUSED 
 					&& storage.getLastShotFiredAt() + builder.pumpTimeoutMilliseconds <= System.currentTimeMillis()) {
 				
-				storage.setState(WeaponInstanceState.READY);
+				storage.setState(State.READY);
 			}
 		}
 	}

@@ -4,8 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import com.vicmatskiv.weaponlib.Weapon.WeaponInstanceState;
-
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 
@@ -60,8 +58,8 @@ class WeaponClientStorageManager {
 		return weaponClientStorage.computeIfAbsent(new Key(player.getPersistentID(), weapon), (w) ->
 			{
 				ItemStack itemStack = player.getHeldItem();
-				return player.getHeldItem().stackTagCompound != null ?
-						new WeaponClientStorage(WeaponInstanceState.values()[player.getHeldItem().stackTagCompound.getInteger(Weapon.PERSISTENT_STATE_TAG)], 
+				return itemStack.stackTagCompound != null ?
+						new WeaponClientStorage(Weapon.getClientState(itemStack), 
 						Weapon.getAmmo(itemStack), weapon.builder.zoom, 
 						Weapon.getRecoil(player.getHeldItem()), weapon.builder.fireRate) : null;
 			});

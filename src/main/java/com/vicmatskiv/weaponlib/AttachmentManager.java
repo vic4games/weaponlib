@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.vicmatskiv.weaponlib.Weapon.WeaponInstanceState;
+import com.vicmatskiv.weaponlib.Weapon.State;
 
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import net.minecraft.entity.player.EntityPlayer;
@@ -33,8 +33,8 @@ public final class AttachmentManager {
 			return; 
 		}
 		
-		Weapon weapon = (Weapon) item;
-		if(weapon.getState(itemStack) == Weapon.STATE_MODIFYING) {
+		//Weapon weapon = (Weapon) item;
+		if(Weapon.isModifying(itemStack) /*weapon.getState(itemStack) == Weapon.STATE_MODIFYING*/) {
 			exitAttachmentSelectionMode(itemStack, itemTossEvent.player);
 		}
 	}
@@ -47,10 +47,10 @@ public final class AttachmentManager {
 		Weapon weapon = (Weapon) item;
 		WeaponClientStorage storage = weapon.getWeaponClientStorage(player);
 		if(storage == null) return;
-		if(storage.getState() != WeaponInstanceState.MODIFYING) {
-			storage.setState(WeaponInstanceState.MODIFYING);
+		if(storage.getState() != State.MODIFYING) {
+			storage.setState(State.MODIFYING);
 		} else {
-			storage.setState(WeaponInstanceState.READY);
+			storage.setState(State.READY);
 		}
     	modContext.getChannel().sendToServer(new AttachmentModeMessage());
 	}
@@ -60,7 +60,7 @@ public final class AttachmentManager {
 			return;
 		}
 		
-		if(((Weapon) itemStack.getItem()).getState(itemStack) != Weapon.STATE_MODIFYING) {
+		if(!Weapon.isModifying(itemStack) /*((Weapon) itemStack.getItem()).getState(itemStack) != Weapon.STATE_MODIFYING*/) {
 			enterAttachmentSelectionMode(itemStack);
 		} else {
 			exitAttachmentSelectionMode(itemStack, player);
@@ -77,8 +77,7 @@ public final class AttachmentManager {
 		itemStack.stackTagCompound.setIntArray(PREVIOUSLY_SELECTED_ATTACHMENT_TAG, 
 				Arrays.copyOf(activeAttachmentsIds, activeAttachmentsIds.length));
 		
-		((Weapon) itemStack.getItem()).setState(itemStack, Weapon.STATE_MODIFYING);
-		itemStack.stackTagCompound.setInteger(Weapon.PERSISTENT_STATE_TAG, WeaponInstanceState.MODIFYING.ordinal());
+		Weapon.setModifying(itemStack, true);
 	}
 	
 	void exitAttachmentSelectionMode(ItemStack itemStack, EntityPlayer player) {
@@ -97,8 +96,7 @@ public final class AttachmentManager {
 			}
 		}
 		
-		((Weapon) itemStack.getItem()).setState(itemStack, Weapon.STATE_READY);
-		itemStack.stackTagCompound.setInteger(Weapon.PERSISTENT_STATE_TAG, WeaponInstanceState.READY.ordinal());
+		Weapon.setModifying(itemStack, false);
 	}
 
 	List<CompatibleAttachment<Weapon>> getActiveAttachments(ItemStack itemStack) {
@@ -143,7 +141,8 @@ public final class AttachmentManager {
 	
 	@SuppressWarnings("unchecked")
 	void changeAttachment(AttachmentCategory attachmentCategory, ItemStack itemStack, EntityPlayer player) {
-		if(!(itemStack.getItem() instanceof Weapon) || ((Weapon) itemStack.getItem()).getState(itemStack) != Weapon.STATE_MODIFYING) {
+		if(!(itemStack.getItem() instanceof Weapon) || 
+				!Weapon.isModifying(itemStack) /*((Weapon) itemStack.getItem()).getState(itemStack) != Weapon.STATE_MODIFYING*/) {
 			return;
 		}
 		
@@ -289,7 +288,7 @@ public final class AttachmentManager {
 			return;
 		}
 		
-		if(((Weapon) itemStack.getItem()).getState(itemStack) != Weapon.STATE_MODIFYING) {
+		if(!Weapon.isModifying(itemStack) /*((Weapon) itemStack.getItem()).getState(itemStack) != Weapon.STATE_MODIFYING*/) {
 			return;
 		}
 		

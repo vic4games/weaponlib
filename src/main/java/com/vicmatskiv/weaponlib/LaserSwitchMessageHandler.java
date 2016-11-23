@@ -16,7 +16,7 @@ public class LaserSwitchMessageHandler implements IMessageHandler<LaserSwitchMes
 			ItemStack itemStack = player.getHeldItem();
 			
 			if(itemStack != null && itemStack.getItem() instanceof Weapon) {
-				((Weapon) itemStack.getItem()).toggleLaser(itemStack);
+				Weapon.toggleLaser(itemStack);
 			}
 		}
 		

@@ -450,7 +450,7 @@ public class WeaponRenderer implements IItemRenderer {
 		float rate = builder.normalRandomizingRate;
 		RenderableState currentState = null;
 		Weapon weapon = (Weapon) itemStack.getItem();
-		if(weapon.getState(itemStack) == Weapon.STATE_MODIFYING && builder.firstPersonPositioningModifying != null) {
+		if(Weapon.isModifying(itemStack)/*weapon.getState(itemStack) == Weapon.STATE_MODIFYING*/ && builder.firstPersonPositioningModifying != null) {
 			currentState = RenderableState.MODIFYING;
 		} else if(player.isSprinting() && builder.firstPersonPositioningRunning != null) {
 			currentState = RenderableState.RUNNING;
@@ -470,7 +470,7 @@ public class WeaponRenderer implements IItemRenderer {
 			}
 			amplitude = builder.zoomRandomizingAmplitude; // Zoom amplitude is enforced even when firing
 			currentState = RenderableState.ZOOMING;
-		} else if(weapon.getState(itemStack) == Weapon.STATE_READY) {
+		} else if(!Weapon.isModifying(itemStack) /*weapon.getState(itemStack) == Weapon.STATE_READY)*/) {
 			currentState = RenderableState.NORMAL;
 		} else {
 			WeaponClientStorage storage = weapon.getWeaponClientStorage(player);

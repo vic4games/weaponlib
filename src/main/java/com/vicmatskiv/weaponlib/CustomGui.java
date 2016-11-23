@@ -104,7 +104,7 @@ public class CustomGui extends Gui {
 			
 			int color = 0xFFFFFF;
 			
-			if(weaponItem.getState(weapon) == Weapon.STATE_MODIFYING) {
+			if(Weapon.isModifying(weapon) /*weaponItem.getState(weapon) == Weapon.STATE_MODIFYING*/) {
 				fontRender.drawStringWithShadow("Attachment selection mode. Press [f] to exit.", 10, 10, color);
 				fontRender.drawStringWithShadow("Press [up] to add optic", width / 2 - 40, 60, color);
 				fontRender.drawStringWithShadow("Press [left] to add barrel rig", 10, height / 2 - 10, color);

@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 import com.google.common.util.concurrent.AtomicDouble;
-import com.vicmatskiv.weaponlib.Weapon.WeaponInstanceState;
+import com.vicmatskiv.weaponlib.Weapon.State;
 
 final class WeaponClientStorage {
 	private AtomicInteger currentAmmo;
@@ -19,14 +19,14 @@ final class WeaponClientStorage {
 	private AtomicDouble recoil;
 	private float fireRate;
 
-	private AtomicReference<WeaponInstanceState> state;
+	private AtomicReference<State> state;
 
 	private int recoilableShotCount;
 	private boolean recoiledForCurrentShot;
 
 	private Queue<ExpirableRenderableState> disposableRenderableStates = new ArrayBlockingQueue<>(100);
 
-	public WeaponClientStorage(WeaponInstanceState state, int currentAmmo, float zoom, float recoil, float fireRate) {
+	public WeaponClientStorage(State state, int currentAmmo, float zoom, float recoil, float fireRate) {
 		this.currentAmmo = new AtomicInteger(currentAmmo);
 		this.reloadingStopsAt = new AtomicLong();
 		this.recoil = new AtomicDouble(recoil);
@@ -43,11 +43,11 @@ final class WeaponClientStorage {
 		return lastShotFiredAt;
 	}
 
-	public WeaponInstanceState getState() {
+	public State getState() {
 		return state.get();
 	}
 
-	public void setState(WeaponInstanceState state) {
+	public void setState(State state) {
 		this.state.set(state);
 	}
 
