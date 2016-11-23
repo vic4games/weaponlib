@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 
 import org.lwjgl.opengl.GL11;
 
-import com.vicmatskiv.weaponlib.Weapon.WeaponInstanceStorage;
 import com.vicmatskiv.weaponlib.animation.MultipartPositioning;
 import com.vicmatskiv.weaponlib.animation.MultipartPositioning.Positioner;
 import com.vicmatskiv.weaponlib.animation.MultipartRenderStateManager;
@@ -291,7 +290,7 @@ public class WeaponRenderer implements IItemRenderer {
 			if(firstPersonPositioning == null) {
 				firstPersonPositioning = (player, itemStack) -> {
 					GL11.glRotatef(45F, 0f, 1f, 0f);
-					if(itemStack.stackTagCompound != null && itemStack.stackTagCompound.getFloat(Weapon.ZOOM_TAG) != 1.0f) {
+					if(itemStack.stackTagCompound != null && Tags.getZoom(itemStack) /*itemStack.stackTagCompound.getFloat(Weapon.ZOOM_TAG)*/ != 1.0f) {
 						GL11.glTranslatef(xOffsetZoom, yOffsetZoom, weaponProximity);
 					} else {
 						GL11.glTranslatef(0F, -1.2F, 0F);
@@ -451,14 +450,14 @@ public class WeaponRenderer implements IItemRenderer {
 		float rate = builder.normalRandomizingRate;
 		RenderableState currentState = null;
 		Weapon weapon = (Weapon) itemStack.getItem();
-		if(weapon.getState(itemStack) == Weapon.STATE_MODIFYING && builder.firstPersonPositioningModifying != null) {
+		if(Weapon.isModifying(itemStack)/*weapon.getState(itemStack) == Weapon.STATE_MODIFYING*/ && builder.firstPersonPositioningModifying != null) {
 			currentState = RenderableState.MODIFYING;
 		} else if(player.isSprinting() && builder.firstPersonPositioningRunning != null) {
 			currentState = RenderableState.RUNNING;
 		} else if(Weapon.isReloadingConfirmed(player, itemStack)) {
 			currentState = RenderableState.RELOADING;
 		} else if(Weapon.isZoomed(itemStack)) {
-			WeaponInstanceStorage storage = weapon.getWeaponInstanceStorage(player);
+			WeaponClientStorage storage = weapon.getWeaponClientStorage(player);
 
 			if(storage != null) {
 				currentState = storage.getNextDisposableRenderableState();
@@ -471,10 +470,10 @@ public class WeaponRenderer implements IItemRenderer {
 			}
 			amplitude = builder.zoomRandomizingAmplitude; // Zoom amplitude is enforced even when firing
 			currentState = RenderableState.ZOOMING;
-		} else if(weapon.getState(itemStack) == Weapon.STATE_READY) {
+		} else if(!Weapon.isModifying(itemStack) /*weapon.getState(itemStack) == Weapon.STATE_READY)*/) {
 			currentState = RenderableState.NORMAL;
 		} else {
-			WeaponInstanceStorage storage = weapon.getWeaponInstanceStorage(player);
+			WeaponClientStorage storage = weapon.getWeaponClientStorage(player);
 
 			if(storage != null) {
 				currentState = storage.getNextDisposableRenderableState();

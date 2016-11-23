@@ -2,13 +2,12 @@ package com.vicmatskiv.weaponlib;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import net.minecraft.client.entity.EntityClientPlayerMP;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
-
 import org.lwjgl.input.Mouse;
 
 import cpw.mods.fml.client.FMLClientHandler;
+import net.minecraft.client.entity.EntityClientPlayerMP;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 
 class ClientWeaponTicker extends Thread {
 	
@@ -16,9 +15,13 @@ class ClientWeaponTicker extends Thread {
 	
 	private AtomicBoolean running = new AtomicBoolean(true);
 	private SafeGlobals safeGlobals;
+	private FireManager fireManager;
+	private ReloadManager reloadManager;
 
-	public ClientWeaponTicker(SafeGlobals safeGlobals) {
+	public ClientWeaponTicker(SafeGlobals safeGlobals, FireManager fireManager, ReloadManager reloadManager) {
 		this.safeGlobals = safeGlobals;
+		this.fireManager = fireManager;
+		this.reloadManager = reloadManager;
 	}
 
 	void shutdown() {
@@ -40,18 +43,18 @@ class ClientWeaponTicker extends Thread {
 						mouseWasPressed = true;
 					}
 					if(currentWeapon != null && !safeGlobals.guiOpen.get() && !isInteracting()) {
-						currentWeapon.clientTryFire(player);
+						fireManager.clientTryFire(player);
 					}
 				} else if(mouseWasPressed || currentItemIndex != safeGlobals.currentItemIndex.get()) { // if switched item while pressing mouse down and then released
 					mouseWasPressed = false;
 					currentItemIndex = safeGlobals.currentItemIndex.get();
 					if(currentWeapon != null) {
-						currentWeapon.clientTryStopFire(player);
+						fireManager.clientTryStopFire(player);
 					}
 				}
 				
 				if(currentWeapon != null) {
-					currentWeapon.tick(player);
+					update(player);
 				}
 				Thread.sleep(10);
 			} catch(InterruptedException e) {
@@ -60,6 +63,12 @@ class ClientWeaponTicker extends Thread {
 		}
 	}
 	
+	private void update(EntityClientPlayerMP player) {
+		//currentWeapon.tick(player);
+		reloadManager.update(player.getHeldItem(), player);
+		fireManager.update(player.getHeldItem(), player);
+	}
+
 	private boolean isInteracting() {
 		return false;
 		/*

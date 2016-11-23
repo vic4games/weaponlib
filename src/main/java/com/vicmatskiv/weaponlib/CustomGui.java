@@ -1,21 +1,16 @@
 package com.vicmatskiv.weaponlib;
 
+import org.lwjgl.opengl.GL11;
+
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.entity.Render;
-import net.minecraft.client.renderer.entity.RenderManager;
-import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import net.minecraftforge.client.event.RenderHandEvent;
-
-import org.lwjgl.opengl.GL11;
-
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 
 public class CustomGui extends Gui {
 	private Minecraft mc;
@@ -103,15 +98,13 @@ public class CustomGui extends Gui {
 				drawTexturedModalRect(xPos, yPos, 0, 0, BUFF_ICON_SIZE, BUFF_ICON_SIZE);
 			}
 			
-
 			FontRenderer fontRender = mc.fontRenderer;
 
 			mc.entityRenderer.setupOverlayRendering();
-
 			
 			int color = 0xFFFFFF;
 			
-			if(weaponItem.getState(weapon) == Weapon.STATE_MODIFYING) {
+			if(Weapon.isModifying(weapon) /*weaponItem.getState(weapon) == Weapon.STATE_MODIFYING*/) {
 				fontRender.drawStringWithShadow("Attachment selection mode. Press [f] to exit.", 10, 10, color);
 				fontRender.drawStringWithShadow("Press [up] to add optic", width / 2 - 40, 60, color);
 				fontRender.drawStringWithShadow("Press [left] to add barrel rig", 10, height / 2 - 10, color);

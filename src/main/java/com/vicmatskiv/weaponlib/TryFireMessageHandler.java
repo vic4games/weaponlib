@@ -8,6 +8,12 @@ import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import cpw.mods.fml.relauncher.Side;
 
 public class TryFireMessageHandler implements IMessageHandler<TryFireMessage, IMessage> {
+	
+	private FireManager fireManager;
+
+	TryFireMessageHandler(FireManager fireManager) {
+		this.fireManager = fireManager;
+	}
 
 	@Override
 	public IMessage onMessage(TryFireMessage message, MessageContext ctx) {
@@ -17,9 +23,9 @@ public class TryFireMessageHandler implements IMessageHandler<TryFireMessage, IM
 			ItemStack itemStack = player.getHeldItem();
 			if(itemStack != null && itemStack.getItem() instanceof Weapon) {
 				if(message.isOn()) {
-					((Weapon) itemStack.getItem()).tryFire(player, itemStack);
+					fireManager.tryFire(player, itemStack);
 				} else {
-					((Weapon) itemStack.getItem()).tryStopFire(player, itemStack);
+					fireManager.tryStopFire(player, itemStack);
 				}
 				
 			}
