@@ -674,7 +674,7 @@ public class Weapon extends Item {
 		WeaponClientStorage storage = getWeaponClientStorage(player);
 		if(storage == null) return;
 		if(storage.getState() != State.RELOAD_REQUESTED 
-				&& storage.getState() != State.RELOAD_CONFIRMED &&storage.getCurrentAmmo().get() < builder.ammoCapacity) {
+				&& storage.getState() != State.RELOAD_CONFIRMED && storage.getCurrentAmmo().get() < builder.ammoCapacity) {
 			storage.getReloadingStopsAt().set(player.worldObj.getTotalWorldTime() + MAX_RELOAD_TIMEOUT_TICKS);
 			storage.setState(State.RELOAD_REQUESTED);
 			modContext.getChannel().sendToServer(new ReloadMessage(this));
@@ -702,8 +702,6 @@ public class Weapon extends Item {
 	void reload(ItemStack itemStack, EntityPlayer player) {
 		if (itemStack.stackTagCompound != null && !player.isSprinting()) {
 			if (player.inventory.consumeInventoryItem(builder.ammo)) {
-				//long totalWorldTime = player.worldObj.getTotalWorldTime();
-				//itemStack.stackTagCompound.setLong(RELOADING_TIMER_TAG, totalWorldTime + builder.reloadingTimeout);
 				Tags.setAmmo(itemStack, builder.ammoCapacity);
 				modContext.getChannel().sendTo(new ReloadMessage(this, builder.ammoCapacity), (EntityPlayerMP) player);
 				player.worldObj.playSoundToNearExcept(player, builder.reloadSound, 1.0F, 1.0F);
