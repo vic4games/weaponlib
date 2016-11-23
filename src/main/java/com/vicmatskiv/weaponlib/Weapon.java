@@ -25,9 +25,9 @@ public class Weapon extends Item {
 	private static final AttributeModifier SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER = (new AttributeModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER_UUID, "Slow Down While Zooming", -0.5, 2)).setSaved(false);
 
 	private static final String SHOT_COUNTER_TAG = "ShotCounter";
-	static final String ZOOM_TAG = "Zoomed";
+	private static final String ZOOM_TAG = "Zoomed";
 	private static final String RECOIL_TAG = "Recoil";
-	static final String AIMED_TAG = "Aimed";
+	private static final String AIMED_TAG = "Aimed";
 		
 	static final int DEFAULT_RELOADING_TIMEOUT_TICKS = 10;
 	
@@ -62,7 +62,6 @@ public class Weapon extends Item {
 	public static enum WeaponInstanceState { READY, SHOOTING, RELOAD_REQUESTED, RELOAD_CONFIRMED, PAUSED, MODIFYING };
 	
 	private Map<UUID, WeaponInstanceStorage> weaponInstanceStorages = new IdentityHashMap<>();
-	
 
 	Weapon(Builder builder, ModContext modContext) {
 		this.builder = builder;
@@ -77,6 +76,7 @@ public class Weapon extends Item {
 	@Override
 	public void registerIcons(IIconRegister register) {}
 	
+	@Override
 	public boolean onEntitySwing(EntityLivingBase entityLiving, ItemStack itemStack) {
 		return true;
 	}
@@ -85,20 +85,20 @@ public class Weapon extends Item {
 	public ItemStack onItemRightClick(ItemStack itemStack, World world, EntityPlayer entityPlayer) {
 		ensureItemStack(itemStack);
 		
-		float currentZoom = itemStack.stackTagCompound.getFloat(ZOOM_TAG);
+		float currentZoom = getZoom(itemStack);
 		
 		if (currentZoom != 1.0f || entityPlayer.isSprinting()) {
-			itemStack.stackTagCompound.setFloat(ZOOM_TAG, 1.0f);
-			itemStack.stackTagCompound.setBoolean(AIMED_TAG, false);
+			setZoom(itemStack, 1.0f);
+			setAimed(itemStack, false);
 			entityPlayer.getEntityAttribute(SharedMonsterAttributes.movementSpeed).removeModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER);
 		} else {
 			WeaponInstanceStorage weaponInstanceStorage = getWeaponInstanceStorage(entityPlayer);
 			if(weaponInstanceStorage != null) {
-				itemStack.stackTagCompound.setFloat(ZOOM_TAG, weaponInstanceStorage.getZoom());
+				setZoom(itemStack, weaponInstanceStorage.getZoom());
 			}
 			entityPlayer.getEntityAttribute(SharedMonsterAttributes.movementSpeed).applyModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER);
 
-			itemStack.stackTagCompound.setBoolean(AIMED_TAG, true);
+			setAimed(itemStack, true);
 		}
 		
 		return super.onItemRightClick(itemStack, world, entityPlayer);
@@ -107,36 +107,69 @@ public class Weapon extends Item {
 	@Override
 	public void onUpdate(ItemStack itemStack, World world, Entity entity, int p_77663_4_, boolean active) {
 		ensureItemStack(itemStack);
-		float currentZoom = itemStack.stackTagCompound.getFloat(ZOOM_TAG);
+		float currentZoom = getZoom(itemStack);
 		if (currentZoom != 1.0f && entity.isSprinting()) {
-			itemStack.stackTagCompound.setFloat(ZOOM_TAG, 1.0f);
-			itemStack.stackTagCompound.setBoolean(AIMED_TAG, false);
+			setZoom(itemStack, 1.0f);
+			setAimed(itemStack, false);
 			((EntityLivingBase) entity).getEntityAttribute(SharedMonsterAttributes.movementSpeed).removeModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER);
 		}
 	}
 	
 	public static boolean isZoomed(ItemStack itemStack) {
-		return itemStack.stackTagCompound != null && itemStack.stackTagCompound.getFloat(ZOOM_TAG) != 1.0f;
+		return itemStack.stackTagCompound != null && getZoom(itemStack) != 1.0f;
 	}
 
 	private void ensureItemStack(ItemStack itemStack) {
 		if (itemStack.stackTagCompound == null) {
 			itemStack.stackTagCompound = new NBTTagCompound();
-			itemStack.stackTagCompound.setInteger(AMMO_TAG, 0);
+			setAmmo(itemStack, 0);
 			itemStack.stackTagCompound.setInteger(SHOT_COUNTER_TAG, 0);
-			itemStack.stackTagCompound.setFloat(ZOOM_TAG, 1.0f);
-			itemStack.stackTagCompound.setFloat(RECOIL_TAG, builder.recoil);
+			setZoom(itemStack, 1.0f);
+			setRecoil(itemStack, builder.recoil);
 			itemStack.stackTagCompound.setLong(STOP_TIMER_TAG, 0);
 			itemStack.stackTagCompound.setLong(RESUME_TIMER_TAG, 0);
 			setState(itemStack, STATE_READY);
 		}
 	}
 	
+	static int getAmmo(ItemStack itemStack) {
+		return itemStack.stackTagCompound.getInteger(AMMO_TAG);
+	}
+	
+	static void setAmmo(ItemStack itemStack, int ammo) {
+		itemStack.stackTagCompound.setInteger(AMMO_TAG, ammo);
+	}
+	
+	static void setAimed(ItemStack itemStack, boolean aimed) {
+		itemStack.stackTagCompound.setBoolean(AIMED_TAG, aimed);
+	}
+	
+	public static boolean isAimed(ItemStack itemStack) {
+		return itemStack != null && itemStack.getItem() instanceof Weapon && 
+				itemStack.stackTagCompound != null && itemStack.stackTagCompound.getBoolean(AIMED_TAG);
+	}
+
+	static float getZoom(ItemStack itemStack) {
+		return itemStack.stackTagCompound.getFloat(ZOOM_TAG);
+	}
+	
+	static void setZoom(ItemStack itemStack, float zoom) {
+		itemStack.stackTagCompound.setFloat(ZOOM_TAG, zoom);
+	}
+	
+	static void setRecoil(ItemStack itemStack, float recoil) {
+		itemStack.stackTagCompound.setFloat(RECOIL_TAG, recoil);
+	}
+	
+	static float getRecoil(ItemStack itemStack) {
+		return itemStack.stackTagCompound.getFloat(RECOIL_TAG);
+	}
+	
 	public void changeRecoil(EntityPlayer player, float factor) {
 		ItemStack itemStack = player.getHeldItem();
 		ensureItemStack(itemStack);
 		float recoil = builder.recoil * factor;
-		itemStack.stackTagCompound.setFloat(RECOIL_TAG, recoil);
+		setRecoil(itemStack, recoil);
 		modContext.getChannel().sendTo(new ChangeSettingsMessage(this, recoil), (EntityPlayerMP) player);
 	}
 	
@@ -154,25 +187,10 @@ public class Weapon extends Item {
 		}
 	}
 	
-	int getShotCount(ItemStack itemStack) {
-		if(itemStack.stackTagCompound != null) {
-			return itemStack.stackTagCompound.getInteger(SHOT_COUNTER_TAG);
-		}
-		return 0;
-	}
-	
-	int getMaxShots() {
-		return builder.maxShots;
-	}
-	
 	int getState(ItemStack itemStack) {
 		return itemStack.stackTagCompound.getInteger(STATE_TAG);
 	}
 	
-	long getReloadingTimeout() {
-		return builder.reloadingTimeout;
-	}
-
 	void setState(ItemStack itemStack, int newState) {
 		itemStack.stackTagCompound.setInteger(STATE_TAG, newState);
 	}
@@ -204,10 +222,6 @@ public class Weapon extends Item {
 		}
 		return builder.crosshairFullScreen;
 		
-	}
-	
-	boolean isCrosshairZoomedFullScreen() {
-		return builder.crosshairZoomedFullScreen;
 	}
 	
 	void changeTexture(ItemStack itemStack, EntityPlayer player) {
@@ -244,13 +258,8 @@ public class Weapon extends Item {
 	}
 
 	@Override
-	public int getMaxItemUseDuration(ItemStack p_77626_1_) {
+	public int getMaxItemUseDuration(ItemStack itemStack) {
 		return 0;
-	}
-	
-	public static boolean isAimed(ItemStack itemStack) {
-		return itemStack != null && itemStack.getItem() instanceof Weapon && 
-				itemStack.stackTagCompound != null && itemStack.stackTagCompound.getBoolean(Weapon.AIMED_TAG);
 	}
 
 	WeaponInstanceStorage getWeaponInstanceStorage(EntityPlayer player) {
@@ -259,8 +268,8 @@ public class Weapon extends Item {
 		return weaponInstanceStorages.computeIfAbsent(player.getPersistentID(), (w) ->
 			player.getHeldItem().stackTagCompound != null ?
 					new WeaponInstanceStorage(WeaponInstanceState.values()[player.getHeldItem().stackTagCompound.getInteger(PERSISTENT_STATE_TAG)], 
-					player.getHeldItem().stackTagCompound.getInteger(AMMO_TAG), builder.zoom, 
-					player.getHeldItem().stackTagCompound.getFloat(RECOIL_TAG), builder.fireRate) : null);
+					getAmmo(player.getHeldItem()), builder.zoom, 
+					getRecoil(player.getHeldItem()), builder.fireRate) : null);
 	}
 	
 	void clientTryFire(EntityPlayer player) {
@@ -299,12 +308,12 @@ public class Weapon extends Item {
 	}
 
 	void tryFire(EntityPlayer player, ItemStack itemStack) {
-		int currentAmmo = itemStack.stackTagCompound.getInteger(AMMO_TAG);
+		int currentAmmo = getAmmo(itemStack);
 		if(currentAmmo > 0) {
 			if(!isZoomed(itemStack)) {
-				itemStack.stackTagCompound.setBoolean(AIMED_TAG, true);
+				setAimed(itemStack, true);
 			}
-			itemStack.stackTagCompound.setInteger(AMMO_TAG, currentAmmo - 1);
+			setAmmo(itemStack, currentAmmo - 1);
 			for(int i = 0; i < builder.pellets; i++) {
 				player.worldObj.spawnEntityInWorld(builder.spawnEntityWith.apply(this, player));
 			}
@@ -316,7 +325,7 @@ public class Weapon extends Item {
 	
 	void tryStopFire(EntityPlayer player, ItemStack itemStack) {
 		if(!isZoomed(itemStack)) {
-			itemStack.stackTagCompound.setBoolean(AIMED_TAG, false);
+			setAimed(itemStack, false);
 		}
 	}
 
@@ -370,11 +379,11 @@ public class Weapon extends Item {
 				long totalWorldTime = player.worldObj.getTotalWorldTime();
 				itemStack.stackTagCompound.setLong(RELOADING_TIMER_TAG, totalWorldTime + builder.reloadingTimeout);
 				setState(itemStack, STATE_RELOADING);
-				itemStack.stackTagCompound.setInteger(AMMO_TAG, builder.ammoCapacity);
+				setAmmo(itemStack, builder.ammoCapacity);
 				modContext.getChannel().sendTo(new ReloadMessage(this, builder.ammoCapacity), (EntityPlayerMP) player);
 				player.worldObj.playSoundToNearExcept(player, builder.reloadSound, 1.0F, 1.0F);
 			} else {
-				itemStack.stackTagCompound.setInteger(AMMO_TAG, 0);
+				setAmmo(itemStack, 0);
 				modContext.getChannel().sendTo(new ReloadMessage(this, 0), (EntityPlayerMP) player);
 			}
 		}
@@ -384,9 +393,6 @@ public class Weapon extends Item {
 	void tick(EntityPlayer player) {
 		WeaponInstanceStorage storage = getWeaponInstanceStorage(player);
 		if(storage != null) {
-			
-			if(storage.getState() != WeaponInstanceState.SHOOTING && System.currentTimeMillis() - storage.getLastShotFiredAt() > 50) {
-			}
 			
 			if(storage.getState() == WeaponInstanceState.RELOAD_REQUESTED || storage.getState() == WeaponInstanceState.RELOAD_CONFIRMED) {
 				long totalWorldTime = player.worldObj.getTotalWorldTime();
@@ -410,10 +416,6 @@ public class Weapon extends Item {
 
 	int getAmmoCapacity() {
 		return builder.ammoCapacity;
-	}
-
-	ItemAmmo getAmmo() {
-		return builder.ammo;
 	}
 	
 	ModelBase getAmmoModel() {
