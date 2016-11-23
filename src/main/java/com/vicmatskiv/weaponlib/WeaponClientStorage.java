@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import com.google.common.util.concurrent.AtomicDouble;
 import com.vicmatskiv.weaponlib.Weapon.WeaponInstanceState;
 
-final class WeaponInstanceStorage {
+final class WeaponClientStorage {
 	private AtomicInteger currentAmmo;
 	private AtomicLong reloadingStopsAt;
 
@@ -26,7 +26,7 @@ final class WeaponInstanceStorage {
 
 	private Queue<ExpirableRenderableState> disposableRenderableStates = new ArrayBlockingQueue<>(100);
 
-	public WeaponInstanceStorage(WeaponInstanceState state, int currentAmmo, float zoom, float recoil, float fireRate) {
+	public WeaponClientStorage(WeaponInstanceState state, int currentAmmo, float zoom, float recoil, float fireRate) {
 		this.currentAmmo = new AtomicInteger(currentAmmo);
 		this.reloadingStopsAt = new AtomicLong();
 		this.recoil = new AtomicDouble(recoil);

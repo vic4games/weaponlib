@@ -457,7 +457,7 @@ public class WeaponRenderer implements IItemRenderer {
 		} else if(Weapon.isReloadingConfirmed(player, itemStack)) {
 			currentState = RenderableState.RELOADING;
 		} else if(Weapon.isZoomed(itemStack)) {
-			WeaponInstanceStorage storage = weapon.getWeaponInstanceStorage(player);
+			WeaponClientStorage storage = weapon.getWeaponClientStorage(player);
 
 			if(storage != null) {
 				currentState = storage.getNextDisposableRenderableState();
@@ -473,7 +473,7 @@ public class WeaponRenderer implements IItemRenderer {
 		} else if(weapon.getState(itemStack) == Weapon.STATE_READY) {
 			currentState = RenderableState.NORMAL;
 		} else {
-			WeaponInstanceStorage storage = weapon.getWeaponInstanceStorage(player);
+			WeaponClientStorage storage = weapon.getWeaponClientStorage(player);
 
 			if(storage != null) {
 				currentState = storage.getNextDisposableRenderableState();

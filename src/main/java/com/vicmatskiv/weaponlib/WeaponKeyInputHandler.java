@@ -43,7 +43,7 @@ public class WeaponKeyInputHandler {
         	EntityPlayer player = entityPlayerSupplier.apply(null);
     		ItemStack itemStack = player.getHeldItem();
     		if(itemStack != null && itemStack.getItem() instanceof Weapon) {
-    			attachmentManager.switchClientAttachmentSelectionMode(itemStack, player);
+    			attachmentManager.toggleClientAttachmentSelectionMode(itemStack, player);
     		}
         } 
         

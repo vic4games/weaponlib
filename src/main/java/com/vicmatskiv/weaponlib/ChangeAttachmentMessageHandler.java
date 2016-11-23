@@ -1,11 +1,10 @@
 package com.vicmatskiv.weaponlib;
 
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
 import cpw.mods.fml.common.network.simpleimpl.IMessage;
 import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import cpw.mods.fml.relauncher.Side;
+import net.minecraft.entity.player.EntityPlayer;
 
 public class ChangeAttachmentMessageHandler implements IMessageHandler<ChangeAttachmentMessage, IMessage> {
 	
@@ -20,12 +19,7 @@ public class ChangeAttachmentMessageHandler implements IMessageHandler<ChangeAtt
 		EntityPlayer player = null;
 		if(ctx.side == Side.SERVER) {
 			player = ctx.getServerHandler().playerEntity;
-			ItemStack itemStack = player.getHeldItem();
-			if(itemStack != null && itemStack.getItem() instanceof Weapon) {
-				if(((Weapon) itemStack.getItem()).getState(itemStack) == Weapon.STATE_MODIFYING) {
-					attachmentManager.changeAttachment(message.getAttachmentCategory(), itemStack, player);
-				}
-			}
+			attachmentManager.changeAttachment(message.getAttachmentCategory(), player.getHeldItem(), player);
 		}
 		
 		return null;

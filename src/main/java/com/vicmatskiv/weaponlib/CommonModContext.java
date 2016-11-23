@@ -39,10 +39,10 @@ public class CommonModContext implements ModContext {
 		channel.registerMessage(new ChangeAttachmentMessageHandler(attachmentManager),
 				ChangeAttachmentMessage.class, 6, Side.CLIENT);
 		
-		channel.registerMessage(ChangeTextureMessageHandler.class,
+		channel.registerMessage(new ChangeTextureMessageHandler(attachmentManager),
 				ChangeTextureMessage.class, 7, Side.SERVER);
 		
-		channel.registerMessage(ChangeTextureMessageHandler.class,
+		channel.registerMessage(new ChangeTextureMessageHandler(attachmentManager),
 				ChangeTextureMessage.class, 8, Side.CLIENT);
 		
 		channel.registerMessage(new ChangeSettingMessageHandler((ctx) -> getPlayer(ctx)),
@@ -89,6 +89,11 @@ public class CommonModContext implements ModContext {
 	@Override
 	public AttachmentManager getAttachmentManager() {
 		return attachmentManager;
+	}
+
+	@Override
+	public WeaponClientStorageManager getWeaponClientStorageManager() {
+		throw new IllegalStateException("Attempted to get instance of " + WeaponClientStorageManager.class.getSimpleName());
 	}
 	
 	

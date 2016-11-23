@@ -39,13 +39,13 @@ public final class AttachmentManager {
 		}
 	}
 	
-	void switchClientAttachmentSelectionMode(ItemStack itemStack, EntityPlayer player) {
+	void toggleClientAttachmentSelectionMode(ItemStack itemStack, EntityPlayer player) {
 		Item item = itemStack.getItem();
 		if(!(item instanceof Weapon)) {
 			return; 
 		}
 		Weapon weapon = (Weapon) item;
-		WeaponInstanceStorage storage = weapon.getWeaponInstanceStorage(player);
+		WeaponClientStorage storage = weapon.getWeaponClientStorage(player);
 		if(storage == null) return;
 		if(storage.getState() != WeaponInstanceState.MODIFYING) {
 			storage.setState(WeaponInstanceState.MODIFYING);
@@ -53,6 +53,18 @@ public final class AttachmentManager {
 			storage.setState(WeaponInstanceState.READY);
 		}
     	modContext.getChannel().sendToServer(new AttachmentModeMessage());
+	}
+	
+	void toggleServerAttachmentSelectionMode(ItemStack itemStack, EntityPlayer player) {
+		if(!(itemStack.getItem() instanceof Weapon)) {
+			return;
+		}
+		
+		if(((Weapon) itemStack.getItem()).getState(itemStack) != Weapon.STATE_MODIFYING) {
+			enterAttachmentSelectionMode(itemStack);
+		} else {
+			exitAttachmentSelectionMode(itemStack, player);
+		}
 	}
 	
 	void enterAttachmentSelectionMode(ItemStack itemStack) {
@@ -131,6 +143,10 @@ public final class AttachmentManager {
 	
 	@SuppressWarnings("unchecked")
 	void changeAttachment(AttachmentCategory attachmentCategory, ItemStack itemStack, EntityPlayer player) {
+		if(!(itemStack.getItem() instanceof Weapon) || ((Weapon) itemStack.getItem()).getState(itemStack) != Weapon.STATE_MODIFYING) {
+			return;
+		}
+		
 		ensureItemStack(itemStack);
 		Weapon weapon = (Weapon) itemStack.getItem();
 		
@@ -266,6 +282,29 @@ public final class AttachmentManager {
 		int[] activeAttachmentsIds = ensureActiveAttachments(itemStack);
 		int activeAttachmentIdForThisCategory = activeAttachmentsIds[AttachmentCategory.SILENCER.ordinal()];
 		return activeAttachmentIdForThisCategory > 0;
+	}
+	
+	void changeTexture(ItemStack itemStack, EntityPlayer player) {
+		if(!(itemStack.getItem() instanceof Weapon)) {
+			return;
+		}
+		
+		if(((Weapon) itemStack.getItem()).getState(itemStack) != Weapon.STATE_MODIFYING) {
+			return;
+		}
+		
+		Weapon weapon = (Weapon) itemStack.getItem();
+		ensureItemStack(itemStack);
+		int currentIndex = Weapon.getActiveTexture(itemStack);
+		if(weapon.builder.textureNames.isEmpty()) {
+			return;
+		}
+		if(currentIndex >= weapon.builder.textureNames.size() - 1) {
+			currentIndex = 0;
+		} else {
+			currentIndex++;
+		}
+		Weapon.setActiveTexture(itemStack, currentIndex);
 	}
 	
 	private void ensureItemStack(ItemStack itemStack) {

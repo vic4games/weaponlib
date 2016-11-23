@@ -16,4 +16,6 @@ public interface ModContext {
 	
 	public AttachmentManager getAttachmentManager();
 	
+	public WeaponClientStorageManager getWeaponClientStorageManager();
+	
 }
