@@ -2,7 +2,7 @@ package com.vicmatskiv.weaponlib;
 
 import net.minecraft.item.ItemStack;
 
-public class Tags {
+final class Tags {
 
 	private static final String ZOOM_TAG = "Zoomed";
 	private static final String AIMED_TAG = "Aimed";
