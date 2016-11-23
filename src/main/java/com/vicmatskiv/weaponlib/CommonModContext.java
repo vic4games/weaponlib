@@ -13,18 +13,22 @@ public class CommonModContext implements ModContext {
 	
 	protected SimpleNetworkWrapper channel;
 	
-	private AttachmentManager attachmentManager;
+	protected AttachmentManager attachmentManager;
+	protected FireManager fireManager;
+	protected ReloadManager reloadManager;
 
 	@Override
 	public void init(Object mod, SimpleNetworkWrapper channel) {
 		this.channel = channel;
 		
 		this.attachmentManager = new AttachmentManager(this);
+		this.fireManager = new FireManager(this);
+		this.reloadManager = new ReloadManager(this);
 		
-		channel.registerMessage(new ReloadMessageHandler((ctx) -> getServerPlayer(ctx)),
+		channel.registerMessage(new ReloadMessageHandler(reloadManager, (ctx) -> getServerPlayer(ctx)),
 				ReloadMessage.class, 1, Side.SERVER);
 		
-		channel.registerMessage(new ReloadMessageHandler((ctx) -> getPlayer(ctx)),
+		channel.registerMessage(new ReloadMessageHandler(reloadManager, (ctx) -> getPlayer(ctx)),
 				ReloadMessage.class, 2, Side.CLIENT);
 		
 		channel.registerMessage(new AttachmentModeMessageHandler(attachmentManager),
@@ -48,7 +52,7 @@ public class CommonModContext implements ModContext {
 		channel.registerMessage(new ChangeSettingMessageHandler((ctx) -> getPlayer(ctx)),
 				ChangeSettingsMessage.class, 9, Side.CLIENT);
 
-		channel.registerMessage(TryFireMessageHandler.class,
+		channel.registerMessage(new TryFireMessageHandler(fireManager),
 				TryFireMessage.class, 11, Side.SERVER);
 		
 		channel.registerMessage(LaserSwitchMessageHandler.class,
@@ -60,7 +64,7 @@ public class CommonModContext implements ModContext {
 		MinecraftForge.EVENT_BUS.register(attachmentManager); 
 		
 		FMLCommonHandler.instance().bus().register(new WeaponKeyInputHandler((ctx) -> getPlayer(ctx), 
-				attachmentManager, channel));
+				attachmentManager, reloadManager, channel));
 	}
 
 	@Override

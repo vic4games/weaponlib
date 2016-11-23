@@ -42,7 +42,8 @@ public class ClientModContext extends CommonModContext {
 		
 		KeyBindings.init();	
 
-		ClientWeaponTicker clientWeaponTicker = new ClientWeaponTicker(safeGlobals);
+		ClientWeaponTicker clientWeaponTicker = new ClientWeaponTicker(safeGlobals, fireManager, reloadManager);
+		
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
 			clientWeaponTicker.shutdown();
 		}));
@@ -52,10 +53,8 @@ public class ClientModContext extends CommonModContext {
 		FMLCommonHandler.instance().bus().register(clientEventHandler);
 		
 		EntityRegistry.registerModEntity(WeaponSpawnEntity.class, "Ammo" + modEntityID, modEntityID++, mod, 64, 10, true);
-		RenderingRegistry.registerEntityRenderingHandler(WeaponSpawnEntity.class, 
-				new SpawnEntityRenderer(/*weapon.getAmmoModel(), weapon.getAmmoModelTextureName()*/));
+		RenderingRegistry.registerEntityRenderingHandler(WeaponSpawnEntity.class, new SpawnEntityRenderer());
 		
-		//EntityRegistry.registerModEntity(WeaponSpawnEntity.class, "Ammo", ++modEntityID, mod, 64, 10, true);
 	}
 	
 	@Override

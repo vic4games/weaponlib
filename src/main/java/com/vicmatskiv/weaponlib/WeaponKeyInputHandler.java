@@ -14,12 +14,15 @@ public class WeaponKeyInputHandler {
 	private SimpleNetworkWrapper channel;
 	private Function<MessageContext, EntityPlayer> entityPlayerSupplier;
 	private AttachmentManager attachmentManager;
+	private ReloadManager reloadManager;
 	
 	public WeaponKeyInputHandler(Function<MessageContext, EntityPlayer> entityPlayerSupplier, 
 			AttachmentManager attachmentManager,
+			ReloadManager reloadManager,
 			SimpleNetworkWrapper channel) {
 		this.entityPlayerSupplier = entityPlayerSupplier;
 		this.attachmentManager = attachmentManager;
+		this.reloadManager = reloadManager;
 		this.channel = channel;
 	}
 
@@ -27,11 +30,11 @@ public class WeaponKeyInputHandler {
     public void onKeyInput(InputEvent.KeyInputEvent event) {
 		
         if(KeyBindings.reloadKey.isPressed()) {
-        	//channel.sendToServer(new ReloadMessage());
         	EntityPlayer player = entityPlayerSupplier.apply(null);
         	ItemStack itemStack = player.getHeldItem();    		
     		if(itemStack != null && itemStack.getItem() instanceof Weapon) {
-    			((Weapon) itemStack.getItem()).initiateReload(itemStack, player);
+    			//((Weapon) itemStack.getItem()).initiateReload(itemStack, player);
+    			reloadManager.initiateReload(itemStack, player);
     		}
         }
         

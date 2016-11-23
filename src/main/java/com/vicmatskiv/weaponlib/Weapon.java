@@ -402,7 +402,7 @@ public class Weapon extends Item {
 	private static final AttributeModifier SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER = (new AttributeModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER_UUID, "Slow Down While Zooming", -0.5, 2)).setSaved(false);
 
 	private static final long DEFAULT_RELOADING_TIMEOUT_TICKS = 10;
-	private static final long MAX_RELOAD_TIMEOUT_TICKS = 60;
+	static final long MAX_RELOAD_TIMEOUT_TICKS = 60;
 	
 	private static final float DEFAULT_ZOOM = 0.75f;
 	
@@ -434,8 +434,13 @@ public class Weapon extends Item {
 	
 	@Override
 	public ItemStack onItemRightClick(ItemStack itemStack, World world, EntityPlayer entityPlayer) {
-		ensureItemStack(itemStack);
+		toggleAiming(itemStack, entityPlayer);
+		return itemStack;
+	}
+
+	private void toggleAiming(ItemStack itemStack, EntityPlayer entityPlayer) {
 		
+		ensureItemStack(itemStack);
 		float currentZoom = Tags.getZoom(itemStack);
 		
 		if (currentZoom != 1.0f || entityPlayer.isSprinting()) {
@@ -450,8 +455,6 @@ public class Weapon extends Item {
 			slowDown(entityPlayer);
 			Tags.setAimed(itemStack, true);
 		}
-		
-		return super.onItemRightClick(itemStack, world, entityPlayer);
 	}
 
 	private static void restoreNormalSpeed(EntityPlayer entityPlayer) {
@@ -596,138 +599,6 @@ public class Weapon extends Item {
 	
 	WeaponClientStorage getWeaponClientStorage(EntityPlayer player) {
 		return modContext.getWeaponClientStorageManager().getWeaponClientStorage(player, this);
-	}
-	
-	void clientTryFire(EntityPlayer player) {
-		
-		WeaponClientStorage storage = getWeaponClientStorage(player);
-		if(storage == null) return;
-		
-		boolean readyToShootAccordingToFireRate = System.currentTimeMillis() - storage.getLastShotFiredAt() >= 50f / builder.fireRate;
-		if(!player.isSprinting() 
-				&& (storage.getState() == State.READY || storage.getState() == State.SHOOTING)
-				&& readyToShootAccordingToFireRate
-				&& storage.getShots() < builder.maxShots
-				&& storage.getCurrentAmmo().getAndAccumulate(0, (current, ignore) -> current > 0 ? current - 1 : 0) > 0) {
-			storage.setState(State.SHOOTING);
-			modContext.getChannel().sendToServer(new TryFireMessage(true));
-			ItemStack heldItem = player.getHeldItem();
-			
-			modContext.runSyncTick(() -> {
-				player.playSound(modContext.getAttachmentManager().isSilencerOn(heldItem) ? builder.silencedShootSound : builder.shootSound, 1F, 1F);
-			});
-			
-			player.rotationPitch = player.rotationPitch - storage.getRecoil();						
-			float rotationYawFactor = -1.0f + itemRand.nextFloat() * 2.0f;
-			player.rotationYaw = player.rotationYaw + storage.getRecoil() * rotationYawFactor;
-			
-			if(builder.flashIntensity > 0) {
-				EffectManager.getInstance().spawnFlashParticle(player, builder.flashIntensity);
-			}
-			
-			EffectManager.getInstance().spawnSmokeParticle(player);
-			
-			storage.setLastShotFiredAt(System.currentTimeMillis());
-			
-			storage.addShot();
-		}
-	}
-
-	void tryFire(EntityPlayer player, ItemStack itemStack) {
-		int currentAmmo = Tags.getAmmo(itemStack);
-		if(currentAmmo > 0) {
-			if(!isZoomed(itemStack)) {
-				Tags.setAimed(itemStack, true);
-			}
-			Tags.setAmmo(itemStack, currentAmmo - 1);
-			for(int i = 0; i < builder.pellets; i++) {
-				player.worldObj.spawnEntityInWorld(builder.spawnEntityWith.apply(this, player));
-			}
-			player.worldObj.playSoundToNearExcept(player, modContext.getAttachmentManager().isSilencerOn(itemStack) ? builder.silencedShootSound : builder.shootSound, 1.0F, 1.0F);
-		} else {
-			System.err.println("Invalid state: attempted to fire a weapon without ammo");
-		}
-	}
-	
-	void tryStopFire(EntityPlayer player, ItemStack itemStack) {
-		if(!isZoomed(itemStack)) {
-			Tags.setAimed(itemStack, false);
-		}
-	}
-
-	void clientTryStopFire(EntityPlayer player) {
-		WeaponClientStorage storage = getWeaponClientStorage(player);
-		if(storage == null) return;
-		if(storage.getState() == State.SHOOTING) {
-			storage.resetShots();
-			if(storage.getLastShotFiredAt() + builder.pumpTimeoutMilliseconds <= System.currentTimeMillis()) {
-				storage.setState(State.READY);
-			} else {
-				storage.setState(State.PAUSED);
-			}
-			modContext.getChannel().sendToServer(new TryFireMessage(false));
-		}
-	}
-
-	// Client
-	void initiateReload(ItemStack itemStack, EntityPlayer player) {
-		WeaponClientStorage storage = getWeaponClientStorage(player);
-		if(storage == null) return;
-		if(storage.getState() != State.RELOAD_REQUESTED 
-				&& storage.getState() != State.RELOAD_CONFIRMED && storage.getCurrentAmmo().get() < builder.ammoCapacity) {
-			storage.getReloadingStopsAt().set(player.worldObj.getTotalWorldTime() + MAX_RELOAD_TIMEOUT_TICKS);
-			storage.setState(State.RELOAD_REQUESTED);
-			modContext.getChannel().sendToServer(new ReloadMessage(this));
-		}
-	}
-	
-	// Client
-	void completeReload(ItemStack itemStack, EntityPlayer player, int ammo, boolean quietly) {
-		WeaponClientStorage storage = getWeaponClientStorage(player);
-		if(storage == null) return;
-		if(storage.getState() == State.RELOAD_REQUESTED) {
-			storage.getCurrentAmmo().set(ammo);
-			if(ammo > 0 && !quietly) {
-				storage.setState(State.RELOAD_CONFIRMED);
-				long reloadingStopsAt = player.worldObj.getTotalWorldTime() + builder.reloadingTimeout;
-				storage.getReloadingStopsAt().set(reloadingStopsAt);
-				player.playSound(builder.reloadSound, 1.0F, 1.0F);
-			} else {
-				storage.setState(State.READY);
-			}
-		}
-	}
-	
-	// Server
-	void reload(ItemStack itemStack, EntityPlayer player) {
-		if (itemStack.stackTagCompound != null && !player.isSprinting()) {
-			if (player.inventory.consumeInventoryItem(builder.ammo)) {
-				Tags.setAmmo(itemStack, builder.ammoCapacity);
-				modContext.getChannel().sendTo(new ReloadMessage(this, builder.ammoCapacity), (EntityPlayerMP) player);
-				player.worldObj.playSoundToNearExcept(player, builder.reloadSound, 1.0F, 1.0F);
-			} else {
-				Tags.setAmmo(itemStack, 0);
-				modContext.getChannel().sendTo(new ReloadMessage(this, 0), (EntityPlayerMP) player);
-			}
-		}
-	}
-
-	// Client
-	void tick(EntityPlayer player) {
-		WeaponClientStorage storage = getWeaponClientStorage(player);
-		if(storage != null) {
-			
-			if(storage.getState() == State.RELOAD_REQUESTED || storage.getState() == State.RELOAD_CONFIRMED) {
-				long totalWorldTime = player.worldObj.getTotalWorldTime();
-				if(storage.getReloadingStopsAt().get() <= totalWorldTime) {
-					storage.setState(State.READY);
-				}
-			} else if(storage.getState() == State.PAUSED 
-					&& storage.getLastShotFiredAt() + builder.pumpTimeoutMilliseconds <= System.currentTimeMillis()) {
-				
-				storage.setState(State.READY);
-			}
-		}
 	}
 	
 	int getCurrentAmmo(EntityPlayer player) {
