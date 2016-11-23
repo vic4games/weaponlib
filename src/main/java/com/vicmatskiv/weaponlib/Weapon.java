@@ -401,14 +401,6 @@ public class Weapon extends Item {
 	private static final UUID SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER_UUID = UUID.fromString("8efa8469-0256-4f8e-bdd9-3e7b23970663");
 	private static final AttributeModifier SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER = (new AttributeModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER_UUID, "Slow Down While Zooming", -0.5, 2)).setSaved(false);
 
-	private static final String ZOOM_TAG = "Zoomed";
-	private static final String RECOIL_TAG = "Recoil";
-	private static final String AIMED_TAG = "Aimed";
-	private static final String ACTIVE_TEXTURE_INDEX_TAG = "ActiveTextureIndex";
-	private static final String LASER_ON_TAG = "LaserOn";
-	private static final String AMMO_TAG = "Ammo";
-	private static final String STATE_TAG = "State";
-
 	private static final long DEFAULT_RELOADING_TIMEOUT_TICKS = 10;
 	private static final long MAX_RELOAD_TIMEOUT_TICKS = 60;
 	
@@ -444,19 +436,19 @@ public class Weapon extends Item {
 	public ItemStack onItemRightClick(ItemStack itemStack, World world, EntityPlayer entityPlayer) {
 		ensureItemStack(itemStack);
 		
-		float currentZoom = getZoom(itemStack);
+		float currentZoom = Tags.getZoom(itemStack);
 		
 		if (currentZoom != 1.0f || entityPlayer.isSprinting()) {
-			setZoom(itemStack, 1.0f);
-			setAimed(itemStack, false);
+			Tags.setZoom(itemStack, 1.0f);
+			Tags.setAimed(itemStack, false);
 			restoreNormalSpeed(entityPlayer);
 		} else {
 			WeaponClientStorage weaponInstanceStorage = getWeaponClientStorage(entityPlayer);
 			if(weaponInstanceStorage != null) {
-				setZoom(itemStack, weaponInstanceStorage.getZoom());
+				Tags.setZoom(itemStack, weaponInstanceStorage.getZoom());
 			}
 			slowDown(entityPlayer);
-			setAimed(itemStack, true);
+			Tags.setAimed(itemStack, true);
 		}
 		
 		return super.onItemRightClick(itemStack, world, entityPlayer);
@@ -485,10 +477,10 @@ public class Weapon extends Item {
 	@Override
 	public void onUpdate(ItemStack itemStack, World world, Entity entity, int p_77663_4_, boolean active) {
 		ensureItemStack(itemStack);
-		float currentZoom = getZoom(itemStack);
+		float currentZoom = Tags.getZoom(itemStack);
 		if (currentZoom != 1.0f && entity.isSprinting()) {
-			setZoom(itemStack, 1.0f);
-			setAimed(itemStack, false);
+			Tags.setZoom(itemStack, 1.0f);
+			Tags.setAimed(itemStack, false);
 			restoreNormalSpeed((EntityPlayer) entity);
 		}
 	}
@@ -496,94 +488,42 @@ public class Weapon extends Item {
 	private void ensureItemStack(ItemStack itemStack) {
 		if (itemStack.stackTagCompound == null) {
 			itemStack.stackTagCompound = new NBTTagCompound();
-			setAmmo(itemStack, 0);
-			setZoom(itemStack, 1.0f);
-			setRecoil(itemStack, builder.recoil);
+			Tags.setAmmo(itemStack, 0);
+			Tags.setZoom(itemStack, 1.0f);
+			Tags.setRecoil(itemStack, builder.recoil);
 			setModifying(itemStack, false);
 		}
 	}
 	
-	static boolean isLaserOn(ItemStack itemStack) {
-		if(itemStack.stackTagCompound == null) {
-			return false;
-		}
-		return itemStack.stackTagCompound.getBoolean(LASER_ON_TAG);
-	}
-	
-	static void setLaser(ItemStack itemStack, boolean enabled) {
-		itemStack.stackTagCompound.setBoolean(LASER_ON_TAG, enabled);
-	}
-
 	static void toggleLaser(ItemStack itemStack) {
-		setLaser(itemStack, !isLaserOn(itemStack));
-	}
-	
-	static int getAmmo(ItemStack itemStack) {
-		return itemStack.stackTagCompound.getInteger(AMMO_TAG);
-	}
-	
-	static void setAmmo(ItemStack itemStack, int ammo) {
-		itemStack.stackTagCompound.setInteger(AMMO_TAG, ammo);
-	}
-	
-	static void setAimed(ItemStack itemStack, boolean aimed) {
-		itemStack.stackTagCompound.setBoolean(AIMED_TAG, aimed);
+		Tags.setLaser(itemStack, !Tags.isLaserOn(itemStack));
 	}
 	
 	public static boolean isAimed(ItemStack itemStack) {
-		return itemStack != null && itemStack.getItem() instanceof Weapon && 
-				itemStack.stackTagCompound != null && itemStack.stackTagCompound.getBoolean(AIMED_TAG);
+		return Tags.isAimed(itemStack);
 	}
 
-	static float getZoom(ItemStack itemStack) {
-		return itemStack.stackTagCompound.getFloat(ZOOM_TAG);
-	}
-	
-	static void setZoom(ItemStack itemStack, float zoom) {
-		itemStack.stackTagCompound.setFloat(ZOOM_TAG, zoom);
-	}
-	
 	public static boolean isZoomed(ItemStack itemStack) {
-		return itemStack.stackTagCompound != null && getZoom(itemStack) != 1.0f;
-	}
-	
-	static void setActiveTexture(ItemStack itemStack, int currentIndex) {
-		itemStack.stackTagCompound.setInteger(ACTIVE_TEXTURE_INDEX_TAG, currentIndex);
-	}
-
-	static int getActiveTexture(ItemStack itemStack) {
-		return itemStack.stackTagCompound.getInteger(ACTIVE_TEXTURE_INDEX_TAG);
-	}
-	
-	static void setRecoil(ItemStack itemStack, float recoil) {
-		itemStack.stackTagCompound.setFloat(RECOIL_TAG, recoil);
-	}
-	
-	static float getRecoil(ItemStack itemStack) {
-		return itemStack.stackTagCompound.getFloat(RECOIL_TAG);
+		return Tags.getZoom(itemStack) != 1.0f;
 	}
 	
 	static void setModifying(ItemStack itemStack, boolean modifying) {
 		if(modifying) {
-			itemStack.stackTagCompound.setInteger(Weapon.STATE_TAG, State.MODIFYING.ordinal());
+			Tags.setState(itemStack, State.MODIFYING);
 		} else {
-			itemStack.stackTagCompound.setInteger(Weapon.STATE_TAG, State.READY.ordinal());
+			Tags.setState(itemStack, State.READY);
 		}
 	}
 	
 	static boolean isModifying(ItemStack itemStack) {
-		return itemStack.stackTagCompound.getInteger(Weapon.STATE_TAG) == State.MODIFYING.ordinal();
-	}
-	
-	static State getClientState(ItemStack itemStack) {
-		return State.values()[itemStack.stackTagCompound.getInteger(Weapon.STATE_TAG)];
+		return Tags.getState(itemStack) == State.MODIFYING;
 	}
 	
 	public void changeRecoil(EntityPlayer player, float factor) {
 		ItemStack itemStack = player.getHeldItem();
 		ensureItemStack(itemStack);
 		float recoil = builder.recoil * factor;
-		setRecoil(itemStack, recoil);
+		Tags.setRecoil(itemStack, recoil);
 		modContext.getChannel().sendTo(new ChangeSettingsMessage(this, recoil), (EntityPlayerMP) player);
 	}
 	
@@ -635,7 +575,7 @@ public class Weapon extends Item {
 		if(builder.textureNames.isEmpty()) {
 			return null;
 		}
-		return builder.textureNames.get(getActiveTexture(itemStack));
+		return builder.textureNames.get(Tags.getActiveTexture(itemStack));
 	}
 	
 	public static boolean isActiveAttachment(ItemStack itemStack, ItemAttachment<Weapon> attachment) {
@@ -694,12 +634,12 @@ public class Weapon extends Item {
 	}
 
 	void tryFire(EntityPlayer player, ItemStack itemStack) {
-		int currentAmmo = getAmmo(itemStack);
+		int currentAmmo = Tags.getAmmo(itemStack);
 		if(currentAmmo > 0) {
 			if(!isZoomed(itemStack)) {
-				setAimed(itemStack, true);
+				Tags.setAimed(itemStack, true);
 			}
-			setAmmo(itemStack, currentAmmo - 1);
+			Tags.setAmmo(itemStack, currentAmmo - 1);
 			for(int i = 0; i < builder.pellets; i++) {
 				player.worldObj.spawnEntityInWorld(builder.spawnEntityWith.apply(this, player));
 			}
@@ -711,7 +651,7 @@ public class Weapon extends Item {
 	
 	void tryStopFire(EntityPlayer player, ItemStack itemStack) {
 		if(!isZoomed(itemStack)) {
-			setAimed(itemStack, false);
+			Tags.setAimed(itemStack, false);
 		}
 	}
 
@@ -764,11 +704,11 @@ public class Weapon extends Item {
 			if (player.inventory.consumeInventoryItem(builder.ammo)) {
 				//long totalWorldTime = player.worldObj.getTotalWorldTime();
 				//itemStack.stackTagCompound.setLong(RELOADING_TIMER_TAG, totalWorldTime + builder.reloadingTimeout);
-				setAmmo(itemStack, builder.ammoCapacity);
+				Tags.setAmmo(itemStack, builder.ammoCapacity);
 				modContext.getChannel().sendTo(new ReloadMessage(this, builder.ammoCapacity), (EntityPlayerMP) player);
 				player.worldObj.playSoundToNearExcept(player, builder.reloadSound, 1.0F, 1.0F);
 			} else {
-				setAmmo(itemStack, 0);
+				Tags.setAmmo(itemStack, 0);
 				modContext.getChannel().sendTo(new ReloadMessage(this, 0), (EntityPlayerMP) player);
 			}
 		}

@@ -30,7 +30,7 @@ public class WeaponEventHandler {
 		if (stack != null) {
 			if (stack.getItem() instanceof Weapon) {
 				if (stack.stackTagCompound != null) {
-					event.newfov = Weapon.getZoom(stack);
+					event.newfov = Tags.getZoom(stack);
 				}
 			}
 		}

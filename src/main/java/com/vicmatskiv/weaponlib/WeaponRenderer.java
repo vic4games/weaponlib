@@ -290,7 +290,7 @@ public class WeaponRenderer implements IItemRenderer {
 			if(firstPersonPositioning == null) {
 				firstPersonPositioning = (player, itemStack) -> {
 					GL11.glRotatef(45F, 0f, 1f, 0f);
-					if(itemStack.stackTagCompound != null && Weapon.getZoom(itemStack) /*itemStack.stackTagCompound.getFloat(Weapon.ZOOM_TAG)*/ != 1.0f) {
+					if(itemStack.stackTagCompound != null && Tags.getZoom(itemStack) /*itemStack.stackTagCompound.getFloat(Weapon.ZOOM_TAG)*/ != 1.0f) {
 						GL11.glTranslatef(xOffsetZoom, yOffsetZoom, weaponProximity);
 					} else {
 						GL11.glTranslatef(0F, -1.2F, 0F);

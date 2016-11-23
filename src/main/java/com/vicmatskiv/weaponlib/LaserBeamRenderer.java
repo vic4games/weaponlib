@@ -26,7 +26,7 @@ public class LaserBeamRenderer implements CustomRenderer {
 			throw new IllegalStateException("Item is not weapon");
 		}
 
-		if(Weapon.isLaserOn(itemStack) && (
+		if(Tags.isLaserOn(itemStack) && (
 				type == ItemRenderType.EQUIPPED || type == ItemRenderType.EQUIPPED_FIRST_PERSON || type == ItemRenderType.ENTITY)) {
 			GL11.glPushMatrix();
 			GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);

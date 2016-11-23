@@ -33,8 +33,7 @@ public final class AttachmentManager {
 			return; 
 		}
 		
-		//Weapon weapon = (Weapon) item;
-		if(Weapon.isModifying(itemStack) /*weapon.getState(itemStack) == Weapon.STATE_MODIFYING*/) {
+		if(Weapon.isModifying(itemStack)) {
 			exitAttachmentSelectionMode(itemStack, itemTossEvent.player);
 		}
 	}
@@ -60,7 +59,7 @@ public final class AttachmentManager {
 			return;
 		}
 		
-		if(!Weapon.isModifying(itemStack) /*((Weapon) itemStack.getItem()).getState(itemStack) != Weapon.STATE_MODIFYING*/) {
+		if(!Weapon.isModifying(itemStack)) {
 			enterAttachmentSelectionMode(itemStack);
 		} else {
 			exitAttachmentSelectionMode(itemStack, player);
@@ -288,13 +287,13 @@ public final class AttachmentManager {
 			return;
 		}
 		
-		if(!Weapon.isModifying(itemStack) /*((Weapon) itemStack.getItem()).getState(itemStack) != Weapon.STATE_MODIFYING*/) {
+		if(!Weapon.isModifying(itemStack)) {
 			return;
 		}
 		
 		Weapon weapon = (Weapon) itemStack.getItem();
 		ensureItemStack(itemStack);
-		int currentIndex = Weapon.getActiveTexture(itemStack);
+		int currentIndex = Tags.getActiveTexture(itemStack);
 		if(weapon.builder.textureNames.isEmpty()) {
 			return;
 		}
@@ -303,19 +302,12 @@ public final class AttachmentManager {
 		} else {
 			currentIndex++;
 		}
-		Weapon.setActiveTexture(itemStack, currentIndex);
+		Tags.setActiveTexture(itemStack, currentIndex);
 	}
 	
 	private void ensureItemStack(ItemStack itemStack) {
 		if (itemStack.stackTagCompound == null) {
 			itemStack.stackTagCompound = new NBTTagCompound();
-//			itemStack.stackTagCompound.setInteger(AMMO_TAG, 0);
-//			itemStack.stackTagCompound.setInteger(SHOT_COUNTER_TAG, 0);
-//			itemStack.stackTagCompound.setFloat(ZOOM_TAG, 1.0f);
-//			itemStack.stackTagCompound.setFloat(RECOIL_TAG, builder.recoil);
-//			itemStack.stackTagCompound.setLong(STOP_TIMER_TAG, 0);
-//			itemStack.stackTagCompound.setLong(RESUME_TIMER_TAG, 0);
-//			setState(itemStack, STATE_READY);
 		}
 	}
 }

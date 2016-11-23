@@ -59,9 +59,9 @@ class WeaponClientStorageManager {
 			{
 				ItemStack itemStack = player.getHeldItem();
 				return itemStack.stackTagCompound != null ?
-						new WeaponClientStorage(Weapon.getClientState(itemStack), 
-						Weapon.getAmmo(itemStack), weapon.builder.zoom, 
-						Weapon.getRecoil(player.getHeldItem()), weapon.builder.fireRate) : null;
+						new WeaponClientStorage(Tags.getState(itemStack), 
+						Tags.getAmmo(itemStack), weapon.builder.zoom, 
+						Tags.getRecoil(player.getHeldItem()), weapon.builder.fireRate) : null;
 			});
 	}
 }
