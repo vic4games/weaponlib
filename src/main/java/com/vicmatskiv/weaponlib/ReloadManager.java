@@ -78,9 +78,7 @@ public class ReloadManager {
 		
 		State state = storage.getState();
 		
-		if(state == State.RELOAD_CONFIRMED && player.isSprinting()) {
-			storage.setState(State.READY);
-		} else if(state == State.RELOAD_REQUESTED || state == State.RELOAD_CONFIRMED) {
+		if(state == State.RELOAD_REQUESTED || state == State.RELOAD_CONFIRMED) {
 			long currentTime = player.worldObj.getTotalWorldTime();
 			if(storage.getReloadingStopsAt().get() <= currentTime) {
 				storage.setState(State.READY);

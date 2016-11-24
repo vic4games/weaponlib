@@ -452,10 +452,10 @@ public class WeaponRenderer implements IItemRenderer {
 		Weapon weapon = (Weapon) itemStack.getItem();
 		if(Weapon.isModifying(itemStack)) {
 			currentState = builder.firstPersonPositioningModifying != null ? RenderableState.MODIFYING : RenderableState.NORMAL;
-		} else if(player.isSprinting() && builder.firstPersonPositioningRunning != null) {
-			currentState = RenderableState.RUNNING;
 		} else if(Weapon.isReloadingConfirmed(player, itemStack)) {
 			currentState = RenderableState.RELOADING;
+		} else if(player.isSprinting() && builder.firstPersonPositioningRunning != null) {
+			currentState = RenderableState.RUNNING;
 		} else if(Weapon.isZoomed(itemStack)) {
 			WeaponClientStorage storage = weapon.getWeaponClientStorage(player);
 
@@ -491,8 +491,7 @@ public class WeaponRenderer implements IItemRenderer {
 			stateManager = new MultipartRenderStateManager<>(currentState, weaponTransitionProvider, Part.WEAPON);
 			firstPersonStateManagers.put(player, stateManager);
 		} else {
-			stateManager.setState(currentState, true, currentState == RenderableState.SHOOTING
-					|| currentState == RenderableState.RUNNING);
+			stateManager.setState(currentState, true, currentState == RenderableState.SHOOTING);
 		}
 		
 		return new StateDescriptor(stateManager, rate, amplitude);
