@@ -491,7 +491,8 @@ public class WeaponRenderer implements IItemRenderer {
 			stateManager = new MultipartRenderStateManager<>(currentState, weaponTransitionProvider, Part.WEAPON);
 			firstPersonStateManagers.put(player, stateManager);
 		} else {
-			stateManager.setState(currentState, true, currentState == RenderableState.SHOOTING);
+			stateManager.setState(currentState, true, currentState == RenderableState.SHOOTING
+					|| currentState == RenderableState.RUNNING);
 		}
 		
 		return new StateDescriptor(stateManager, rate, amplitude);
