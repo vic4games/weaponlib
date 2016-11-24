@@ -34,7 +34,7 @@ public class ReloadManager {
 	}
 
 	@SideOnly(Side.CLIENT)
-	void completeReload(ItemStack itemStack, EntityPlayer player, int ammo, boolean quietly) {
+	void completeReload(ItemStack itemStack, EntityPlayer player, int ammo, boolean forceQuietReload) {
 		Weapon weapon = (Weapon) itemStack.getItem();
 		WeaponClientStorage storage = modContext.getWeaponClientStorageManager().getWeaponClientStorage(player, weapon);
 		if (storage == null) {
@@ -43,7 +43,7 @@ public class ReloadManager {
 			
 		if (storage.getState() == State.RELOAD_REQUESTED) {
 			storage.getCurrentAmmo().set(ammo);
-			if (ammo > 0 && !quietly) {
+			if (ammo > 0 && !forceQuietReload) {
 				storage.setState(State.RELOAD_CONFIRMED);
 				long reloadingStopsAt = player.worldObj.getTotalWorldTime() + weapon.builder.reloadingTimeout;
 				storage.getReloadingStopsAt().set(reloadingStopsAt);
@@ -75,9 +75,14 @@ public class ReloadManager {
 		if(storage == null) {
 			return;
 		}
-		if(storage.getState() == State.RELOAD_REQUESTED || storage.getState() == State.RELOAD_CONFIRMED) {
-			long totalWorldTime = player.worldObj.getTotalWorldTime();
-			if(storage.getReloadingStopsAt().get() <= totalWorldTime) {
+		
+		State state = storage.getState();
+		
+		if(state == State.RELOAD_CONFIRMED && player.isSprinting()) {
+			storage.setState(State.READY);
+		} else if(state == State.RELOAD_REQUESTED || state == State.RELOAD_CONFIRMED) {
+			long currentTime = player.worldObj.getTotalWorldTime();
+			if(storage.getReloadingStopsAt().get() <= currentTime) {
 				storage.setState(State.READY);
 			}
 		}
