@@ -40,10 +40,10 @@ final class EffectManager {
 		Minecraft.getMinecraft().effectRenderer.addEffect(smokeParticle);
 	}
 	
-	void spawnFlashParticle(EntityPlayer player, float flashIntensity) {
+	void spawnFlashParticle(EntityPlayer player, float flashIntensity, float xOffset) {
 		
 		float distance = 0.5f;
-		float xOffset = 0.1f;
+		
 		float yOffset = 0.1f;
 		float scale = 1.5f;
 		float positionRandomizationFactor = 0.01f;

@@ -450,8 +450,8 @@ public class WeaponRenderer implements IItemRenderer {
 		float rate = builder.normalRandomizingRate;
 		RenderableState currentState = null;
 		Weapon weapon = (Weapon) itemStack.getItem();
-		if(Weapon.isModifying(itemStack)/*weapon.getState(itemStack) == Weapon.STATE_MODIFYING*/ && builder.firstPersonPositioningModifying != null) {
-			currentState = RenderableState.MODIFYING;
+		if(Weapon.isModifying(itemStack)) {
+			currentState = builder.firstPersonPositioningModifying != null ? RenderableState.MODIFYING : RenderableState.NORMAL;
 		} else if(player.isSprinting() && builder.firstPersonPositioningRunning != null) {
 			currentState = RenderableState.RUNNING;
 		} else if(Weapon.isReloadingConfirmed(player, itemStack)) {
@@ -462,7 +462,6 @@ public class WeaponRenderer implements IItemRenderer {
 			if(storage != null) {
 				currentState = storage.getNextDisposableRenderableState();
 				if(currentState == RenderableState.SHOOTING) {
-					currentState = RenderableState.ZOOMING;
 					rate = builder.firingRandomizingRate;
 				} else {
 					rate = builder.zoomRandomizingRate;
@@ -470,8 +469,6 @@ public class WeaponRenderer implements IItemRenderer {
 			}
 			amplitude = builder.zoomRandomizingAmplitude; // Zoom amplitude is enforced even when firing
 			currentState = RenderableState.ZOOMING;
-		} else if(!Weapon.isModifying(itemStack) /*weapon.getState(itemStack) == Weapon.STATE_READY)*/) {
-			currentState = RenderableState.NORMAL;
 		} else {
 			WeaponClientStorage storage = weapon.getWeaponClientStorage(player);
 
@@ -482,13 +479,12 @@ public class WeaponRenderer implements IItemRenderer {
 					rate = builder.firingRandomizingRate;
 					amplitude = builder.firingRandomizingAmplitude;
 				}
-
-			}
-			if(currentState == null) {
-				currentState = RenderableState.NORMAL;
 			}
 		}
 		
+		if(currentState == null) {
+			currentState = RenderableState.NORMAL;
+		}
 		
 		MultipartRenderStateManager<RenderableState, Part, RenderContext> stateManager = firstPersonStateManagers.get(player);
 		if(stateManager == null) {
