@@ -1,8 +1,8 @@
 package com.vicmatskiv.weaponlib;
 
-import net.minecraft.item.Item;
 import io.netty.buffer.ByteBuf;
-import cpw.mods.fml.common.network.simpleimpl.IMessage;
+import net.minecraft.item.Item;
+import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 
 public class ReloadMessage implements IMessage {
 

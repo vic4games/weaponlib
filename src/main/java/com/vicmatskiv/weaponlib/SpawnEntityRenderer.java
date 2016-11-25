@@ -1,15 +1,15 @@
 package com.vicmatskiv.weaponlib;
 
 
-import net.minecraft.client.model.ModelBase;
-import net.minecraft.client.renderer.entity.Render;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.ResourceLocation;
-
 import org.lwjgl.opengl.GL11;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
+import net.minecraft.client.model.ModelBase;
+import net.minecraft.client.renderer.entity.Render;
+import net.minecraft.client.renderer.entity.RenderManager;
+import net.minecraft.entity.Entity;
+import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 @SideOnly(Side.CLIENT)
 public class SpawnEntityRenderer extends Render
@@ -17,12 +17,18 @@ public class SpawnEntityRenderer extends Render
     //private ResourceLocation textureLocation;
 //    private ModelBase model;
 
-    public SpawnEntityRenderer(/*ModelBase model, String textureName*/) {
-//    	this.model = model;
-//    	this.textureLocation = new ResourceLocation(textureName);
-    }
+//    public SpawnEntityRenderer(/*ModelBase model, String textureName*/) {
+////    	this.model = model;
+////    	this.textureLocation = new ResourceLocation(textureName);
+//    }
     
-    @Override
+    protected SpawnEntityRenderer(RenderManager renderManager) {
+		super(renderManager);
+		// TODO this.model = model;
+		// TODO this.textureLocation = new ResourceLocation(textureName);
+	}
+
+	@Override
 	public void doRender(Entity entity, double x, double y, double z, float yaw, float tick) {
     	//ResourceLocation texture = getEntityTexture(entity);
     	WeaponSpawnEntity weaponSpawnEntity = (WeaponSpawnEntity) entity;

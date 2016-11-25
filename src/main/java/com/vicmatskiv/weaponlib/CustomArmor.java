@@ -9,7 +9,6 @@ import java.util.function.Consumer;
 
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelBiped;
-import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
@@ -17,9 +16,9 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemArmor;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import cpw.mods.fml.common.registry.GameRegistry;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
+import net.minecraftforge.fml.common.registry.GameRegistry;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class CustomArmor extends ItemArmor {
 	
@@ -234,12 +233,12 @@ public class CustomArmor extends ItemArmor {
 	}
 	
 
-	@Override
-	@SideOnly(Side.CLIENT)
-	public void registerIcons(IIconRegister par1IconRegister) {
-		//String itemName = getUnlocalizedName().substring(getUnlocalizedName().lastIndexOf(".") + 1);
-		this.itemIcon = par1IconRegister.registerIcon(modId + ":" + iconName);
-	}
+//	TODO: @Override
+//	@SideOnly(Side.CLIENT)
+//	public void registerIcons(IIconRegister par1IconRegister) {
+//		//String itemName = getUnlocalizedName().substring(getUnlocalizedName().lastIndexOf(".") + 1);
+//		this.itemIcon = par1IconRegister.registerIcon(modId + ":" + iconName);
+//	}
 
 	@Override
 	public String getArmorTexture(ItemStack stack, Entity entity, int slot, String type) {
@@ -320,7 +319,7 @@ public class CustomArmor extends ItemArmor {
 		
 		activeAttachmentsIds[attachmentCategory.ordinal()] = Item.getIdFromItem(nextAttachment);;
 		
-		itemStack.stackTagCompound.setIntArray(ACTIVE_ATTACHMENT_TAG, activeAttachmentsIds);
+		itemStack.getTagCompound().setIntArray(ACTIVE_ATTACHMENT_TAG, activeAttachmentsIds);
 	}
 	
 	private ItemAttachment<CustomArmor> nextCompatibleAttachment(AttachmentCategory category, Item currentAttachment, EntityPlayer player) {
@@ -354,8 +353,8 @@ public class CustomArmor extends ItemArmor {
 	}
 	
 	private void ensureItemStack(ItemStack itemStack) {
-		if (itemStack.stackTagCompound == null) {
-			itemStack.stackTagCompound = new NBTTagCompound();
+		if (itemStack.getTagCompound() == null) {
+			itemStack.setTagCompound(new NBTTagCompound());
 		}
 	}
 	
@@ -404,11 +403,11 @@ public class CustomArmor extends ItemArmor {
 	}
 
 	private int[] ensureActiveAttachments(ItemStack itemStack) {
-		int activeAttachmentsIds[] = itemStack.stackTagCompound.getIntArray(ACTIVE_ATTACHMENT_TAG);
+		int activeAttachmentsIds[] = itemStack.getTagCompound().getIntArray(ACTIVE_ATTACHMENT_TAG);
 		
 		if(activeAttachmentsIds == null || activeAttachmentsIds.length != AttachmentCategory.values.length) {
 			activeAttachmentsIds = new int[AttachmentCategory.values.length];
-			itemStack.stackTagCompound.setIntArray(ACTIVE_ATTACHMENT_TAG, activeAttachmentsIds);
+			itemStack.getTagCompound().setIntArray(ACTIVE_ATTACHMENT_TAG, activeAttachmentsIds);
 			for(CompatibleAttachment<CustomArmor> attachment: compatibleAttachments.values()) {
 				if(attachment.isDefault()) {
 					activeAttachmentsIds[attachment.getAttachment().getCategory().ordinal()] = Item.getIdFromItem(attachment.getAttachment());

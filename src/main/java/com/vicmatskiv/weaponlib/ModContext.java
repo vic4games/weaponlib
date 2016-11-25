@@ -1,8 +1,6 @@
 package com.vicmatskiv.weaponlib;
 
-import net.minecraftforge.client.IItemRenderer;
-import cpw.mods.fml.common.network.simpleimpl.SimpleNetworkWrapper;
-
+import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 
 public interface ModContext {
 	

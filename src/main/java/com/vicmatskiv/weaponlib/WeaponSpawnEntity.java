@@ -11,7 +11,7 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.MovingObjectPosition.MovingObjectType;
 import net.minecraft.world.World;
-import cpw.mods.fml.common.registry.IEntityAdditionalSpawnData;
+import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
 
 public class WeaponSpawnEntity extends EntityThrowable implements IEntityAdditionalSpawnData {
 	
@@ -57,10 +57,16 @@ public class WeaponSpawnEntity extends EntityThrowable implements IEntityAdditio
 		return gravityVelocity;
 	};
 	
+//	@Override
+//	protected float func_70182_d() {
+//		return speed;
+//	};
+	
 	@Override
-	protected float func_70182_d() {
+	protected float getVelocity() {
+		// TODO check if this is a right method
 		return speed;
-	};
+	}
 
 	/**
 	 * @see net.minecraft.entity.projectile.EntityThrowable#onImpact(net.minecraft.util.MovingObjectPosition)
@@ -78,7 +84,8 @@ public class WeaponSpawnEntity extends EntityThrowable implements IEntityAdditio
 				position.entityHit.hurtResistantTime = 0;
 				position.entityHit.prevRotationYaw -= 0.3D;
 			} else if(explosionRadius > 0) {
-				this.worldObj.createExplosion(this, position.blockX, position.blockY, position.blockZ, explosionRadius, true);
+				this.worldObj.createExplosion(this, position.getBlockPos().getX(), 
+						position.getBlockPos().getY(), position.getBlockPos().getZ(), explosionRadius, true);
 			} else if(position.typeOfHit == MovingObjectType.BLOCK) {
 				weapon.onSpawnEntityBlockImpact(worldObj, null, this, position);
 			}
@@ -126,7 +133,7 @@ public class WeaponSpawnEntity extends EntityThrowable implements IEntityAdditio
 		explosionRadius = buffer.readFloat();
 	}
 	
-	float getInaccuracy() {
+	protected float getInaccuracy() {
 		return DEFAULT_INACCURACY;
 	}
 	

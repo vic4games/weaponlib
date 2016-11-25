@@ -13,61 +13,61 @@ final class Tags {
 	private static final String STATE_TAG = "State";
 
 	static boolean isLaserOn(ItemStack itemStack) {
-		if (itemStack.stackTagCompound == null) {
+		if (itemStack.getTagCompound() == null) {
 			return false;
 		}
-		return itemStack.stackTagCompound.getBoolean(LASER_ON_TAG);
+		return itemStack.getTagCompound().getBoolean(LASER_ON_TAG);
 	}
 
 	static void setLaser(ItemStack itemStack, boolean enabled) {
-		itemStack.stackTagCompound.setBoolean(LASER_ON_TAG, enabled);
+		itemStack.getTagCompound().setBoolean(LASER_ON_TAG, enabled);
 	}
 
 	static int getAmmo(ItemStack itemStack) {
-		return itemStack.stackTagCompound.getInteger(AMMO_TAG);
+		return itemStack.getTagCompound().getInteger(AMMO_TAG);
 	}
 
 	static void setAmmo(ItemStack itemStack, int ammo) {
-		itemStack.stackTagCompound.setInteger(AMMO_TAG, ammo);
+		itemStack.getTagCompound().setInteger(AMMO_TAG, ammo);
 	}
 
 	static void setAimed(ItemStack itemStack, boolean aimed) {
-		itemStack.stackTagCompound.setBoolean(AIMED_TAG, aimed);
+		itemStack.getTagCompound().setBoolean(AIMED_TAG, aimed);
 	}
 	
 	static boolean isAimed(ItemStack itemStack) {
-		return itemStack.stackTagCompound.getBoolean(Tags.AIMED_TAG);
+		return itemStack.getTagCompound().getBoolean(Tags.AIMED_TAG);
 	}
 
 	static float getZoom(ItemStack itemStack) {
-		return itemStack.stackTagCompound.getFloat(ZOOM_TAG);
+		return itemStack.getTagCompound().getFloat(ZOOM_TAG);
 	}
 
 	static void setZoom(ItemStack itemStack, float zoom) {
-		itemStack.stackTagCompound.setFloat(ZOOM_TAG, zoom);
+		itemStack.getTagCompound().setFloat(ZOOM_TAG, zoom);
 	}
 
 	static void setActiveTexture(ItemStack itemStack, int currentIndex) {
-		itemStack.stackTagCompound.setInteger(ACTIVE_TEXTURE_INDEX_TAG, currentIndex);
+		itemStack.getTagCompound().setInteger(ACTIVE_TEXTURE_INDEX_TAG, currentIndex);
 	}
 	
 	static int getActiveTexture(ItemStack itemStack) {
-		return itemStack.stackTagCompound.getInteger(ACTIVE_TEXTURE_INDEX_TAG);
+		return itemStack.getTagCompound().getInteger(ACTIVE_TEXTURE_INDEX_TAG);
 	}
 
 	static void setRecoil(ItemStack itemStack, float recoil) {
-		itemStack.stackTagCompound.setFloat(RECOIL_TAG, recoil);
+		itemStack.getTagCompound().setFloat(RECOIL_TAG, recoil);
 	}
 
 	static float getRecoil(ItemStack itemStack) {
-		return itemStack.stackTagCompound.getFloat(RECOIL_TAG);
+		return itemStack.getTagCompound().getFloat(RECOIL_TAG);
 	}
 
 	static Weapon.State getState(ItemStack itemStack) {
-		return Weapon.State.values()[itemStack.stackTagCompound.getInteger(STATE_TAG)];
+		return Weapon.State.values()[itemStack.getTagCompound().getInteger(STATE_TAG)];
 	}
 	
 	static void setState(ItemStack itemStack, Weapon.State state) {
-		itemStack.stackTagCompound.setInteger(STATE_TAG, state.ordinal());
+		itemStack.getTagCompound().setInteger(STATE_TAG, state.ordinal());
 	}
 }

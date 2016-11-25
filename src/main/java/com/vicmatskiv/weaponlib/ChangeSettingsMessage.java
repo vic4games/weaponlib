@@ -2,7 +2,7 @@ package com.vicmatskiv.weaponlib;
 
 import net.minecraft.item.Item;
 import io.netty.buffer.ByteBuf;
-import cpw.mods.fml.common.network.simpleimpl.IMessage;
+import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 
 public class ChangeSettingsMessage implements IMessage {
 

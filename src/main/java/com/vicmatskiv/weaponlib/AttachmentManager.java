@@ -6,12 +6,13 @@ import java.util.List;
 
 import com.vicmatskiv.weaponlib.Weapon.State;
 
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 public final class AttachmentManager {
 	
@@ -71,9 +72,10 @@ public final class AttachmentManager {
 		int activeAttachmentsIds[] = ensureActiveAttachments(itemStack);
 		
 		int selectedAttachmentIndexes[] = new int[AttachmentCategory.values.length];
-		itemStack.stackTagCompound.setIntArray(SELECTED_ATTACHMENT_INDEXES_TAG, selectedAttachmentIndexes);
 		
-		itemStack.stackTagCompound.setIntArray(PREVIOUSLY_SELECTED_ATTACHMENT_TAG, 
+		itemStack.getTagCompound().setIntArray(SELECTED_ATTACHMENT_INDEXES_TAG, selectedAttachmentIndexes);
+		
+		itemStack.getTagCompound().setIntArray(PREVIOUSLY_SELECTED_ATTACHMENT_TAG, 
 				Arrays.copyOf(activeAttachmentsIds, activeAttachmentsIds.length));
 		
 		Weapon.setModifying(itemStack, true);
@@ -82,8 +84,8 @@ public final class AttachmentManager {
 	void exitAttachmentSelectionMode(ItemStack itemStack, EntityPlayer player) {
 		ensureItemStack(itemStack);
 		
-		int activeAttachmentsIds[] = itemStack.stackTagCompound.getIntArray(ACTIVE_ATTACHMENT_TAG);
-		int previouslySelectedAttachmentIds[] = itemStack.stackTagCompound.getIntArray(PREVIOUSLY_SELECTED_ATTACHMENT_TAG);
+		int activeAttachmentsIds[] = itemStack.getTagCompound().getIntArray(ACTIVE_ATTACHMENT_TAG);
+		int previouslySelectedAttachmentIds[] = itemStack.getTagCompound().getIntArray(PREVIOUSLY_SELECTED_ATTACHMENT_TAG);
 		for(int i = 0; i < activeAttachmentsIds.length; i++) {
 			if(activeAttachmentsIds[i] != previouslySelectedAttachmentIds[i]) {
 				Item newItem = Item.getItemById(activeAttachmentsIds[i]);
@@ -123,12 +125,12 @@ public final class AttachmentManager {
 	}
 
 	private int[] ensureActiveAttachments(ItemStack itemStack) {
-		int activeAttachmentsIds[] = itemStack.stackTagCompound.getIntArray(ACTIVE_ATTACHMENT_TAG);
+		int activeAttachmentsIds[] = itemStack.getTagCompound().getIntArray(ACTIVE_ATTACHMENT_TAG);
 		
 		Weapon weapon = (Weapon) itemStack.getItem();
 		if(activeAttachmentsIds == null || activeAttachmentsIds.length != AttachmentCategory.values.length) {
 			activeAttachmentsIds = new int[AttachmentCategory.values.length];
-			itemStack.stackTagCompound.setIntArray(ACTIVE_ATTACHMENT_TAG, activeAttachmentsIds);
+			itemStack.getTagCompound().setIntArray(ACTIVE_ATTACHMENT_TAG, activeAttachmentsIds);
 			for(CompatibleAttachment<Weapon> attachment: weapon.getCompatibleAttachments().values()) {
 				if(attachment.isDefault()) {
 					activeAttachmentsIds[attachment.getAttachment().getCategory().ordinal()] = Item.getIdFromItem(attachment.getAttachment());
@@ -167,14 +169,14 @@ public final class AttachmentManager {
 		
 		activeAttachmentsIds[attachmentCategory.ordinal()] = Item.getIdFromItem(nextAttachment);;
 		
-		itemStack.stackTagCompound.setIntArray(ACTIVE_ATTACHMENT_TAG, activeAttachmentsIds);
+		itemStack.getTagCompound().setIntArray(ACTIVE_ATTACHMENT_TAG, activeAttachmentsIds);
 	}
 		
 	@SuppressWarnings("unchecked")
 	private ItemAttachment<Weapon> nextCompatibleAttachment(AttachmentCategory category, Item currentAttachment, EntityPlayer player, ItemStack itemStack) {
 		Weapon weapon = (Weapon) itemStack.getItem();
 		
-		int[] selectedAttachmentIndexes = itemStack.stackTagCompound.getIntArray(SELECTED_ATTACHMENT_INDEXES_TAG);
+		int[] selectedAttachmentIndexes = itemStack.getTagCompound().getIntArray(SELECTED_ATTACHMENT_INDEXES_TAG);
 		if(selectedAttachmentIndexes == null || selectedAttachmentIndexes.length != AttachmentCategory.values.length) {
 			return null;
 		}
@@ -217,7 +219,7 @@ public final class AttachmentManager {
 			
 			if(currentIndex == 0) {
 				// Select original attachment that was there prior to entering attachment mode
-				int previouslySelectedAttachmentIds[] = itemStack.stackTagCompound.getIntArray(PREVIOUSLY_SELECTED_ATTACHMENT_TAG);
+				int previouslySelectedAttachmentIds[] = itemStack.getTagCompound().getIntArray(PREVIOUSLY_SELECTED_ATTACHMENT_TAG);
 				nextCompatibleAttachment = (ItemAttachment<Weapon>) Item.getItemById(previouslySelectedAttachmentIds[category.ordinal()]);
 				if(nextCompatibleAttachment != null) {
 					// if original attachment existed, exit, iterate till found one
@@ -242,7 +244,7 @@ public final class AttachmentManager {
 		}
 		
 		selectedAttachmentIndexes[category.ordinal()] = currentIndex;
-		itemStack.stackTagCompound.setIntArray(SELECTED_ATTACHMENT_INDEXES_TAG, selectedAttachmentIndexes);
+		itemStack.getTagCompound().setIntArray(SELECTED_ATTACHMENT_INDEXES_TAG, selectedAttachmentIndexes);
 		return nextCompatibleAttachment;
 	}
 	
@@ -276,7 +278,7 @@ public final class AttachmentManager {
 	}
 	
 	boolean isSilencerOn(ItemStack itemStack) {
-		if(itemStack.stackTagCompound == null) return false;
+		if(itemStack.getTagCompound() == null) return false;
 		int[] activeAttachmentsIds = ensureActiveAttachments(itemStack);
 		int activeAttachmentIdForThisCategory = activeAttachmentsIds[AttachmentCategory.SILENCER.ordinal()];
 		return activeAttachmentIdForThisCategory > 0;
@@ -306,8 +308,8 @@ public final class AttachmentManager {
 	}
 	
 	private void ensureItemStack(ItemStack itemStack) {
-		if (itemStack.stackTagCompound == null) {
-			itemStack.stackTagCompound = new NBTTagCompound();
+		if (itemStack.getTagCompound() == null) {
+			itemStack.setTagCompound(new NBTTagCompound());
 		}
 	}
 }

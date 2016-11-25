@@ -10,7 +10,6 @@ import java.util.function.Consumer;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.model.ModelBase;
-import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -24,7 +23,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
-import net.minecraftforge.client.IItemRenderer;
 
 public class Weapon extends Item {
 	
@@ -351,12 +349,12 @@ public class Weapon extends Item {
 						}
 
 						@Override
-						protected float func_70182_d() {
+						protected float getVelocity() {
 							return spawnEntitySpeed;
 						}
 
 						@Override
-						float getInaccuracy() {
+						protected float getInaccuracy() {
 							return inaccuracy;
 						}
 
@@ -376,10 +374,12 @@ public class Weapon extends Item {
 
 			if (blockImpactHandler == null) {
 				blockImpactHandler = (world, player, entity, position) -> {
-					Block block = world.getBlock(position.blockX, position.blockY, position.blockZ);
+			
+					Block block = world.getBlockState(position.getBlockPos()).getBlock();
 					if (block == Blocks.glass || block == Blocks.glass_pane || block == Blocks.stained_glass
 							|| block == Blocks.stained_glass_pane) {
-						world.func_147480_a(position.blockX, position.blockY, position.blockZ, true);
+						//world.func_147480_a(position.getBlockPos().getX(), position.getBlockPos().getY(), position.getBlockPos().getZ(), true);
+						world.destroyBlock(position.getBlockPos(), true);
 					}
 				};
 			}
@@ -424,9 +424,9 @@ public class Weapon extends Item {
 		return builder.name;
 	}
 
-	@Override
-	public void registerIcons(IIconRegister register) {}
-	
+//	@Override
+//	public void registerIcons(IIconRegister register) {}
+
 	@Override
 	public boolean onEntitySwing(EntityLivingBase entityLiving, ItemStack itemStack) {
 		return true;
@@ -489,8 +489,8 @@ public class Weapon extends Item {
 	}
 
 	private void ensureItemStack(ItemStack itemStack) {
-		if (itemStack.stackTagCompound == null) {
-			itemStack.stackTagCompound = new NBTTagCompound();
+		if (itemStack.getTagCompound() == null) {
+			itemStack.setTagCompound(new NBTTagCompound());
 			Tags.setAmmo(itemStack, 0);
 			Tags.setZoom(itemStack, 1.0f);
 			Tags.setRecoil(itemStack, builder.recoil);

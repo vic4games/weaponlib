@@ -2,11 +2,11 @@ package com.vicmatskiv.weaponlib;
 
 import com.vicmatskiv.weaponlib.Weapon.State;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class ReloadManager {
 	
@@ -57,7 +57,7 @@ public class ReloadManager {
 	//@SideOnly(Side.SERVER)
 	void reload(ItemStack itemStack, EntityPlayer player) {
 		Weapon weapon = (Weapon) itemStack.getItem();
-		if (itemStack.stackTagCompound != null && !player.isSprinting()) {
+		if (itemStack.getTagCompound() != null && !player.isSprinting()) {
 			if (player.inventory.consumeInventoryItem(weapon.builder.ammo)) {
 				Tags.setAmmo(itemStack, weapon.builder.ammoCapacity);
 				modContext.getChannel().sendTo(new ReloadMessage(weapon, weapon.builder.ammoCapacity), (EntityPlayerMP) player);

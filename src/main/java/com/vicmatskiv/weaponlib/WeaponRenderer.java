@@ -20,18 +20,21 @@ import com.vicmatskiv.weaponlib.animation.MultipartTransition;
 import com.vicmatskiv.weaponlib.animation.MultipartTransitionProvider;
 import com.vicmatskiv.weaponlib.animation.Transition;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
+import net.minecraft.client.entity.EntityPlayerSP;
 //import net.minecraft.client.entity.EntityClientPlayerMP;
 import net.minecraft.client.model.ModelBase;
+import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.entity.RenderPlayer;
+import net.minecraft.client.renderer.entity.RendererLivingEntity;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.client.IItemRenderer;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 
 public class WeaponRenderer implements IItemRenderer {
@@ -290,7 +293,7 @@ public class WeaponRenderer implements IItemRenderer {
 			if(firstPersonPositioning == null) {
 				firstPersonPositioning = (player, itemStack) -> {
 					GL11.glRotatef(45F, 0f, 1f, 0f);
-					if(itemStack.stackTagCompound != null && Tags.getZoom(itemStack) /*itemStack.stackTagCompound.getFloat(Weapon.ZOOM_TAG)*/ != 1.0f) {
+					if(itemStack.getTagCompound() != null && Tags.getZoom(itemStack) /*itemStack.stackTagCompound.getFloat(Weapon.ZOOM_TAG)*/ != 1.0f) {
 						GL11.glTranslatef(xOffsetZoom, yOffsetZoom, weaponProximity);
 					} else {
 						GL11.glTranslatef(0F, -1.2F, 0F);
@@ -420,18 +423,18 @@ public class WeaponRenderer implements IItemRenderer {
 		this.weaponTransitionProvider = new WeaponPositionProvider();
 	}
 	
-	@Override
-	public boolean handleRenderType(ItemStack item, ItemRenderType type)
-	{
-		return true;
-	}
-	
-	@Override
-	public boolean shouldUseRenderHelper(ItemRenderType type, ItemStack item, ItemRendererHelper helper)
-	{
-		return true;
-	}
-	
+//	@Override
+//	public boolean handleRenderType(ItemStack item, ItemRenderType type)
+//	{
+//		return true;
+//	}
+//	
+//	@Override
+//	public boolean shouldUseRenderHelper(ItemRenderType type, ItemStack item, ItemRendererHelper helper)
+//	{
+//		return true;
+//	}
+//	
 	private static class StateDescriptor {
 		MultipartRenderStateManager<RenderableState, Part, RenderContext> stateManager;
 		float rate;
@@ -504,8 +507,9 @@ public class WeaponRenderer implements IItemRenderer {
 		GL11.glPushMatrix();
 		
 		GL11.glScaled(-1F, -1F, 1F);
-		EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+		AbstractClientPlayer player = Minecraft.getMinecraft().thePlayer;
 		RenderContext renderContext = new RenderContext(player, item);
+		
 		switch (type)
 		{
 		case ENTITY:
@@ -529,17 +533,20 @@ public class WeaponRenderer implements IItemRenderer {
 			
 			positioner.position(Part.WEAPON, renderContext);
 			
-			RenderPlayer render = (RenderPlayer) RenderManager.instance.getEntityRenderObject(player);
+			Render<AbstractClientPlayer> entityRenderObject = Minecraft.getMinecraft().getRenderManager().getEntityRenderObject(player);
+			RenderPlayer render = (RenderPlayer) entityRenderObject;
 			Minecraft.getMinecraft().getTextureManager().bindTexture(((AbstractClientPlayer) player).getLocationSkin());
 			
 			GL11.glPushMatrix();
 			positioner.position(Part.LEFT_HAND, renderContext);
-			render.renderFirstPersonArm(player);
+			//render.renderFirstPersonArm(player);
+			render.renderLeftArm(player);
 			GL11.glPopMatrix();
 			
 			GL11.glPushMatrix();
 			positioner.position(Part.RIGHT_HAND, renderContext);
-			render.renderFirstPersonArm(player);
+			//render.renderFirstPersonArm(player);
+			render.renderRightArm(player);
 			GL11.glPopMatrix();
 	        
 			break;

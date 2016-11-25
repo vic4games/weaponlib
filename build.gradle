@@ -1,38 +1,40 @@
+
+// For those who want the bleeding edge
 buildscript {
     repositories {
-        mavenCentral()
+        jcenter()
         maven {
             name = "forge"
             url = "http://files.minecraftforge.net/maven"
         }
-        maven {
-            name = "sonatype"
-            url = "https://oss.sonatype.org/content/repositories/snapshots/"
-        }
-        maven {
-            name = "proguard"
-            url = "http://mvnrepository.com/artifact/net.sf.proguard"
-        }
-        //flatDir dirs: '/Users/victor-jr/Development/proguard5.2.1/lib'
     }
     dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:1.2-SNAPSHOT'
-        classpath 'net.sf.proguard:proguard-gradle:5.2.1'
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.1-SNAPSHOT'
     }
 }
+apply plugin: 'net.minecraftforge.gradle.forge'
 
-apply plugin: 'forge'
-
+/*
+// for people who want stable - not yet functional for MC 1.8.8 - we require the forgegradle 2.1 snapshot
+plugins {
+    id "net.minecraftforge.gradle.forge" version "2.0.2"
+}
+*/
 version = "1.0"
-group= "com.vicmatskiv.weaponlib" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
-archivesBaseName = "weaponlib"
-
-sourceCompatibility = JavaVersion.VERSION_1_8
-targetCompatibility = JavaVersion.VERSION_1_8
+group= "com.yourname.modid" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+archivesBaseName = "modid"
 
 minecraft {
-    version = "1.7.10-10.13.2.1291"
-    runDir = "eclipse"
+    version = "1.8.9-11.15.1.1902-1.8.9"
+    runDir = "run"
+    
+    // the mappings can be changed at any time, and must be in the following format.
+    // snapshot_YYYYMMDD   snapshot are built nightly.
+    // stable_#            stables are built at the discretion of the MCP team.
+    // Use non-default mappings at your own risk. they may not allways work.
+    // simply re-run your setup task after changing the mappings to update your workspace.
+    mappings = "stable_20"
+    // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
 }
 
 dependencies {
@@ -45,13 +47,17 @@ dependencies {
     //compile 'com.mod-buildcraft:buildcraft:6.0.8:dev'  // adds buildcraft to the dev env
     //compile 'com.googlecode.efficient-java-matrix-library:ejml:0.24' // adds ejml to the dev env
 
+    // the 'provided' configuration is for optional dependencies that exist at compile-time but might not at runtime.
+    //provided 'com.mod-buildcraft:buildcraft:6.0.8:dev'
+
+    // the deobf configurations:  'deobfCompile' and 'deobfProvided' are the same as the normal compile and provided,
+    // except that these dependencies get remapped to your current MCP mappings
+    //deobfCompile 'com.mod-buildcraft:buildcraft:6.0.8:dev'
+    //deobfProvided 'com.mod-buildcraft:buildcraft:6.0.8:dev'
+
     // for more info...
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
- 
-    //compile group: 'net.sf.proguard', name: 'proguard-base', version: '5.2.1'
-    //compile group: 'net.sf.proguard', name: 'proguard-parent', version: '5.2.1', ext: 'pom'
-
 
 }
 
@@ -73,18 +79,4 @@ processResources
     from(sourceSets.main.resources.srcDirs) {
         exclude 'mcmod.info'
     }
-    
-    from ('src/main/java') {
-        include '**/*.png'
-    }
-    
 }
-
-
-task obfuscate(type: proguard.gradle.ProGuardTask) {
-  configuration 'proguard.cfg'
-  
-  injars "./build/libs/${archivesBaseName}-${version}.jar"
-  
-  outjars "./build/libs/${archivesBaseName}-${version}-${project.minecraft.version}.jar"
-} 

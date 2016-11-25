@@ -2,7 +2,6 @@ package com.vicmatskiv.weaponlib;
 
 import org.lwjgl.opengl.GL11;
 
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
@@ -11,6 +10,7 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 public class CustomGui extends Gui {
 	private Minecraft mc;
@@ -21,20 +21,6 @@ public class CustomGui extends Gui {
 
 	private static final int BUFF_ICON_SIZE = 256;
 	
-	
-//	@SubscribeEvent
-//	public void renderHandEvent(RenderHandEvent par1RenderHandEvent)
-//	{
-//	    System.out.println("Rendering player hand");
-////	    GL11.glPushMatrix();
-////	    Render render = RenderManager.instance.getEntityRenderObject(this.mc.thePlayer);
-////        RenderPlayer renderplayer = (RenderPlayer)render;
-////        float f10 = 1.0F;
-////        //GL11.glScalef(f10, f10, f10);
-////        GL11.glTranslatef(-1f, -1f, -1f);
-////        renderplayer.renderFirstPersonArm(this.mc.thePlayer);
-////        GL11.glPopMatrix();
-//	}
 	
 	@SubscribeEvent
 	public void onRenderHud(RenderGameOverlayEvent.Pre event) {
@@ -98,7 +84,7 @@ public class CustomGui extends Gui {
 				drawTexturedModalRect(xPos, yPos, 0, 0, BUFF_ICON_SIZE, BUFF_ICON_SIZE);
 			}
 			
-			FontRenderer fontRender = mc.fontRenderer;
+			FontRenderer fontRender = mc.fontRendererObj;
 
 			mc.entityRenderer.setupOverlayRendering();
 			
@@ -124,12 +110,13 @@ public class CustomGui extends Gui {
 	}
 	
 	private static void drawTexturedQuadFit(double x, double y, double width, double height, double zLevel){
-		Tessellator tessellator = Tessellator.instance;
-        tessellator.startDrawingQuads();
-        tessellator.addVertexWithUV(x + 0, y + height, zLevel, 0,1);
-        tessellator.addVertexWithUV(x + width, y + height, zLevel, 1, 1);
-        tessellator.addVertexWithUV(x + width, y + 0, zLevel, 1,0);
-        tessellator.addVertexWithUV(x + 0, y + 0, zLevel, 0, 0);
-        tessellator.draw();
+		throw new UnsupportedOperationException("Refactor the commented code below!");
+//		Tessellator tessellator = Tessellator.getInstance();
+//        tessellator.startDrawingQuads();
+//        tessellator.addVertexWithUV(x + 0, y + height, zLevel, 0,1);
+//        tessellator.addVertexWithUV(x + width, y + height, zLevel, 1, 1);
+//        tessellator.addVertexWithUV(x + width, y + 0, zLevel, 1,0);
+//        tessellator.addVertexWithUV(x + 0, y + 0, zLevel, 0, 0);
+//        tessellator.draw();
 	}
 }

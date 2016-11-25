@@ -44,6 +44,10 @@ public class ItemAttachment<T> extends Item {
 		this.remove = remove;
 	}
 	
+	public void setTextureName(String name) {
+		throw new UnsupportedOperationException();
+	}
+	
 	public ItemAttachment<T> addModel(ModelBase model, String textureName) {
 		texturedModels.add(new Tuple<>(model, textureName));
 		return this;

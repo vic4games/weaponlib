@@ -16,7 +16,7 @@ public class WeaponResourcePack implements IResourcePack {
 	
 	private static final String WEAPONLIB_RESOURCE_DOMAIN = "weaponlib";
 	
-	private static final Set<?> RESOURCE_DOMAINS = Collections.unmodifiableSet(new HashSet<>(
+	private static final Set<String> RESOURCE_DOMAINS = Collections.unmodifiableSet(new HashSet<>(
 			Collections.singleton(WEAPONLIB_RESOURCE_DOMAIN)));
 
 	@Override
@@ -32,7 +32,7 @@ public class WeaponResourcePack implements IResourcePack {
 	}
 
 	@Override
-	public Set<?> getResourceDomains() {
+	public Set<String> getResourceDomains() {
 		return RESOURCE_DOMAINS;
 	}
 

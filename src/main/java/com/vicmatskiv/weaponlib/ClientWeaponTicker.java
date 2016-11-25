@@ -4,10 +4,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.lwjgl.input.Mouse;
 
-import cpw.mods.fml.client.FMLClientHandler;
-import net.minecraft.client.entity.EntityClientPlayerMP;
+import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraftforge.fml.client.FMLClientHandler;
 
 class ClientWeaponTicker extends Thread {
 	
@@ -34,7 +34,7 @@ class ClientWeaponTicker extends Thread {
 		while(running.get()) {
 			try {
 				Weapon currentWeapon = getCurrentWeapon();
-				EntityClientPlayerMP player = FMLClientHandler.instance().getClientPlayerEntity();
+				EntityPlayerSP player = FMLClientHandler.instance().getClientPlayerEntity();
 
 				if(Mouse.isCreated() && Mouse.isButtonDown(0)) {
 					// Capture the current item index
@@ -63,7 +63,7 @@ class ClientWeaponTicker extends Thread {
 		}
 	}
 	
-	private void update(EntityClientPlayerMP player) {
+	private void update(EntityPlayerSP player) {
 		//currentWeapon.tick(player);
 		reloadManager.update(player.getHeldItem(), player);
 		fireManager.update(player.getHeldItem(), player);

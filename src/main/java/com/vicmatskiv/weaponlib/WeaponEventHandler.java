@@ -1,14 +1,14 @@
 package com.vicmatskiv.weaponlib;
 
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.client.event.FOVUpdateEvent;
 import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.client.event.RenderLivingEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class WeaponEventHandler {
 	
@@ -29,7 +29,7 @@ public class WeaponEventHandler {
 		ItemStack stack = event.entity.getHeldItem();
 		if (stack != null) {
 			if (stack.getItem() instanceof Weapon) {
-				if (stack.stackTagCompound != null) {
+				if (stack.getTagCompound() != null) {
 					event.newfov = Tags.getZoom(stack);
 				}
 			}
@@ -48,8 +48,9 @@ public class WeaponEventHandler {
 		if (itemStack != null && itemStack.getItem() instanceof Weapon) {
 			RenderPlayer rp = (RenderPlayer) event.renderer;
 
-			if (itemStack.stackTagCompound != null) {
-				rp.modelBipedMain.aimedBow = Weapon.isAimed(itemStack); //itemStack.stackTagCompound.getBoolean("Aimed");
+			if (itemStack.getTagCompound() != null) {
+				//rp.modelBipedMain.aimedBow = Weapon.isAimed(itemStack); //itemStack.stackTagCompound.getBoolean("Aimed");
+				rp.getMainModel().aimedBow = Weapon.isAimed(itemStack);
 			}
 		}
 	}

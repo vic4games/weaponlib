@@ -1,10 +1,9 @@
 package com.vicmatskiv.weaponlib;
 
-import io.netty.buffer.ByteBuf;
-
 import java.util.Random;
 
-import cpw.mods.fml.common.network.simpleimpl.IMessage;
+import io.netty.buffer.ByteBuf;
+import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 
 public class LaserSwitchMessage implements IMessage {
 
