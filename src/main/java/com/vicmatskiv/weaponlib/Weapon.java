@@ -10,6 +10,7 @@ import java.util.function.Consumer;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.model.ModelBase;
+import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -21,8 +22,12 @@ import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.BlockPos;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class Weapon extends Item {
 	
@@ -42,7 +47,7 @@ public class Weapon extends Item {
 		ItemAmmo ammo;
 		float fireRate = Weapon.DEFAULT_FIRE_RATE;
 		private CreativeTabs creativeTab;
-		private IItemRenderer renderer;
+		private WeaponRenderer renderer;
 		float zoom = Weapon.DEFAULT_ZOOM;
 		int maxShots = Integer.MAX_VALUE;
 		String crosshair;
@@ -237,7 +242,7 @@ public class Weapon extends Item {
 			return this;
 		}
 
-		public Builder withRenderer(IItemRenderer renderer) {
+		public Builder withRenderer(WeaponRenderer renderer) {
 			this.renderer = renderer;
 			return this;
 		}
@@ -390,10 +395,12 @@ public class Weapon extends Item {
 			if (ammo != null) {
 				ammo.addCompatibleWeapon(weapon);
 			}
+			
 			for (ItemAttachment<Weapon> attachment : this.compatibleAttachments.keySet()) {
 				attachment.addCompatibleWeapon(weapon);
 			}
-			modContext.registerWeapon(name, weapon, renderer);
+			
+			modContext.registerWeapon(name, weapon);
 			return weapon;
 		}
 	}
@@ -423,6 +430,12 @@ public class Weapon extends Item {
 	public String getName() {
 		return builder.name;
 	}
+	
+	@SideOnly(Side.CLIENT)
+	public ModelResourceLocation getModel(ItemStack stack, EntityPlayer player, int useRemaining) {
+		builder.renderer.setOwner(player);
+		return super.getModel(stack, player, useRemaining);
+	}
 
 //	@Override
 //	public void registerIcons(IIconRegister register) {}
@@ -437,8 +450,14 @@ public class Weapon extends Item {
 		toggleAiming(itemStack, entityPlayer);
 		return itemStack;
 	}
+	
+	@Override
+	public boolean onItemUse(ItemStack stack, EntityPlayer playerIn, World worldIn, BlockPos pos, EnumFacing side,
+			float hitX, float hitY, float hitZ) {
+		return true;
+	}
 
-	private void toggleAiming(ItemStack itemStack, EntityPlayer entityPlayer) {
+	void toggleAiming(ItemStack itemStack, EntityPlayer entityPlayer) {
 		
 		ensureItemStack(itemStack);
 		float currentZoom = Tags.getZoom(itemStack);
@@ -475,6 +494,11 @@ public class Weapon extends Item {
 		}  else {
 			System.err.println("Attempted to add duplicate modifier: " + SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER);
 		}
+	}
+	
+	@Override
+	public boolean shouldCauseReequipAnimation(ItemStack oldStack, ItemStack newStack, boolean slotChanged) {
+		return false;
 	}
 
 	@Override
@@ -627,5 +651,9 @@ public class Weapon extends Item {
 
 	List<CompatibleAttachment<Weapon>> getActiveAttachments(ItemStack itemStack) {
 		return modContext.getAttachmentManager().getActiveAttachments(itemStack);
+	}
+
+	public WeaponRenderer getRenderer() {
+		return builder.renderer;
 	}
 }

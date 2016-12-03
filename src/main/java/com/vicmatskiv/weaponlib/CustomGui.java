@@ -7,6 +7,8 @@ import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.WorldRenderer;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -22,7 +24,7 @@ public class CustomGui extends Gui {
 	private static final int BUFF_ICON_SIZE = 256;
 	
 	
-	@SubscribeEvent
+	//TODO: fix this method @SubscribeEvent
 	public void onRenderHud(RenderGameOverlayEvent.Pre event) {
 		
 		if(event.type == RenderGameOverlayEvent.ElementType.HELMET) {
@@ -48,10 +50,7 @@ public class CustomGui extends Gui {
 		}
 	}
 
-	//
-	// This event is called by GuiIngameForge during each frame by
-	// GuiIngameForge.pre() and GuiIngameForce.post().
-	//
+	
 	@SubscribeEvent
 	public void onRenderCrosshair(RenderGameOverlayEvent.Pre event) {
 		
@@ -110,13 +109,14 @@ public class CustomGui extends Gui {
 	}
 	
 	private static void drawTexturedQuadFit(double x, double y, double width, double height, double zLevel){
-		throw new UnsupportedOperationException("Refactor the commented code below!");
-//		Tessellator tessellator = Tessellator.getInstance();
-//        tessellator.startDrawingQuads();
-//        tessellator.addVertexWithUV(x + 0, y + height, zLevel, 0,1);
-//        tessellator.addVertexWithUV(x + width, y + height, zLevel, 1, 1);
-//        tessellator.addVertexWithUV(x + width, y + 0, zLevel, 1,0);
-//        tessellator.addVertexWithUV(x + 0, y + 0, zLevel, 0, 0);
-//        tessellator.draw();
+		//throw new UnsupportedOperationException("Refactor the commented code below!");
+		Tessellator tessellator = Tessellator.getInstance();
+		WorldRenderer worldRenderer = tessellator.getWorldRenderer();
+		worldRenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL);
+		worldRenderer.pos(x + 0, y + height, zLevel).tex(0,1).endVertex();
+		worldRenderer.pos(x + width, y + height, zLevel).tex(1, 1).endVertex();
+		worldRenderer.pos(x + width, y + 0, zLevel).tex(1,0).endVertex();
+		worldRenderer.pos(x + 0, y + 0, zLevel).tex(0, 0).endVertex();
+		tessellator.draw();
 	}
 }

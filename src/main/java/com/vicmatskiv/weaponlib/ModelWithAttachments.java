@@ -7,25 +7,14 @@ import org.lwjgl.opengl.GL11;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
+import net.minecraft.client.renderer.block.model.ItemCameraTransforms.TransformType;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 
+@SuppressWarnings("deprecation")
 public class ModelWithAttachments extends ModelBase {
 	
-	/*
-	public static class Attachment {
-		private ModelBase model;
-		private String textureName;
-		public Attachment(ModelBase model, String textureName) {
-			this.model = model;
-			this.textureName = textureName;
-		}
-	}
-	
-	private Map<Class<? extends ModelBase>, ItemAttachment> compatibleAttachments = new HashMap<>();
-	*/
-
 
 	public void setRotation(ModelRenderer model, float x, float y, float z) {
 		model.rotateAngleX = x;
@@ -33,7 +22,7 @@ public class ModelWithAttachments extends ModelBase {
 		model.rotateAngleZ = z;
 	}
 	
-	public void renderAttachments(String modId, ItemStack itemStack, ItemRenderType type, List<CompatibleAttachment<Weapon>> attachments, Entity entity, float f, float f1, float f2, float f3, float f4, float f5) {
+	public void renderAttachments(String modId, ItemStack itemStack, TransformType type, List<CompatibleAttachment<Weapon>> attachments, Entity entity, float f, float f1, float f2, float f3, float f4, float f5) {
 		for(CompatibleAttachment<?> compatibleAttachment: attachments) {
 			if(compatibleAttachment != null) {
 				for(Tuple<ModelBase, String> texturedModel: compatibleAttachment.getAttachment().getTexturedModels()) {
@@ -61,10 +50,5 @@ public class ModelWithAttachments extends ModelBase {
 	@Override
 	public void setRotationAngles(float f, float f1, float f2, float f3, float f4, float f5, Entity entity) {
 		super.setRotationAngles(f, f1, f2, f3, f4, f5, entity);
-
-		/*
-		for(ModelBase attachmentModel: attachments) {
-			attachmentModel.setRotationAngles(f, f1, f2, f3, f4, f5, entity);
-		}*/
 	}
 }

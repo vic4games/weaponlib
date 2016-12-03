@@ -1,6 +1,7 @@
 package com.vicmatskiv.weaponlib;
 
 import net.minecraft.client.renderer.entity.RenderPlayer;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.client.event.FOVUpdateEvent;
@@ -38,7 +39,7 @@ public class WeaponEventHandler {
 
 	@SideOnly(Side.CLIENT)
 	@SubscribeEvent
-	public void handleRenderLivingEvent(RenderLivingEvent.Pre event) {
+	public void handleRenderLivingEvent(RenderLivingEvent.Pre<? extends EntityLivingBase> event) {
 
 		if ((event.isCanceled()) || (!(event.entity instanceof EntityPlayer)))
 			return;

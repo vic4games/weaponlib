@@ -2,7 +2,6 @@ package com.vicmatskiv.weaponlib;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.common.registry.GameRegistry;
@@ -62,12 +61,12 @@ public class CommonModContext implements ModContext {
 		
 		MinecraftForge.EVENT_BUS.register(attachmentManager); 
 		
-		FMLCommonHandler.instance().bus().register(new WeaponKeyInputHandler((ctx) -> getPlayer(ctx), 
+		MinecraftForge.EVENT_BUS.register(new WeaponKeyInputHandler((ctx) -> getPlayer(ctx), 
 				attachmentManager, reloadManager, channel));
 	}
 
 	@Override
-	public void registerWeapon(String name, Weapon weapon, IItemRenderer renderer) {
+	public void registerWeapon(String name, Weapon weapon) {
 		GameRegistry.registerItem(weapon, name);
 	}
 	
@@ -86,6 +85,11 @@ public class CommonModContext implements ModContext {
 
 	@Override
 	public void runSyncTick(Runnable runnable) {
+		throw new UnsupportedOperationException();
+	}
+	
+	@Override
+	public void runInMainThread(Runnable runnable) {
 		throw new UnsupportedOperationException();
 	}
 

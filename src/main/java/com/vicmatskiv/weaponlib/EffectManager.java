@@ -23,8 +23,9 @@ final class EffectManager {
 		
 		Vec3 look = player.getLookVec();
 		float distance = 0.3F;
+		float yOffset = -1.5F;
 		double posX = player.posX + (look.xCoord * distance) + (player.worldObj.rand.nextFloat() * 2.0F - 1) * 0.1f;
-		double posY = player.posY + (look.yCoord * distance) + (player.worldObj.rand.nextFloat() * 2.0F - 1) * 0.1f;
+		double posY = player.posY + (look.yCoord * distance) + (player.worldObj.rand.nextFloat() * 2.0F - 1) * 0.1f - yOffset;
 		double posZ = player.posZ + (look.zCoord * distance) + (player.worldObj.rand.nextFloat() * 2.0F - 1) * 0.1f;
 		
 		EntityFX smokeParticle = new SmokeFX(
@@ -37,6 +38,17 @@ final class EffectManager {
 		      (float)motionY, 
 		      (float)motionZ);
 		
+//		EntityFX smokeParticle = new EntityCritFX.Factory().getEntityFX(0,
+//				player.worldObj, 
+//				posX,
+//		        posY, 
+//		        posZ,
+////		        
+//		      motionX, 
+//		      motionY, 
+//		      motionZ, 1);
+		
+		//player.worldObj.spawnParticle(EnumParticleTypes.SMOKE_LARGE, posX, posY, posZ, 0, 0, 0);
 		Minecraft.getMinecraft().effectRenderer.addEffect(smokeParticle);
 	}
 	
@@ -44,7 +56,7 @@ final class EffectManager {
 		
 		float distance = 0.5f;
 		
-		float yOffset = 0.1f;
+		float yOffset = -1.5f;
 		float scale = 1.5f;
 		float positionRandomizationFactor = 0.01f;
 		
@@ -58,7 +70,7 @@ final class EffectManager {
 		double posY = player.posY + (look.yCoord * distance) + (player.worldObj.rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor - yOffset;
 		double posZ = player.posZ + (look.zCoord * distance) + (player.worldObj.rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor + (look.xCoord * xOffset);
 		
-		EntityFX smokeParticle = new FlashFX(
+		EntityFX flashParticle = new FlashFX(
 				player.worldObj, 
 				posX,
 				posY,
@@ -69,6 +81,6 @@ final class EffectManager {
 				motionY, 
 				motionZ);
 		
-		Minecraft.getMinecraft().effectRenderer.addEffect(smokeParticle);
+		Minecraft.getMinecraft().effectRenderer.addEffect(flashParticle);
 	}
 }

@@ -6,11 +6,14 @@ public interface ModContext {
 	
 	public void init(Object mod, SimpleNetworkWrapper channel);
 
-	public void registerWeapon(String name, Weapon weapon, IItemRenderer renderer);
+	public void registerWeapon(String name, Weapon weapon);
+	
 	
 	public SimpleNetworkWrapper getChannel();
 	
 	public void runSyncTick(Runnable runnable);
+	
+	public void runInMainThread(Runnable runnable);
 	
 	public AttachmentManager getAttachmentManager();
 	

@@ -11,6 +11,9 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import javax.vecmath.Matrix4f;
+
+import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.opengl.GL11;
 
 import com.vicmatskiv.weaponlib.animation.MultipartPositioning;
@@ -22,22 +25,35 @@ import com.vicmatskiv.weaponlib.animation.Transition;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
-import net.minecraft.client.entity.EntityPlayerSP;
 //import net.minecraft.client.entity.EntityClientPlayerMP;
 import net.minecraft.client.model.ModelBase;
+import net.minecraft.client.model.ModelBiped;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.WorldRenderer;
+import net.minecraft.client.renderer.block.model.BakedQuad;
+import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
+import net.minecraft.client.renderer.block.model.ItemCameraTransforms.TransformType;
 import net.minecraft.client.renderer.entity.Render;
-import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.entity.RenderPlayer;
-import net.minecraft.client.renderer.entity.RendererLivingEntity;
-import net.minecraft.entity.Entity;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.client.renderer.vertex.VertexFormat;
+import net.minecraft.client.resources.model.IBakedModel;
+import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.client.model.IFlexibleBakedModel;
+import net.minecraftforge.client.model.IPerspectiveAwareModel;
+import net.minecraftforge.client.model.ISmartItemModel;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-
-public class WeaponRenderer implements IItemRenderer {
+@SuppressWarnings("deprecation")
+public class WeaponRenderer implements ISmartItemModel, IPerspectiveAwareModel, IFlexibleBakedModel {
 	
 	private static final float DEFAULT_RANDOMIZING_RATE = 0.33f;
 	private static final float DEFAULT_RANDOMIZING_FIRING_RATE = 20;
@@ -414,6 +430,19 @@ public class WeaponRenderer implements IItemRenderer {
 		
 	private MultipartTransitionProvider<RenderableState, Part, RenderContext> weaponTransitionProvider;
 	
+	protected EntityPlayer owner;
+
+	protected TextureManager textureManager;
+
+	private Pair<? extends IFlexibleBakedModel, Matrix4f> pair;
+	protected ModelBiped playerBiped = new ModelBiped();
+	
+	protected ItemStack itemStack;
+
+	protected ModelResourceLocation resourceLocation;
+	
+	TransformType transformType;
+	
 	//private Randomizer randomizer = new Randomizer();
 	
 	private WeaponRenderer (Builder builder)
@@ -421,20 +450,15 @@ public class WeaponRenderer implements IItemRenderer {
 		this.builder = builder;
 		this.firstPersonStateManagers = new HashMap<>();
 		this.weaponTransitionProvider = new WeaponPositionProvider();
+		
+		this.textureManager = Minecraft.getMinecraft().getTextureManager();
+		//this.resourceLocation = resourceLocation;
+		this.pair = Pair.of((IFlexibleBakedModel) this, null);
+		this.playerBiped = new ModelBiped();
+		this.playerBiped.textureWidth = 64;
+		this.playerBiped.textureHeight = 64;
 	}
-	
-//	@Override
-//	public boolean handleRenderType(ItemStack item, ItemRenderType type)
-//	{
-//		return true;
-//	}
-//	
-//	@Override
-//	public boolean shouldUseRenderHelper(ItemRenderType type, ItemStack item, ItemRendererHelper helper)
-//	{
-//		return true;
-//	}
-//	
+
 	private static class StateDescriptor {
 		MultipartRenderStateManager<RenderableState, Part, RenderContext> stateManager;
 		float rate;
@@ -500,31 +524,116 @@ public class WeaponRenderer implements IItemRenderer {
 		return new StateDescriptor(stateManager, rate, amplitude);
 	}
 	
-	@SideOnly(Side.CLIENT)
 	@Override
-	public void renderItem(ItemRenderType type, ItemStack item, Object... data)
+	public final List<BakedQuad> getGeneralQuads() {
+		// Method that this get's called in, is using startDrawingQuads. We
+		// finish
+		// drawing it so we can move on to render our own thing.
+		Tessellator tessellator = Tessellator.getInstance();
+		WorldRenderer worldrenderer = tessellator.getWorldRenderer();
+		tessellator.draw();
+		GlStateManager.pushMatrix();
+//		GlStateManager.translate(0.5F, 0.5F, 0.5F);
+//		GlStateManager.scale(-1.0F, -1.0F, 1.0F);
+
+		
+		if (owner != null) {
+			if (transformType == TransformType.THIRD_PERSON) {
+				if (owner.isSneaking()) GlStateManager.translate(0.0F, -0.2F, 0.0F);
+			}
+		}
+
+		if (onGround()) {
+			GlStateManager.scale(-3f, -3f, -3f);
+		}
+
+		renderItem();
+		GlStateManager.popMatrix();
+		// Reset the dynamic values.
+		this.owner = null;
+		this.itemStack = null;
+		this.transformType = null;
+		
+		worldrenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.ITEM);
+		
+		return Collections.emptyList();
+	}
+	
+	protected boolean onGround() {
+		return transformType == null;
+	}
+
+	@Override
+	public List<BakedQuad> getFaceQuads(EnumFacing p_177551_1_) {
+		return Collections.emptyList();
+	}
+
+	@Override
+	public final boolean isAmbientOcclusion() {
+		return true;
+	}
+
+	@Override
+	public final boolean isGui3d() {
+		return true;
+	}
+
+	@Override
+	public final boolean isBuiltInRenderer() {
+		return false;
+	}
+	
+	@Override
+	public TextureAtlasSprite getParticleTexture() {
+		return Minecraft.getMinecraft().getTextureMapBlocks().getMissingSprite();
+	}
+
+
+	@Override
+	public IBakedModel handleItemState(ItemStack stack) {
+		this.itemStack = stack;
+		return this;
+	}
+
+	public void setOwner(EntityPlayer player) {
+		this.owner = player;
+	}
+	
+	@Override
+	public Pair<? extends IFlexibleBakedModel, Matrix4f> handlePerspective(TransformType cameraTransformType) {
+		this.transformType = cameraTransformType;
+		return pair;
+	}
+	
+
+	@SideOnly(Side.CLIENT)
+	public void renderItem()
 	{
 		GL11.glPushMatrix();
 		
 		GL11.glScaled(-1F, -1F, 1F);
 		AbstractClientPlayer player = Minecraft.getMinecraft().thePlayer;
-		RenderContext renderContext = new RenderContext(player, item);
+		RenderContext renderContext = new RenderContext(player, itemStack);
 		
-		switch (type)
+		switch (transformType)
 		{
-		case ENTITY:
-			builder.entityPositioning.accept(item);
+		case GROUND:
+			builder.entityPositioning.accept(itemStack);
 			break;
-		case INVENTORY:
-			builder.inventoryPositioning.accept(item);
+		case GUI:
+			GL11.glScaled(0.9F, 0.9F, 0.9F);
+			GL11.glTranslatef(-1.4f, -0.9f, 0f);
+			GL11.glRotatef(-70F, 1f, 0f, 0f);
+			GL11.glRotatef(20F, 0f, 1f, 0f);
+			GL11.glRotatef(20F, 0f, 0f, 1f);
+			builder.inventoryPositioning.accept(itemStack);
 			break;
-		case EQUIPPED:
+		case THIRD_PERSON:
+			builder.thirdPersonPositioning.accept(player, itemStack);
+			break;
+		case FIRST_PERSON:
 			
-			builder.thirdPersonPositioning.accept(player, item);
-			break;
-		case EQUIPPED_FIRST_PERSON:
-			
-			StateDescriptor stateDescriptor = getStateDescriptor(player, item);
+			StateDescriptor stateDescriptor = getStateDescriptor(player, itemStack);
 			MultipartPositioning<Part, RenderContext> multipartPositioning = stateDescriptor.stateManager.nextPositioning();
 			
 			Positioner<Part, RenderContext> positioner = multipartPositioning.getPositioner();
@@ -557,8 +666,8 @@ public class WeaponRenderer implements IItemRenderer {
 			Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(builder.modId 
 					+ ":textures/models/" + builder.textureName));
 		} else {
-			Weapon weapon = ((Weapon) item.getItem());
-			String textureName = weapon.getActiveTextureName(item);
+			Weapon weapon = ((Weapon) itemStack.getItem());
+			String textureName = weapon.getActiveTextureName(itemStack);
 			if(textureName != null) {
 				Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(builder.modId 
 						+ ":textures/models/" + textureName));
@@ -567,9 +676,9 @@ public class WeaponRenderer implements IItemRenderer {
 		
 		builder.model.render(null,  0.0F, 0.0f, -0.4f, 0.0f, 0.0f, 0.08f);
 		if(builder.model instanceof ModelWithAttachments) {
-			List<CompatibleAttachment<Weapon>> attachments = ((Weapon) item.getItem()).getActiveAttachments(item);
-			((ModelWithAttachments)builder.model).renderAttachments(builder.modId, item, 
-					type, attachments , null,  0.0F, 0.0f, -0.4f, 0.0f, 0.0f, 0.08f);
+			List<CompatibleAttachment<Weapon>> attachments = ((Weapon) itemStack.getItem()).getActiveAttachments(itemStack);
+			((ModelWithAttachments)builder.model).renderAttachments(builder.modId, itemStack, 
+					transformType, attachments , null,  0.0F, 0.0f, -0.4f, 0.0f, 0.0f, 0.08f);
 		}
 		
 		GL11.glPopMatrix();
@@ -673,5 +782,13 @@ public class WeaponRenderer implements IItemRenderer {
 		}
 	}
 
-	
+	@Override
+	public ItemCameraTransforms getItemCameraTransforms() {
+		return ItemCameraTransforms.DEFAULT;
+	}
+
+	@Override
+	public VertexFormat getFormat() {
+		return DefaultVertexFormats.ITEM;
+	}
 }

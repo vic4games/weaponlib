@@ -45,7 +45,7 @@ public class ItemAttachment<T> extends Item {
 	}
 	
 	public void setTextureName(String name) {
-		throw new UnsupportedOperationException();
+		//throw new UnsupportedOperationException();
 	}
 	
 	public ItemAttachment<T> addModel(ModelBase model, String textureName) {

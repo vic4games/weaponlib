@@ -1,8 +1,12 @@
 package com.vicmatskiv.weaponlib;
 
+import org.lwjgl.opengl.GL11;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.particle.EntityFX;
+import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldRenderer;
+import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
@@ -86,10 +90,12 @@ public class FlashFX extends EntityFX {
     @SideOnly(Side.CLIENT)
     public void renderParticle(WorldRenderer worldRendererIn, Entity entityIn, float partialTicks, float par3, float par4, float par5, float par6, float par7)
     {
-    	//tesselator.draw();
-    	
+    	VertexFormat currentFormat = worldRendererIn.getVertexFormat();
+    	Tessellator tessellator = Tessellator.getInstance();
+    	tessellator.draw();
 		Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation(FLASH_TEXTURE));
-    	//tesselator.startDrawingQuads();
+		
+		worldRendererIn.begin(GL11.GL_QUADS, currentFormat);
     	
     	//tesselator.setBrightness(200);
         int i = this.getBrightnessForRender(partialTicks); // or simply set it to 200?
@@ -130,9 +136,9 @@ public class FlashFX extends EntityFX {
         worldRendererIn.pos((double)(f11 + par3 * f10 + par6 * f10), (double)(f12 + par4 * f10), (double)(f13 + par5 * f10 + par7 * f10)).tex(cU, cV).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).lightmap(j, k).endVertex();
         worldRendererIn.pos((double)(f11 + par3 * f10 - par6 * f10), (double)(f12 - par4 * f10), (double)(f13 + par5 * f10 - par7 * f10)).tex(dU, dV).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).lightmap(j, k).endVertex();
     	
-//    	tesselator.draw();
+        tessellator.draw();
     	
     	Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation(DEFAULT_PARTICLES_TEXTURE));
-//    	tesselator.startDrawingQuads();
+    	worldRendererIn.begin(GL11.GL_QUADS, currentFormat);
     }
 }

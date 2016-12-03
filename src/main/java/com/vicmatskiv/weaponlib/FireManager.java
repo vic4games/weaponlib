@@ -36,12 +36,14 @@ public class FireManager {
 				&& storage.getShots() < weapon.builder.maxShots
 				&& storage.getCurrentAmmo().getAndAccumulate(0, (current, ignore) -> current > 0 ? current - 1 : 0) > 0) {
 			storage.setState(State.SHOOTING);
+			
 			modContext.getChannel().sendToServer(new TryFireMessage(true));
 			ItemStack heldItem = player.getHeldItem();
-			
+
 			modContext.runSyncTick(() -> {
 				player.playSound(modContext.getAttachmentManager().isSilencerOn(heldItem) ? weapon.builder.silencedShootSound : weapon.builder.shootSound, 1F, 1F);
 			});
+
 			
 			player.rotationPitch = player.rotationPitch - storage.getRecoil();						
 			float rotationYawFactor = -1.0f + random.nextFloat() * 2.0f;
@@ -54,6 +56,17 @@ public class FireManager {
 			
 			EffectManager.getInstance().spawnSmokeParticle(player);
 			
+//			modContext.runInMainThread(() -> {
+//
+//				
+////				if(weapon.builder.flashIntensity > 0) {
+////					EffectManager.getInstance().spawnFlashParticle(player, weapon.builder.flashIntensity,
+////							Weapon.isZoomed(itemStack) ? FLASH_X_OFFSET_ZOOMED : FLASH_X_OFFSET_NORMAL);
+////				}
+////				
+////				EffectManager.getInstance().spawnSmokeParticle(player);
+//			});
+			
 			storage.setLastShotFiredAt(System.currentTimeMillis());
 			
 			storage.addShot();
@@ -64,6 +77,7 @@ public class FireManager {
 		if(!(itemStack.getItem() instanceof Weapon)) {
 			return;
 		}
+
 		Weapon weapon = (Weapon) itemStack.getItem();
 		int currentAmmo = Tags.getAmmo(itemStack);
 		if(currentAmmo > 0) {
@@ -105,7 +119,11 @@ public class FireManager {
 			} else {
 				storage.setState(State.PAUSED);
 			}
-			modContext.getChannel().sendToServer(new TryFireMessage(false));
+			
+			modContext.runInMainThread(() -> {
+				modContext.getChannel().sendToServer(new TryFireMessage(false));
+			});
+			
 		}
 	}
 

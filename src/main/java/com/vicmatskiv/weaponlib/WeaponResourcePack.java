@@ -37,7 +37,7 @@ public class WeaponResourcePack implements IResourcePack {
 	}
 
 	@Override
-	public IMetadataSection getPackMetadata(IMetadataSerializer p_135058_1_, String p_135058_2_) throws IOException {
+    public <T extends IMetadataSection> T getPackMetadata(IMetadataSerializer p_135058_1_, String p_135058_2_) throws IOException {
 		return null;
 	}
 
