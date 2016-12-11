@@ -61,7 +61,7 @@ public class WeaponRenderer implements ISmartItemModel, IPerspectiveAwareModel, 
 	
 	private static final float DEFAULT_NORMAL_RANDOMIZING_AMPLITUDE = 0.06f;
 	private static final float DEFAULT_ZOOM_RANDOMIZING_AMPLITUDE = 0.01f;
-	private static final float DEFAULT_FIRING_RANDOMIZING_AMPLITUDE = 0.06f;
+	private static final float DEFAULT_FIRING_RANDOMIZING_AMPLITUDE = 0.03f;
 	
 	private static final int DEFAULT_ANIMATION_DURATION = 250;
 	private static final int DEFAULT_RECOIL_ANIMATION_DURATION = 100;
@@ -623,15 +623,22 @@ public class WeaponRenderer implements ISmartItemModel, IPerspectiveAwareModel, 
 		case GUI:
 			GL11.glScaled(0.9F, 0.9F, 0.9F);
 			GL11.glTranslatef(-1.4f, -0.9f, 0f);
-			GL11.glRotatef(-70F, 1f, 0f, 0f);
-			GL11.glRotatef(20F, 0f, 1f, 0f);
-			GL11.glRotatef(20F, 0f, 0f, 1f);
+			GL11.glRotatef(-50F, 1f, 0f, 0f);
+			GL11.glRotatef(-70F, 0f, 1f, 0f);
+			GL11.glRotatef(-60F, 0f, 0f, 1f);
 			builder.inventoryPositioning.accept(itemStack);
 			break;
 		case THIRD_PERSON:
+			GL11.glScaled(0.4F, 0.4F, 0.4F);
+			GL11.glTranslatef(-1.2f, -2.5f, -0.05f);
+			GL11.glRotatef(-20F, 1f, 0f, 0f);
+			GL11.glRotatef(-45F, 0f, 1f, 0f);
+			GL11.glRotatef(-180F, 0f, 0f, 1f);
+			
 			builder.thirdPersonPositioning.accept(player, itemStack);
 			break;
 		case FIRST_PERSON:
+			
 			
 			StateDescriptor stateDescriptor = getStateDescriptor(player, itemStack);
 			MultipartPositioning<Part, RenderContext> multipartPositioning = stateDescriptor.stateManager.nextPositioning();
@@ -647,12 +654,27 @@ public class WeaponRenderer implements ISmartItemModel, IPerspectiveAwareModel, 
 			Minecraft.getMinecraft().getTextureManager().bindTexture(((AbstractClientPlayer) player).getLocationSkin());
 			
 			GL11.glPushMatrix();
+			
+			GL11.glScaled(1F, 1F, 1F);
+			
+			GL11.glTranslatef(0f, -1f, 0f);
+			
+			GL11.glRotatef(-10F, 1f, 0f, 0f);
+			GL11.glRotatef(0F, 0f, 1f, 0f);
+			GL11.glRotatef(10F, 0f, 0f, 1f);
+			
 			positioner.position(Part.LEFT_HAND, renderContext);
 			//render.renderFirstPersonArm(player);
 			render.renderLeftArm(player);
 			GL11.glPopMatrix();
 			
 			GL11.glPushMatrix();
+			GL11.glScaled(1F, 1F, 1F);
+			GL11.glTranslatef(-0.25f, 0f, 0.2f);
+			
+			GL11.glRotatef(5F, 1f, 0f, 0f);
+			GL11.glRotatef(25F, 0f, 1f, 0f);
+			GL11.glRotatef(0F, 0f, 0f, 1f);
 			positioner.position(Part.RIGHT_HAND, renderContext);
 			//render.renderFirstPersonArm(player);
 			render.renderRightArm(player);

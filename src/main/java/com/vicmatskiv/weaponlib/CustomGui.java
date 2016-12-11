@@ -75,14 +75,14 @@ public class CustomGui extends Gui {
 //			GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 //			GL11.glDisable(GL11.GL_LIGHTING);
 			
-			this.mc.renderEngine.bindTexture(new ResourceLocation(crosshair));
-
-			if(weaponItem.isCrosshairFullScreen(weapon))	 {
-				drawTexturedQuadFit(0, 0, width, height, 0);
-			} else {
-				drawTexturedModalRect(xPos, yPos, 0, 0, BUFF_ICON_SIZE, BUFF_ICON_SIZE);
-			}
-			
+//			this.mc.renderEngine.bindTexture(new ResourceLocation(crosshair));
+//
+//			if(weaponItem.isCrosshairFullScreen(weapon))	 {
+//				drawTexturedQuadFit(0, 0, width, height, 0);
+//			} else {
+//				drawTexturedModalRect(xPos, yPos, 0, 0, BUFF_ICON_SIZE, BUFF_ICON_SIZE);
+//			}
+						
 			FontRenderer fontRender = mc.fontRendererObj;
 
 			mc.entityRenderer.setupOverlayRendering();
@@ -112,7 +112,7 @@ public class CustomGui extends Gui {
 		//throw new UnsupportedOperationException("Refactor the commented code below!");
 		Tessellator tessellator = Tessellator.getInstance();
 		WorldRenderer worldRenderer = tessellator.getWorldRenderer();
-		worldRenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL);
+		worldRenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
 		worldRenderer.pos(x + 0, y + height, zLevel).tex(0,1).endVertex();
 		worldRenderer.pos(x + width, y + height, zLevel).tex(1, 1).endVertex();
 		worldRenderer.pos(x + width, y + 0, zLevel).tex(1,0).endVertex();
