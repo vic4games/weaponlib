@@ -21,10 +21,11 @@ public class CustomGui extends Gui {
 		this.mc = mc;
 	}
 
-	private static final int BUFF_ICON_SIZE = 256;
+//	private static final int BUFF_ICON_SIZE = 256;
 	
 	
 	//TODO: fix this method @SubscribeEvent
+	@SubscribeEvent
 	public void onRenderHud(RenderGameOverlayEvent.Pre event) {
 		
 		if(event.type == RenderGameOverlayEvent.ElementType.HELMET) {
@@ -70,8 +71,8 @@ public class CustomGui extends Gui {
 			int width = scaledResolution.getScaledWidth();
 		    int height = scaledResolution.getScaledHeight();
 		    
-			int xPos = width / 2 - BUFF_ICON_SIZE / 2;
-			int yPos = height / 2 - BUFF_ICON_SIZE / 2;
+//			int xPos = width / 2 - BUFF_ICON_SIZE / 2;
+//			int yPos = height / 2 - BUFF_ICON_SIZE / 2;
 //			GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 //			GL11.glDisable(GL11.GL_LIGHTING);
 			

@@ -4,6 +4,7 @@ import java.util.function.Function;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.IThreadListener;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
@@ -26,8 +27,11 @@ public class ReloadMessageHandler implements IMessageHandler<ReloadMessage, IMes
 			ItemStack itemStack = player.getHeldItem();
 			
 			if(itemStack != null && itemStack.getItem() instanceof Weapon) {
-				//((Weapon) itemStack.getItem()).reload(itemStack, player);
-				reloadManager.reload(itemStack, player);
+				IThreadListener mainThread = (IThreadListener) ctx.getServerHandler().playerEntity.worldObj;
+				mainThread.addScheduledTask(() -> {
+					reloadManager.reload(itemStack, player);
+				});
+				
 			}
 		} else {
 			onClientMessage(message, ctx);

@@ -1,5 +1,6 @@
 package com.vicmatskiv.weaponlib;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -7,8 +8,14 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.client.model.ICustomModelLoader;
+import net.minecraftforge.client.model.IModel;
+import net.minecraftforge.client.model.ModelLoader;
+import net.minecraftforge.client.model.ModelLoaderRegistry;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
@@ -28,6 +35,8 @@ public class ClientModContext extends CommonModContext {
 	@Override
 	public void init(Object mod, SimpleNetworkWrapper channel) {
 		super.init(mod, channel);
+		
+		ModelLoaderRegistry.registerLoader(rendererRegistry);
 		
 		List<IResourcePack> defaultResourcePacks = ObfuscationReflectionHelper.getPrivateValue(
 				Minecraft.class, Minecraft.getMinecraft(), "defaultResourcePacks", "field_110449_ao") ; 
@@ -59,6 +68,7 @@ public class ClientModContext extends CommonModContext {
 		net.minecraftforge.fml.client.registry.RenderingRegistry.registerEntityRenderingHandler(WeaponSpawnEntity.class, 
 				new SpawnEntityRenderer(Minecraft.getMinecraft().getRenderManager()));
 	}
+	
 	
 	@Override
 	public void registerWeapon(String name, Weapon weapon) {

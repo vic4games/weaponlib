@@ -10,7 +10,7 @@ import net.minecraft.item.ItemStack;
 public class FireManager {
 	
 	private static final float FLASH_X_OFFSET_ZOOMED = 0f;
-	private static final float FLASH_X_OFFSET_NORMAL = 0.1f;
+	private static final float FLASH_X_OFFSET_NORMAL = 0f;
 	
 	private ModContext modContext;
 	private Random random = new Random();

@@ -1,6 +1,7 @@
 package com.vicmatskiv.weaponlib;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.IThreadListener;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
@@ -15,8 +16,12 @@ public class ChangeTextureMessageHandler implements IMessageHandler<ChangeTextur
 
 	@Override
 	public IMessage onMessage(ChangeTextureMessage message, MessageContext ctx) {
-		EntityPlayer player = ctx.getServerHandler().playerEntity;		
-		attachmentManager.changeTexture(player.getHeldItem(), player);
+		EntityPlayer player = ctx.getServerHandler().playerEntity;
+		IThreadListener mainThread = (IThreadListener) ctx.getServerHandler().playerEntity.worldObj;
+		mainThread.addScheduledTask(() -> {
+			attachmentManager.changeTexture(player.getHeldItem(), player);
+		});
+		
 		return null;
 	}
 
