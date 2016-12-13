@@ -42,7 +42,7 @@ public class WeaponRenderer implements IItemRenderer {
 	
 	private static final float DEFAULT_NORMAL_RANDOMIZING_AMPLITUDE = 0.06f;
 	private static final float DEFAULT_ZOOM_RANDOMIZING_AMPLITUDE = 0.01f;
-	private static final float DEFAULT_FIRING_RANDOMIZING_AMPLITUDE = 0.06f;
+	private static final float DEFAULT_FIRING_RANDOMIZING_AMPLITUDE = 0.03f;
 	
 	private static final int DEFAULT_ANIMATION_DURATION = 250;
 	private static final int DEFAULT_RECOIL_ANIMATION_DURATION = 100;
@@ -533,13 +533,39 @@ public class WeaponRenderer implements IItemRenderer {
 			Minecraft.getMinecraft().getTextureManager().bindTexture(((AbstractClientPlayer) player).getLocationSkin());
 			
 			GL11.glPushMatrix();
+			
+			GL11.glScaled(1F, 1F, 1F);
+			
+			GL11.glTranslatef(0f, -1f, 0f);
+			
+			GL11.glRotatef(-10F, 1f, 0f, 0f);
+			GL11.glRotatef(0F, 0f, 1f, 0f);
+			GL11.glRotatef(10F, 0f, 0f, 1f);
+			
 			positioner.position(Part.LEFT_HAND, renderContext);
-			render.renderFirstPersonArm(player);
+			
+			GL11.glColor3f(1F, 1F, 1F);
+	        render.modelBipedMain.onGround = 0.0F;
+	        render.modelBipedMain.setRotationAngles(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0625F, player);
+	        render.modelBipedMain.bipedLeftArm.render(0.0625F);
+			
 			GL11.glPopMatrix();
 			
 			GL11.glPushMatrix();
+			GL11.glScaled(1F, 1F, 1F);
+			
+			GL11.glScaled(1F, 1F, 1F);
+			GL11.glTranslatef(-0.25f, 0f, 0.2f);
+			
+			GL11.glRotatef(5F, 1f, 0f, 0f);
+			GL11.glRotatef(25F, 0f, 1f, 0f);
+			GL11.glRotatef(0F, 0f, 0f, 1f);
+			
 			positioner.position(Part.RIGHT_HAND, renderContext);
-			render.renderFirstPersonArm(player);
+			GL11.glColor3f(1F, 1F, 1F);
+	        render.modelBipedMain.onGround = 0.0F;
+	        render.modelBipedMain.setRotationAngles(0.0F, 0.3F, 0.0F, 0.0F, 0.0F, 0.0625F, player);
+	        render.modelBipedMain.bipedRightArm.render(0.0625F);
 			GL11.glPopMatrix();
 	        
 			break;
