@@ -29,6 +29,9 @@ version = "1.0"
 group= "com.vicmatskiv.weaponlib" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "weaponlib"
 
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
 minecraft {
     version = "1.8.9-11.15.1.1902-1.8.9"
     runDir = "run"

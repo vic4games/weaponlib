@@ -52,7 +52,7 @@ public class FlashFX extends EntityFX {
 		this.particleRed = 1.0F;
 		this.particleGreen = 1.0F;
 		this.particleBlue = 1.0F;
-		this.particleAlpha = alpha;
+		this.particleAlpha = alpha < 1.0f ? alpha : 0.99f;
 		this.particleScale *= 1.4F;
 		this.particleScale *= scale;
 		this.particleMaxAge = 3;
