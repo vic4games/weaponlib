@@ -7,9 +7,8 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.projectile.EntityThrowable;
 import net.minecraft.item.Item;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.MathHelper;
-import net.minecraft.util.MovingObjectPosition;
-import net.minecraft.util.MovingObjectPosition.MovingObjectType;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
 
@@ -50,6 +49,7 @@ public class WeaponSpawnEntity extends EntityThrowable implements IEntityAdditio
 		this.explosionRadius = explosionRadius;
 		this.speed = speed;
 		this.gravityVelocity = gravityVelocity;
+	
 	}
 
 	@Override
@@ -57,14 +57,12 @@ public class WeaponSpawnEntity extends EntityThrowable implements IEntityAdditio
 		return gravityVelocity;
 	};
 	
-//	@Override
-//	protected float func_70182_d() {
-//		return speed;
-//	};
 	
-	@Override
+//	@Override
+	
+//  TODO: FIXME!!!!!!!!!
+	
 	protected float getVelocity() {
-		// TODO check if this is a right method
 		return speed;
 	}
 
@@ -72,7 +70,7 @@ public class WeaponSpawnEntity extends EntityThrowable implements IEntityAdditio
 	 * @see net.minecraft.entity.projectile.EntityThrowable#onImpact(net.minecraft.util.MovingObjectPosition)
 	 */
 	@Override
-	protected void onImpact(MovingObjectPosition position) {
+	protected void onImpact(RayTraceResult position) {
 		//this.worldObj.createExplosion(this, this.posX, this.posY, this.posZ, (float)this.explosionRadius, true);
 		if(!this.worldObj.isRemote) {
 			if (position.entityHit != null) {
@@ -86,7 +84,7 @@ public class WeaponSpawnEntity extends EntityThrowable implements IEntityAdditio
 			} else if(explosionRadius > 0) {
 				this.worldObj.createExplosion(this, position.getBlockPos().getX(), 
 						position.getBlockPos().getY(), position.getBlockPos().getZ(), explosionRadius, true);
-			} else if(position.typeOfHit == MovingObjectType.BLOCK) {
+			} else if(position.typeOfHit == RayTraceResult.Type.BLOCK) {
 				weapon.onSpawnEntityBlockImpact(worldObj, null, this, position);
 			}
 			this.setDead();

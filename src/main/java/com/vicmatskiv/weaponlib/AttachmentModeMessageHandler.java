@@ -1,6 +1,7 @@
 package com.vicmatskiv.weaponlib;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.IThreadListener;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -21,7 +22,7 @@ public class AttachmentModeMessageHandler implements IMessageHandler<AttachmentM
 			EntityPlayer player = ctx.getServerHandler().playerEntity;
 			IThreadListener mainThread = (IThreadListener) ctx.getServerHandler().playerEntity.worldObj;
 			mainThread.addScheduledTask(() -> {
-				attachmentManager.toggleServerAttachmentSelectionMode(player.getHeldItem(), player);
+				attachmentManager.toggleServerAttachmentSelectionMode(player.getHeldItem(EnumHand.MAIN_HAND), player);
 			});
 			
 		}

@@ -5,7 +5,7 @@ import java.util.Random;
 import org.lwjgl.opengl.GL11;
 
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.WorldRenderer;
+import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms.TransformType;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.item.Item;
@@ -30,7 +30,7 @@ public class LaserBeamRenderer implements CustomRenderer {
 		}
 
 		if(Tags.isLaserOn(itemStack) && (
-				type == TransformType.GROUND || type == TransformType.FIRST_PERSON /*|| type == ItemRenderType.ENTITY ?*/)) {
+				type == TransformType.GROUND || type == TransformType.FIRST_PERSON_RIGHT_HAND /*|| type == ItemRenderType.ENTITY ?*/)) {
 			GL11.glPushMatrix();
 			GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
 			GL11.glDisable(GL11.GL_CULL_FACE);
@@ -46,7 +46,7 @@ public class LaserBeamRenderer implements CustomRenderer {
 			GL11.glRotatef(-0.1f, 0f, 1f, 0f);
 
 			Tessellator tessellator = Tessellator.getInstance();
-			WorldRenderer renderer = tessellator.getWorldRenderer();
+			VertexBuffer renderer = tessellator.getBuffer();
 			renderer.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_TEX_NORMAL);
 
 			long time = System.currentTimeMillis();

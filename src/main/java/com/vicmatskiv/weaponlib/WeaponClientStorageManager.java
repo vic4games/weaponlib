@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumHand;
 
 class WeaponClientStorageManager {
 	
@@ -57,11 +58,11 @@ class WeaponClientStorageManager {
 		if(player == null) return null;
 		return weaponClientStorage.computeIfAbsent(new Key(player.getPersistentID(), weapon), (w) ->
 			{
-				ItemStack itemStack = player.getHeldItem();
+				ItemStack itemStack = player.getHeldItem(EnumHand.MAIN_HAND);
 				return itemStack.getTagCompound() != null ?
 						new WeaponClientStorage(Tags.getState(itemStack), 
 						Tags.getAmmo(itemStack), weapon.builder.zoom, 
-						Tags.getRecoil(player.getHeldItem()), weapon.builder.fireRate) : null;
+						Tags.getRecoil(player.getHeldItem(EnumHand.MAIN_HAND)), weapon.builder.fireRate) : null;
 			});
 	}
 }

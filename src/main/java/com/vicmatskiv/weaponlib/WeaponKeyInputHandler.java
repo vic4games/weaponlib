@@ -4,6 +4,7 @@ import java.util.function.Function;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumHand;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
@@ -31,7 +32,7 @@ public class WeaponKeyInputHandler {
 		
         if(KeyBindings.reloadKey.isPressed()) {
         	EntityPlayer player = entityPlayerSupplier.apply(null);
-        	ItemStack itemStack = player.getHeldItem();    		
+        	ItemStack itemStack = player.getHeldItem(EnumHand.MAIN_HAND);    		
     		if(itemStack != null && itemStack.getItem() instanceof Weapon) {
     			//((Weapon) itemStack.getItem()).initiateReload(itemStack, player);
     			reloadManager.initiateReload(itemStack, player);
@@ -44,7 +45,7 @@ public class WeaponKeyInputHandler {
         
         else if(KeyBindings.attachmentKey.isPressed()) {
         	EntityPlayer player = entityPlayerSupplier.apply(null);
-    		ItemStack itemStack = player.getHeldItem();
+    		ItemStack itemStack = player.getHeldItem(EnumHand.MAIN_HAND);
     		if(itemStack != null && itemStack.getItem() instanceof Weapon) {
     			attachmentManager.toggleClientAttachmentSelectionMode(itemStack, player);
     		}

@@ -7,6 +7,7 @@ import org.lwjgl.input.Mouse;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumHand;
 import net.minecraftforge.fml.client.FMLClientHandler;
 
 class ClientWeaponTicker extends Thread {
@@ -65,8 +66,8 @@ class ClientWeaponTicker extends Thread {
 	
 	private void update(EntityPlayerSP player) {
 		//currentWeapon.tick(player);
-		reloadManager.update(player.getHeldItem(), player);
-		fireManager.update(player.getHeldItem(), player);
+		reloadManager.update(player.getHeldItem(EnumHand.MAIN_HAND), player);
+		fireManager.update(player.getHeldItem(EnumHand.MAIN_HAND), player);
 	}
 
 	private boolean isInteracting() {
@@ -80,7 +81,7 @@ class ClientWeaponTicker extends Thread {
 	private Weapon getCurrentWeapon() {
 		EntityPlayer clientPlayerEntity = FMLClientHandler.instance().getClientPlayerEntity();
 		if(clientPlayerEntity == null) return null;
-		ItemStack heldItem = clientPlayerEntity.getHeldItem();
+		ItemStack heldItem = clientPlayerEntity.getHeldItem(EnumHand.MAIN_HAND);
 		return heldItem != null && heldItem.getItem() instanceof Weapon ? (Weapon) heldItem.getItem() : null;
 	}
 }

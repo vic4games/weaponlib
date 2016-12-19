@@ -9,7 +9,7 @@ import java.util.Set;
 
 import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.client.resources.data.IMetadataSection;
-import net.minecraft.client.resources.data.IMetadataSerializer;
+import net.minecraft.client.resources.data.MetadataSerializer;
 import net.minecraft.util.ResourceLocation;
 
 public class WeaponResourcePack implements IResourcePack {
@@ -37,11 +37,6 @@ public class WeaponResourcePack implements IResourcePack {
 	}
 
 	@Override
-    public <T extends IMetadataSection> T getPackMetadata(IMetadataSerializer p_135058_1_, String p_135058_2_) throws IOException {
-		return null;
-	}
-
-	@Override
 	public BufferedImage getPackImage() throws IOException {
 		return null;
 	}
@@ -49,6 +44,13 @@ public class WeaponResourcePack implements IResourcePack {
 	@Override
 	public String getPackName() {
 		return getClass().getSimpleName();
+	}
+
+	@Override
+	public <T extends IMetadataSection> T getPackMetadata(MetadataSerializer metadataSerializer,
+			String metadataSectionName) throws IOException {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

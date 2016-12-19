@@ -6,6 +6,7 @@ import com.vicmatskiv.weaponlib.Weapon.State;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumHand;
 
 public class FireManager {
 	
@@ -20,7 +21,7 @@ public class FireManager {
 	}
 
 	void clientTryFire(EntityPlayer player) {
-		ItemStack itemStack = player.getHeldItem();
+		ItemStack itemStack = player.getHeldItem(EnumHand.MAIN_HAND);
 		if(!(itemStack.getItem() instanceof Weapon)) {
 			return;
 		}
@@ -38,10 +39,11 @@ public class FireManager {
 			storage.setState(State.SHOOTING);
 			
 			modContext.getChannel().sendToServer(new TryFireMessage(true));
-			ItemStack heldItem = player.getHeldItem();
+			ItemStack heldItem = player.getHeldItem(EnumHand.MAIN_HAND);
 
 			modContext.runSyncTick(() -> {
-				player.playSound(modContext.getAttachmentManager().isSilencerOn(heldItem) ? weapon.builder.silencedShootSound : weapon.builder.shootSound, 1F, 1F);
+				//TODO: play sound 
+				player.playSound(modContext.getAttachmentManager().isSilencerOn(heldItem) ? weapon.getSilencedShootSound() : weapon.getShootSound(), 1F, 1F);
 			});
 
 			
@@ -86,9 +88,15 @@ public class FireManager {
 			}
 			Tags.setAmmo(itemStack, currentAmmo - 1);
 			for(int i = 0; i < weapon.builder.pellets; i++) {
-				player.worldObj.spawnEntityInWorld(weapon.builder.spawnEntityWith.apply(weapon, player));
+				WeaponSpawnEntity spawnEntity = weapon.builder.spawnEntityWith.apply(weapon, player);
+				spawnEntity.setHeadingFromThrower(player, player.rotationPitch, player.rotationYaw, 0.0F, spawnEntity.getVelocity(), 1.0F);
+				player.worldObj.spawnEntityInWorld(spawnEntity);
 			}
-			player.worldObj.playSoundToNearExcept(player, modContext.getAttachmentManager().isSilencerOn(itemStack) ? weapon.builder.silencedShootSound : weapon.builder.shootSound, 1.0F, 1.0F);
+			player.playSound(modContext.getAttachmentManager().isSilencerOn(itemStack) ? 
+					weapon.getSilencedShootSound() : weapon.getShootSound(), 1.0F, 1.0F);
+//			//TODO: play sound 
+//			player.worldObj.playSound/*ToNearExcept*/(player, modContext.getAttachmentManager().isSilencerOn(itemStack) ? 
+//					weapon.getSilencedShootSound() : weapon.getShootSound(), 1.0F, 1.0F);
 		} else {
 			System.err.println("Invalid state: attempted to fire a weapon without ammo");
 		}
@@ -104,7 +112,7 @@ public class FireManager {
 	}
 
 	void clientTryStopFire(EntityPlayer player) {
-		ItemStack itemStack = player.getHeldItem();
+		ItemStack itemStack = player.getHeldItem(EnumHand.MAIN_HAND);
 		if(!(itemStack.getItem() instanceof Weapon)) {
 			return;
 		}

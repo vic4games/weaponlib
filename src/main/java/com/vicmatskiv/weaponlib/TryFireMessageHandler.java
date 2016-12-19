@@ -2,6 +2,7 @@ package com.vicmatskiv.weaponlib;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.IThreadListener;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -21,7 +22,7 @@ public class TryFireMessageHandler implements IMessageHandler<TryFireMessage, IM
 		if(ctx.side == Side.SERVER) {
 			EntityPlayer player = ctx.getServerHandler().playerEntity;
 			IThreadListener mainThread = (IThreadListener) ctx.getServerHandler().playerEntity.worldObj; 
-			ItemStack itemStack = player.getHeldItem();
+			ItemStack itemStack = player.getHeldItem(EnumHand.MAIN_HAND);
 			if(itemStack != null && itemStack.getItem() instanceof Weapon) {
 				if(message.isOn()) {
 					mainThread.addScheduledTask(() -> {

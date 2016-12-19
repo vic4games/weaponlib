@@ -1,6 +1,7 @@
 package com.vicmatskiv.weaponlib;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.IThreadListener;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -22,7 +23,7 @@ public class ChangeAttachmentMessageHandler implements IMessageHandler<ChangeAtt
 			EntityPlayer player = ctx.getServerHandler().playerEntity;
 			IThreadListener mainThread = (IThreadListener) ctx.getServerHandler().playerEntity.worldObj;
 			mainThread.addScheduledTask(() -> {
-				attachmentManager.changeAttachment(message.getAttachmentCategory(), player.getHeldItem(), player);
+				attachmentManager.changeAttachment(message.getAttachmentCategory(), player.getHeldItem(EnumHand.MAIN_HAND), player);
 			});
 			
 			

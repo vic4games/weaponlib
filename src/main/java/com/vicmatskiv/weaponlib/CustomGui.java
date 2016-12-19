@@ -1,5 +1,7 @@
 package com.vicmatskiv.weaponlib;
 
+import java.util.Iterator;
+
 import org.lwjgl.opengl.GL11;
 
 import net.minecraft.client.Minecraft;
@@ -7,9 +9,10 @@ import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.WorldRenderer;
+import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -28,13 +31,14 @@ public class CustomGui extends Gui {
 	@SubscribeEvent
 	public void onRenderHud(RenderGameOverlayEvent.Pre event) {
 		
-		if(event.type == RenderGameOverlayEvent.ElementType.HELMET) {
-			ItemStack helmet = mc.thePlayer.getEquipmentInSlot(4);
+		if(event.getType() == RenderGameOverlayEvent.ElementType.HELMET) {
+			Iterator<ItemStack> equipmentIterator = mc.thePlayer.getEquipmentAndArmor().iterator();
+			ItemStack helmet = equipmentIterator.hasNext() ? equipmentIterator.next() : null; // TODO: fix iterator
 			if(helmet != null && mc.gameSettings.thirdPersonView == 0 && helmet.getItem() instanceof CustomArmor) {
 				// Texture must be Width: 427, height: 240
 				String hudTexture = ((CustomArmor)helmet.getItem()).getHudTexture();
 				if(hudTexture != null) {
-					ScaledResolution scaledResolution = event.resolution;
+					ScaledResolution scaledResolution = event.getResolution();
 					int width = scaledResolution.getScaledWidth();
 				    int height = scaledResolution.getScaledHeight();
 				    
@@ -55,11 +59,11 @@ public class CustomGui extends Gui {
 	@SubscribeEvent
 	public void onRenderCrosshair(RenderGameOverlayEvent.Pre event) {
 		
-		if (event.type != RenderGameOverlayEvent.ElementType.CROSSHAIRS ) {
+		if (event.getType() != RenderGameOverlayEvent.ElementType.CROSSHAIRS ) {
 			return;
 		}
 		
-		ItemStack weapon = mc.thePlayer.getHeldItem();
+		ItemStack weapon = mc.thePlayer.getHeldItem(EnumHand.MAIN_HAND);
 		if(weapon == null || !(weapon.getItem() instanceof Weapon) || mc.gameSettings.thirdPersonView != 0) {
 			return;
 		}
@@ -67,7 +71,7 @@ public class CustomGui extends Gui {
 		Weapon weaponItem = (Weapon) weapon.getItem();
 		String crosshair = weaponItem.getCrosshair(weapon, mc.thePlayer);
 		if(crosshair != null) {
-			ScaledResolution scaledResolution = event.resolution;
+			ScaledResolution scaledResolution = event.getResolution();
 			int width = scaledResolution.getScaledWidth();
 		    int height = scaledResolution.getScaledHeight();
 		    
@@ -112,7 +116,7 @@ public class CustomGui extends Gui {
 	private static void drawTexturedQuadFit(double x, double y, double width, double height, double zLevel){
 		//throw new UnsupportedOperationException("Refactor the commented code below!");
 		Tessellator tessellator = Tessellator.getInstance();
-		WorldRenderer worldRenderer = tessellator.getWorldRenderer();
+		VertexBuffer worldRenderer = tessellator.getBuffer();
 		worldRenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
 		worldRenderer.pos(x + 0, y + height, zLevel).tex(0,1).endVertex();
 		worldRenderer.pos(x + width, y + height, zLevel).tex(1, 1).endVertex();

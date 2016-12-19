@@ -2,15 +2,16 @@ package com.vicmatskiv.weaponlib;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.model.ModelBase;
-import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -22,12 +23,16 @@ import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.BlockPos;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.SoundEvent;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.fml.common.registry.GameRegistry;
 
 public class Weapon extends Item {
 	
@@ -39,9 +44,9 @@ public class Weapon extends Item {
 		List<String> textureNames = new ArrayList<>();
 		int ammoCapacity = 1;
 		float recoil = 1.0F;
-		String shootSound;
-		String silencedShootSound;
-		String reloadSound;
+		private String shootSound;
+		private String silencedShootSound;
+		private String reloadSound;
 		@SuppressWarnings("unused")
 		private String exceededMaxShotsSound;
 		ItemAmmo ammo;
@@ -178,7 +183,7 @@ public class Weapon extends Item {
 			if (modId == null) {
 				throw new IllegalStateException("ModId is not set");
 			}
-			this.shootSound = modId + ":" + shootSound;
+			this.shootSound = shootSound; //modId + ":" + shootSound;
 			return this;
 		}
 
@@ -186,7 +191,7 @@ public class Weapon extends Item {
 			if (modId == null) {
 				throw new IllegalStateException("ModId is not set");
 			}
-			this.silencedShootSound = modId + ":" + silencedShootSound;
+			this.silencedShootSound = silencedShootSound; //modId + ":" + silencedShootSound;
 			return this;
 		}
 
@@ -194,7 +199,7 @@ public class Weapon extends Item {
 			if (modId == null) {
 				throw new IllegalStateException("ModId is not set");
 			}
-			this.reloadSound = modId + ":" + reloadSound;
+			this.reloadSound = reloadSound; //modId + ":" + reloadSound;
 			return this;
 		}
 
@@ -202,7 +207,7 @@ public class Weapon extends Item {
 			if (modId == null) {
 				throw new IllegalStateException("ModId is not set");
 			}
-			this.exceededMaxShotsSound = modId + ":" + shootSound;
+			this.exceededMaxShotsSound = shootSound; //modId + ":" + shootSound;
 			return this;
 		}
 
@@ -327,7 +332,7 @@ public class Weapon extends Item {
 			// }
 
 			if (shootSound == null) {
-				shootSound = modId + ":" + name;
+				shootSound = /*modId + ":" + */name;
 			}
 
 			if (silencedShootSound == null) {
@@ -335,7 +340,7 @@ public class Weapon extends Item {
 			}
 
 			if (reloadSound == null) {
-				reloadSound = modId + ":" + "reload";
+				reloadSound = /*modId + ":" +*/ "reload";
 			}
 
 			if (spawnEntityClass == null) {
@@ -353,10 +358,10 @@ public class Weapon extends Item {
 							return spawnEntityGravityVelocity;
 						}
 
-						@Override
-						protected float getVelocity() {
-							return spawnEntitySpeed;
-						}
+//						@Override
+//						protected float getVelocity() {
+//							return spawnEntitySpeed;
+//						}
 
 						@Override
 						protected float getInaccuracy() {
@@ -381,8 +386,8 @@ public class Weapon extends Item {
 				blockImpactHandler = (world, player, entity, position) -> {
 			
 					Block block = world.getBlockState(position.getBlockPos()).getBlock();
-					if (block == Blocks.glass || block == Blocks.glass_pane || block == Blocks.stained_glass
-							|| block == Blocks.stained_glass_pane) {
+					if (block == Blocks.GLASS || block == Blocks.GLASS_PANE || block == Blocks.STAINED_GLASS
+							|| block == Blocks.STAINED_GLASS_PANE) {
 						//world.func_147480_a(position.getBlockPos().getX(), position.getBlockPos().getY(), position.getBlockPos().getZ(), true);
 						world.destroyBlock(position.getBlockPos(), true);
 					}
@@ -390,6 +395,20 @@ public class Weapon extends Item {
 			}
 
 			Weapon weapon = new Weapon(this, modContext);
+			
+			ResourceLocation shootSoundLocation = new ResourceLocation(this.modId, this.shootSound);
+			weapon.shootSound = new SoundEvent(shootSoundLocation);
+			registerSound(weapon.shootSound, shootSoundLocation);
+			
+			ResourceLocation reloadSoundLocation = new ResourceLocation(this.modId, this.reloadSound);
+			weapon.reloadSound = new SoundEvent(reloadSoundLocation);
+			registerSound(weapon.reloadSound, reloadSoundLocation);
+			
+			ResourceLocation silencedShootSoundLocation = new ResourceLocation(this.modId, this.silencedShootSound);
+			weapon.silencedShootSound = new SoundEvent(silencedShootSoundLocation);
+			registerSound(weapon.silencedShootSound, silencedShootSoundLocation);
+			
+			
 			weapon.setCreativeTab(creativeTab);
 			weapon.setUnlocalizedName(name);
 			if (ammo != null) {
@@ -402,6 +421,14 @@ public class Weapon extends Item {
 			
 			modContext.registerWeapon(name, weapon);
 			return weapon;
+		}
+
+		private static Set<ResourceLocation> registeredSounds = new HashSet<>();
+		
+		private void registerSound(SoundEvent soundEvent, ResourceLocation shootSoundLocation) {
+			if(registeredSounds.add(shootSoundLocation)) {
+				GameRegistry.register(soundEvent, shootSoundLocation);
+			}
 		}
 	}
 
@@ -418,6 +445,10 @@ public class Weapon extends Item {
 	Builder builder;
 	
 	private ModContext modContext;
+	
+	private SoundEvent shootSound;
+	private SoundEvent silencedShootSound;
+	private SoundEvent reloadSound;
 
 	public static enum State { READY, SHOOTING, RELOAD_REQUESTED, RELOAD_CONFIRMED, PAUSED, MODIFYING };
 	
@@ -430,15 +461,18 @@ public class Weapon extends Item {
 	public String getName() {
 		return builder.name;
 	}
-	
-	@SideOnly(Side.CLIENT)
-	public ModelResourceLocation getModel(ItemStack stack, EntityPlayer player, int useRemaining) {
-		builder.renderer.setOwner(player);
-		return super.getModel(stack, player, useRemaining);
+
+	public SoundEvent getShootSound() {
+		return shootSound;
 	}
 
-//	@Override
-//	public void registerIcons(IIconRegister register) {}
+	public SoundEvent getSilencedShootSound() {
+		return silencedShootSound;
+	}
+
+	public SoundEvent getReloadSound() {
+		return reloadSound;
+	}
 
 	@Override
 	public boolean onEntitySwing(EntityLivingBase entityLiving, ItemStack itemStack) {
@@ -446,16 +480,29 @@ public class Weapon extends Item {
 	}
 	
 	@Override
-	public ItemStack onItemRightClick(ItemStack itemStack, World world, EntityPlayer entityPlayer) {
-		toggleAiming(itemStack, entityPlayer);
-		return itemStack;
+	public ActionResult<ItemStack> onItemRightClick(ItemStack itemStackIn, World worldIn, EntityPlayer playerIn,
+			EnumHand hand) {
+		toggleAiming(itemStackIn, playerIn);
+		return new ActionResult<>(EnumActionResult.SUCCESS, itemStackIn);
 	}
 	
+//	@Override
+//	public ItemStack onItemRightClick(ItemStack itemStack, World world, EntityPlayer entityPlayer) {
+//		toggleAiming(itemStack, entityPlayer);
+//		return itemStack;
+//	}
+	
 	@Override
-	public boolean onItemUse(ItemStack stack, EntityPlayer playerIn, World worldIn, BlockPos pos, EnumFacing side,
-			float hitX, float hitY, float hitZ) {
-		return true;
+	public EnumActionResult onItemUse(ItemStack stack, EntityPlayer playerIn, World worldIn, BlockPos pos,
+			EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+		return EnumActionResult.SUCCESS;
 	}
+	
+//	@Override
+//	public boolean onItemUse(ItemStack stack, EntityPlayer playerIn, World worldIn, BlockPos pos, EnumFacing side,
+//			float hitX, float hitY, float hitZ) {
+//		return true;
+//	}
 
 	void toggleAiming(ItemStack itemStack, EntityPlayer entityPlayer) {
 		
@@ -477,9 +524,9 @@ public class Weapon extends Item {
 	}
 
 	private static void restoreNormalSpeed(EntityPlayer entityPlayer) {
-		if(entityPlayer.getEntityAttribute(SharedMonsterAttributes.movementSpeed)
+		if(entityPlayer.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED)
 				.getModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER.getID()) != null) {
-			entityPlayer.getEntityAttribute(SharedMonsterAttributes.movementSpeed)
+			entityPlayer.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED)
 				.removeModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER);
 		} else {
 			System.err.println("Attempted to remove modifier that was not applied: " + SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER);
@@ -487,9 +534,9 @@ public class Weapon extends Item {
 	}
 
 	private static void slowDown(EntityPlayer entityPlayer) {
-		if(entityPlayer.getEntityAttribute(SharedMonsterAttributes.movementSpeed)
+		if(entityPlayer.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED)
 				.getModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER.getID()) == null) {
-			entityPlayer.getEntityAttribute(SharedMonsterAttributes.movementSpeed)
+			entityPlayer.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED)
 				.applyModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER);
 		}  else {
 			System.err.println("Attempted to add duplicate modifier: " + SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER);
@@ -498,7 +545,7 @@ public class Weapon extends Item {
 	
 	@Override
 	public boolean shouldCauseReequipAnimation(ItemStack oldStack, ItemStack newStack, boolean slotChanged) {
-		return false;
+		return true;
 	}
 
 	@Override
@@ -547,7 +594,7 @@ public class Weapon extends Item {
 	}
 	
 	public void changeRecoil(EntityPlayer player, float factor) {
-		ItemStack itemStack = player.getHeldItem();
+		ItemStack itemStack = player.getHeldItem(EnumHand.MAIN_HAND);
 		ensureItemStack(itemStack);
 		float recoil = builder.recoil * factor;
 		Tags.setRecoil(itemStack, recoil);
@@ -643,7 +690,7 @@ public class Weapon extends Item {
 		return builder.ammoModelTextureName;
 	}
 	
-	void onSpawnEntityBlockImpact(World world, EntityPlayer player, WeaponSpawnEntity entity, MovingObjectPosition position) {
+	void onSpawnEntityBlockImpact(World world, EntityPlayer player, WeaponSpawnEntity entity, RayTraceResult position) {
 		if(builder.blockImpactHandler != null) {
 			builder.blockImpactHandler.onImpact(world, player, entity, position);
 		}

@@ -3,9 +3,9 @@ package com.vicmatskiv.weaponlib;
 import org.lwjgl.opengl.GL11;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.particle.EntityFX;
+import net.minecraft.client.particle.Particle;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.WorldRenderer;
+import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
@@ -13,7 +13,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class SmokeFX extends EntityFX {
+public class SmokeFX extends Particle {
 	
 	private static final double SMOKE_SCALE_FACTOR = 1.0005988079071D;
 	
@@ -57,7 +57,7 @@ public class SmokeFX extends EntityFX {
 
         if (this.particleAge++ >= this.particleMaxAge)
         {
-            this.setDead();
+            this.setExpired();
         }
 
         this.motionY += 0.0005D;
@@ -72,7 +72,7 @@ public class SmokeFX extends EntityFX {
 
         this.particleScale *= SMOKE_SCALE_FACTOR;
         
-        if (this.onGround)
+        if (this.isCollided)
         {
             this.motionX *= 0.699999988079071D;
             this.motionZ *= 0.699999988079071D;
@@ -82,7 +82,7 @@ public class SmokeFX extends EntityFX {
     @Override
     @SideOnly(Side.CLIENT)
     //public void renderParticle(Tessellator tesselator, float partialTicks, float par3, float par4, float par5, float par6, float par7)
-    public void renderParticle(WorldRenderer worldRendererIn, Entity entityIn, float partialTicks, float par3, float par4, float par5, float par6, float par7)
+    public void renderParticle(VertexBuffer worldRendererIn, Entity entityIn, float partialTicks, float par3, float par4, float par5, float par6, float par7)
     {
     	VertexFormat currentFormat = worldRendererIn.getVertexFormat();
     	Tessellator tessellator = Tessellator.getInstance();

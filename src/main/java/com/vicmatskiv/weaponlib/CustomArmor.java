@@ -12,6 +12,7 @@ import net.minecraft.client.model.ModelBiped;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemArmor;
 import net.minecraft.item.ItemStack;
@@ -103,19 +104,19 @@ public class CustomArmor extends ItemArmor {
 			}
 			
 			String unlocalizedHelmetName = unlocalizedName + "_helmet";
-			CustomArmor armorHelmet = new CustomArmor(modId, material, 4, 0, 
+			CustomArmor armorHelmet = new CustomArmor(modId, material, 4, EntityEquipmentSlot.HEAD, 
 					unlocalizedHelmetName, textureName, chestModel, hudTextureName);
 			armorHelmet.setUnlocalizedName(unlocalizedHelmetName);
 			GameRegistry.registerItem(armorHelmet, unlocalizedHelmetName);
 			
 			String unlocalizedChestName = unlocalizedName + "_chest";
-			CustomArmor armorChest = new CustomArmor(modId, material, 4, 1, 
+			CustomArmor armorChest = new CustomArmor(modId, material, 4, EntityEquipmentSlot.CHEST, 
 					unlocalizedChestName, textureName, chestModel, hudTextureName);
 			armorChest.setUnlocalizedName(unlocalizedChestName);
 			GameRegistry.registerItem(armorChest, unlocalizedChestName);
 			
 			String unlocalizedBootsName = unlocalizedName + "_boots";
-			CustomArmor armorBoots = new CustomArmor(modId, material, 4, 3, 
+			CustomArmor armorBoots = new CustomArmor(modId, material, 4, EntityEquipmentSlot.LEGS, 
 					unlocalizedBootsName, textureName, bootsModel, hudTextureName);
 			armorBoots.setUnlocalizedName(unlocalizedBootsName);
 			GameRegistry.registerItem(armorBoots, unlocalizedBootsName);
@@ -147,7 +148,7 @@ public class CustomArmor extends ItemArmor {
 			}
 			
 			String unlocalizedHelmetName = unlocalizedName + "_helmet";
-			CustomArmor armorHelmet = new CustomArmor(modId, material, 4, 0, 
+			CustomArmor armorHelmet = new CustomArmor(modId, material, 4, EntityEquipmentSlot.HEAD, 
 					unlocalizedHelmetName, textureName, chestModel, hudTextureName);
 			armorHelmet.setUnlocalizedName(unlocalizedHelmetName);
 			GameRegistry.registerItem(armorHelmet, unlocalizedHelmetName);
@@ -172,7 +173,7 @@ public class CustomArmor extends ItemArmor {
 			}
 			
 			String unlocalizedChestName = unlocalizedName + "_chest";
-			CustomArmor armorChest = new CustomArmor(modId, material, 4, 1, 
+			CustomArmor armorChest = new CustomArmor(modId, material, 4, EntityEquipmentSlot.CHEST, 
 					unlocalizedChestName, textureName, chestModel, hudTextureName);
 			armorChest.setUnlocalizedName(unlocalizedChestName);
 			GameRegistry.registerItem(armorChest, unlocalizedChestName);
@@ -199,7 +200,7 @@ public class CustomArmor extends ItemArmor {
 			
 			
 			String unlocalizedBootsName = unlocalizedName + "_boots";
-			CustomArmor armorBoots = new CustomArmor(modId, material, 4, 3, 
+			CustomArmor armorBoots = new CustomArmor(modId, material, 4, EntityEquipmentSlot.LEGS, 
 					unlocalizedBootsName, textureName, bootsModel, hudTextureName);
 			armorBoots.setUnlocalizedName(unlocalizedBootsName);
 			GameRegistry.registerItem(armorBoots, unlocalizedBootsName);
@@ -217,7 +218,7 @@ public class CustomArmor extends ItemArmor {
 	private String modId;
 	private Map<ItemAttachment<CustomArmor>, CompatibleAttachment<CustomArmor>> compatibleAttachments = new HashMap<>();
 	
-	private CustomArmor(String modId, ArmorMaterial material, int renderIndex, int armorType, String iconName, String textureName,
+	private CustomArmor(String modId, ArmorMaterial material, int renderIndex, EntityEquipmentSlot armorType, String iconName, String textureName,
 			ModelBiped model, String hudTextureName) {
 		super(material, renderIndex, armorType);
 		this.modId = modId;
@@ -240,14 +241,20 @@ public class CustomArmor extends ItemArmor {
 //		this.itemIcon = par1IconRegister.registerIcon(modId + ":" + iconName);
 //	}
 
+//	@Override
+//	public String getArmorTexture(ItemStack stack, Entity entity, int slot, String type) {
+//		return modId + ":textures/models/" + textureName + ".png";
+//	}
+	
 	@Override
-	public String getArmorTexture(ItemStack stack, Entity entity, int slot, String type) {
+	public String getArmorTexture(ItemStack stack, Entity entity, EntityEquipmentSlot slot, String type) {
 		return modId + ":textures/models/" + textureName + ".png";
 	}
-
+	
 	@Override
 	@SideOnly(Side.CLIENT)
-	public ModelBiped getArmorModel(EntityLivingBase entityLiving, ItemStack itemStack, int armorSlot) {
+	public ModelBiped getArmorModel(EntityLivingBase entityLiving, ItemStack itemStack, EntityEquipmentSlot armorSlot,
+			ModelBiped _default) {
 		
 		ModelBiped armorModel = null;
 		
@@ -265,32 +272,33 @@ public class CustomArmor extends ItemArmor {
 			}
 			
 			if (armorModel != null) {
-				armorModel.bipedHead.showModel = armorSlot == 0;
-				armorModel.bipedHeadwear.showModel = armorSlot == 0;
-				armorModel.bipedBody.showModel = armorSlot == 1
-						|| armorSlot == 2;
-				armorModel.bipedRightArm.showModel = armorSlot == 1;
-				armorModel.bipedLeftArm.showModel = armorSlot == 1;
-				
-				armorModel.bipedRightLeg.showModel = false;
-				armorModel.bipedLeftLeg.showModel = false;
-				
-				armorModel.bipedRightLeg.showModel = armorSlot == 2
-						|| armorSlot == 3;
-				armorModel.bipedLeftLeg.showModel = armorSlot == 2
-						|| armorSlot == 3;
-				
-				armorModel.isSneak = entityLiving.isSneaking();
-				armorModel.isRiding = entityLiving.isRiding();
-				armorModel.isChild = entityLiving.isChild();
-				armorModel.heldItemRight = entityLiving.getEquipmentInSlot(0) != null ? 1 : 0;
-				
-				if (entityLiving instanceof EntityPlayer) {
-					boolean isAimedWeapon = Weapon.isAimed(entityLiving.getEquipmentInSlot(0));
-					armorModel.aimedBow = ((EntityPlayer) entityLiving).getItemInUseDuration() > 0 
-							|| isAimedWeapon;
-				}
-				return armorModel;
+				throw new UnsupportedOperationException("Fixme below");
+//				armorModel.bipedHead.showModel = armorSlot == 0;
+//				armorModel.bipedHeadwear.showModel = armorSlot == 0;
+//				armorModel.bipedBody.showModel = armorSlot == 1
+//						|| armorSlot == 2;
+//				armorModel.bipedRightArm.showModel = armorSlot == 1;
+//				armorModel.bipedLeftArm.showModel = armorSlot == 1;
+//				
+//				armorModel.bipedRightLeg.showModel = false;
+//				armorModel.bipedLeftLeg.showModel = false;
+//				
+//				armorModel.bipedRightLeg.showModel = armorSlot == 2
+//						|| armorSlot == 3;
+//				armorModel.bipedLeftLeg.showModel = armorSlot == 2
+//						|| armorSlot == 3;
+//				
+//				armorModel.isSneak = entityLiving.isSneaking();
+//				armorModel.isRiding = entityLiving.isRiding();
+//				armorModel.isChild = entityLiving.isChild();
+//				armorModel.heldItemRight = entityLiving.getEquipmentInSlot(0) != null ? 1 : 0;
+//				
+//				if (entityLiving instanceof EntityPlayer) {
+//					boolean isAimedWeapon = Weapon.isAimed(entityLiving.getEquipmentInSlot(0));
+//					armorModel.aimedBow = ((EntityPlayer) entityLiving).getItemInUseDuration() > 0 
+//							|| isAimedWeapon;
+//				}
+//				return armorModel;
 			}
 		}
 		return null;

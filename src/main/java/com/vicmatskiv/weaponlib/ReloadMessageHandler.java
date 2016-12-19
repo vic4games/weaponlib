@@ -4,6 +4,7 @@ import java.util.function.Function;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.IThreadListener;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -24,7 +25,7 @@ public class ReloadMessageHandler implements IMessageHandler<ReloadMessage, IMes
 	public IMessage onMessage(ReloadMessage message, MessageContext ctx) {
 		if(ctx.side == Side.SERVER) {
 			EntityPlayer player = entityPlayerSupplier.apply(ctx);
-			ItemStack itemStack = player.getHeldItem();
+			ItemStack itemStack = player.getHeldItem(EnumHand.MAIN_HAND);
 			
 			if(itemStack != null && itemStack.getItem() instanceof Weapon) {
 				IThreadListener mainThread = (IThreadListener) ctx.getServerHandler().playerEntity.worldObj;
@@ -41,7 +42,7 @@ public class ReloadMessageHandler implements IMessageHandler<ReloadMessage, IMes
 
 	private void onClientMessage(ReloadMessage message, MessageContext ctx) {
 		EntityPlayer player = entityPlayerSupplier.apply(ctx);
-		ItemStack itemStack = player.getHeldItem();
+		ItemStack itemStack = player.getHeldItem(EnumHand.MAIN_HAND);
 		if(itemStack != null && itemStack.getItem() instanceof Weapon) {
 			//Weapon weapon = (Weapon) itemStack.getItem();
 			Weapon targetWeapon = message.getWeapon();

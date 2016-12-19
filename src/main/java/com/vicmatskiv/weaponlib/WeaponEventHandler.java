@@ -1,9 +1,11 @@
 package com.vicmatskiv.weaponlib;
 
+import net.minecraft.client.model.ModelBiped.ArmPose;
 import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumHand;
 import net.minecraftforge.client.event.FOVUpdateEvent;
 import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.client.event.RenderLivingEvent;
@@ -21,17 +23,17 @@ public class WeaponEventHandler {
 	
 	@SubscribeEvent
 	public void onGuiOpenEvent(GuiOpenEvent event) {
-		safeGlobals.guiOpen.set(event.gui != null);
+		safeGlobals.guiOpen.set(event.getGui() != null);
 	}
 	
 	@SubscribeEvent
 	public void zoom(FOVUpdateEvent event) {
 
-		ItemStack stack = event.entity.getHeldItem();
+		ItemStack stack = event.getEntity().getHeldItem(EnumHand.MAIN_HAND);
 		if (stack != null) {
 			if (stack.getItem() instanceof Weapon) {
 				if (stack.getTagCompound() != null) {
-					event.newfov = Tags.getZoom(stack);
+					event.setNewfov(Tags.getZoom(stack));
 				}
 			}
 		}
@@ -41,17 +43,19 @@ public class WeaponEventHandler {
 	@SubscribeEvent
 	public void handleRenderLivingEvent(RenderLivingEvent.Pre<? extends EntityLivingBase> event) {
 
-		if ((event.isCanceled()) || (!(event.entity instanceof EntityPlayer)))
+		if ((event.isCanceled()) || (!(event.getEntity() instanceof EntityPlayer)))
 			return;
 
-		ItemStack itemStack = event.entity.getHeldItem();
+		ItemStack itemStack = event.getEntity().getHeldItem(EnumHand.MAIN_HAND);
 
 		if (itemStack != null && itemStack.getItem() instanceof Weapon) {
-			RenderPlayer rp = (RenderPlayer) event.renderer;
+			RenderPlayer rp = (RenderPlayer) event.getRenderer();
 
 			if (itemStack.getTagCompound() != null) {
-				//rp.modelBipedMain.aimedBow = Weapon.isAimed(itemStack); //itemStack.stackTagCompound.getBoolean("Aimed");
-				rp.getMainModel().aimedBow = Weapon.isAimed(itemStack);
+				//throw new UnsupportedOperationException("Fix aiming!");
+				//rp.getMainModel().aimedBow = Weapon.isAimed(itemStack);
+				rp.getMainModel().leftArmPose = ArmPose.BOW_AND_ARROW;
+				rp.getMainModel().rightArmPose = ArmPose.BOW_AND_ARROW;
 			}
 		}
 	}

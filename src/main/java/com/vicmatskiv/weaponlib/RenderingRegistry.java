@@ -8,9 +8,9 @@ import java.util.Set;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ItemModelMesher;
-import net.minecraft.client.renderer.entity.RenderItem;
+import net.minecraft.client.renderer.RenderItem;
+import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.resources.IResourceManager;
-import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.client.model.ICustomModelLoader;
@@ -29,7 +29,7 @@ public class RenderingRegistry implements ICustomModelLoader {
 	@SubscribeEvent
 	public void bakeModel(ModelBakeEvent event) {
 		for(WeaponRenderer model: renderers) {
-			event.modelRegistry.putObject(model.resourceLocation, model);
+			event.getModelRegistry().putObject(model.resourceLocation, model);
 		}
 	}
 

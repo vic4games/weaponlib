@@ -23,6 +23,7 @@ import com.vicmatskiv.weaponlib.animation.MultipartTransition;
 import com.vicmatskiv.weaponlib.animation.MultipartTransitionProvider;
 import com.vicmatskiv.weaponlib.animation.Transition;
 
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
 //import net.minecraft.client.entity.EntityClientPlayerMP;
@@ -30,30 +31,30 @@ import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.WorldRenderer;
+import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.block.model.BakedQuad;
+import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms.TransformType;
+import net.minecraft.client.renderer.block.model.ItemOverride;
+import net.minecraft.client.renderer.block.model.ItemOverrideList;
+import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.client.renderer.vertex.VertexFormat;
-import net.minecraft.client.resources.model.IBakedModel;
-import net.minecraft.client.resources.model.ModelResourceLocation;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.client.model.IFlexibleBakedModel;
+import net.minecraft.world.World;
 import net.minecraftforge.client.model.IPerspectiveAwareModel;
-import net.minecraftforge.client.model.ISmartItemModel;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-@SuppressWarnings("deprecation")
-public class WeaponRenderer implements ISmartItemModel, IPerspectiveAwareModel, IFlexibleBakedModel {
+public class WeaponRenderer implements IPerspectiveAwareModel, IBakedModel {
 	
 	private static final float DEFAULT_RANDOMIZING_RATE = 0.33f;
 	private static final float DEFAULT_RANDOMIZING_FIRING_RATE = 20;
@@ -434,7 +435,7 @@ public class WeaponRenderer implements ISmartItemModel, IPerspectiveAwareModel, 
 
 	protected TextureManager textureManager;
 
-	private Pair<? extends IFlexibleBakedModel, Matrix4f> pair;
+	private Pair<? extends IBakedModel, Matrix4f> pair;
 	protected ModelBiped playerBiped = new ModelBiped();
 	
 	protected ItemStack itemStack;
@@ -443,7 +444,22 @@ public class WeaponRenderer implements ISmartItemModel, IPerspectiveAwareModel, 
 	
 	TransformType transformType;
 	
-	//private Randomizer randomizer = new Randomizer();
+	private class WeaponItemOverrideList extends ItemOverrideList {
+
+		public WeaponItemOverrideList(List<ItemOverride> overridesIn) {
+			super(overridesIn);
+		}
+		
+		@Override
+		public IBakedModel handleItemState(IBakedModel originalModel, ItemStack stack, World world,
+				EntityLivingBase entity) {
+			WeaponRenderer.this.itemStack = stack;
+			WeaponRenderer.this.owner = (EntityPlayer) entity;
+			return super.handleItemState(originalModel, stack, world, entity);
+		}
+	}
+	
+	private ItemOverrideList itemOverrideList = new WeaponItemOverrideList(Collections.emptyList());
 	
 	private WeaponRenderer (Builder builder)
 	{
@@ -453,10 +469,11 @@ public class WeaponRenderer implements ISmartItemModel, IPerspectiveAwareModel, 
 		
 		this.textureManager = Minecraft.getMinecraft().getTextureManager();
 		//this.resourceLocation = resourceLocation;
-		this.pair = Pair.of((IFlexibleBakedModel) this, null);
+		this.pair = Pair.of((IBakedModel) this, null);
 		this.playerBiped = new ModelBiped();
 		this.playerBiped.textureWidth = 64;
 		this.playerBiped.textureHeight = 64;
+		
 	}
 
 	private static class StateDescriptor {
@@ -525,47 +542,47 @@ public class WeaponRenderer implements ISmartItemModel, IPerspectiveAwareModel, 
 	}
 	
 	@Override
-	public final List<BakedQuad> getGeneralQuads() {
-		// Method that this get's called in, is using startDrawingQuads. We
-		// finish
-		// drawing it so we can move on to render our own thing.
-		Tessellator tessellator = Tessellator.getInstance();
-		WorldRenderer worldrenderer = tessellator.getWorldRenderer();
-		tessellator.draw();
-		GlStateManager.pushMatrix();
-//		GlStateManager.translate(0.5F, 0.5F, 0.5F);
-//		GlStateManager.scale(-1.0F, -1.0F, 1.0F);
-
+	public List<BakedQuad> getQuads(IBlockState state, EnumFacing side, long rand) {
+		if(transformType == TransformType.GROUND 
+				|| transformType == TransformType.GUI
+				|| transformType == TransformType.FIRST_PERSON_RIGHT_HAND 
+				|| transformType == TransformType.THIRD_PERSON_RIGHT_HAND 
+				) {
+			
+//			if(transformType == TransformType.FIRST_PERSON_RIGHT_HAND) {
+//				System.out.println("Renderer " + WeaponRenderer.this.builder.model.getClass() + " handing item " + this.itemStack);
+//			}
 		
-		if (owner != null) {
-			if (transformType == TransformType.THIRD_PERSON) {
-				if (owner.isSneaking()) GlStateManager.translate(0.0F, -0.2F, 0.0F);
+			Tessellator tessellator = Tessellator.getInstance();
+			VertexBuffer worldrenderer = tessellator.getBuffer();
+			tessellator.draw();
+			GlStateManager.pushMatrix();
+
+			if (owner != null) {
+				if (transformType == TransformType.THIRD_PERSON_RIGHT_HAND) {
+					if (owner.isSneaking()) GlStateManager.translate(0.0F, -0.2F, 0.0F);
+				}
 			}
-		}
 
-		if (onGround()) {
-			GlStateManager.scale(-3f, -3f, -3f);
-		}
+			if (onGround()) {
+				GlStateManager.scale(-3f, -3f, -3f);
+			}
 
-		renderItem();
-		GlStateManager.popMatrix();
+			renderItem();
+			GlStateManager.popMatrix();
+			worldrenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.ITEM);
+		}
+		
 		// Reset the dynamic values.
 		this.owner = null;
 		this.itemStack = null;
 		this.transformType = null;
-		
-		worldrenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.ITEM);
 		
 		return Collections.emptyList();
 	}
 	
 	protected boolean onGround() {
 		return transformType == null;
-	}
-
-	@Override
-	public List<BakedQuad> getFaceQuads(EnumFacing p_177551_1_) {
-		return Collections.emptyList();
 	}
 
 	@Override
@@ -589,21 +606,22 @@ public class WeaponRenderer implements ISmartItemModel, IPerspectiveAwareModel, 
 	}
 
 
-	@Override
-	public IBakedModel handleItemState(ItemStack stack) {
-		this.itemStack = stack;
-		return this;
-	}
+//	@Override
+//	public IBakedModel handleItemState(ItemStack stack) {
+//		this.itemStack = stack;
+//		return this;
+//	}
 
 	public void setOwner(EntityPlayer player) {
 		this.owner = player;
 	}
 	
-	@Override
-	public Pair<? extends IFlexibleBakedModel, Matrix4f> handlePerspective(TransformType cameraTransformType) {
-		this.transformType = cameraTransformType;
-		return pair;
-	}
+	
+//	@Override
+//	public Pair<? extends IFlexibleBakedModel, Matrix4f> handlePerspective(TransformType cameraTransformType) {
+//		this.transformType = cameraTransformType;
+//		return pair;
+//	}
 	
 
 	@SideOnly(Side.CLIENT)
@@ -621,14 +639,14 @@ public class WeaponRenderer implements ISmartItemModel, IPerspectiveAwareModel, 
 			builder.entityPositioning.accept(itemStack);
 			break;
 		case GUI:
-			GL11.glScaled(0.9F, 0.9F, 0.9F);
-			GL11.glTranslatef(-1.4f, -0.9f, 0f);
-			GL11.glRotatef(-50F, 1f, 0f, 0f);
-			GL11.glRotatef(-70F, 0f, 1f, 0f);
-			GL11.glRotatef(-60F, 0f, 0f, 1f);
+			GL11.glScaled(0.5F, 0.5F, 0.5F);
+			GL11.glTranslatef(-1.1f, -0.9f, 0f);
+			GL11.glRotatef(0F, 1f, 0f, 0f);
+			GL11.glRotatef(0F, 0f, 1f, 0f);
+			GL11.glRotatef(-10F, 0f, 0f, 1f);
 			builder.inventoryPositioning.accept(itemStack);
 			break;
-		case THIRD_PERSON:
+		case THIRD_PERSON_RIGHT_HAND: case THIRD_PERSON_LEFT_HAND:
 			GL11.glScaled(0.4F, 0.4F, 0.4F);
 			GL11.glTranslatef(-1.2f, -2.5f, -0.05f);
 			GL11.glRotatef(-20F, 1f, 0f, 0f);
@@ -637,8 +655,16 @@ public class WeaponRenderer implements ISmartItemModel, IPerspectiveAwareModel, 
 			
 			builder.thirdPersonPositioning.accept(player, itemStack);
 			break;
-		case FIRST_PERSON:
+		case FIRST_PERSON_RIGHT_HAND: case FIRST_PERSON_LEFT_HAND:
 			
+			//GL11.glScaled(0.5F, 0.5F, 0.5F);
+			GL11.glTranslatef(-0.61f, 0.17f, -0.55f);
+			
+			GL11.glRotatef(0F, 1f, 0f, 0f);
+			GL11.glRotatef(-45.7F, 0f, 1f, 0f);
+			GL11.glRotatef(0F, 0f, 0f, 1f);
+			
+
 			
 			StateDescriptor stateDescriptor = getStateDescriptor(player, itemStack);
 			MultipartPositioning<Part, RenderContext> multipartPositioning = stateDescriptor.stateManager.nextPositioning();
@@ -809,8 +835,20 @@ public class WeaponRenderer implements ISmartItemModel, IPerspectiveAwareModel, 
 		return ItemCameraTransforms.DEFAULT;
 	}
 
+//	@Override
+//	public VertexFormat getFormat() {
+//		return DefaultVertexFormats.ITEM;
+//	}
+
 	@Override
-	public VertexFormat getFormat() {
-		return DefaultVertexFormats.ITEM;
+	public ItemOverrideList getOverrides() {
+		
+		return itemOverrideList;
+	}
+
+	@Override
+	public Pair<? extends IBakedModel, Matrix4f> handlePerspective(TransformType cameraTransformType) {
+		this.transformType = cameraTransformType;
+		return pair;
 	}
 }

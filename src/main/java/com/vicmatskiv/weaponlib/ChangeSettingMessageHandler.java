@@ -4,6 +4,7 @@ import java.util.function.Function;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumHand;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
@@ -27,7 +28,7 @@ public class ChangeSettingMessageHandler implements IMessageHandler<ChangeSettin
 	
 	private void onClientMessage(ChangeSettingsMessage message, MessageContext ctx) {
 		EntityPlayer player = entityPlayerSupplier.apply(ctx);
-		ItemStack itemStack = player.getHeldItem();
+		ItemStack itemStack = player.getHeldItem(EnumHand.MAIN_HAND);
 		if(itemStack != null && itemStack.getItem() instanceof Weapon) {
 			Weapon targetWeapon = message.getWeapon();
 			if(targetWeapon != null) {

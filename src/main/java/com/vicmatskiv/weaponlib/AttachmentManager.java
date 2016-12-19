@@ -28,14 +28,14 @@ public final class AttachmentManager {
 
 	@SubscribeEvent
 	public void onItemToss(ItemTossEvent itemTossEvent) {
-		ItemStack itemStack = itemTossEvent.entityItem.getEntityItem();
+		ItemStack itemStack = itemTossEvent.getEntityItem().getEntityItem();
 		Item item = itemStack.getItem();
 		if(!(item instanceof Weapon)) {
 			return; 
 		}
 		
 		if(Weapon.isModifying(itemStack)) {
-			exitAttachmentSelectionMode(itemStack, itemTossEvent.player);
+			exitAttachmentSelectionMode(itemStack, itemTossEvent.getPlayer());
 		}
 	}
 	
@@ -90,7 +90,7 @@ public final class AttachmentManager {
 			if(activeAttachmentsIds[i] != previouslySelectedAttachmentIds[i]) {
 				Item newItem = Item.getItemById(activeAttachmentsIds[i]);
 				Item oldItem = Item.getItemById(previouslySelectedAttachmentIds[i]);
-				player.inventory.consumeInventoryItem(newItem);
+				WorldHelper.consumeInventoryItem(player.inventory, newItem);
 				if(!player.inventory.addItemStackToInventory(new ItemStack(oldItem))) {
 					System.err.println("Cannot add item back to the inventory: " + oldItem);
 				}
@@ -99,7 +99,7 @@ public final class AttachmentManager {
 		
 		Weapon.setModifying(itemStack, false);
 	}
-
+	
 	List<CompatibleAttachment<Weapon>> getActiveAttachments(ItemStack itemStack) {
 		ensureItemStack(itemStack);
 		
