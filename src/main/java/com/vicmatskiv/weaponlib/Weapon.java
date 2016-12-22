@@ -545,7 +545,22 @@ public class Weapon extends Item {
 	
 	@Override
 	public boolean shouldCauseReequipAnimation(ItemStack oldStack, ItemStack newStack, boolean slotChanged) {
+		if(slotChanged) {
+			return true;
+		}
 		return true;
+//		if(oldStack == newStack) {
+//			return false;
+//		}
+//		if(oldStack == null || newStack == null) {
+//			return oldStack != newStack;
+//		}
+//		if(!ItemStack.areItemsEqual(oldStack, newStack)) {
+//			System.out.println("Items " + oldStack + " and " + newStack + " not equal");
+//			return true;
+//		}
+//		//System.out.println("Items are equal, stacks are not, triggering reequip animation");
+//		return true;
 	}
 
 	@Override

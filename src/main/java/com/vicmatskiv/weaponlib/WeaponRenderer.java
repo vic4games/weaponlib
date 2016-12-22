@@ -29,6 +29,7 @@ import net.minecraft.client.entity.AbstractClientPlayer;
 //import net.minecraft.client.entity.EntityClientPlayerMP;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelBiped;
+import net.minecraft.client.model.ModelPlayer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.VertexBuffer;
@@ -46,8 +47,11 @@ import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EnumPlayerModelParts;
+import net.minecraft.item.EnumAction;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHandSide;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.client.model.IPerspectiveAwareModel;
@@ -629,16 +633,18 @@ public class WeaponRenderer implements IPerspectiveAwareModel, IBakedModel {
 	{
 		GL11.glPushMatrix();
 		
-		GL11.glScaled(-1F, -1F, 1F);
+		
 		AbstractClientPlayer player = Minecraft.getMinecraft().thePlayer;
 		RenderContext renderContext = new RenderContext(player, itemStack);
 		
 		switch (transformType)
 		{
 		case GROUND:
+			GL11.glScaled(-1F, -1F, 1F);
 			builder.entityPositioning.accept(itemStack);
 			break;
 		case GUI:
+			GL11.glScaled(-1F, -1F, 1F);
 			GL11.glScaled(0.5F, 0.5F, 0.5F);
 			GL11.glTranslatef(-1.1f, -0.9f, 0f);
 			GL11.glRotatef(0F, 1f, 0f, 0f);
@@ -647,6 +653,7 @@ public class WeaponRenderer implements IPerspectiveAwareModel, IBakedModel {
 			builder.inventoryPositioning.accept(itemStack);
 			break;
 		case THIRD_PERSON_RIGHT_HAND: case THIRD_PERSON_LEFT_HAND:
+			GL11.glScaled(-1F, -1F, 1F);
 			GL11.glScaled(0.4F, 0.4F, 0.4F);
 			GL11.glTranslatef(-1.2f, -2.5f, -0.05f);
 			GL11.glRotatef(-20F, 1f, 0f, 0f);
@@ -657,14 +664,13 @@ public class WeaponRenderer implements IPerspectiveAwareModel, IBakedModel {
 			break;
 		case FIRST_PERSON_RIGHT_HAND: case FIRST_PERSON_LEFT_HAND:
 			
-			//GL11.glScaled(0.5F, 0.5F, 0.5F);
-			GL11.glTranslatef(-0.61f, 0.17f, -0.55f);
+			GL11.glTranslatef(0.5f, 0.5f  + 0.6f, 0.5f); // untranslate
+			GL11.glRotatef(45f, 0f, 1f, 0f); // rotate as per 1.8.9 transformFirstPersonItem
 			
-			GL11.glRotatef(0F, 1f, 0f, 0f);
-			GL11.glRotatef(-45.7F, 0f, 1f, 0f);
-			GL11.glRotatef(0F, 0f, 0f, 1f);
+			GL11.glScalef(0.4F, 0.4F, 0.4F); // scale as per 1.8.9 transformFirstPersonItem
+			GL11.glTranslatef(-0.5f, -0.5f, -0.5f); 
 			
-
+			GL11.glScaled(-1F, -1F, 1F);
 			
 			StateDescriptor stateDescriptor = getStateDescriptor(player, itemStack);
 			MultipartPositioning<Part, RenderContext> multipartPositioning = stateDescriptor.stateManager.nextPositioning();
@@ -680,9 +686,7 @@ public class WeaponRenderer implements IPerspectiveAwareModel, IBakedModel {
 			Minecraft.getMinecraft().getTextureManager().bindTexture(((AbstractClientPlayer) player).getLocationSkin());
 			
 			GL11.glPushMatrix();
-			
-			GL11.glScaled(1F, 1F, 1F);
-			
+						
 			GL11.glTranslatef(0f, -1f, 0f);
 			
 			GL11.glRotatef(-10F, 1f, 0f, 0f);
@@ -690,20 +694,21 @@ public class WeaponRenderer implements IPerspectiveAwareModel, IBakedModel {
 			GL11.glRotatef(10F, 0f, 0f, 1f);
 			
 			positioner.position(Part.LEFT_HAND, renderContext);
-			//render.renderFirstPersonArm(player);
 			render.renderLeftArm(player);
 			GL11.glPopMatrix();
 			
 			GL11.glPushMatrix();
+			
 			GL11.glScaled(1F, 1F, 1F);
 			GL11.glTranslatef(-0.25f, 0f, 0.2f);
 			
 			GL11.glRotatef(5F, 1f, 0f, 0f);
 			GL11.glRotatef(25F, 0f, 1f, 0f);
-			GL11.glRotatef(0F, 0f, 0f, 1f);
+			GL11.glRotatef(0F, 0f, 0f, 1f);	
+			
 			positioner.position(Part.RIGHT_HAND, renderContext);
-			//render.renderFirstPersonArm(player);
-			render.renderRightArm(player);
+			//render.renderRightArm(player);
+			renderRightArm(render, player);
 			GL11.glPopMatrix();
 	        
 			break;
@@ -732,6 +737,98 @@ public class WeaponRenderer implements IPerspectiveAwareModel, IBakedModel {
 		GL11.glPopMatrix();
 	   
 	}
+	
+	public void renderRightArm(RenderPlayer renderPlayer, AbstractClientPlayer clientPlayer)
+    {
+        float f = 1.0F;
+        GlStateManager.color(f, f, f);
+        ModelPlayer modelplayer = renderPlayer.getMainModel();
+        // Can ignore private method setModelVisibilities since it was already called earlier for left hand
+        setModelVisibilities(renderPlayer, clientPlayer);
+        
+        GlStateManager.enableBlend();
+        modelplayer.swingProgress = 0.0F;
+        modelplayer.isSneak = false;
+        modelplayer.setRotationAngles(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0625F, clientPlayer);
+        modelplayer.bipedRightArm.rotateAngleX = -0.3F;
+        modelplayer.bipedRightArm.rotateAngleY = 0.0F;
+        modelplayer.bipedRightArm.render(0.0625F);
+        modelplayer.bipedRightArmwear.rotateAngleX = 0.0F;
+        modelplayer.bipedRightArmwear.render(0.0625F);
+        GlStateManager.disableBlend();
+    }
+	
+	private void setModelVisibilities(RenderPlayer renderPlayer, AbstractClientPlayer clientPlayer)
+    {
+        ModelPlayer modelplayer = renderPlayer.getMainModel();
+
+        if (clientPlayer.isSpectator())
+        {
+            modelplayer.setInvisible(false);
+            modelplayer.bipedHead.showModel = true;
+            modelplayer.bipedHeadwear.showModel = true;
+        }
+        else
+        {
+            ItemStack itemstack = clientPlayer.getHeldItemMainhand();
+            ItemStack itemstack1 = clientPlayer.getHeldItemOffhand();
+            modelplayer.setInvisible(true);
+            modelplayer.bipedHeadwear.showModel = clientPlayer.isWearing(EnumPlayerModelParts.HAT);
+            modelplayer.bipedBodyWear.showModel = clientPlayer.isWearing(EnumPlayerModelParts.JACKET);
+            modelplayer.bipedLeftLegwear.showModel = clientPlayer.isWearing(EnumPlayerModelParts.LEFT_PANTS_LEG);
+            modelplayer.bipedRightLegwear.showModel = clientPlayer.isWearing(EnumPlayerModelParts.RIGHT_PANTS_LEG);
+            modelplayer.bipedLeftArmwear.showModel = clientPlayer.isWearing(EnumPlayerModelParts.LEFT_SLEEVE);
+            modelplayer.bipedRightArmwear.showModel = clientPlayer.isWearing(EnumPlayerModelParts.RIGHT_SLEEVE);
+            modelplayer.isSneak = clientPlayer.isSneaking();
+            ModelBiped.ArmPose modelbiped$armpose = ModelBiped.ArmPose.EMPTY;
+            ModelBiped.ArmPose modelbiped$armpose1 = ModelBiped.ArmPose.EMPTY;
+
+            if (itemstack != null)
+            {
+                modelbiped$armpose = ModelBiped.ArmPose.ITEM;
+
+                if (clientPlayer.getItemInUseCount() > 0)
+                {
+                    EnumAction enumaction = itemstack.getItemUseAction();
+
+                    if (enumaction == EnumAction.BLOCK)
+                    {
+                        modelbiped$armpose = ModelBiped.ArmPose.BLOCK;
+                    }
+                    else if (enumaction == EnumAction.BOW)
+                    {
+                        modelbiped$armpose = ModelBiped.ArmPose.BOW_AND_ARROW;
+                    }
+                }
+            }
+
+            if (itemstack1 != null)
+            {
+                modelbiped$armpose1 = ModelBiped.ArmPose.ITEM;
+
+                if (clientPlayer.getItemInUseCount() > 0)
+                {
+                    EnumAction enumaction1 = itemstack1.getItemUseAction();
+
+                    if (enumaction1 == EnumAction.BLOCK)
+                    {
+                        modelbiped$armpose1 = ModelBiped.ArmPose.BLOCK;
+                    }
+                }
+            }
+
+            if (clientPlayer.getPrimaryHand() == EnumHandSide.RIGHT)
+            {
+                modelplayer.rightArmPose = modelbiped$armpose;
+                modelplayer.leftArmPose = modelbiped$armpose1;
+            }
+            else
+            {
+                modelplayer.rightArmPose = modelbiped$armpose1;
+                modelplayer.leftArmPose = modelbiped$armpose;
+            }
+        }
+    }
 	
 	private enum Part {
 		WEAPON, RIGHT_HAND, LEFT_HAND
