@@ -438,7 +438,7 @@ public class Weapon extends Item {
 		return itemStack;
 	}
 
-	private void toggleAiming(ItemStack itemStack, EntityPlayer entityPlayer) {
+	void toggleAiming(ItemStack itemStack, EntityPlayer entityPlayer) {
 		
 		ensureItemStack(itemStack);
 		float currentZoom = Tags.getZoom(itemStack);
@@ -448,9 +448,13 @@ public class Weapon extends Item {
 			Tags.setAimed(itemStack, false);
 			restoreNormalSpeed(entityPlayer);
 		} else {
-			WeaponClientStorage weaponInstanceStorage = getWeaponClientStorage(entityPlayer);
-			if(weaponInstanceStorage != null) {
-				Tags.setZoom(itemStack, weaponInstanceStorage.getZoom());
+			float allowedZoom = Tags.getAllowedZoom(itemStack);
+			if(allowedZoom > 0f) {
+				Tags.setZoom(itemStack, allowedZoom);
+			} else {
+				allowedZoom = builder.zoom;
+				Tags.setAllowedZoom(itemStack, allowedZoom);
+				Tags.setZoom(itemStack, allowedZoom);
 			}
 			slowDown(entityPlayer);
 			Tags.setAimed(itemStack, true);
@@ -538,10 +542,10 @@ public class Weapon extends Item {
 	}
 	
 	public void changeZoom(EntityPlayer player, float factor) {
-		WeaponClientStorage weaponInstanceStorage = getWeaponClientStorage(player);
-		if(weaponInstanceStorage != null) {
-			weaponInstanceStorage.setZoom(builder.zoom * factor);
-		}
+		ItemStack itemStack = player.getHeldItem();
+		ensureItemStack(itemStack);
+		float zoom = builder.zoom * factor;
+		Tags.setAllowedZoom(itemStack, zoom);
 	}
 
 	Map<ItemAttachment<Weapon>, CompatibleAttachment<Weapon>> getCompatibleAttachments() {

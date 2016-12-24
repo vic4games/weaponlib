@@ -4,7 +4,8 @@ import net.minecraft.item.ItemStack;
 
 final class Tags {
 
-	private static final String ZOOM_TAG = "Zoomed";
+	private static final String ZOOM_TAG = "Zoom";
+	private static final String ALLOWED_ZOOM_TAG = "AllowedZoom";
 	private static final String AIMED_TAG = "Aimed";
 	private static final String RECOIL_TAG = "Recoil";
 	private static final String ACTIVE_TEXTURE_INDEX_TAG = "ActiveTextureIndex";
@@ -37,6 +38,20 @@ final class Tags {
 	
 	static boolean isAimed(ItemStack itemStack) {
 		return itemStack.stackTagCompound.getBoolean(Tags.AIMED_TAG);
+	}
+	
+	static float getAllowedZoom(ItemStack itemStack) {
+		if (itemStack == null || itemStack.getTagCompound() == null) {
+			return 0f;
+		}
+		return itemStack.getTagCompound().getFloat(ALLOWED_ZOOM_TAG);
+	}
+
+	static void setAllowedZoom(ItemStack itemStack, float zoom) {
+		if (itemStack == null || itemStack.getTagCompound() == null) {
+			return;
+		}
+		itemStack.getTagCompound().setFloat(ALLOWED_ZOOM_TAG, zoom);
 	}
 
 	static float getZoom(ItemStack itemStack) {
