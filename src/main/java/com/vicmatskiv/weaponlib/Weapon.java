@@ -447,7 +447,10 @@ public class Weapon extends Item {
 	
 	@Override
 	public ItemStack onItemRightClick(ItemStack itemStack, World world, EntityPlayer entityPlayer) {
-		toggleAiming(itemStack, entityPlayer);
+		if(world.isRemote) {
+			toggleAiming(itemStack, entityPlayer);
+		}
+		
 		return itemStack;
 	}
 	
@@ -470,6 +473,8 @@ public class Weapon extends Item {
 			WeaponClientStorage weaponInstanceStorage = getWeaponClientStorage(entityPlayer);
 			if(weaponInstanceStorage != null) {
 				Tags.setZoom(itemStack, weaponInstanceStorage.getZoom());
+			} else {
+				Tags.setZoom(itemStack, builder.zoom);
 			}
 			slowDown(entityPlayer);
 			Tags.setAimed(itemStack, true);
@@ -562,11 +567,21 @@ public class Weapon extends Item {
 	}
 	
 	public void changeZoom(EntityPlayer player, float factor) {
+		ItemStack itemStack = player.getHeldItem();
+		ensureItemStack(itemStack);
+		float zoom = builder.zoom * factor;
+		Tags.setZoom(itemStack, zoom);
+		modContext.getChannel().sendTo(ChangeSettingsMessage.createChangeZoomMessage(this, zoom), (EntityPlayerMP) player);
+	}
+	
+	void clientChangeZoom(EntityPlayer player, float zoom) {
 		WeaponClientStorage weaponInstanceStorage = getWeaponClientStorage(player);
 		if(weaponInstanceStorage != null) {
-			weaponInstanceStorage.setZoom(builder.zoom * factor);
+			weaponInstanceStorage.setZoom(zoom);
 		}
 	}
+	
+	
 
 	Map<ItemAttachment<Weapon>, CompatibleAttachment<Weapon>> getCompatibleAttachments() {
 		return builder.compatibleAttachments;

@@ -100,7 +100,8 @@ public class CommonModContext implements ModContext {
 
 	@Override
 	public WeaponClientStorageManager getWeaponClientStorageManager() {
-		throw new IllegalStateException("Attempted to get instance of " + WeaponClientStorageManager.class.getSimpleName());
+		return null;
+		//throw new IllegalStateException("Attempted to get instance of " + WeaponClientStorageManager.class.getSimpleName());
 	}
 	
 	
