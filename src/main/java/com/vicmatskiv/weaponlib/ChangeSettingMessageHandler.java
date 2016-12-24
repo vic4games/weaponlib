@@ -33,10 +33,9 @@ public class ChangeSettingMessageHandler implements IMessageHandler<ChangeSettin
 			if(targetWeapon != null) {
 				if(message.recoilChanged()) {
 					targetWeapon.clientChangeRecoil(player, message.getRecoil());
-				} else if(message.zoomChanged()) {
+				} /*else if(message.zoomChanged()) {
 					targetWeapon.clientChangeZoom(player, message.getZoom());
-				}
-				
+				}*/
 			}
 			
 		}

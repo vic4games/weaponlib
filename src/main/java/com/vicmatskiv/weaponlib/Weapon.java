@@ -470,11 +470,13 @@ public class Weapon extends Item {
 			Tags.setAimed(itemStack, false);
 			restoreNormalSpeed(entityPlayer);
 		} else {
-			WeaponClientStorage weaponInstanceStorage = getWeaponClientStorage(entityPlayer);
-			if(weaponInstanceStorage != null) {
-				Tags.setZoom(itemStack, weaponInstanceStorage.getZoom());
+			float allowedZoom = Tags.getAllowedZoom(itemStack);
+			if(allowedZoom > 0f) {
+				Tags.setZoom(itemStack, allowedZoom);
 			} else {
-				Tags.setZoom(itemStack, builder.zoom);
+				allowedZoom = builder.zoom;
+				Tags.setAllowedZoom(itemStack, allowedZoom);
+				Tags.setZoom(itemStack, allowedZoom);
 			}
 			slowDown(entityPlayer);
 			Tags.setAimed(itemStack, true);
@@ -570,18 +572,16 @@ public class Weapon extends Item {
 		ItemStack itemStack = player.getHeldItem();
 		ensureItemStack(itemStack);
 		float zoom = builder.zoom * factor;
-		Tags.setZoom(itemStack, zoom);
-		modContext.getChannel().sendTo(ChangeSettingsMessage.createChangeZoomMessage(this, zoom), (EntityPlayerMP) player);
+		Tags.setAllowedZoom(itemStack, zoom);
+		//modContext.getChannel().sendTo(ChangeSettingsMessage.createChangeZoomMessage(this, zoom), (EntityPlayerMP) player);
 	}
 	
-	void clientChangeZoom(EntityPlayer player, float zoom) {
-		WeaponClientStorage weaponInstanceStorage = getWeaponClientStorage(player);
-		if(weaponInstanceStorage != null) {
-			weaponInstanceStorage.setZoom(zoom);
-		}
-	}
-	
-	
+//	void clientChangeZoom(EntityPlayer player, float zoom) {
+//		WeaponClientStorage weaponInstanceStorage = getWeaponClientStorage(player);
+//		if(weaponInstanceStorage != null) {
+//			weaponInstanceStorage.setZoom(zoom);
+//		}
+//	}
 
 	Map<ItemAttachment<Weapon>, CompatibleAttachment<Weapon>> getCompatibleAttachments() {
 		return builder.compatibleAttachments;
