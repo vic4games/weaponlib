@@ -447,10 +447,7 @@ public class Weapon extends Item {
 	
 	@Override
 	public ItemStack onItemRightClick(ItemStack itemStack, World world, EntityPlayer entityPlayer) {
-		if(world.isRemote) {
-			toggleAiming(itemStack, entityPlayer);
-		}
-		
+		toggleAiming(itemStack, entityPlayer);
 		return itemStack;
 	}
 	
