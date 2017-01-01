@@ -460,6 +460,9 @@ public class Weapon extends Item {
 	void toggleAiming(ItemStack itemStack, EntityPlayer entityPlayer) {
 		
 		ensureItemStack(itemStack);
+		if(Weapon.isModifying(itemStack)) {
+			return;
+		}
 		float currentZoom = Tags.getZoom(itemStack);
 		
 		if (currentZoom != 1.0f || entityPlayer.isSprinting()) {
