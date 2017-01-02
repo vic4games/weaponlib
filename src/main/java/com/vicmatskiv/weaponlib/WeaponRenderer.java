@@ -28,6 +28,7 @@ import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.entity.RenderPlayer;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
@@ -80,11 +81,20 @@ public class WeaponRenderer implements IItemRenderer {
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonRightHandPositioningRecoiled;
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonRightHandPositioningShooting;
 		
+		private BiConsumer<EntityPlayer, ItemStack> firstPersonMagazinePositioning;
+		
 		private Random random = new Random();
 		
 		private List<Transition> firstPersonPositioningReloading;
+		private List<Transition> firstPersonMagazinePositioningReloading;
 		private List<Transition> firstPersonLeftHandPositioningReloading;
 		private List<Transition> firstPersonRightHandPositioningReloading;
+		
+		private List<Transition> firstPersonPositioningUnloading;
+		private List<Transition> firstPersonMagazinePositioningUnloading;
+		private List<Transition> firstPersonLeftHandPositioningUnloading;
+		private List<Transition> firstPersonRightHandPositioningUnloading;
+		
 		private String modId;
 		
 		private float normalRandomizingRate = DEFAULT_RANDOMIZING_RATE; // movements per second, e.g. 0.25 = 0.25 movements per second = 1 movement in 3 minutes
@@ -201,6 +211,12 @@ public class WeaponRenderer implements IItemRenderer {
 			return this;
 		}
 		
+		@SafeVarargs
+		public final Builder withFirstPersonPositioningUnloading(Transition ...transitions) {
+			this.firstPersonPositioningUnloading = Arrays.asList(transitions);
+			return this;
+		}
+		
 		public Builder withFirstPersonPositioningModifying(BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningModifying) {
 			this.firstPersonPositioningModifying = firstPersonPositioningModifying;
 			return this;
@@ -259,8 +275,20 @@ public class WeaponRenderer implements IItemRenderer {
 		}
 		
 		@SafeVarargs
+		public final Builder withFirstPersonLeftHandPositioningUnloading(Transition ...transitions) {
+			this.firstPersonLeftHandPositioningUnloading = Arrays.asList(transitions);
+			return this;
+		}
+		
+		@SafeVarargs
 		public final Builder withFirstPersonRightHandPositioningReloading(Transition ...transitions) {
 			this.firstPersonRightHandPositioningReloading = Arrays.asList(transitions);
+			return this;
+		}
+		
+		@SafeVarargs
+		public final Builder withFirstPersonRightHandPositioningUnloading(Transition ...transitions) {
+			this.firstPersonRightHandPositioningUnloading = Arrays.asList(transitions);
 			return this;
 		}
 		
@@ -270,6 +298,23 @@ public class WeaponRenderer implements IItemRenderer {
 		{
 			this.firstPersonLeftHandPositioningModifying = leftHand;
 			this.firstPersonRightHandPositioningModifying = rightHand;
+			return this;
+		}
+		
+		public Builder withFirstPersonMagazinePositioning(BiConsumer<EntityPlayer, ItemStack> positioning) {
+			this.firstPersonMagazinePositioning = positioning;
+			return this;
+		}
+		
+		@SafeVarargs
+		public final Builder withFirstPersonMagazinePositioningReloading(Transition ...transitions) {
+			this.firstPersonMagazinePositioningReloading = Arrays.asList(transitions);
+			return this;
+		}
+		
+		@SafeVarargs
+		public final Builder withFirstPersonMagazinePositioningUnloading(Transition ...transitions) {
+			this.firstPersonMagazinePositioningReloading = Arrays.asList(transitions);
 			return this;
 		}
 
@@ -306,6 +351,10 @@ public class WeaponRenderer implements IItemRenderer {
 				firstPersonPositioningReloading = Collections.singletonList(new Transition(firstPersonPositioning, DEFAULT_ANIMATION_DURATION));
 			}
 			
+			if(firstPersonPositioningUnloading == null) {
+				firstPersonPositioningUnloading = Collections.singletonList(new Transition(firstPersonPositioning, DEFAULT_ANIMATION_DURATION));
+			}
+			
 			if(firstPersonPositioningRecoiled == null) {
 				firstPersonPositioningRecoiled = firstPersonPositioning;
 			}
@@ -340,6 +389,20 @@ public class WeaponRenderer implements IItemRenderer {
 				};
 			}
 			
+			// Magazine positioning
+			
+			if(firstPersonMagazinePositioningReloading == null) {
+				firstPersonMagazinePositioningReloading = firstPersonPositioningReloading.stream().map(t -> new Transition((p, i) -> {}, 0)).collect(Collectors.toList());
+			}
+			
+			if(firstPersonMagazinePositioningUnloading == null) {
+				firstPersonMagazinePositioningUnloading = firstPersonPositioningUnloading.stream().map(t -> new Transition((p, i) -> {}, 0)).collect(Collectors.toList());
+			}
+			
+			if(firstPersonMagazinePositioning == null) {
+				firstPersonMagazinePositioning = (player, itemStack) -> {};
+			}
+			
 			// Left hand positioning
 			
 			if(firstPersonLeftHandPositioning == null) {
@@ -348,6 +411,10 @@ public class WeaponRenderer implements IItemRenderer {
 			
 			if(firstPersonLeftHandPositioningReloading == null) {
 				firstPersonLeftHandPositioningReloading = firstPersonPositioningReloading.stream().map(t -> new Transition((p, i) -> {}, 0)).collect(Collectors.toList());
+			}
+			
+			if(firstPersonLeftHandPositioningUnloading == null) {
+				firstPersonLeftHandPositioningUnloading = firstPersonPositioningUnloading.stream().map(t -> new Transition((p, i) -> {}, 0)).collect(Collectors.toList());
 			}
 			
 			if(firstPersonLeftHandPositioningRecoiled == null) {
@@ -379,6 +446,10 @@ public class WeaponRenderer implements IItemRenderer {
 			if(firstPersonRightHandPositioningReloading == null) {
 				//firstPersonRightHandPositioningReloading = Collections.singletonList(new Transition(firstPersonRightHandPositioning, DEFAULT_ANIMATION_DURATION));
 				firstPersonRightHandPositioningReloading = firstPersonPositioningReloading.stream().map(t -> new Transition((p, i) -> {}, 0)).collect(Collectors.toList());
+			}
+			
+			if(firstPersonRightHandPositioningUnloading == null) {
+				firstPersonRightHandPositioningUnloading = firstPersonPositioningUnloading.stream().map(t -> new Transition((p, i) -> {}, 0)).collect(Collectors.toList());
 			}
 
 			if(firstPersonRightHandPositioningRecoiled == null) {
@@ -452,6 +523,8 @@ public class WeaponRenderer implements IItemRenderer {
 		Weapon weapon = (Weapon) itemStack.getItem();
 		if(Weapon.isModifying(itemStack)) {
 			currentState = builder.firstPersonPositioningModifying != null ? RenderableState.MODIFYING : RenderableState.NORMAL;
+		} else if(Weapon.isUnloadingStarted(player, itemStack)) {
+			currentState = RenderableState.UNLOADING;
 		} else if(Weapon.isReloadingConfirmed(player, itemStack)) {
 			currentState = RenderableState.RELOADING;
 		} else if(player.isSprinting() && builder.firstPersonPositioningRunning != null) {
@@ -528,45 +601,16 @@ public class WeaponRenderer implements IItemRenderer {
 			positioner.randomize(stateDescriptor.rate, stateDescriptor.amplitude);
 			
 			positioner.position(Part.WEAPON, renderContext);
+						
+			if(builder.model instanceof ModelWithAttachments) {
+				//TODO: get list of dynamic attachments instead of list of all the attachments
+				List<CompatibleAttachment<Weapon>> attachments = ((Weapon) item.getItem()).getActiveAttachments(item);
+				renderDynamicAttachments(positioner, renderContext, item, type, attachments , null,  0.0F, 0.0f, -0.4f, 0.0f, 0.0f, 0.08f);
+			}
 			
-			RenderPlayer render = (RenderPlayer) RenderManager.instance.getEntityRenderObject(player);
-			Minecraft.getMinecraft().getTextureManager().bindTexture(((AbstractClientPlayer) player).getLocationSkin());
+			renderLeftArm(player, renderContext, positioner);
 			
-			GL11.glPushMatrix();
-			
-			GL11.glScaled(1F, 1F, 1F);
-			
-			GL11.glTranslatef(0f, -1f, 0f);
-			
-			GL11.glRotatef(-10F, 1f, 0f, 0f);
-			GL11.glRotatef(0F, 0f, 1f, 0f);
-			GL11.glRotatef(10F, 0f, 0f, 1f);
-			
-			positioner.position(Part.LEFT_HAND, renderContext);
-			
-			GL11.glColor3f(1F, 1F, 1F);
-	        render.modelBipedMain.onGround = 0.0F;
-	        render.modelBipedMain.setRotationAngles(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0625F, player);
-	        render.modelBipedMain.bipedLeftArm.render(0.0625F);
-			
-			GL11.glPopMatrix();
-			
-			GL11.glPushMatrix();
-			GL11.glScaled(1F, 1F, 1F);
-			
-			GL11.glScaled(1F, 1F, 1F);
-			GL11.glTranslatef(-0.25f, 0f, 0.2f);
-			
-			GL11.glRotatef(5F, 1f, 0f, 0f);
-			GL11.glRotatef(25F, 0f, 1f, 0f);
-			GL11.glRotatef(0F, 0f, 0f, 1f);
-			
-			positioner.position(Part.RIGHT_HAND, renderContext);
-			GL11.glColor3f(1F, 1F, 1F);
-	        render.modelBipedMain.onGround = 0.0F;
-	        render.modelBipedMain.setRotationAngles(0.0F, 0.3F, 0.0F, 0.0F, 0.0F, 0.0625F, player);
-	        render.modelBipedMain.bipedRightArm.render(0.0625F);
-			GL11.glPopMatrix();
+			renderRightArm(player, renderContext, positioner);
 	        
 			break;
 		default:
@@ -587,16 +631,115 @@ public class WeaponRenderer implements IItemRenderer {
 		builder.model.render(null,  0.0F, 0.0f, -0.4f, 0.0f, 0.0f, 0.08f);
 		if(builder.model instanceof ModelWithAttachments) {
 			List<CompatibleAttachment<Weapon>> attachments = ((Weapon) item.getItem()).getActiveAttachments(item);
-			((ModelWithAttachments)builder.model).renderAttachments(builder.modId, item, 
-					type, attachments , null,  0.0F, 0.0f, -0.4f, 0.0f, 0.0f, 0.08f);
+			renderStaticAttachments(item, type, attachments , null,  0.0F, 0.0f, -0.4f, 0.0f, 0.0f, 0.08f);
 		}
 		
 		GL11.glPopMatrix();
 	   
 	}
 	
+	private void renderDynamicAttachments(Positioner<Part, RenderContext> positioner, RenderContext renderContext,
+			ItemStack itemStack, ItemRenderType type, List<CompatibleAttachment<Weapon>> attachments, Entity entity, float f, float f1, float f2, float f3, float f4, float f5) {
+		for(CompatibleAttachment<?> compatibleAttachment: attachments) {
+			if(compatibleAttachment != null) {
+				ItemAttachment<?> itemAttachment = compatibleAttachment.getAttachment();
+				if(itemAttachment instanceof ItemMagazine) {
+					positioner.position(Part.MAGAZINE, renderContext);
+					for(Tuple<ModelBase, String> texturedModel: compatibleAttachment.getAttachment().getTexturedModels()) {
+						Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(builder.modId 
+								+ ":textures/models/" + texturedModel.getV()));
+						GL11.glPushMatrix();
+						GL11.glPushAttrib(GL11.GL_ENABLE_BIT);
+						if(compatibleAttachment.getPositioning() != null) {
+							compatibleAttachment.getPositioning().accept(texturedModel.getU());
+						}
+						texturedModel.getU().render(entity, f, f1, f2, f3, f4, f5);
+						
+						CustomRenderer postRenderer = compatibleAttachment.getAttachment().getPostRenderer();
+						if(postRenderer != null) {
+							postRenderer.render(type, itemStack);
+						}
+						GL11.glPopAttrib();
+						GL11.glPopMatrix();
+					}
+				}
+			}
+		}
+	}
+	
+	private void renderStaticAttachments(ItemStack itemStack, ItemRenderType type, List<CompatibleAttachment<Weapon>> attachments, Entity entity, float f, float f1, float f2, float f3, float f4, float f5) {
+		for(CompatibleAttachment<?> compatibleAttachment: attachments) {
+			if(compatibleAttachment != null && !(compatibleAttachment.getAttachment() instanceof ItemMagazine)) {
+				for(Tuple<ModelBase, String> texturedModel: compatibleAttachment.getAttachment().getTexturedModels()) {
+					Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(builder.modId 
+							+ ":textures/models/" + texturedModel.getV()));
+					GL11.glPushMatrix();
+					GL11.glPushAttrib(GL11.GL_ENABLE_BIT);
+					if(compatibleAttachment.getPositioning() != null) {
+						compatibleAttachment.getPositioning().accept(texturedModel.getU());
+					}
+					texturedModel.getU().render(entity, f, f1, f2, f3, f4, f5);
+					
+					CustomRenderer postRenderer = compatibleAttachment.getAttachment().getPostRenderer();
+					if(postRenderer != null) {
+						postRenderer.render(type, itemStack);
+					}
+					GL11.glPopAttrib();
+					GL11.glPopMatrix();
+				}
+			}
+		}
+	}
+
+	private void renderRightArm(EntityPlayer player, RenderContext renderContext,
+			Positioner<Part, RenderContext> positioner) {
+		RenderPlayer render = (RenderPlayer) RenderManager.instance.getEntityRenderObject(player);
+		Minecraft.getMinecraft().getTextureManager().bindTexture(((AbstractClientPlayer) player).getLocationSkin());
+		GL11.glPushMatrix();
+		GL11.glScaled(1F, 1F, 1F);
+		
+		GL11.glScaled(1F, 1F, 1F);
+		GL11.glTranslatef(-0.25f, 0f, 0.2f);
+		
+		GL11.glRotatef(5F, 1f, 0f, 0f);
+		GL11.glRotatef(25F, 0f, 1f, 0f);
+		GL11.glRotatef(0F, 0f, 0f, 1f);
+		
+		positioner.position(Part.RIGHT_HAND, renderContext);
+		GL11.glColor3f(1F, 1F, 1F);
+		render.modelBipedMain.onGround = 0.0F;
+		render.modelBipedMain.setRotationAngles(0.0F, 0.3F, 0.0F, 0.0F, 0.0F, 0.0625F, player);
+		render.modelBipedMain.bipedRightArm.render(0.0625F);
+		GL11.glPopMatrix();
+	}
+
+	private void renderLeftArm(EntityPlayer player, RenderContext renderContext,
+			Positioner<Part, RenderContext> positioner) {
+		RenderPlayer render = (RenderPlayer) RenderManager.instance.getEntityRenderObject(player);
+		Minecraft.getMinecraft().getTextureManager().bindTexture(((AbstractClientPlayer) player).getLocationSkin());
+		
+		GL11.glPushMatrix();
+		
+		GL11.glScaled(1F, 1F, 1F);
+		
+		GL11.glTranslatef(0f, -1f, 0f);
+		
+		GL11.glRotatef(-10F, 1f, 0f, 0f);
+		GL11.glRotatef(0F, 0f, 1f, 0f);
+		GL11.glRotatef(10F, 0f, 0f, 1f);
+		
+		positioner.position(Part.LEFT_HAND, renderContext);
+		
+		GL11.glColor3f(1F, 1F, 1F);
+		render.modelBipedMain.onGround = 0.0F;
+		render.modelBipedMain.setRotationAngles(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0625F, player);
+		render.modelBipedMain.bipedLeftArm.render(0.0625F);
+		
+		GL11.glPopMatrix();
+	}
+	
 	private enum Part {
-		WEAPON, RIGHT_HAND, LEFT_HAND
+		WEAPON, RIGHT_HAND, LEFT_HAND, MAGAZINE
 	};
 	
 	private BiConsumer<Part, RenderContext> createWeaponPartPositionFunction(BiConsumer<EntityPlayer, ItemStack> weaponPositionFunction) {
@@ -612,18 +755,23 @@ public class WeaponRenderer implements IItemRenderer {
 		}
 	}
 	
-	private List<MultipartTransition<Part, RenderContext>> getComplexTransition(List<Transition> wt, List<Transition> lht, List<Transition> rht) {
+	private List<MultipartTransition<Part, RenderContext>> getComplexTransition(List<Transition> wt, 
+			List<Transition> lht, List<Transition> rht, List<Transition> mt) {
 		List<MultipartTransition<Part, RenderContext>> result = new ArrayList<>();
 		for(int i = 0; i < wt.size(); i++) {
 			Transition p = wt.get(i);
 			Transition l = lht.get(i);
 			Transition r = rht.get(i);
+			Transition m = mt.get(i);
 			
 			MultipartTransition<Part, RenderContext> t = new MultipartTransition<Part, RenderContext>(p.getDuration(), p.getPause())
 					.withPartPositionFunction(Part.WEAPON, createWeaponPartPositionFunction(p.getPositioning()))
 					.withPartPositionFunction(Part.LEFT_HAND, createWeaponPartPositionFunction(l.getPositioning()))
 					.withPartPositionFunction(Part.RIGHT_HAND, createWeaponPartPositionFunction(r.getPositioning()));
 			
+			if(m != null) {
+				t.withPartPositionFunction(Part.MAGAZINE, createWeaponPartPositionFunction(m.getPositioning()));
+			}
 			result.add(t);
 		}
 		return result;
@@ -633,11 +781,13 @@ public class WeaponRenderer implements IItemRenderer {
 			BiConsumer<EntityPlayer, ItemStack> w,
 			BiConsumer<EntityPlayer, ItemStack> lh,
 			BiConsumer<EntityPlayer, ItemStack> rh,
+			BiConsumer<EntityPlayer, ItemStack> m,
 			int duration) {
 		MultipartTransition<Part, RenderContext> mt = new MultipartTransition<Part, RenderContext>(duration, 0)
 				.withPartPositionFunction(Part.WEAPON, createWeaponPartPositionFunction(w))
 				.withPartPositionFunction(Part.LEFT_HAND, createWeaponPartPositionFunction(lh))
-				.withPartPositionFunction(Part.RIGHT_HAND, createWeaponPartPositionFunction(rh));
+				.withPartPositionFunction(Part.RIGHT_HAND, createWeaponPartPositionFunction(rh))
+				.withPartPositionFunction(Part.MAGAZINE, createWeaponPartPositionFunction(m));
 		return Collections.singletonList(mt);
 	}
 	
@@ -650,35 +800,47 @@ public class WeaponRenderer implements IItemRenderer {
 				return getSimpleTransition(builder.firstPersonPositioningModifying,
 						builder.firstPersonLeftHandPositioningModifying,
 						builder.firstPersonRightHandPositioningModifying,
+						builder.firstPersonMagazinePositioning,
 						DEFAULT_ANIMATION_DURATION);
 			case RUNNING:
 				return getSimpleTransition(builder.firstPersonPositioningRunning,
 						builder.firstPersonLeftHandPositioningRunning,
 						builder.firstPersonRightHandPositioningRunning,
+						builder.firstPersonMagazinePositioning,
 						DEFAULT_ANIMATION_DURATION);
+			case UNLOADING:
+				return getComplexTransition(builder.firstPersonPositioningUnloading, 
+						builder.firstPersonLeftHandPositioningUnloading,
+						builder.firstPersonRightHandPositioningUnloading,
+						builder.firstPersonMagazinePositioningUnloading);
 			case RELOADING:
 				return getComplexTransition(builder.firstPersonPositioningReloading, 
 						builder.firstPersonLeftHandPositioningReloading,
-						builder.firstPersonRightHandPositioningReloading);
+						builder.firstPersonRightHandPositioningReloading,
+						builder.firstPersonMagazinePositioningReloading);
 			case RECOILED:
 				return getSimpleTransition(builder.firstPersonPositioningRecoiled, 
 						builder.firstPersonLeftHandPositioningRecoiled,
 						builder.firstPersonRightHandPositioningRecoiled,
+						builder.firstPersonMagazinePositioning,
 						DEFAULT_RECOIL_ANIMATION_DURATION);
 			case SHOOTING:
 				return getSimpleTransition(builder.firstPersonPositioningShooting, 
 						builder.firstPersonLeftHandPositioningShooting,
 						builder.firstPersonRightHandPositioningShooting,
+						builder.firstPersonMagazinePositioning,
 						DEFAULT_RECOIL_ANIMATION_DURATION); // TODO: is it really recoil duration
 			case NORMAL:
 				return getSimpleTransition(builder.firstPersonPositioning, 
 						builder.firstPersonLeftHandPositioning,
 						builder.firstPersonRightHandPositioning,
+						builder.firstPersonMagazinePositioning,
 						DEFAULT_ANIMATION_DURATION);
 			case ZOOMING:
 				return getSimpleTransition(builder.firstPersonPositioningZooming, 
 						builder.firstPersonLeftHandPositioningZooming,
 						builder.firstPersonRightHandPositioningZooming,
+						builder.firstPersonMagazinePositioning,
 						DEFAULT_ANIMATION_DURATION);
 			default:
 				break;
