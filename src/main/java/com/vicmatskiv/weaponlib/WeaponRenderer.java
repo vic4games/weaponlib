@@ -314,7 +314,7 @@ public class WeaponRenderer implements IItemRenderer {
 		
 		@SafeVarargs
 		public final Builder withFirstPersonMagazinePositioningUnloading(Transition ...transitions) {
-			this.firstPersonMagazinePositioningReloading = Arrays.asList(transitions);
+			this.firstPersonMagazinePositioningUnloading = Arrays.asList(transitions);
 			return this;
 		}
 
@@ -579,6 +579,7 @@ public class WeaponRenderer implements IItemRenderer {
 		GL11.glScaled(-1F, -1F, 1F);
 		EntityPlayer player = Minecraft.getMinecraft().thePlayer;
 		RenderContext renderContext = new RenderContext(player, item);
+		Positioner<Part, RenderContext> positioner = null;
 		switch (type)
 		{
 		case ENTITY:
@@ -590,23 +591,18 @@ public class WeaponRenderer implements IItemRenderer {
 		case EQUIPPED:
 			
 			builder.thirdPersonPositioning.accept(player, item);
+			
 			break;
 		case EQUIPPED_FIRST_PERSON:
 			
 			StateDescriptor stateDescriptor = getStateDescriptor(player, item);
 			MultipartPositioning<Part, RenderContext> multipartPositioning = stateDescriptor.stateManager.nextPositioning();
 			
-			Positioner<Part, RenderContext> positioner = multipartPositioning.getPositioner();
+			positioner = multipartPositioning.getPositioner();
 						
 			positioner.randomize(stateDescriptor.rate, stateDescriptor.amplitude);
 			
 			positioner.position(Part.WEAPON, renderContext);
-						
-			if(builder.model instanceof ModelWithAttachments) {
-				//TODO: get list of dynamic attachments instead of list of all the attachments
-				List<CompatibleAttachment<Weapon>> attachments = ((Weapon) item.getItem()).getActiveAttachments(item);
-				renderDynamicAttachments(positioner, renderContext, item, type, attachments , null,  0.0F, 0.0f, -0.4f, 0.0f, 0.0f, 0.08f);
-			}
 			
 			renderLeftArm(player, renderContext, positioner);
 			
@@ -630,6 +626,11 @@ public class WeaponRenderer implements IItemRenderer {
 		
 		builder.model.render(null,  0.0F, 0.0f, -0.4f, 0.0f, 0.0f, 0.08f);
 		if(builder.model instanceof ModelWithAttachments) {
+			//TODO: get list of dynamic attachments instead of list of all the attachments
+			List<CompatibleAttachment<Weapon>> attachments = ((Weapon) item.getItem()).getActiveAttachments(item);
+			renderDynamicAttachments(positioner, renderContext, item, type, attachments , null,  0.0F, 0.0f, -0.4f, 0.0f, 0.0f, 0.08f);
+		}
+		if(builder.model instanceof ModelWithAttachments) {
 			List<CompatibleAttachment<Weapon>> attachments = ((Weapon) item.getItem()).getActiveAttachments(item);
 			renderStaticAttachments(item, type, attachments , null,  0.0F, 0.0f, -0.4f, 0.0f, 0.0f, 0.08f);
 		}
@@ -640,11 +641,15 @@ public class WeaponRenderer implements IItemRenderer {
 	
 	private void renderDynamicAttachments(Positioner<Part, RenderContext> positioner, RenderContext renderContext,
 			ItemStack itemStack, ItemRenderType type, List<CompatibleAttachment<Weapon>> attachments, Entity entity, float f, float f1, float f2, float f3, float f4, float f5) {
+		GL11.glPushMatrix();
 		for(CompatibleAttachment<?> compatibleAttachment: attachments) {
 			if(compatibleAttachment != null) {
 				ItemAttachment<?> itemAttachment = compatibleAttachment.getAttachment();
 				if(itemAttachment instanceof ItemMagazine) {
-					positioner.position(Part.MAGAZINE, renderContext);
+					if(positioner != null) {
+						positioner.position(Part.MAGAZINE, renderContext);
+					}
+					
 					for(Tuple<ModelBase, String> texturedModel: compatibleAttachment.getAttachment().getTexturedModels()) {
 						Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(builder.modId 
 								+ ":textures/models/" + texturedModel.getV()));
@@ -665,6 +670,7 @@ public class WeaponRenderer implements IItemRenderer {
 				}
 			}
 		}
+		GL11.glPopMatrix();
 	}
 	
 	private void renderStaticAttachments(ItemStack itemStack, ItemRenderType type, List<CompatibleAttachment<Weapon>> attachments, Entity entity, float f, float f1, float f2, float f3, float f4, float f5) {

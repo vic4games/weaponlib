@@ -8,6 +8,7 @@ import net.minecraft.client.settings.KeyBinding;
 public class KeyBindings {
 
 	public static KeyBinding reloadKey;
+	//public static KeyBinding unloadKey;
 	public static KeyBinding attachmentKey;
 	public static KeyBinding upArrowKey;
 	public static KeyBinding downArrowKey;
@@ -19,6 +20,9 @@ public class KeyBindings {
 		
 		reloadKey = new KeyBinding("key.reload", Keyboard.KEY_R,
 				"key.categories.weaponlib");
+		
+//		unloadKey = new KeyBinding("key.unload", Keyboard.KEY_U,
+//				"key.categories.weaponlib");
 		
 		laserSwitchKey = new KeyBinding("key.laser", Keyboard.KEY_L,
 				"key.categories.weaponlib");
@@ -39,6 +43,7 @@ public class KeyBindings {
 				"key.categories.weaponlib");
 		
 		ClientRegistry.registerKeyBinding(reloadKey);
+//		ClientRegistry.registerKeyBinding(unloadKey);
 		ClientRegistry.registerKeyBinding(attachmentKey);
 		ClientRegistry.registerKeyBinding(upArrowKey);
 		ClientRegistry.registerKeyBinding(downArrowKey);

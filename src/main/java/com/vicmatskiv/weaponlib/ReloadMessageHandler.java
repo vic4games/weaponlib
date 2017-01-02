@@ -46,7 +46,7 @@ public class ReloadMessageHandler implements IMessageHandler<ReloadMessage, IMes
 		if(itemStack != null && itemStack.getItem() instanceof Weapon) {
 			Weapon targetWeapon = message.getWeapon();
 			if(message.getType() == Type.LOAD) {
-				reloadManager.completeReload(itemStack, player, message.getAmmo(), itemStack.getItem() != targetWeapon);
+				reloadManager.completeReload(itemStack, player, message.getMagazine(), message.getAmmo(), itemStack.getItem() != targetWeapon);
 			} else {
 				reloadManager.completeUnload(itemStack, player);
 			}

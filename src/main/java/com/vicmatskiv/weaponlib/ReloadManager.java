@@ -18,6 +18,24 @@ public class ReloadManager {
 	ReloadManager(ModContext modContext) {
 		this.modContext = modContext;
 	}
+	
+	@SideOnly(Side.CLIENT)
+	void toggleReload(ItemStack itemStack, EntityPlayer player) {
+		if(!(itemStack.getItem() instanceof Weapon)) {
+			return;
+		}
+		
+		if(Weapon.isModifying(itemStack)) {
+			return;
+		}
+		
+		ItemAttachment<Weapon> existingMagazine = modContext.getAttachmentManager().getActiveAttachment(itemStack, AttachmentCategory.MAGAZINE);
+		if(existingMagazine != null) {
+			initiateUnload(itemStack, player);
+		} else {
+			initiateReload(itemStack, player);
+		}
+	}
 
 	@SideOnly(Side.CLIENT)
 	void initiateReload(ItemStack itemStack, EntityPlayer player) {
@@ -41,7 +59,7 @@ public class ReloadManager {
 	}
 
 	@SideOnly(Side.CLIENT)
-	void completeReload(ItemStack itemStack, EntityPlayer player, int ammo, boolean forceQuietReload) {
+	void completeReload(ItemStack itemStack, EntityPlayer player, ItemMagazine itemMagazine, int ammo, boolean forceQuietReload) {
 		Weapon weapon = (Weapon) itemStack.getItem();
 		WeaponClientStorage storage = modContext.getWeaponClientStorageManager().getWeaponClientStorage(player, weapon);
 		if (storage == null) {
@@ -50,7 +68,7 @@ public class ReloadManager {
 			
 		if (storage.getState() == State.RELOAD_REQUESTED) {
 			storage.getCurrentAmmo().set(ammo);
-			if (ammo > 0 && !forceQuietReload) {
+			if ((itemMagazine != null || ammo > 0) && !forceQuietReload) {
 				storage.setState(State.RELOAD_CONFIRMED);
 				long reloadingStopsAt = player.worldObj.getTotalWorldTime() + weapon.builder.reloadingTimeout;
 				storage.getReloadingStopsAt().set(reloadingStopsAt);
@@ -62,17 +80,28 @@ public class ReloadManager {
 	}
 
 	//@SideOnly(Side.SERVER)
+	@SuppressWarnings("unchecked")
 	void reload(ItemStack weaponItemStack, EntityPlayer player) {
 		Weapon weapon = (Weapon) weaponItemStack.getItem();
 		if (weaponItemStack.stackTagCompound != null && !player.isSprinting()) {
 			List<ItemMagazine> compatibleMagazines = weapon.getCompatibleMagazines();
 			if(!compatibleMagazines.isEmpty()) {
-				int ammo = tryConsumingMagazine(weapon, compatibleMagazines, player);
-				if(ammo > 0) {
-					Tags.setAmmo(weaponItemStack, ammo);
-					player.worldObj.playSoundToNearExcept(player, weapon.builder.reloadSound, 1.0F, 1.0F);
+				ItemAttachment<Weapon> existingMagazine = modContext.getAttachmentManager().getActiveAttachment(weaponItemStack, AttachmentCategory.MAGAZINE);
+				int ammo = Tags.getAmmo(weaponItemStack);
+				ItemMagazine newMagazine = null;
+				if(existingMagazine == null) {
+					ammo = 0;
+					ItemStack magazineItemStack = tryConsumingMagazine(weapon, compatibleMagazines, player);
+					if(magazineItemStack != null) {
+						newMagazine = (ItemMagazine) magazineItemStack.getItem();
+						ammo = Tags.getAmmo(magazineItemStack);
+						Tags.setAmmo(weaponItemStack, ammo);
+						modContext.getAttachmentManager().addAttachment((ItemAttachment<Weapon>) magazineItemStack.getItem(), weaponItemStack, player);
+						player.worldObj.playSoundToNearExcept(player, weapon.builder.reloadSound, 1.0F, 1.0F);
+					}
 				}
-				modContext.getChannel().sendTo(new ReloadMessage(weapon, ammo), (EntityPlayerMP) player);
+				modContext.getChannel().sendTo(new ReloadMessage(weapon, ReloadMessage.Type.LOAD, newMagazine, ammo), (EntityPlayerMP) player);
+				
 			} else if (player.inventory.consumeInventoryItem(weapon.builder.ammo)) {
 				Tags.setAmmo(weaponItemStack, weapon.builder.ammoCapacity);
 				modContext.getChannel().sendTo(new ReloadMessage(weapon, weapon.builder.ammoCapacity), (EntityPlayerMP) player);
@@ -84,16 +113,14 @@ public class ReloadManager {
 		}
 	}
 	
-	private int tryConsumingMagazine(Weapon weapon, List<ItemMagazine> compatibleMagazines, EntityPlayer player) {
-		int ammo = 0;
+	private ItemStack tryConsumingMagazine(Weapon weapon, List<ItemMagazine> compatibleMagazines, EntityPlayer player) {
+		ItemStack magazineItemStack = null;
 		for(ItemMagazine magazine: compatibleMagazines) {
-			ItemStack magazineItemStack;
 			if((magazineItemStack = consumeInventoryItem(magazine, player)) != null) {
-				ammo = Tags.getAmmo(magazineItemStack);
 				break;
 			}
 		}
-		return ammo;
+		return magazineItemStack;
 	}
 	
 	private ItemStack consumeInventoryItem(Item p_146026_1_, EntityPlayer player)

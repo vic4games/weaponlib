@@ -34,9 +34,16 @@ public class WeaponKeyInputHandler {
         	ItemStack itemStack = player.getHeldItem();    		
     		if(itemStack != null && itemStack.getItem() instanceof Weapon) {
     			//((Weapon) itemStack.getItem()).initiateReload(itemStack, player);
-    			reloadManager.initiateReload(itemStack, player);
+    			reloadManager.toggleReload(itemStack, player);
     		}
-        }
+        } /* else if(KeyBindings.unloadKey.isPressed()) {
+        	EntityPlayer player = entityPlayerSupplier.apply(null);
+        	ItemStack itemStack = player.getHeldItem();    		
+    		if(itemStack != null && itemStack.getItem() instanceof Weapon) {
+    			//((Weapon) itemStack.getItem()).initiateReload(itemStack, player);
+    			reloadManager.initiateUnload(itemStack, player);
+    		}
+        } */
         
         else if(KeyBindings.laserSwitchKey.isPressed()) {
         	channel.sendToServer(new LaserSwitchMessage()); 
