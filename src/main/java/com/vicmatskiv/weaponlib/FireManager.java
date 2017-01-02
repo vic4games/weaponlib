@@ -5,6 +5,7 @@ import java.util.Random;
 import com.vicmatskiv.weaponlib.Weapon.State;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
 public class FireManager {
@@ -71,6 +72,11 @@ public class FireManager {
 				Tags.setAimed(itemStack, true);
 			}
 			Tags.setAmmo(itemStack, currentAmmo - 1);
+			ItemAttachment<Weapon> magazine = modContext.getAttachmentManager().getActiveAttachment(itemStack, AttachmentCategory.MAGAZINE);
+			if(magazine != null) {
+				ItemStack magazineStack = getItemStack(magazine, player);
+				Tags.setAmmo(magazineStack, currentAmmo);
+			}
 			for(int i = 0; i < weapon.builder.pellets; i++) {
 				player.worldObj.spawnEntityInWorld(weapon.builder.spawnEntityWith.apply(weapon, player));
 			}
@@ -118,4 +124,18 @@ public class FireManager {
 			storage.setState(State.READY);
 		}
 	}
+	
+	private static ItemStack getItemStack(Item item, EntityPlayer player)
+    {
+		ItemStack itemStack = null;
+        for (int i = 0; i < player.inventory.mainInventory.length; ++i)
+        {
+            if (player.inventory.mainInventory[i] != null && player.inventory.mainInventory[i].getItem() == item) {
+            	itemStack = player.inventory.mainInventory[i];
+            	break;
+            }
+        }
+
+        return itemStack;
+    }
 }
