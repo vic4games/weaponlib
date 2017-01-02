@@ -1,27 +1,60 @@
 package com.vicmatskiv.weaponlib;
 
 import net.minecraft.client.model.ModelBase;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.world.World;
 
 public class ItemMagazine extends ItemAttachment<Weapon> {
+	
+	private final int DEFAULT_MAX_STACK_SIZE = 1;
+	
+	private int ammo;
 
-	public ItemMagazine(String modId, AttachmentCategory category, ModelBase attachment, String textureName,
-			String crosshair) {
-		super(modId, category, attachment, textureName, crosshair);
+	public ItemMagazine(String modId, ModelBase model, String textureName, int ammo) {
+		this(modId, model, textureName, ammo, null, null);
 	}
 
-	public ItemMagazine(String modId, AttachmentCategory category, ModelBase attachment, String textureName,
-			String crosshair, com.vicmatskiv.weaponlib.ItemAttachment.ApplyHandler<Weapon> apply,
-			com.vicmatskiv.weaponlib.ItemAttachment.ApplyHandler<Weapon> remove) {
-		super(modId, category, attachment, textureName, crosshair, apply, remove);
-	}
-
-	public ItemMagazine(String modId, AttachmentCategory category, String crosshair,
+	public ItemMagazine(String modId, ModelBase model, String textureName, int ammo,
 			com.vicmatskiv.weaponlib.ItemAttachment.ApplyHandler<Weapon> apply,
 			com.vicmatskiv.weaponlib.ItemAttachment.ApplyHandler<Weapon> remove) {
-		super(modId, category, crosshair, apply, remove);
+		super(modId, AttachmentCategory.MAGAZINE, model, textureName, null, apply, remove);
+		this.ammo = ammo;
+		setMaxStackSize(DEFAULT_MAX_STACK_SIZE);
 	}
-
-	public ItemMagazine(String modId, AttachmentCategory category, String crosshair) {
-		super(modId, category, crosshair);
+	
+	ItemStack createItemStack() {
+		ItemStack attachmentItemStack = new ItemStack(this);
+		ensureItemStack(attachmentItemStack);
+		return attachmentItemStack;
+	}
+	
+	private void ensureItemStack(ItemStack itemStack) {
+		if (itemStack.stackTagCompound == null) {
+			itemStack.stackTagCompound = new NBTTagCompound();
+			Tags.setAmmo(itemStack, ammo);
+		}
+	}
+	
+	@Override
+	public void onCreated(ItemStack stack, World p_77622_2_, EntityPlayer p_77622_3_) {
+		ensureItemStack(stack);
+		super.onCreated(stack, p_77622_2_, p_77622_3_);
+	}
+	
+	@Override
+	public boolean onItemUseFirst(ItemStack stack, EntityPlayer player, World world, int x, int y, int z, int side,
+			float hitX, float hitY, float hitZ) {
+		ensureItemStack(stack);
+		return super.onItemUseFirst(stack, player, world, x, y, z, side, hitX, hitY, hitZ);
+	}
+	
+	@Override
+	public void onUpdate(ItemStack stack, World p_77663_2_, Entity p_77663_3_, int p_77663_4_,
+			boolean p_77663_5_) {
+		ensureItemStack(stack);
+		super.onUpdate(stack, p_77663_2_, p_77663_3_, p_77663_4_, p_77663_5_);
 	}
 }

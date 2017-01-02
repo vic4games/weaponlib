@@ -10,7 +10,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 
 public class ReloadManager {
 	
@@ -200,25 +199,22 @@ public class ReloadManager {
 	void unload(ItemStack weaponItemStack, int ammo, EntityPlayer player) {
 		Weapon weapon = (Weapon) weaponItemStack.getItem();
 		if (weaponItemStack.stackTagCompound != null && !player.isSprinting()) {
-			{
-				// TODO: add item back to the inventory
-				ItemAttachment<Weapon> attachment = modContext.getAttachmentManager().removeAttachment(AttachmentCategory.MAGAZINE, weaponItemStack, player);
-				if(attachment instanceof ItemMagazine) {
-					ItemStack attachmentItemStack = new ItemStack(attachment);
-					attachmentItemStack.stackTagCompound = new NBTTagCompound();
-					Tags.setAmmo(attachmentItemStack, ammo);
-					
-					if(!player.inventory.addItemStackToInventory(attachmentItemStack)) {
-						System.err.println("Cannot add item back to the inventory: " + attachment);
-					}
-				} else {
-					//throw new IllegalStateException();
+			// TODO: add item back to the inventory
+			ItemAttachment<Weapon> attachment = modContext.getAttachmentManager().removeAttachment(AttachmentCategory.MAGAZINE, weaponItemStack, player);
+			if(attachment instanceof ItemMagazine) {
+				ItemStack attachmentItemStack = ((ItemMagazine) attachment).createItemStack();
+				Tags.setAmmo(attachmentItemStack, ammo);
+
+				if(!player.inventory.addItemStackToInventory(attachmentItemStack)) {
+					System.err.println("Cannot add item back to the inventory: " + attachment);
 				}
-				
-				Tags.setAmmo(weaponItemStack, 0);
-				modContext.getChannel().sendTo(new ReloadMessage(weapon, ReloadMessage.Type.UNLOAD, null, 0), (EntityPlayerMP) player);
-				player.worldObj.playSoundToNearExcept(player, weapon.builder.reloadSound, 1.0F, 1.0F);
+			} else {
+				//throw new IllegalStateException();
 			}
+
+			Tags.setAmmo(weaponItemStack, 0);
+			modContext.getChannel().sendTo(new ReloadMessage(weapon, ReloadMessage.Type.UNLOAD, null, 0), (EntityPlayerMP) player);
+			player.worldObj.playSoundToNearExcept(player, weapon.builder.reloadSound, 1.0F, 1.0F);
 		}
 	}
 	
