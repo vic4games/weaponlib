@@ -57,4 +57,9 @@ public class ItemMagazine extends ItemAttachment<Weapon> {
 		ensureItemStack(stack);
 		super.onUpdate(stack, p_77663_2_, p_77663_3_, p_77663_4_, p_77663_5_);
 	}
+	
+	@Override
+	public Part getRenderingPart() {
+		return Part.MAGAZINE;
+	}
 }
