@@ -7,7 +7,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
-public class ItemMagazine extends ItemAttachment<Weapon> {
+public class ItemMagazine extends ItemAttachment<Weapon> implements Part {
 	
 	private final int DEFAULT_MAX_STACK_SIZE = 1;
 	
@@ -58,8 +58,4 @@ public class ItemMagazine extends ItemAttachment<Weapon> {
 		super.onUpdate(stack, p_77663_2_, p_77663_3_, p_77663_4_, p_77663_5_);
 	}
 	
-	@Override
-	public Part getRenderingPart() {
-		return Part.MAGAZINE;
-	}
 }

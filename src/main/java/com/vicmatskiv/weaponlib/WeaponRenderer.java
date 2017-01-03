@@ -83,17 +83,17 @@ public class WeaponRenderer implements IItemRenderer {
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonRightHandPositioningRecoiled;
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonRightHandPositioningShooting;
 		
-		private BiConsumer<EntityPlayer, ItemStack> firstPersonMagazinePositioning;
+		//private BiConsumer<EntityPlayer, ItemStack> firstPersonMagazinePositioning;
 		
 		private Random random = new Random();
 		
 		private List<Transition> firstPersonPositioningReloading;
-		private List<Transition> firstPersonMagazinePositioningReloading;
+		//private List<Transition> firstPersonMagazinePositioningReloading;
 		private List<Transition> firstPersonLeftHandPositioningReloading;
 		private List<Transition> firstPersonRightHandPositioningReloading;
 		
 		private List<Transition> firstPersonPositioningUnloading;
-		private List<Transition> firstPersonMagazinePositioningUnloading;
+		//private List<Transition> firstPersonMagazinePositioningUnloading;
 		private List<Transition> firstPersonLeftHandPositioningUnloading;
 		private List<Transition> firstPersonRightHandPositioningUnloading;
 		
@@ -307,25 +307,25 @@ public class WeaponRenderer implements IItemRenderer {
 			return this;
 		}
 		
-		public Builder withFirstPersonMagazinePositioning(BiConsumer<EntityPlayer, ItemStack> positioning) {
-			this.firstPersonMagazinePositioning = positioning;
-			return this;
-		}
+//		public Builder withFirstPersonMagazinePositioning(BiConsumer<EntityPlayer, ItemStack> positioning) {
+//			this.firstPersonMagazinePositioning = positioning;
+//			return this;
+//		}
 		
-		@SafeVarargs
-		public final Builder withFirstPersonMagazinePositioningReloading(Transition ...transitions) {
-			this.firstPersonMagazinePositioningReloading = Arrays.asList(transitions);
-			return this;
-		}
-		
-		@SafeVarargs
-		public final Builder withFirstPersonMagazinePositioningUnloading(Transition ...transitions) {
-			this.firstPersonMagazinePositioningUnloading = Arrays.asList(transitions);
-			return this;
-		}
+//		@SafeVarargs
+//		public final Builder withFirstPersonMagazinePositioningReloading(Transition ...transitions) {
+//			this.firstPersonMagazinePositioningReloading = Arrays.asList(transitions);
+//			return this;
+//		}
+//		
+//		@SafeVarargs
+//		public final Builder withFirstPersonMagazinePositioningUnloading(Transition ...transitions) {
+//			this.firstPersonMagazinePositioningUnloading = Arrays.asList(transitions);
+//			return this;
+//		}
 		
 		public Builder withFirstPersonCustomPositioning(Part part, BiConsumer<EntityPlayer, ItemStack> positioning) {
-			if(!(part == Part.CUSTOM1 || part == Part.CUSTOM2 || part == Part.CUSTOM3)) {
+			if(part instanceof DefaultPart) {
 				throw new IllegalArgumentException("Part " + part + " is not custom");
 			}
 			if(this.firstPersonCustomPositioning.put(part, positioning) != null) {
@@ -337,7 +337,7 @@ public class WeaponRenderer implements IItemRenderer {
 		
 		@SafeVarargs
 		public final Builder withFirstPersonCustomPositioningReloading(Part part, Transition ...transitions) {
-			if(!(part == Part.CUSTOM1 || part == Part.CUSTOM2 || part == Part.CUSTOM3)) {
+			if(part instanceof DefaultPart) {
 				throw new IllegalArgumentException("Part " + part + " is not custom");
 			}
 			
@@ -347,7 +347,7 @@ public class WeaponRenderer implements IItemRenderer {
 		
 		@SafeVarargs
 		public final Builder withFirstPersonCustomPositioningUnloading(Part part, Transition ...transitions) {
-			if(!(part == Part.CUSTOM1 || part == Part.CUSTOM2 || part == Part.CUSTOM3)) {
+			if(part instanceof DefaultPart) {
 				throw new IllegalArgumentException("Part " + part + " is not custom");
 			}
 			this.firstPersonCustomPositioningUnloading.put(part, Arrays.asList(transitions));
@@ -431,17 +431,17 @@ public class WeaponRenderer implements IItemRenderer {
 			
 			// Magazine positioning
 			
-			if(firstPersonMagazinePositioningReloading == null) {
-				firstPersonMagazinePositioningReloading = firstPersonPositioningReloading.stream().map(t -> new Transition((p, i) -> {}, 0)).collect(Collectors.toList());
-			}
-			
-			if(firstPersonMagazinePositioningUnloading == null) {
-				firstPersonMagazinePositioningUnloading = firstPersonPositioningUnloading.stream().map(t -> new Transition((p, i) -> {}, 0)).collect(Collectors.toList());
-			}
-			
-			if(firstPersonMagazinePositioning == null) {
-				firstPersonMagazinePositioning = (player, itemStack) -> {};
-			}
+//			if(firstPersonMagazinePositioningReloading == null) {
+//				firstPersonMagazinePositioningReloading = firstPersonPositioningReloading.stream().map(t -> new Transition((p, i) -> {}, 0)).collect(Collectors.toList());
+//			}
+//			
+//			if(firstPersonMagazinePositioningUnloading == null) {
+//				firstPersonMagazinePositioningUnloading = firstPersonPositioningUnloading.stream().map(t -> new Transition((p, i) -> {}, 0)).collect(Collectors.toList());
+//			}
+//			
+//			if(firstPersonMagazinePositioning == null) {
+//				firstPersonMagazinePositioning = (player, itemStack) -> {};
+//			}
 
 			
 			// Left hand positioning
@@ -702,9 +702,9 @@ public class WeaponRenderer implements IItemRenderer {
 		for(CompatibleAttachment<?> compatibleAttachment: attachments) {
 			if(compatibleAttachment != null) {
 				ItemAttachment<?> itemAttachment = compatibleAttachment.getAttachment();
-				Part renderingPart = itemAttachment.getRenderingPart();
-				if(renderingPart != null && positioner != null) {
-					positioner.position(renderingPart, renderContext);
+				
+				if(itemAttachment instanceof Part && positioner != null) {
+					positioner.position((Part) itemAttachment, renderContext);
 				}
 
 				for(Tuple<ModelBase, String> texturedModel: compatibleAttachment.getAttachment().getTexturedModels()) {
@@ -794,7 +794,7 @@ public class WeaponRenderer implements IItemRenderer {
 			List<Transition> wt, 
 			List<Transition> lht, 
 			List<Transition> rht, 
-			List<Transition> magazineTransitioning,
+			//List<Transition> magazineTransitioning,
 			LinkedHashMap<Part, List<Transition>> custom) 
 	{
 		List<MultipartTransition<Part, RenderContext>> result = new ArrayList<>();
@@ -802,13 +802,13 @@ public class WeaponRenderer implements IItemRenderer {
 			Transition p = wt.get(i);
 			Transition l = lht.get(i);
 			Transition r = rht.get(i);
-			Transition m = magazineTransitioning.get(i);
+			//Transition m = magazineTransitioning.get(i);
 			
 			MultipartTransition<Part, RenderContext> t = new MultipartTransition<Part, RenderContext>(p.getDuration(), p.getPause())
 					.withPartPositionFunction(Part.WEAPON, createWeaponPartPositionFunction(p.getPositioning()))
 					.withPartPositionFunction(Part.LEFT_HAND, createWeaponPartPositionFunction(l.getPositioning()))
-					.withPartPositionFunction(Part.RIGHT_HAND, createWeaponPartPositionFunction(r.getPositioning()))
-					.withPartPositionFunction(Part.MAGAZINE, createWeaponPartPositionFunction(m.getPositioning()));
+					.withPartPositionFunction(Part.RIGHT_HAND, createWeaponPartPositionFunction(r.getPositioning()));
+					//.withPartPositionFunction(Part.MAGAZINE, createWeaponPartPositionFunction(m.getPositioning()));
 			
 			for(Entry<Part, List<Transition>> e: custom.entrySet()){
 				Transition partTransition = e.getValue().get(i);
@@ -824,14 +824,14 @@ public class WeaponRenderer implements IItemRenderer {
 			BiConsumer<EntityPlayer, ItemStack> w,
 			BiConsumer<EntityPlayer, ItemStack> lh,
 			BiConsumer<EntityPlayer, ItemStack> rh,
-			BiConsumer<EntityPlayer, ItemStack> m,
+			//BiConsumer<EntityPlayer, ItemStack> m,
 			LinkedHashMap<Part, BiConsumer<EntityPlayer, ItemStack>> custom,
 			int duration) {
 		MultipartTransition<Part, RenderContext> mt = new MultipartTransition<Part, RenderContext>(duration, 0)
 				.withPartPositionFunction(Part.WEAPON, createWeaponPartPositionFunction(w))
 				.withPartPositionFunction(Part.LEFT_HAND, createWeaponPartPositionFunction(lh))
-				.withPartPositionFunction(Part.RIGHT_HAND, createWeaponPartPositionFunction(rh))
-				.withPartPositionFunction(Part.MAGAZINE, createWeaponPartPositionFunction(m));
+				.withPartPositionFunction(Part.RIGHT_HAND, createWeaponPartPositionFunction(rh));
+				//.withPartPositionFunction(Part.MAGAZINE, createWeaponPartPositionFunction(m));
 		custom.forEach((part, position) -> {
 			mt.withPartPositionFunction(part, createWeaponPartPositionFunction(position));
 		});
@@ -847,67 +847,62 @@ public class WeaponRenderer implements IItemRenderer {
 				return getSimpleTransition(builder.firstPersonPositioningModifying,
 						builder.firstPersonLeftHandPositioningModifying,
 						builder.firstPersonRightHandPositioningModifying,
-						builder.firstPersonMagazinePositioning,
+						//builder.firstPersonMagazinePositioning,
 						builder.firstPersonCustomPositioning,
 						DEFAULT_ANIMATION_DURATION);
 			case RUNNING:
 				return getSimpleTransition(builder.firstPersonPositioningRunning,
 						builder.firstPersonLeftHandPositioningRunning,
 						builder.firstPersonRightHandPositioningRunning,
-						builder.firstPersonMagazinePositioning,
+						//builder.firstPersonMagazinePositioning,
 						builder.firstPersonCustomPositioning,
 						DEFAULT_ANIMATION_DURATION);
 			case UNLOADING:
 				return getComplexTransition(builder.firstPersonPositioningUnloading, 
 						builder.firstPersonLeftHandPositioningUnloading,
 						builder.firstPersonRightHandPositioningUnloading,
-						builder.firstPersonMagazinePositioningUnloading,
+						//builder.firstPersonMagazinePositioningUnloading,
 						builder.firstPersonCustomPositioningUnloading
 						);
 			case RELOADING:
 				return getComplexTransition(builder.firstPersonPositioningReloading, 
 						builder.firstPersonLeftHandPositioningReloading,
 						builder.firstPersonRightHandPositioningReloading,
-						builder.firstPersonMagazinePositioningReloading,
+						//builder.firstPersonMagazinePositioningReloading,
 						builder.firstPersonCustomPositioningReloading
 						);
 			case RECOILED:
 				return getSimpleTransition(builder.firstPersonPositioningRecoiled, 
 						builder.firstPersonLeftHandPositioningRecoiled,
 						builder.firstPersonRightHandPositioningRecoiled,
-						builder.firstPersonMagazinePositioning,
+						//builder.firstPersonMagazinePositioning,
 						builder.firstPersonCustomPositioning,
 						DEFAULT_RECOIL_ANIMATION_DURATION);
 			case SHOOTING:
 				return getSimpleTransition(builder.firstPersonPositioningShooting, 
 						builder.firstPersonLeftHandPositioningShooting,
 						builder.firstPersonRightHandPositioningShooting,
-						builder.firstPersonMagazinePositioning,
+						//builder.firstPersonMagazinePositioning,
 						builder.firstPersonCustomPositioning,
 						DEFAULT_RECOIL_ANIMATION_DURATION); // TODO: is it really recoil duration
 			case NORMAL:
 				return getSimpleTransition(builder.firstPersonPositioning, 
 						builder.firstPersonLeftHandPositioning,
 						builder.firstPersonRightHandPositioning,
-						builder.firstPersonMagazinePositioning,
+						//builder.firstPersonMagazinePositioning,
 						builder.firstPersonCustomPositioning,
 						DEFAULT_ANIMATION_DURATION);
 			case ZOOMING:
 				return getSimpleTransition(builder.firstPersonPositioningZooming, 
 						builder.firstPersonLeftHandPositioningZooming,
 						builder.firstPersonRightHandPositioningZooming,
-						builder.firstPersonMagazinePositioning,
+						//builder.firstPersonMagazinePositioning,
 						builder.firstPersonCustomPositioning,
 						DEFAULT_ANIMATION_DURATION);
 			default:
 				break;
 			}
 			return null;
-		}
-
-		@Override
-		public List<Part> getParts() {
-			return Arrays.asList(Part.values());
 		}
 	}
 

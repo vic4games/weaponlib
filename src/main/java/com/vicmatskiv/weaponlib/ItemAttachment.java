@@ -103,8 +103,4 @@ public class ItemAttachment<T> extends Item {
 	public void setPreRenderer(CustomRenderer preRenderer) {
 		this.preRenderer = preRenderer;
 	}
-	
-	public Part getRenderingPart() {
-		return null;
-	}
 }
