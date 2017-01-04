@@ -4,15 +4,26 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Random;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import javax.vecmath.Matrix4f;
+
+import org.apache.commons.lang3.tuple.Pair;
+import org.lwjgl.opengl.GL11;
+
+import com.vicmatskiv.weaponlib.animation.MultipartPositioning;
+import com.vicmatskiv.weaponlib.animation.MultipartPositioning.Positioner;
+import com.vicmatskiv.weaponlib.animation.MultipartRenderStateManager;
+import com.vicmatskiv.weaponlib.animation.MultipartTransition;
+import com.vicmatskiv.weaponlib.animation.MultipartTransitionProvider;
+import com.vicmatskiv.weaponlib.animation.Transition;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
@@ -33,6 +44,7 @@ import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.client.resources.model.IBakedModel;
 import net.minecraft.client.resources.model.ModelResourceLocation;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
@@ -41,19 +53,8 @@ import net.minecraftforge.client.model.IFlexibleBakedModel;
 import net.minecraftforge.client.model.IPerspectiveAwareModel;
 import net.minecraftforge.client.model.ISmartItemModel;
 import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-
-import org.apache.commons.lang3.tuple.Pair;
-import org.lwjgl.opengl.GL11;
-
-import com.vicmatskiv.weaponlib.animation.MultipartPositioning;
-import com.vicmatskiv.weaponlib.animation.MultipartPositioning.Positioner;
-import com.vicmatskiv.weaponlib.animation.MultipartRenderStateManager;
-import com.vicmatskiv.weaponlib.animation.MultipartTransition;
-import com.vicmatskiv.weaponlib.animation.MultipartTransitionProvider;
-import com.vicmatskiv.weaponlib.animation.Transition;
 
 @SuppressWarnings("deprecation")
 public class WeaponRenderer implements ISmartItemModel, IPerspectiveAwareModel, IFlexibleBakedModel {
@@ -108,6 +109,11 @@ public class WeaponRenderer implements ISmartItemModel, IPerspectiveAwareModel, 
 		private List<Transition> firstPersonPositioningReloading;
 		private List<Transition> firstPersonLeftHandPositioningReloading;
 		private List<Transition> firstPersonRightHandPositioningReloading;
+		
+		private List<Transition> firstPersonPositioningUnloading;
+		private List<Transition> firstPersonLeftHandPositioningUnloading;
+		private List<Transition> firstPersonRightHandPositioningUnloading;
+		
 		private String modId;
 		
 		private float normalRandomizingRate = DEFAULT_RANDOMIZING_RATE; // movements per second, e.g. 0.25 = 0.25 movements per second = 1 movement in 3 minutes
@@ -117,6 +123,10 @@ public class WeaponRenderer implements ISmartItemModel, IPerspectiveAwareModel, 
 		private float normalRandomizingAmplitude = DEFAULT_NORMAL_RANDOMIZING_AMPLITUDE;
 		private float zoomRandomizingAmplitude = DEFAULT_ZOOM_RANDOMIZING_AMPLITUDE;
 		private float firingRandomizingAmplitude = DEFAULT_FIRING_RANDOMIZING_AMPLITUDE;
+		
+		public LinkedHashMap<Part, BiConsumer<EntityPlayer, ItemStack>> firstPersonCustomPositioning = new LinkedHashMap<>();
+		public LinkedHashMap<Part, List<Transition>> firstPersonCustomPositioningUnloading = new LinkedHashMap<>();
+		public LinkedHashMap<Part, List<Transition>> firstPersonCustomPositioningReloading = new LinkedHashMap<>();
 		
 		public Builder withModId(String modId) {
 			this.modId = modId;
@@ -224,6 +234,12 @@ public class WeaponRenderer implements ISmartItemModel, IPerspectiveAwareModel, 
 			return this;
 		}
 		
+		@SafeVarargs
+		public final Builder withFirstPersonPositioningUnloading(Transition ...transitions) {
+			this.firstPersonPositioningUnloading = Arrays.asList(transitions);
+			return this;
+		}
+		
 		public Builder withFirstPersonPositioningModifying(BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningModifying) {
 			this.firstPersonPositioningModifying = firstPersonPositioningModifying;
 			return this;
@@ -282,8 +298,20 @@ public class WeaponRenderer implements ISmartItemModel, IPerspectiveAwareModel, 
 		}
 		
 		@SafeVarargs
+		public final Builder withFirstPersonLeftHandPositioningUnloading(Transition ...transitions) {
+			this.firstPersonLeftHandPositioningUnloading = Arrays.asList(transitions);
+			return this;
+		}
+		
+		@SafeVarargs
 		public final Builder withFirstPersonRightHandPositioningReloading(Transition ...transitions) {
 			this.firstPersonRightHandPositioningReloading = Arrays.asList(transitions);
+			return this;
+		}
+		
+		@SafeVarargs
+		public final Builder withFirstPersonRightHandPositioningUnloading(Transition ...transitions) {
+			this.firstPersonRightHandPositioningUnloading = Arrays.asList(transitions);
 			return this;
 		}
 		
@@ -295,6 +323,39 @@ public class WeaponRenderer implements ISmartItemModel, IPerspectiveAwareModel, 
 			this.firstPersonRightHandPositioningModifying = rightHand;
 			return this;
 		}
+		
+		
+		public Builder withFirstPersonCustomPositioning(Part part, BiConsumer<EntityPlayer, ItemStack> positioning) {
+			if(part instanceof DefaultPart) {
+				throw new IllegalArgumentException("Part " + part + " is not custom");
+			}
+			if(this.firstPersonCustomPositioning.put(part, positioning) != null) {
+				throw new IllegalArgumentException("Part " + part + " already added");
+			}
+			this.firstPersonCustomPositioning.put(part, positioning);
+			return this;
+		}
+		
+		@SafeVarargs
+		public final Builder withFirstPersonCustomPositioningReloading(Part part, Transition ...transitions) {
+			if(part instanceof DefaultPart) {
+				throw new IllegalArgumentException("Part " + part + " is not custom");
+			}
+			
+			this.firstPersonCustomPositioningReloading.put(part, Arrays.asList(transitions));
+			return this;
+		}
+		
+		@SafeVarargs
+		public final Builder withFirstPersonCustomPositioningUnloading(Part part, Transition ...transitions) {
+			if(part instanceof DefaultPart) {
+				throw new IllegalArgumentException("Part " + part + " is not custom");
+			}
+			this.firstPersonCustomPositioningUnloading.put(part, Arrays.asList(transitions));
+			return this;
+		}
+		
+		
 
 		public WeaponRenderer build() {
 			if(FMLCommonHandler.instance().getSide() != Side.CLIENT) {
@@ -332,6 +393,10 @@ public class WeaponRenderer implements ISmartItemModel, IPerspectiveAwareModel, 
 				firstPersonPositioningReloading = Collections.singletonList(new Transition(firstPersonPositioning, DEFAULT_ANIMATION_DURATION));
 			}
 			
+			if(firstPersonPositioningUnloading == null) {
+				firstPersonPositioningUnloading = Collections.singletonList(new Transition(firstPersonPositioning, DEFAULT_ANIMATION_DURATION));
+			}
+			
 			if(firstPersonPositioningRecoiled == null) {
 				firstPersonPositioningRecoiled = firstPersonPositioning;
 			}
@@ -363,7 +428,7 @@ public class WeaponRenderer implements ISmartItemModel, IPerspectiveAwareModel, 
 					GL11.glTranslatef(-0.4F, 0.2F, 0.4F);
 					GL11.glRotatef(-45F, 0f, 1f, 0f);
 					GL11.glRotatef(70F, 1f, 0f, 0f);
-				};
+				};		
 			}
 			
 			// Left hand positioning
@@ -374,6 +439,10 @@ public class WeaponRenderer implements ISmartItemModel, IPerspectiveAwareModel, 
 			
 			if(firstPersonLeftHandPositioningReloading == null) {
 				firstPersonLeftHandPositioningReloading = firstPersonPositioningReloading.stream().map(t -> new Transition((p, i) -> {}, 0)).collect(Collectors.toList());
+			}
+			
+			if(firstPersonLeftHandPositioningUnloading == null) {
+				firstPersonLeftHandPositioningUnloading = firstPersonPositioningUnloading.stream().map(t -> new Transition((p, i) -> {}, 0)).collect(Collectors.toList());
 			}
 			
 			if(firstPersonLeftHandPositioningRecoiled == null) {
@@ -407,6 +476,10 @@ public class WeaponRenderer implements ISmartItemModel, IPerspectiveAwareModel, 
 				firstPersonRightHandPositioningReloading = firstPersonPositioningReloading.stream().map(t -> new Transition((p, i) -> {}, 0)).collect(Collectors.toList());
 			}
 
+			if(firstPersonRightHandPositioningUnloading == null) {
+				firstPersonRightHandPositioningUnloading = firstPersonPositioningUnloading.stream().map(t -> new Transition((p, i) -> {}, 0)).collect(Collectors.toList());
+			}
+
 			if(firstPersonRightHandPositioningRecoiled == null) {
 				firstPersonRightHandPositioningRecoiled = firstPersonRightHandPositioning;
 			}
@@ -426,6 +499,23 @@ public class WeaponRenderer implements ISmartItemModel, IPerspectiveAwareModel, 
 			if(firstPersonRightHandPositioningModifying == null) {
 				firstPersonRightHandPositioningModifying = firstPersonRightHandPositioning;
 			}
+			
+			
+			// Custom positioning
+			
+			firstPersonCustomPositioningReloading.forEach((p, t) -> {
+				if(t.size() != firstPersonPositioningReloading.size()) {
+					throw new IllegalStateException("Custom reloading transition number mismatch. Expected " + firstPersonPositioningReloading.size()
+					+ ", actual: " + t.size());
+				}
+			});
+			
+			firstPersonCustomPositioningUnloading.forEach((p, t) -> {
+				if(t.size() != firstPersonPositioningUnloading.size()) {
+					throw new IllegalStateException("Custom unloading transition number mismatch. Expected " + firstPersonPositioningUnloading.size()
+					+ ", actual: " + t.size());
+				}
+			});
 			
 			return new WeaponRenderer(this);
 		}
@@ -486,6 +576,8 @@ public class WeaponRenderer implements ISmartItemModel, IPerspectiveAwareModel, 
 		Weapon weapon = (Weapon) itemStack.getItem();
 		if(Weapon.isModifying(itemStack)) {
 			currentState = builder.firstPersonPositioningModifying != null ? RenderableState.MODIFYING : RenderableState.NORMAL;
+		} else if(Weapon.isUnloadingStarted(player, itemStack)) {
+			currentState = RenderableState.UNLOADING;
 		} else if(Weapon.isReloadingConfirmed(player, itemStack)) {
 			currentState = RenderableState.RELOADING;
 		} else if(player.isSprinting() && builder.firstPersonPositioningRunning != null) {
@@ -621,7 +713,7 @@ public class WeaponRenderer implements ISmartItemModel, IPerspectiveAwareModel, 
 		GL11.glScaled(-1F, -1F, 1F);
 		AbstractClientPlayer player = Minecraft.getMinecraft().thePlayer;
 		RenderContext renderContext = new RenderContext(player, itemStack);
-		
+		Positioner<Part, RenderContext> positioner = null;
 		switch (transformType)
 		{
 		case GROUND:
@@ -650,42 +742,15 @@ public class WeaponRenderer implements ISmartItemModel, IPerspectiveAwareModel, 
 			StateDescriptor stateDescriptor = getStateDescriptor(player, itemStack);
 			MultipartPositioning<Part, RenderContext> multipartPositioning = stateDescriptor.stateManager.nextPositioning();
 			
-			Positioner<Part, RenderContext> positioner = multipartPositioning.getPositioner();
+			positioner = multipartPositioning.getPositioner();
 						
 			positioner.randomize(stateDescriptor.rate, stateDescriptor.amplitude);
 			
 			positioner.position(Part.WEAPON, renderContext);
 			
-			Render<AbstractClientPlayer> entityRenderObject = Minecraft.getMinecraft().getRenderManager().getEntityRenderObject(player);
-			RenderPlayer render = (RenderPlayer) entityRenderObject;
-			Minecraft.getMinecraft().getTextureManager().bindTexture(((AbstractClientPlayer) player).getLocationSkin());
+			renderLeftArm(player, renderContext, positioner);
 			
-			GL11.glPushMatrix();
-			
-			GL11.glScaled(1F, 1F, 1F);
-			
-			GL11.glTranslatef(0f, -1f, 0f);
-			
-			GL11.glRotatef(-10F, 1f, 0f, 0f);
-			GL11.glRotatef(0F, 0f, 1f, 0f);
-			GL11.glRotatef(10F, 0f, 0f, 1f);
-			
-			positioner.position(Part.LEFT_HAND, renderContext);
-			//render.renderFirstPersonArm(player);
-			render.renderLeftArm(player);
-			GL11.glPopMatrix();
-			
-			GL11.glPushMatrix();
-			GL11.glScaled(1F, 1F, 1F);
-			GL11.glTranslatef(-0.25f, 0f, 0.2f);
-			
-			GL11.glRotatef(5F, 1f, 0f, 0f);
-			GL11.glRotatef(25F, 0f, 1f, 0f);
-			GL11.glRotatef(0F, 0f, 0f, 1f);
-			positioner.position(Part.RIGHT_HAND, renderContext);
-			//render.renderFirstPersonArm(player);
-			render.renderRightArm(player);
-			GL11.glPopMatrix();
+			renderRightArm(player, renderContext, positioner);
 	        
 			break;
 		default:
@@ -706,17 +771,88 @@ public class WeaponRenderer implements ISmartItemModel, IPerspectiveAwareModel, 
 		builder.model.render(null,  0.0F, 0.0f, -0.4f, 0.0f, 0.0f, 0.08f);
 		if(builder.model instanceof ModelWithAttachments) {
 			List<CompatibleAttachment<Weapon>> attachments = ((Weapon) itemStack.getItem()).getActiveAttachments(itemStack);
-			((ModelWithAttachments)builder.model).renderAttachments(builder.modId, itemStack, 
-					transformType, attachments , null,  0.0F, 0.0f, -0.4f, 0.0f, 0.0f, 0.08f);
+			renderAttachments(positioner, builder.modId, renderContext, itemStack, transformType, attachments , null,  0.0F, 0.0f, -0.4f, 0.0f, 0.0f, 0.08f);
 		}
 		
 		GL11.glPopMatrix();
 	   
 	}
+
+	private void renderAttachments(Positioner<Part, RenderContext> positioner, String modId, RenderContext renderContext,
+			ItemStack itemStack, TransformType type, List<CompatibleAttachment<Weapon>> attachments, Entity entity, float f, float f1, float f2, float f3, float f4, float f5) {
+		GL11.glPushMatrix();
+		for(CompatibleAttachment<?> compatibleAttachment: attachments) {
+			if(compatibleAttachment != null) {
+				ItemAttachment<?> itemAttachment = compatibleAttachment.getAttachment();
+				
+				if(itemAttachment instanceof Part && positioner != null) {
+					positioner.position((Part) itemAttachment, renderContext);
+				}
+
+				for(Tuple<ModelBase, String> texturedModel: compatibleAttachment.getAttachment().getTexturedModels()) {
+					Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(modId 
+							+ ":textures/models/" + texturedModel.getV()));
+					GL11.glPushMatrix();
+					GL11.glPushAttrib(GL11.GL_ENABLE_BIT);
+					if(compatibleAttachment.getPositioning() != null) {
+						compatibleAttachment.getPositioning().accept(texturedModel.getU());
+					}
+					texturedModel.getU().render(entity, f, f1, f2, f3, f4, f5);
+					
+					CustomRenderer postRenderer = compatibleAttachment.getAttachment().getPostRenderer();
+					if(postRenderer != null) {
+						postRenderer.render(type, itemStack);
+					}
+					GL11.glPopAttrib();
+					GL11.glPopMatrix();
+				}
+				
+			}
+		}
+		GL11.glPopMatrix();
+	}
 	
-	private enum Part {
-		WEAPON, RIGHT_HAND, LEFT_HAND
-	};
+	private void renderRightArm(AbstractClientPlayer player, RenderContext renderContext,
+			Positioner<Part, RenderContext> positioner) {
+		
+		Render<AbstractClientPlayer> entityRenderObject = Minecraft.getMinecraft().getRenderManager().getEntityRenderObject(player);
+		RenderPlayer render = (RenderPlayer) entityRenderObject;
+		Minecraft.getMinecraft().getTextureManager().bindTexture(((AbstractClientPlayer) player).getLocationSkin());
+
+		GL11.glPushMatrix();
+		GL11.glScaled(1F, 1F, 1F);
+		GL11.glTranslatef(-0.25f, 0f, 0.2f);
+		
+		GL11.glRotatef(5F, 1f, 0f, 0f);
+		GL11.glRotatef(25F, 0f, 1f, 0f);
+		GL11.glRotatef(0F, 0f, 0f, 1f);
+		positioner.position(Part.RIGHT_HAND, renderContext);
+		//render.renderFirstPersonArm(player);
+		render.renderRightArm(player);
+		GL11.glPopMatrix();
+	}
+
+	private void renderLeftArm(AbstractClientPlayer player, RenderContext renderContext,
+			Positioner<Part, RenderContext> positioner) {
+		Render<AbstractClientPlayer> entityRenderObject = Minecraft.getMinecraft().getRenderManager().getEntityRenderObject(player);
+		RenderPlayer render = (RenderPlayer) entityRenderObject;
+		Minecraft.getMinecraft().getTextureManager().bindTexture(((AbstractClientPlayer) player).getLocationSkin());
+		
+		GL11.glPushMatrix();
+		
+		GL11.glScaled(1F, 1F, 1F);
+		
+		GL11.glTranslatef(0f, -1f, 0f);
+		
+		GL11.glRotatef(-10F, 1f, 0f, 0f);
+		GL11.glRotatef(0F, 0f, 1f, 0f);
+		GL11.glRotatef(10F, 0f, 0f, 1f);
+		
+		positioner.position(Part.LEFT_HAND, renderContext);
+		//render.renderFirstPersonArm(player);
+		render.renderLeftArm(player);
+		GL11.glPopMatrix();
+	}
 	
 	private BiConsumer<Part, RenderContext> createWeaponPartPositionFunction(BiConsumer<EntityPlayer, ItemStack> weaponPositionFunction) {
 		return (part, context) -> weaponPositionFunction.accept(context.player, context.weapon);
@@ -731,7 +867,12 @@ public class WeaponRenderer implements ISmartItemModel, IPerspectiveAwareModel, 
 		}
 	}
 	
-	private List<MultipartTransition<Part, RenderContext>> getComplexTransition(List<Transition> wt, List<Transition> lht, List<Transition> rht) {
+	private List<MultipartTransition<Part, RenderContext>> getComplexTransition(
+			List<Transition> wt, 
+			List<Transition> lht, 
+			List<Transition> rht, 
+			LinkedHashMap<Part, List<Transition>> custom) 
+	{
 		List<MultipartTransition<Part, RenderContext>> result = new ArrayList<>();
 		for(int i = 0; i < wt.size(); i++) {
 			Transition p = wt.get(i);
@@ -743,6 +884,11 @@ public class WeaponRenderer implements ISmartItemModel, IPerspectiveAwareModel, 
 					.withPartPositionFunction(Part.LEFT_HAND, createWeaponPartPositionFunction(l.getPositioning()))
 					.withPartPositionFunction(Part.RIGHT_HAND, createWeaponPartPositionFunction(r.getPositioning()));
 			
+			for(Entry<Part, List<Transition>> e: custom.entrySet()){
+				Transition partTransition = e.getValue().get(i);
+				t.withPartPositionFunction(e.getKey(), createWeaponPartPositionFunction(partTransition.getPositioning()));
+			}
+	
 			result.add(t);
 		}
 		return result;
@@ -752,11 +898,16 @@ public class WeaponRenderer implements ISmartItemModel, IPerspectiveAwareModel, 
 			BiConsumer<EntityPlayer, ItemStack> w,
 			BiConsumer<EntityPlayer, ItemStack> lh,
 			BiConsumer<EntityPlayer, ItemStack> rh,
+			//BiConsumer<EntityPlayer, ItemStack> m,
+			LinkedHashMap<Part, BiConsumer<EntityPlayer, ItemStack>> custom,
 			int duration) {
 		MultipartTransition<Part, RenderContext> mt = new MultipartTransition<Part, RenderContext>(duration, 0)
 				.withPartPositionFunction(Part.WEAPON, createWeaponPartPositionFunction(w))
 				.withPartPositionFunction(Part.LEFT_HAND, createWeaponPartPositionFunction(lh))
 				.withPartPositionFunction(Part.RIGHT_HAND, createWeaponPartPositionFunction(rh));
+		custom.forEach((part, position) -> {
+			mt.withPartPositionFunction(part, createWeaponPartPositionFunction(position));
+		});
 		return Collections.singletonList(mt);
 	}
 	
@@ -769,45 +920,54 @@ public class WeaponRenderer implements ISmartItemModel, IPerspectiveAwareModel, 
 				return getSimpleTransition(builder.firstPersonPositioningModifying,
 						builder.firstPersonLeftHandPositioningModifying,
 						builder.firstPersonRightHandPositioningModifying,
+						builder.firstPersonCustomPositioning,
 						DEFAULT_ANIMATION_DURATION);
 			case RUNNING:
 				return getSimpleTransition(builder.firstPersonPositioningRunning,
 						builder.firstPersonLeftHandPositioningRunning,
 						builder.firstPersonRightHandPositioningRunning,
+						builder.firstPersonCustomPositioning,
 						DEFAULT_ANIMATION_DURATION);
+			case UNLOADING:
+				return getComplexTransition(builder.firstPersonPositioningUnloading, 
+						builder.firstPersonLeftHandPositioningUnloading,
+						builder.firstPersonRightHandPositioningUnloading,
+						builder.firstPersonCustomPositioningUnloading
+						);
 			case RELOADING:
 				return getComplexTransition(builder.firstPersonPositioningReloading, 
 						builder.firstPersonLeftHandPositioningReloading,
-						builder.firstPersonRightHandPositioningReloading);
+						builder.firstPersonRightHandPositioningReloading,
+						builder.firstPersonCustomPositioningReloading
+						);
 			case RECOILED:
 				return getSimpleTransition(builder.firstPersonPositioningRecoiled, 
 						builder.firstPersonLeftHandPositioningRecoiled,
 						builder.firstPersonRightHandPositioningRecoiled,
+						builder.firstPersonCustomPositioning,
 						DEFAULT_RECOIL_ANIMATION_DURATION);
 			case SHOOTING:
 				return getSimpleTransition(builder.firstPersonPositioningShooting, 
 						builder.firstPersonLeftHandPositioningShooting,
 						builder.firstPersonRightHandPositioningShooting,
+						builder.firstPersonCustomPositioning,
 						DEFAULT_RECOIL_ANIMATION_DURATION); // TODO: is it really recoil duration
 			case NORMAL:
 				return getSimpleTransition(builder.firstPersonPositioning, 
 						builder.firstPersonLeftHandPositioning,
 						builder.firstPersonRightHandPositioning,
+						builder.firstPersonCustomPositioning,
 						DEFAULT_ANIMATION_DURATION);
 			case ZOOMING:
 				return getSimpleTransition(builder.firstPersonPositioningZooming, 
 						builder.firstPersonLeftHandPositioningZooming,
 						builder.firstPersonRightHandPositioningZooming,
+						builder.firstPersonCustomPositioning,
 						DEFAULT_ANIMATION_DURATION);
 			default:
 				break;
 			}
 			return null;
-		}
-
-		@Override
-		public List<Part> getParts() {
-			return Arrays.asList(Part.values());
 		}
 	}
 

@@ -56,17 +56,6 @@ public class FireManager {
 			
 			EffectManager.getInstance().spawnSmokeParticle(player);
 			
-//			modContext.runInMainThread(() -> {
-//
-//				
-////				if(weapon.builder.flashIntensity > 0) {
-////					EffectManager.getInstance().spawnFlashParticle(player, weapon.builder.flashIntensity,
-////							Weapon.isZoomed(itemStack) ? FLASH_X_OFFSET_ZOOMED : FLASH_X_OFFSET_NORMAL);
-////				}
-////				
-////				EffectManager.getInstance().spawnSmokeParticle(player);
-//			});
-			
 			storage.setLastShotFiredAt(System.currentTimeMillis());
 			
 			storage.addShot();
