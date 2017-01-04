@@ -13,17 +13,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import org.lwjgl.opengl.GL11;
-
-import com.vicmatskiv.weaponlib.animation.MultipartPositioning;
-import com.vicmatskiv.weaponlib.animation.MultipartPositioning.Positioner;
-import com.vicmatskiv.weaponlib.animation.MultipartRenderStateManager;
-import com.vicmatskiv.weaponlib.animation.MultipartTransition;
-import com.vicmatskiv.weaponlib.animation.MultipartTransitionProvider;
-import com.vicmatskiv.weaponlib.animation.Transition;
-
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
 //import net.minecraft.client.entity.EntityClientPlayerMP;
@@ -35,6 +24,18 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.IItemRenderer;
+
+import org.lwjgl.opengl.GL11;
+
+import com.vicmatskiv.weaponlib.animation.MultipartPositioning;
+import com.vicmatskiv.weaponlib.animation.MultipartPositioning.Positioner;
+import com.vicmatskiv.weaponlib.animation.MultipartRenderStateManager;
+import com.vicmatskiv.weaponlib.animation.MultipartTransition;
+import com.vicmatskiv.weaponlib.animation.MultipartTransitionProvider;
+import com.vicmatskiv.weaponlib.animation.Transition;
+
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 
 
 public class WeaponRenderer implements IItemRenderer {
