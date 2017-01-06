@@ -8,7 +8,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
-public class ItemAttachment<T> extends Item {
+public class ItemAttachment<T> extends Item implements ModelSource {
 
 	private AttachmentCategory category;
 	private String crosshair;

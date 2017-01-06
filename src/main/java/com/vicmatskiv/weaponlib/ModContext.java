@@ -1,7 +1,8 @@
 package com.vicmatskiv.weaponlib;
 
-import net.minecraftforge.client.IItemRenderer;
 import cpw.mods.fml.common.network.simpleimpl.SimpleNetworkWrapper;
+import net.minecraft.item.Item;
+import net.minecraftforge.client.IItemRenderer;
 
 
 public interface ModContext {
@@ -17,5 +18,7 @@ public interface ModContext {
 	public AttachmentManager getAttachmentManager();
 	
 	public WeaponClientStorageManager getWeaponClientStorageManager();
+
+	public void registerRenderableItem(String name, Item weapon, IItemRenderer renderer);
 	
 }

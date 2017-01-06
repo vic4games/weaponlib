@@ -35,6 +35,8 @@ public class WeaponKeyInputHandler {
     		if(itemStack != null && itemStack.getItem() instanceof Weapon) {
     			//((Weapon) itemStack.getItem()).initiateReload(itemStack, player);
     			reloadManager.toggleReload(itemStack, player);
+    		} else if(itemStack != null && itemStack.getItem() instanceof ItemMagazine) {
+    			((ItemMagazine)itemStack.getItem()).load(itemStack, player);
     		}
         } /* else if(KeyBindings.unloadKey.isPressed()) {
         	EntityPlayer player = entityPlayerSupplier.apply(null);

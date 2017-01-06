@@ -33,6 +33,8 @@ public class ReloadMessageHandler implements IMessageHandler<ReloadMessage, IMes
 				} else {
 					reloadManager.unload(itemStack, message.getAmmo(), player);
 				}
+			} else if(itemStack != null && itemStack.getItem() instanceof ItemMagazine) {
+				
 			}
 		} else {
 			onClientMessage(message, ctx);

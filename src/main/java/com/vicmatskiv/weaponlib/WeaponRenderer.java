@@ -685,7 +685,7 @@ public class WeaponRenderer implements IItemRenderer {
 		
 		builder.model.render(null,  0.0F, 0.0f, -0.4f, 0.0f, 0.0f, 0.08f);
 		if(builder.model instanceof ModelWithAttachments) {
-			List<CompatibleAttachment<Weapon>> attachments = ((Weapon) item.getItem()).getActiveAttachments(item);
+			List<CompatibleAttachment<? extends AttachmentContainer>> attachments = ((Weapon) item.getItem()).getActiveAttachments(item);
 			renderAttachments(positioner, renderContext, item, type, attachments , null,  0.0F, 0.0f, -0.4f, 0.0f, 0.0f, 0.08f);
 		}
 //		if(builder.model instanceof ModelWithAttachments) {
@@ -698,7 +698,7 @@ public class WeaponRenderer implements IItemRenderer {
 	}
 	
 	private void renderAttachments(Positioner<Part, RenderContext> positioner, RenderContext renderContext,
-			ItemStack itemStack, ItemRenderType type, List<CompatibleAttachment<Weapon>> attachments, Entity entity, float f, float f1, float f2, float f3, float f4, float f5) {
+			ItemStack itemStack, ItemRenderType type, List<CompatibleAttachment<? extends AttachmentContainer>> attachments, Entity entity, float f, float f1, float f2, float f3, float f4, float f5) {
 		GL11.glPushMatrix();
 		for(CompatibleAttachment<?> compatibleAttachment: attachments) {
 			if(compatibleAttachment != null) {

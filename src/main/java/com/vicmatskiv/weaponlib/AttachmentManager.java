@@ -98,10 +98,10 @@ public final class AttachmentManager {
 		Weapon.setModifying(itemStack, false);
 	}
 
-	List<CompatibleAttachment<Weapon>> getActiveAttachments(ItemStack itemStack) {
+	List<CompatibleAttachment<? extends AttachmentContainer>> getActiveAttachments(ItemStack itemStack) {
 		ensureItemStack(itemStack);
 		
-		List<CompatibleAttachment<Weapon>> activeAttachments = new ArrayList<>();
+		List<CompatibleAttachment<? extends AttachmentContainer>> activeAttachments = new ArrayList<>();
 		
 		int[] activeAttachmentsIds = ensureActiveAttachments(itemStack);
 		

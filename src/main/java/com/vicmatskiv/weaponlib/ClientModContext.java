@@ -13,6 +13,7 @@ import cpw.mods.fml.common.registry.EntityRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
 import net.minecraftforge.client.IItemRenderer;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.common.MinecraftForge;
@@ -60,6 +61,12 @@ public class ClientModContext extends CommonModContext {
 		super.registerWeapon(name, weapon, renderer);
 		MinecraftForgeClient.registerItemRenderer(weapon, renderer);
 
+	}
+	
+	@Override
+	public void registerRenderableItem(String name, Item item, IItemRenderer renderer) {
+		super.registerRenderableItem(name, item, renderer);
+		MinecraftForgeClient.registerItemRenderer(item, renderer);
 	}
 	
 	@Override

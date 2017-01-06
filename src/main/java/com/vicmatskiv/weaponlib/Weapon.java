@@ -27,7 +27,7 @@ import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
 import net.minecraftforge.client.IItemRenderer;
 
-public class Weapon extends Item {
+public class Weapon extends Item implements AttachmentContainer {
 	
 	public static class Builder {
 
@@ -661,7 +661,7 @@ public class Weapon extends Item {
 		}
 	}
 
-	List<CompatibleAttachment<Weapon>> getActiveAttachments(ItemStack itemStack) {
+	public List<CompatibleAttachment<? extends AttachmentContainer>> getActiveAttachments(ItemStack itemStack) {
 		return modContext.getAttachmentManager().getActiveAttachments(itemStack);
 	}
 	

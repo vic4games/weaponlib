@@ -91,7 +91,7 @@ public class ReloadManager {
 				ItemMagazine newMagazine = null;
 				if(existingMagazine == null) {
 					ammo = 0;
-					ItemStack magazineItemStack = tryConsumingMagazine(weapon, compatibleMagazines, player);
+					ItemStack magazineItemStack = tryConsumingPart(weapon, compatibleMagazines, player);
 					if(magazineItemStack != null) {
 						newMagazine = (ItemMagazine) magazineItemStack.getItem();
 						ammo = Tags.getAmmo(magazineItemStack);
@@ -113,9 +113,9 @@ public class ReloadManager {
 		}
 	}
 	
-	private ItemStack tryConsumingMagazine(Weapon weapon, List<ItemMagazine> compatibleMagazines, EntityPlayer player) {
+	private ItemStack tryConsumingPart(Weapon weapon, List<? extends Item> compatibleParts, EntityPlayer player) {
 		ItemStack magazineItemStack = null;
-		for(ItemMagazine magazine: compatibleMagazines) {
+		for(Item magazine: compatibleParts) {
 			if((magazineItemStack = consumeInventoryItem(magazine, player)) != null) {
 				break;
 			}

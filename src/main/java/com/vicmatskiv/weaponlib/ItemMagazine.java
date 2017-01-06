@@ -1,6 +1,11 @@
 package com.vicmatskiv.weaponlib;
 
+import java.util.List;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+
 import net.minecraft.client.model.ModelBase;
+import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -8,6 +13,87 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
 public class ItemMagazine extends ItemAttachment<Weapon> implements Part {
+	
+	public static final class Builder {
+		private String name;
+		private String modId;
+		private ModelBase model;
+		private String textureName;
+		private int ammo;
+		private Consumer<ItemStack> entityPositioning;
+		private Consumer<ItemStack> inventoryPositioning;
+		private BiConsumer<EntityPlayer, ItemStack> thirdPersonPositioning;
+		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioning;
+		
+		private CreativeTabs tab;
+		
+		public Builder withName(String name) {
+			this.name = name;
+			return this;
+		}
+		
+		public Builder withCreativeTab(CreativeTabs tab) {
+			this.tab = tab;
+			return this;
+		}
+
+		public Builder withModId(String modId) {
+			this.modId = modId;
+			return this;
+		}
+		
+		public Builder withModel(ModelBase model) {
+			this.model = model;
+			return this;
+		}
+		
+		public Builder withTextureName(String textureName) {
+			this.textureName = textureName;
+			return this;
+		}
+		
+		public Builder withAmmo(int ammo) {
+			this.ammo = ammo;
+			return this;
+		}
+		
+		public Builder withEntityPositioning(Consumer<ItemStack> entityPositioning) {
+			this.entityPositioning = entityPositioning;
+			return this;
+		}
+		
+		public Builder withInventoryPositioning(Consumer<ItemStack> inventoryPositioning) {
+			this.inventoryPositioning = inventoryPositioning;
+			return this;
+		}
+
+		public Builder withThirdPersonPositioning(BiConsumer<EntityPlayer, ItemStack> thirdPersonPositioning) {
+			this.thirdPersonPositioning = thirdPersonPositioning;
+			return this;
+		}
+
+		public Builder withFirstPersonPositioning(BiConsumer<EntityPlayer, ItemStack> firstPersonPositioning) {
+			this.firstPersonPositioning = firstPersonPositioning;
+			return this;
+		}
+		
+		public ItemMagazine build(ModContext modContext) {
+			ItemMagazine itemMagazine = new ItemMagazine(modId, model, textureName, ammo);
+			itemMagazine.setUnlocalizedName(modId + "_" + name); 
+			itemMagazine.setCreativeTab(tab);
+			
+			StaticModelSourceRenderer renderer = new StaticModelSourceRenderer.Builder()
+					.withEntityPositioning(entityPositioning)
+					.withFirstPersonPositioning(firstPersonPositioning)
+					.withThirdPersonPositioning(thirdPersonPositioning)
+					.withInventoryPositioning(inventoryPositioning)
+					.withModId(modId)
+					.build();
+			
+			modContext.registerRenderableItem(name, itemMagazine, renderer);
+			return itemMagazine;
+		}
+	}
 	
 	private final int DEFAULT_MAX_STACK_SIZE = 1;
 	
@@ -57,5 +143,30 @@ public class ItemMagazine extends ItemAttachment<Weapon> implements Part {
 		ensureItemStack(stack);
 		super.onUpdate(stack, p_77663_2_, p_77663_3_, p_77663_4_, p_77663_5_);
 	}
+
+	public void load(ItemStack itemStack, EntityPlayer player) {
+		int currentAmmo = Tags.getAmmo(itemStack);
+		ItemMagazine magazine = (ItemMagazine) itemStack.getItem();
+		if(currentAmmo < ammo) {
+			List<ItemBullet> compatibleBullets = magazine.getCompatibleBullets();
+			ItemStack bulletStack = tryConsumingBullet(magazine, compatibleBullets, player);
+			if(bulletStack != null) {
+				Tags.setAmmo(itemStack, currentAmmo + 1);
+			}
+		}
+	}
+
+	private ItemStack tryConsumingBullet(ItemMagazine magazine, List<ItemBullet> compatibleBullets,
+			EntityPlayer player) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private List<ItemBullet> getCompatibleBullets() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	
 	
 }

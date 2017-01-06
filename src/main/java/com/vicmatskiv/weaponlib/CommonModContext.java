@@ -6,6 +6,7 @@ import cpw.mods.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
 import net.minecraftforge.client.IItemRenderer;
 import net.minecraftforge.common.MinecraftForge;
 
@@ -98,6 +99,11 @@ public class CommonModContext implements ModContext {
 	@Override
 	public WeaponClientStorageManager getWeaponClientStorageManager() {
 		throw new IllegalStateException("Attempted to get instance of " + WeaponClientStorageManager.class.getSimpleName());
+	}
+
+	@Override
+	public void registerRenderableItem(String name, Item item, IItemRenderer renderer) {
+		GameRegistry.registerItem(item, name);
 	}
 	
 	
