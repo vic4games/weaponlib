@@ -30,7 +30,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class Weapon extends Item {
+public class Weapon extends Item implements AttachmentContainer {
 	
 	public static class Builder {
 
@@ -678,8 +678,9 @@ public class Weapon extends Item {
 			builder.blockImpactHandler.onImpact(world, player, entity, position);
 		}
 	}
-
-	List<CompatibleAttachment<Weapon>> getActiveAttachments(ItemStack itemStack) {
+	
+	@Override
+	public List<CompatibleAttachment<? extends AttachmentContainer>> getActiveAttachments(ItemStack itemStack) {
 		return modContext.getAttachmentManager().getActiveAttachments(itemStack);
 	}
 	

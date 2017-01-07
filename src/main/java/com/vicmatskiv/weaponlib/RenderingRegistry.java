@@ -11,6 +11,7 @@ import net.minecraft.client.renderer.ItemModelMesher;
 import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.client.resources.model.ModelResourceLocation;
+import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.client.model.ICustomModelLoader;
@@ -22,25 +23,31 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class RenderingRegistry implements ICustomModelLoader {
 
-	private List<WeaponRenderer> renderers = new ArrayList<WeaponRenderer>();
-	private Set<String> weaponLocations = new HashSet<>();
+	private List<ModelSourceRenderer> renderers = new ArrayList<>();
+	private Set<String> modelSourceLocations = new HashSet<>();
 	
+	private String modId = "mw";
+	
+	public RenderingRegistry(String modId) {
+		this.modId = modId;
+	}
+
 	@SideOnly(Side.CLIENT)
 	@SubscribeEvent
 	public void bakeModel(ModelBakeEvent event) {
-		for(WeaponRenderer model: renderers) {
-			event.modelRegistry.putObject(model.resourceLocation, model);
+		for(ModelSourceRenderer model: renderers) {
+			event.modelRegistry.putObject(model.getResourceLocation(), model);
 		}
 	}
 
-	public void register(Weapon weapon, WeaponRenderer renderer) {
+	public void register(Item item, String name, ModelSourceRenderer renderer) {
 		renderers.add(renderer);
-		weaponLocations.add("mw" + ":models/item/" + weapon.getName());
-		ModelResourceLocation modelID = new ModelResourceLocation("mw" + ":" + weapon.getName(), "inventory");
-		renderer.resourceLocation = modelID;
+		modelSourceLocations.add(modId + ":models/item/" + name);
+		ModelResourceLocation modelID = new ModelResourceLocation(modId + ":" + name, "inventory");
+		renderer.setResourceLocation(modelID);
 		RenderItem renderItem = Minecraft.getMinecraft().getRenderItem();
 		ItemModelMesher itemModelMesher = renderItem.getItemModelMesher();
-		itemModelMesher.register(weapon, 0, modelID);
+		itemModelMesher.register(item, 0, modelID);
 	}
 	
 	@Override
@@ -52,7 +59,7 @@ public class RenderingRegistry implements ICustomModelLoader {
 	@Override
 	public boolean accepts(ResourceLocation modelLocation) {
 		// Do not accept attachments
-		return "mw".equals(modelLocation.getResourceDomain()) && weaponLocations.contains(modelLocation.toString());
+		return modId.equals(modelLocation.getResourceDomain()) && modelSourceLocations.contains(modelLocation.toString());
 	}
 
 	@Override

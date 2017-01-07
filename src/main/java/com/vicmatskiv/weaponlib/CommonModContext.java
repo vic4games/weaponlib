@@ -1,6 +1,7 @@
 package com.vicmatskiv.weaponlib;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
@@ -16,7 +17,7 @@ public class CommonModContext implements ModContext {
 	protected ReloadManager reloadManager;
 
 	@Override
-	public void init(Object mod, SimpleNetworkWrapper channel) {
+	public void init(Object mod, String modId, SimpleNetworkWrapper channel) {
 		this.channel = channel;
 		
 		this.attachmentManager = new AttachmentManager(this);
@@ -102,6 +103,11 @@ public class CommonModContext implements ModContext {
 	public WeaponClientStorageManager getWeaponClientStorageManager() {
 		return null;
 		//throw new IllegalStateException("Attempted to get instance of " + WeaponClientStorageManager.class.getSimpleName());
+	}
+
+	@Override
+	public void registerRenderableItem(String name, Item item, ModelSourceRenderer renderer) {
+		GameRegistry.registerItem(item, name);
 	}
 	
 	

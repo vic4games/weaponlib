@@ -57,7 +57,8 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 @SuppressWarnings("deprecation")
-public class WeaponRenderer implements ISmartItemModel, IPerspectiveAwareModel, IFlexibleBakedModel {
+public class WeaponRenderer extends ModelSourceRenderer 
+implements ISmartItemModel, IPerspectiveAwareModel, IFlexibleBakedModel {
 	
 	private static final float DEFAULT_RANDOMIZING_RATE = 0.33f;
 	private static final float DEFAULT_RANDOMIZING_FIRING_RATE = 20;
@@ -536,7 +537,7 @@ public class WeaponRenderer implements ISmartItemModel, IPerspectiveAwareModel, 
 	
 	protected ItemStack itemStack;
 
-	protected ModelResourceLocation resourceLocation;
+	//protected ModelResourceLocation resourceLocation;
 	
 	TransformType transformType;
 	
@@ -770,7 +771,7 @@ public class WeaponRenderer implements ISmartItemModel, IPerspectiveAwareModel, 
 		
 		builder.model.render(null,  0.0F, 0.0f, -0.4f, 0.0f, 0.0f, 0.08f);
 		if(builder.model instanceof ModelWithAttachments) {
-			List<CompatibleAttachment<Weapon>> attachments = ((Weapon) itemStack.getItem()).getActiveAttachments(itemStack);
+			List<CompatibleAttachment<? extends AttachmentContainer>> attachments = ((Weapon) itemStack.getItem()).getActiveAttachments(itemStack);
 			renderAttachments(positioner, builder.modId, renderContext, itemStack, transformType, attachments , null,  0.0F, 0.0f, -0.4f, 0.0f, 0.0f, 0.08f);
 		}
 		
@@ -779,7 +780,7 @@ public class WeaponRenderer implements ISmartItemModel, IPerspectiveAwareModel, 
 	}
 
 	private void renderAttachments(Positioner<Part, RenderContext> positioner, String modId, RenderContext renderContext,
-			ItemStack itemStack, TransformType type, List<CompatibleAttachment<Weapon>> attachments, Entity entity, float f, float f1, float f2, float f3, float f4, float f5) {
+			ItemStack itemStack, TransformType type, List<CompatibleAttachment<? extends AttachmentContainer>> attachments, Entity entity, float f, float f1, float f2, float f3, float f4, float f5) {
 		GL11.glPushMatrix();
 		for(CompatibleAttachment<?> compatibleAttachment: attachments) {
 			if(compatibleAttachment != null) {

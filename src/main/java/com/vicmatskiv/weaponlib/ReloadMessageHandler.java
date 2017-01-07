@@ -37,6 +37,7 @@ public class ReloadMessageHandler implements IMessageHandler<ReloadMessage, IMes
 						reloadManager.unload(itemStack, message.getAmmo(), player);
 					}
 				});
+			} else if(itemStack != null && itemStack.getItem() instanceof ItemMagazine) {
 				
 			}
 		} else {
@@ -57,5 +58,4 @@ public class ReloadMessageHandler implements IMessageHandler<ReloadMessage, IMes
 			}
 		}
 	}
-
 }

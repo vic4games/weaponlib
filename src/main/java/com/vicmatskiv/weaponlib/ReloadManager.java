@@ -18,7 +18,7 @@ public class ReloadManager {
 	ReloadManager(ModContext modContext) {
 		this.modContext = modContext;
 	}
-
+	
 	@SideOnly(Side.CLIENT)
 	void toggleReload(ItemStack itemStack, EntityPlayer player) {
 		if(!(itemStack.getItem() instanceof Weapon)) {
@@ -76,22 +76,6 @@ public class ReloadManager {
 			}
 		}
 	}
-
-//	//@SideOnly(Side.SERVER)
-//	void reload(ItemStack itemStack, EntityPlayer player) {
-//		Weapon weapon = (Weapon) itemStack.getItem();
-//		if (itemStack.getTagCompound() != null && !player.isSprinting()) {
-//			if (player.inventory.consumeInventoryItem(weapon.builder.ammo)) {
-//				Tags.setAmmo(itemStack, weapon.builder.ammoCapacity);
-//				modContext.getChannel().sendTo(new ReloadMessage(weapon, weapon.builder.ammoCapacity), (EntityPlayerMP) player);
-//				player.worldObj.playSoundToNearExcept(player, weapon.builder.reloadSound, 1.0F, 1.0F);
-//			} else {
-//				Tags.setAmmo(itemStack, 0);
-//				modContext.getChannel().sendTo(new ReloadMessage(weapon, 0), (EntityPlayerMP) player);
-//			}
-//		}
-//	}
-	
 	
 	@SuppressWarnings("unchecked")
 	void reload(ItemStack weaponItemStack, EntityPlayer player) {
@@ -104,7 +88,7 @@ public class ReloadManager {
 				ItemMagazine newMagazine = null;
 				if(existingMagazine == null) {
 					ammo = 0;
-					ItemStack magazineItemStack = tryConsumingMagazine(weapon, compatibleMagazines, player);
+					ItemStack magazineItemStack = tryConsumingPart(weapon, compatibleMagazines, player);
 					if(magazineItemStack != null) {
 						newMagazine = (ItemMagazine) magazineItemStack.getItem();
 						ammo = Tags.getAmmo(magazineItemStack);
@@ -126,9 +110,10 @@ public class ReloadManager {
 		}
 	}
 	
-	private ItemStack tryConsumingMagazine(Weapon weapon, List<ItemMagazine> compatibleMagazines, EntityPlayer player) {
+
+	private ItemStack tryConsumingPart(Weapon weapon, List<? extends Item> compatibleParts, EntityPlayer player) {
 		ItemStack magazineItemStack = null;
-		for(ItemMagazine magazine: compatibleMagazines) {
+		for(Item magazine: compatibleParts) {
 			if((magazineItemStack = consumeInventoryItem(magazine, player)) != null) {
 				break;
 			}

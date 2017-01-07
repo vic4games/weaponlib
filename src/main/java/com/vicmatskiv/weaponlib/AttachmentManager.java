@@ -100,10 +100,10 @@ public final class AttachmentManager {
 		Weapon.setModifying(itemStack, false);
 	}
 
-	List<CompatibleAttachment<Weapon>> getActiveAttachments(ItemStack itemStack) {
+	List<CompatibleAttachment<? extends AttachmentContainer>> getActiveAttachments(ItemStack itemStack) {
 		ensureItemStack(itemStack);
 		
-		List<CompatibleAttachment<Weapon>> activeAttachments = new ArrayList<>();
+		List<CompatibleAttachment<? extends AttachmentContainer>> activeAttachments = new ArrayList<>();
 		
 		int[] activeAttachmentsIds = ensureActiveAttachments(itemStack);
 		
@@ -113,11 +113,10 @@ public final class AttachmentManager {
 			if(activeIndex == 0) continue;
 			Item item = Item.getItemById(activeIndex);
 			if(item instanceof ItemAttachment) {
-				CompatibleAttachment<Weapon> compatibleAttachment = weapon.getCompatibleAttachments().get(item);
+				CompatibleAttachment<? extends AttachmentContainer> compatibleAttachment = (CompatibleAttachment<? extends AttachmentContainer>) weapon.getCompatibleAttachments().get(item);
 				if(compatibleAttachment != null) {
 					activeAttachments.add(compatibleAttachment);
 				}
-				
 			}
 			
 		}
@@ -313,7 +312,6 @@ public final class AttachmentManager {
 		
 		if(currentAttachment != null) {
 			activeAttachmentsIds[attachmentCategory.ordinal()] = -1;
-			
 			weaponStack.getTagCompound().setIntArray(ACTIVE_ATTACHMENT_TAG, activeAttachmentsIds);
 		}
 		

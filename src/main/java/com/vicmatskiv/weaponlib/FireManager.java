@@ -2,10 +2,10 @@ package com.vicmatskiv.weaponlib;
 
 import java.util.Random;
 
-import com.vicmatskiv.weaponlib.Weapon.State;
-
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+
+import com.vicmatskiv.weaponlib.Weapon.State;
 
 public class FireManager {
 	
@@ -125,4 +125,5 @@ public class FireManager {
 			storage.setState(State.READY);
 		}
 	}
+
 }

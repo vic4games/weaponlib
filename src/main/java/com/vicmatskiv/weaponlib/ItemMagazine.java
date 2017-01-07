@@ -1,5 +1,7 @@
 package com.vicmatskiv.weaponlib;
 
+import java.util.List;
+
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -10,6 +12,20 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.world.World;
 
 public class ItemMagazine extends ItemAttachment<Weapon> implements Part {
+	
+	public static final class Builder extends AttachmentBuilder<Weapon> {
+		private int ammo;
+		
+		public Builder withAmmo(int ammo) {
+			this.ammo = ammo;
+			return this;
+		}
+		
+		@Override
+		protected ItemAttachment<Weapon> createAttachment() {
+			return new ItemMagazine(modId, model, textureName, ammo);
+		}
+	}
 	
 	private final int DEFAULT_MAX_STACK_SIZE = 1;
 	
@@ -58,6 +74,29 @@ public class ItemMagazine extends ItemAttachment<Weapon> implements Part {
 			boolean p_77663_5_) {
 		ensureItemStack(stack);
 		super.onUpdate(stack, p_77663_2_, p_77663_3_, p_77663_4_, p_77663_5_);
+	}
+	
+	public void load(ItemStack itemStack, EntityPlayer player) {
+		int currentAmmo = Tags.getAmmo(itemStack);
+		ItemMagazine magazine = (ItemMagazine) itemStack.getItem();
+		if(currentAmmo < ammo) {
+			List<ItemBullet> compatibleBullets = magazine.getCompatibleBullets();
+			ItemStack bulletStack = tryConsumingBullet(magazine, compatibleBullets, player);
+			if(bulletStack != null) {
+				Tags.setAmmo(itemStack, currentAmmo + 1);
+			}
+		}
+	}
+
+	private ItemStack tryConsumingBullet(ItemMagazine magazine, List<ItemBullet> compatibleBullets,
+			EntityPlayer player) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private List<ItemBullet> getCompatibleBullets() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 }

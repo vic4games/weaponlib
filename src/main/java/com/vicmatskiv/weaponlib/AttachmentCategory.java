@@ -1,7 +1,7 @@
 package com.vicmatskiv.weaponlib;
 
 public enum AttachmentCategory {
-	SCOPE, GRIP, SILENCER, MAGAZINE;
+	SCOPE, GRIP, SILENCER, EXTRA, MAGAZINE;
 	
 	public static final AttachmentCategory values[] = values();
 	

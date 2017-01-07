@@ -1,10 +1,10 @@
 package com.vicmatskiv.weaponlib;
-
+import net.minecraft.item.Item;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 
 public interface ModContext {
 	
-	public void init(Object mod, SimpleNetworkWrapper channel);
+	public void init(Object mod, String modId, SimpleNetworkWrapper channel);
 
 	public void registerWeapon(String name, Weapon weapon);
 	
@@ -18,5 +18,7 @@ public interface ModContext {
 	public AttachmentManager getAttachmentManager();
 	
 	public WeaponClientStorageManager getWeaponClientStorageManager();
+
+	public void registerRenderableItem(String name, Item weapon, ModelSourceRenderer renderer);
 	
 }
