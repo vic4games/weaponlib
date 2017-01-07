@@ -356,7 +356,7 @@ public class WeaponRenderer implements IItemRenderer {
 			return this;
 		}
 		
-		public Builder withFirstPersonCustomRecoiled(Part part, BiConsumer<EntityPlayer, ItemStack> positioning) {
+		public Builder withFirstPersonPositioningCustomRecoiled(Part part, BiConsumer<EntityPlayer, ItemStack> positioning) {
 			if(part instanceof DefaultPart) {
 				throw new IllegalArgumentException("Part " + part + " is not custom");
 			}
@@ -366,7 +366,7 @@ public class WeaponRenderer implements IItemRenderer {
 			return this;
 		}
 		
-		public Builder withFirstPersonCustomZoomingShooting(Part part, BiConsumer<EntityPlayer, ItemStack> positioning) {
+		public Builder withFirstPersonPositioningCustomZoomingShooting(Part part, BiConsumer<EntityPlayer, ItemStack> positioning) {
 			if(part instanceof DefaultPart) {
 				throw new IllegalArgumentException("Part " + part + " is not custom");
 			}
@@ -376,7 +376,7 @@ public class WeaponRenderer implements IItemRenderer {
 			return this;
 		}
 		
-		public Builder withFirstPersonCustomZoomingRecoiled(Part part, BiConsumer<EntityPlayer, ItemStack> positioning) {
+		public Builder withFirstPersonPositioningCustomZoomingRecoiled(Part part, BiConsumer<EntityPlayer, ItemStack> positioning) {
 			if(part instanceof DefaultPart) {
 				throw new IllegalArgumentException("Part " + part + " is not custom");
 			}
@@ -554,6 +554,27 @@ public class WeaponRenderer implements IItemRenderer {
 			if(firstPersonRightHandPositioningModifying == null) {
 				firstPersonRightHandPositioningModifying = firstPersonRightHandPositioning;
 			}
+			
+			/*
+			 * If custom positioning for recoil is not set, default it to normal custom positioning
+			 */
+			if(!firstPersonCustomPositioning.isEmpty() && firstPersonCustomPositioningRecoiled.isEmpty()) {
+				firstPersonCustomPositioning.forEach((part, pos) -> {
+					firstPersonCustomPositioningRecoiled.put(part, pos);
+				});
+			}
+			
+			if(!firstPersonCustomPositioning.isEmpty() && firstPersonCustomPositioningZoomingRecoiled.isEmpty()) {
+				firstPersonCustomPositioning.forEach((part, pos) -> {
+					firstPersonCustomPositioningZoomingRecoiled.put(part, pos);
+				});
+			}
+			
+			if(!firstPersonCustomPositioning.isEmpty() && firstPersonCustomPositioningZoomingShooting.isEmpty()) {
+				firstPersonCustomPositioning.forEach((part, pos) -> {
+					firstPersonCustomPositioningZoomingShooting.put(part, pos);
+				});
+			}
 						
 			firstPersonCustomPositioningReloading.forEach((p, t) -> {
 				if(t.size() != firstPersonPositioningReloading.size()) {
@@ -629,7 +650,10 @@ public class WeaponRenderer implements IItemRenderer {
 
 			if(storage != null) {
 				currentState = storage.getNextDisposableRenderableState();
-				if(currentState == RenderableState.SHOOTING) {
+				if(currentState == RenderableState.AUTO_SHOOTING) {
+					currentState = RenderableState.ZOOMING;
+					rate = builder.firingRandomizingRate;
+				} else if(currentState == RenderableState.SHOOTING) {
 					currentState = RenderableState.ZOOMING_SHOOTING;
 					rate = builder.firingRandomizingRate;
 				} else if(currentState == RenderableState.RECOILED) {
@@ -639,16 +663,17 @@ public class WeaponRenderer implements IItemRenderer {
 					currentState = RenderableState.ZOOMING;
 					rate = builder.zoomRandomizingRate;
 				}
+				
 			}
 			amplitude = builder.zoomRandomizingAmplitude; // Zoom amplitude is enforced even when firing
-			
+			//System.out.println("Rendering state: " + currentState);
 		} else {
 			WeaponClientStorage storage = weapon.getWeaponClientStorage(player);
 
 			if(storage != null) {
 				currentState = storage.getNextDisposableRenderableState();
-				if(currentState == RenderableState.SHOOTING) {
-					//currentState = RenderableState.NORMAL;
+				if(currentState == RenderableState.AUTO_SHOOTING) {
+					currentState = RenderableState.NORMAL;
 					rate = builder.firingRandomizingRate;
 					amplitude = builder.firingRandomizingAmplitude;
 				}
@@ -664,7 +689,8 @@ public class WeaponRenderer implements IItemRenderer {
 			stateManager = new MultipartRenderStateManager<>(currentState, weaponTransitionProvider, Part.WEAPON);
 			firstPersonStateManagers.put(player, stateManager);
 		} else {
-			stateManager.setState(currentState, true, currentState == RenderableState.SHOOTING);
+			stateManager.setState(currentState, true, currentState == RenderableState.SHOOTING
+					|| currentState == RenderableState.ZOOMING_SHOOTING);
 		}
 		
 		return new StateDescriptor(stateManager, rate, amplitude);
@@ -740,14 +766,21 @@ public class WeaponRenderer implements IItemRenderer {
 	
 	private void renderAttachments(Positioner<Part, RenderContext> positioner, RenderContext renderContext,
 			ItemStack itemStack, ItemRenderType type, List<CompatibleAttachment<? extends AttachmentContainer>> attachments, Entity entity, float f, float f1, float f2, float f3, float f4, float f5) {
-		GL11.glPushMatrix();
+		
 		for(CompatibleAttachment<?> compatibleAttachment: attachments) {
 			if(compatibleAttachment != null) {
+				GL11.glPushMatrix();
+				
 				ItemAttachment<?> itemAttachment = compatibleAttachment.getAttachment();
 				
-				if(itemAttachment instanceof Part && positioner != null) {
-					positioner.position((Part) itemAttachment, renderContext);
+				if(positioner != null) {
+					if(itemAttachment instanceof Part) {
+						positioner.position((Part) itemAttachment, renderContext);
+					} else if(itemAttachment.getRenderablePart() != null) {
+						positioner.position(itemAttachment.getRenderablePart(), renderContext);
+					}
 				}
+				
 
 				for(Tuple<ModelBase, String> texturedModel: compatibleAttachment.getAttachment().getTexturedModels()) {
 					Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(builder.modId 
@@ -767,9 +800,10 @@ public class WeaponRenderer implements IItemRenderer {
 					GL11.glPopMatrix();
 				}
 				
+				GL11.glPopMatrix();
 			}
 		}
-		GL11.glPopMatrix();
+		
 	}
 
 	private void renderRightArm(EntityPlayer player, RenderContext renderContext,
@@ -933,7 +967,7 @@ public class WeaponRenderer implements IItemRenderer {
 						builder.firstPersonRightHandPositioning,
 						//builder.firstPersonMagazinePositioning,
 						builder.firstPersonCustomPositioning,
-						builder.recoilAnimationDuration);
+						DEFAULT_ANIMATION_DURATION);
 			case ZOOMING:
 				return getSimpleTransition(builder.firstPersonPositioningZooming, 
 						builder.firstPersonLeftHandPositioningZooming,
@@ -947,14 +981,14 @@ public class WeaponRenderer implements IItemRenderer {
 						builder.firstPersonRightHandPositioningZooming,
 						//builder.firstPersonMagazinePositioning,
 						builder.firstPersonCustomPositioningZoomingShooting,
-						builder.shootingAnimationDuration);
+						60);
 			case ZOOMING_RECOILED:
 				return getSimpleTransition(builder.firstPersonPositioningZoomingRecoiled, 
 						builder.firstPersonLeftHandPositioningZooming,
 						builder.firstPersonRightHandPositioningZooming,
 						//builder.firstPersonMagazinePositioning,
 						builder.firstPersonCustomPositioningZoomingRecoiled,
-						builder.recoilAnimationDuration);
+						60);
 			default:
 				break;
 			}

@@ -116,7 +116,7 @@ final class WeaponClientStorage {
 		}
 		// disposableRenderableStates.add(RenderableState.SHOOTING);
 		if(automatic) {
-			expirableRenderableStates.add(new ExpirableRenderableState(RenderableState.SHOOTING,
+			expirableRenderableStates.add(new ExpirableRenderableState(RenderableState.AUTO_SHOOTING,
 					System.currentTimeMillis() + (long) (50f / fireRate), false));
 		}
 		
