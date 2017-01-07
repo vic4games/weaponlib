@@ -97,7 +97,7 @@ public class AttachmentBuilder<T> {
 	
 	protected ItemAttachment<T> createAttachment() {
 		return new ItemAttachment<T>(
-				modId, attachmentCategory, model, textureName, crosshair, 
+				modId, attachmentCategory, /*model, textureName, */ crosshair, 
 				apply, remove);
 	}
 	
@@ -107,6 +107,9 @@ public class AttachmentBuilder<T> {
 		attachment.setUnlocalizedName(modId + "_" + name); 
 		attachment.setCreativeTab(tab);
 		attachment.setPostRenderer(postRenderer);
+		if(model != null) {
+			attachment.addModel(model, textureName);
+		}
 		texturedModels.forEach(tm -> attachment.addModel(tm.getU(), tm.getV()));
 		StaticModelSourceRenderer renderer = new StaticModelSourceRenderer.Builder()
 				.withEntityPositioning(entityPositioning)

@@ -25,11 +25,13 @@ public class ItemAttachment<T> extends Item implements ModelSource {
 	}
 
 
-	public ItemAttachment(String modId, AttachmentCategory category, ModelBase attachment, String textureName, String crosshair, 
+	public ItemAttachment(String modId, AttachmentCategory category, ModelBase model, String textureName, String crosshair, 
 			ApplyHandler<T> apply, ApplyHandler<T> remove) {
 		//this.modId = modId;
 		this.category = category;
-		this.texturedModels.add(new Tuple<ModelBase, String>(attachment, textureName));
+		if(model != null) {
+			this.texturedModels.add(new Tuple<ModelBase, String>(model, textureName));
+		}
 		this.crosshair = crosshair != null ? modId + ":" + "textures/crosshairs/" + crosshair + ".png" : null;
 		this.apply = apply;
 		this.remove = remove;
