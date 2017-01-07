@@ -13,18 +13,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.AbstractClientPlayer;
-//import net.minecraft.client.entity.EntityClientPlayerMP;
-import net.minecraft.client.model.ModelBase;
-import net.minecraft.client.renderer.entity.RenderManager;
-import net.minecraft.client.renderer.entity.RenderPlayer;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.client.IItemRenderer;
-
 import org.lwjgl.opengl.GL11;
 
 import com.vicmatskiv.weaponlib.animation.MultipartPositioning;
@@ -36,6 +24,17 @@ import com.vicmatskiv.weaponlib.animation.Transition;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.AbstractClientPlayer;
+//import net.minecraft.client.entity.EntityClientPlayerMP;
+import net.minecraft.client.model.ModelBase;
+import net.minecraft.client.renderer.entity.RenderManager;
+import net.minecraft.client.renderer.entity.RenderPlayer;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.client.IItemRenderer;
 
 
 public class WeaponRenderer implements IItemRenderer {
@@ -49,7 +48,8 @@ public class WeaponRenderer implements IItemRenderer {
 	private static final float DEFAULT_FIRING_RANDOMIZING_AMPLITUDE = 0.03f;
 	
 	private static final int DEFAULT_ANIMATION_DURATION = 250;
-	private static final int DEFAULT_RECOIL_ANIMATION_DURATION = 100;
+	private static final int DEFAULT_RECOIL_ANIMATION_DURATION = 60;
+	private static final int DEFAULT_SHOOTING_ANIMATION_DURATION = 100;
 
 	public static class Builder {
 		
@@ -84,17 +84,13 @@ public class WeaponRenderer implements IItemRenderer {
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonRightHandPositioningRecoiled;
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonRightHandPositioningShooting;
 		
-		//private BiConsumer<EntityPlayer, ItemStack> firstPersonMagazinePositioning;
-		
 		private Random random = new Random();
 		
 		private List<Transition> firstPersonPositioningReloading;
-		//private List<Transition> firstPersonMagazinePositioningReloading;
 		private List<Transition> firstPersonLeftHandPositioningReloading;
 		private List<Transition> firstPersonRightHandPositioningReloading;
 		
 		private List<Transition> firstPersonPositioningUnloading;
-		//private List<Transition> firstPersonMagazinePositioningUnloading;
 		private List<Transition> firstPersonLeftHandPositioningUnloading;
 		private List<Transition> firstPersonRightHandPositioningUnloading;
 		
@@ -111,6 +107,7 @@ public class WeaponRenderer implements IItemRenderer {
 		public LinkedHashMap<Part, BiConsumer<EntityPlayer, ItemStack>> firstPersonCustomPositioning = new LinkedHashMap<>();
 		public LinkedHashMap<Part, List<Transition>> firstPersonCustomPositioningUnloading = new LinkedHashMap<>();
 		public LinkedHashMap<Part, List<Transition>> firstPersonCustomPositioningReloading = new LinkedHashMap<>();
+		public LinkedHashMap<Part, BiConsumer<EntityPlayer, ItemStack>> firstPersonCustomPositioningRecoiled = new LinkedHashMap<>();
 		
 		public Builder withModId(String modId) {
 			this.modId = modId;
@@ -332,7 +329,16 @@ public class WeaponRenderer implements IItemRenderer {
 			if(this.firstPersonCustomPositioning.put(part, positioning) != null) {
 				throw new IllegalArgumentException("Part " + part + " already added");
 			}
-			this.firstPersonCustomPositioning.put(part, positioning);
+			return this;
+		}
+		
+		public Builder withFirstPersonCustomRecoiled(Part part, BiConsumer<EntityPlayer, ItemStack> positioning) {
+			if(part instanceof DefaultPart) {
+				throw new IllegalArgumentException("Part " + part + " is not custom");
+			}
+			if(this.firstPersonCustomPositioningRecoiled.put(part, positioning) != null) {
+				throw new IllegalArgumentException("Part " + part + " already added");
+			}
 			return this;
 		}
 		
@@ -428,23 +434,6 @@ public class WeaponRenderer implements IItemRenderer {
 				};
 			}
 			
-			
-			
-			// Magazine positioning
-			
-//			if(firstPersonMagazinePositioningReloading == null) {
-//				firstPersonMagazinePositioningReloading = firstPersonPositioningReloading.stream().map(t -> new Transition((p, i) -> {}, 0)).collect(Collectors.toList());
-//			}
-//			
-//			if(firstPersonMagazinePositioningUnloading == null) {
-//				firstPersonMagazinePositioningUnloading = firstPersonPositioningUnloading.stream().map(t -> new Transition((p, i) -> {}, 0)).collect(Collectors.toList());
-//			}
-//			
-//			if(firstPersonMagazinePositioning == null) {
-//				firstPersonMagazinePositioning = (player, itemStack) -> {};
-//			}
-
-			
 			// Left hand positioning
 			
 			if(firstPersonLeftHandPositioning == null) {
@@ -513,10 +502,7 @@ public class WeaponRenderer implements IItemRenderer {
 			if(firstPersonRightHandPositioningModifying == null) {
 				firstPersonRightHandPositioningModifying = firstPersonRightHandPositioning;
 			}
-			
-			
-			// Custom positioning
-			
+						
 			firstPersonCustomPositioningReloading.forEach((p, t) -> {
 				if(t.size() != firstPersonPositioningReloading.size()) {
 					throw new IllegalStateException("Custom reloading transition number mismatch. Expected " + firstPersonPositioningReloading.size()
@@ -540,8 +526,6 @@ public class WeaponRenderer implements IItemRenderer {
 	private Map<EntityPlayer, MultipartRenderStateManager<RenderableState, Part, RenderContext>> firstPersonStateManagers;
 		
 	private MultipartTransitionProvider<RenderableState, Part, RenderContext> weaponTransitionProvider;
-	
-	//private Randomizer randomizer = new Randomizer();
 	
 	private WeaponRenderer (Builder builder)
 	{
@@ -877,7 +861,7 @@ public class WeaponRenderer implements IItemRenderer {
 						builder.firstPersonLeftHandPositioningRecoiled,
 						builder.firstPersonRightHandPositioningRecoiled,
 						//builder.firstPersonMagazinePositioning,
-						builder.firstPersonCustomPositioning,
+						builder.firstPersonCustomPositioningRecoiled,
 						DEFAULT_RECOIL_ANIMATION_DURATION);
 			case SHOOTING:
 				return getSimpleTransition(builder.firstPersonPositioningShooting, 
@@ -885,7 +869,7 @@ public class WeaponRenderer implements IItemRenderer {
 						builder.firstPersonRightHandPositioningShooting,
 						//builder.firstPersonMagazinePositioning,
 						builder.firstPersonCustomPositioning,
-						DEFAULT_RECOIL_ANIMATION_DURATION); // TODO: is it really recoil duration
+						DEFAULT_SHOOTING_ANIMATION_DURATION);
 			case NORMAL:
 				return getSimpleTransition(builder.firstPersonPositioning, 
 						builder.firstPersonLeftHandPositioning,
