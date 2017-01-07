@@ -1,5 +1,7 @@
 package com.vicmatskiv.weaponlib;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -25,6 +27,7 @@ public class AttachmentBuilder<T> {
 	protected ApplyHandler<T> remove;
 	private String crosshair;
 	private CustomRenderer postRenderer;
+	private List<Tuple<ModelBase, String>> texturedModels = new ArrayList<>();
 	
 	public AttachmentBuilder<T> withCategory(AttachmentCategory attachmentCategory) {
 		this.attachmentCategory = attachmentCategory;
@@ -87,17 +90,24 @@ public class AttachmentBuilder<T> {
 		return this;
 	}
 	
+	public AttachmentBuilder<T> withModel(ModelBase model, String textureName) {
+		this.texturedModels.add(new Tuple<>(model, textureName));
+		return this;
+	}
+	
 	protected ItemAttachment<T> createAttachment() {
 		return new ItemAttachment<T>(
 				modId, attachmentCategory, model, textureName, crosshair, 
 				apply, remove);
 	}
 	
+	@SuppressWarnings("deprecation")
 	public ItemAttachment<T> build(ModContext modContext) {
 		ItemAttachment<T> attachment = createAttachment();
 		attachment.setUnlocalizedName(modId + "_" + name); 
 		attachment.setCreativeTab(tab);
 		attachment.setPostRenderer(postRenderer);
+		texturedModels.forEach(tm -> attachment.addModel(tm.getU(), tm.getV()));
 		StaticModelSourceRenderer renderer = new StaticModelSourceRenderer.Builder()
 				.withEntityPositioning(entityPositioning)
 				.withFirstPersonPositioning(firstPersonPositioning)

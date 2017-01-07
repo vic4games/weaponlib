@@ -44,6 +44,7 @@ public class ItemAttachment<T> extends Item implements ModelSource {
 		this.remove = remove;
 	}
 	
+	@Deprecated
 	public ItemAttachment<T> addModel(ModelBase model, String textureName) {
 		texturedModels.add(new Tuple<>(model, textureName));
 		return this;
