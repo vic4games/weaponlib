@@ -8,7 +8,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Random;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -48,7 +47,7 @@ public class WeaponRenderer implements IItemRenderer {
 	private static final float DEFAULT_FIRING_RANDOMIZING_AMPLITUDE = 0.03f;
 	
 	private static final int DEFAULT_ANIMATION_DURATION = 250;
-	private static final int DEFAULT_RECOIL_ANIMATION_DURATION = 60;
+	private static final int DEFAULT_RECOIL_ANIMATION_DURATION = 100;
 	private static final int DEFAULT_SHOOTING_ANIMATION_DURATION = 100;
 
 	public static class Builder {
@@ -69,6 +68,8 @@ public class WeaponRenderer implements IItemRenderer {
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningModifying;
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningRecoiled;
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningShooting;
+		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningZoomingRecoiled;
+		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningZoomingShooting;
 		
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonLeftHandPositioning;
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonLeftHandPositioningZooming;
@@ -84,8 +85,6 @@ public class WeaponRenderer implements IItemRenderer {
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonRightHandPositioningRecoiled;
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonRightHandPositioningShooting;
 		
-		private Random random = new Random();
-		
 		private List<Transition> firstPersonPositioningReloading;
 		private List<Transition> firstPersonLeftHandPositioningReloading;
 		private List<Transition> firstPersonRightHandPositioningReloading;
@@ -95,6 +94,9 @@ public class WeaponRenderer implements IItemRenderer {
 		private List<Transition> firstPersonRightHandPositioningUnloading;
 		
 		private String modId;
+		
+		private int recoilAnimationDuration = DEFAULT_RECOIL_ANIMATION_DURATION;
+		private int shootingAnimationDuration = DEFAULT_SHOOTING_ANIMATION_DURATION;
 		
 		private float normalRandomizingRate = DEFAULT_RANDOMIZING_RATE; // movements per second, e.g. 0.25 = 0.25 movements per second = 1 movement in 3 minutes
 		private float firingRandomizingRate = DEFAULT_RANDOMIZING_FIRING_RATE; // movements per second, e.g. 20 = 20 movements per second = 1 movement in 50 ms
@@ -108,7 +110,9 @@ public class WeaponRenderer implements IItemRenderer {
 		public LinkedHashMap<Part, List<Transition>> firstPersonCustomPositioningUnloading = new LinkedHashMap<>();
 		public LinkedHashMap<Part, List<Transition>> firstPersonCustomPositioningReloading = new LinkedHashMap<>();
 		public LinkedHashMap<Part, BiConsumer<EntityPlayer, ItemStack>> firstPersonCustomPositioningRecoiled = new LinkedHashMap<>();
-		
+		public LinkedHashMap<Part, BiConsumer<EntityPlayer, ItemStack>> firstPersonCustomPositioningZoomingRecoiled = new LinkedHashMap<>();
+		public LinkedHashMap<Part, BiConsumer<EntityPlayer, ItemStack>> firstPersonCustomPositioningZoomingShooting = new LinkedHashMap<>();
+
 		public Builder withModId(String modId) {
 			this.modId = modId;
 			return this;
@@ -116,6 +120,16 @@ public class WeaponRenderer implements IItemRenderer {
 		
 		public Builder withModel(ModelBase model) {
 			this.model = model;
+			return this;
+		}
+		
+		public Builder withShootingAnimationDuration(int shootingAnimationDuration) {
+			this.shootingAnimationDuration = shootingAnimationDuration;
+			return this;
+		}
+		
+		public Builder withRecoilAnimationDuration(int recoilAnimationDuration) {
+			this.recoilAnimationDuration = recoilAnimationDuration;
 			return this;
 		}
 		
@@ -206,6 +220,16 @@ public class WeaponRenderer implements IItemRenderer {
 		
 		public Builder withFirstPersonPositioningShooting(BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningShooting) {
 			this.firstPersonPositioningShooting = firstPersonPositioningShooting;
+			return this;
+		}
+		
+		public Builder withFirstPersonPositioningZoomingRecoiled(BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningZoomingRecoiled) {
+			this.firstPersonPositioningZoomingRecoiled = firstPersonPositioningZoomingRecoiled;
+			return this;
+		}
+		
+		public Builder withFirstPersonPositioningZoomingShooting(BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningZoomingShooting) {
+			this.firstPersonPositioningZoomingShooting = firstPersonPositioningZoomingShooting;
 			return this;
 		}
 		
@@ -342,6 +366,26 @@ public class WeaponRenderer implements IItemRenderer {
 			return this;
 		}
 		
+		public Builder withFirstPersonCustomZoomingShooting(Part part, BiConsumer<EntityPlayer, ItemStack> positioning) {
+			if(part instanceof DefaultPart) {
+				throw new IllegalArgumentException("Part " + part + " is not custom");
+			}
+			if(this.firstPersonCustomPositioningZoomingShooting.put(part, positioning) != null) {
+				throw new IllegalArgumentException("Part " + part + " already added");
+			}
+			return this;
+		}
+		
+		public Builder withFirstPersonCustomZoomingRecoiled(Part part, BiConsumer<EntityPlayer, ItemStack> positioning) {
+			if(part instanceof DefaultPart) {
+				throw new IllegalArgumentException("Part " + part + " is not custom");
+			}
+			if(this.firstPersonCustomPositioningZoomingRecoiled.put(part, positioning) != null) {
+				throw new IllegalArgumentException("Part " + part + " already added");
+			}
+			return this;
+		}
+		
 		@SafeVarargs
 		public final Builder withFirstPersonCustomPositioningReloading(Part part, Transition ...transitions) {
 			if(part instanceof DefaultPart) {
@@ -413,17 +457,25 @@ public class WeaponRenderer implements IItemRenderer {
 			}
 			
 			if(firstPersonPositioningShooting == null) {
-				//firstPersonPositioningShooting = firstPersonPositioning;
+				firstPersonPositioningShooting = firstPersonPositioning;
 				
-				firstPersonPositioningShooting = (player, itemStack) -> {
-					//firstPersonPositioning.accept(player, itemStack);
-
-					float xRandomOffset = 0.05f * (random.nextFloat() - 0.5f) * 2;
-					float yRandomOffset = 0.05f * (random.nextFloat() - 0.5f) * 2;
-					float zRandomOffset = 0.05f * (random.nextFloat() - 0.5f) * 2;
-					GL11.glTranslatef(xRandomOffset, yRandomOffset, zRandomOffset);
-					//System.out.println("Rendering randomized shooting position...");
-				};
+//				firstPersonPositioningShooting = (player, itemStack) -> {
+//					//firstPersonPositioning.accept(player, itemStack);
+//
+//					float xRandomOffset = 0.05f * (random.nextFloat() - 0.5f) * 2;
+//					float yRandomOffset = 0.05f * (random.nextFloat() - 0.5f) * 2;
+//					float zRandomOffset = 0.05f * (random.nextFloat() - 0.5f) * 2;
+//					GL11.glTranslatef(xRandomOffset, yRandomOffset, zRandomOffset);
+//					//System.out.println("Rendering randomized shooting position...");
+//				};
+			}
+			
+			if(firstPersonPositioningZoomingRecoiled == null) {
+				firstPersonPositioningZoomingRecoiled = firstPersonPositioningZooming;
+			}
+			
+			if(firstPersonPositioningZoomingShooting == null) {
+				firstPersonPositioningZoomingShooting = firstPersonPositioningZooming;
 			}
 			
 			if(thirdPersonPositioning == null) {
@@ -578,20 +630,25 @@ public class WeaponRenderer implements IItemRenderer {
 			if(storage != null) {
 				currentState = storage.getNextDisposableRenderableState();
 				if(currentState == RenderableState.SHOOTING) {
+					currentState = RenderableState.ZOOMING_SHOOTING;
 					rate = builder.firingRandomizingRate;
+				} else if(currentState == RenderableState.RECOILED) {
+					currentState = RenderableState.ZOOMING_RECOILED;
+					rate = builder.zoomRandomizingRate;
 				} else {
+					currentState = RenderableState.ZOOMING;
 					rate = builder.zoomRandomizingRate;
 				}
 			}
 			amplitude = builder.zoomRandomizingAmplitude; // Zoom amplitude is enforced even when firing
-			currentState = RenderableState.ZOOMING;
+			
 		} else {
 			WeaponClientStorage storage = weapon.getWeaponClientStorage(player);
 
 			if(storage != null) {
 				currentState = storage.getNextDisposableRenderableState();
 				if(currentState == RenderableState.SHOOTING) {
-					currentState = RenderableState.NORMAL;
+					//currentState = RenderableState.NORMAL;
 					rate = builder.firingRandomizingRate;
 					amplitude = builder.firingRandomizingAmplitude;
 				}
@@ -862,21 +919,21 @@ public class WeaponRenderer implements IItemRenderer {
 						builder.firstPersonRightHandPositioningRecoiled,
 						//builder.firstPersonMagazinePositioning,
 						builder.firstPersonCustomPositioningRecoiled,
-						DEFAULT_RECOIL_ANIMATION_DURATION);
+						builder.recoilAnimationDuration);
 			case SHOOTING:
 				return getSimpleTransition(builder.firstPersonPositioningShooting, 
 						builder.firstPersonLeftHandPositioningShooting,
 						builder.firstPersonRightHandPositioningShooting,
 						//builder.firstPersonMagazinePositioning,
 						builder.firstPersonCustomPositioning,
-						DEFAULT_SHOOTING_ANIMATION_DURATION);
+						builder.shootingAnimationDuration);
 			case NORMAL:
 				return getSimpleTransition(builder.firstPersonPositioning, 
 						builder.firstPersonLeftHandPositioning,
 						builder.firstPersonRightHandPositioning,
 						//builder.firstPersonMagazinePositioning,
 						builder.firstPersonCustomPositioning,
-						DEFAULT_ANIMATION_DURATION);
+						builder.recoilAnimationDuration);
 			case ZOOMING:
 				return getSimpleTransition(builder.firstPersonPositioningZooming, 
 						builder.firstPersonLeftHandPositioningZooming,
@@ -884,6 +941,20 @@ public class WeaponRenderer implements IItemRenderer {
 						//builder.firstPersonMagazinePositioning,
 						builder.firstPersonCustomPositioning,
 						DEFAULT_ANIMATION_DURATION);
+			case ZOOMING_SHOOTING:
+				return getSimpleTransition(builder.firstPersonPositioningZoomingShooting, 
+						builder.firstPersonLeftHandPositioningZooming,
+						builder.firstPersonRightHandPositioningZooming,
+						//builder.firstPersonMagazinePositioning,
+						builder.firstPersonCustomPositioningZoomingShooting,
+						builder.shootingAnimationDuration);
+			case ZOOMING_RECOILED:
+				return getSimpleTransition(builder.firstPersonPositioningZoomingRecoiled, 
+						builder.firstPersonLeftHandPositioningZooming,
+						builder.firstPersonRightHandPositioningZooming,
+						//builder.firstPersonMagazinePositioning,
+						builder.firstPersonCustomPositioningZoomingRecoiled,
+						builder.recoilAnimationDuration);
 			default:
 				break;
 			}

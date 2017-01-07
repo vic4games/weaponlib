@@ -123,6 +123,8 @@ final class WeaponClientStorage {
 		if(!automatic) {
 			expirableRenderableStates.add(new ExpirableRenderableState(RenderableState.RECOILED,
 					System.currentTimeMillis() + (long) (500f), true));
+			expirableRenderableStates.add(new ExpirableRenderableState(RenderableState.SHOOTING,
+					System.currentTimeMillis() + (long) (500f), true));
 		}
 	}
 
