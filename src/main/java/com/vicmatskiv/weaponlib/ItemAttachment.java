@@ -17,6 +17,7 @@ public class ItemAttachment<T> extends Item implements ModelSource {
 	private List<Tuple<ModelBase, String>> texturedModels = new ArrayList<>();
 	private CustomRenderer postRenderer;
 	private CustomRenderer preRenderer;
+	private Part renderablePart;
 	
 	private List<Weapon> compatibleWeapons = new ArrayList<>();
 	
@@ -25,11 +26,13 @@ public class ItemAttachment<T> extends Item implements ModelSource {
 	}
 
 
-	public ItemAttachment(String modId, AttachmentCategory category, ModelBase attachment, String textureName, String crosshair, 
+	public ItemAttachment(String modId, AttachmentCategory category, ModelBase model, String textureName, String crosshair, 
 			ApplyHandler<T> apply, ApplyHandler<T> remove) {
 		//this.modId = modId;
 		this.category = category;
-		this.texturedModels.add(new Tuple<ModelBase, String>(attachment, textureName));
+		if(model != null) {
+			this.texturedModels.add(new Tuple<ModelBase, String>(model, textureName));
+		}
 		this.crosshair = crosshair != null ? modId + ":" + "textures/crosshairs/" + crosshair + ".png" : null;
 		this.apply = apply;
 		this.remove = remove;
@@ -48,6 +51,16 @@ public class ItemAttachment<T> extends Item implements ModelSource {
 		//throw new UnsupportedOperationException();
 	}
 	
+	
+	public Part getRenderablePart() {
+		return renderablePart;
+	}
+
+	protected void setRenderablePart(Part renderablePart) {
+		this.renderablePart = renderablePart;
+	}
+
+	@Deprecated
 	public ItemAttachment<T> addModel(ModelBase model, String textureName) {
 		texturedModels.add(new Tuple<>(model, textureName));
 		return this;

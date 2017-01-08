@@ -61,8 +61,8 @@ class WeaponClientStorageManager {
 				ItemStack itemStack = player.getHeldItem(EnumHand.MAIN_HAND);
 				return itemStack.getTagCompound() != null ?
 						new WeaponClientStorage(Tags.getState(itemStack), 
-						Tags.getAmmo(itemStack), weapon.builder.zoom, 
-						Tags.getRecoil(player.getHeldItem(EnumHand.MAIN_HAND)), weapon.builder.fireRate) : null;
+								Tags.getAmmo(itemStack), weapon.builder.zoom, 
+								Tags.getRecoil(player.getHeldItem(EnumHand.MAIN_HAND)), weapon.builder.fireRate, weapon.builder.maxShots > 1) : null;
 			});
 	}
 }

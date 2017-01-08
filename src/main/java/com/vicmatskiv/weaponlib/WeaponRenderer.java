@@ -8,7 +8,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Random;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -28,7 +27,6 @@ import com.vicmatskiv.weaponlib.animation.Transition;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
-//import net.minecraft.client.entity.EntityClientPlayerMP;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.model.ModelPlayer;
@@ -74,6 +72,8 @@ public class WeaponRenderer extends ModelSourceRenderer implements IPerspectiveA
 	
 	private static final int DEFAULT_ANIMATION_DURATION = 250;
 	private static final int DEFAULT_RECOIL_ANIMATION_DURATION = 100;
+	private static final int DEFAULT_SHOOTING_ANIMATION_DURATION = 100;
+
 
 	public static class Builder {
 		
@@ -93,6 +93,8 @@ public class WeaponRenderer extends ModelSourceRenderer implements IPerspectiveA
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningModifying;
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningRecoiled;
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningShooting;
+		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningZoomingRecoiled;
+		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningZoomingShooting;
 		
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonLeftHandPositioning;
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonLeftHandPositioningZooming;
@@ -107,11 +109,7 @@ public class WeaponRenderer extends ModelSourceRenderer implements IPerspectiveA
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonRightHandPositioningModifying;
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonRightHandPositioningRecoiled;
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonRightHandPositioningShooting;
-		
-		//private BiConsumer<EntityPlayer, ItemStack> firstPersonMagazinePositioning;
-		
-		private Random random = new Random();
-		
+
 		private List<Transition> firstPersonPositioningReloading;
 		private List<Transition> firstPersonLeftHandPositioningReloading;
 		private List<Transition> firstPersonRightHandPositioningReloading;
@@ -121,6 +119,9 @@ public class WeaponRenderer extends ModelSourceRenderer implements IPerspectiveA
 		private List<Transition> firstPersonRightHandPositioningUnloading;
 		
 		private String modId;
+		
+		private int recoilAnimationDuration = DEFAULT_RECOIL_ANIMATION_DURATION;
+		private int shootingAnimationDuration = DEFAULT_SHOOTING_ANIMATION_DURATION;
 		
 		private float normalRandomizingRate = DEFAULT_RANDOMIZING_RATE; // movements per second, e.g. 0.25 = 0.25 movements per second = 1 movement in 3 minutes
 		private float firingRandomizingRate = DEFAULT_RANDOMIZING_FIRING_RATE; // movements per second, e.g. 20 = 20 movements per second = 1 movement in 50 ms
@@ -134,7 +135,10 @@ public class WeaponRenderer extends ModelSourceRenderer implements IPerspectiveA
 		public LinkedHashMap<Part, List<Transition>> firstPersonCustomPositioningUnloading = new LinkedHashMap<>();
 		public LinkedHashMap<Part, List<Transition>> firstPersonCustomPositioningReloading = new LinkedHashMap<>();
 
-		
+		public LinkedHashMap<Part, BiConsumer<EntityPlayer, ItemStack>> firstPersonCustomPositioningRecoiled = new LinkedHashMap<>();
+		public LinkedHashMap<Part, BiConsumer<EntityPlayer, ItemStack>> firstPersonCustomPositioningZoomingRecoiled = new LinkedHashMap<>();
+		public LinkedHashMap<Part, BiConsumer<EntityPlayer, ItemStack>> firstPersonCustomPositioningZoomingShooting = new LinkedHashMap<>();
+
 		public Builder withModId(String modId) {
 			this.modId = modId;
 			return this;
@@ -142,6 +146,16 @@ public class WeaponRenderer extends ModelSourceRenderer implements IPerspectiveA
 		
 		public Builder withModel(ModelBase model) {
 			this.model = model;
+			return this;
+		}
+		
+		public Builder withShootingAnimationDuration(int shootingAnimationDuration) {
+			this.shootingAnimationDuration = shootingAnimationDuration;
+			return this;
+		}
+		
+		public Builder withRecoilAnimationDuration(int recoilAnimationDuration) {
+			this.recoilAnimationDuration = recoilAnimationDuration;
 			return this;
 		}
 		
@@ -235,6 +249,16 @@ public class WeaponRenderer extends ModelSourceRenderer implements IPerspectiveA
 			return this;
 		}
 		
+		public Builder withFirstPersonPositioningZoomingRecoiled(BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningZoomingRecoiled) {
+			this.firstPersonPositioningZoomingRecoiled = firstPersonPositioningZoomingRecoiled;
+			return this;
+		}
+		
+		public Builder withFirstPersonPositioningZoomingShooting(BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningZoomingShooting) {
+			this.firstPersonPositioningZoomingShooting = firstPersonPositioningZoomingShooting;
+			return this;
+		}
+		
 		@SafeVarargs
 		public final Builder withFirstPersonPositioningReloading(Transition ...transitions) {
 			this.firstPersonPositioningReloading = Arrays.asList(transitions);
@@ -312,6 +336,66 @@ public class WeaponRenderer extends ModelSourceRenderer implements IPerspectiveA
 			this.firstPersonRightHandPositioningModifying = rightHand;
 			return this;
 		}
+		
+		
+		public Builder withFirstPersonCustomPositioning(Part part, BiConsumer<EntityPlayer, ItemStack> positioning) {
+			if(part instanceof DefaultPart) {
+				throw new IllegalArgumentException("Part " + part + " is not custom");
+			}
+			if(this.firstPersonCustomPositioning.put(part, positioning) != null) {
+				throw new IllegalArgumentException("Part " + part + " already added");
+			}
+			return this;
+		}
+		
+		public Builder withFirstPersonPositioningCustomRecoiled(Part part, BiConsumer<EntityPlayer, ItemStack> positioning) {
+			if(part instanceof DefaultPart) {
+				throw new IllegalArgumentException("Part " + part + " is not custom");
+			}
+			if(this.firstPersonCustomPositioningRecoiled.put(part, positioning) != null) {
+				throw new IllegalArgumentException("Part " + part + " already added");
+			}
+			return this;
+		}
+		
+		public Builder withFirstPersonPositioningCustomZoomingShooting(Part part, BiConsumer<EntityPlayer, ItemStack> positioning) {
+			if(part instanceof DefaultPart) {
+				throw new IllegalArgumentException("Part " + part + " is not custom");
+			}
+			if(this.firstPersonCustomPositioningZoomingShooting.put(part, positioning) != null) {
+				throw new IllegalArgumentException("Part " + part + " already added");
+			}
+			return this;
+		}
+		
+		public Builder withFirstPersonPositioningCustomZoomingRecoiled(Part part, BiConsumer<EntityPlayer, ItemStack> positioning) {
+			if(part instanceof DefaultPart) {
+				throw new IllegalArgumentException("Part " + part + " is not custom");
+			}
+			if(this.firstPersonCustomPositioningZoomingRecoiled.put(part, positioning) != null) {
+				throw new IllegalArgumentException("Part " + part + " already added");
+			}
+			return this;
+		}
+		
+		@SafeVarargs
+		public final Builder withFirstPersonCustomPositioningReloading(Part part, Transition ...transitions) {
+			if(part instanceof DefaultPart) {
+				throw new IllegalArgumentException("Part " + part + " is not custom");
+			}
+			
+			this.firstPersonCustomPositioningReloading.put(part, Arrays.asList(transitions));
+			return this;
+		}
+		
+		@SafeVarargs
+		public final Builder withFirstPersonCustomPositioningUnloading(Part part, Transition ...transitions) {
+			if(part instanceof DefaultPart) {
+				throw new IllegalArgumentException("Part " + part + " is not custom");
+			}
+			this.firstPersonCustomPositioningUnloading.put(part, Arrays.asList(transitions));
+			return this;
+		}
 
 		public WeaponRenderer build() {
 			if(FMLCommonHandler.instance().getSide() != Side.CLIENT) {
@@ -366,17 +450,25 @@ public class WeaponRenderer extends ModelSourceRenderer implements IPerspectiveA
 			}
 			
 			if(firstPersonPositioningShooting == null) {
-				//firstPersonPositioningShooting = firstPersonPositioning;
+				firstPersonPositioningShooting = firstPersonPositioning;
 				
-				firstPersonPositioningShooting = (player, itemStack) -> {
-					//firstPersonPositioning.accept(player, itemStack);
-
-					float xRandomOffset = 0.05f * (random.nextFloat() - 0.5f) * 2;
-					float yRandomOffset = 0.05f * (random.nextFloat() - 0.5f) * 2;
-					float zRandomOffset = 0.05f * (random.nextFloat() - 0.5f) * 2;
-					GL11.glTranslatef(xRandomOffset, yRandomOffset, zRandomOffset);
-					//System.out.println("Rendering randomized shooting position...");
-				};
+//				firstPersonPositioningShooting = (player, itemStack) -> {
+//					//firstPersonPositioning.accept(player, itemStack);
+//
+//					float xRandomOffset = 0.05f * (random.nextFloat() - 0.5f) * 2;
+//					float yRandomOffset = 0.05f * (random.nextFloat() - 0.5f) * 2;
+//					float zRandomOffset = 0.05f * (random.nextFloat() - 0.5f) * 2;
+//					GL11.glTranslatef(xRandomOffset, yRandomOffset, zRandomOffset);
+//					//System.out.println("Rendering randomized shooting position...");
+//				};
+			}
+			
+			if(firstPersonPositioningZoomingRecoiled == null) {
+				firstPersonPositioningZoomingRecoiled = firstPersonPositioningZooming;
+			}
+			
+			if(firstPersonPositioningZoomingShooting == null) {
+				firstPersonPositioningZoomingShooting = firstPersonPositioningZooming;
 			}
 			
 			if(thirdPersonPositioning == null) {
@@ -456,9 +548,27 @@ public class WeaponRenderer extends ModelSourceRenderer implements IPerspectiveA
 				firstPersonRightHandPositioningModifying = firstPersonRightHandPositioning;
 			}
 			
+			/*
+			 * If custom positioning for recoil is not set, default it to normal custom positioning
+			 */
+			if(!firstPersonCustomPositioning.isEmpty() && firstPersonCustomPositioningRecoiled.isEmpty()) {
+				firstPersonCustomPositioning.forEach((part, pos) -> {
+					firstPersonCustomPositioningRecoiled.put(part, pos);
+				});
+			}
 			
-			// Custom positioning
+			if(!firstPersonCustomPositioning.isEmpty() && firstPersonCustomPositioningZoomingRecoiled.isEmpty()) {
+				firstPersonCustomPositioning.forEach((part, pos) -> {
+					firstPersonCustomPositioningZoomingRecoiled.put(part, pos);
+				});
+			}
 			
+			if(!firstPersonCustomPositioning.isEmpty() && firstPersonCustomPositioningZoomingShooting.isEmpty()) {
+				firstPersonCustomPositioning.forEach((part, pos) -> {
+					firstPersonCustomPositioningZoomingShooting.put(part, pos);
+				});
+			}
+						
 			firstPersonCustomPositioningReloading.forEach((p, t) -> {
 				if(t.size() != firstPersonPositioningReloading.size()) {
 					throw new IllegalStateException("Custom reloading transition number mismatch. Expected " + firstPersonPositioningReloading.size()
@@ -494,8 +604,6 @@ public class WeaponRenderer extends ModelSourceRenderer implements IPerspectiveA
 
 	protected ModelResourceLocation resourceLocation;
 	
-	TransformType transformType;
-	
 	private class WeaponItemOverrideList extends ItemOverrideList {
 
 		public WeaponItemOverrideList(List<ItemOverride> overridesIn) {
@@ -512,6 +620,8 @@ public class WeaponRenderer extends ModelSourceRenderer implements IPerspectiveA
 	}
 	
 	private ItemOverrideList itemOverrideList = new WeaponItemOverrideList(Collections.emptyList());
+	
+	TransformType transformType;
 	
 	private WeaponRenderer (Builder builder)
 	{
@@ -559,20 +669,29 @@ public class WeaponRenderer extends ModelSourceRenderer implements IPerspectiveA
 
 			if(storage != null) {
 				currentState = storage.getNextDisposableRenderableState();
-				if(currentState == RenderableState.SHOOTING) {
+				if(currentState == RenderableState.AUTO_SHOOTING) {
+					currentState = RenderableState.ZOOMING;
 					rate = builder.firingRandomizingRate;
+				} else if(currentState == RenderableState.SHOOTING) {
+					currentState = RenderableState.ZOOMING_SHOOTING;
+					rate = builder.firingRandomizingRate;
+				} else if(currentState == RenderableState.RECOILED) {
+					currentState = RenderableState.ZOOMING_RECOILED;
+					rate = builder.zoomRandomizingRate;
 				} else {
+					currentState = RenderableState.ZOOMING;
 					rate = builder.zoomRandomizingRate;
 				}
+				
 			}
 			amplitude = builder.zoomRandomizingAmplitude; // Zoom amplitude is enforced even when firing
-			currentState = RenderableState.ZOOMING;
+			//System.out.println("Rendering state: " + currentState);
 		} else {
 			WeaponClientStorage storage = weapon.getWeaponClientStorage(player);
 
 			if(storage != null) {
 				currentState = storage.getNextDisposableRenderableState();
-				if(currentState == RenderableState.SHOOTING) {
+				if(currentState == RenderableState.AUTO_SHOOTING) {
 					currentState = RenderableState.NORMAL;
 					rate = builder.firingRandomizingRate;
 					amplitude = builder.firingRandomizingAmplitude;
@@ -589,7 +708,8 @@ public class WeaponRenderer extends ModelSourceRenderer implements IPerspectiveA
 			stateManager = new MultipartRenderStateManager<>(currentState, weaponTransitionProvider, Part.WEAPON);
 			firstPersonStateManagers.put(player, stateManager);
 		} else {
-			stateManager.setState(currentState, true, currentState == RenderableState.SHOOTING);
+			stateManager.setState(currentState, true, currentState == RenderableState.SHOOTING
+					|| currentState == RenderableState.ZOOMING_SHOOTING);
 		}
 		
 		return new StateDescriptor(stateManager, rate, amplitude);
@@ -786,17 +906,23 @@ public class WeaponRenderer extends ModelSourceRenderer implements IPerspectiveA
 		GL11.glPopMatrix();
 	   
 	}
-
+	
 	private void renderAttachments(Positioner<Part, RenderContext> positioner, String modId, RenderContext renderContext,
 			ItemStack itemStack, TransformType type, List<CompatibleAttachment<? extends AttachmentContainer>> attachments, Entity entity, float f, float f1, float f2, float f3, float f4, float f5) {
-		GL11.glPushMatrix();
 		for(CompatibleAttachment<?> compatibleAttachment: attachments) {
 			if(compatibleAttachment != null) {
+				GL11.glPushMatrix();
+				
 				ItemAttachment<?> itemAttachment = compatibleAttachment.getAttachment();
 				
-				if(itemAttachment instanceof Part && positioner != null) {
-					positioner.position((Part) itemAttachment, renderContext);
+				if(positioner != null) {
+					if(itemAttachment instanceof Part) {
+						positioner.position((Part) itemAttachment, renderContext);
+					} else if(itemAttachment.getRenderablePart() != null) {
+						positioner.position(itemAttachment.getRenderablePart(), renderContext);
+					}
 				}
+				
 
 				for(Tuple<ModelBase, String> texturedModel: compatibleAttachment.getAttachment().getTexturedModels()) {
 					Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(modId 
@@ -815,11 +941,9 @@ public class WeaponRenderer extends ModelSourceRenderer implements IPerspectiveA
 					GL11.glPopAttrib();
 					GL11.glPopMatrix();
 				}
+				GL11.glPopMatrix();
 			}
 		}
-		
-		GL11.glPopMatrix();
-	   
 	}
 	
 	public void renderRightArm(RenderPlayer renderPlayer, AbstractClientPlayer clientPlayer)
@@ -1004,14 +1128,15 @@ public class WeaponRenderer extends ModelSourceRenderer implements IPerspectiveA
 				return getSimpleTransition(builder.firstPersonPositioningRecoiled, 
 						builder.firstPersonLeftHandPositioningRecoiled,
 						builder.firstPersonRightHandPositioningRecoiled,
-						builder.firstPersonCustomPositioning,
-						DEFAULT_RECOIL_ANIMATION_DURATION);
+						//builder.firstPersonMagazinePositioning,
+						builder.firstPersonCustomPositioningRecoiled,
+						builder.recoilAnimationDuration);
 			case SHOOTING:
 				return getSimpleTransition(builder.firstPersonPositioningShooting, 
 						builder.firstPersonLeftHandPositioningShooting,
 						builder.firstPersonRightHandPositioningShooting,
 						builder.firstPersonCustomPositioning,
-						DEFAULT_RECOIL_ANIMATION_DURATION); // TODO: is it really recoil duration
+						builder.shootingAnimationDuration);
 			case NORMAL:
 				return getSimpleTransition(builder.firstPersonPositioning, 
 						builder.firstPersonLeftHandPositioning,
@@ -1024,6 +1149,20 @@ public class WeaponRenderer extends ModelSourceRenderer implements IPerspectiveA
 						builder.firstPersonRightHandPositioningZooming,
 						builder.firstPersonCustomPositioning,
 						DEFAULT_ANIMATION_DURATION);
+			case ZOOMING_SHOOTING:
+				return getSimpleTransition(builder.firstPersonPositioningZoomingShooting, 
+						builder.firstPersonLeftHandPositioningZooming,
+						builder.firstPersonRightHandPositioningZooming,
+						//builder.firstPersonMagazinePositioning,
+						builder.firstPersonCustomPositioningZoomingShooting,
+						60);
+			case ZOOMING_RECOILED:
+				return getSimpleTransition(builder.firstPersonPositioningZoomingRecoiled, 
+						builder.firstPersonLeftHandPositioningZooming,
+						builder.firstPersonRightHandPositioningZooming,
+						//builder.firstPersonMagazinePositioning,
+						builder.firstPersonCustomPositioningZoomingRecoiled,
+						60);
 			default:
 				break;
 			}
@@ -1035,11 +1174,6 @@ public class WeaponRenderer extends ModelSourceRenderer implements IPerspectiveA
 	public ItemCameraTransforms getItemCameraTransforms() {
 		return ItemCameraTransforms.DEFAULT;
 	}
-
-//	@Override
-//	public VertexFormat getFormat() {
-//		return DefaultVertexFormats.ITEM;
-//	}
 
 	@Override
 	public ItemOverrideList getOverrides() {

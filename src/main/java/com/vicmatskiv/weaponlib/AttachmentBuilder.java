@@ -5,12 +5,12 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import com.vicmatskiv.weaponlib.ItemAttachment.ApplyHandler;
-
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+
+import com.vicmatskiv.weaponlib.ItemAttachment.ApplyHandler;
 
 public class AttachmentBuilder<T> {
 	protected String name;
@@ -28,6 +28,7 @@ public class AttachmentBuilder<T> {
 	private String crosshair;
 	private CustomRenderer postRenderer;
 	private List<Tuple<ModelBase, String>> texturedModels = new ArrayList<>();
+	private boolean isRenderablePart;
 	
 	public AttachmentBuilder<T> withCategory(AttachmentCategory attachmentCategory) {
 		this.attachmentCategory = attachmentCategory;
@@ -95,9 +96,14 @@ public class AttachmentBuilder<T> {
 		return this;
 	}
 	
+	public AttachmentBuilder<T> withRenderablePart() {
+		this.isRenderablePart = true;
+		return this;
+	}
+	
 	protected ItemAttachment<T> createAttachment() {
 		return new ItemAttachment<T>(
-				modId, attachmentCategory, model, textureName, crosshair, 
+				modId, attachmentCategory, /*model, textureName, */ crosshair, 
 				apply, remove);
 	}
 	
@@ -107,6 +113,13 @@ public class AttachmentBuilder<T> {
 		attachment.setUnlocalizedName(modId + "_" + name); 
 		attachment.setCreativeTab(tab);
 		attachment.setPostRenderer(postRenderer);
+		if(isRenderablePart) {
+			attachment.setRenderablePart(new Part() {});
+		}
+		
+		if(model != null) {
+			attachment.addModel(model, textureName);
+		}
 		texturedModels.forEach(tm -> attachment.addModel(tm.getU(), tm.getV()));
 		StaticModelSourceRenderer renderer = new StaticModelSourceRenderer.Builder()
 				.withEntityPositioning(entityPositioning)
