@@ -17,6 +17,7 @@ public class ItemAttachment<T> extends Item implements ModelSource {
 	private List<Tuple<ModelBase, String>> texturedModels = new ArrayList<>();
 	private CustomRenderer postRenderer;
 	private CustomRenderer preRenderer;
+	private Part renderablePart;
 	
 	private List<Weapon> compatibleWeapons = new ArrayList<>();
 	
@@ -50,6 +51,16 @@ public class ItemAttachment<T> extends Item implements ModelSource {
 		//throw new UnsupportedOperationException();
 	}
 	
+	
+	public Part getRenderablePart() {
+		return renderablePart;
+	}
+
+	protected void setRenderablePart(Part renderablePart) {
+		this.renderablePart = renderablePart;
+	}
+
+	@Deprecated
 	public ItemAttachment<T> addModel(ModelBase model, String textureName) {
 		texturedModels.add(new Tuple<>(model, textureName));
 		return this;

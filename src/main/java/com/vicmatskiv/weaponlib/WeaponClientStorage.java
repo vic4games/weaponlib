@@ -20,19 +20,22 @@ final class WeaponClientStorage {
 	private float fireRate;
 
 	private AtomicReference<State> state;
+	
+	private boolean automatic;
 
-	private int recoilableShotCount;
-	private boolean recoiledForCurrentShot;
+//	private int recoilableShotCount;
+//	private boolean recoiledForCurrentShot;
 
-	private Queue<ExpirableRenderableState> disposableRenderableStates = new ArrayBlockingQueue<>(100);
+	private Queue<ExpirableRenderableState> expirableRenderableStates = new ArrayBlockingQueue<>(100);
 
-	public WeaponClientStorage(State state, int currentAmmo, float zoom, float recoil, float fireRate) {
+	public WeaponClientStorage(State state, int currentAmmo, float zoom, float recoil, float fireRate, boolean automatic) {
 		this.currentAmmo = new AtomicInteger(currentAmmo);
 		this.reloadingStopsAt = new AtomicLong();
 		this.recoil = new AtomicDouble(recoil);
 		this.state = new AtomicReference<>(state);
 		this.zoom = zoom;
 		this.fireRate = fireRate;
+		this.automatic = automatic;
 	}
 
 	public void setLastShotFiredAt(long lastShotFiredAt) {
@@ -75,45 +78,54 @@ final class WeaponClientStorage {
 		this.recoil.set(recoil);
 	}
 
-	public synchronized void addRecoilableShot() {
-		if (recoilableShotCount < 0) {
-			recoilableShotCount = 0;
-		}
-		if (recoilableShotCount == 0) {
-			recoiledForCurrentShot = false;
-		}
-		recoilableShotCount++;
-	}
-
-	public synchronized boolean hasRecoiled() {
-		return recoiledForCurrentShot;
-	}
-
-	public synchronized boolean checkIfNotRecoiledAndRecoil() {
-		if (recoilableShotCount > 0) {
-			if (!recoiledForCurrentShot) {
-				recoilableShotCount--;
-				recoiledForCurrentShot = true;
-				return true;
-			} else {
-				return false;
-			}
-		} else {
-			return false;
-		}
-	}
-
-	public synchronized void resetRecoiled() {
-		recoiledForCurrentShot = false;
-	}
+//	public synchronized void addRecoilableShot() {
+//		if (recoilableShotCount < 0) {
+//			recoilableShotCount = 0;
+//		}
+//		if (recoilableShotCount == 0) {
+//			recoiledForCurrentShot = false;
+//		}
+//		recoilableShotCount++;
+//	}
+//
+//	public synchronized boolean hasRecoiled() {
+//		return recoiledForCurrentShot;
+//	}
+//
+//	public synchronized boolean checkIfNotRecoiledAndRecoil() {
+//		if (recoilableShotCount > 0) {
+//			if (!recoiledForCurrentShot) {
+//				recoilableShotCount--;
+//				recoiledForCurrentShot = true;
+//				return true;
+//			} else {
+//				return false;
+//			}
+//		} else {
+//			return false;
+//		}
+//	}
+//
+//	public synchronized void resetRecoiled() {
+//		recoiledForCurrentShot = false;
+//	}
 
 	public void addShot() {
 		if (shotsInternal++ == 0) {
 			// disposableRenderableStates.add(RenderableState.RECOILED);
 		}
 		// disposableRenderableStates.add(RenderableState.SHOOTING);
-		disposableRenderableStates.add(new ExpirableRenderableState(RenderableState.SHOOTING,
-				System.currentTimeMillis() + (long) (50f / fireRate)));
+		if(automatic) {
+			expirableRenderableStates.add(new ExpirableRenderableState(RenderableState.AUTO_SHOOTING,
+					System.currentTimeMillis() + (long) (50f / fireRate), false));
+		}
+		
+		if(!automatic) {
+			expirableRenderableStates.add(new ExpirableRenderableState(RenderableState.RECOILED,
+					System.currentTimeMillis() + (long) (500f), true));
+			expirableRenderableStates.add(new ExpirableRenderableState(RenderableState.SHOOTING,
+					System.currentTimeMillis() + (long) (500f), true));
+		}
 	}
 
 	/**
@@ -124,12 +136,13 @@ final class WeaponClientStorage {
 	 */
 	public RenderableState getNextDisposableRenderableState() {
 		ExpirableRenderableState ers;
-		while ((ers = disposableRenderableStates.peek()) != null) {
+		while ((ers = expirableRenderableStates.peek()) != null) {
 			if (System.currentTimeMillis() <= ers.expiresAt) {
-				// if(ers.singleUse) disposableRenderableStates.poll();
+				if(ers.singleUse) expirableRenderableStates.poll();
 				break;
 			} else {
-				disposableRenderableStates.poll();
+				//System.out.println("Discarding expired renderable state " + ers.state);
+				expirableRenderableStates.poll();
 			}
 		}
 		return ers != null ? ers.state : RenderableState.NORMAL;

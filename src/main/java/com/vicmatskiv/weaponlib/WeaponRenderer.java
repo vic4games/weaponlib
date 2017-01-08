@@ -8,7 +8,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Random;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -27,7 +26,6 @@ import com.vicmatskiv.weaponlib.animation.Transition;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
-//import net.minecraft.client.entity.EntityClientPlayerMP;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.renderer.GlStateManager;
@@ -43,7 +41,6 @@ import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.client.resources.model.IBakedModel;
-import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -70,7 +67,7 @@ implements ISmartItemModel, IPerspectiveAwareModel, IFlexibleBakedModel {
 	
 	private static final int DEFAULT_ANIMATION_DURATION = 250;
 	private static final int DEFAULT_RECOIL_ANIMATION_DURATION = 100;
-	
+	private static final int DEFAULT_SHOOTING_ANIMATION_DURATION = 100;
 
 	public static class Builder {
 		
@@ -90,6 +87,8 @@ implements ISmartItemModel, IPerspectiveAwareModel, IFlexibleBakedModel {
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningModifying;
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningRecoiled;
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningShooting;
+		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningZoomingRecoiled;
+		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningZoomingShooting;
 		
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonLeftHandPositioning;
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonLeftHandPositioningZooming;
@@ -105,8 +104,6 @@ implements ISmartItemModel, IPerspectiveAwareModel, IFlexibleBakedModel {
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonRightHandPositioningRecoiled;
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonRightHandPositioningShooting;
 		
-		private Random random = new Random();
-		
 		private List<Transition> firstPersonPositioningReloading;
 		private List<Transition> firstPersonLeftHandPositioningReloading;
 		private List<Transition> firstPersonRightHandPositioningReloading;
@@ -116,6 +113,9 @@ implements ISmartItemModel, IPerspectiveAwareModel, IFlexibleBakedModel {
 		private List<Transition> firstPersonRightHandPositioningUnloading;
 		
 		private String modId;
+		
+		private int recoilAnimationDuration = DEFAULT_RECOIL_ANIMATION_DURATION;
+		private int shootingAnimationDuration = DEFAULT_SHOOTING_ANIMATION_DURATION;
 		
 		private float normalRandomizingRate = DEFAULT_RANDOMIZING_RATE; // movements per second, e.g. 0.25 = 0.25 movements per second = 1 movement in 3 minutes
 		private float firingRandomizingRate = DEFAULT_RANDOMIZING_FIRING_RATE; // movements per second, e.g. 20 = 20 movements per second = 1 movement in 50 ms
@@ -128,7 +128,10 @@ implements ISmartItemModel, IPerspectiveAwareModel, IFlexibleBakedModel {
 		public LinkedHashMap<Part, BiConsumer<EntityPlayer, ItemStack>> firstPersonCustomPositioning = new LinkedHashMap<>();
 		public LinkedHashMap<Part, List<Transition>> firstPersonCustomPositioningUnloading = new LinkedHashMap<>();
 		public LinkedHashMap<Part, List<Transition>> firstPersonCustomPositioningReloading = new LinkedHashMap<>();
-		
+		public LinkedHashMap<Part, BiConsumer<EntityPlayer, ItemStack>> firstPersonCustomPositioningRecoiled = new LinkedHashMap<>();
+		public LinkedHashMap<Part, BiConsumer<EntityPlayer, ItemStack>> firstPersonCustomPositioningZoomingRecoiled = new LinkedHashMap<>();
+		public LinkedHashMap<Part, BiConsumer<EntityPlayer, ItemStack>> firstPersonCustomPositioningZoomingShooting = new LinkedHashMap<>();
+
 		public Builder withModId(String modId) {
 			this.modId = modId;
 			return this;
@@ -136,6 +139,16 @@ implements ISmartItemModel, IPerspectiveAwareModel, IFlexibleBakedModel {
 		
 		public Builder withModel(ModelBase model) {
 			this.model = model;
+			return this;
+		}
+		
+		public Builder withShootingAnimationDuration(int shootingAnimationDuration) {
+			this.shootingAnimationDuration = shootingAnimationDuration;
+			return this;
+		}
+		
+		public Builder withRecoilAnimationDuration(int recoilAnimationDuration) {
+			this.recoilAnimationDuration = recoilAnimationDuration;
 			return this;
 		}
 		
@@ -226,6 +239,16 @@ implements ISmartItemModel, IPerspectiveAwareModel, IFlexibleBakedModel {
 		
 		public Builder withFirstPersonPositioningShooting(BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningShooting) {
 			this.firstPersonPositioningShooting = firstPersonPositioningShooting;
+			return this;
+		}
+		
+		public Builder withFirstPersonPositioningZoomingRecoiled(BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningZoomingRecoiled) {
+			this.firstPersonPositioningZoomingRecoiled = firstPersonPositioningZoomingRecoiled;
+			return this;
+		}
+		
+		public Builder withFirstPersonPositioningZoomingShooting(BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningZoomingShooting) {
+			this.firstPersonPositioningZoomingShooting = firstPersonPositioningZoomingShooting;
 			return this;
 		}
 		
@@ -333,7 +356,36 @@ implements ISmartItemModel, IPerspectiveAwareModel, IFlexibleBakedModel {
 			if(this.firstPersonCustomPositioning.put(part, positioning) != null) {
 				throw new IllegalArgumentException("Part " + part + " already added");
 			}
-			this.firstPersonCustomPositioning.put(part, positioning);
+			return this;
+		}
+		
+		public Builder withFirstPersonPositioningCustomRecoiled(Part part, BiConsumer<EntityPlayer, ItemStack> positioning) {
+			if(part instanceof DefaultPart) {
+				throw new IllegalArgumentException("Part " + part + " is not custom");
+			}
+			if(this.firstPersonCustomPositioningRecoiled.put(part, positioning) != null) {
+				throw new IllegalArgumentException("Part " + part + " already added");
+			}
+			return this;
+		}
+		
+		public Builder withFirstPersonPositioningCustomZoomingShooting(Part part, BiConsumer<EntityPlayer, ItemStack> positioning) {
+			if(part instanceof DefaultPart) {
+				throw new IllegalArgumentException("Part " + part + " is not custom");
+			}
+			if(this.firstPersonCustomPositioningZoomingShooting.put(part, positioning) != null) {
+				throw new IllegalArgumentException("Part " + part + " already added");
+			}
+			return this;
+		}
+		
+		public Builder withFirstPersonPositioningCustomZoomingRecoiled(Part part, BiConsumer<EntityPlayer, ItemStack> positioning) {
+			if(part instanceof DefaultPart) {
+				throw new IllegalArgumentException("Part " + part + " is not custom");
+			}
+			if(this.firstPersonCustomPositioningZoomingRecoiled.put(part, positioning) != null) {
+				throw new IllegalArgumentException("Part " + part + " already added");
+			}
 			return this;
 		}
 		
@@ -411,17 +463,25 @@ implements ISmartItemModel, IPerspectiveAwareModel, IFlexibleBakedModel {
 			}
 			
 			if(firstPersonPositioningShooting == null) {
-				//firstPersonPositioningShooting = firstPersonPositioning;
+				firstPersonPositioningShooting = firstPersonPositioning;
 				
-				firstPersonPositioningShooting = (player, itemStack) -> {
-					//firstPersonPositioning.accept(player, itemStack);
-
-					float xRandomOffset = 0.05f * (random.nextFloat() - 0.5f) * 2;
-					float yRandomOffset = 0.05f * (random.nextFloat() - 0.5f) * 2;
-					float zRandomOffset = 0.05f * (random.nextFloat() - 0.5f) * 2;
-					GL11.glTranslatef(xRandomOffset, yRandomOffset, zRandomOffset);
-					//System.out.println("Rendering randomized shooting position...");
-				};
+//				firstPersonPositioningShooting = (player, itemStack) -> {
+//					//firstPersonPositioning.accept(player, itemStack);
+//
+//					float xRandomOffset = 0.05f * (random.nextFloat() - 0.5f) * 2;
+//					float yRandomOffset = 0.05f * (random.nextFloat() - 0.5f) * 2;
+//					float zRandomOffset = 0.05f * (random.nextFloat() - 0.5f) * 2;
+//					GL11.glTranslatef(xRandomOffset, yRandomOffset, zRandomOffset);
+//					//System.out.println("Rendering randomized shooting position...");
+//				};
+			}
+			
+			if(firstPersonPositioningZoomingRecoiled == null) {
+				firstPersonPositioningZoomingRecoiled = firstPersonPositioningZooming;
+			}
+			
+			if(firstPersonPositioningZoomingShooting == null) {
+				firstPersonPositioningZoomingShooting = firstPersonPositioningZooming;
 			}
 			
 			if(thirdPersonPositioning == null) {
@@ -501,9 +561,27 @@ implements ISmartItemModel, IPerspectiveAwareModel, IFlexibleBakedModel {
 				firstPersonRightHandPositioningModifying = firstPersonRightHandPositioning;
 			}
 			
+			/*
+			 * If custom positioning for recoil is not set, default it to normal custom positioning
+			 */
+			if(!firstPersonCustomPositioning.isEmpty() && firstPersonCustomPositioningRecoiled.isEmpty()) {
+				firstPersonCustomPositioning.forEach((part, pos) -> {
+					firstPersonCustomPositioningRecoiled.put(part, pos);
+				});
+			}
 			
-			// Custom positioning
+			if(!firstPersonCustomPositioning.isEmpty() && firstPersonCustomPositioningZoomingRecoiled.isEmpty()) {
+				firstPersonCustomPositioning.forEach((part, pos) -> {
+					firstPersonCustomPositioningZoomingRecoiled.put(part, pos);
+				});
+			}
 			
+			if(!firstPersonCustomPositioning.isEmpty() && firstPersonCustomPositioningZoomingShooting.isEmpty()) {
+				firstPersonCustomPositioning.forEach((part, pos) -> {
+					firstPersonCustomPositioningZoomingShooting.put(part, pos);
+				});
+			}
+						
 			firstPersonCustomPositioningReloading.forEach((p, t) -> {
 				if(t.size() != firstPersonPositioningReloading.size()) {
 					throw new IllegalStateException("Custom reloading transition number mismatch. Expected " + firstPersonPositioningReloading.size()
@@ -536,12 +614,8 @@ implements ISmartItemModel, IPerspectiveAwareModel, IFlexibleBakedModel {
 	protected ModelBiped playerBiped = new ModelBiped();
 	
 	protected ItemStack itemStack;
-
-	//protected ModelResourceLocation resourceLocation;
 	
 	TransformType transformType;
-	
-	//private Randomizer randomizer = new Randomizer();
 	
 	private WeaponRenderer (Builder builder)
 	{
@@ -588,20 +662,29 @@ implements ISmartItemModel, IPerspectiveAwareModel, IFlexibleBakedModel {
 
 			if(storage != null) {
 				currentState = storage.getNextDisposableRenderableState();
-				if(currentState == RenderableState.SHOOTING) {
+				if(currentState == RenderableState.AUTO_SHOOTING) {
+					currentState = RenderableState.ZOOMING;
 					rate = builder.firingRandomizingRate;
+				} else if(currentState == RenderableState.SHOOTING) {
+					currentState = RenderableState.ZOOMING_SHOOTING;
+					rate = builder.firingRandomizingRate;
+				} else if(currentState == RenderableState.RECOILED) {
+					currentState = RenderableState.ZOOMING_RECOILED;
+					rate = builder.zoomRandomizingRate;
 				} else {
+					currentState = RenderableState.ZOOMING;
 					rate = builder.zoomRandomizingRate;
 				}
+				
 			}
 			amplitude = builder.zoomRandomizingAmplitude; // Zoom amplitude is enforced even when firing
-			currentState = RenderableState.ZOOMING;
+			//System.out.println("Rendering state: " + currentState);
 		} else {
 			WeaponClientStorage storage = weapon.getWeaponClientStorage(player);
 
 			if(storage != null) {
 				currentState = storage.getNextDisposableRenderableState();
-				if(currentState == RenderableState.SHOOTING) {
+				if(currentState == RenderableState.AUTO_SHOOTING) {
 					currentState = RenderableState.NORMAL;
 					rate = builder.firingRandomizingRate;
 					amplitude = builder.firingRandomizingAmplitude;
@@ -618,7 +701,8 @@ implements ISmartItemModel, IPerspectiveAwareModel, IFlexibleBakedModel {
 			stateManager = new MultipartRenderStateManager<>(currentState, weaponTransitionProvider, Part.WEAPON);
 			firstPersonStateManagers.put(player, stateManager);
 		} else {
-			stateManager.setState(currentState, true, currentState == RenderableState.SHOOTING);
+			stateManager.setState(currentState, true, currentState == RenderableState.SHOOTING
+					|| currentState == RenderableState.ZOOMING_SHOOTING);
 		}
 		
 		return new StateDescriptor(stateManager, rate, amplitude);
@@ -778,17 +862,23 @@ implements ISmartItemModel, IPerspectiveAwareModel, IFlexibleBakedModel {
 		GL11.glPopMatrix();
 	   
 	}
-
+	
 	private void renderAttachments(Positioner<Part, RenderContext> positioner, String modId, RenderContext renderContext,
 			ItemStack itemStack, TransformType type, List<CompatibleAttachment<? extends AttachmentContainer>> attachments, Entity entity, float f, float f1, float f2, float f3, float f4, float f5) {
-		GL11.glPushMatrix();
 		for(CompatibleAttachment<?> compatibleAttachment: attachments) {
 			if(compatibleAttachment != null) {
+				GL11.glPushMatrix();
+				
 				ItemAttachment<?> itemAttachment = compatibleAttachment.getAttachment();
 				
-				if(itemAttachment instanceof Part && positioner != null) {
-					positioner.position((Part) itemAttachment, renderContext);
+				if(positioner != null) {
+					if(itemAttachment instanceof Part) {
+						positioner.position((Part) itemAttachment, renderContext);
+					} else if(itemAttachment.getRenderablePart() != null) {
+						positioner.position(itemAttachment.getRenderablePart(), renderContext);
+					}
 				}
+				
 
 				for(Tuple<ModelBase, String> texturedModel: compatibleAttachment.getAttachment().getTexturedModels()) {
 					Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(modId 
@@ -808,9 +898,10 @@ implements ISmartItemModel, IPerspectiveAwareModel, IFlexibleBakedModel {
 					GL11.glPopMatrix();
 				}
 				
+				GL11.glPopMatrix();
 			}
 		}
-		GL11.glPopMatrix();
+		
 	}
 	
 	private void renderRightArm(AbstractClientPlayer player, RenderContext renderContext,
@@ -945,14 +1036,15 @@ implements ISmartItemModel, IPerspectiveAwareModel, IFlexibleBakedModel {
 				return getSimpleTransition(builder.firstPersonPositioningRecoiled, 
 						builder.firstPersonLeftHandPositioningRecoiled,
 						builder.firstPersonRightHandPositioningRecoiled,
-						builder.firstPersonCustomPositioning,
-						DEFAULT_RECOIL_ANIMATION_DURATION);
+						//builder.firstPersonMagazinePositioning,
+						builder.firstPersonCustomPositioningRecoiled,
+						builder.recoilAnimationDuration);
 			case SHOOTING:
 				return getSimpleTransition(builder.firstPersonPositioningShooting, 
 						builder.firstPersonLeftHandPositioningShooting,
 						builder.firstPersonRightHandPositioningShooting,
 						builder.firstPersonCustomPositioning,
-						DEFAULT_RECOIL_ANIMATION_DURATION); // TODO: is it really recoil duration
+						builder.shootingAnimationDuration);
 			case NORMAL:
 				return getSimpleTransition(builder.firstPersonPositioning, 
 						builder.firstPersonLeftHandPositioning,
@@ -965,6 +1057,20 @@ implements ISmartItemModel, IPerspectiveAwareModel, IFlexibleBakedModel {
 						builder.firstPersonRightHandPositioningZooming,
 						builder.firstPersonCustomPositioning,
 						DEFAULT_ANIMATION_DURATION);
+			case ZOOMING_SHOOTING:
+				return getSimpleTransition(builder.firstPersonPositioningZoomingShooting, 
+						builder.firstPersonLeftHandPositioningZooming,
+						builder.firstPersonRightHandPositioningZooming,
+						//builder.firstPersonMagazinePositioning,
+						builder.firstPersonCustomPositioningZoomingShooting,
+						60);
+			case ZOOMING_RECOILED:
+				return getSimpleTransition(builder.firstPersonPositioningZoomingRecoiled, 
+						builder.firstPersonLeftHandPositioningZooming,
+						builder.firstPersonRightHandPositioningZooming,
+						//builder.firstPersonMagazinePositioning,
+						builder.firstPersonCustomPositioningZoomingRecoiled,
+						60);
 			default:
 				break;
 			}
