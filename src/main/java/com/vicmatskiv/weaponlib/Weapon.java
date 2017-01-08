@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.model.ModelBase;
@@ -34,7 +35,7 @@ import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 
-public class Weapon extends Item {
+public class Weapon extends Item implements AttachmentContainer {
 	
 	public static class Builder {
 
@@ -47,6 +48,7 @@ public class Weapon extends Item {
 		private String shootSound;
 		private String silencedShootSound;
 		private String reloadSound;
+		private String unloadSound;
 		@SuppressWarnings("unused")
 		private String exceededMaxShotsSound;
 		ItemAmmo ammo;
@@ -82,6 +84,8 @@ public class Weapon extends Item {
 		int pellets = 1;
 
 		float flashIntensity = 0.7f;
+
+		long unloadingTimeout = Weapon.DEFAULT_UNLOADING_TIMEOUT_TICKS;
 
 		public Builder withModId(String modId) {
 			this.modId = modId;
@@ -200,6 +204,14 @@ public class Weapon extends Item {
 				throw new IllegalStateException("ModId is not set");
 			}
 			this.reloadSound = reloadSound; //modId + ":" + reloadSound;
+			return this;
+		}
+
+		public Builder withUnloadSound(String unloadSound) {
+			if (modId == null) {
+				throw new IllegalStateException("ModId is not set");
+			}
+			this.unloadSound = unloadSound;
 			return this;
 		}
 
@@ -343,6 +355,10 @@ public class Weapon extends Item {
 				reloadSound = /*modId + ":" +*/ "reload";
 			}
 
+			if (unloadSound == null) {
+				unloadSound = "unload";
+			}
+
 			if (spawnEntityClass == null) {
 				spawnEntityClass = WeaponSpawnEntity.class;
 			}
@@ -404,6 +420,10 @@ public class Weapon extends Item {
 			weapon.reloadSound = new SoundEvent(reloadSoundLocation);
 			registerSound(weapon.reloadSound, reloadSoundLocation);
 			
+			ResourceLocation unloadSoundLocation = new ResourceLocation(this.modId, this.unloadSound);
+			weapon.unloadSound = new SoundEvent(unloadSoundLocation);
+			registerSound(weapon.unloadSound, unloadSoundLocation);
+			
 			ResourceLocation silencedShootSoundLocation = new ResourceLocation(this.modId, this.silencedShootSound);
 			weapon.silencedShootSound = new SoundEvent(silencedShootSoundLocation);
 			registerSound(weapon.silencedShootSound, silencedShootSoundLocation);
@@ -436,6 +456,7 @@ public class Weapon extends Item {
 	private static final AttributeModifier SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER = (new AttributeModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER_UUID, "Slow Down While Zooming", -0.5, 2)).setSaved(false);
 
 	private static final long DEFAULT_RELOADING_TIMEOUT_TICKS = 10;
+	private static final long DEFAULT_UNLOADING_TIMEOUT_TICKS = 10;
 	static final long MAX_RELOAD_TIMEOUT_TICKS = 60;
 	
 	private static final float DEFAULT_ZOOM = 0.75f;
@@ -449,8 +470,9 @@ public class Weapon extends Item {
 	private SoundEvent shootSound;
 	private SoundEvent silencedShootSound;
 	private SoundEvent reloadSound;
+	private SoundEvent unloadSound;
 
-	public static enum State { READY, SHOOTING, RELOAD_REQUESTED, RELOAD_CONFIRMED, PAUSED, MODIFYING };
+	public static enum State { READY, SHOOTING, RELOAD_REQUESTED, RELOAD_CONFIRMED, UNLOAD_STARTED, UNLOAD_REQUESTED_FROM_SERVER, UNLOAD_CONFIRMED, PAUSED, MODIFYING };
 	
 	Weapon(Builder builder, ModContext modContext) {
 		this.builder = builder;
@@ -472,6 +494,10 @@ public class Weapon extends Item {
 
 	public SoundEvent getReloadSound() {
 		return reloadSound;
+	}
+	
+	public SoundEvent getUnloadSound() {
+		return unloadSound;
 	}
 
 	@Override
@@ -507,6 +533,9 @@ public class Weapon extends Item {
 	void toggleAiming(ItemStack itemStack, EntityPlayer entityPlayer) {
 		
 		ensureItemStack(itemStack);
+		if(Weapon.isModifying(itemStack)) {
+			return;
+		}
 		float currentZoom = Tags.getZoom(itemStack);
 		
 		if (currentZoom != 1.0f || entityPlayer.isSprinting()) {
@@ -514,9 +543,13 @@ public class Weapon extends Item {
 			Tags.setAimed(itemStack, false);
 			restoreNormalSpeed(entityPlayer);
 		} else {
-			WeaponClientStorage weaponInstanceStorage = getWeaponClientStorage(entityPlayer);
-			if(weaponInstanceStorage != null) {
-				Tags.setZoom(itemStack, weaponInstanceStorage.getZoom());
+			float allowedZoom = Tags.getAllowedZoom(itemStack);
+			if(allowedZoom > 0f) {
+				Tags.setZoom(itemStack, allowedZoom);
+			} else {
+				allowedZoom = builder.zoom;
+				Tags.setAllowedZoom(itemStack, allowedZoom);
+				Tags.setZoom(itemStack, allowedZoom);
 			}
 			slowDown(entityPlayer);
 			Tags.setAimed(itemStack, true);
@@ -624,12 +657,12 @@ public class Weapon extends Item {
 	}
 	
 	public void changeZoom(EntityPlayer player, float factor) {
-		WeaponClientStorage weaponInstanceStorage = getWeaponClientStorage(player);
-		if(weaponInstanceStorage != null) {
-			weaponInstanceStorage.setZoom(builder.zoom * factor);
-		}
+		ItemStack itemStack = player.getHeldItem(EnumHand.MAIN_HAND);
+		ensureItemStack(itemStack);
+		float zoom = builder.zoom * factor;
+		Tags.setAllowedZoom(itemStack, zoom);
 	}
-
+	
 	Map<ItemAttachment<Weapon>, CompatibleAttachment<Weapon>> getCompatibleAttachments() {
 		return builder.compatibleAttachments;
 	}
@@ -678,6 +711,12 @@ public class Weapon extends Item {
 		return storage != null && storage.getState() == State.RELOAD_CONFIRMED;
 	}
 
+	static boolean isUnloadingStarted(EntityPlayer player, ItemStack itemStack) {
+		Weapon weapon = (Weapon) itemStack.getItem();
+		WeaponClientStorage storage = weapon.getWeaponClientStorage(player);
+		return storage != null && storage.getState() == State.UNLOAD_STARTED;
+	}
+
 	@Override
 	public int getMaxItemUseDuration(ItemStack itemStack) {
 		return 0;
@@ -710,9 +749,21 @@ public class Weapon extends Item {
 			builder.blockImpactHandler.onImpact(world, player, entity, position);
 		}
 	}
-
-	List<CompatibleAttachment<Weapon>> getActiveAttachments(ItemStack itemStack) {
+	
+	@Override
+	public List<CompatibleAttachment<? extends AttachmentContainer>> getActiveAttachments(ItemStack itemStack) {
 		return modContext.getAttachmentManager().getActiveAttachments(itemStack);
+	}
+	
+	long getUnloadTimeoutTicks() {
+		return builder.unloadingTimeout;
+	}
+	
+	List<ItemMagazine> getCompatibleMagazines() {
+		return builder.compatibleAttachments.keySet().stream()
+				.filter(a -> a instanceof ItemMagazine)
+				.map(a -> (ItemMagazine)a)
+				.collect(Collectors.toList());
 	}
 
 	public WeaponRenderer getRenderer() {

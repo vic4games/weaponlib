@@ -99,11 +99,11 @@ public final class AttachmentManager {
 		
 		Weapon.setModifying(itemStack, false);
 	}
-	
-	List<CompatibleAttachment<Weapon>> getActiveAttachments(ItemStack itemStack) {
+
+	List<CompatibleAttachment<? extends AttachmentContainer>> getActiveAttachments(ItemStack itemStack) {
 		ensureItemStack(itemStack);
 		
-		List<CompatibleAttachment<Weapon>> activeAttachments = new ArrayList<>();
+		List<CompatibleAttachment<? extends AttachmentContainer>> activeAttachments = new ArrayList<>();
 		
 		int[] activeAttachmentsIds = ensureActiveAttachments(itemStack);
 		
@@ -113,11 +113,10 @@ public final class AttachmentManager {
 			if(activeIndex == 0) continue;
 			Item item = Item.getItemById(activeIndex);
 			if(item instanceof ItemAttachment) {
-				CompatibleAttachment<Weapon> compatibleAttachment = weapon.getCompatibleAttachments().get(item);
+				CompatibleAttachment<? extends AttachmentContainer> compatibleAttachment = (CompatibleAttachment<? extends AttachmentContainer>) weapon.getCompatibleAttachments().get(item);
 				if(compatibleAttachment != null) {
 					activeAttachments.add(compatibleAttachment);
 				}
-				
 			}
 			
 		}
@@ -246,6 +245,77 @@ public final class AttachmentManager {
 		selectedAttachmentIndexes[category.ordinal()] = currentIndex;
 		itemStack.getTagCompound().setIntArray(SELECTED_ATTACHMENT_INDEXES_TAG, selectedAttachmentIndexes);
 		return nextCompatibleAttachment;
+	}
+	
+	@SuppressWarnings("unchecked")
+	/**
+	 * Adds the attachment to the weapon identified by the itemStack without removing the attachment from the inventory.
+	 * 
+	 * @param nextAttachment
+	 * @param itemStack
+	 * @param player
+	 */
+	void addAttachment(ItemAttachment<Weapon> attachment, ItemStack weaponStack, EntityPlayer player) {
+		if(!(weaponStack.getItem() instanceof Weapon)) {
+			throw new IllegalStateException();
+		}
+		
+		ensureItemStack(weaponStack);
+		Weapon weapon = (Weapon) weaponStack.getItem();
+		
+		int[] activeAttachmentsIds = ensureActiveAttachments(weaponStack);
+		int activeAttachmentIdForThisCategory = activeAttachmentsIds[attachment.getCategory().ordinal()];
+		ItemAttachment<Weapon> currentAttachment = null;
+		if(activeAttachmentIdForThisCategory > 0) {
+			currentAttachment = (ItemAttachment<Weapon>) Item.getItemById(activeAttachmentIdForThisCategory);
+		}
+		
+		if(currentAttachment == null) {
+			
+			if(attachment != null && attachment.getApply() != null) {
+				attachment.getApply().apply(attachment, weapon, player);
+			}
+			
+			activeAttachmentsIds[attachment.getCategory().ordinal()] = Item.getIdFromItem(attachment);;
+		} else {
+			System.err.println("Attachment of category " + attachment.getCategory() + " installed, remove it first");
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	/**
+	 * Removes the attachment from the weapon identified by the itemStack without adding the attachment to the inventory.
+	 * 
+	 * @param attachmentCategory
+	 * @param itemStack
+	 * @param player
+	 * @return
+	 */
+	ItemAttachment<Weapon> removeAttachment(AttachmentCategory attachmentCategory, ItemStack weaponStack, EntityPlayer player) {
+		if(!(weaponStack.getItem() instanceof Weapon)) {
+			throw new IllegalStateException();
+		}
+		
+		ensureItemStack(weaponStack);
+		Weapon weapon = (Weapon) weaponStack.getItem();
+		
+		int[] activeAttachmentsIds = ensureActiveAttachments(weaponStack);
+		int activeAttachmentIdForThisCategory = activeAttachmentsIds[attachmentCategory.ordinal()];
+		ItemAttachment<Weapon> currentAttachment = null;
+		if(activeAttachmentIdForThisCategory > 0) {
+			currentAttachment = (ItemAttachment<Weapon>) Item.getItemById(activeAttachmentIdForThisCategory);
+		}
+		
+		if(currentAttachment != null && currentAttachment.getRemove() != null) {
+			currentAttachment.getRemove().apply(currentAttachment, weapon, player);
+		}
+		
+		if(currentAttachment != null) {
+			activeAttachmentsIds[attachmentCategory.ordinal()] = -1;
+			weaponStack.getTagCompound().setIntArray(ACTIVE_ATTACHMENT_TAG, activeAttachmentsIds);
+		}
+		
+		return currentAttachment;
 	}
 	
 	ItemAttachment<Weapon> getActiveAttachment(ItemStack itemStack, AttachmentCategory category) {

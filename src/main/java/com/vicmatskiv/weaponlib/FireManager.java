@@ -2,11 +2,11 @@ package com.vicmatskiv.weaponlib;
 
 import java.util.Random;
 
-import com.vicmatskiv.weaponlib.Weapon.State;
-
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHand;
+
+import com.vicmatskiv.weaponlib.Weapon.State;
 
 public class FireManager {
 	
@@ -57,17 +57,6 @@ public class FireManager {
 			}
 			
 			EffectManager.getInstance().spawnSmokeParticle(player);
-			
-//			modContext.runInMainThread(() -> {
-//
-//				
-////				if(weapon.builder.flashIntensity > 0) {
-////					EffectManager.getInstance().spawnFlashParticle(player, weapon.builder.flashIntensity,
-////							Weapon.isZoomed(itemStack) ? FLASH_X_OFFSET_ZOOMED : FLASH_X_OFFSET_NORMAL);
-////				}
-////				
-////				EffectManager.getInstance().spawnSmokeParticle(player);
-//			});
 			
 			storage.setLastShotFiredAt(System.currentTimeMillis());
 			
@@ -144,4 +133,5 @@ public class FireManager {
 			storage.setState(State.READY);
 		}
 	}
+
 }

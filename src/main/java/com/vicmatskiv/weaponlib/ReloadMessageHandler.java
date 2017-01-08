@@ -2,6 +2,8 @@ package com.vicmatskiv.weaponlib;
 
 import java.util.function.Function;
 
+import com.vicmatskiv.weaponlib.ReloadMessage.Type;
+
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHand;
@@ -30,8 +32,13 @@ public class ReloadMessageHandler implements IMessageHandler<ReloadMessage, IMes
 			if(itemStack != null && itemStack.getItem() instanceof Weapon) {
 				IThreadListener mainThread = (IThreadListener) ctx.getServerHandler().playerEntity.worldObj;
 				mainThread.addScheduledTask(() -> {
-					reloadManager.reload(itemStack, player);
+					if(message.getType() == Type.LOAD) {
+						reloadManager.reload(itemStack, player);
+					} else {
+						reloadManager.unload(itemStack, message.getAmmo(), player);
+					}
 				});
+			} else if(itemStack != null && itemStack.getItem() instanceof ItemMagazine) {
 				
 			}
 		} else {
@@ -44,11 +51,12 @@ public class ReloadMessageHandler implements IMessageHandler<ReloadMessage, IMes
 		EntityPlayer player = entityPlayerSupplier.apply(ctx);
 		ItemStack itemStack = player.getHeldItem(EnumHand.MAIN_HAND);
 		if(itemStack != null && itemStack.getItem() instanceof Weapon) {
-			//Weapon weapon = (Weapon) itemStack.getItem();
 			Weapon targetWeapon = message.getWeapon();
-			//targetWeapon.completeReload(itemStack, player, message.getAmmo(), itemStack.getItem() != targetWeapon);
-			reloadManager.completeReload(itemStack, player, message.getAmmo(), itemStack.getItem() != targetWeapon);
+			if(message.getType() == Type.LOAD) {
+				reloadManager.completeReload(itemStack, player, message.getMagazine(), message.getAmmo(), itemStack.getItem() != targetWeapon);
+			} else {
+				reloadManager.completeUnload(itemStack, player);
+			}
 		}
 	}
-
 }

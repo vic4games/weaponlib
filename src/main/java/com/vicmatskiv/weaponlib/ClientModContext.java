@@ -1,6 +1,5 @@
 package com.vicmatskiv.weaponlib;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -8,13 +7,9 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.client.model.ICustomModelLoader;
-import net.minecraftforge.client.model.IModel;
-import net.minecraftforge.client.model.ModelLoader;
+import net.minecraft.item.Item;
 import net.minecraftforge.client.model.ModelLoaderRegistry;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
@@ -30,11 +25,14 @@ public class ClientModContext extends CommonModContext {
 	private WeaponClientStorageManager weaponClientStorageManager;
 	private Queue<Runnable> runInClientThreadQueue = new LinkedBlockingQueue<>();
 	
-	private RenderingRegistry rendererRegistry = new RenderingRegistry();
+	private RenderingRegistry rendererRegistry;
 	
+	@SuppressWarnings("deprecation")
 	@Override
-	public void init(Object mod, SimpleNetworkWrapper channel) {
-		super.init(mod, channel);
+	public void init(Object mod, String modId, SimpleNetworkWrapper channel) {
+		super.init(mod, modId, channel);
+		
+		rendererRegistry = new RenderingRegistry(modId);
 		
 		ModelLoaderRegistry.registerLoader(rendererRegistry);
 		
@@ -72,8 +70,14 @@ public class ClientModContext extends CommonModContext {
 	
 	@Override
 	public void registerWeapon(String name, Weapon weapon) {
-		super.registerWeapon(name, weapon);		
-		rendererRegistry.register(weapon, weapon.getRenderer());
+		super.registerWeapon(name, weapon);
+		rendererRegistry.register(weapon, weapon.getName(), weapon.getRenderer());
+	}
+	
+	@Override
+	public void registerRenderableItem(String name, Item item, ModelSourceRenderer renderer) {
+		super.registerRenderableItem(name, item, renderer);
+		rendererRegistry.register(item, name, renderer);
 	}
 	
 	@Override
