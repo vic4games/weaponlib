@@ -17,38 +17,31 @@ final class EffectManager {
 
 	void spawnSmokeParticle(EntityPlayer player) {
 		
-		double motionX = player.worldObj.rand.nextGaussian() * 0.003D;
-		double motionY = player.worldObj.rand.nextGaussian() * 0.003D;
-		double motionZ = player.worldObj.rand.nextGaussian() * 0.003D;
+		double motionX = player.worldObj.rand.nextGaussian() * 0.003d;
+		double motionY = player.worldObj.rand.nextGaussian() * 0.003d;
+		double motionZ = player.worldObj.rand.nextGaussian() * 0.003d;
 		
 		Vec3d look = player.getLookVec();
-		float distance = 0.3F;
-		float yOffset = -1.5F;
-		double posX = player.posX + (look.xCoord * distance) + (player.worldObj.rand.nextFloat() * 2.0F - 1) * 0.1f;
-		double posY = player.posY + (look.yCoord * distance) + (player.worldObj.rand.nextFloat() * 2.0F - 1) * 0.1f - yOffset;
-		double posZ = player.posZ + (look.zCoord * distance) + (player.worldObj.rand.nextFloat() * 2.0F - 1) * 0.1f;
+		float distance = 0.3f;
+		float yOffset = -1.6f;
+		float xOffset = 0.0f;
+		float scale = 1f;
+		float positionRandomizationFactor = 0.01f;
+		
+		double posX = player.posX + (look.xCoord * distance) + (player.worldObj.rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor + (-look.zCoord * xOffset);
+		double posY = player.posY + (look.yCoord * distance) + (player.worldObj.rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor - yOffset;
+		double posZ = player.posZ + (look.zCoord * distance) + (player.worldObj.rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor + (look.xCoord * xOffset);
 		
 		Particle smokeParticle = new SmokeFX(
 				player.worldObj, 
 				posX,
 		        posY, 
 		        posZ,
-		        2.0f,
+		        scale,
 		      (float)motionX, 
 		      (float)motionY, 
 		      (float)motionZ);
 		
-//		EntityFX smokeParticle = new EntityCritFX.Factory().getEntityFX(0,
-//				player.worldObj, 
-//				posX,
-//		        posY, 
-//		        posZ,
-////		        
-//		      motionX, 
-//		      motionY, 
-//		      motionZ, 1);
-		
-		//player.worldObj.spawnParticle(EnumParticleTypes.SMOKE_LARGE, posX, posY, posZ, 0, 0, 0);
 		Minecraft.getMinecraft().effectRenderer.addEffect(smokeParticle);
 	}
 	
@@ -56,8 +49,8 @@ final class EffectManager {
 		
 		float distance = 0.5f;
 		
-		float yOffset = -1.5f;
-		float scale = 1.5f;
+		float yOffset = -1.6f;
+		float scale = 0.8f;
 		float positionRandomizationFactor = 0.01f;
 		
 		Vec3d look = player.getLookVec();

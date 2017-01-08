@@ -4,9 +4,10 @@ import org.lwjgl.opengl.GL11;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.particle.Particle;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.VertexBuffer;
-import net.minecraft.client.renderer.vertex.VertexFormat;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
@@ -19,7 +20,6 @@ public class FlashFX extends Particle {
 
 	private static final double FLASH_SCALE_FACTOR = 1.1;
 	
-	private static final String DEFAULT_PARTICLES_TEXTURE = "textures/particle/particles.png";
 	private static final String FLASH_TEXTURE = "weaponlib:/com/vicmatskiv/weaponlib/resources/flashes.png";
 		
 	private int imageIndex;
@@ -90,14 +90,21 @@ public class FlashFX extends Particle {
     @SideOnly(Side.CLIENT)
     public void renderParticle(VertexBuffer worldRendererIn, Entity entityIn, float partialTicks, float par3, float par4, float par5, float par6, float par7)
     {
-    	VertexFormat currentFormat = worldRendererIn.getVertexFormat();
+    	
     	Tessellator tessellator = Tessellator.getInstance();
-    	tessellator.draw();
 		Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation(FLASH_TEXTURE));
 		
-		worldRendererIn.begin(GL11.GL_QUADS, currentFormat);
+		GlStateManager.pushMatrix();
+		GlStateManager.pushAttrib();
+		
+        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+        GL11.glDepthMask(false);
+        GL11.glEnable(GL11.GL_BLEND);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        GL11.glAlphaFunc(GL11.GL_GREATER, 0.003921569F);
+		
+		worldRendererIn.begin(GL11.GL_QUADS, DefaultVertexFormats.PARTICLE_POSITION_TEX_COLOR_LMAP);
     	
-    	//tesselator.setBrightness(200);
         int i = this.getBrightnessForRender(partialTicks); // or simply set it to 200?
         int j = i >> 16 & 65535;
         int k = i & 65535;
@@ -137,8 +144,13 @@ public class FlashFX extends Particle {
         worldRendererIn.pos((double)(f11 + par3 * f10 - par6 * f10), (double)(f12 - par4 * f10), (double)(f13 + par5 * f10 - par7 * f10)).tex(dU, dV).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).lightmap(j, k).endVertex();
     	
         tessellator.draw();
-    	
-    	Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation(DEFAULT_PARTICLES_TEXTURE));
-    	worldRendererIn.begin(GL11.GL_QUADS, currentFormat);
+        
+        GlStateManager.popAttrib();
+        GlStateManager.popMatrix();
+    }
+
+    @Override
+    public int getFXLayer() {
+    	return 3;
     }
 }
