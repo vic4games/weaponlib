@@ -107,19 +107,19 @@ public class CustomArmor extends ItemArmor {
 			CustomArmor armorHelmet = new CustomArmor(modId, material, 4, EntityEquipmentSlot.HEAD, 
 					unlocalizedHelmetName, textureName, chestModel, hudTextureName);
 			armorHelmet.setUnlocalizedName(unlocalizedHelmetName);
-			GameRegistry.registerItem(armorHelmet, unlocalizedHelmetName);
+			GameRegistry.register(armorHelmet); //, unlocalizedHelmetName);
 			
 			String unlocalizedChestName = unlocalizedName + "_chest";
 			CustomArmor armorChest = new CustomArmor(modId, material, 4, EntityEquipmentSlot.CHEST, 
 					unlocalizedChestName, textureName, chestModel, hudTextureName);
 			armorChest.setUnlocalizedName(unlocalizedChestName);
-			GameRegistry.registerItem(armorChest, unlocalizedChestName);
+			GameRegistry.register(armorChest); //, unlocalizedChestName);
 			
 			String unlocalizedBootsName = unlocalizedName + "_boots";
 			CustomArmor armorBoots = new CustomArmor(modId, material, 4, EntityEquipmentSlot.LEGS, 
 					unlocalizedBootsName, textureName, bootsModel, hudTextureName);
 			armorBoots.setUnlocalizedName(unlocalizedBootsName);
-			GameRegistry.registerItem(armorBoots, unlocalizedBootsName);
+			GameRegistry.register(armorBoots); //, unlocalizedBootsName);
 		}
 		
 		
@@ -151,7 +151,7 @@ public class CustomArmor extends ItemArmor {
 			CustomArmor armorHelmet = new CustomArmor(modId, material, 4, EntityEquipmentSlot.HEAD, 
 					unlocalizedHelmetName, textureName, chestModel, hudTextureName);
 			armorHelmet.setUnlocalizedName(unlocalizedHelmetName);
-			GameRegistry.registerItem(armorHelmet, unlocalizedHelmetName);
+			GameRegistry.register(armorHelmet); //, unlocalizedHelmetName);
 			
 			return armorHelmet;
 		}
@@ -176,7 +176,7 @@ public class CustomArmor extends ItemArmor {
 			CustomArmor armorChest = new CustomArmor(modId, material, 4, EntityEquipmentSlot.CHEST, 
 					unlocalizedChestName, textureName, chestModel, hudTextureName);
 			armorChest.setUnlocalizedName(unlocalizedChestName);
-			GameRegistry.registerItem(armorChest, unlocalizedChestName);
+			GameRegistry.register(armorChest); //, unlocalizedChestName);
 
 			return armorChest;
 		}
@@ -203,7 +203,7 @@ public class CustomArmor extends ItemArmor {
 			CustomArmor armorBoots = new CustomArmor(modId, material, 4, EntityEquipmentSlot.LEGS, 
 					unlocalizedBootsName, textureName, bootsModel, hudTextureName);
 			armorBoots.setUnlocalizedName(unlocalizedBootsName);
-			GameRegistry.registerItem(armorBoots, unlocalizedBootsName);
+			GameRegistry.register(armorBoots); //, unlocalizedBootsName);
 			
 			return armorBoots;
 		}

@@ -8,8 +8,10 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.IResourcePack;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.model.ModelLoaderRegistry;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
@@ -59,8 +61,9 @@ public class ClientModContext extends CommonModContext {
 		MinecraftForge.EVENT_BUS.register(clientEventHandler);
 		
 		MinecraftForge.EVENT_BUS.register(rendererRegistry);
-		
-		EntityRegistry.registerModEntity(WeaponSpawnEntity.class, "Ammo" + modEntityID, modEntityID++, mod, 64, 10, true);
+				
+		ResourceLocation entityResourceLocation = null;
+		EntityRegistry.registerModEntity(entityResourceLocation, WeaponSpawnEntity.class, "Ammo" + modEntityID, modEntityID++, mod, 64, 10, true);
 		
 		// TODO: do something about it
 		net.minecraftforge.fml.client.registry.RenderingRegistry.registerEntityRenderingHandler(WeaponSpawnEntity.class, 
@@ -82,7 +85,7 @@ public class ClientModContext extends CommonModContext {
 	
 	@Override
 	protected EntityPlayer getPlayer(MessageContext ctx) {
-		return Minecraft.getMinecraft().thePlayer;
+		return Minecraft.getMinecraft().player;
 	}
 	
 	@Override

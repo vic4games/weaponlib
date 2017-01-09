@@ -30,7 +30,7 @@ public class ReloadMessageHandler implements IMessageHandler<ReloadMessage, IMes
 			ItemStack itemStack = player.getHeldItem(EnumHand.MAIN_HAND);
 			
 			if(itemStack != null && itemStack.getItem() instanceof Weapon) {
-				IThreadListener mainThread = (IThreadListener) ctx.getServerHandler().playerEntity.worldObj;
+				IThreadListener mainThread = (IThreadListener) ctx.getServerHandler().playerEntity.world;
 				mainThread.addScheduledTask(() -> {
 					if(message.getType() == Type.LOAD) {
 						reloadManager.reload(itemStack, player);

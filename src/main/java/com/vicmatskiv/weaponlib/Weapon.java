@@ -366,7 +366,7 @@ public class Weapon extends Item implements AttachmentContainer {
 			if (spawnEntityWith == null) {
 
 				spawnEntityWith = (weapon, player) -> {
-					WeaponSpawnEntity spawnEntity = new WeaponSpawnEntity(weapon, player.worldObj, player, spawnEntitySpeed,
+					WeaponSpawnEntity spawnEntity = new WeaponSpawnEntity(weapon, player.world, player, spawnEntitySpeed,
 							spawnEntityGravityVelocity, spawnEntityDamage, spawnEntityExplosionRadius) {
 
 						@Override
@@ -506,29 +506,18 @@ public class Weapon extends Item implements AttachmentContainer {
 	}
 	
 	@Override
-	public ActionResult<ItemStack> onItemRightClick(ItemStack itemStackIn, World worldIn, EntityPlayer playerIn,
-			EnumHand hand) {
-		toggleAiming(itemStackIn, playerIn);
-		return new ActionResult<>(EnumActionResult.SUCCESS, itemStackIn);
+	public ActionResult<ItemStack> onItemRightClick(World worldIn, EntityPlayer playerIn, EnumHand handIn) {
+		toggleAiming(playerIn.getHeldItem(handIn), playerIn);
+		return super.onItemRightClick(worldIn, playerIn, handIn);
 	}
-	
-//	@Override
-//	public ItemStack onItemRightClick(ItemStack itemStack, World world, EntityPlayer entityPlayer) {
-//		toggleAiming(itemStack, entityPlayer);
-//		return itemStack;
-//	}
+
 	
 	@Override
-	public EnumActionResult onItemUse(ItemStack stack, EntityPlayer playerIn, World worldIn, BlockPos pos,
-			EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+	public EnumActionResult onItemUse(EntityPlayer player, World worldIn, BlockPos pos, EnumHand hand,
+			EnumFacing facing, float hitX, float hitY, float hitZ) {
 		return EnumActionResult.SUCCESS;
 	}
-	
-//	@Override
-//	public boolean onItemUse(ItemStack stack, EntityPlayer playerIn, World worldIn, BlockPos pos, EnumFacing side,
-//			float hitX, float hitY, float hitZ) {
-//		return true;
-//	}
+
 
 	void toggleAiming(ItemStack itemStack, EntityPlayer entityPlayer) {
 		

@@ -20,7 +20,7 @@ public class AttachmentModeMessageHandler implements IMessageHandler<AttachmentM
 	public IMessage onMessage(AttachmentModeMessage message, MessageContext ctx) {
 		if(ctx.side == Side.SERVER) {
 			EntityPlayer player = ctx.getServerHandler().playerEntity;
-			IThreadListener mainThread = (IThreadListener) ctx.getServerHandler().playerEntity.worldObj;
+			IThreadListener mainThread = (IThreadListener) ctx.getServerHandler().playerEntity.getEntityWorld();
 			mainThread.addScheduledTask(() -> {
 				attachmentManager.toggleServerAttachmentSelectionMode(player.getHeldItem(EnumHand.MAIN_HAND), player);
 			});

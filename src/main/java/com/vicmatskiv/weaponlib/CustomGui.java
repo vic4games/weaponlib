@@ -32,7 +32,7 @@ public class CustomGui extends Gui {
 	public void onRenderHud(RenderGameOverlayEvent.Pre event) {
 		
 		if(event.getType() == RenderGameOverlayEvent.ElementType.HELMET) {
-			Iterator<ItemStack> equipmentIterator = mc.thePlayer.getEquipmentAndArmor().iterator();
+			Iterator<ItemStack> equipmentIterator = mc.player.getEquipmentAndArmor().iterator();
 			ItemStack helmet = equipmentIterator.hasNext() ? equipmentIterator.next() : null; // TODO: fix iterator
 			if(helmet != null && mc.gameSettings.thirdPersonView == 0 && helmet.getItem() instanceof CustomArmor) {
 				// Texture must be Width: 427, height: 240
@@ -63,13 +63,13 @@ public class CustomGui extends Gui {
 			return;
 		}
 		
-		ItemStack weapon = mc.thePlayer.getHeldItem(EnumHand.MAIN_HAND);
+		ItemStack weapon = mc.player.getHeldItem(EnumHand.MAIN_HAND);
 		if(weapon == null || !(weapon.getItem() instanceof Weapon) || mc.gameSettings.thirdPersonView != 0) {
 			return;
 		}
 		
 		Weapon weaponItem = (Weapon) weapon.getItem();
-		String crosshair = weaponItem.getCrosshair(weapon, mc.thePlayer);
+		String crosshair = weaponItem.getCrosshair(weapon, mc.player);
 		if(crosshair != null) {
 			ScaledResolution scaledResolution = event.getResolution();
 			int width = scaledResolution.getScaledWidth();
@@ -101,7 +101,7 @@ public class CustomGui extends Gui {
 				fontRender.drawStringWithShadow("Press [right] to change camo", width / 2 + 60, height / 2 - 20, color);
 				fontRender.drawStringWithShadow("Press [down] to add under-barrel rig", 10, height - 40, color);
 			} else {
-				String text = "Ammo: " + weaponItem.getCurrentAmmo(mc.thePlayer) + "/" + weaponItem.getAmmoCapacity();
+				String text = "Ammo: " + weaponItem.getCurrentAmmo(mc.player) + "/" + weaponItem.getAmmoCapacity();
 				int x = width - 80;
 				int y = 10;
 

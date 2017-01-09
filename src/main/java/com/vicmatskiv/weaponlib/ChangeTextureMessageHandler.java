@@ -18,7 +18,7 @@ public class ChangeTextureMessageHandler implements IMessageHandler<ChangeTextur
 	@Override
 	public IMessage onMessage(ChangeTextureMessage message, MessageContext ctx) {
 		EntityPlayer player = ctx.getServerHandler().playerEntity;
-		IThreadListener mainThread = (IThreadListener) ctx.getServerHandler().playerEntity.worldObj;
+		IThreadListener mainThread = (IThreadListener) ctx.getServerHandler().playerEntity.getEntityWorld();
 		mainThread.addScheduledTask(() -> {
 			attachmentManager.changeTexture(player.getHeldItem(EnumHand.MAIN_HAND), player);
 		});

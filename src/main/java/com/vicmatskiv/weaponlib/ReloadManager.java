@@ -50,7 +50,7 @@ public class ReloadManager {
 		
 		if (storage.getState() != State.RELOAD_REQUESTED && storage.getState() != State.RELOAD_CONFIRMED
 				&& storage.getCurrentAmmo().get() < weapon.builder.ammoCapacity) {
-			storage.getReloadingStopsAt().set(player.worldObj.getTotalWorldTime() + Weapon.MAX_RELOAD_TIMEOUT_TICKS);
+			storage.getReloadingStopsAt().set(player.world.getTotalWorldTime() + Weapon.MAX_RELOAD_TIMEOUT_TICKS);
 			storage.setState(State.RELOAD_REQUESTED);
 			modContext.getChannel().sendToServer(new ReloadMessage(weapon));
 		}
@@ -68,7 +68,7 @@ public class ReloadManager {
 			storage.getCurrentAmmo().set(ammo);
 			if ((itemMagazine != null || ammo > 0) && !forceQuietReload) {
 				storage.setState(State.RELOAD_CONFIRMED);
-				long reloadingStopsAt = player.worldObj.getTotalWorldTime() + weapon.builder.reloadingTimeout;
+				long reloadingStopsAt = player.world.getTotalWorldTime() + weapon.builder.reloadingTimeout;
 				storage.getReloadingStopsAt().set(reloadingStopsAt);
 				//TODO: Fix me: 
 				player.playSound(weapon.getReloadSound(), 1.0F, 1.0F);
@@ -101,7 +101,7 @@ public class ReloadManager {
 				}
 				modContext.getChannel().sendTo(new ReloadMessage(weapon, ReloadMessage.Type.LOAD, newMagazine, ammo), (EntityPlayerMP) player);
 				
-			} else if (WorldHelper.consumeInventoryItem(player.inventory, weapon.builder.ammo)) {
+			} else if (WorldHelper.consumeInventoryItem(weapon.builder.ammo, player) != null) {
 				Tags.setAmmo(weaponItemStack, weapon.builder.ammoCapacity);
 				modContext.getChannel().sendTo(new ReloadMessage(weapon, weapon.builder.ammoCapacity), (EntityPlayerMP) player);
 				player.playSound(weapon.getReloadSound(), 1.0F, 1.0F);
@@ -115,44 +115,38 @@ public class ReloadManager {
 	private ItemStack tryConsumingPart(Weapon weapon, List<? extends Item> compatibleParts, EntityPlayer player) {
 		ItemStack magazineItemStack = null;
 		for(Item magazine: compatibleParts) {
-			if((magazineItemStack = consumeInventoryItem(magazine, player)) != null) {
+			if((magazineItemStack = WorldHelper.consumeInventoryItem(magazine, player)) != null) {
 				break;
 			}
 		}
 		return magazineItemStack;
 	}
 	
-	private ItemStack consumeInventoryItem(Item p_146026_1_, EntityPlayer player)
-    {
-		ItemStack result = null;
-        int i = itemSlotIndex(p_146026_1_, player);
-
-		if (i < 0) {
-			return null;
-		} else {
-
-			result = player.inventory.mainInventory[i];
-			if (--player.inventory.mainInventory[i].stackSize <= 0) {
-				player.inventory.mainInventory[i] = null;
-			}
-
-			return result;
-		}
-    }
-	
-	private int itemSlotIndex(Item p_146029_1_, EntityPlayer player)
-    {
-        for (int i = 0; i < player.inventory.mainInventory.length; ++i)
-        {
-            if (player.inventory.mainInventory[i] != null && player.inventory.mainInventory[i].getItem() == p_146029_1_)
-            {
-                return i;
-            }
-        }
-
-        return -1;
-    }
-	
+//	private ItemStack consumeInventoryItem(Item p_146026_1_, EntityPlayer player)
+//    {
+//		ItemStack stack = findItemStack(p_146026_1_, player);
+//
+//		if(stack != null) {
+//			player.inventory.deleteStack(stack);
+//		}
+//		
+//		return stack;
+//    }
+//	
+//	private ItemStack findItemStack(Item p_146029_1_, EntityPlayer player) {
+//		
+//		ItemStack result = null;
+//		for (int i = 0; i < player.inventory.getSizeInventory(); ++i)
+//        {
+//            ItemStack itemstack = player.inventory.getStackInSlot(i);
+//            if(itemstack.getItem() == p_146029_1_) {
+//            	result = itemstack;
+//            	break;
+//            }
+//        }
+//
+//        return result;
+//    }
 	
 	@SideOnly(Side.CLIENT)
 	void initiateUnload(ItemStack itemStack, EntityPlayer player) {
@@ -173,7 +167,7 @@ public class ReloadManager {
 		 *       The server will remove a magazine attachment immediately
 		 */
 		if (storage.getState() != State.UNLOAD_STARTED && storage.getState() != State.UNLOAD_REQUESTED_FROM_SERVER && storage.getState() != State.UNLOAD_CONFIRMED) {
-			storage.getReloadingStopsAt().set(player.worldObj.getTotalWorldTime() + weapon.getUnloadTimeoutTicks());
+			storage.getReloadingStopsAt().set(player.world.getTotalWorldTime() + weapon.getUnloadTimeoutTicks());
 			storage.setState(State.UNLOAD_STARTED);
 			player.playSound(weapon.getUnloadSound(), 1.0F, 1.0F);
 		}
@@ -198,7 +192,7 @@ public class ReloadManager {
 		 *       The server will remove a magazine attachment immediately
 		 */
 		if (storage.getState() == State.UNLOAD_STARTED) {
-			storage.getReloadingStopsAt().set(player.worldObj.getTotalWorldTime() + Weapon.MAX_RELOAD_TIMEOUT_TICKS);
+			storage.getReloadingStopsAt().set(player.world.getTotalWorldTime() + Weapon.MAX_RELOAD_TIMEOUT_TICKS);
 			storage.setState(State.UNLOAD_REQUESTED_FROM_SERVER);
 			modContext.getChannel().sendToServer(new ReloadMessage(weapon, ReloadMessage.Type.UNLOAD, null, 
 					storage.getCurrentAmmo().get()));
@@ -254,17 +248,17 @@ public class ReloadManager {
 		State state = storage.getState();
 		
 		if(state == State.RELOAD_REQUESTED || state == State.RELOAD_CONFIRMED) {
-			long currentTime = player.worldObj.getTotalWorldTime();
+			long currentTime = player.world.getTotalWorldTime();
 			if(storage.getReloadingStopsAt().get() <= currentTime) {
 				storage.setState(State.READY);
 			}
 		} else if(state == State.UNLOAD_STARTED) {
-			long currentTime = player.worldObj.getTotalWorldTime();
+			long currentTime = player.world.getTotalWorldTime();
 			if(storage.getReloadingStopsAt().get() <= currentTime) {
 				requestUnloadFromServer(itemStack, player);
 			}
 		} else if(state == State.UNLOAD_REQUESTED_FROM_SERVER || state == State.UNLOAD_CONFIRMED) {
-			long currentTime = player.worldObj.getTotalWorldTime();
+			long currentTime = player.world.getTotalWorldTime();
 			if(storage.getReloadingStopsAt().get() <= currentTime) {
 				storage.setState(State.READY);
 			}

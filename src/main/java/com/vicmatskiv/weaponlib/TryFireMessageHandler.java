@@ -21,7 +21,7 @@ public class TryFireMessageHandler implements IMessageHandler<TryFireMessage, IM
 	public IMessage onMessage(TryFireMessage message, MessageContext ctx) {
 		if(ctx.side == Side.SERVER) {
 			EntityPlayer player = ctx.getServerHandler().playerEntity;
-			IThreadListener mainThread = (IThreadListener) ctx.getServerHandler().playerEntity.worldObj; 
+			IThreadListener mainThread = (IThreadListener) ctx.getServerHandler().playerEntity.world; 
 			ItemStack itemStack = player.getHeldItem(EnumHand.MAIN_HAND);
 			if(itemStack != null && itemStack.getItem() instanceof Weapon) {
 				if(message.isOn()) {

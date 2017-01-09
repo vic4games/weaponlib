@@ -68,7 +68,9 @@ public class CommonModContext implements ModContext {
 
 	@Override
 	public void registerWeapon(String name, Weapon weapon) {
-		GameRegistry.registerItem(weapon, name);
+		//
+		GameRegistry.register(weapon);
+		//GameRegistry.registerItem(weapon, name);
 	}
 	
 	private EntityPlayer getServerPlayer(MessageContext ctx) {
@@ -107,7 +109,8 @@ public class CommonModContext implements ModContext {
 
 	@Override
 	public void registerRenderableItem(String name, Item item, ModelSourceRenderer renderer) {
-		GameRegistry.registerItem(item, name);
+		//GameRegistry.registerItem(item, name);
+		GameRegistry.register(item);
 	}
 	
 	

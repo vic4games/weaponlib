@@ -32,8 +32,8 @@ public class ClientEventHandler {
 			mainLoopLock.unlock();
 			processRunInClientThreadQueue();
 			safeGlobals.objectMouseOver.set(Minecraft.getMinecraft().objectMouseOver);
-			if(Minecraft.getMinecraft().thePlayer != null) {
-				safeGlobals.currentItemIndex.set(Minecraft.getMinecraft().thePlayer.inventory.currentItem);
+			if(Minecraft.getMinecraft().player != null) {
+				safeGlobals.currentItemIndex.set(Minecraft.getMinecraft().player.inventory.currentItem);
 			}
 		}
 	}

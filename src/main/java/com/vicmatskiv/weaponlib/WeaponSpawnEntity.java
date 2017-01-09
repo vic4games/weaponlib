@@ -71,21 +71,21 @@ public class WeaponSpawnEntity extends EntityThrowable implements IEntityAdditio
 	 */
 	@Override
 	protected void onImpact(RayTraceResult position) {
-		//this.worldObj.createExplosion(this, this.posX, this.posY, this.posZ, (float)this.explosionRadius, true);
-		if(!this.worldObj.isRemote) {
+		//this.world.createExplosion(this, this.posX, this.posY, this.posZ, (float)this.explosionRadius, true);
+		if(!this.world.isRemote) {
 			if (position.entityHit != null) {
 				if(explosionRadius > 0) {
-					this.worldObj.createExplosion(this, this.posX, this.posY, this.posZ, explosionRadius, true);
+					this.world.createExplosion(this, this.posX, this.posY, this.posZ, explosionRadius, true);
 				}
 				//System.out.println(">>>>>>   Damaging entity " + position.entityHit + " >>>>>> !!!");
 				position.entityHit.attackEntityFrom(DamageSource.causeThrownDamage(this, this.getThrower()), damage);
 				position.entityHit.hurtResistantTime = 0;
 				position.entityHit.prevRotationYaw -= 0.3D;
 			} else if(explosionRadius > 0) {
-				this.worldObj.createExplosion(this, position.getBlockPos().getX(), 
+				this.world.createExplosion(this, position.getBlockPos().getX(), 
 						position.getBlockPos().getY(), position.getBlockPos().getZ(), explosionRadius, true);
 			} else if(position.typeOfHit == RayTraceResult.Type.BLOCK) {
-				weapon.onSpawnEntityBlockImpact(worldObj, null, this, position);
+				weapon.onSpawnEntityBlockImpact(world, null, this, position);
 			}
 			this.setDead();
 		}
@@ -94,7 +94,7 @@ public class WeaponSpawnEntity extends EntityThrowable implements IEntityAdditio
 	@Override
 	public void setThrowableHeading(double motionX, double motionY, double motionZ, float velocity, float ignoredInaccuracy)
     {
-        float f2 = MathHelper.sqrt_double(motionX * motionX + motionY * motionY + motionZ * motionZ);
+        float f2 = MathHelper.sqrt(motionX * motionX + motionY * motionY + motionZ * motionZ);
         motionX /= (double)f2;
         motionY /= (double)f2;
         motionZ /= (double)f2;
@@ -108,7 +108,7 @@ public class WeaponSpawnEntity extends EntityThrowable implements IEntityAdditio
         this.motionX = motionX;
         this.motionY = motionY;
         this.motionZ = motionZ;
-        float f3 = MathHelper.sqrt_double(motionX * motionX + motionZ * motionZ);
+        float f3 = MathHelper.sqrt(motionX * motionX + motionZ * motionZ);
         this.prevRotationYaw = this.rotationYaw = (float)(Math.atan2(motionX, motionZ) * 180.0D / Math.PI);
         this.prevRotationPitch = this.rotationPitch = (float)(Math.atan2(motionY, (double)f3) * 180.0D / Math.PI);
     }

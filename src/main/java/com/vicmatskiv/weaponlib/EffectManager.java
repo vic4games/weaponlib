@@ -17,9 +17,9 @@ final class EffectManager {
 
 	void spawnSmokeParticle(EntityPlayer player) {
 		
-		double motionX = player.worldObj.rand.nextGaussian() * 0.003d;
-		double motionY = player.worldObj.rand.nextGaussian() * 0.003d;
-		double motionZ = player.worldObj.rand.nextGaussian() * 0.003d;
+		double motionX = player.world.rand.nextGaussian() * 0.003d;
+		double motionY = player.world.rand.nextGaussian() * 0.003d;
+		double motionZ = player.world.rand.nextGaussian() * 0.003d;
 		
 		Vec3d look = player.getLookVec();
 		float distance = 0.3f;
@@ -28,12 +28,12 @@ final class EffectManager {
 		float scale = 1f;
 		float positionRandomizationFactor = 0.01f;
 		
-		double posX = player.posX + (look.xCoord * distance) + (player.worldObj.rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor + (-look.zCoord * xOffset);
-		double posY = player.posY + (look.yCoord * distance) + (player.worldObj.rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor - yOffset;
-		double posZ = player.posZ + (look.zCoord * distance) + (player.worldObj.rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor + (look.xCoord * xOffset);
+		double posX = player.posX + (look.xCoord * distance) + (player.world.rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor + (-look.zCoord * xOffset);
+		double posY = player.posY + (look.yCoord * distance) + (player.world.rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor - yOffset;
+		double posZ = player.posZ + (look.zCoord * distance) + (player.world.rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor + (look.xCoord * xOffset);
 		
 		Particle smokeParticle = new SmokeFX(
-				player.worldObj, 
+				player.world, 
 				posX,
 		        posY, 
 		        posZ,
@@ -55,16 +55,16 @@ final class EffectManager {
 		
 		Vec3d look = player.getLookVec();
 		
-		float motionX = (float)player.worldObj.rand.nextGaussian() * 0.01f;
-		float motionY = (float)player.worldObj.rand.nextGaussian() * 0.01f;
-		float motionZ = (float)player.worldObj.rand.nextGaussian() * 0.01f;
+		float motionX = (float)player.world.rand.nextGaussian() * 0.01f;
+		float motionY = (float)player.world.rand.nextGaussian() * 0.01f;
+		float motionZ = (float)player.world.rand.nextGaussian() * 0.01f;
 		
-		double posX = player.posX + (look.xCoord * distance) + (player.worldObj.rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor + (-look.zCoord * xOffset);
-		double posY = player.posY + (look.yCoord * distance) + (player.worldObj.rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor - yOffset;
-		double posZ = player.posZ + (look.zCoord * distance) + (player.worldObj.rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor + (look.xCoord * xOffset);
+		double posX = player.posX + (look.xCoord * distance) + (player.world.rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor + (-look.zCoord * xOffset);
+		double posY = player.posY + (look.yCoord * distance) + (player.world.rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor - yOffset;
+		double posZ = player.posZ + (look.zCoord * distance) + (player.world.rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor + (look.xCoord * xOffset);
 		
 		Particle flashParticle = new FlashFX(
-				player.worldObj, 
+				player.world, 
 				posX,
 				posY,
 				posZ,

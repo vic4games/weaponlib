@@ -804,7 +804,7 @@ public class WeaponRenderer extends ModelSourceRenderer implements IPerspectiveA
 		GL11.glPushMatrix();
 		
 		
-		AbstractClientPlayer player = Minecraft.getMinecraft().thePlayer;
+		AbstractClientPlayer player = Minecraft.getMinecraft().player;
 		RenderContext renderContext = new RenderContext(player, itemStack);
 		Positioner<Part, RenderContext> positioner = null;
 		switch (transformType)

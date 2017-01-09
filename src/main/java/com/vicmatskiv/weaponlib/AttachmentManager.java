@@ -90,7 +90,7 @@ public final class AttachmentManager {
 			if(activeAttachmentsIds[i] != previouslySelectedAttachmentIds[i]) {
 				Item newItem = Item.getItemById(activeAttachmentsIds[i]);
 				Item oldItem = Item.getItemById(previouslySelectedAttachmentIds[i]);
-				WorldHelper.consumeInventoryItem(player.inventory, newItem);
+				WorldHelper.consumeInventoryItem(newItem, player);
 				if(!player.inventory.addItemStackToInventory(new ItemStack(oldItem))) {
 					System.err.println("Cannot add item back to the inventory: " + oldItem);
 				}

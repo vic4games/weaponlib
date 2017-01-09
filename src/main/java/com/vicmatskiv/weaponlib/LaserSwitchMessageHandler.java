@@ -18,7 +18,7 @@ public class LaserSwitchMessageHandler implements IMessageHandler<LaserSwitchMes
 			ItemStack itemStack = player.getHeldItem(EnumHand.MAIN_HAND);
 			
 			if(itemStack != null && itemStack.getItem() instanceof Weapon) {
-				IThreadListener mainThread = (IThreadListener) ctx.getServerHandler().playerEntity.worldObj;
+				IThreadListener mainThread = (IThreadListener) ctx.getServerHandler().playerEntity.world;
 				mainThread.addScheduledTask(() -> {
 					Weapon.toggleLaser(itemStack);
 				});

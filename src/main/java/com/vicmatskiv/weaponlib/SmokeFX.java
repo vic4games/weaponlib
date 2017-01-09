@@ -60,7 +60,7 @@ public class SmokeFX extends Particle {
         }
 
         this.motionY += 0.0005D;
-        this.moveEntity(this.motionX, this.motionY, this.motionZ);
+        this.move(this.motionX, this.motionY, this.motionZ);
         
         this.motionX *= 0.599999785423279D;
         this.motionY *= 0.9999999785423279D;
@@ -71,7 +71,7 @@ public class SmokeFX extends Particle {
 
         this.particleScale *= SMOKE_SCALE_FACTOR;
         
-        if (this.isCollided)
+        if (this.onGround)
         {
             this.motionX *= 0.699999988079071D;
             this.motionZ *= 0.699999988079071D;

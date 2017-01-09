@@ -21,7 +21,7 @@ public class ChangeAttachmentMessageHandler implements IMessageHandler<ChangeAtt
 		
 		if(ctx.side == Side.SERVER) {
 			EntityPlayer player = ctx.getServerHandler().playerEntity;
-			IThreadListener mainThread = (IThreadListener) ctx.getServerHandler().playerEntity.worldObj;
+			IThreadListener mainThread = (IThreadListener) ctx.getServerHandler().playerEntity.getEntityWorld();
 			mainThread.addScheduledTask(() -> {
 				attachmentManager.changeAttachment(message.getAttachmentCategory(), player.getHeldItem(EnumHand.MAIN_HAND), player);
 			});

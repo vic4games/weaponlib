@@ -70,7 +70,7 @@ public class FlashFX extends Particle {
             this.setExpired();
         }
 
-        this.moveEntity(this.motionX, this.motionY, this.motionZ);
+        this.move(this.motionX, this.motionY, this.motionZ);
         
         this.motionX *= 0.9999999785423279D;
         this.motionY *= 0.9999999785423279D;
@@ -80,7 +80,7 @@ public class FlashFX extends Particle {
         
         this.particleScale *= FLASH_SCALE_FACTOR;
         
-        if (this.isCollided) {
+        if (this.onGround) {
             this.motionX *= 0.699999988079071D;
             this.motionZ *= 0.699999988079071D;
         }

@@ -209,7 +209,7 @@ public class StaticModelSourceRenderer extends ModelSourceRenderer implements IP
 		GL11.glPushMatrix();
 		
 		GL11.glScaled(-1F, -1F, 1F);
-		AbstractClientPlayer player = Minecraft.getMinecraft().thePlayer;
+		AbstractClientPlayer player = Minecraft.getMinecraft().player;
 		switch (transformType)
 		{
 		case GROUND:
