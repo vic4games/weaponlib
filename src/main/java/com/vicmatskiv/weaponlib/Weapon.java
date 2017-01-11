@@ -80,6 +80,8 @@ public class Weapon extends Item implements AttachmentContainer {
 
 		long unloadingTimeout = Weapon.DEFAULT_UNLOADING_TIMEOUT_TICKS;
 
+		private int maxBullets;
+
 		public Builder withModId(String modId) {
 			this.modId = modId;
 			return this;
@@ -272,25 +274,30 @@ public class Weapon extends Item implements AttachmentContainer {
 			compatibleAttachments.put(attachment, new CompatibleAttachment<>(attachment, positioner, isDefault));
 			return this;
 		}
-
-		public Builder withCompatibleAttachment(AttachmentCategory category, ModelBase attachmentModel, String textureName,
-				Consumer<ModelBase> positioner) {
-			ItemAttachment<Weapon> item = new ItemAttachment<>(modId, category, attachmentModel, textureName, null);
-			compatibleAttachments.put(item, new CompatibleAttachment<>(item, positioner));
+		
+		public Builder withMaxBullets(int maxBullets) {
+			this.maxBullets = maxBullets;
 			return this;
 		}
 
-		public Builder withCompatibleAttachment(AttachmentCategory category, ModelBase attachmentModel, String textureName,
-				String crosshair, Consumer<ModelBase> positioner) {
-			ItemAttachment<Weapon> item = new ItemAttachment<>(modId, category, attachmentModel, textureName, crosshair);
-			compatibleAttachments.put(item, new CompatibleAttachment<>(item, positioner));
-			return this;
-		}
-
-		public Builder withCompatibleAttachment(CompatibleAttachment<Weapon> compatibleAttachment) {
-			compatibleAttachments.put(compatibleAttachment.getAttachment(), compatibleAttachment);
-			return this;
-		}
+//		public Builder withCompatibleAttachment(AttachmentCategory category, ModelBase attachmentModel, String textureName,
+//				Consumer<ModelBase> positioner) {
+//			ItemAttachment<Weapon> item = new ItemAttachment<>(modId, category, attachmentModel, textureName, null);
+//			compatibleAttachments.put(item, new CompatibleAttachment<>(item, positioner));
+//			return this;
+//		}
+//
+//		public Builder withCompatibleAttachment(AttachmentCategory category, ModelBase attachmentModel, String textureName,
+//				String crosshair, Consumer<ModelBase> positioner) {
+//			ItemAttachment<Weapon> item = new ItemAttachment<>(modId, category, attachmentModel, textureName, crosshair);
+//			compatibleAttachments.put(item, new CompatibleAttachment<>(item, positioner));
+//			return this;
+//		}
+//
+//		protected Builder withCompatibleAttachment(CompatibleAttachment<Weapon> compatibleAttachment) {
+//			compatibleAttachments.put(compatibleAttachment.getAttachment(), compatibleAttachment);
+//			return this;
+//		}
 
 		public Builder withSpawnEntityModel(ModelBase ammoModel) {
 			this.ammoModel = ammoModel;
@@ -669,10 +676,21 @@ public class Weapon extends Item implements AttachmentContainer {
 		return builder.unloadingTimeout;
 	}
 	
+	int maxBullets() {
+		return builder.maxBullets;
+	}
+	
 	List<ItemMagazine> getCompatibleMagazines() {
 		return builder.compatibleAttachments.keySet().stream()
 				.filter(a -> a instanceof ItemMagazine)
 				.map(a -> (ItemMagazine)a)
+				.collect(Collectors.toList());
+	}
+	
+	List<ItemAttachment<Weapon>> getCompatibleAttachments(Class<? extends ItemAttachment<Weapon>> target) {
+		return builder.compatibleAttachments.entrySet().stream()
+				.filter(e -> target.isInstance(e.getKey()))
+				.map(e -> e.getKey())
 				.collect(Collectors.toList());
 	}
 }
