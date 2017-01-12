@@ -29,12 +29,19 @@ public class FireManager {
 
 		if(storage == null) return;
 		
+		if(storage.getState() == State.PAUSED) {
+			storage.setEjectSpentRoundStartedAt(System.currentTimeMillis());
+			storage.setState(State.EJECT_SPENT_ROUND);
+			return;
+		}
+		
 		boolean readyToShootAccordingToFireRate = System.currentTimeMillis() - storage.getLastShotFiredAt() >= 50f / weapon.builder.fireRate;
 		if(!player.isSprinting() 
 				&& (storage.getState() == State.READY || storage.getState() == State.SHOOTING)
 				&& readyToShootAccordingToFireRate
 				&& storage.getShots() < weapon.builder.maxShots
 				&& storage.getCurrentAmmo().getAndAccumulate(0, (current, ignore) -> current > 0 ? current - 1 : 0) > 0) {
+			
 			storage.setState(State.SHOOTING);
 			modContext.getChannel().sendToServer(new TryFireMessage(true));
 			ItemStack heldItem = player.getHeldItem();
@@ -57,6 +64,7 @@ public class FireManager {
 			storage.setLastShotFiredAt(System.currentTimeMillis());
 			
 			storage.addShot();
+			
 		}
 	}
 
@@ -100,11 +108,16 @@ public class FireManager {
 		if(storage == null) return;
 		if(storage.getState() == State.SHOOTING) {
 			storage.resetShots();
-			if(storage.getLastShotFiredAt() + weapon.builder.pumpTimeoutMilliseconds <= System.currentTimeMillis()) {
-				storage.setState(State.READY);
-			} else {
+			if(weapon.ejectSpentRoundRequired()) {
 				storage.setState(State.PAUSED);
+			} else {
+				storage.setState(State.READY);
 			}
+//			if(storage.getLastShotFiredAt() + weapon.builder.pumpTimeoutMilliseconds <= System.currentTimeMillis()) {
+//				storage.setState(State.READY);
+//			} else {
+//				storage.setState(State.EJECT_SPENT_ROUND_REQUIRED);
+//			}
 			modContext.getChannel().sendToServer(new TryFireMessage(false));
 		}
 	}
@@ -114,7 +127,7 @@ public class FireManager {
 		WeaponClientStorage storage = modContext.getWeaponClientStorageManager().getWeaponClientStorage(player, weapon);
 		if(storage == null) return;
 		
-		if(storage.getState() == State.PAUSED && storage.getLastShotFiredAt() + weapon.builder.pumpTimeoutMilliseconds <= System.currentTimeMillis()) {
+		if(storage.getState() == State.EJECT_SPENT_ROUND && storage.getEjectSpentRoundStartedAt() + weapon.builder.pumpTimeoutMilliseconds <= System.currentTimeMillis()) {
 			storage.setState(State.READY);
 		}
 	}

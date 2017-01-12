@@ -81,11 +81,19 @@ public class Weapon extends Item implements AttachmentContainer {
 		long unloadingTimeout = Weapon.DEFAULT_UNLOADING_TIMEOUT_TICKS;
 
 		private int maxBullets;
+		
+		private boolean ejectSpentRoundRequired;
 
 		public Builder withModId(String modId) {
 			this.modId = modId;
 			return this;
 		}
+		
+		public Builder withEjectRoundRequired() {
+			this.ejectSpentRoundRequired = true;
+			return this;
+		}
+		
 
 		public Builder withReloadingTime(long reloadingTime) {
 			this.reloadingTimeout = reloadingTime;
@@ -443,7 +451,7 @@ public class Weapon extends Item implements AttachmentContainer {
 	
 	private ModContext modContext;
 
-	public static enum State { READY, SHOOTING, RELOAD_REQUESTED, RELOAD_CONFIRMED, UNLOAD_STARTED, UNLOAD_REQUESTED_FROM_SERVER, UNLOAD_CONFIRMED, PAUSED, MODIFYING };
+	public static enum State { READY, SHOOTING, RELOAD_REQUESTED, RELOAD_CONFIRMED, UNLOAD_STARTED, UNLOAD_REQUESTED_FROM_SERVER, UNLOAD_CONFIRMED, PAUSED, MODIFYING, EJECT_SPENT_ROUND};
 	
 	Weapon(Builder builder, ModContext modContext) {
 		this.builder = builder;
@@ -623,6 +631,12 @@ public class Weapon extends Item implements AttachmentContainer {
 		return weapon.modContext.getAttachmentManager().isActiveAttachment(itemStack, attachment);
 	}
 	
+	static boolean isEjectedSpentRound(EntityPlayer player, ItemStack itemStack) {
+		Weapon weapon = (Weapon) itemStack.getItem();
+		WeaponClientStorage storage = weapon.getWeaponClientStorage(player);
+		return storage != null && storage.getState() == State.EJECT_SPENT_ROUND;
+	}
+	
 	static boolean isReloadingConfirmed(EntityPlayer player, ItemStack itemStack) {
 		Weapon weapon = (Weapon) itemStack.getItem();
 		WeaponClientStorage storage = weapon.getWeaponClientStorage(player);
@@ -678,6 +692,10 @@ public class Weapon extends Item implements AttachmentContainer {
 	
 	int maxBullets() {
 		return builder.maxBullets;
+	}
+	
+	boolean ejectSpentRoundRequired() {
+		return builder.ejectSpentRoundRequired;
 	}
 	
 	List<ItemMagazine> getCompatibleMagazines() {
