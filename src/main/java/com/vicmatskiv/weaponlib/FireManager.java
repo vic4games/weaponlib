@@ -32,6 +32,9 @@ public class FireManager {
 		if(storage.getState() == State.PAUSED) {
 			storage.setEjectSpentRoundStartedAt(System.currentTimeMillis());
 			storage.setState(State.EJECT_SPENT_ROUND);
+			modContext.runSyncTick(() -> {
+				player.playSound(weapon.builder.ejectSpentRoundSound, 1F, 1F);
+			});
 			return;
 		}
 		

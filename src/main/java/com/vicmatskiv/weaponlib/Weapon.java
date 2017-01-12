@@ -41,6 +41,7 @@ public class Weapon extends Item implements AttachmentContainer {
 		String silencedShootSound;
 		String reloadSound;
 		String unloadSound;
+		String ejectSpentRoundSound;
 		@SuppressWarnings("unused")
 		private String exceededMaxShotsSound;
 		ItemAmmo ammo;
@@ -83,6 +84,8 @@ public class Weapon extends Item implements AttachmentContainer {
 		private int maxBullets;
 		
 		private boolean ejectSpentRoundRequired;
+
+		
 
 		public Builder withModId(String modId) {
 			this.modId = modId;
@@ -196,6 +199,14 @@ public class Weapon extends Item implements AttachmentContainer {
 				throw new IllegalStateException("ModId is not set");
 			}
 			this.shootSound = modId + ":" + shootSound;
+			return this;
+		}
+		
+		public Builder withEjectSpentRoundSound(String ejectSpentRoundSound) {
+			if (modId == null) {
+				throw new IllegalStateException("ModId is not set");
+			}
+			this.ejectSpentRoundSound = modId + ":" + ejectSpentRoundSound;
 			return this;
 		}
 
