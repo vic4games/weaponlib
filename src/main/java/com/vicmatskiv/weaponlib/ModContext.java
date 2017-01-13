@@ -21,4 +21,6 @@ public interface ModContext {
 
 	public void registerRenderableItem(String name, Item weapon, ModelSourceRenderer renderer);
 	
+	public String getModId();
+	
 }

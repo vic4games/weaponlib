@@ -14,6 +14,7 @@ final class WeaponClientStorage {
 	private AtomicLong reloadingStopsAt;
 
 	private long lastShotFiredAt;
+	private long ejectSpentRoundStartedAt;
 	private int shotsInternal;
 	private float zoom;
 	private AtomicDouble recoil;
@@ -38,12 +39,20 @@ final class WeaponClientStorage {
 		this.automatic = automatic;
 	}
 
-	public void setLastShotFiredAt(long lastShotFiredAt) {
+	void setLastShotFiredAt(long lastShotFiredAt) {
 		this.lastShotFiredAt = lastShotFiredAt;
 	}
 
-	public long getLastShotFiredAt() {
+	long getLastShotFiredAt() {
 		return lastShotFiredAt;
+	}
+
+	long getEjectSpentRoundStartedAt() {
+		return ejectSpentRoundStartedAt;
+	}
+
+	void setEjectSpentRoundStartedAt(long ejectSpentRoundStartedAt) {
+		this.ejectSpentRoundStartedAt = ejectSpentRoundStartedAt;
 	}
 
 	public State getState() {

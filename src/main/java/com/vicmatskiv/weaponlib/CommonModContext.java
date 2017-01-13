@@ -15,10 +15,12 @@ public class CommonModContext implements ModContext {
 	protected AttachmentManager attachmentManager;
 	protected FireManager fireManager;
 	protected ReloadManager reloadManager;
+	private String modId;
 
 	@Override
 	public void init(Object mod, String modId, SimpleNetworkWrapper channel) {
 		this.channel = channel;
+		this.modId = modId;
 		
 		this.attachmentManager = new AttachmentManager(this);
 		this.fireManager = new FireManager(this);
@@ -113,5 +115,9 @@ public class CommonModContext implements ModContext {
 		GameRegistry.register(item);
 	}
 	
+	@Override
+	public String getModId() {
+		return modId;
+	}
 	
 }

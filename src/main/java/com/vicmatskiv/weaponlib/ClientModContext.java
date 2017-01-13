@@ -45,7 +45,7 @@ public class ClientModContext extends CommonModContext {
         this.weaponClientStorageManager = new WeaponClientStorageManager();
 		SafeGlobals safeGlobals = new SafeGlobals();
 		
-		MinecraftForge.EVENT_BUS.register(new CustomGui(Minecraft.getMinecraft()));
+		MinecraftForge.EVENT_BUS.register(new CustomGui(Minecraft.getMinecraft(), attachmentManager));
 		MinecraftForge.EVENT_BUS.register(new WeaponEventHandler(safeGlobals));
 		
 		KeyBindings.init();	
@@ -62,7 +62,7 @@ public class ClientModContext extends CommonModContext {
 		
 		MinecraftForge.EVENT_BUS.register(rendererRegistry);
 				
-		ResourceLocation entityResourceLocation = null;
+		ResourceLocation entityResourceLocation = new ResourceLocation(modId, "changeme");
 		EntityRegistry.registerModEntity(entityResourceLocation, WeaponSpawnEntity.class, "Ammo" + modEntityID, modEntityID++, mod, 64, 10, true);
 		
 		// TODO: do something about it

@@ -111,6 +111,7 @@ public class AttachmentBuilder<T> {
 	public ItemAttachment<T> build(ModContext modContext) {
 		ItemAttachment<T> attachment = createAttachment();
 		attachment.setUnlocalizedName(modId + "_" + name); 
+		attachment.setRegistryName(modId, name);
 		attachment.setCreativeTab(tab);
 		attachment.setPostRenderer(postRenderer);
 		if(isRenderablePart) {

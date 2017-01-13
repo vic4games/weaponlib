@@ -150,6 +150,7 @@ public class CustomArmor extends ItemArmor {
 			String unlocalizedHelmetName = unlocalizedName + "_helmet";
 			CustomArmor armorHelmet = new CustomArmor(modId, material, 4, EntityEquipmentSlot.HEAD, 
 					unlocalizedHelmetName, textureName, chestModel, hudTextureName);
+			armorHelmet.setRegistryName(modId, unlocalizedHelmetName);
 			armorHelmet.setUnlocalizedName(unlocalizedHelmetName);
 			GameRegistry.register(armorHelmet); //, unlocalizedHelmetName);
 			
@@ -175,6 +176,7 @@ public class CustomArmor extends ItemArmor {
 			String unlocalizedChestName = unlocalizedName + "_chest";
 			CustomArmor armorChest = new CustomArmor(modId, material, 4, EntityEquipmentSlot.CHEST, 
 					unlocalizedChestName, textureName, chestModel, hudTextureName);
+			armorChest.setRegistryName(modId, unlocalizedChestName);
 			armorChest.setUnlocalizedName(unlocalizedChestName);
 			GameRegistry.register(armorChest); //, unlocalizedChestName);
 
@@ -202,6 +204,7 @@ public class CustomArmor extends ItemArmor {
 			String unlocalizedBootsName = unlocalizedName + "_boots";
 			CustomArmor armorBoots = new CustomArmor(modId, material, 4, EntityEquipmentSlot.LEGS, 
 					unlocalizedBootsName, textureName, bootsModel, hudTextureName);
+			armorBoots.setRegistryName(modId, unlocalizedBootsName);
 			armorBoots.setUnlocalizedName(unlocalizedBootsName);
 			GameRegistry.register(armorBoots); //, unlocalizedBootsName);
 			
