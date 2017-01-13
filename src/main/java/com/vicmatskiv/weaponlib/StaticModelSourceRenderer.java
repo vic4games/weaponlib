@@ -123,6 +123,7 @@ implements ISmartItemModel, IPerspectiveAwareModel, IFlexibleBakedModel {
 	private StaticModelSourceRenderer(Builder builder)
 	{
 		this.builder = builder;
+		this.pair = Pair.of((IFlexibleBakedModel) this, null);
 	}
 	
 	@Override
