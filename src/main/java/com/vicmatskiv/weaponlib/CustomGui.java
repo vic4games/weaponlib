@@ -19,9 +19,11 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 public class CustomGui extends Gui {
 	private Minecraft mc;
+	private AttachmentManager attachmentManager;
 
-	public CustomGui(Minecraft mc) {
+	public CustomGui(Minecraft mc, AttachmentManager attachmentManager) {
 		this.mc = mc;
+		this.attachmentManager = attachmentManager;
 	}
 
 //	private static final int BUFF_ICON_SIZE = 256;
@@ -101,7 +103,14 @@ public class CustomGui extends Gui {
 				fontRender.drawStringWithShadow("Press [right] to change camo", width / 2 + 60, height / 2 - 20, color);
 				fontRender.drawStringWithShadow("Press [down] to add under-barrel rig", 10, height - 40, color);
 			} else {
-				String text = "Ammo: " + weaponItem.getCurrentAmmo(mc.thePlayer) + "/" + weaponItem.getAmmoCapacity();
+				ItemMagazine magazine = (ItemMagazine) attachmentManager.getActiveAttachment(weapon, AttachmentCategory.MAGAZINE);
+				int totalCapacity;
+				if(magazine != null) {
+					totalCapacity = magazine.getAmmo();
+				} else {
+					totalCapacity = weaponItem.getAmmoCapacity();
+				}
+				String text = "Ammo: " + weaponItem.getCurrentAmmo(mc.thePlayer) + "/" + totalCapacity;
 				int x = width - 80;
 				int y = 10;
 

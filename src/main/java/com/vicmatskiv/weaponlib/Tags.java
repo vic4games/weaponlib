@@ -2,7 +2,7 @@ package com.vicmatskiv.weaponlib;
 
 import net.minecraft.item.ItemStack;
 
-final class Tags {
+public final class Tags {
 
 	private static final String ZOOM_TAG = "Zoom";
 	private static final String ALLOWED_ZOOM_TAG = "AllowedZoom";
@@ -27,7 +27,8 @@ final class Tags {
 		itemStack.getTagCompound().setBoolean(LASER_ON_TAG, enabled);
 	}
 
-	static int getAmmo(ItemStack itemStack) {
+
+	public static int getAmmo(ItemStack itemStack) {
 		if (itemStack == null || itemStack.getTagCompound() == null) {
 			return 0;
 		}

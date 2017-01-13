@@ -141,6 +141,7 @@ public class StaticModelSourceRenderer extends ModelSourceRenderer implements IP
 	private StaticModelSourceRenderer(Builder builder)
 	{
 		this.builder = builder;
+		this.pair = Pair.of((IBakedModel) this, null);
 	}
 	
 	@Override

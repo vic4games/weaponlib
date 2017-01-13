@@ -131,13 +131,17 @@ public class WeaponRenderer extends ModelSourceRenderer implements IPerspectiveA
 		private float zoomRandomizingAmplitude = DEFAULT_ZOOM_RANDOMIZING_AMPLITUDE;
 		private float firingRandomizingAmplitude = DEFAULT_FIRING_RANDOMIZING_AMPLITUDE;
 		
-		public LinkedHashMap<Part, BiConsumer<EntityPlayer, ItemStack>> firstPersonCustomPositioning = new LinkedHashMap<>();
-		public LinkedHashMap<Part, List<Transition>> firstPersonCustomPositioningUnloading = new LinkedHashMap<>();
-		public LinkedHashMap<Part, List<Transition>> firstPersonCustomPositioningReloading = new LinkedHashMap<>();
-
-		public LinkedHashMap<Part, BiConsumer<EntityPlayer, ItemStack>> firstPersonCustomPositioningRecoiled = new LinkedHashMap<>();
-		public LinkedHashMap<Part, BiConsumer<EntityPlayer, ItemStack>> firstPersonCustomPositioningZoomingRecoiled = new LinkedHashMap<>();
-		public LinkedHashMap<Part, BiConsumer<EntityPlayer, ItemStack>> firstPersonCustomPositioningZoomingShooting = new LinkedHashMap<>();
+		private LinkedHashMap<Part, BiConsumer<EntityPlayer, ItemStack>> firstPersonCustomPositioning = new LinkedHashMap<>();
+		private LinkedHashMap<Part, List<Transition>> firstPersonCustomPositioningUnloading = new LinkedHashMap<>();
+		private LinkedHashMap<Part, List<Transition>> firstPersonCustomPositioningReloading = new LinkedHashMap<>();
+		private LinkedHashMap<Part, BiConsumer<EntityPlayer, ItemStack>> firstPersonCustomPositioningRecoiled = new LinkedHashMap<>();
+		private LinkedHashMap<Part, BiConsumer<EntityPlayer, ItemStack>> firstPersonCustomPositioningZoomingRecoiled = new LinkedHashMap<>();
+		private LinkedHashMap<Part, BiConsumer<EntityPlayer, ItemStack>> firstPersonCustomPositioningZoomingShooting = new LinkedHashMap<>();
+		
+		private List<Transition> firstPersonPositioningEjectSpentRound;
+		private List<Transition> firstPersonLeftHandPositioningEjectSpentRound;
+		private List<Transition> firstPersonRightHandPositioningEjectSpentRound;
+		private LinkedHashMap<Part, List<Transition>> firstPersonCustomPositioningEjectSpentRound = new LinkedHashMap<>();
 
 		public Builder withModId(String modId) {
 			this.modId = modId;
@@ -265,6 +269,18 @@ public class WeaponRenderer extends ModelSourceRenderer implements IPerspectiveA
 			return this;
 		}
 		
+		@SafeVarargs
+		public final Builder withFirstPersonPositioningUnloading(Transition ...transitions) {
+			this.firstPersonPositioningUnloading = Arrays.asList(transitions);
+			return this;
+		}
+		
+		@SafeVarargs
+		public final Builder withFirstPersonPositioningEjectSpentRound(Transition ...transitions) {
+			this.firstPersonPositioningEjectSpentRound = Arrays.asList(transitions);
+			return this;
+		}
+		
 		public Builder withFirstPersonPositioningModifying(BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningModifying) {
 			this.firstPersonPositioningModifying = firstPersonPositioningModifying;
 			return this;
@@ -323,8 +339,33 @@ public class WeaponRenderer extends ModelSourceRenderer implements IPerspectiveA
 		}
 		
 		@SafeVarargs
+
+		public final Builder withFirstPersonLeftHandPositioningEjectSpentRound(Transition ...transitions) {
+			this.firstPersonLeftHandPositioningEjectSpentRound = Arrays.asList(transitions);
+			return this;
+		}
+		
+		@SafeVarargs
+		public final Builder withFirstPersonLeftHandPositioningUnloading(Transition ...transitions) {
+			this.firstPersonLeftHandPositioningUnloading = Arrays.asList(transitions);
+			return this;
+		}
+		
+		@SafeVarargs
 		public final Builder withFirstPersonRightHandPositioningReloading(Transition ...transitions) {
 			this.firstPersonRightHandPositioningReloading = Arrays.asList(transitions);
+			return this;
+		}
+
+		@SafeVarargs
+		public final Builder withFirstPersonRightHandPositioningUnloading(Transition ...transitions) {
+			this.firstPersonRightHandPositioningUnloading = Arrays.asList(transitions);
+			return this;
+		}
+		
+		@SafeVarargs
+		public final Builder withFirstPersonRightHandPositioningEjectSpentRound(Transition ...transitions) {
+			this.firstPersonRightHandPositioningEjectSpentRound = Arrays.asList(transitions);
 			return this;
 		}
 		
@@ -336,7 +377,6 @@ public class WeaponRenderer extends ModelSourceRenderer implements IPerspectiveA
 			this.firstPersonRightHandPositioningModifying = rightHand;
 			return this;
 		}
-		
 		
 		public Builder withFirstPersonCustomPositioning(Part part, BiConsumer<EntityPlayer, ItemStack> positioning) {
 			if(part instanceof DefaultPart) {
@@ -396,7 +436,17 @@ public class WeaponRenderer extends ModelSourceRenderer implements IPerspectiveA
 			this.firstPersonCustomPositioningUnloading.put(part, Arrays.asList(transitions));
 			return this;
 		}
-
+		
+		@SafeVarargs
+		public final Builder withFirstPersonCustomPositioningEjectSpentRound(Part part, Transition ...transitions) {
+			if(part instanceof DefaultPart) {
+				throw new IllegalArgumentException("Part " + part + " is not custom");
+			}
+			
+			this.firstPersonCustomPositioningEjectSpentRound.put(part, Arrays.asList(transitions));
+			return this;
+		}
+		
 		public WeaponRenderer build() {
 			if(FMLCommonHandler.instance().getSide() != Side.CLIENT) {
 				return null;
@@ -662,6 +712,8 @@ public class WeaponRenderer extends ModelSourceRenderer implements IPerspectiveA
 			currentState = RenderableState.UNLOADING;
 		} else if(Weapon.isReloadingConfirmed(player, itemStack)) {
 			currentState = RenderableState.RELOADING;
+		} else if(Weapon.isEjectedSpentRound(player, itemStack)) {
+			currentState = RenderableState.EJECT_SPENT_ROUND;
 		} else if(player.isSprinting() && builder.firstPersonPositioningRunning != null) {
 			currentState = RenderableState.RUNNING;
 		} else if(Weapon.isZoomed(itemStack)) {
@@ -1137,6 +1189,12 @@ public class WeaponRenderer extends ModelSourceRenderer implements IPerspectiveA
 						builder.firstPersonRightHandPositioningShooting,
 						builder.firstPersonCustomPositioning,
 						builder.shootingAnimationDuration);
+			case EJECT_SPENT_ROUND:
+				return getComplexTransition(builder.firstPersonPositioningEjectSpentRound, 
+						builder.firstPersonLeftHandPositioningEjectSpentRound,
+						builder.firstPersonRightHandPositioningEjectSpentRound,
+						builder.firstPersonCustomPositioningEjectSpentRound
+						);
 			case NORMAL:
 				return getSimpleTransition(builder.firstPersonPositioning, 
 						builder.firstPersonLeftHandPositioning,

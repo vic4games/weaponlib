@@ -6,7 +6,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 
 public class ReloadMessage implements IMessage {
 	
-	public static enum Type { LOAD, UNLOAD };
+	public static enum Type { LOAD, UNLOAD, CANCEL };
 	
 	private int ammo;
 	private int weaponItemId;
