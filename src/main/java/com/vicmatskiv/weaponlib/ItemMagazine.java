@@ -96,7 +96,8 @@ public class ItemMagazine extends ItemAttachment<Weapon> implements Part {
 		// TODO Auto-generated method stub
 		return null;
 	}
-	
-	
-	
+
+	int getAmmo() {
+		return ammo;
+	}
 }

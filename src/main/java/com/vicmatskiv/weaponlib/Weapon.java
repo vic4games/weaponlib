@@ -35,7 +35,7 @@ public class Weapon extends Item implements AttachmentContainer {
 		
 		String name;
 		List<String> textureNames = new ArrayList<>();
-		int ammoCapacity = 1;
+		int ammoCapacity = 0;
 		float recoil = 1.0F;
 		String shootSound;
 		String silencedShootSound;

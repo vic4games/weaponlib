@@ -36,7 +36,7 @@ public class ClientModContext extends CommonModContext {
         this.weaponClientStorageManager = new WeaponClientStorageManager();
 		SafeGlobals safeGlobals = new SafeGlobals();
 		
-		MinecraftForge.EVENT_BUS.register(new CustomGui(Minecraft.getMinecraft()));
+		MinecraftForge.EVENT_BUS.register(new CustomGui(Minecraft.getMinecraft(), attachmentManager));
 		MinecraftForge.EVENT_BUS.register(new WeaponEventHandler(safeGlobals));
 		
 		KeyBindings.init();	
