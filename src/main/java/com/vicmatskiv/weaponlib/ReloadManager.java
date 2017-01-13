@@ -29,16 +29,21 @@ public class ReloadManager {
 			return;
 		}
 		
-		ItemAttachment<Weapon> existingMagazine = modContext.getAttachmentManager().getActiveAttachment(itemStack, AttachmentCategory.MAGAZINE);
-		if(existingMagazine != null) {
-			initiateUnload(itemStack, player);
+		if(((Weapon)itemStack.getItem()).maxBullets() > 0) {
+			initiateLoad(itemStack, player);
 		} else {
-			initiateReload(itemStack, player);
+			ItemAttachment<Weapon> existingMagazine = modContext.getAttachmentManager().getActiveAttachment(itemStack, AttachmentCategory.MAGAZINE);
+			if(existingMagazine != null) {
+				initiateUnload(itemStack, player);
+			} else {
+				initiateLoad(itemStack, player);
+			}
 		}
+
 	}
 
 	@SideOnly(Side.CLIENT)
-	void initiateReload(ItemStack itemStack, EntityPlayer player) {
+	void initiateLoad(ItemStack itemStack, EntityPlayer player) {
 		Weapon weapon = (Weapon) itemStack.getItem();
 		if(Weapon.isModifying(itemStack)) {
 			return;
@@ -49,7 +54,7 @@ public class ReloadManager {
 		}
 		
 		if (storage.getState() != State.RELOAD_REQUESTED && storage.getState() != State.RELOAD_CONFIRMED
-				&& storage.getCurrentAmmo().get() < weapon.builder.ammoCapacity) {
+				&& (weapon.maxBullets() == 0 || storage.getCurrentAmmo().get() < weapon.maxBullets())) {
 			storage.getReloadingStopsAt().set(player.worldObj.getTotalWorldTime() + Weapon.MAX_RELOAD_TIMEOUT_TICKS);
 			storage.setState(State.RELOAD_REQUESTED);
 			modContext.getChannel().sendToServer(new ReloadMessage(weapon));
@@ -82,6 +87,7 @@ public class ReloadManager {
 		Weapon weapon = (Weapon) weaponItemStack.getItem();
 		if (weaponItemStack.getTagCompound() != null && !player.isSprinting()) {
 			List<ItemMagazine> compatibleMagazines = weapon.getCompatibleMagazines();
+			List<ItemAttachment<Weapon>> compatibleBullets = weapon.getCompatibleAttachments(ItemBullet.class);
 			if(!compatibleMagazines.isEmpty()) {
 				ItemAttachment<Weapon> existingMagazine = modContext.getAttachmentManager().getActiveAttachment(weaponItemStack, AttachmentCategory.MAGAZINE);
 				int ammo = Tags.getAmmo(weaponItemStack);
@@ -99,6 +105,11 @@ public class ReloadManager {
 				}
 				modContext.getChannel().sendTo(new ReloadMessage(weapon, ReloadMessage.Type.LOAD, newMagazine, ammo), (EntityPlayerMP) player);
 				
+			} else if(!compatibleBullets.isEmpty() && tryConsumingPart(weapon, compatibleBullets, player) != null) {
+				int ammo = Tags.getAmmo(weaponItemStack) + 1;
+				Tags.setAmmo(weaponItemStack, ammo);
+				modContext.getChannel().sendTo(new ReloadMessage(weapon, ammo), (EntityPlayerMP) player);
+				player.worldObj.playSoundToNearExcept(player, weapon.builder.reloadSound, 1.0F, 1.0F);
 			} else if (player.inventory.consumeInventoryItem(weapon.builder.ammo)) {
 				Tags.setAmmo(weaponItemStack, weapon.builder.ammoCapacity);
 				modContext.getChannel().sendTo(new ReloadMessage(weapon, weapon.builder.ammoCapacity), (EntityPlayerMP) player);
