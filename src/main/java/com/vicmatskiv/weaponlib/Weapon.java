@@ -437,9 +437,11 @@ public class Weapon extends Item implements AttachmentContainer {
 			weapon.silencedShootSound = new SoundEvent(silencedShootSoundLocation);
 			registerSound(weapon.silencedShootSound, silencedShootSoundLocation);
 			
-			ResourceLocation ejectSpentRoundSoundLocation = new ResourceLocation(this.modId, this.ejectSpentRoundSound);
-			weapon.ejectSpentRoundSound = new SoundEvent(ejectSpentRoundSoundLocation);
-			registerSound(weapon.ejectSpentRoundSound, ejectSpentRoundSoundLocation);
+			if(ejectSpentRoundSound != null) {
+				ResourceLocation ejectSpentRoundSoundLocation = new ResourceLocation(this.modId, this.ejectSpentRoundSound);
+				weapon.ejectSpentRoundSound = new SoundEvent(ejectSpentRoundSoundLocation);
+				registerSound(weapon.ejectSpentRoundSound, ejectSpentRoundSoundLocation);
+			}
 			
 			weapon.setCreativeTab(creativeTab);
 			weapon.setUnlocalizedName(name);
