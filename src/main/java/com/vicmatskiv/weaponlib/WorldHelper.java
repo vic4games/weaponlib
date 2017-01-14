@@ -1,6 +1,10 @@
 package com.vicmatskiv.weaponlib;
 
+import java.util.List;
+import java.util.function.Predicate;
+
 import net.minecraft.block.Block;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
@@ -39,5 +43,56 @@ public class WorldHelper {
 		}
 		
 		return result;
+	}
+
+	static ItemStack itemStackForItem(Item item, Predicate<ItemStack> condition, EntityPlayer player) {
+	    ItemStack result = null;
+		
+		for(int i = 0; i < player.inventory.getSizeInventory(); i++) {
+			ItemStack stack = player.inventory.getStackInSlot(i);
+			if (stack != null && stack.getItem() == item
+	        		&& condition.test(stack)) {
+	            result = stack;
+	            break;
+	        }
+		}
+	
+	    return result;
+	}
+	
+	static ItemStack consumeInventoryItem(Item item, Predicate<ItemStack> condition, EntityPlayer player)
+	{
+		ItemStack result = null;
+		for(int i = 0; i < player.inventory.getSizeInventory(); i++) {
+			ItemStack stack = player.inventory.getStackInSlot(i);
+			if(stack != null && stack.getItem() == item && condition.test(stack)) {
+				if (--stack.stackSize <= 0) {
+					player.inventory.setInventorySlotContents(i, null);
+	            }
+				result = stack;
+				break;
+			}
+		}
+		
+		return result;
+	}
+
+	static ItemStack tryConsumingCompatibleItem(List<? extends Item> compatibleParts, EntityPlayer player) {
+		return tryConsumingCompatibleItem(compatibleParts, player, i -> true);
+	}
+	
+	@SafeVarargs
+	static ItemStack tryConsumingCompatibleItem(List<? extends Item> compatibleParts, EntityPlayer player, Predicate<ItemStack> ...conditions) {
+		ItemStack resultStack = null;
+		for(Predicate<ItemStack> condition: conditions) {
+			for(Item item: compatibleParts) {
+				if((resultStack = consumeInventoryItem(item, condition, player)) != null) {
+					break;
+				}
+			}
+			if(resultStack != null) break;
+		}
+		
+		return resultStack;
 	}
 }

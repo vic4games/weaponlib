@@ -12,6 +12,7 @@ public final class Tags {
 	private static final String LASER_ON_TAG = "LaserOn";
 	private static final String AMMO_TAG = "Ammo";
 	private static final String STATE_TAG = "State";
+	private static final String DEFAULT_TIMER_TAG = "DefaultTimer";
 
 	static boolean isLaserOn(ItemStack itemStack) {
 		if (itemStack == null || itemStack.getTagCompound() == null) {
@@ -124,5 +125,15 @@ public final class Tags {
 			return;
 		}
 		itemStack.getTagCompound().setInteger(STATE_TAG, state.ordinal());
+	}
+	
+	public static long getDefaultTimer(ItemStack itemStack) {
+		if(itemStack == null || itemStack.getTagCompound() == null) return 0;
+		return itemStack.getTagCompound().getLong(DEFAULT_TIMER_TAG);
+	}
+
+	static void setDefaultTimer(ItemStack itemStack, long ammo) {
+		if(itemStack == null || itemStack.getTagCompound() == null) return;
+		itemStack.getTagCompound().setLong(DEFAULT_TIMER_TAG, ammo);
 	}
 }

@@ -5,12 +5,13 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import com.vicmatskiv.weaponlib.ItemAttachment.ApplyHandler;
+
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-
-import com.vicmatskiv.weaponlib.ItemAttachment.ApplyHandler;
+import net.minecraftforge.fml.common.registry.GameRegistry;
 
 public class AttachmentBuilder<T> {
 	protected String name;
@@ -101,7 +102,7 @@ public class AttachmentBuilder<T> {
 		return this;
 	}
 	
-	protected ItemAttachment<T> createAttachment() {
+	protected ItemAttachment<T> createAttachment(ModContext modContext) {
 		return new ItemAttachment<T>(
 				modId, attachmentCategory, /*model, textureName, */ crosshair, 
 				apply, remove);
@@ -109,10 +110,13 @@ public class AttachmentBuilder<T> {
 	
 	@SuppressWarnings("deprecation")
 	public ItemAttachment<T> build(ModContext modContext) {
-		ItemAttachment<T> attachment = createAttachment();
+		ItemAttachment<T> attachment = createAttachment(modContext);
 		attachment.setUnlocalizedName(modId + "_" + name); 
 		attachment.setCreativeTab(tab);
 		attachment.setPostRenderer(postRenderer);
+		if(textureName != null) {
+			attachment.setTextureName(modId + ":" + textureName);
+		}
 		if(isRenderablePart) {
 			attachment.setRenderablePart(new Part() {});
 		}
@@ -120,16 +124,23 @@ public class AttachmentBuilder<T> {
 		if(model != null) {
 			attachment.addModel(model, textureName);
 		}
-		texturedModels.forEach(tm -> attachment.addModel(tm.getU(), tm.getV()));
-		StaticModelSourceRenderer renderer = new StaticModelSourceRenderer.Builder()
-				.withEntityPositioning(entityPositioning)
-				.withFirstPersonPositioning(firstPersonPositioning)
-				.withThirdPersonPositioning(thirdPersonPositioning)
-				.withInventoryPositioning(inventoryPositioning)
-				.withModId(modId)
-				.build();
 		
-		modContext.registerRenderableItem(name, attachment, renderer);
+		texturedModels.forEach(tm -> attachment.addModel(tm.getU(), tm.getV()));
+		
+		if(model != null || !texturedModels.isEmpty()) {
+			StaticModelSourceRenderer renderer = new StaticModelSourceRenderer.Builder()
+					.withEntityPositioning(entityPositioning)
+					.withFirstPersonPositioning(firstPersonPositioning)
+					.withThirdPersonPositioning(thirdPersonPositioning)
+					.withInventoryPositioning(inventoryPositioning)
+					.withModId(modId)
+					.build();
+			
+			modContext.registerRenderableItem(name, attachment, renderer);
+		} else {
+			GameRegistry.registerItem(attachment, name);
+		}
+		
 		return attachment;
 	}
 	

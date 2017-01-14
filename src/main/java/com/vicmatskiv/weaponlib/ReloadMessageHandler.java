@@ -39,7 +39,7 @@ public class ReloadMessageHandler implements IMessageHandler<ReloadMessage, IMes
 					}
 				});
 			} else if(itemStack != null && itemStack.getItem() instanceof ItemMagazine) {
-				
+				reloadManager.reload(itemStack, player);
 			}
 		} else {
 			onClientMessage(message, ctx);
@@ -50,10 +50,45 @@ public class ReloadMessageHandler implements IMessageHandler<ReloadMessage, IMes
 	private void onClientMessage(ReloadMessage message, MessageContext ctx) {
 		EntityPlayer player = entityPlayerSupplier.apply(ctx);
 		ItemStack itemStack = player.getHeldItem(EnumHand.MAIN_HAND);
-		if(itemStack != null && itemStack.getItem() instanceof Weapon) {
+		if(itemStack != null) {
+			
 			Weapon targetWeapon = message.getWeapon();
+			ItemMagazine targetMagazine = message.getMagazine();
+			
 			if(message.getType() == Type.LOAD) {
-				reloadManager.completeReload(itemStack, player, message.getMagazine(), message.getAmmo(), itemStack.getItem() != targetWeapon);
+				ItemStack targetStack = null;
+				if(message.getWeapon() != null) {
+					
+					if(itemStack.getItem() == targetWeapon) {
+						/*
+						 * if currently held item is the weapon in the message, use it
+						 */
+						targetStack = itemStack;
+					} else {
+						/*
+						 * if currently held item is not the weapon in the message, try finding 
+						 * item stack in the player inventory
+						 */
+						targetStack = WorldHelper.itemStackForItem(targetWeapon, s -> true, player);
+					}
+					reloadManager.completeReload(targetStack, player, message.getMagazine(), message.getAmmo(), 
+							itemStack.getItem() != targetWeapon);
+				} else if(targetMagazine != null) {
+					if(itemStack.getItem() == targetMagazine) {
+						/*
+						 * if currently held item is the magazine in the message, use it
+						 */
+						targetStack = itemStack;
+					} else {
+						/*
+						 * if currently held item is not the magazine in the message, try finding 
+						 * item stack in the player inventory
+						 */
+						targetStack = WorldHelper.itemStackForItem(targetMagazine, s -> true, player);
+					}
+					reloadManager.completeReload(targetStack, player, targetMagazine, message.getAmmo(), 
+							itemStack.getItem() != targetMagazine);
+				}
 			} else {
 				reloadManager.completeUnload(itemStack, player);
 			}
