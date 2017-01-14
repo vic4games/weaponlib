@@ -12,6 +12,8 @@ import net.minecraft.item.ItemStack;
 
 import com.vicmatskiv.weaponlib.ItemAttachment.ApplyHandler;
 
+import cpw.mods.fml.common.registry.GameRegistry;
+
 public class AttachmentBuilder<T> {
 	protected String name;
 	protected String modId;
@@ -113,6 +115,9 @@ public class AttachmentBuilder<T> {
 		attachment.setUnlocalizedName(modId + "_" + name); 
 		attachment.setCreativeTab(tab);
 		attachment.setPostRenderer(postRenderer);
+		if(textureName != null) {
+			attachment.setTextureName(modId + ":" + textureName);
+		}
 		if(isRenderablePart) {
 			attachment.setRenderablePart(new Part() {});
 		}
@@ -120,16 +125,23 @@ public class AttachmentBuilder<T> {
 		if(model != null) {
 			attachment.addModel(model, textureName);
 		}
-		texturedModels.forEach(tm -> attachment.addModel(tm.getU(), tm.getV()));
-		StaticModelSourceRenderer renderer = new StaticModelSourceRenderer.Builder()
-				.withEntityPositioning(entityPositioning)
-				.withFirstPersonPositioning(firstPersonPositioning)
-				.withThirdPersonPositioning(thirdPersonPositioning)
-				.withInventoryPositioning(inventoryPositioning)
-				.withModId(modId)
-				.build();
 		
-		modContext.registerRenderableItem(name, attachment, renderer);
+		texturedModels.forEach(tm -> attachment.addModel(tm.getU(), tm.getV()));
+		
+		if(model != null || !texturedModels.isEmpty()) {
+			StaticModelSourceRenderer renderer = new StaticModelSourceRenderer.Builder()
+					.withEntityPositioning(entityPositioning)
+					.withFirstPersonPositioning(firstPersonPositioning)
+					.withThirdPersonPositioning(thirdPersonPositioning)
+					.withInventoryPositioning(inventoryPositioning)
+					.withModId(modId)
+					.build();
+			
+			modContext.registerRenderableItem(name, attachment, renderer);
+		} else {
+			GameRegistry.registerItem(attachment, name);
+		}
+		
 		return attachment;
 	}
 	

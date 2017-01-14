@@ -80,8 +80,6 @@ public class Weapon extends Item implements AttachmentContainer {
 		float flashIntensity = 0.7f;
 
 		long unloadingTimeout = Weapon.DEFAULT_UNLOADING_TIMEOUT_TICKS;
-
-		private int maxBullets;
 		
 		private boolean ejectSpentRoundRequired;
 
@@ -291,11 +289,6 @@ public class Weapon extends Item implements AttachmentContainer {
 		public Builder withCompatibleAttachment(ItemAttachment<Weapon> attachment, boolean isDefault,
 				Consumer<ModelBase> positioner) {
 			compatibleAttachments.put(attachment, new CompatibleAttachment<>(attachment, positioner, isDefault));
-			return this;
-		}
-		
-		public Builder withMaxBullets(int maxBullets) {
-			this.maxBullets = maxBullets;
 			return this;
 		}
 
@@ -699,10 +692,6 @@ public class Weapon extends Item implements AttachmentContainer {
 	
 	long getUnloadTimeoutTicks() {
 		return builder.unloadingTimeout;
-	}
-	
-	int maxBullets() {
-		return builder.maxBullets;
 	}
 	
 	boolean ejectSpentRoundRequired() {
