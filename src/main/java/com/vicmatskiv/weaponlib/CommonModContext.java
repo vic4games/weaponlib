@@ -1,7 +1,12 @@
 package com.vicmatskiv.weaponlib;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.SoundEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
@@ -64,6 +69,15 @@ public class CommonModContext implements ModContext {
 		
 		MinecraftForge.EVENT_BUS.register(new WeaponKeyInputHandler((ctx) -> getPlayer(ctx), 
 				attachmentManager, reloadManager, channel));
+	}
+	
+	private Set<ResourceLocation> registeredSounds = new HashSet<>();
+	
+	@Override
+	public void registerSound(SoundEvent soundEvent, ResourceLocation shootSoundLocation) {
+		if(registeredSounds.add(shootSoundLocation)) {
+			GameRegistry.register(soundEvent, shootSoundLocation);
+		}
 	}
 
 	@Override

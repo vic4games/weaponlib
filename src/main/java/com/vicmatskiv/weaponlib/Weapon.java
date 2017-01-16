@@ -2,10 +2,8 @@ package com.vicmatskiv.weaponlib;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -33,7 +31,6 @@ import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 
 public class Weapon extends Item implements AttachmentContainer {
 	
@@ -89,8 +86,6 @@ public class Weapon extends Item implements AttachmentContainer {
 		float flashIntensity = 0.7f;
 
 		long unloadingTimeout = Weapon.DEFAULT_UNLOADING_TIMEOUT_TICKS;
-
-		private int maxBullets;
 		
 		private boolean ejectSpentRoundRequired;
 
@@ -286,6 +281,11 @@ public class Weapon extends Item implements AttachmentContainer {
 			this.renderer = renderer;
 			return this;
 		}
+		
+		public Builder withCompatibleBullet(ItemBullet bullet, Consumer<ModelBase> positioner) {
+			compatibleAttachments.put(bullet, new CompatibleAttachment<>(bullet, positioner));
+			return this;
+		}
 
 		public Builder withCompatibleAttachment(ItemAttachment<Weapon> attachment, Consumer<ModelBase> positioner) {
 			compatibleAttachments.put(attachment, new CompatibleAttachment<>(attachment, positioner));
@@ -295,11 +295,6 @@ public class Weapon extends Item implements AttachmentContainer {
 		public Builder withCompatibleAttachment(ItemAttachment<Weapon> attachment, boolean isDefault,
 				Consumer<ModelBase> positioner) {
 			compatibleAttachments.put(attachment, new CompatibleAttachment<>(attachment, positioner, isDefault));
-			return this;
-		}
-		
-		public Builder withMaxBullets(int maxBullets) {
-			this.maxBullets = maxBullets;
 			return this;
 		}
 
@@ -423,24 +418,24 @@ public class Weapon extends Item implements AttachmentContainer {
 			
 			ResourceLocation shootSoundLocation = new ResourceLocation(this.modId, this.shootSound);
 			weapon.shootSound = new SoundEvent(shootSoundLocation);
-			registerSound(weapon.shootSound, shootSoundLocation);
+			modContext.registerSound(weapon.shootSound, shootSoundLocation);
 			
 			ResourceLocation reloadSoundLocation = new ResourceLocation(this.modId, this.reloadSound);
 			weapon.reloadSound = new SoundEvent(reloadSoundLocation);
-			registerSound(weapon.reloadSound, reloadSoundLocation);
+			modContext.registerSound(weapon.reloadSound, reloadSoundLocation);
 			
 			ResourceLocation unloadSoundLocation = new ResourceLocation(this.modId, this.unloadSound);
 			weapon.unloadSound = new SoundEvent(unloadSoundLocation);
-			registerSound(weapon.unloadSound, unloadSoundLocation);
+			modContext.registerSound(weapon.unloadSound, unloadSoundLocation);
 			
 			ResourceLocation silencedShootSoundLocation = new ResourceLocation(this.modId, this.silencedShootSound);
 			weapon.silencedShootSound = new SoundEvent(silencedShootSoundLocation);
-			registerSound(weapon.silencedShootSound, silencedShootSoundLocation);
+			modContext.registerSound(weapon.silencedShootSound, silencedShootSoundLocation);
 			
 			if(ejectSpentRoundSound != null) {
 				ResourceLocation ejectSpentRoundSoundLocation = new ResourceLocation(this.modId, this.ejectSpentRoundSound);
 				weapon.ejectSpentRoundSound = new SoundEvent(ejectSpentRoundSoundLocation);
-				registerSound(weapon.ejectSpentRoundSound, ejectSpentRoundSoundLocation);
+				modContext.registerSound(weapon.ejectSpentRoundSound, ejectSpentRoundSoundLocation);
 			}
 			
 			weapon.setCreativeTab(creativeTab);
@@ -455,14 +450,6 @@ public class Weapon extends Item implements AttachmentContainer {
 			
 			modContext.registerWeapon(name, weapon);
 			return weapon;
-		}
-
-		private static Set<ResourceLocation> registeredSounds = new HashSet<>();
-		
-		private void registerSound(SoundEvent soundEvent, ResourceLocation shootSoundLocation) {
-			if(registeredSounds.add(shootSoundLocation)) {
-				GameRegistry.register(soundEvent, shootSoundLocation);
-			}
 		}
 	}
 
@@ -782,10 +769,6 @@ public class Weapon extends Item implements AttachmentContainer {
 	
 	long getUnloadTimeoutTicks() {
 		return builder.unloadingTimeout;
-	}
-	
-	int maxBullets() {
-		return builder.maxBullets;
 	}
 	
 	boolean ejectSpentRoundRequired() {

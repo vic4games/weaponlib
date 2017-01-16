@@ -65,61 +65,82 @@ public class CustomGui extends Gui {
 			return;
 		}
 		
-		ItemStack weapon = mc.thePlayer.getHeldItem(EnumHand.MAIN_HAND);
-		if(weapon == null || !(weapon.getItem() instanceof Weapon) || mc.gameSettings.thirdPersonView != 0) {
+//<<<<<<< HEAD
+//		ItemStack weapon = mc.thePlayer.getHeldItem(EnumHand.MAIN_HAND);
+//		if(weapon == null || !(weapon.getItem() instanceof Weapon) || mc.gameSettings.thirdPersonView != 0) {
+//			return;
+//		}
+//		
+//		Weapon weaponItem = (Weapon) weapon.getItem();
+//		String crosshair = weaponItem.getCrosshair(weapon, mc.thePlayer);
+//		if(crosshair != null) {
+//			ScaledResolution scaledResolution = event.getResolution();
+//=======
+		ItemStack itemStack = mc.thePlayer.getHeldItem(EnumHand.MAIN_HAND);
+		if(itemStack == null) {
 			return;
 		}
 		
-		Weapon weaponItem = (Weapon) weapon.getItem();
-		String crosshair = weaponItem.getCrosshair(weapon, mc.thePlayer);
-		if(crosshair != null) {
+		if(itemStack.getItem() instanceof Weapon) {
+			Weapon weaponItem = (Weapon) itemStack.getItem();
+			String crosshair = weaponItem != null ? weaponItem.getCrosshair(itemStack, mc.thePlayer) : null;
+			if(crosshair != null) {
+				ScaledResolution scaledResolution = event.getResolution();
+				int width = scaledResolution.getScaledWidth();
+			    int height = scaledResolution.getScaledHeight();
+			    
+				
+			    FontRenderer fontRender = mc.fontRendererObj;
+
+				mc.entityRenderer.setupOverlayRendering();
+				
+				int color = 0xFFFFFF;
+				
+				if(Weapon.isModifying(itemStack) /*weaponItem.getState(weapon) == Weapon.STATE_MODIFYING*/) {
+					fontRender.drawStringWithShadow("Attachment selection mode. Press [f] to exit.", 10, 10, color);
+					fontRender.drawStringWithShadow("Press [up] to add optic", width / 2 - 40, 60, color);
+					fontRender.drawStringWithShadow("Press [left] to add barrel rig", 10, height / 2 - 10, color);
+					fontRender.drawStringWithShadow("Press [right] to change camo", width / 2 + 60, height / 2 - 20, color);
+					fontRender.drawStringWithShadow("Press [down] to add under-barrel rig", 10, height - 40, color);
+				} else {
+					ItemMagazine magazine = (ItemMagazine) attachmentManager.getActiveAttachment(itemStack, AttachmentCategory.MAGAZINE);
+					int totalCapacity;
+					if(magazine != null) {
+						totalCapacity = magazine.getAmmo();
+					} else {
+						totalCapacity = weaponItem.getAmmoCapacity();
+					}
+					
+					String text;
+					if(weaponItem.getAmmoCapacity() == 0 && totalCapacity == 0) {
+						text = "No magazine";
+					} else {
+						text = "Ammo: " + weaponItem.getCurrentAmmo(mc.thePlayer) + "/" + totalCapacity;
+					}
+					
+					int x = width - 80;
+					int y = 10;
+
+					fontRender.drawStringWithShadow(text, x, y, color);
+				}
+				event.setCanceled(true);
+			}
+		} else if(itemStack.getItem() instanceof ItemMagazine) {
 			ScaledResolution scaledResolution = event.getResolution();
 			int width = scaledResolution.getScaledWidth();
-		    int height = scaledResolution.getScaledHeight();
-		    
-//			int xPos = width / 2 - BUFF_ICON_SIZE / 2;
-//			int yPos = height / 2 - BUFF_ICON_SIZE / 2;
-//			GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-//			GL11.glDisable(GL11.GL_LIGHTING);
-			
-//			this.mc.renderEngine.bindTexture(new ResourceLocation(crosshair));
-//
-//			if(weaponItem.isCrosshairFullScreen(weapon))	 {
-//				drawTexturedQuadFit(0, 0, width, height, 0);
-//			} else {
-//				drawTexturedModalRect(xPos, yPos, 0, 0, BUFF_ICON_SIZE, BUFF_ICON_SIZE);
-//			}
-						
 			FontRenderer fontRender = mc.fontRendererObj;
-
 			mc.entityRenderer.setupOverlayRendering();
-			
 			int color = 0xFFFFFF;
 			
-			if(Weapon.isModifying(weapon) /*weaponItem.getState(weapon) == Weapon.STATE_MODIFYING*/) {
-				fontRender.drawStringWithShadow("Attachment selection mode. Press [f] to exit.", 10, 10, color);
-				fontRender.drawStringWithShadow("Press [up] to add optic", width / 2 - 40, 60, color);
-				fontRender.drawStringWithShadow("Press [left] to add barrel rig", 10, height / 2 - 10, color);
-				fontRender.drawStringWithShadow("Press [right] to change camo", width / 2 + 60, height / 2 - 20, color);
-				fontRender.drawStringWithShadow("Press [down] to add under-barrel rig", 10, height - 40, color);
-			} else {
-				ItemMagazine magazine = (ItemMagazine) attachmentManager.getActiveAttachment(weapon, AttachmentCategory.MAGAZINE);
-				int totalCapacity;
-				if(magazine != null) {
-					totalCapacity = magazine.getAmmo();
-				} else {
-					totalCapacity = weaponItem.getAmmoCapacity();
-				}
-				String text = "Ammo: " + weaponItem.getCurrentAmmo(mc.thePlayer) + "/" + totalCapacity;
-				int x = width - 80;
-				int y = 10;
+			ItemMagazine magazine = (ItemMagazine) itemStack.getItem();
+			
+			String text = "Ammo: " + Tags.getAmmo(itemStack) + "/" + magazine.getAmmo();
+			int x = width - 80;
+			int y = 10;
 
-				fontRender.drawStringWithShadow(text, x, y, color);
-			}
+			fontRender.drawStringWithShadow(text, x, y, color);
 			event.setCanceled(true);
 		}
-		
-		
 	}
 	
 	private static void drawTexturedQuadFit(double x, double y, double width, double height, double zLevel){
