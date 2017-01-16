@@ -97,15 +97,16 @@ public class ReloadManager {
 	@SuppressWarnings("unchecked")
 	void reload(ItemStack itemStack, EntityPlayer player) {
 		
+		ItemStack consumedStack = null;
 		if(itemStack.getItem() instanceof ItemMagazine) {
 			ItemStack magazineItemStack = itemStack;
 			ItemMagazine magazine = (ItemMagazine) magazineItemStack.getItem();
 			List<ItemBullet> compatibleBullets = magazine.getCompatibleBullets();
 			int currentAmmo = Tags.getAmmo(magazineItemStack);
-			if(Tags.getState(magazineItemStack) != Weapon.State.RELOAD_CONFIRMED && currentAmmo < magazine.getAmmo() && WorldHelper.tryConsumingCompatibleItem(compatibleBullets, player) != null) {
+			if(Tags.getState(magazineItemStack) != Weapon.State.RELOAD_CONFIRMED && currentAmmo < magazine.getAmmo() && (consumedStack = WorldHelper.tryConsumingCompatibleItem(compatibleBullets, magazine.getAmmo() - currentAmmo, player)) != null) {
 				Tags.setState(magazineItemStack, Weapon.State.RELOAD_CONFIRMED);
 				Tags.setDefaultTimer(magazineItemStack, player.worldObj.getTotalWorldTime() + magazine.getReloadTimeout());
-				Tags.setAmmo(magazineItemStack, ++currentAmmo);
+				Tags.setAmmo(magazineItemStack, currentAmmo + consumedStack.stackSize);
 				player.playSound(magazine.getReloadSound(), 1.0F, 1.0F);
 			}
 			modContext.getChannel().sendTo(new ReloadMessage(null, ReloadMessage.Type.LOAD, magazine, currentAmmo), (EntityPlayerMP) player);
@@ -122,8 +123,8 @@ public class ReloadManager {
 					ItemMagazine newMagazine = null;
 					if(existingMagazine == null) {
 						ammo = 0;
-						ItemStack magazineItemStack = WorldHelper.tryConsumingCompatibleItem(compatibleMagazines, player, 
-								magazineStack -> Tags.getAmmo(magazineStack) > 0, magazineStack -> true);
+						ItemStack magazineItemStack = WorldHelper.tryConsumingCompatibleItem(compatibleMagazines,
+								1, player, magazineStack -> Tags.getAmmo(magazineStack) > 0, magazineStack -> true);
 						if(magazineItemStack != null) {
 							newMagazine = (ItemMagazine) magazineItemStack.getItem();
 							ammo = Tags.getAmmo(magazineItemStack);
@@ -134,8 +135,9 @@ public class ReloadManager {
 					}
 					modContext.getChannel().sendTo(new ReloadMessage(weapon, ReloadMessage.Type.LOAD, newMagazine, ammo), (EntityPlayerMP) player);
 					
-				} else if(!compatibleBullets.isEmpty() && WorldHelper.tryConsumingCompatibleItem(compatibleBullets, player) != null) {
-					int ammo = Tags.getAmmo(weaponItemStack) + 1;
+				} else if(!compatibleBullets.isEmpty() && (consumedStack = WorldHelper.tryConsumingCompatibleItem(compatibleBullets,
+						weapon.getAmmoCapacity() - Tags.getAmmo(weaponItemStack), player)) != null) {
+					int ammo = Tags.getAmmo(weaponItemStack) + consumedStack.stackSize;
 					Tags.setAmmo(weaponItemStack, ammo);
 					modContext.getChannel().sendTo(new ReloadMessage(weapon, ammo), (EntityPlayerMP) player);
 					player.playSound(weapon.getReloadSound(), 1.0F, 1.0F);
