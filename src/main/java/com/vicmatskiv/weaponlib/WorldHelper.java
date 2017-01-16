@@ -52,16 +52,21 @@ public class WorldHelper {
 	    return -1;
 	}
 
-	private static ItemStack consumeInventoryItem(Item item, Predicate<ItemStack> condition, EntityPlayer player) {
-		ItemStack result = null;
+	private static ItemStack consumeInventoryItem(Item item, Predicate<ItemStack> condition, EntityPlayer player, int maxSize) {
+		
+		if(maxSize <= 0) {
+			return null;
+		}
+		
 	    int i = itemSlotIndex(item, condition, player);
 	
 		if (i < 0) {
 			return null;
 		} else {
-	
-			result = player.inventory.mainInventory[i];
-			if (--player.inventory.mainInventory[i].stackSize <= 0) {
+			ItemStack stackInSlot = player.inventory.mainInventory[i];
+			int consumedStackSize = maxSize >= stackInSlot.stackSize ? stackInSlot.stackSize : maxSize;
+			ItemStack result = stackInSlot.splitStack(consumedStackSize);
+			if (stackInSlot.stackSize <= 0) {
 				player.inventory.mainInventory[i] = null;
 			}
 	
@@ -69,16 +74,17 @@ public class WorldHelper {
 		}
 	}
 
-	static ItemStack tryConsumingCompatibleItem(List<? extends Item> compatibleParts, EntityPlayer player) {
-		return tryConsumingCompatibleItem(compatibleParts, player, i -> true);
+	static ItemStack tryConsumingCompatibleItem(List<? extends Item> compatibleParts, int maxSize, EntityPlayer player) {
+		return tryConsumingCompatibleItem(compatibleParts, maxSize, player, i -> true);
 	}
 	
 	@SafeVarargs
-	static ItemStack tryConsumingCompatibleItem(List<? extends Item> compatibleParts, EntityPlayer player, Predicate<ItemStack> ...conditions) {
+	static ItemStack tryConsumingCompatibleItem(List<? extends Item> compatibleParts, int maxSize, 
+			EntityPlayer player, Predicate<ItemStack> ...conditions) {
 		ItemStack resultStack = null;
 		for(Predicate<ItemStack> condition: conditions) {
 			for(Item item: compatibleParts) {
-				if((resultStack = consumeInventoryItem(item, condition, player)) != null) {
+				if((resultStack = consumeInventoryItem(item, condition, player, maxSize)) != null) {
 					break;
 				}
 			}

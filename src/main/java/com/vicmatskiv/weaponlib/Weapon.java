@@ -277,6 +277,11 @@ public class Weapon extends Item implements AttachmentContainer {
 			this.renderer = renderer;
 			return this;
 		}
+		
+		public Builder withCompatibleBullet(ItemBullet bullet, Consumer<ModelBase> positioner) {
+			compatibleAttachments.put(bullet, new CompatibleAttachment<>(bullet, positioner));
+			return this;
+		}
 
 		public Builder withCompatibleAttachment(ItemAttachment<Weapon> attachment, Consumer<ModelBase> positioner) {
 			compatibleAttachments.put(attachment, new CompatibleAttachment<>(attachment, positioner));
