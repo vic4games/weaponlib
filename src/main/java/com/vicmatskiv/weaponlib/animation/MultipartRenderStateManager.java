@@ -67,7 +67,12 @@ public class MultipartRenderStateManager<State, Part, Context> {
 		private List<MultipartTransition<Part, Context>> fromPositioning;
 		private List<MultipartTransition<Part, Context>> toPositioning;
 		
+		private State fromState;
+		private State toState;
+		
 		TransitionedPositioning(State fromState, State toState) {
+			this.fromState = fromState;
+			this.toState = toState;
 			fromPositioning = transitionProvider.getPositioning(fromState);
 			toPositioning = transitionProvider.getPositioning(toState);
 			segmentCount = toPositioning.size();
@@ -79,14 +84,19 @@ public class MultipartRenderStateManager<State, Part, Context> {
 		}
 		
 		private PartData getPartData(Part part, Context context) {
-			return partDataMap.computeIfAbsent(part, p -> { 
-				PartData pd = new PartData();
-				pd.matrices.add(getMatrixForPositioning(fromPositioning.get(fromPositioning.size() - 1), p, context));
-				for(MultipartTransition<Part, Context> t: toPositioning) {
-					pd.matrices.add(getMatrixForPositioning(t, p, context));
-				}
-				return pd;
-			});
+			try {
+				return partDataMap.computeIfAbsent(part, p -> { 
+					PartData pd = new PartData();
+					pd.matrices.add(getMatrixForPositioning(fromPositioning.get(fromPositioning.size() - 1), p, context));
+					for(MultipartTransition<Part, Context> t: toPositioning) {
+						pd.matrices.add(getMatrixForPositioning(t, p, context));
+					}
+					return pd;
+				});
+			} catch(Exception e) {
+				System.err.println("Failed to get data for part " + part + " for transition from [" + fromState + "] to [" + toState + "]");
+				throw e;
+			}
 		}
 		
 		@Override

@@ -127,4 +127,9 @@ public class ItemMagazine extends ItemAttachment<Weapon> implements Part {
 		return reloadingTimeout;
 	}
 	
+	@Override
+	public Part getRenderablePart() {
+		return this;
+	}
+	
 }
