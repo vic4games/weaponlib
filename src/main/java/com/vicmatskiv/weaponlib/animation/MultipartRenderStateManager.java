@@ -37,7 +37,12 @@ public class MultipartRenderStateManager<State, Part, Context> {
 
 				@Override
 				public void position(Part part, Context context) {
-					transitions.get(transitions.size() - 1).position(part, context);
+					try {
+						transitions.get(transitions.size() - 1).position(part, context);
+					} catch(Exception e) {
+						System.err.println("Failed to find static position for " + part + " in " + state);
+						throw e;
+					}
 				}
 				
 				@Override

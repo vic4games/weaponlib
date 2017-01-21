@@ -18,6 +18,7 @@ public class ItemAttachment<T> extends Item implements ModelSource {
 	private CustomRenderer postRenderer;
 	private CustomRenderer preRenderer;
 	private Part renderablePart;
+	private String name;
 	
 	private List<Weapon> compatibleWeapons = new ArrayList<>();
 	
@@ -105,6 +106,10 @@ public class ItemAttachment<T> extends Item implements ModelSource {
 		compatibleWeapons.forEach((weapon) -> info.add(weapon.getName()));
 	}
 	
+	public void setName(String name) {
+		this.name = name;
+	}
+
 	public void setPostRenderer(CustomRenderer postRenderer) {
 		this.postRenderer = postRenderer;
 	}
@@ -119,5 +124,10 @@ public class ItemAttachment<T> extends Item implements ModelSource {
 
 	public void setPreRenderer(CustomRenderer preRenderer) {
 		this.preRenderer = preRenderer;
+	}
+	
+	@Override
+	public String toString() {
+		return name != null ? "Attachment [" + name + "]" : super.toString();
 	}
 }
