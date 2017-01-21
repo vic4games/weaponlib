@@ -23,6 +23,11 @@ public class AttachmentBuilder<T> {
 	protected Consumer<ItemStack> inventoryPositioning;
 	protected BiConsumer<EntityPlayer, ItemStack> thirdPersonPositioning;
 	protected BiConsumer<EntityPlayer, ItemStack> firstPersonPositioning;
+	protected BiConsumer<ModelBase, ItemStack> firstPersonModelPositioning;
+	protected BiConsumer<ModelBase, ItemStack> thirdPersonModelPositioning;
+	protected BiConsumer<ModelBase, ItemStack> inventoryModelPositioning;
+	protected BiConsumer<ModelBase, ItemStack> entityModelPositioning;
+	
 	protected CreativeTabs tab;
 	protected AttachmentCategory attachmentCategory;
 	protected ApplyHandler<T> apply;
@@ -82,6 +87,26 @@ public class AttachmentBuilder<T> {
 		return this;
 	}
 	
+	public AttachmentBuilder<T> withFirstPersonModelPositioning(BiConsumer<ModelBase, ItemStack> firstPersonModelPositioning) {
+		this.firstPersonModelPositioning = firstPersonModelPositioning;
+		return this;
+	}
+	
+	public AttachmentBuilder<T> withEntityModelPositioning(BiConsumer<ModelBase, ItemStack> entityModelPositioning) {
+		this.entityModelPositioning = entityModelPositioning;
+		return this;
+	}
+	
+	public AttachmentBuilder<T> withInventoryModelPositioning(BiConsumer<ModelBase, ItemStack> inventoryModelPositioning) {
+		this.inventoryModelPositioning = inventoryModelPositioning;
+		return this;
+	}
+
+	public AttachmentBuilder<T> withThirdPersonModelPositioning(BiConsumer<ModelBase, ItemStack> thirdPersonModelPositioning) {
+		this.thirdPersonModelPositioning = thirdPersonModelPositioning;
+		return this;
+	}
+	
 	public AttachmentBuilder<T> withCrosshair(String crosshair) {
 		this.crosshair = crosshair;
 		return this;
@@ -103,6 +128,16 @@ public class AttachmentBuilder<T> {
 		return this;
 	}
 	
+	public AttachmentBuilder<T> withApply(ApplyHandler<T> apply) {
+		this.apply = apply;
+		return this;
+	}
+	
+	public AttachmentBuilder<T> withRemove(ApplyHandler<T> remove) {
+		this.remove = remove;
+		return this;
+	} 
+	
 	protected ItemAttachment<T> createAttachment() {
 		return new ItemAttachment<T>(
 				modId, attachmentCategory, /*model, textureName, */ crosshair, 
@@ -115,11 +150,18 @@ public class AttachmentBuilder<T> {
 		attachment.setUnlocalizedName(modId + "_" + name); 
 		attachment.setCreativeTab(tab);
 		attachment.setPostRenderer(postRenderer);
+		attachment.setName(name);
 		if(textureName != null) {
-			attachment.setTextureName(modId + ":" + textureName);
-		}
+			attachment.setTextureName(modId + ":" + stripFileExtension(textureName, ".png"));
+		} 
+		
 		if(isRenderablePart) {
-			attachment.setRenderablePart(new Part() {});
+			attachment.setRenderablePart(new Part() {
+				@Override
+				public String toString() {
+					return name != null ? "Part [" + name + "]" : super.toString();
+				}
+			});
 		}
 		
 		if(model != null) {
@@ -134,6 +176,10 @@ public class AttachmentBuilder<T> {
 					.withFirstPersonPositioning(firstPersonPositioning)
 					.withThirdPersonPositioning(thirdPersonPositioning)
 					.withInventoryPositioning(inventoryPositioning)
+					.withEntityModelPositioning(entityModelPositioning)
+					.withFirstPersonModelPositioning(firstPersonModelPositioning)
+					.withThirdPersonModelPositioning(thirdPersonModelPositioning)
+					.withInventoryModelPositioning(inventoryModelPositioning)
 					.withModId(modId)
 					.build();
 			
@@ -143,6 +189,10 @@ public class AttachmentBuilder<T> {
 		}
 		
 		return attachment;
+	}
+
+	private static String stripFileExtension(String str, String extension) {
+		return str.endsWith(extension) ? str.substring(0, str.length() - 4) : str;
 	}
 	
 	public <V extends ItemAttachment<T>> V build(ModContext modContext, Class<V> target) {

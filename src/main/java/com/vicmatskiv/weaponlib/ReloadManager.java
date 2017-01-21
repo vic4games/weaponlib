@@ -139,7 +139,7 @@ public class ReloadManager {
 					modContext.getChannel().sendTo(new ReloadMessage(weapon, ReloadMessage.Type.LOAD, newMagazine, ammo), (EntityPlayerMP) player);
 					
 				} else if(!compatibleBullets.isEmpty() && (consumedStack = WorldHelper.tryConsumingCompatibleItem(compatibleBullets,
-						weapon.getAmmoCapacity() - Tags.getAmmo(weaponItemStack), player)) != null) {
+						Math.min(weapon.getMaxBulletsPerReload(), weapon.getAmmoCapacity() - Tags.getAmmo(weaponItemStack)), player)) != null) {
 					int ammo = Tags.getAmmo(weaponItemStack) + consumedStack.stackSize;
 					Tags.setAmmo(weaponItemStack, ammo);
 					modContext.getChannel().sendTo(new ReloadMessage(weapon, ammo), (EntityPlayerMP) player);
