@@ -89,6 +89,8 @@ public class Weapon extends Item implements AttachmentContainer {
 		
 		private boolean ejectSpentRoundRequired;
 
+		public int maxBulletsPerReload;
+
 		
 
 		public Builder withModId(String modId) {
@@ -114,6 +116,11 @@ public class Weapon extends Item implements AttachmentContainer {
 
 		public Builder withAmmoCapacity(int ammoCapacity) {
 			this.ammoCapacity = ammoCapacity;
+			return this;
+		}
+		
+		public Builder withMaxBulletsPerReload(int maxBulletsPerReload) {
+			this.maxBulletsPerReload = maxBulletsPerReload;
 			return this;
 		}
 
@@ -412,6 +419,10 @@ public class Weapon extends Item implements AttachmentContainer {
 						world.destroyBlock(position.getBlockPos(), true);
 					}
 				};
+			}
+			
+			if(maxBulletsPerReload == 0) {
+				maxBulletsPerReload = ammoCapacity;
 			}
 
 			Weapon weapon = new Weapon(this, modContext);
@@ -746,6 +757,10 @@ public class Weapon extends Item implements AttachmentContainer {
 
 	int getAmmoCapacity() {
 		return builder.ammoCapacity;
+	}
+	
+	int getMaxBulletsPerReload() {
+		return builder.maxBulletsPerReload;
 	}
 	
 	ModelBase getAmmoModel() {

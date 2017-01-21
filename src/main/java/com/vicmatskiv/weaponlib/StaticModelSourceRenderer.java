@@ -47,10 +47,21 @@ public class StaticModelSourceRenderer extends ModelSourceRenderer implements IP
 		private BiConsumer<EntityPlayer, ItemStack> thirdPersonPositioning;
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioning;
 		
+		private BiConsumer<ModelBase, ItemStack> firstPersonModelPositioning;
+		private BiConsumer<ModelBase, ItemStack> thirdPersonModelPositioning;
+		private BiConsumer<ModelBase, ItemStack> inventoryModelPositioning;
+		private BiConsumer<ModelBase, ItemStack> entityModelPositioning;
+		
 		private String modId;
 		
 		public Builder withModId(String modId) {
 			this.modId = modId;
+			return this;
+		}
+		
+
+		public Builder withFirstPersonPositioning(BiConsumer<EntityPlayer, ItemStack> firstPersonPositioning) {
+			this.firstPersonPositioning = firstPersonPositioning;
 			return this;
 		}
 		
@@ -69,8 +80,23 @@ public class StaticModelSourceRenderer extends ModelSourceRenderer implements IP
 			return this;
 		}
 
-		public Builder withFirstPersonPositioning(BiConsumer<EntityPlayer, ItemStack> firstPersonPositioning) {
-			this.firstPersonPositioning = firstPersonPositioning;
+		public Builder withFirstPersonModelPositioning(BiConsumer<ModelBase, ItemStack> firstPersonModelPositioning) {
+			this.firstPersonModelPositioning = firstPersonModelPositioning;
+			return this;
+		}
+		
+		public Builder withEntityModelPositioning(BiConsumer<ModelBase, ItemStack> entityModelPositioning) {
+			this.entityModelPositioning = entityModelPositioning;
+			return this;
+		}
+		
+		public Builder withInventoryModelPositioning(BiConsumer<ModelBase, ItemStack> inventoryModelPositioning) {
+			this.inventoryModelPositioning = inventoryModelPositioning;
+			return this;
+		}
+
+		public Builder withThirdPersonModelPositioning(BiConsumer<ModelBase, ItemStack> thirdPersonModelPositioning) {
+			this.thirdPersonModelPositioning = thirdPersonModelPositioning;
 			return this;
 		}
 
@@ -95,10 +121,26 @@ public class StaticModelSourceRenderer extends ModelSourceRenderer implements IP
 			
 			if(thirdPersonPositioning == null) {
 				thirdPersonPositioning = (player, itemStack) -> {
-					GL11.glTranslatef(-0.4F, 0.2F, 0.4F);
-					GL11.glRotatef(-45F, 0f, 1f, 0f);
-					GL11.glRotatef(70F, 1f, 0f, 0f);
+//					GL11.glTranslatef(-0.4F, 0.2F, 0.4F);
+//					GL11.glRotatef(-45F, 0f, 1f, 0f);
+//					GL11.glRotatef(70F, 1f, 0f, 0f);
 				};
+			}
+			
+			if(inventoryModelPositioning == null) {
+				inventoryModelPositioning = (m, i) -> {};
+			}
+			
+			if(entityModelPositioning == null) {
+				entityModelPositioning = (m, i) -> {};
+			}
+			
+			if(firstPersonModelPositioning == null) {
+				firstPersonModelPositioning = (m, i) -> {};
+			}
+			
+			if(thirdPersonModelPositioning == null) {
+				thirdPersonModelPositioning = (m, i) -> {};
 			}
 			
 			return new StaticModelSourceRenderer(this);
@@ -217,6 +259,11 @@ public class StaticModelSourceRenderer extends ModelSourceRenderer implements IP
 			builder.entityPositioning.accept(itemStack);
 			break;
 		case GUI:
+			GL11.glScaled(0.7F, 0.7F, 0.7F);
+			//GL11.glTranslatef(-1.2f, -1.1f, -0.1f);
+//			GL11.glRotatef(0F, 1f, 0f, 0f);
+//			GL11.glRotatef(0F, 0f, 1f, 0f);
+//			GL11.glRotatef(0F, 0f, 0f, 1f);
 			builder.inventoryPositioning.accept(itemStack);
 			break;
 		case THIRD_PERSON_RIGHT_HAND: case THIRD_PERSON_LEFT_HAND:
@@ -249,7 +296,25 @@ public class StaticModelSourceRenderer extends ModelSourceRenderer implements IP
 					+ ":textures/models/" + texturedModel.getV()));
 			GL11.glPushMatrix();
 			GL11.glPushAttrib(GL11.GL_ENABLE_BIT);
-			texturedModel.getU().render(entity, f, f1, f2, f3, f4, f5);
+			ModelBase model = texturedModel.getU();
+			switch (type)
+			{
+			case GROUND:
+				builder.entityModelPositioning.accept(model, itemStack);
+				break;
+			case GUI:
+				builder.inventoryModelPositioning.accept(model, itemStack);
+				break;
+			case THIRD_PERSON_RIGHT_HAND: case THIRD_PERSON_LEFT_HAND:
+				builder.thirdPersonModelPositioning.accept(model, itemStack);
+				break;
+			case FIRST_PERSON_RIGHT_HAND: case FIRST_PERSON_LEFT_HAND:
+				builder.firstPersonModelPositioning.accept(model, itemStack);
+				break;
+			default:
+			}
+			
+			model.render(entity, f, f1, f2, f3, f4, f5);
 			GL11.glPopAttrib();
 			GL11.glPopMatrix();
 		}
