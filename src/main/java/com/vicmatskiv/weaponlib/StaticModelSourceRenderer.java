@@ -259,6 +259,11 @@ implements ISmartItemModel, IPerspectiveAwareModel, IFlexibleBakedModel {
 			builder.entityPositioning.accept(itemStack);
 			break;
 		case GUI:
+			GL11.glScaled(0.9F, 0.9F, 0.9F);
+			GL11.glTranslatef(-1.2f, -1.1f, -0.1f);
+			GL11.glRotatef(-50F, 1f, 0f, 0f);
+			GL11.glRotatef(-80F, 0f, 1f, 0f);
+			GL11.glRotatef(-60F, 0f, 0f, 1f);
 			builder.inventoryPositioning.accept(itemStack);
 			break;
 		case THIRD_PERSON:
@@ -294,16 +299,16 @@ implements ISmartItemModel, IPerspectiveAwareModel, IFlexibleBakedModel {
 			ModelBase model = texturedModel.getU();
 			switch (type)
 			{
-			case ENTITY:
+			case GROUND:
 				builder.entityModelPositioning.accept(model, itemStack);
 				break;
-			case INVENTORY:
+			case GUI:
 				builder.inventoryModelPositioning.accept(model, itemStack);
 				break;
-			case EQUIPPED:
+			case THIRD_PERSON:
 				builder.thirdPersonModelPositioning.accept(model, itemStack);
 				break;
-			case EQUIPPED_FIRST_PERSON:
+			case FIRST_PERSON:
 				builder.firstPersonModelPositioning.accept(model, itemStack);
 				break;
 			default:
