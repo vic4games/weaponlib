@@ -103,8 +103,6 @@ public class CustomGui extends Gui {
 					drawTexturedModalRect(xPos, yPos, 0, 0, BUFF_ICON_SIZE, BUFF_ICON_SIZE);
 				}
 				
-				GlStateManager.popAttrib();
-				
 				if(Weapon.isModifying(itemStack) /*weaponItem.getState(weapon) == Weapon.STATE_MODIFYING*/) {
 					fontRender.drawStringWithShadow("Attachment selection mode. Press [f] to exit.", 10, 10, color);
 					fontRender.drawStringWithShadow("Press [up] to add optic", width / 2 - 40, 60, color);
@@ -132,6 +130,8 @@ public class CustomGui extends Gui {
 
 					fontRender.drawStringWithShadow(text, x, y, color);
 				}
+				GlStateManager.popAttrib();
+				
 				event.setCanceled(true);
 			}
 		} else if(itemStack.getItem() instanceof ItemMagazine) {
