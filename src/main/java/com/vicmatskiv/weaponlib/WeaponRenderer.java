@@ -716,7 +716,7 @@ public class WeaponRenderer extends ModelSourceRenderer implements IPerspectiveA
 			currentState = RenderableState.EJECT_SPENT_ROUND;
 		} else if(player.isSprinting() && builder.firstPersonPositioningRunning != null) {
 			currentState = RenderableState.RUNNING;
-		} else if(Weapon.isZoomed(itemStack)) {
+		} else if(Weapon.isZoomed(player, itemStack)) {
 			WeaponClientStorage storage = weapon.getWeaponClientStorage(player);
 
 			if(storage != null) {
@@ -776,10 +776,6 @@ public class WeaponRenderer extends ModelSourceRenderer implements IPerspectiveA
 				|| transformType == TransformType.FIRST_PERSON_LEFT_HAND 
 				|| transformType == TransformType.THIRD_PERSON_LEFT_HAND 
 				) {
-			
-//			if(transformType == TransformType.FIRST_PERSON_RIGHT_HAND) {
-//				System.out.println("Renderer " + WeaponRenderer.this.builder.model.getClass() + " handing item " + this.itemStack);
-//			}
 		
 			Tessellator tessellator = Tessellator.getInstance();
 			VertexBuffer worldrenderer = tessellator.getBuffer();
@@ -789,6 +785,8 @@ public class WeaponRenderer extends ModelSourceRenderer implements IPerspectiveA
 			if (owner != null) {
 				if (transformType == TransformType.THIRD_PERSON_RIGHT_HAND) {
 					if (owner.isSneaking()) GlStateManager.translate(0.0F, -0.2F, 0.0F);
+				} else if (transformType == TransformType.FIRST_PERSON_LEFT_HAND || transformType == TransformType.FIRST_PERSON_RIGHT_HAND) {
+					//
 				}
 			}
 
@@ -925,31 +923,28 @@ public class WeaponRenderer extends ModelSourceRenderer implements IPerspectiveA
 			RenderPlayer render = (RenderPlayer) entityRenderObject;
 			Minecraft.getMinecraft().getTextureManager().bindTexture(((AbstractClientPlayer) player).getLocationSkin());
 			
-			GL11.glPushMatrix();
-						
-			GL11.glTranslatef(0f, -1f, 0f);
+			if(player != null && player.getHeldItemMainhand() != null && player.getHeldItemMainhand().getItem() instanceof Weapon) {
+				// Draw hands only if weapon is held in the main hand
+				GL11.glPushMatrix();
+				GL11.glTranslatef(0f, -1f, 0f);
+				GL11.glRotatef(-10F, 1f, 0f, 0f);
+				GL11.glRotatef(0F, 0f, 1f, 0f);
+				GL11.glRotatef(10F, 0f, 0f, 1f);
+				positioner.position(Part.LEFT_HAND, renderContext);
+				render.renderLeftArm(player);
+				GL11.glPopMatrix();
+				
+				GL11.glPushMatrix();
+				GL11.glScaled(1F, 1F, 1F);
+				GL11.glTranslatef(-0.25f, 0f, 0.2f);
+				GL11.glRotatef(5F, 1f, 0f, 0f);
+				GL11.glRotatef(25F, 0f, 1f, 0f);
+				GL11.glRotatef(0F, 0f, 0f, 1f);	
+				positioner.position(Part.RIGHT_HAND, renderContext);
+				renderRightArm(render, player);
+				GL11.glPopMatrix();
+			}
 			
-			GL11.glRotatef(-10F, 1f, 0f, 0f);
-			GL11.glRotatef(0F, 0f, 1f, 0f);
-			GL11.glRotatef(10F, 0f, 0f, 1f);
-			
-			positioner.position(Part.LEFT_HAND, renderContext);
-			render.renderLeftArm(player);
-			GL11.glPopMatrix();
-			
-			GL11.glPushMatrix();
-			
-			GL11.glScaled(1F, 1F, 1F);
-			GL11.glTranslatef(-0.25f, 0f, 0.2f);
-			
-			GL11.glRotatef(5F, 1f, 0f, 0f);
-			GL11.glRotatef(25F, 0f, 1f, 0f);
-			GL11.glRotatef(0F, 0f, 0f, 1f);	
-			
-			positioner.position(Part.RIGHT_HAND, renderContext);
-			//render.renderRightArm(player);
-			renderRightArm(render, player);
-			GL11.glPopMatrix();
 	        
 			break;
 		default:

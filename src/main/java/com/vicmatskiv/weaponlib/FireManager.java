@@ -63,7 +63,7 @@ public class FireManager {
 			
 			if(weapon.builder.flashIntensity > 0) {
 				EffectManager.getInstance().spawnFlashParticle(player, weapon.builder.flashIntensity,
-						Weapon.isZoomed(itemStack) ? FLASH_X_OFFSET_ZOOMED : FLASH_X_OFFSET_NORMAL);
+						Weapon.isZoomed(player, itemStack) ? FLASH_X_OFFSET_ZOOMED : FLASH_X_OFFSET_NORMAL);
 			}
 			
 			EffectManager.getInstance().spawnSmokeParticle(player);
@@ -83,9 +83,9 @@ public class FireManager {
 		Weapon weapon = (Weapon) itemStack.getItem();
 		int currentAmmo = Tags.getAmmo(itemStack);
 		if(currentAmmo > 0) {
-			if(!Weapon.isZoomed(itemStack)) {
-				Tags.setAimed(itemStack, true);
-			}
+//			if(!Weapon.isZoomed(player, itemStack)) {
+//				Tags.setAimed(itemStack, true);
+//			}
 			Tags.setAmmo(itemStack, currentAmmo - 1);
 			for(int i = 0; i < weapon.builder.pellets; i++) {
 				WeaponSpawnEntity spawnEntity = weapon.builder.spawnEntityWith.apply(weapon, player);
@@ -106,7 +106,7 @@ public class FireManager {
 		if(!(itemStack.getItem() instanceof Weapon)) {
 			return;
 		}
-		if(!Weapon.isZoomed(itemStack)) {
+		if(!Weapon.isZoomed(player, itemStack)) {
 			Tags.setAimed(itemStack, false);
 		}
 	}

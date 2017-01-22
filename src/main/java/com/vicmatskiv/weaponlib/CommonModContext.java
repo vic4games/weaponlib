@@ -55,6 +55,9 @@ public class CommonModContext implements ModContext {
 		
 		channel.registerMessage(new ChangeSettingMessageHandler((ctx) -> getPlayer(ctx)),
 				ChangeSettingsMessage.class, 9, Side.CLIENT);
+		
+		channel.registerMessage(new ChangeSettingMessageHandler((ctx) -> getPlayer(ctx)),
+				ChangeSettingsMessage.class, 10, Side.SERVER);
 
 		channel.registerMessage(new TryFireMessageHandler(fireManager),
 				TryFireMessage.class, 11, Side.SERVER);

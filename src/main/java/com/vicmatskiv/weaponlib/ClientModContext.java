@@ -55,7 +55,7 @@ public class ClientModContext extends CommonModContext {
 		}));
 		
 		clientWeaponTicker.start();
-		clientEventHandler = new ClientEventHandler(mainLoopLock, safeGlobals, runInClientThreadQueue);
+		clientEventHandler = new ClientEventHandler(this, mainLoopLock, safeGlobals, runInClientThreadQueue);
 		MinecraftForge.EVENT_BUS.register(clientEventHandler);
 		
 		MinecraftForge.EVENT_BUS.register(rendererRegistry);

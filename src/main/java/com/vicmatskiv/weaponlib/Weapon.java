@@ -525,7 +525,9 @@ public class Weapon extends Item implements AttachmentContainer {
 	@Override
 	public ActionResult<ItemStack> onItemRightClick(ItemStack itemStackIn, World worldIn, EntityPlayer playerIn,
 			EnumHand hand) {
-		toggleAiming(itemStackIn, playerIn);
+		if(hand == EnumHand.MAIN_HAND) {
+			toggleAiming(itemStackIn, playerIn);
+		}
 		return new ActionResult<>(EnumActionResult.SUCCESS, itemStackIn);
 	}
 	
@@ -617,11 +619,21 @@ public class Weapon extends Item implements AttachmentContainer {
 	public void onUpdate(ItemStack itemStack, World world, Entity entity, int p_77663_4_, boolean active) {
 		ensureItemStack(itemStack);
 		float currentZoom = Tags.getZoom(itemStack);
-		if (currentZoom != 1.0f && entity.isSprinting()) {
-			Tags.setZoom(itemStack, 1.0f);
+		EntityPlayer player = (EntityPlayer) entity;
+		if (currentZoom != 1.0f && (entity.isSprinting() || player.getHeldItemMainhand() != itemStack)) {
+			Tags.setZoom(itemStack, currentZoom = 1.0f);
 			Tags.setAimed(itemStack, false);
-			restoreNormalSpeed((EntityPlayer) entity);
+			restoreNormalSpeed(player);
 		}
+//		if(world.isRemote) {
+//			WeaponClientStorage storage = getWeaponClientStorage(player);
+//			if(storage != null) {
+//				storage.setZoom(currentZoom);
+//				if(Tags.getState(itemStack) == Weapon.State.MODIFYING) {
+//					storage.setState(Weapon.State.MODIFYING);
+//				}
+//			}
+//		}
 	}
 
 	private void ensureItemStack(ItemStack itemStack) {
@@ -642,7 +654,13 @@ public class Weapon extends Item implements AttachmentContainer {
 		return Tags.isAimed(itemStack);
 	}
 
-	public static boolean isZoomed(ItemStack itemStack) {
+	public static boolean isZoomed(EntityPlayer player, ItemStack itemStack) {
+//		if(itemStack != null && itemStack.getItem() instanceof Weapon) {
+//			Weapon weapon = (Weapon) itemStack.getItem();
+//			WeaponClientStorage storage = weapon.getWeaponClientStorage(player);
+//			return storage != null && (1.0f - storage.getZoom()) > 0.001;
+//		}
+//		return false;
 		return Tags.getZoom(itemStack) != 1.0f;
 	}
 	
@@ -675,9 +693,13 @@ public class Weapon extends Item implements AttachmentContainer {
 	
 	public void changeZoom(EntityPlayer player, float factor) {
 		ItemStack itemStack = player.getHeldItem(EnumHand.MAIN_HAND);
-		ensureItemStack(itemStack);
-		float zoom = builder.zoom * factor;
-		Tags.setAllowedZoom(itemStack, zoom);
+		if(itemStack != null) {
+			ensureItemStack(itemStack);
+			float zoom = builder.zoom * factor;
+			Tags.setAllowedZoom(itemStack, zoom);
+//			WeaponClientStorage storage = getWeaponClientStorage(player);
+//			storage.setZoom(builder.zoom * factor);
+		}
 	}
 	
 	Map<ItemAttachment<Weapon>, CompatibleAttachment<Weapon>> getCompatibleAttachments() {
@@ -685,7 +707,7 @@ public class Weapon extends Item implements AttachmentContainer {
 	}
 
 	String getCrosshair(ItemStack itemStack, EntityPlayer thePlayer) {
-		if(isZoomed(itemStack)) {
+		if(isZoomed(thePlayer, itemStack)) {
 			String crosshair = null;
 			ItemAttachment<Weapon> scopeAttachment = modContext.getAttachmentManager().getActiveAttachment(itemStack, AttachmentCategory.SCOPE);
 			if(scopeAttachment != null) {
@@ -701,13 +723,13 @@ public class Weapon extends Item implements AttachmentContainer {
 		return builder.crosshair;
 	}
 	
-	boolean isCrosshairFullScreen(ItemStack itemStack) {
-		if(isZoomed(itemStack)) {
-			return builder.crosshairZoomedFullScreen;
-		}
-		return builder.crosshairFullScreen;
-		
-	}
+//	boolean isCrosshairFullScreen(ItemStack itemStack) {
+//		if(isZoomed(itemStack)) {
+//			return builder.crosshairZoomedFullScreen;
+//		}
+//		return builder.crosshairFullScreen;
+//		
+//	}
 	
 	String getActiveTextureName(ItemStack itemStack) {
 		ensureItemStack(itemStack);
