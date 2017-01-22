@@ -5,6 +5,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.item.ItemStack;
+import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
@@ -13,15 +15,35 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class ClientEventHandler {
 	
+	//private static final int DEFAULT_RIGHT_CLICK_TIMEOUT = 200;
+	
 	private Lock mainLoopLock = new ReentrantLock();
 	private SafeGlobals safeGlobals;
 	private Queue<Runnable> runInClientThreadQueue;
+//	private ModContext modContext;
+//	private long lastRightClickTimestamp;
+//	private long rightClickTimeout = DEFAULT_RIGHT_CLICK_TIMEOUT;
 
-	public ClientEventHandler(Lock mainLoopLock, SafeGlobals safeGlobals, Queue<Runnable> runInClientThreadQueue) {
+	public ClientEventHandler(ModContext modContext, Lock mainLoopLock, SafeGlobals safeGlobals, Queue<Runnable> runInClientThreadQueue) {
+		//this.modContext = modContext;
 		this.mainLoopLock = mainLoopLock;
 		this.safeGlobals = safeGlobals;
 		this.runInClientThreadQueue = runInClientThreadQueue;
 	}
+	
+	@SideOnly(Side.CLIENT)
+	@SubscribeEvent
+	public void onMouse(MouseEvent event) {
+		ItemStack heldItem = Minecraft.getMinecraft().thePlayer.getHeldItemMainhand();
+		if((event.getButton() == 0 /*|| event.getButton() == 1*/) && heldItem != null && heldItem.getItem() instanceof Weapon) {
+//			if(event.getButton() == 1 && lastRightClickTimestamp + rightClickTimeout < System.currentTimeMillis()) {
+//				lastRightClickTimestamp = System.currentTimeMillis();
+//				modContext.getChannel().sendToServer(ChangeSettingsMessage.createToggleAimingMessage((Weapon) heldItem.getItem()));
+//			}
+			event.setCanceled(true);
+		}
+	}
+
 
 	@SideOnly(Side.CLIENT)
 	@SubscribeEvent
@@ -44,6 +66,4 @@ public class ClientEventHandler {
 			r.run();
 		}
 	}
-
-
 }

@@ -59,7 +59,7 @@ class WeaponClientStorageManager {
 		return weaponClientStorage.computeIfAbsent(new Key(player.getPersistentID(), weapon), (w) ->
 			{
 				ItemStack itemStack = player.getHeldItem(EnumHand.MAIN_HAND);
-				return itemStack.getTagCompound() != null ?
+				return itemStack != null && itemStack.getTagCompound() != null ?
 						new WeaponClientStorage(Tags.getState(itemStack), 
 								Tags.getAmmo(itemStack), weapon.builder.zoom, 
 								Tags.getRecoil(player.getHeldItem(EnumHand.MAIN_HAND)), weapon.builder.fireRate, weapon.builder.maxShots > 1) : null;

@@ -41,7 +41,7 @@ public final class AttachmentManager {
 	
 	void toggleClientAttachmentSelectionMode(ItemStack itemStack, EntityPlayer player) {
 		Item item = itemStack.getItem();
-		if(!(item instanceof Weapon)) {
+		if(!(item instanceof Weapon && player.getHeldItemMainhand() == itemStack)) {
 			return; 
 		}
 		Weapon weapon = (Weapon) item;
