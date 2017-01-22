@@ -712,13 +712,13 @@ public class Weapon extends Item implements AttachmentContainer {
 		return builder.crosshair;
 	}
 	
-//	boolean isCrosshairFullScreen(ItemStack itemStack) {
-//		if(isZoomed(itemStack)) {
-//			return builder.crosshairZoomedFullScreen;
-//		}
-//		return builder.crosshairFullScreen;
-//		
-//	}
+	boolean isCrosshairFullScreen(ItemStack itemStack) {
+		if(isZoomed(null, itemStack)) {
+			return builder.crosshairZoomedFullScreen;
+		}
+		return builder.crosshairFullScreen;
+		
+	}
 	
 	String getActiveTextureName(ItemStack itemStack) {
 		ensureItemStack(itemStack);
