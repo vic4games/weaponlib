@@ -256,20 +256,35 @@ public class StaticModelSourceRenderer extends ModelSourceRenderer implements IP
 		switch (transformType)
 		{
 		case GROUND:
+//			GL11.glScaled(0.6F, 0.6F, 0.6F);
+//			GL11.glTranslatef(-0.7f, -0.8f, -0.1f);
+//			GL11.glRotatef(-30F, 1f, 0f, 0f);
+//			GL11.glRotatef(40F, 0f, 1f, 0f);
+//			GL11.glRotatef(0F, 0f, 0f, 1f);
 			builder.entityPositioning.accept(itemStack);
 			break;
 		case GUI:
-			GL11.glScaled(0.7F, 0.7F, 0.7F);
-			//GL11.glTranslatef(-1.2f, -1.1f, -0.1f);
-//			GL11.glRotatef(0F, 1f, 0f, 0f);
-//			GL11.glRotatef(0F, 0f, 1f, 0f);
-//			GL11.glRotatef(0F, 0f, 0f, 1f);
+			GL11.glScaled(0.6F, 0.6F, 0.6F);
+			GL11.glTranslatef(-0.7f, -0.8f, -0.1f);
+			GL11.glRotatef(-30F, 1f, 0f, 0f);
+			GL11.glRotatef(40F, 0f, 1f, 0f);
+			GL11.glRotatef(0F, 0f, 0f, 1f);
 			builder.inventoryPositioning.accept(itemStack);
 			break;
 		case THIRD_PERSON_RIGHT_HAND: case THIRD_PERSON_LEFT_HAND:
+			GL11.glScaled(0.4F, 0.4F, 0.4F);
+			GL11.glTranslatef(-1.5f, -2.4f, 1.3f);
+			GL11.glRotatef(-100F, 1f, 0f, 0f);
+			GL11.glRotatef(50F, 0f, 1f, 0f);
+			GL11.glRotatef(0F, 0f, 0f, 1f);
 			builder.thirdPersonPositioning.accept(player, itemStack);
 			break;
 		case FIRST_PERSON_RIGHT_HAND: case FIRST_PERSON_LEFT_HAND:
+			GL11.glScaled(0.4F, 0.4F, 0.4F);
+			GL11.glTranslatef(-0.8f, -0.6f, 1f);
+			//GL11.glRotatef(-30F, 1f, 0f, 0f);
+			GL11.glRotatef(-50F, 0f, 1f, 0f);
+			GL11.glRotatef(0F, 0f, 0f, 1f);
 			builder.firstPersonPositioning.accept(player, itemStack);
 	        
 			break;

@@ -378,23 +378,12 @@ public class Weapon extends Item implements AttachmentContainer {
 
 				spawnEntityWith = (weapon, player) -> {
 					WeaponSpawnEntity spawnEntity = new WeaponSpawnEntity(weapon, player.worldObj, player, spawnEntitySpeed,
-							spawnEntityGravityVelocity, spawnEntityDamage, spawnEntityExplosionRadius) {
+							spawnEntityGravityVelocity, inaccuracy, spawnEntityDamage, spawnEntityExplosionRadius) {
 
 						@Override
 						protected float getGravityVelocity() {
 							return spawnEntityGravityVelocity;
 						}
-
-//						@Override
-//						protected float getVelocity() {
-//							return spawnEntitySpeed;
-//						}
-
-						@Override
-						protected float getInaccuracy() {
-							return inaccuracy;
-						}
-
 					};
 
 					return spawnEntity;

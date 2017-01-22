@@ -863,6 +863,11 @@ public class WeaponRenderer extends ModelSourceRenderer implements IPerspectiveA
 		{
 		case GROUND:
 			GL11.glScaled(-1F, -1F, 1F);
+//			GL11.glScaled(0.5F, 0.5F, 0.5F);
+//			GL11.glTranslatef(-1.1f, -0.9f, 0f);
+//			GL11.glRotatef(0F, 1f, 0f, 0f);
+//			GL11.glRotatef(0F, 0f, 1f, 0f);
+//			GL11.glRotatef(-10F, 0f, 0f, 1f);
 			builder.entityPositioning.accept(itemStack);
 			break;
 		case GUI:

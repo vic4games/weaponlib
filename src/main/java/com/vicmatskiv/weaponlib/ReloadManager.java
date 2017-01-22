@@ -245,7 +245,7 @@ public class ReloadManager {
 	}
 	
 	void update(ItemStack itemStack, EntityPlayer player) {
-		if(itemStack.getItem() instanceof Weapon) {
+		if(itemStack != null && itemStack.getItem() instanceof Weapon) {
 			Weapon weapon = (Weapon) itemStack.getItem();
 			WeaponClientStorage storage = modContext.getWeaponClientStorageManager().getWeaponClientStorage(player, weapon);
 			if(storage == null) {

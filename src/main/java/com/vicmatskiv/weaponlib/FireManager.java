@@ -83,20 +83,17 @@ public class FireManager {
 		Weapon weapon = (Weapon) itemStack.getItem();
 		int currentAmmo = Tags.getAmmo(itemStack);
 		if(currentAmmo > 0) {
-//			if(!Weapon.isZoomed(player, itemStack)) {
-//				Tags.setAimed(itemStack, true);
-//			}
+			if(!Weapon.isZoomed(player, itemStack)) {
+				Tags.setAimed(itemStack, true);
+			}
 			Tags.setAmmo(itemStack, currentAmmo - 1);
 			for(int i = 0; i < weapon.builder.pellets; i++) {
 				WeaponSpawnEntity spawnEntity = weapon.builder.spawnEntityWith.apply(weapon, player);
-				spawnEntity.setHeadingFromThrower(player, player.rotationPitch, player.rotationYaw, 0.0F, spawnEntity.getVelocity(), 1.0F);
+				//spawnEntity.setHeadingFromThrower(player, player.rotationPitch, player.rotationYaw, 1.0F, spawnEntity.getVelocity(), 1.0F);
 				player.worldObj.spawnEntityInWorld(spawnEntity);
 			}
 			player.playSound(modContext.getAttachmentManager().isSilencerOn(itemStack) ? 
 					weapon.getSilencedShootSound() : weapon.getShootSound(), 1.0F, 1.0F);
-//			//TODO: play sound 
-//			player.worldObj.playSound/*ToNearExcept*/(player, modContext.getAttachmentManager().isSilencerOn(itemStack) ? 
-//					weapon.getSilencedShootSound() : weapon.getShootSound(), 1.0F, 1.0F);
 		} else {
 			System.err.println("Invalid state: attempted to fire a weapon without ammo");
 		}
@@ -135,13 +132,16 @@ public class FireManager {
 	}
 
 	void update(ItemStack itemStack, EntityPlayer player) {
-		Weapon weapon = (Weapon) itemStack.getItem();
-		WeaponClientStorage storage = modContext.getWeaponClientStorageManager().getWeaponClientStorage(player, weapon);
-		if(storage == null) return;
-		
-		if(storage.getState() == State.EJECT_SPENT_ROUND && storage.getEjectSpentRoundStartedAt() + weapon.builder.pumpTimeoutMilliseconds <= System.currentTimeMillis()) {
-			storage.setState(State.READY);
+		if(itemStack != null) {
+			Weapon weapon = (Weapon) itemStack.getItem();
+			WeaponClientStorage storage = modContext.getWeaponClientStorageManager().getWeaponClientStorage(player, weapon);
+			if(storage == null) return;
+			
+			if(storage.getState() == State.EJECT_SPENT_ROUND && storage.getEjectSpentRoundStartedAt() + weapon.builder.pumpTimeoutMilliseconds <= System.currentTimeMillis()) {
+				storage.setState(State.READY);
+			}
 		}
+		
 	}
 
 }
