@@ -6,6 +6,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
@@ -22,8 +23,7 @@ public class CustomGui extends Gui {
 		this.mc = mc;
 		this.attachmentManager = attachmentManager;
 	}
-
-//	private static final int BUFF_ICON_SIZE = 256;
+	private static final int BUFF_ICON_SIZE = 256;
 	
 	
 	//TODO: fix this method @SubscribeEvent
@@ -40,12 +40,18 @@ public class CustomGui extends Gui {
 					int width = scaledResolution.getScaledWidth();
 				    int height = scaledResolution.getScaledHeight();
 				    
-				    GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-					GL11.glDisable(GL11.GL_LIGHTING);
+					GlStateManager.pushAttrib();
+					GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+					GlStateManager.disableLighting();
+					GlStateManager.enableAlpha();
+					GlStateManager.enableBlend();
+					
 					
 					this.mc.renderEngine.bindTexture(new ResourceLocation(hudTexture));
 					
 					drawTexturedQuadFit(0, 0, width, height, 0);
+					
+					GlStateManager.popAttrib();
 					
 					event.setCanceled(true);
 				}
@@ -74,12 +80,30 @@ public class CustomGui extends Gui {
 				int width = scaledResolution.getScaledWidth();
 			    int height = scaledResolution.getScaledHeight();
 			    
+			    int xPos = width / 2 - BUFF_ICON_SIZE / 2;
+				int yPos = height / 2 - BUFF_ICON_SIZE / 2;
 				
 			    FontRenderer fontRender = mc.fontRendererObj;
 
 				mc.entityRenderer.setupOverlayRendering();
 				
 				int color = 0xFFFFFF;
+				
+				this.mc.renderEngine.bindTexture(new ResourceLocation(crosshair));
+
+				GlStateManager.pushAttrib();
+				GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+				GlStateManager.disableLighting();
+				GlStateManager.enableAlpha();
+				GlStateManager.enableBlend();
+				
+				if(weaponItem.isCrosshairFullScreen(itemStack))	 {
+					drawTexturedQuadFit(0, 0, width, height, 0);
+				} else {
+					drawTexturedModalRect(xPos, yPos, 0, 0, BUFF_ICON_SIZE, BUFF_ICON_SIZE);
+				}
+				
+				GlStateManager.popAttrib();
 				
 				if(Weapon.isModifying(itemStack) /*weaponItem.getState(weapon) == Weapon.STATE_MODIFYING*/) {
 					fontRender.drawStringWithShadow("Attachment selection mode. Press [f] to exit.", 10, 10, color);

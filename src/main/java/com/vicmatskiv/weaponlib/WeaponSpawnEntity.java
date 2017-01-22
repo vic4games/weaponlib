@@ -20,6 +20,7 @@ public class WeaponSpawnEntity extends EntityThrowable implements IEntityAdditio
 	private float damage = 6f;
 	private float speed;
 	private float gravityVelocity;
+	private float inaccuracy = DEFAULT_INACCURACY;
 	private Weapon weapon;
 
 	public WeaponSpawnEntity(World world) {
@@ -40,6 +41,7 @@ public class WeaponSpawnEntity extends EntityThrowable implements IEntityAdditio
 			EntityLivingBase arg1EntityLivingBase, 
 			float speed, 
 			float gravityVelocity,
+			float inaccuracy,
 			float damage, 
 			float explosionRadius,
 			Material...damageableBlockMaterials) 
@@ -50,6 +52,9 @@ public class WeaponSpawnEntity extends EntityThrowable implements IEntityAdditio
 		this.explosionRadius = explosionRadius;
 		this.speed = speed;
 		this.gravityVelocity = gravityVelocity;
+		
+		// Workaround for a design bug: allowing parent constructor read the default (small) inaccuracy
+		this.inaccuracy = inaccuracy;
 	}
 
 	@Override
@@ -61,6 +66,24 @@ public class WeaponSpawnEntity extends EntityThrowable implements IEntityAdditio
 //	protected float func_70182_d() {
 //		return speed;
 //	};
+	
+	
+	@Override
+	/**
+	 * This method is to be used while constructing entity only to provide 
+	 * getInaccuracy() == 0 to EntityThrowable constructor
+	 */
+	protected float getInaccuracy() {
+		return 0f;
+	}
+	
+	/**
+	 * This method is to be always to be overriden
+	 * @return
+	 */
+	protected float getInaccuracyWoraround() {
+		return inaccuracy;
+	}
 	
 	@Override
 	protected float getVelocity() {
@@ -79,7 +102,6 @@ public class WeaponSpawnEntity extends EntityThrowable implements IEntityAdditio
 				if(explosionRadius > 0) {
 					this.worldObj.createExplosion(this, this.posX, this.posY, this.posZ, explosionRadius, true);
 				}
-				//System.out.println(">>>>>>   Damaging entity " + position.entityHit + " >>>>>> !!!");
 				position.entityHit.attackEntityFrom(DamageSource.causeThrownDamage(this, this.getThrower()), damage);
 				position.entityHit.hurtResistantTime = 0;
 				position.entityHit.prevRotationYaw -= 0.3D;
@@ -100,10 +122,10 @@ public class WeaponSpawnEntity extends EntityThrowable implements IEntityAdditio
         motionX /= (double)f2;
         motionY /= (double)f2;
         motionZ /= (double)f2;
-        float inaccuracy = getInaccuracy();
-        motionX += this.rand.nextGaussian() * 0.007499999832361937D * (double)inaccuracy;
-        motionY += this.rand.nextGaussian() * 0.007499999832361937D * (double)inaccuracy;
-        motionZ += this.rand.nextGaussian() * 0.007499999832361937D * (double)inaccuracy;
+        float inaccuracyWorkaround = getInaccuracyWoraround();
+        motionX += this.rand.nextGaussian() * 0.007499999832361937D * (double)inaccuracyWorkaround;
+        motionY += this.rand.nextGaussian() * 0.007499999832361937D * (double)inaccuracyWorkaround;
+        motionZ += this.rand.nextGaussian() * 0.007499999832361937D * (double)inaccuracyWorkaround;
         motionX *= (double)velocity;
         motionY *= (double)velocity;
         motionZ *= (double)velocity;
@@ -133,10 +155,7 @@ public class WeaponSpawnEntity extends EntityThrowable implements IEntityAdditio
 		explosionRadius = buffer.readFloat();
 	}
 	
-	protected float getInaccuracy() {
-		return DEFAULT_INACCURACY;
-	}
-	
+
 	Weapon getWeapon() {
 		return weapon;
 	}
