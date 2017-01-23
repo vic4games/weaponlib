@@ -5,8 +5,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.item.ItemStack;
-import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
@@ -31,20 +29,6 @@ public class ClientEventHandler {
 		this.runInClientThreadQueue = runInClientThreadQueue;
 	}
 	
-	@SideOnly(Side.CLIENT)
-	@SubscribeEvent
-	public void onMouse(MouseEvent event) {
-		ItemStack heldItem = Minecraft.getMinecraft().thePlayer.getHeldItemMainhand();
-		if((event.getButton() == 0 /*|| event.getButton() == 1*/) && heldItem != null && heldItem.getItem() instanceof Weapon) {
-//			if(event.getButton() == 1 && lastRightClickTimestamp + rightClickTimeout < System.currentTimeMillis()) {
-//				lastRightClickTimestamp = System.currentTimeMillis();
-//				modContext.getChannel().sendToServer(ChangeSettingsMessage.createToggleAimingMessage((Weapon) heldItem.getItem()));
-//			}
-			event.setCanceled(true);
-		}
-	}
-
-
 	@SideOnly(Side.CLIENT)
 	@SubscribeEvent
 	public void onClientTick(TickEvent.ClientTickEvent event) {		

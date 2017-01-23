@@ -47,6 +47,9 @@ public final class AttachmentManager {
 		Weapon weapon = (Weapon) item;
 		WeaponClientStorage storage = weapon.getWeaponClientStorage(player);
 		if(storage == null) return;
+		if(storage.getState() == State.EJECT_SPENT_ROUND) {
+			return;
+		}
 		if(storage.getState() != State.MODIFYING) {
 			storage.setState(State.MODIFYING);
 		} else {
