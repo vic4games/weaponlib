@@ -3,11 +3,13 @@ package com.vicmatskiv.weaponlib;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.client.event.FOVUpdateEvent;
 import net.minecraftforge.client.event.GuiOpenEvent;
+import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderLivingEvent;
 
 public class WeaponEventHandler {
@@ -32,6 +34,23 @@ public class WeaponEventHandler {
 				if (stack.stackTagCompound != null) {
 					event.newfov = Tags.getZoom(stack);
 				}
+			}
+		}
+	}
+	
+	@SideOnly(Side.CLIENT)
+	@SubscribeEvent
+	public void onMouse(MouseEvent event) {
+		if(event.button == 0) {
+			ItemStack heldItem = Minecraft.getMinecraft().thePlayer.getHeldItem();
+			if(heldItem != null && heldItem.getItem() instanceof Weapon) {
+				event.setCanceled(true);
+			}
+		} else if(event.button == 1) {
+			ItemStack heldItem = Minecraft.getMinecraft().thePlayer.getHeldItem();
+			if(heldItem != null && heldItem.getItem() instanceof Weapon 
+					&& Weapon.isEjectedSpentRound(Minecraft.getMinecraft().thePlayer, heldItem)) {
+				event.setCanceled(true);
 			}
 		}
 	}

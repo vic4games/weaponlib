@@ -21,7 +21,7 @@ public class ReloadManager {
 	@SideOnly(Side.CLIENT)
 	void toggleReload(ItemStack itemStack, EntityPlayer player) {
 		if(itemStack.getItem() instanceof Weapon) {
-			if(Weapon.isModifying(itemStack)) {
+			if(Weapon.isModifying(itemStack) || Weapon.isEjectedSpentRound(player, itemStack)) {
 				return;
 			}
 			
