@@ -21,13 +21,10 @@ public class KeyBindings {
 		reloadKey = new KeyBinding("key.reload", Keyboard.KEY_R,
 				"key.categories.weaponlib");
 		
-//		unloadKey = new KeyBinding("key.unload", Keyboard.KEY_U,
-//				"key.categories.weaponlib");
-		
 		laserSwitchKey = new KeyBinding("key.laser", Keyboard.KEY_L,
 				"key.categories.weaponlib");
 		
-		attachmentKey = new KeyBinding("key.attachment", Keyboard.KEY_F,
+		attachmentKey = new KeyBinding("key.attachment", Keyboard.KEY_M,
 				"key.categories.weaponlib");
 		
 		upArrowKey = new KeyBinding("key.scope", Keyboard.KEY_UP,
@@ -43,7 +40,6 @@ public class KeyBindings {
 				"key.categories.weaponlib");
 		
 		ClientRegistry.registerKeyBinding(reloadKey);
-//		ClientRegistry.registerKeyBinding(unloadKey);
 		ClientRegistry.registerKeyBinding(attachmentKey);
 		ClientRegistry.registerKeyBinding(upArrowKey);
 		ClientRegistry.registerKeyBinding(downArrowKey);
