@@ -863,11 +863,11 @@ public class WeaponRenderer extends ModelSourceRenderer implements IPerspectiveA
 		{
 		case GROUND:
 			GL11.glScaled(-1F, -1F, 1F);
-//			GL11.glScaled(0.5F, 0.5F, 0.5F);
-//			GL11.glTranslatef(-1.1f, -0.9f, 0f);
-//			GL11.glRotatef(0F, 1f, 0f, 0f);
-//			GL11.glRotatef(0F, 0f, 1f, 0f);
-//			GL11.glRotatef(-10F, 0f, 0f, 1f);
+			GL11.glScaled(0.45F, 0.45F, 0.45F);
+			GL11.glTranslatef(-1.1f, -0.9f, 0f);
+			GL11.glRotatef(0F, 1f, 0f, 0f);
+			GL11.glRotatef(0F, 0f, 1f, 0f);
+			GL11.glRotatef(0F, 0f, 0f, 1f);
 			builder.entityPositioning.accept(itemStack);
 			break;
 		case GUI:
@@ -882,9 +882,9 @@ public class WeaponRenderer extends ModelSourceRenderer implements IPerspectiveA
 		case THIRD_PERSON_RIGHT_HAND: case THIRD_PERSON_LEFT_HAND:
 			GL11.glScaled(-1F, -1F, 1F);
 			GL11.glScaled(0.4F, 0.4F, 0.4F);
-			GL11.glTranslatef(-1.2f, -2.5f, -0.05f);
-			GL11.glRotatef(-20F, 1f, 0f, 0f);
-			GL11.glRotatef(-45F, 0f, 1f, 0f);
+			GL11.glTranslatef(-1.25f, -2.1f, 0.6f);
+			GL11.glRotatef(110F, 1f, 0f, 0f);
+			GL11.glRotatef(135F, 0f, 1f, 0f);
 			GL11.glRotatef(-180F, 0f, 0f, 1f);
 			
 			builder.thirdPersonPositioning.accept(player, itemStack);
