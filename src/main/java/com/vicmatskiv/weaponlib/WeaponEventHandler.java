@@ -51,11 +51,12 @@ public class WeaponEventHandler {
 		if (itemStack != null && itemStack.getItem() instanceof Weapon) {
 			RenderPlayer rp = (RenderPlayer) event.getRenderer();
 
-			if (itemStack.getTagCompound() != null) {
-				//throw new UnsupportedOperationException("Fix aiming!");
-				//rp.getMainModel().aimedBow = Weapon.isAimed(itemStack);
+			if (itemStack != null && itemStack.getTagCompound() != null && Weapon.isAimed(itemStack)) {				
 				rp.getMainModel().leftArmPose = ArmPose.BOW_AND_ARROW;
 				rp.getMainModel().rightArmPose = ArmPose.BOW_AND_ARROW;
+			} else {
+				rp.getMainModel().leftArmPose = ArmPose.EMPTY;
+				rp.getMainModel().rightArmPose = ArmPose.ITEM;
 			}
 		}
 	}
