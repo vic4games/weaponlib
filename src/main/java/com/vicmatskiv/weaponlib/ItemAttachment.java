@@ -6,7 +6,6 @@ import java.util.List;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 
 public class ItemAttachment<T> extends Item implements ModelSource {
 
@@ -95,12 +94,12 @@ public class ItemAttachment<T> extends Item implements ModelSource {
 		compatibleWeapons.add(weapon);
 	}
 	
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	@Override
-	public void addInformation(ItemStack itemStack, EntityPlayer entityPlayer, List info, boolean p_77624_4_) {
-		info.add("Compatible guns:");
-		compatibleWeapons.forEach((weapon) -> info.add(weapon.getName()));
-	}
+//	@SuppressWarnings({ "rawtypes", "unchecked" })
+//	@Override
+//	public void addInformation(ItemStack itemStack, EntityPlayer entityPlayer, List info, boolean p_77624_4_) {
+//		info.add("Compatible guns:");
+//		compatibleWeapons.forEach((weapon) -> info.add(weapon.getName()));
+//	}
 	
 	public void setName(String name) {
 		this.name = name;
