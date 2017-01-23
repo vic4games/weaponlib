@@ -1,6 +1,8 @@
 package com.vicmatskiv.weaponlib;
 
 import net.minecraft.client.model.ModelBiped.ArmPose;
+
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
@@ -8,6 +10,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHand;
 import net.minecraftforge.client.event.FOVUpdateEvent;
 import net.minecraftforge.client.event.GuiOpenEvent;
+import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
@@ -35,6 +38,23 @@ public class WeaponEventHandler {
 				if (stack.getTagCompound() != null) {
 					event.setNewfov(Tags.getZoom(stack));
 				}
+			}
+		}
+	}
+	
+	@SideOnly(Side.CLIENT)
+	@SubscribeEvent
+	public void onMouse(MouseEvent event) {
+		if(event.getButton() == 0) {
+			ItemStack heldItem = Minecraft.getMinecraft().thePlayer.getHeldItemMainhand();
+			if(heldItem != null && heldItem.getItem() instanceof Weapon) {
+				event.setCanceled(true);
+			}
+		} else if(event.getButton() == 1) {
+			ItemStack heldItem = Minecraft.getMinecraft().thePlayer.getHeldItemMainhand();
+			if(heldItem != null && heldItem.getItem() instanceof Weapon 
+					&& Weapon.isEjectedSpentRound(Minecraft.getMinecraft().thePlayer, heldItem)) {
+				event.setCanceled(true);
 			}
 		}
 	}
