@@ -76,7 +76,6 @@ public class ClientModContext extends CommonModContext {
 	
 	@Override
 	public void registerRenderableItem(String name, Item item, ModelSourceRenderer renderer) {
-		super.registerRenderableItem(name, item, renderer);
 		rendererRegistry.register(item, name, renderer);
 	}
 	

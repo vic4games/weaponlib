@@ -11,7 +11,10 @@ import net.minecraft.client.model.ModelBase;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.registry.GameRegistry;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class AttachmentBuilder<T> {
 	protected String name;
@@ -169,26 +172,31 @@ public class AttachmentBuilder<T> {
 		
 		texturedModels.forEach(tm -> attachment.addModel(tm.getU(), tm.getV()));
 		
-		if(model != null || !texturedModels.isEmpty()) {
-			StaticModelSourceRenderer renderer = new StaticModelSourceRenderer.Builder()
-					.withEntityPositioning(entityPositioning)
-					.withFirstPersonPositioning(firstPersonPositioning)
-					.withThirdPersonPositioning(thirdPersonPositioning)
-					.withInventoryPositioning(inventoryPositioning)
-					.withEntityModelPositioning(entityModelPositioning)
-					.withFirstPersonModelPositioning(firstPersonModelPositioning)
-					.withThirdPersonModelPositioning(thirdPersonModelPositioning)
-					.withInventoryModelPositioning(inventoryModelPositioning)
-					.withModId(modId)
-					.build();
-			
-			modContext.registerRenderableItem(name, attachment, renderer);
-		} else {
-			GameRegistry.registerItem(attachment, name);
+		if((model != null || !texturedModels.isEmpty()) && FMLCommonHandler.instance().getSide() == Side.CLIENT) {
+			registerRenderer(modContext, attachment);
 		}
+		GameRegistry.registerItem(attachment, name);
 		
 		return attachment;
 	}
+	
+	@SideOnly(Side.CLIENT)
+	private void registerRenderer(ModContext modContext, ItemAttachment<T> attachment) {
+		StaticModelSourceRenderer renderer = new StaticModelSourceRenderer.Builder()
+		.withEntityPositioning(entityPositioning)
+		.withFirstPersonPositioning(firstPersonPositioning)
+		.withThirdPersonPositioning(thirdPersonPositioning)
+		.withInventoryPositioning(inventoryPositioning)
+		.withEntityModelPositioning(entityModelPositioning)
+		.withFirstPersonModelPositioning(firstPersonModelPositioning)
+		.withThirdPersonModelPositioning(thirdPersonModelPositioning)
+		.withInventoryModelPositioning(inventoryModelPositioning)
+		.withModId(modId)
+		.build();
+
+		modContext.registerRenderableItem(name, attachment, renderer);
+	}
+
 
 	private static String stripFileExtension(String str, String extension) {
 		return str.endsWith(extension) ? str.substring(0, str.length() - 4) : str;
