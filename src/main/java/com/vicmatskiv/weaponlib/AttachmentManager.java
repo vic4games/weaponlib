@@ -144,7 +144,7 @@ public final class AttachmentManager {
 	
 	@SuppressWarnings("unchecked")
 	void changeAttachment(AttachmentCategory attachmentCategory, ItemStack itemStack, EntityPlayer player) {
-		if(!(itemStack.getItem() instanceof Weapon) || 
+		if(itemStack == null || !(itemStack.getItem() instanceof Weapon) || 
 				!Weapon.isModifying(itemStack) /*((Weapon) itemStack.getItem()).getState(itemStack) != Weapon.STATE_MODIFYING*/) {
 			return;
 		}
