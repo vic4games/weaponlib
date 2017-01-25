@@ -170,7 +170,7 @@ implements ISmartItemModel, IPerspectiveAwareModel, IFlexibleBakedModel {
 	
 	@Override
 	public final List<BakedQuad> getGeneralQuads() {
-		
+		if(itemStack == null) return Collections.emptyList();
 		Tessellator tessellator = Tessellator.getInstance();
 		WorldRenderer worldrenderer = tessellator.getWorldRenderer();
 		tessellator.draw();
