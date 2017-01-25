@@ -188,6 +188,7 @@ public class StaticModelSourceRenderer extends ModelSourceRenderer implements IP
 	
 	@Override
 	public List<BakedQuad> getQuads(IBlockState state, EnumFacing side, long rand) {
+		if(itemStack == null) return Collections.emptyList();
 		if(transformType == TransformType.GROUND 
 				|| transformType == TransformType.GUI
 				|| transformType == TransformType.FIRST_PERSON_RIGHT_HAND 
