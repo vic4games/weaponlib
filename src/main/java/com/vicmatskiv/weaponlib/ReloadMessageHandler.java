@@ -4,6 +4,7 @@ import java.util.function.Function;
 
 import com.vicmatskiv.weaponlib.ReloadMessage.Type;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHand;
@@ -12,6 +13,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class ReloadMessageHandler implements IMessageHandler<ReloadMessage, IMessage> {
 	
@@ -47,6 +49,7 @@ public class ReloadMessageHandler implements IMessageHandler<ReloadMessage, IMes
 		return null;
 	}
 
+	@SideOnly(Side.CLIENT)
 	private void onClientMessage(ReloadMessage message, MessageContext ctx) {
 		EntityPlayer player = entityPlayerSupplier.apply(ctx);
 		ItemStack itemStack = player.getHeldItem(EnumHand.MAIN_HAND);
@@ -56,7 +59,7 @@ public class ReloadMessageHandler implements IMessageHandler<ReloadMessage, IMes
 			ItemMagazine targetMagazine = message.getMagazine();
 			
 			if(message.getType() == Type.LOAD) {
-				ItemStack targetStack = null;
+				ItemStack targetStack;
 				if(message.getWeapon() != null) {
 					
 					if(itemStack.getItem() == targetWeapon) {
@@ -71,8 +74,10 @@ public class ReloadMessageHandler implements IMessageHandler<ReloadMessage, IMes
 						 */
 						targetStack = WorldHelper.itemStackForItem(targetWeapon, s -> true, player);
 					}
-					reloadManager.completeReload(targetStack, player, message.getMagazine(), message.getAmmo(), 
-							itemStack.getItem() != targetWeapon);
+					Minecraft.getMinecraft().addScheduledTask(() -> {
+						reloadManager.completeReload(targetStack, player, message.getMagazine(), message.getAmmo(), 
+								itemStack.getItem() != targetWeapon);
+					});
 				} else if(targetMagazine != null) {
 					if(itemStack.getItem() == targetMagazine) {
 						/*
@@ -86,8 +91,10 @@ public class ReloadMessageHandler implements IMessageHandler<ReloadMessage, IMes
 						 */
 						targetStack = WorldHelper.itemStackForItem(targetMagazine, s -> true, player);
 					}
-					reloadManager.completeReload(targetStack, player, targetMagazine, message.getAmmo(), 
-							itemStack.getItem() != targetMagazine);
+					Minecraft.getMinecraft().addScheduledTask(() -> {
+						reloadManager.completeReload(targetStack, player, targetMagazine, message.getAmmo(), 
+								itemStack.getItem() != targetMagazine);
+					});
 				}
 			} else {
 				reloadManager.completeUnload(itemStack, player);

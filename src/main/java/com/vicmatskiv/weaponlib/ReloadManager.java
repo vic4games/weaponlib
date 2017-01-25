@@ -240,7 +240,7 @@ public class ReloadManager {
 
 			Tags.setAmmo(weaponItemStack, 0);
 			modContext.getChannel().sendTo(new ReloadMessage(weapon, ReloadMessage.Type.UNLOAD, null, 0), (EntityPlayerMP) player);
-			player.playSound(weapon.getReloadSound(), 1.0F, 1.0F);
+			player.playSound(weapon.getUnloadSound(), 1.0F, 1.0F);
 		}
 	}
 	
