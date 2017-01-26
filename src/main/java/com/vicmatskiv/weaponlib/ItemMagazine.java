@@ -5,18 +5,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.vicmatskiv.weaponlib.Weapon.State;
-
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.registry.GameRegistry;
+
+import com.vicmatskiv.weaponlib.Weapon.State;
 
 public class ItemMagazine extends ItemAttachment<Weapon> implements Part {
 	
@@ -54,9 +52,7 @@ public class ItemMagazine extends ItemAttachment<Weapon> implements Part {
 			magazine.reloadingTimeout = reloadingTimeout;
 			magazine.compatibleBullets = new ArrayList<>(compatibleBullets);
 			if(reloadSound != null) {
-				ResourceLocation reloadSoundLocation = new ResourceLocation(this.modId, reloadSound);
-				magazine.reloadSound = new SoundEvent(reloadSoundLocation);
-				modContext.registerSound(magazine.reloadSound, reloadSoundLocation);
+				magazine.reloadSound = modContext.registerSound(reloadSound);
 			}
 			return magazine;
 		}

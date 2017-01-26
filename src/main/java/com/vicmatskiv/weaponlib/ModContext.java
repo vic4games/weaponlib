@@ -1,6 +1,5 @@
 package com.vicmatskiv.weaponlib;
 import net.minecraft.item.Item;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 
@@ -22,6 +21,6 @@ public interface ModContext {
 
 	public void registerRenderableItem(String name, Item weapon, ModelSourceRenderer renderer);
 
-	public void registerSound(SoundEvent reloadSound, ResourceLocation reloadSoundLocation);
+	public SoundEvent registerSound(String sound);
 	
 }

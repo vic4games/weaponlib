@@ -10,7 +10,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import scala.actors.threadpool.Arrays;
 import net.minecraft.block.Block;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.creativetab.CreativeTabs;
@@ -28,7 +27,6 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
@@ -413,26 +411,13 @@ public class Weapon extends Item implements AttachmentContainer {
 
 			Weapon weapon = new Weapon(this, modContext);
 			
-			ResourceLocation shootSoundLocation = new ResourceLocation(this.modId, this.shootSound);
-			weapon.shootSound = new SoundEvent(shootSoundLocation);
-			modContext.registerSound(weapon.shootSound, shootSoundLocation);
-			
-			ResourceLocation reloadSoundLocation = new ResourceLocation(this.modId, this.reloadSound);
-			weapon.reloadSound = new SoundEvent(reloadSoundLocation);
-			modContext.registerSound(weapon.reloadSound, reloadSoundLocation);
-			
-			ResourceLocation unloadSoundLocation = new ResourceLocation(this.modId, this.unloadSound);
-			weapon.unloadSound = new SoundEvent(unloadSoundLocation);
-			modContext.registerSound(weapon.unloadSound, unloadSoundLocation);
-			
-			ResourceLocation silencedShootSoundLocation = new ResourceLocation(this.modId, this.silencedShootSound);
-			weapon.silencedShootSound = new SoundEvent(silencedShootSoundLocation);
-			modContext.registerSound(weapon.silencedShootSound, silencedShootSoundLocation);
+			weapon.shootSound = modContext.registerSound(this.shootSound);
+			weapon.reloadSound = modContext.registerSound(this.reloadSound);
+			weapon.unloadSound = modContext.registerSound(this.unloadSound);
+			weapon.silencedShootSound = modContext.registerSound(this.silencedShootSound);
 			
 			if(ejectSpentRoundSound != null) {
-				ResourceLocation ejectSpentRoundSoundLocation = new ResourceLocation(this.modId, this.ejectSpentRoundSound);
-				weapon.ejectSpentRoundSound = new SoundEvent(ejectSpentRoundSoundLocation);
-				modContext.registerSound(weapon.ejectSpentRoundSound, ejectSpentRoundSoundLocation);
+				weapon.ejectSpentRoundSound = modContext.registerSound(this.ejectSpentRoundSound);
 			}
 			
 			weapon.setCreativeTab(creativeTab);

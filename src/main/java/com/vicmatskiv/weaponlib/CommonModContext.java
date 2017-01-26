@@ -1,7 +1,7 @@
 package com.vicmatskiv.weaponlib;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -20,10 +20,12 @@ public class CommonModContext implements ModContext {
 	protected AttachmentManager attachmentManager;
 	protected FireManager fireManager;
 	protected ReloadManager reloadManager;
+	private String modId;
 
 	@Override
 	public void init(Object mod, String modId, SimpleNetworkWrapper channel) {
 		this.channel = channel;
+		this.modId = modId;
 		
 		this.attachmentManager = new AttachmentManager(this);
 		this.fireManager = new FireManager(this);
@@ -74,13 +76,18 @@ public class CommonModContext implements ModContext {
 				attachmentManager, reloadManager, channel));
 	}
 	
-	private Set<ResourceLocation> registeredSounds = new HashSet<>();
+	private Map<ResourceLocation, SoundEvent> registeredSounds = new HashMap<>();
 	
 	@Override
-	public void registerSound(SoundEvent soundEvent, ResourceLocation shootSoundLocation) {
-		if(registeredSounds.add(shootSoundLocation)) {
-			GameRegistry.register(soundEvent, shootSoundLocation);
+	public SoundEvent registerSound(String sound) {
+		ResourceLocation soundResourceLocation = new ResourceLocation(modId, sound);
+		SoundEvent result = registeredSounds.get(soundResourceLocation);
+		if(result == null) {
+			result = new SoundEvent(soundResourceLocation);
+			registeredSounds.put(soundResourceLocation, result);
+			GameRegistry.register(result, soundResourceLocation);
 		}
+		return result;
 	}
 
 	@Override
