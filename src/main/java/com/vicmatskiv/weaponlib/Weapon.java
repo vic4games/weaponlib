@@ -86,7 +86,7 @@ public class Weapon extends Item implements AttachmentContainer {
 
 		public int maxBulletsPerReload;
 
-		private Function<ItemStack, String> informationProvider;
+		private Function<ItemStack, List<String>> informationProvider;
 
 
 		public Builder withModId(String modId) {
@@ -99,7 +99,7 @@ public class Weapon extends Item implements AttachmentContainer {
 			return this;
 		}
 		
-		public Builder withInformationProvider(Function<ItemStack, String> informationProvider) {
+		public Builder withInformationProvider(Function<ItemStack, List<String>> informationProvider) {
 			this.informationProvider = informationProvider;
 			return this;
 		}
@@ -743,7 +743,7 @@ public class Weapon extends Item implements AttachmentContainer {
 	public void addInformation(ItemStack itemStack, EntityPlayer entityPlayer,
 			@SuppressWarnings("rawtypes") List list, boolean p_77624_4_) {
 		if(list != null && builder.informationProvider != null) {
-			list.add(builder.informationProvider.apply(itemStack));
+			list.addAll(builder.informationProvider.apply(itemStack));
 		}
 	}
 }
