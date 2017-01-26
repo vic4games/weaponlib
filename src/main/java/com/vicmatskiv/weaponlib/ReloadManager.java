@@ -130,7 +130,9 @@ public class ReloadManager {
 							ammo = Tags.getAmmo(magazineItemStack);
 							Tags.setAmmo(weaponItemStack, ammo);
 							modContext.getAttachmentManager().addAttachment((ItemAttachment<Weapon>) magazineItemStack.getItem(), weaponItemStack, player);
-							player.playSound(weapon.getReloadSound(), 1.0F, 1.0F);
+							//player.playSound(weapon.getReloadSound(), 1.0F, 1.0F);
+							player.worldObj.playSound(null, player.posX, player.posY, player.posZ, weapon.getReloadSound(), 
+									player.getSoundCategory(), 1.0F, 1.0F);
 						}
 					}
 					modContext.getChannel().sendTo(new ReloadMessage(weapon, ReloadMessage.Type.LOAD, newMagazine, ammo), (EntityPlayerMP) player);
@@ -140,11 +142,15 @@ public class ReloadManager {
 					int ammo = Tags.getAmmo(weaponItemStack) + consumedStack.stackSize;
 					Tags.setAmmo(weaponItemStack, ammo);
 					modContext.getChannel().sendTo(new ReloadMessage(weapon, ammo), (EntityPlayerMP) player);
-					player.playSound(weapon.getReloadSound(), 1.0F, 1.0F);
+					//player.playSound(weapon.getReloadSound(), 1.0F, 1.0F);
+					player.worldObj.playSound(null, player.posX, player.posY, player.posZ, weapon.getReloadSound(), 
+							player.getSoundCategory(), 1.0F, 1.0F);
 				} else if (WorldHelper.consumeInventoryItem(player.inventory, weapon.builder.ammo)) {
 					Tags.setAmmo(weaponItemStack, weapon.builder.ammoCapacity);
 					modContext.getChannel().sendTo(new ReloadMessage(weapon, weapon.builder.ammoCapacity), (EntityPlayerMP) player);
-					player.playSound(weapon.getReloadSound(), 1.0F, 1.0F);
+					//player.playSound(weapon.getReloadSound(), 1.0F, 1.0F);
+					player.worldObj.playSound(null, player.posX, player.posY, player.posZ, weapon.getReloadSound(), 
+							player.getSoundCategory(), 1.0F, 1.0F);
 				} else {
 					Tags.setAmmo(weaponItemStack, 0);
 					modContext.getChannel().sendTo(new ReloadMessage(weapon, 0), (EntityPlayerMP) player);
@@ -240,7 +246,9 @@ public class ReloadManager {
 
 			Tags.setAmmo(weaponItemStack, 0);
 			modContext.getChannel().sendTo(new ReloadMessage(weapon, ReloadMessage.Type.UNLOAD, null, 0), (EntityPlayerMP) player);
-			player.playSound(weapon.getUnloadSound(), 1.0F, 1.0F);
+			//player.playSound(weapon.getUnloadSound(), 1.0F, 1.0F);
+			player.worldObj.playSound(null, player.posX, player.posY, player.posZ, weapon.getUnloadSound(), 
+					player.getSoundCategory(), 1.0F, 1.0F);
 		}
 	}
 	
