@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import net.minecraft.block.Block;
@@ -85,7 +86,8 @@ public class Weapon extends Item implements AttachmentContainer {
 
 		public int maxBulletsPerReload;
 
-		
+		private Function<ItemStack, String> informationProvider;
+
 
 		public Builder withModId(String modId) {
 			this.modId = modId;
@@ -97,6 +99,10 @@ public class Weapon extends Item implements AttachmentContainer {
 			return this;
 		}
 		
+		public Builder withInformationProvider(Function<ItemStack, String> informationProvider) {
+			this.informationProvider = informationProvider;
+			return this;
+		}
 
 		public Builder withReloadingTime(long reloadingTime) {
 			this.reloadingTimeout = reloadingTime;
@@ -730,5 +736,14 @@ public class Weapon extends Item implements AttachmentContainer {
 				.filter(e -> target.isInstance(e.getKey()))
 				.map(e -> e.getKey())
 				.collect(Collectors.toList());
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public void addInformation(ItemStack itemStack, EntityPlayer entityPlayer,
+			@SuppressWarnings("rawtypes") List list, boolean p_77624_4_) {
+		if(list != null && builder.informationProvider != null) {
+			list.add(builder.informationProvider.apply(itemStack));
+		}
 	}
 }
