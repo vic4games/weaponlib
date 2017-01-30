@@ -1,17 +1,17 @@
 package com.vicmatskiv.weaponlib;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
 import java.util.function.Function;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponKeyInputHandler;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumHand;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.InputEvent;
 
-public class WeaponKeyInputHandler {
+public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
 	
 	private CompatibleChannel channel;
 	private Function<CompatibleMessageContext, EntityPlayer> entityPlayerSupplier;
@@ -28,12 +28,12 @@ public class WeaponKeyInputHandler {
 		this.channel = channel;
 	}
 
-	@SubscribeEvent
-    public void onKeyInput(InputEvent.KeyInputEvent event) {
+	@Override
+    public void onCompatibleKeyInput() {
 		
         if(KeyBindings.reloadKey.isPressed()) {
         	EntityPlayer player = entityPlayerSupplier.apply(null);
-        	ItemStack itemStack = player.getHeldItem(EnumHand.MAIN_HAND);   		
+        	ItemStack itemStack = compatibility.getHeldItemMainHand(player);
     		if(itemStack != null) {
     			reloadManager.toggleReload(itemStack, player);
     		}
@@ -45,7 +45,7 @@ public class WeaponKeyInputHandler {
         
         else if(KeyBindings.attachmentKey.isPressed()) {
         	EntityPlayer player = entityPlayerSupplier.apply(null);
-    		ItemStack itemStack = player.getHeldItem(EnumHand.MAIN_HAND);
+    		ItemStack itemStack = compatibility.getHeldItemMainHand(player);
     		if(itemStack != null && itemStack.getItem() instanceof Weapon) {
     			attachmentManager.toggleClientAttachmentSelectionMode(itemStack, player);
     		}

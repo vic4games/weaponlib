@@ -9,8 +9,12 @@ import com.vicmatskiv.weaponlib.WorldHelper;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.model.ModelBiped.ArmPose;
+import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.IAttribute;
 import net.minecraft.entity.player.EntityPlayer;
@@ -18,8 +22,12 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
+import net.minecraftforge.client.event.FOVUpdateEvent;
+import net.minecraftforge.client.event.GuiOpenEvent;
+import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.Pre;
+import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
 import net.minecraftforge.fml.client.FMLClientHandler;
@@ -50,7 +58,7 @@ public class Compatibility1_10_2 implements Compatibility {
 	}
 
 	@Override
-	public ItemStack getHeldItemMainHand(EntityPlayer player) {
+	public ItemStack getHeldItemMainHand(EntityLivingBase player) {
 		return player.getHeldItemMainhand();
 	}
 
@@ -175,8 +183,6 @@ public class Compatibility1_10_2 implements Compatibility {
 	@Override
 	public void registerModEntity(Class<WeaponSpawnEntity> class1, String string, int i, Object mod, int j, int k,
 			boolean b) {
-		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
@@ -187,5 +193,50 @@ public class Compatibility1_10_2 implements Compatibility {
 	@Override
 	public <T, E> T getPrivateValue(Class<? super E> classToAccess, E instance, String... fieldNames) {
 		return ObfuscationReflectionHelper.getPrivateValue(classToAccess, instance, fieldNames);
+	}
+
+	@Override
+	public int getButton(MouseEvent event) {
+		return event.getButton();
+	}
+
+	@Override
+	public EntityPlayer getEntity(FOVUpdateEvent event) {
+		return event.getEntity();
+	}
+
+	@Override
+	public EntityLivingBase getEntity(RenderLivingEvent.Pre<? extends EntityLivingBase> event) {
+		return event.getEntity();
+	}
+
+	@Override
+	@SideOnly(Side.CLIENT)
+	public void setNewFov(FOVUpdateEvent event, float fov) {
+		event.setNewfov(fov);
+	}
+
+	@Override
+	@SideOnly(Side.CLIENT)
+	public RenderPlayer getRenderer(RenderLivingEvent.Pre<? extends EntityLivingBase> event) {
+		return (RenderPlayer) event.getRenderer();
+	}
+
+	@Override
+	@SideOnly(Side.CLIENT)
+	public GuiScreen getGui(GuiOpenEvent event) {
+		return event.getGui();
+	}
+
+	@Override
+	@SideOnly(Side.CLIENT)
+	public void setAimed(RenderPlayer rp, boolean aimed) {
+		if (aimed) {				
+			rp.getMainModel().leftArmPose = ArmPose.BOW_AND_ARROW;
+			rp.getMainModel().rightArmPose = ArmPose.BOW_AND_ARROW;
+		} else {
+			rp.getMainModel().leftArmPose = ArmPose.EMPTY;
+			rp.getMainModel().rightArmPose = ArmPose.ITEM;
+		}
 	}
 }

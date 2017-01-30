@@ -49,7 +49,6 @@ public class WeaponResourcePack implements IResourcePack {
 	@Override
 	public <T extends IMetadataSection> T getPackMetadata(MetadataSerializer metadataSerializer,
 			String metadataSectionName) throws IOException {
-		// TODO Auto-generated method stub
 		return null;
 	}
 

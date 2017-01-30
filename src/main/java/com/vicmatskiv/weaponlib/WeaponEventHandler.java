@@ -1,21 +1,19 @@
 package com.vicmatskiv.weaponlib;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
+import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponEventHandler;
+
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.model.ModelBiped.ArmPose;
 import net.minecraft.client.renderer.entity.RenderPlayer;
-import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumHand;
 import net.minecraftforge.client.event.FOVUpdateEvent;
 import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderLivingEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class WeaponEventHandler {
+public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 	
 	private SafeGlobals safeGlobals;
 
@@ -23,59 +21,52 @@ public class WeaponEventHandler {
 		this.safeGlobals = safeGlobals;
 	}
 	
-	@SubscribeEvent
-	public void onGuiOpenEvent(GuiOpenEvent event) {
-		safeGlobals.guiOpen.set(event.getGui() != null);
+	@Override
+	public void onCompatibleGuiOpenEvent(GuiOpenEvent event) {
+		safeGlobals.guiOpen.set(compatibility.getGui(event) != null);
 	}
 	
-	@SubscribeEvent
-	public void zoom(FOVUpdateEvent event) {
+	@Override
+	public void compatibleZoom(FOVUpdateEvent event) {
 
-		ItemStack stack = event.getEntity().getHeldItem(EnumHand.MAIN_HAND);
+		ItemStack stack = compatibility.getHeldItemMainHand(compatibility.getEntity(event));
 		if (stack != null) {
 			if (stack.getItem() instanceof Weapon) {
-				if (stack.getTagCompound() != null) {
-					event.setNewfov(Tags.getZoom(stack));
+				if (compatibility.getTagCompound(stack) != null) {
+					compatibility.setNewFov(event, Tags.getZoom(stack));
 				}
 			}
 		}
 	}
 	
-	@SideOnly(Side.CLIENT)
-	@SubscribeEvent
-	public void onMouse(MouseEvent event) {
-		if(event.getButton() == 0) {
-			ItemStack heldItem = Minecraft.getMinecraft().thePlayer.getHeldItemMainhand();
+	@Override
+	public void onCompatibleMouse(MouseEvent event) {
+		if(compatibility.getButton(event) == 0) {
+			ItemStack heldItem = compatibility.getHeldItemMainHand(Minecraft.getMinecraft().thePlayer);
 			if(heldItem != null && heldItem.getItem() instanceof Weapon) {
 				event.setCanceled(true);
 			}
-		} else if(event.getButton() == 1) {
-			ItemStack heldItem = Minecraft.getMinecraft().thePlayer.getHeldItemMainhand();
-			if(heldItem != null && heldItem.getItem() instanceof Weapon 
+		} else if(compatibility.getButton(event) == 1) {
+			ItemStack heldItem = compatibility.getHeldItemMainHand(Minecraft.getMinecraft().thePlayer);			if(heldItem != null && heldItem.getItem() instanceof Weapon 
 					&& Weapon.isEjectedSpentRound(Minecraft.getMinecraft().thePlayer, heldItem)) {
 				event.setCanceled(true);
 			}
 		}
 	}
 
-	@SideOnly(Side.CLIENT)
-	@SubscribeEvent
-	public void handleRenderLivingEvent(RenderLivingEvent.Pre<? extends EntityLivingBase> event) {
+	@Override
+	public void onCompatibleHandleRenderLivingEvent(RenderLivingEvent.Pre event) {
 
-		if ((event.isCanceled()) || (!(event.getEntity() instanceof EntityPlayer)))
+		if ((event.isCanceled()) || (!(compatibility.getEntity(event) instanceof EntityPlayer)))
 			return;
 
-		ItemStack itemStack = event.getEntity().getHeldItem(EnumHand.MAIN_HAND);
+		ItemStack itemStack = compatibility.getHeldItemMainHand(compatibility.getEntity(event));
 
 		if (itemStack != null && itemStack.getItem() instanceof Weapon) {
-			RenderPlayer rp = (RenderPlayer) event.getRenderer();
+			RenderPlayer rp = compatibility.getRenderer(event);
 
-			if (itemStack != null && itemStack.getTagCompound() != null && Weapon.isAimed(itemStack)) {				
-				rp.getMainModel().leftArmPose = ArmPose.BOW_AND_ARROW;
-				rp.getMainModel().rightArmPose = ArmPose.BOW_AND_ARROW;
-			} else {
-				rp.getMainModel().leftArmPose = ArmPose.EMPTY;
-				rp.getMainModel().rightArmPose = ArmPose.ITEM;
+			if (itemStack != null && compatibility.getTagCompound(itemStack) != null) {
+				compatibility.setAimed(rp, Weapon.isAimed(itemStack));
 			}
 		}
 	}
