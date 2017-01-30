@@ -1,20 +1,21 @@
 package com.vicmatskiv.weaponlib;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.vicmatskiv.weaponlib.Weapon.State;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
+
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.SoundEvent;
 import net.minecraft.world.World;
-
-import com.vicmatskiv.weaponlib.Weapon.State;
 
 public class ItemMagazine extends ItemAttachment<Weapon> implements Part {
 	
@@ -63,7 +64,7 @@ public class ItemMagazine extends ItemAttachment<Weapon> implements Part {
 	private int ammo;
 	private long reloadingTimeout;
 	private List<ItemBullet> compatibleBullets;
-	private SoundEvent reloadSound;
+	private CompatibleSound reloadSound;
 
 	public ItemMagazine(String modId, ModelBase model, String textureName, int ammo) {
 		this(modId, model, textureName, ammo, null, null);
@@ -84,8 +85,8 @@ public class ItemMagazine extends ItemAttachment<Weapon> implements Part {
 	}
 	
 	private void ensureItemStack(ItemStack itemStack) {
-		if (itemStack.getTagCompound() == null) {
-			itemStack.setTagCompound(new NBTTagCompound());
+		if (compatibility.getTagCompound(itemStack) == null) {
+			compatibility.setTagCompound(itemStack, new NBTTagCompound());
 			Tags.setAmmo(itemStack, ammo);
 		}
 	}
@@ -97,9 +98,9 @@ public class ItemMagazine extends ItemAttachment<Weapon> implements Part {
 	}
 
 	@Override
-	public ItemStack onItemUseFinish(ItemStack stack, World worldIn, EntityLivingBase entityLiving) {
+	public boolean onItemUseFirst(ItemStack stack, EntityPlayer player, World world) {
 		ensureItemStack(stack);
-		return super.onItemUseFinish(stack, worldIn, entityLiving);
+		return super.onItemUseFirst(stack, player, world);
 	}
 	
 	@Override
@@ -122,7 +123,7 @@ public class ItemMagazine extends ItemAttachment<Weapon> implements Part {
 		return ammo;
 	}
 
-	public SoundEvent getReloadSound() {
+	public CompatibleSound getReloadSound() {
 		return reloadSound;
 	}
 

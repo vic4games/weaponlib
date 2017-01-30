@@ -1,29 +1,32 @@
 package com.vicmatskiv.weaponlib;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
 import java.util.HashMap;
 import java.util.Map;
+
+import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleSide;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundEvent;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
-import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
-import net.minecraftforge.fml.common.registry.GameRegistry;
-import net.minecraftforge.fml.relauncher.Side;
 
 public class CommonModContext implements ModContext {
 	
-	protected SimpleNetworkWrapper channel;
+	protected CompatibleChannel channel;
 	
 	protected AttachmentManager attachmentManager;
 	protected FireManager fireManager;
 	protected ReloadManager reloadManager;
 	private String modId;
+	
+	private Map<ResourceLocation, CompatibleSound> registeredSounds = new HashMap<>();
 
 	@Override
-	public void init(Object mod, String modId, SimpleNetworkWrapper channel) {
+	public void init(Object mod, String modId, CompatibleChannel channel) {
 		this.channel = channel;
 		this.modId = modId;
 		
@@ -32,79 +35,78 @@ public class CommonModContext implements ModContext {
 		this.reloadManager = new ReloadManager(this);
 		
 		channel.registerMessage(new ReloadMessageHandler(reloadManager, (ctx) -> getServerPlayer(ctx)),
-				ReloadMessage.class, 1, Side.SERVER);
+				ReloadMessage.class, 1, CompatibleSide.SERVER);
 		
 		channel.registerMessage(new ReloadMessageHandler(reloadManager, (ctx) -> getPlayer(ctx)),
-				ReloadMessage.class, 2, Side.CLIENT);
+				ReloadMessage.class, 2, CompatibleSide.CLIENT);
 		
 		channel.registerMessage(new AttachmentModeMessageHandler(attachmentManager),
-				AttachmentModeMessage.class, 3, Side.SERVER);
+				AttachmentModeMessage.class, 3, CompatibleSide.SERVER);
 		
 		channel.registerMessage(new AttachmentModeMessageHandler(attachmentManager),
-				AttachmentModeMessage.class, 4, Side.CLIENT);
+				AttachmentModeMessage.class, 4, CompatibleSide.CLIENT);
 		
 		channel.registerMessage(new ChangeAttachmentMessageHandler(attachmentManager),
-				ChangeAttachmentMessage.class, 5, Side.SERVER);
+				ChangeAttachmentMessage.class, 5, CompatibleSide.SERVER);
 		
 		channel.registerMessage(new ChangeAttachmentMessageHandler(attachmentManager),
-				ChangeAttachmentMessage.class, 6, Side.CLIENT);
+				ChangeAttachmentMessage.class, 6, CompatibleSide.CLIENT);
 		
 		channel.registerMessage(new ChangeTextureMessageHandler(attachmentManager),
-				ChangeTextureMessage.class, 7, Side.SERVER);
+				ChangeTextureMessage.class, 7, CompatibleSide.SERVER);
 		
 		channel.registerMessage(new ChangeTextureMessageHandler(attachmentManager),
-				ChangeTextureMessage.class, 8, Side.CLIENT);
+				ChangeTextureMessage.class, 8, CompatibleSide.CLIENT);
 		
 		channel.registerMessage(new ChangeSettingMessageHandler((ctx) -> getPlayer(ctx)),
-				ChangeSettingsMessage.class, 9, Side.CLIENT);
+				ChangeSettingsMessage.class, 9, CompatibleSide.CLIENT);
 		
 		channel.registerMessage(new ChangeSettingMessageHandler((ctx) -> getPlayer(ctx)),
-				ChangeSettingsMessage.class, 10, Side.SERVER);
+				ChangeSettingsMessage.class, 10, CompatibleSide.SERVER);
 
 		channel.registerMessage(new TryFireMessageHandler(fireManager),
-				TryFireMessage.class, 11, Side.SERVER);
+				TryFireMessage.class, 11, CompatibleSide.SERVER);
 		
-		channel.registerMessage(LaserSwitchMessageHandler.class,
-				LaserSwitchMessage.class, 12, Side.SERVER);
+		channel.registerMessage(new LaserSwitchMessageHandler(),
+				LaserSwitchMessage.class, 12, CompatibleSide.SERVER);
 		
-		channel.registerMessage(LaserSwitchMessageHandler.class,
-				LaserSwitchMessage.class, 13, Side.CLIENT);
+		channel.registerMessage(new LaserSwitchMessageHandler(),
+				LaserSwitchMessage.class, 13, CompatibleSide.CLIENT);
 		
-		MinecraftForge.EVENT_BUS.register(attachmentManager); 
+		compatibility.registerWithEventBus(attachmentManager);
 		
-		MinecraftForge.EVENT_BUS.register(new WeaponKeyInputHandler((ctx) -> getPlayer(ctx), 
+		compatibility.registerWithFmlEventBus(new WeaponKeyInputHandler((ctx) -> getPlayer(ctx), 
 				attachmentManager, reloadManager, channel));
 	}
 	
-	private Map<ResourceLocation, SoundEvent> registeredSounds = new HashMap<>();
 	
 	@Override
-	public SoundEvent registerSound(String sound) {
+	public CompatibleSound registerSound(String sound) {
 		ResourceLocation soundResourceLocation = new ResourceLocation(modId, sound);
-		SoundEvent result = registeredSounds.get(soundResourceLocation);
+		CompatibleSound result = registeredSounds.get(soundResourceLocation);
 		if(result == null) {
-			result = new SoundEvent(soundResourceLocation);
+			result = new CompatibleSound(soundResourceLocation);
 			registeredSounds.put(soundResourceLocation, result);
-			GameRegistry.register(result, soundResourceLocation);
+			compatibility.registerSound(result);
 		}
 		return result;
 	}
-
+	
 	@Override
-	public void registerWeapon(String name, Weapon weapon) {
-		GameRegistry.registerItem(weapon, name);
+	public void registerWeapon(String name, Weapon weapon, WeaponRenderer renderer) {
+		compatibility.registerItem(weapon, name);
 	}
 	
-	private EntityPlayer getServerPlayer(MessageContext ctx) {
-		return ctx != null ? ctx.getServerHandler().playerEntity : null;
+	private EntityPlayer getServerPlayer(CompatibleMessageContext ctx) {
+		return ctx != null ? ctx.getPlayer() : null;
 	}
 	
-	protected EntityPlayer getPlayer(MessageContext ctx) {
+	protected EntityPlayer getPlayer(CompatibleMessageContext ctx) {
 		return getServerPlayer(ctx);
 	}
 
 	@Override
-	public SimpleNetworkWrapper getChannel() {
+	public CompatibleChannel getChannel() {
 		return channel;
 	}
 
@@ -130,9 +132,7 @@ public class CommonModContext implements ModContext {
 	}
 
 	@Override
-	public void registerRenderableItem(String name, Item item, ModelSourceRenderer renderer) {
-		GameRegistry.registerItem(item, name);
+	public void registerRenderableItem(String name, Item item, Object renderer) {
+		compatibility.registerItem(item, name);
 	}
-	
-	
 }

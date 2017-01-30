@@ -4,14 +4,14 @@ import java.util.Random;
 
 import org.lwjgl.opengl.GL11;
 
+import com.vicmatskiv.weaponlib.compatibility.CompatibleTransformType;
+
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.VertexBuffer;
-import net.minecraft.client.renderer.block.model.ItemCameraTransforms.TransformType;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
-@SuppressWarnings("deprecation")
 public class LaserBeamRenderer implements CustomRenderer {
 	
 	private float leftOffset = 0.3f;
@@ -22,7 +22,7 @@ public class LaserBeamRenderer implements CustomRenderer {
 	}
 
 	@Override
-	public void render(TransformType type, ItemStack itemStack) {
+	public void render(CompatibleTransformType type, ItemStack itemStack) {
 		
 		Item item = itemStack.getItem();
 		if(!(item instanceof Weapon)) {
@@ -30,7 +30,11 @@ public class LaserBeamRenderer implements CustomRenderer {
 		}
 
 		if(Tags.isLaserOn(itemStack) && (
-				type == TransformType.GROUND || type == TransformType.FIRST_PERSON_RIGHT_HAND /*|| type == ItemRenderType.ENTITY ?*/)) {
+				type == CompatibleTransformType.THIRD_PERSON_LEFT_HAND 
+				|| type == CompatibleTransformType.THIRD_PERSON_RIGHT_HAND 
+				|| type == CompatibleTransformType.FIRST_PERSON_LEFT_HAND
+				|| type == CompatibleTransformType.FIRST_PERSON_RIGHT_HAND
+				|| type == CompatibleTransformType.GROUND)) {
 			GL11.glPushMatrix();
 			GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
 			GL11.glDisable(GL11.GL_CULL_FACE);

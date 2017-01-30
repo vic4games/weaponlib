@@ -1,5 +1,7 @@
 package com.vicmatskiv.weaponlib;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
@@ -11,10 +13,6 @@ import net.minecraft.client.model.ModelBase;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.common.registry.GameRegistry;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class AttachmentBuilder<T> {
 	protected String name;
@@ -39,6 +37,7 @@ public class AttachmentBuilder<T> {
 	private List<Tuple<ModelBase, String>> texturedModels = new ArrayList<>();
 	private boolean isRenderablePart;
 	
+
 	public AttachmentBuilder<T> withCategory(AttachmentCategory attachmentCategory) {
 		this.attachmentCategory = attachmentCategory;
 		return this;
@@ -143,7 +142,7 @@ public class AttachmentBuilder<T> {
 	
 	protected ItemAttachment<T> createAttachment(ModContext modContext) {
 		return new ItemAttachment<T>(
-				modId, attachmentCategory, /*model, textureName, */ crosshair, 
+				modId, attachmentCategory, crosshair, 
 				apply, remove);
 	}
 	
@@ -173,17 +172,15 @@ public class AttachmentBuilder<T> {
 		
 		texturedModels.forEach(tm -> attachment.addModel(tm.getU(), tm.getV()));
 		
-		if((model != null || !texturedModels.isEmpty()) && FMLCommonHandler.instance().getSide() == Side.CLIENT) {
-			registerRenderer(modContext, attachment);
+		if((model != null || !texturedModels.isEmpty())) {
+			modContext.registerRenderableItem(name, attachment, compatibility.isClientSide() ? registerRenderer(attachment) : null);
 		}
-		GameRegistry.registerItem(attachment, name);
 		
 		return attachment;
 	}
 	
-	@SideOnly(Side.CLIENT)
-	private void registerRenderer(ModContext modContext, ItemAttachment<T> attachment) {
-		StaticModelSourceRenderer renderer = new StaticModelSourceRenderer.Builder()
+	private Object registerRenderer(ItemAttachment<T> attachment) {
+		return new StaticModelSourceRenderer.Builder()
 		.withEntityPositioning(entityPositioning)
 		.withFirstPersonPositioning(firstPersonPositioning)
 		.withThirdPersonPositioning(thirdPersonPositioning)
@@ -194,8 +191,6 @@ public class AttachmentBuilder<T> {
 		.withInventoryModelPositioning(inventoryModelPositioning)
 		.withModId(modId)
 		.build();
-
-		modContext.registerRenderableItem(name, attachment, renderer);
 	}
 
 

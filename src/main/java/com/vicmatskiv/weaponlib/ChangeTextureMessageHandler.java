@@ -1,13 +1,14 @@
 package com.vicmatskiv.weaponlib;
 
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.IThreadListener;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
-public class ChangeTextureMessageHandler implements IMessageHandler<ChangeTextureMessage, IMessage> {
+import com.vicmatskiv.weaponlib.compatibility.CompatibleMessage;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageHandler;
+
+import net.minecraft.entity.player.EntityPlayer;
+
+public class ChangeTextureMessageHandler implements CompatibleMessageHandler<ChangeTextureMessage, CompatibleMessage> {
 	
 	private AttachmentManager attachmentManager;
 
@@ -16,11 +17,10 @@ public class ChangeTextureMessageHandler implements IMessageHandler<ChangeTextur
 	}
 
 	@Override
-	public IMessage onMessage(ChangeTextureMessage message, MessageContext ctx) {
-		EntityPlayer player = ctx.getServerHandler().playerEntity;
-		IThreadListener mainThread = (IThreadListener) ctx.getServerHandler().playerEntity.worldObj;
-		mainThread.addScheduledTask(() -> {
-			attachmentManager.changeTexture(player.getHeldItem(EnumHand.MAIN_HAND), player);
+	public <T extends CompatibleMessage> T onCompatibleMessage(ChangeTextureMessage message, CompatibleMessageContext ctx) {
+		EntityPlayer player = ctx.getPlayer();
+		ctx.runInMainThread(() -> {
+			attachmentManager.changeTexture(compatibility.getHeldItemMainHand(player), player);
 		});
 		
 		return null;

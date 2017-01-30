@@ -1,10 +1,10 @@
 package com.vicmatskiv.weaponlib;
 
-import net.minecraft.client.renderer.block.model.ItemCameraTransforms.TransformType;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleTransformType;
+
 import net.minecraft.item.ItemStack;
 
-@SuppressWarnings("deprecation")
 public interface CustomRenderer {
 
-	public void render(TransformType type, ItemStack itemStack);
+	public void render(CompatibleTransformType type, ItemStack itemStack);
 }

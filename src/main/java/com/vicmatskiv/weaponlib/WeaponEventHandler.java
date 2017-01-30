@@ -1,8 +1,7 @@
 package com.vicmatskiv.weaponlib;
 
-import net.minecraft.client.model.ModelBiped.ArmPose;
-
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.model.ModelBiped.ArmPose;
 import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;

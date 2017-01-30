@@ -12,18 +12,12 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class ClientEventHandler {
-	
-	//private static final int DEFAULT_RIGHT_CLICK_TIMEOUT = 200;
-	
+		
 	private Lock mainLoopLock = new ReentrantLock();
 	private SafeGlobals safeGlobals;
 	private Queue<Runnable> runInClientThreadQueue;
-//	private ModContext modContext;
-//	private long lastRightClickTimestamp;
-//	private long rightClickTimeout = DEFAULT_RIGHT_CLICK_TIMEOUT;
 
 	public ClientEventHandler(ModContext modContext, Lock mainLoopLock, SafeGlobals safeGlobals, Queue<Runnable> runInClientThreadQueue) {
-		//this.modContext = modContext;
 		this.mainLoopLock = mainLoopLock;
 		this.safeGlobals = safeGlobals;
 		this.runInClientThreadQueue = runInClientThreadQueue;

@@ -1,24 +1,20 @@
 package com.vicmatskiv.weaponlib;
 
-import java.util.Iterator;
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
 import org.lwjgl.opengl.GL11;
 
+import com.vicmatskiv.weaponlib.compatibility.CompatibleGui;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleTessellator;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.VertexBuffer;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
-public class CustomGui extends Gui {
+public class CustomGui extends CompatibleGui {
 	private Minecraft mc;
 	private AttachmentManager attachmentManager;
 
@@ -29,33 +25,32 @@ public class CustomGui extends Gui {
 	private static final int BUFF_ICON_SIZE = 256;
 	
 	
-	//TODO: fix this method @SubscribeEvent
-	@SubscribeEvent
-	public void onRenderHud(RenderGameOverlayEvent.Pre event) {
+	//@SubscribeEvent defined in CompatibleGui
+	@Override
+	public void onCompatibleRenderHud(RenderGameOverlayEvent.Pre event) {
 		
-		if(event.getType() == RenderGameOverlayEvent.ElementType.HELMET) {
-			Iterator<ItemStack> equipmentIterator = mc.thePlayer.getEquipmentAndArmor().iterator();
-			ItemStack helmet = equipmentIterator.hasNext() ? equipmentIterator.next() : null; // TODO: fix iterator
+		if(compatibility.getEventType(event) == RenderGameOverlayEvent.ElementType.HELMET) {
+			ItemStack helmet = compatibility.getHelmet();
 			if(helmet != null && mc.gameSettings.thirdPersonView == 0 && helmet.getItem() instanceof CustomArmor) {
 				// Texture must be Width: 427, height: 240
 				String hudTexture = ((CustomArmor)helmet.getItem()).getHudTexture();
 				if(hudTexture != null) {
-					ScaledResolution scaledResolution = event.getResolution();
+					ScaledResolution scaledResolution = compatibility.getResolution(event);
 					int width = scaledResolution.getScaledWidth();
 				    int height = scaledResolution.getScaledHeight();
 				    
-					GlStateManager.pushAttrib();
-					GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-					GlStateManager.disableLighting();
-					GlStateManager.enableAlpha();
-					GlStateManager.enableBlend();
+				    GL11.glPushAttrib(GL11.GL_ENABLE_BIT);
+					GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+					GL11.glDisable(GL11.GL_LIGHTING);
+			        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+					GL11.glEnable(GL11.GL_BLEND);
 					
 					
 					this.mc.renderEngine.bindTexture(new ResourceLocation(hudTexture));
 					
 					drawTexturedQuadFit(0, 0, width, height, 0);
 					
-					GlStateManager.popAttrib();
+					GL11.glPopAttrib();
 					
 					event.setCanceled(true);
 				}
@@ -64,25 +59,14 @@ public class CustomGui extends Gui {
 	}
 
 	
-	@SubscribeEvent
-	public void onRenderCrosshair(RenderGameOverlayEvent.Pre event) {
-		
-		if (event.getType() != RenderGameOverlayEvent.ElementType.CROSSHAIRS ) {
+	//@SubscribeEvent defined in CompatibleGui
+	@Override
+	public void onCompatibleRenderCrosshair(RenderGameOverlayEvent.Pre event) {
+		if (compatibility.getEventType(event) != RenderGameOverlayEvent.ElementType.CROSSHAIRS ) {
 			return;
 		}
 		
-//<<<<<<< HEAD
-//		ItemStack weapon = mc.thePlayer.getHeldItem(EnumHand.MAIN_HAND);
-//		if(weapon == null || !(weapon.getItem() instanceof Weapon) || mc.gameSettings.thirdPersonView != 0) {
-//			return;
-//		}
-//		
-//		Weapon weaponItem = (Weapon) weapon.getItem();
-//		String crosshair = weaponItem.getCrosshair(weapon, mc.thePlayer);
-//		if(crosshair != null) {
-//			ScaledResolution scaledResolution = event.getResolution();
-//=======
-		ItemStack itemStack = mc.thePlayer.getHeldItem(EnumHand.MAIN_HAND);
+		ItemStack itemStack = compatibility.getHeldItemMainHand(mc.thePlayer);
 		if(itemStack == null) {
 			return;
 		}
@@ -91,14 +75,14 @@ public class CustomGui extends Gui {
 			Weapon weaponItem = (Weapon) itemStack.getItem();
 			String crosshair = weaponItem != null ? weaponItem.getCrosshair(itemStack, mc.thePlayer) : null;
 			if(crosshair != null) {
-				ScaledResolution scaledResolution = event.getResolution();
+				ScaledResolution scaledResolution = compatibility.getResolution(event);
 				int width = scaledResolution.getScaledWidth();
 			    int height = scaledResolution.getScaledHeight();
 			    
 			    int xPos = width / 2 - BUFF_ICON_SIZE / 2;
 				int yPos = height / 2 - BUFF_ICON_SIZE / 2;
 				
-			    FontRenderer fontRender = mc.fontRendererObj;
+			    FontRenderer fontRender = compatibility.getFontRenderer();
 
 				mc.entityRenderer.setupOverlayRendering();
 				
@@ -106,11 +90,11 @@ public class CustomGui extends Gui {
 				
 				this.mc.renderEngine.bindTexture(new ResourceLocation(crosshair));
 
-				GlStateManager.pushAttrib();
-				GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-				GlStateManager.disableLighting();
-				GlStateManager.enableAlpha();
-				GlStateManager.enableBlend();
+				GL11.glPushAttrib(GL11.GL_ENABLE_BIT);
+				GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+				GL11.glDisable(GL11.GL_LIGHTING);
+		        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+				GL11.glEnable(GL11.GL_BLEND);
 				
 				if(weaponItem.isCrosshairFullScreen(itemStack))	 {
 					drawTexturedQuadFit(0, 0, width, height, 0);
@@ -145,14 +129,14 @@ public class CustomGui extends Gui {
 
 					fontRender.drawStringWithShadow(text, x, y, color);
 				}
-				GlStateManager.popAttrib();
+				GL11.glPopAttrib();
 				
 				event.setCanceled(true);
 			}
 		} else if(itemStack.getItem() instanceof ItemMagazine) {
-			ScaledResolution scaledResolution = event.getResolution();
+			ScaledResolution scaledResolution = compatibility.getResolution(event);
 			int width = scaledResolution.getScaledWidth();
-			FontRenderer fontRender = mc.fontRendererObj;
+			FontRenderer fontRender = compatibility.getFontRenderer();
 			mc.entityRenderer.setupOverlayRendering();
 			int color = 0xFFFFFF;
 			
@@ -168,14 +152,12 @@ public class CustomGui extends Gui {
 	}
 	
 	private static void drawTexturedQuadFit(double x, double y, double width, double height, double zLevel){
-		//throw new UnsupportedOperationException("Refactor the commented code below!");
-		Tessellator tessellator = Tessellator.getInstance();
-		VertexBuffer worldRenderer = tessellator.getBuffer();
-		worldRenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-		worldRenderer.pos(x + 0, y + height, zLevel).tex(0,1).endVertex();
-		worldRenderer.pos(x + width, y + height, zLevel).tex(1, 1).endVertex();
-		worldRenderer.pos(x + width, y + 0, zLevel).tex(1,0).endVertex();
-		worldRenderer.pos(x + 0, y + 0, zLevel).tex(0, 0).endVertex();
+		CompatibleTessellator tessellator = CompatibleTessellator.getInstance();
+        tessellator.startDrawingQuads();
+        tessellator.addVertexWithUV(x + 0, y + height, zLevel, 0,1);
+        tessellator.addVertexWithUV(x + width, y + height, zLevel, 1, 1);
+        tessellator.addVertexWithUV(x + width, y + 0, zLevel, 1,0);
+        tessellator.addVertexWithUV(x + 0, y + 0, zLevel, 0, 0);
 		tessellator.draw();
 	}
 }

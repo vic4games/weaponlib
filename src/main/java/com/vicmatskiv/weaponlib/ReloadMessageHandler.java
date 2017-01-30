@@ -1,39 +1,35 @@
 package com.vicmatskiv.weaponlib;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
 import java.util.function.Function;
 
 import com.vicmatskiv.weaponlib.ReloadMessage.Type;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleMessage;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageHandler;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.IThreadListener;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class ReloadMessageHandler implements IMessageHandler<ReloadMessage, IMessage> {
+public class ReloadMessageHandler implements CompatibleMessageHandler<ReloadMessage, CompatibleMessage> {
 	
-	private Function<MessageContext, EntityPlayer> entityPlayerSupplier;
+	private Function<CompatibleMessageContext, EntityPlayer> entityPlayerSupplier;
 	private ReloadManager reloadManager;
 
-	public ReloadMessageHandler(ReloadManager reloadManager, Function<MessageContext, EntityPlayer> entityPlayerSupplier) {
+	public ReloadMessageHandler(ReloadManager reloadManager, Function<CompatibleMessageContext, EntityPlayer> entityPlayerSupplier) {
 		this.reloadManager = reloadManager;
 		this.entityPlayerSupplier = entityPlayerSupplier;
 	}
 	
 	@Override
-	public IMessage onMessage(ReloadMessage message, MessageContext ctx) {
-		if(ctx.side == Side.SERVER) {
+	public <T extends CompatibleMessage> T onCompatibleMessage(ReloadMessage message, CompatibleMessageContext ctx) {
+		if(ctx.isServerSide()) {
 			EntityPlayer player = entityPlayerSupplier.apply(ctx);
-			ItemStack itemStack = player.getHeldItem(EnumHand.MAIN_HAND);
+			ItemStack itemStack = compatibility.getHeldItemMainHand(player);
 			
 			if(itemStack != null && itemStack.getItem() instanceof Weapon) {
-				IThreadListener mainThread = (IThreadListener) ctx.getServerHandler().playerEntity.worldObj;
-				mainThread.addScheduledTask(() -> {
+				ctx.runInMainThread(() -> {
 					if(message.getType() == Type.LOAD) {
 						reloadManager.reload(itemStack, player);
 					} else {
@@ -49,10 +45,9 @@ public class ReloadMessageHandler implements IMessageHandler<ReloadMessage, IMes
 		return null;
 	}
 
-	@SideOnly(Side.CLIENT)
-	private void onClientMessage(ReloadMessage message, MessageContext ctx) {
+	private void onClientMessage(ReloadMessage message, CompatibleMessageContext ctx) {
 		EntityPlayer player = entityPlayerSupplier.apply(ctx);
-		ItemStack itemStack = player.getHeldItem(EnumHand.MAIN_HAND);
+		ItemStack itemStack = compatibility.getHeldItemMainHand(player);
 		if(itemStack != null) {
 			
 			Weapon targetWeapon = message.getWeapon();
@@ -74,7 +69,7 @@ public class ReloadMessageHandler implements IMessageHandler<ReloadMessage, IMes
 						 */
 						targetStack = WorldHelper.itemStackForItem(targetWeapon, s -> true, player);
 					}
-					Minecraft.getMinecraft().addScheduledTask(() -> {
+					compatibility.runInMainClientThread(() -> {
 						reloadManager.completeReload(targetStack, player, message.getMagazine(), message.getAmmo(), 
 								itemStack.getItem() != targetWeapon);
 					});
@@ -91,7 +86,7 @@ public class ReloadMessageHandler implements IMessageHandler<ReloadMessage, IMes
 						 */
 						targetStack = WorldHelper.itemStackForItem(targetMagazine, s -> true, player);
 					}
-					Minecraft.getMinecraft().addScheduledTask(() -> {
+					compatibility.runInMainClientThread(() -> {
 						reloadManager.completeReload(targetStack, player, targetMagazine, message.getAmmo(), 
 								itemStack.getItem() != targetMagazine);
 					});

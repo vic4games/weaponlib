@@ -1,14 +1,14 @@
 package com.vicmatskiv.weaponlib;
 
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.IThreadListener;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
-import net.minecraftforge.fml.relauncher.Side;
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
-public class ChangeAttachmentMessageHandler implements IMessageHandler<ChangeAttachmentMessage, IMessage> {
+import com.vicmatskiv.weaponlib.compatibility.CompatibleMessage;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageHandler;
+
+import net.minecraft.entity.player.EntityPlayer;
+
+public class ChangeAttachmentMessageHandler implements CompatibleMessageHandler<ChangeAttachmentMessage, CompatibleMessage> {
 	
 	private AttachmentManager attachmentManager;
 
@@ -17,19 +17,14 @@ public class ChangeAttachmentMessageHandler implements IMessageHandler<ChangeAtt
 	}
 
 	@Override
-	public IMessage onMessage(ChangeAttachmentMessage message, MessageContext ctx) {
-		
-		if(ctx.side == Side.SERVER) {
-			EntityPlayer player = ctx.getServerHandler().playerEntity;
-			IThreadListener mainThread = (IThreadListener) ctx.getServerHandler().playerEntity.worldObj;
-			mainThread.addScheduledTask(() -> {
-				attachmentManager.changeAttachment(message.getAttachmentCategory(), player.getHeldItem(EnumHand.MAIN_HAND), player);
+	public <T extends CompatibleMessage> T onCompatibleMessage(ChangeAttachmentMessage message, CompatibleMessageContext ctx) {
+		if(ctx.isServerSide()) {
+			EntityPlayer player = ctx.getPlayer();
+			ctx.runInMainThread(() -> {
+				attachmentManager.changeAttachment(message.getAttachmentCategory(), compatibility.getHeldItemMainHand(player), player);
 			});
-			
-			
 		}
 		
 		return null;
 	}
-
 }

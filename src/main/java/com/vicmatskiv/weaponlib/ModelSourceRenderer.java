@@ -6,11 +6,11 @@ import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 public abstract class ModelSourceRenderer implements IBakedModel {
 	private ModelResourceLocation resourceLocation;
 
-	protected ModelResourceLocation getResourceLocation() {
+	public ModelResourceLocation getResourceLocation() {
 		return resourceLocation;
 	}
 
-	protected void setResourceLocation(ModelResourceLocation resourceLocation) {
+	public void setResourceLocation(ModelResourceLocation resourceLocation) {
 		this.resourceLocation = resourceLocation;
 	}
 

@@ -1,10 +1,11 @@
 package com.vicmatskiv.weaponlib;
 
-import net.minecraft.item.Item;
-import io.netty.buffer.ByteBuf;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleMessage;
 
-public class ChangeSettingsMessage implements IMessage {
+import io.netty.buffer.ByteBuf;
+import net.minecraft.item.Item;
+
+public class ChangeSettingsMessage implements CompatibleMessage {
 
 	private float recoil;
 	private float zoom;

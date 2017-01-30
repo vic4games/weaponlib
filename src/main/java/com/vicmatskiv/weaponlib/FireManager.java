@@ -1,17 +1,18 @@
 package com.vicmatskiv.weaponlib;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
 import java.util.Random;
+
+import com.vicmatskiv.weaponlib.Weapon.State;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumHand;
-
-import com.vicmatskiv.weaponlib.Weapon.State;
 
 public class FireManager {
 	
 	private static final float FLASH_X_OFFSET_ZOOMED = 0f;
-	private static final float FLASH_X_OFFSET_NORMAL = 0f;
+	private static final float FLASH_X_OFFSET_NORMAL = 0.1f;
 	
 	private ModContext modContext;
 	private Random random = new Random();
@@ -21,7 +22,7 @@ public class FireManager {
 	}
 
 	void clientTryFire(EntityPlayer player) {
-		ItemStack itemStack = player.getHeldItem(EnumHand.MAIN_HAND);
+		ItemStack itemStack = compatibility.getHeldItemMainHand(player);
 		if(!(itemStack.getItem() instanceof Weapon)) {
 			return;
 		}
@@ -35,7 +36,7 @@ public class FireManager {
 				storage.setEjectSpentRoundStartedAt(System.currentTimeMillis());
 				storage.setState(State.EJECT_SPENT_ROUND);
 				modContext.runSyncTick(() -> {
-					player.playSound(weapon.getEjectSpentRoundSound(), 1F, 1F);
+					compatibility.playSound(player, weapon.getEjectSpentRoundSound(), 1F, 1F);
 				});
 			}
 			return;
@@ -50,12 +51,11 @@ public class FireManager {
 			
 			storage.setState(State.SHOOTING);
 			
-			modContext.getChannel().sendToServer(new TryFireMessage(true));
-			ItemStack heldItem = player.getHeldItem(EnumHand.MAIN_HAND);
+			modContext.getChannel().getChannel().sendToServer(new TryFireMessage(true));
+			ItemStack heldItem = compatibility.getHeldItemMainHand(player);
 
 			modContext.runSyncTick(() -> {
-				//TODO: play sound 
-				player.playSound(modContext.getAttachmentManager().isSilencerOn(heldItem) ? weapon.getSilencedShootSound() : weapon.getShootSound(), 1F, 1F);
+				compatibility.playSound(player, modContext.getAttachmentManager().isSilencerOn(heldItem) ? weapon.getSilencedShootSound() : weapon.getShootSound(), 1F, 1F);
 			});
 
 			
@@ -91,11 +91,9 @@ public class FireManager {
 			Tags.setAmmo(itemStack, currentAmmo - 1);
 			for(int i = 0; i < weapon.builder.pellets; i++) {
 				WeaponSpawnEntity spawnEntity = weapon.builder.spawnEntityWith.apply(weapon, player);
-				//spawnEntity.setHeadingFromThrower(player, player.rotationPitch, player.rotationYaw, 1.0F, spawnEntity.getVelocity(), 1.0F);
 				player.worldObj.spawnEntityInWorld(spawnEntity);
 			}
-			player.playSound(modContext.getAttachmentManager().isSilencerOn(itemStack) ? 
-					weapon.getSilencedShootSound() : weapon.getShootSound(), 1.0F, 1.0F);
+			compatibility.playSoundToNearExcept(player, modContext.getAttachmentManager().isSilencerOn(itemStack) ? weapon.getSilencedShootSound() : weapon.getShootSound(), 1.0F, 1.0F);
 		} else {
 			System.err.println("Invalid state: attempted to fire a weapon without ammo");
 		}
@@ -111,7 +109,7 @@ public class FireManager {
 	}
 
 	void clientTryStopFire(EntityPlayer player) {
-		ItemStack itemStack = player.getHeldItem(EnumHand.MAIN_HAND);
+		ItemStack itemStack = compatibility.getHeldItemMainHand(player);
 		if(!(itemStack.getItem() instanceof Weapon)) {
 			return;
 		}
@@ -128,7 +126,7 @@ public class FireManager {
 			}
 			
 			modContext.runInMainThread(() -> {
-				modContext.getChannel().sendToServer(new TryFireMessage(false));
+				modContext.getChannel().getChannel().sendToServer(new TryFireMessage(false));
 			});
 		}
 	}
