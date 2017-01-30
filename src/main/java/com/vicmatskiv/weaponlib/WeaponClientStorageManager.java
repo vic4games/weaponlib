@@ -1,5 +1,7 @@
 package com.vicmatskiv.weaponlib;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -57,12 +59,11 @@ class WeaponClientStorageManager {
 		if(player == null) return null;
 		return weaponClientStorage.computeIfAbsent(new Key(player.getPersistentID(), weapon), (w) ->
 			{
-				ItemStack itemStack = player.getHeldItem();
-				return itemStack.stackTagCompound != null ?
+				ItemStack itemStack = compatibility.getHeldItemMainHand(player);
+				return compatibility.getTagCompound(itemStack) != null ?
 						new WeaponClientStorage(Tags.getState(itemStack), 
-						Tags.getAmmo(itemStack), weapon.builder.zoom, 
-						Tags.getRecoil(player.getHeldItem()), weapon.builder.fireRate,
-						weapon.builder.maxShots > 1) : null;
+								Tags.getAmmo(itemStack), weapon.builder.zoom,
+								Tags.getRecoil(itemStack), weapon.builder.fireRate, weapon.builder.maxShots > 1) : null;
 			});
 	}
 }

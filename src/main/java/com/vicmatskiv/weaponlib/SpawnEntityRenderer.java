@@ -3,18 +3,18 @@ package com.vicmatskiv.weaponlib;
 
 import org.lwjgl.opengl.GL11;
 
+import com.vicmatskiv.weaponlib.compatibility.CompatibleEntityRenderer;
+
 import net.minecraft.client.model.ModelBase;
-import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
 
-public class SpawnEntityRenderer extends Render {
+public class SpawnEntityRenderer extends CompatibleEntityRenderer {
 
-    
-    @Override
-	public void doRender(Entity entity, double x, double y, double z, float yaw, float tick) {
-    	WeaponSpawnEntity weaponSpawnEntity = (WeaponSpawnEntity) entity;
-    	Weapon weapon = weaponSpawnEntity.getWeapon();
+	@Override
+	public void doCompatibleRender(Entity entity, double x, double y, double z, float yaw, float tick) {
+		WeaponSpawnEntity weaponSpawnEntity = (WeaponSpawnEntity) entity;
+		Weapon weapon = weaponSpawnEntity.getWeapon();
 		if(weapon == null) {
     		return;
     	}
@@ -32,14 +32,13 @@ public class SpawnEntityRenderer extends Render {
         		GL11.glPopMatrix();
         	}
     	}
-    	
 	}
 
-    @Override
-    protected ResourceLocation getEntityTexture(Entity entity){
-    	WeaponSpawnEntity weaponSpawnEntity = (WeaponSpawnEntity) entity;
+	@Override
+	protected ResourceLocation getEntityTexture(Entity entity) {
+		WeaponSpawnEntity weaponSpawnEntity = (WeaponSpawnEntity) entity;
         return new ResourceLocation(weaponSpawnEntity.getWeapon().getAmmoModelTextureName());
-    }
+	}
 
   
 }

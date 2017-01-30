@@ -14,8 +14,11 @@ import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.IAttribute;
 import net.minecraft.entity.player.EntityPlayer;
@@ -23,8 +26,12 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
+import net.minecraftforge.client.event.FOVUpdateEvent;
+import net.minecraftforge.client.event.GuiOpenEvent;
+import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.Pre;
+import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
 
@@ -48,7 +55,7 @@ public class Compatibility1_7_10 implements Compatibility {
 	}
 	
 	@Override
-	public ItemStack getHeldItemMainHand(EntityPlayer player) {
+	public ItemStack getHeldItemMainHand(EntityLivingBase player) {
 		return player.getHeldItem();
 	}
 
@@ -197,5 +204,41 @@ public class Compatibility1_7_10 implements Compatibility {
 	@Override
 	public <T, E> T getPrivateValue(Class<? super E> classToAccess, E instance, String... fieldNames) {
 		return ObfuscationReflectionHelper.getPrivateValue(classToAccess, instance, fieldNames);
+	}
+
+	@Override
+	public int getButton(MouseEvent event) {
+		return event.button;
+	}
+
+	@Override
+	public EntityPlayer getEntity(FOVUpdateEvent event) {
+		return event.entity;
+	}
+
+	@Override
+	public EntityLivingBase getEntity(RenderLivingEvent.Pre event) {
+		return event.entity;
+	}
+
+	@Override
+	public void setNewFov(FOVUpdateEvent event, float fov) {
+		event.newfov = fov;
+	}
+
+	@Override
+	@SideOnly(Side.CLIENT)
+	public RenderPlayer getRenderer(RenderLivingEvent.Pre event) {
+		return (RenderPlayer) event.renderer;
+	}
+
+	@Override
+	public GuiScreen getGui(GuiOpenEvent event) {
+		return event.gui;
+	}
+
+	@Override
+	public void setAimed(RenderPlayer rp, boolean aimed) {
+		rp.modelBipedMain.aimedBow = aimed;
 	}
 }

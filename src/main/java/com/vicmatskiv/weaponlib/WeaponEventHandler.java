@@ -1,8 +1,9 @@
 package com.vicmatskiv.weaponlib;
 
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
+import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponEventHandler;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.entity.player.EntityPlayer;
@@ -12,7 +13,7 @@ import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderLivingEvent;
 
-public class WeaponEventHandler {
+public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 	
 	private SafeGlobals safeGlobals;
 
@@ -20,55 +21,52 @@ public class WeaponEventHandler {
 		this.safeGlobals = safeGlobals;
 	}
 	
-	@SubscribeEvent
-	public void onGuiOpenEvent(GuiOpenEvent event) {
-		safeGlobals.guiOpen.set(event.gui != null);
+	@Override
+	public void onCompatibleGuiOpenEvent(GuiOpenEvent event) {
+		safeGlobals.guiOpen.set(compatibility.getGui(event) != null);
 	}
 	
-	@SubscribeEvent
-	public void zoom(FOVUpdateEvent event) {
+	@Override
+	public void compatibleZoom(FOVUpdateEvent event) {
 
-		ItemStack stack = event.entity.getHeldItem();
+		ItemStack stack = compatibility.getHeldItemMainHand(compatibility.getEntity(event));
 		if (stack != null) {
 			if (stack.getItem() instanceof Weapon) {
-				if (stack.stackTagCompound != null) {
-					event.newfov = Tags.getZoom(stack);
+				if (compatibility.getTagCompound(stack) != null) {
+					compatibility.setNewFov(event, Tags.getZoom(stack));
 				}
 			}
 		}
 	}
 	
-	@SideOnly(Side.CLIENT)
-	@SubscribeEvent
-	public void onMouse(MouseEvent event) {
-		if(event.button == 0) {
-			ItemStack heldItem = Minecraft.getMinecraft().thePlayer.getHeldItem();
+	@Override
+	public void onCompatibleMouse(MouseEvent event) {
+		if(compatibility.getButton(event) == 0) {
+			ItemStack heldItem = compatibility.getHeldItemMainHand(Minecraft.getMinecraft().thePlayer);
 			if(heldItem != null && heldItem.getItem() instanceof Weapon) {
 				event.setCanceled(true);
 			}
-		} else if(event.button == 1) {
-			ItemStack heldItem = Minecraft.getMinecraft().thePlayer.getHeldItem();
-			if(heldItem != null && heldItem.getItem() instanceof Weapon 
+		} else if(compatibility.getButton(event) == 1) {
+			ItemStack heldItem = compatibility.getHeldItemMainHand(Minecraft.getMinecraft().thePlayer);			if(heldItem != null && heldItem.getItem() instanceof Weapon 
 					&& Weapon.isEjectedSpentRound(Minecraft.getMinecraft().thePlayer, heldItem)) {
 				event.setCanceled(true);
 			}
 		}
 	}
 
-	@SideOnly(Side.CLIENT)
-	@SubscribeEvent
-	public void handleRenderLivingEvent(RenderLivingEvent.Pre event) {
+	@Override
+	public void onCompatibleHandleRenderLivingEvent(RenderLivingEvent.Pre event) {
 
-		if ((event.isCanceled()) || (!(event.entity instanceof EntityPlayer)))
+		if ((event.isCanceled()) || (!(compatibility.getEntity(event) instanceof EntityPlayer)))
 			return;
 
-		ItemStack itemStack = event.entity.getHeldItem();
+		ItemStack itemStack = compatibility.getHeldItemMainHand(compatibility.getEntity(event));
 
 		if (itemStack != null && itemStack.getItem() instanceof Weapon) {
-			RenderPlayer rp = (RenderPlayer) event.renderer;
+			RenderPlayer rp = compatibility.getRenderer(event);
 
-			if (itemStack.stackTagCompound != null) {
-				rp.modelBipedMain.aimedBow = Weapon.isAimed(itemStack); //itemStack.stackTagCompound.getBoolean("Aimed");
+			if (itemStack != null && compatibility.getTagCompound(itemStack) != null) {
+				compatibility.setAimed(rp, Weapon.isAimed(itemStack));
 			}
 		}
 	}

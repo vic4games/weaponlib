@@ -5,17 +5,13 @@ import java.util.function.Consumer;
 
 import org.lwjgl.opengl.GL11;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
-import net.minecraft.client.Minecraft;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleStaticModelSourceRenderer;
+
 import net.minecraft.client.model.ModelBase;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.client.IItemRenderer;
 
-public class StaticModelSourceRenderer implements IItemRenderer {
+public class StaticModelSourceRenderer extends CompatibleStaticModelSourceRenderer {
 
 	public static class Builder {
 		private Consumer<ItemStack> entityPositioning;
@@ -121,94 +117,45 @@ public class StaticModelSourceRenderer implements IItemRenderer {
 			
 			return new StaticModelSourceRenderer(this);
 		}
-	}
-	
-	private Builder builder;
-	
-	private StaticModelSourceRenderer(Builder builder)
-	{
-		this.builder = builder;
-	}
-	
-	@Override
-	public boolean handleRenderType(ItemStack item, ItemRenderType type)
-	{
-		return true;
-	}
-	
-	@Override
-	public boolean shouldUseRenderHelper(ItemRenderType type, ItemStack item, ItemRendererHelper helper) {
-		return true;
-	}
-	
-	@SideOnly(Side.CLIENT)
-	@Override
-	public void renderItem(ItemRenderType type, ItemStack itemStack, Object... data)
-	{
-		GL11.glPushMatrix();
-		
-		GL11.glScaled(-1F, -1F, 1F);
-		EntityPlayer player = Minecraft.getMinecraft().thePlayer;
-		switch (type)
-		{
-		case ENTITY:
-			builder.entityPositioning.accept(itemStack);
-			break;
-		case INVENTORY:
-			builder.inventoryPositioning.accept(itemStack);
-			break;
-		case EQUIPPED:
-			builder.thirdPersonPositioning.accept(player, itemStack);
-			break;
-		case EQUIPPED_FIRST_PERSON:
-			builder.firstPersonPositioning.accept(player, itemStack);
-			break;
-		default:
-		}
-		
-		renderModelSource(itemStack, type, null,  0.0F, 0.0f, -0.4f, 0.0f, 0.0f, 0.08f);
-		
-		GL11.glPopMatrix();
-	}
-	
-	private void renderModelSource(
-			ItemStack itemStack, ItemRenderType type, Entity entity, 
-			float f, float f1, float f2, float f3, float f4, float f5) {
-		
-		if(!(itemStack.getItem() instanceof ModelSource)) {
-			throw new IllegalArgumentException();
-		}
-		
-		GL11.glPushMatrix();
 
-		for(Tuple<ModelBase, String> texturedModel: ((ModelSource)itemStack.getItem()).getTexturedModels()) {
-			Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(builder.modId 
-					+ ":textures/models/" + texturedModel.getV()));
-			GL11.glPushMatrix();
-			GL11.glPushAttrib(GL11.GL_ENABLE_BIT);
-			ModelBase model = texturedModel.getU();
-			switch (type)
-			{
-			case ENTITY:
-				builder.entityModelPositioning.accept(model, itemStack);
-				break;
-			case INVENTORY:
-				builder.inventoryModelPositioning.accept(model, itemStack);
-				break;
-			case EQUIPPED:
-				builder.thirdPersonModelPositioning.accept(model, itemStack);
-				break;
-			case EQUIPPED_FIRST_PERSON:
-				builder.firstPersonModelPositioning.accept(model, itemStack);
-				break;
-			default:
-			}
-			
-			model.render(entity, f, f1, f2, f3, f4, f5);
-			GL11.glPopAttrib();
-			GL11.glPopMatrix();
+		public Consumer<ItemStack> getEntityPositioning() {
+			return entityPositioning;
 		}
-		GL11.glPopMatrix();
+
+		public Consumer<ItemStack> getInventoryPositioning() {
+			return inventoryPositioning;
+		}
+
+		public BiConsumer<EntityPlayer, ItemStack> getThirdPersonPositioning() {
+			return thirdPersonPositioning;
+		}
+
+		public BiConsumer<EntityPlayer, ItemStack> getFirstPersonPositioning() {
+			return firstPersonPositioning;
+		}
+
+		public BiConsumer<ModelBase, ItemStack> getFirstPersonModelPositioning() {
+			return firstPersonModelPositioning;
+		}
+
+		public BiConsumer<ModelBase, ItemStack> getThirdPersonModelPositioning() {
+			return thirdPersonModelPositioning;
+		}
+
+		public BiConsumer<ModelBase, ItemStack> getInventoryModelPositioning() {
+			return inventoryModelPositioning;
+		}
+
+		public BiConsumer<ModelBase, ItemStack> getEntityModelPositioning() {
+			return entityModelPositioning;
+		}
+
+		public String getModId() {
+			return modId;
+		}
 	}
 
+	private StaticModelSourceRenderer(Builder builder) {
+		super(builder);
+	}
 }
