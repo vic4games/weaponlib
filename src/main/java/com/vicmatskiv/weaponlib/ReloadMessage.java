@@ -1,10 +1,11 @@
 package com.vicmatskiv.weaponlib;
 
-import net.minecraft.item.Item;
-import io.netty.buffer.ByteBuf;
-import cpw.mods.fml.common.network.simpleimpl.IMessage;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleMessage;
 
-public class ReloadMessage implements IMessage {
+import io.netty.buffer.ByteBuf;
+import net.minecraft.item.Item;
+
+public class ReloadMessage implements CompatibleMessage {
 	
 	public static enum Type { LOAD, UNLOAD, CANCEL };
 	

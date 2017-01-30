@@ -4,10 +4,11 @@ import java.util.Random;
 
 import org.lwjgl.opengl.GL11;
 
+import com.vicmatskiv.weaponlib.compatibility.CompatibleTransformType;
+
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.client.IItemRenderer.ItemRenderType;
 
 public class LaserBeamRenderer implements CustomRenderer {
 	
@@ -19,7 +20,7 @@ public class LaserBeamRenderer implements CustomRenderer {
 	}
 
 	@Override
-	public void render(ItemRenderType type, ItemStack itemStack) {
+	public void render(CompatibleTransformType type, ItemStack itemStack) {
 		
 		Item item = itemStack.getItem();
 		if(!(item instanceof Weapon)) {
@@ -27,7 +28,11 @@ public class LaserBeamRenderer implements CustomRenderer {
 		}
 
 		if(Tags.isLaserOn(itemStack) && (
-				type == ItemRenderType.EQUIPPED || type == ItemRenderType.EQUIPPED_FIRST_PERSON || type == ItemRenderType.ENTITY)) {
+				type == CompatibleTransformType.THIRD_PERSON_LEFT_HAND 
+				|| type == CompatibleTransformType.THIRD_PERSON_RIGHT_HAND 
+				|| type == CompatibleTransformType.FIRST_PERSON_LEFT_HAND
+				|| type == CompatibleTransformType.FIRST_PERSON_RIGHT_HAND
+				|| type == CompatibleTransformType.GROUND)) {
 			GL11.glPushMatrix();
 			GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
 			GL11.glDisable(GL11.GL_CULL_FACE);

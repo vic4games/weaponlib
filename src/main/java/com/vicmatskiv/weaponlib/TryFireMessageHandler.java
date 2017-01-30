@@ -1,13 +1,15 @@
 package com.vicmatskiv.weaponlib;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
+import com.vicmatskiv.weaponlib.compatibility.CompatibleMessage;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageHandler;
+
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import cpw.mods.fml.common.network.simpleimpl.IMessage;
-import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
-import cpw.mods.fml.common.network.simpleimpl.MessageContext;
-import cpw.mods.fml.relauncher.Side;
 
-public class TryFireMessageHandler implements IMessageHandler<TryFireMessage, IMessage> {
+public class TryFireMessageHandler implements CompatibleMessageHandler<TryFireMessage, CompatibleMessage> {
 	
 	private FireManager fireManager;
 
@@ -16,18 +18,20 @@ public class TryFireMessageHandler implements IMessageHandler<TryFireMessage, IM
 	}
 
 	@Override
-	public IMessage onMessage(TryFireMessage message, MessageContext ctx) {
-		EntityPlayer player = null;
-		if(ctx.side == Side.SERVER) {
-			player = ctx.getServerHandler().playerEntity;
-			ItemStack itemStack = player.getHeldItem();
+	public <T extends CompatibleMessage> T onCompatibleMessage(TryFireMessage message, CompatibleMessageContext ctx) {
+		if(ctx.isServerSide()) {
+			EntityPlayer player = ctx.getPlayer();
+			ItemStack itemStack = compatibility.getHeldItemMainHand(player);
 			if(itemStack != null && itemStack.getItem() instanceof Weapon) {
 				if(message.isOn()) {
-					fireManager.tryFire(player, itemStack);
+					ctx.runInMainThread(() -> {
+						fireManager.tryFire(player, itemStack);
+					});
 				} else {
-					fireManager.tryStopFire(player, itemStack);
+					ctx.runInMainThread(() -> {
+						fireManager.tryStopFire(player, itemStack);
+					});
 				}
-				
 			}
 		}
 		

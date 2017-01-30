@@ -3,22 +3,28 @@ package com.vicmatskiv.weaponlib;
 import java.util.List;
 import java.util.function.Predicate;
 
+import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult;
+
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
 
 public class WorldHelper {
-
-	public static Block getBlockAtPosition(World world, MovingObjectPosition position) {
-		return world.getBlock(position.blockX, position.blockY, position.blockZ);
+	
+	public static boolean consumeInventoryItem(InventoryPlayer inventoryPlayer, Item item) {
+		return inventoryPlayer.consumeInventoryItem(item);
 	}
 
-	public static void destroyBlock(World world, MovingObjectPosition position) {
-		world.func_147480_a(position.blockX, position.blockY, position.blockZ, true);
+	public static Block getBlockAtPosition(World world, /*MovingObjectPosition*/ CompatibleRayTraceResult position) {
+		return world.getBlock(position.getBlockPosX(), position.getBlockPosY(), position.getBlockPosZ());
+	}
+
+	public static void destroyBlock(World world, /*MovingObjectPosition*/ CompatibleRayTraceResult position) {
+		world.func_147480_a(position.getBlockPosX(), position.getBlockPosY(), position.getBlockPosZ(), true);
 	}
 	
 	public static boolean isGlassBlock(Block block) {

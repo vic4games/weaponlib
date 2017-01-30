@@ -1,22 +1,21 @@
 package com.vicmatskiv.weaponlib;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import cpw.mods.fml.client.registry.RenderingRegistry;
-import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.common.ObfuscationReflectionHelper;
-import cpw.mods.fml.common.network.simpleimpl.MessageContext;
-import cpw.mods.fml.common.network.simpleimpl.SimpleNetworkWrapper;
-import cpw.mods.fml.common.registry.EntityRegistry;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderingRegistry;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
-import net.minecraftforge.client.IItemRenderer;
-import net.minecraftforge.client.MinecraftForgeClient;
-import net.minecraftforge.common.MinecraftForge;
 
 public class ClientModContext extends CommonModContext {
 
@@ -24,20 +23,25 @@ public class ClientModContext extends CommonModContext {
 	private Lock mainLoopLock = new ReentrantLock();
 	private int modEntityID;
 	private WeaponClientStorageManager weaponClientStorageManager;
+	private Queue<Runnable> runInClientThreadQueue = new LinkedBlockingQueue<>();
+	
+	private CompatibleRenderingRegistry rendererRegistry;
 	
 	@Override
-	public void init(Object mod, SimpleNetworkWrapper channel) {
-		super.init(mod, channel);
+	public void init(Object mod, String modId, CompatibleChannel channel) {
+		super.init(mod, modId, channel);
 		
-		List<IResourcePack> defaultResourcePacks = ObfuscationReflectionHelper.getPrivateValue(
+		rendererRegistry = new CompatibleRenderingRegistry(modId);
+
+		List<IResourcePack> defaultResourcePacks = compatibility.getPrivateValue(
 				Minecraft.class, Minecraft.getMinecraft(), "defaultResourcePacks", "field_110449_ao") ; 
         defaultResourcePacks.add(new WeaponResourcePack()) ;
    
         this.weaponClientStorageManager = new WeaponClientStorageManager();
 		SafeGlobals safeGlobals = new SafeGlobals();
 		
-		MinecraftForge.EVENT_BUS.register(new CustomGui(Minecraft.getMinecraft(), attachmentManager));
-		MinecraftForge.EVENT_BUS.register(new WeaponEventHandler(safeGlobals));
+		compatibility.registerWithEventBus(new CustomGui(Minecraft.getMinecraft(), attachmentManager));
+		compatibility.registerWithEventBus(new WeaponEventHandler(safeGlobals));
 		
 		KeyBindings.init();	
 
@@ -48,29 +52,30 @@ public class ClientModContext extends CommonModContext {
 		}));
 		
 		clientWeaponTicker.start();
-		clientEventHandler = new ClientEventHandler(mainLoopLock, safeGlobals);
-		FMLCommonHandler.instance().bus().register(clientEventHandler);
+		clientEventHandler = new ClientEventHandler(this, mainLoopLock, safeGlobals, runInClientThreadQueue);
+		compatibility.registerWithFmlEventBus(clientEventHandler);
 		
-		EntityRegistry.registerModEntity(WeaponSpawnEntity.class, "Ammo" + modEntityID, modEntityID++, mod, 64, 10, true);
-		RenderingRegistry.registerEntityRenderingHandler(WeaponSpawnEntity.class, new SpawnEntityRenderer());
+		compatibility.registerRenderingRegistry(rendererRegistry);
 		
+		compatibility.registerModEntity(WeaponSpawnEntity.class, "Ammo" + modEntityID, modEntityID++, mod, 64, 10, true);
+		
+		rendererRegistry.registerEntityRenderingHandler(WeaponSpawnEntity.class, new SpawnEntityRenderer());
 	}
 	
 	@Override
-	public void registerWeapon(String name, Weapon weapon, IItemRenderer renderer) {
+	public void registerWeapon(String name, Weapon weapon, WeaponRenderer renderer) {
 		super.registerWeapon(name, weapon, renderer);
-		MinecraftForgeClient.registerItemRenderer(weapon, renderer);
-
+		rendererRegistry.register(weapon, weapon.getName(), weapon.getRenderer());
 	}
 	
 	@Override
-	public void registerRenderableItem(String name, Item item, IItemRenderer renderer) {
+	public void registerRenderableItem(String name, Item item, Object renderer) {
 		super.registerRenderableItem(name, item, renderer);
-		MinecraftForgeClient.registerItemRenderer(item, renderer);
+		rendererRegistry.register(item, name, renderer);
 	}
 	
 	@Override
-	protected EntityPlayer getPlayer(MessageContext ctx) {
+	protected EntityPlayer getPlayer(CompatibleMessageContext ctx) {
 		return Minecraft.getMinecraft().thePlayer;
 	}
 	
@@ -82,6 +87,11 @@ public class ClientModContext extends CommonModContext {
 		} finally {
 			mainLoopLock.unlock();
 		}
+	}
+	
+	@Override
+	public void runInMainThread(Runnable runnable) {
+		runInClientThreadQueue.add(runnable);
 	}
 	
 	@Override

@@ -1,11 +1,14 @@
 package com.vicmatskiv.weaponlib;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import com.vicmatskiv.weaponlib.Weapon.State;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.entity.Entity;
@@ -45,11 +48,13 @@ public class ItemMagazine extends ItemAttachment<Weapon> implements Part {
 		}
 		
 		@Override
-		protected ItemAttachment<Weapon> createAttachment() {
+		protected ItemAttachment<Weapon> createAttachment(ModContext modContext) {
 			ItemMagazine magazine = new ItemMagazine(modId, model, textureName, ammo);
 			magazine.reloadingTimeout = reloadingTimeout;
 			magazine.compatibleBullets = new ArrayList<>(compatibleBullets);
-			magazine.reloadSound = modId + ":" + reloadSound;
+			if(reloadSound != null) {
+				magazine.reloadSound = modContext.registerSound(reloadSound);
+			}
 			return magazine;
 		}
 	}
@@ -59,7 +64,7 @@ public class ItemMagazine extends ItemAttachment<Weapon> implements Part {
 	private int ammo;
 	private long reloadingTimeout;
 	private List<ItemBullet> compatibleBullets;
-	private String reloadSound;
+	private CompatibleSound reloadSound;
 
 	public ItemMagazine(String modId, ModelBase model, String textureName, int ammo) {
 		this(modId, model, textureName, ammo, null, null);
@@ -80,8 +85,8 @@ public class ItemMagazine extends ItemAttachment<Weapon> implements Part {
 	}
 	
 	private void ensureItemStack(ItemStack itemStack) {
-		if (itemStack.stackTagCompound == null) {
-			itemStack.stackTagCompound = new NBTTagCompound();
+		if (compatibility.getTagCompound(itemStack) == null) {
+			compatibility.setTagCompound(itemStack, new NBTTagCompound());
 			Tags.setAmmo(itemStack, ammo);
 		}
 	}
@@ -91,12 +96,11 @@ public class ItemMagazine extends ItemAttachment<Weapon> implements Part {
 		ensureItemStack(stack);
 		super.onCreated(stack, p_77622_2_, p_77622_3_);
 	}
-	
+
 	@Override
-	public boolean onItemUseFirst(ItemStack stack, EntityPlayer player, World world, int x, int y, int z, int side,
-			float hitX, float hitY, float hitZ) {
+	public boolean onItemUseFirst(ItemStack stack, EntityPlayer player, World world) {
 		ensureItemStack(stack);
-		return super.onItemUseFirst(stack, player, world, x, y, z, side, hitX, hitY, hitZ);
+		return super.onItemUseFirst(stack, player, world);
 	}
 	
 	@Override
@@ -119,7 +123,7 @@ public class ItemMagazine extends ItemAttachment<Weapon> implements Part {
 		return ammo;
 	}
 
-	public String getReloadSound() {
+	public CompatibleSound getReloadSound() {
 		return reloadSound;
 	}
 

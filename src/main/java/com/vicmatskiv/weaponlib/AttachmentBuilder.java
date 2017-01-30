@@ -1,18 +1,18 @@
 package com.vicmatskiv.weaponlib;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import com.vicmatskiv.weaponlib.ItemAttachment.ApplyHandler;
+
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-
-import com.vicmatskiv.weaponlib.ItemAttachment.ApplyHandler;
-
-import cpw.mods.fml.common.registry.GameRegistry;
 
 public class AttachmentBuilder<T> {
 	protected String name;
@@ -36,6 +36,7 @@ public class AttachmentBuilder<T> {
 	private CustomRenderer postRenderer;
 	private List<Tuple<ModelBase, String>> texturedModels = new ArrayList<>();
 	private boolean isRenderablePart;
+	
 	
 	public AttachmentBuilder<T> withCategory(AttachmentCategory attachmentCategory) {
 		this.attachmentCategory = attachmentCategory;
@@ -128,6 +129,7 @@ public class AttachmentBuilder<T> {
 		return this;
 	}
 	
+
 	public AttachmentBuilder<T> withApply(ApplyHandler<T> apply) {
 		this.apply = apply;
 		return this;
@@ -138,15 +140,15 @@ public class AttachmentBuilder<T> {
 		return this;
 	} 
 	
-	protected ItemAttachment<T> createAttachment() {
+	protected ItemAttachment<T> createAttachment(ModContext modContext) {
 		return new ItemAttachment<T>(
-				modId, attachmentCategory, /*model, textureName, */ crosshair, 
+				modId, attachmentCategory, crosshair, 
 				apply, remove);
 	}
 	
 	@SuppressWarnings("deprecation")
 	public ItemAttachment<T> build(ModContext modContext) {
-		ItemAttachment<T> attachment = createAttachment();
+		ItemAttachment<T> attachment = createAttachment(modContext);
 		attachment.setUnlocalizedName(modId + "_" + name); 
 		attachment.setCreativeTab(tab);
 		attachment.setPostRenderer(postRenderer);
@@ -170,26 +172,27 @@ public class AttachmentBuilder<T> {
 		
 		texturedModels.forEach(tm -> attachment.addModel(tm.getU(), tm.getV()));
 		
-		if(model != null || !texturedModels.isEmpty()) {
-			StaticModelSourceRenderer renderer = new StaticModelSourceRenderer.Builder()
-					.withEntityPositioning(entityPositioning)
-					.withFirstPersonPositioning(firstPersonPositioning)
-					.withThirdPersonPositioning(thirdPersonPositioning)
-					.withInventoryPositioning(inventoryPositioning)
-					.withEntityModelPositioning(entityModelPositioning)
-					.withFirstPersonModelPositioning(firstPersonModelPositioning)
-					.withThirdPersonModelPositioning(thirdPersonModelPositioning)
-					.withInventoryModelPositioning(inventoryModelPositioning)
-					.withModId(modId)
-					.build();
-			
-			modContext.registerRenderableItem(name, attachment, renderer);
-		} else {
-			GameRegistry.registerItem(attachment, name);
+		if((model != null || !texturedModels.isEmpty())) {
+			modContext.registerRenderableItem(name, attachment, compatibility.isClientSide() ? registerRenderer(attachment) : null);
 		}
 		
 		return attachment;
 	}
+	
+	private Object registerRenderer(ItemAttachment<T> attachment) {
+		return new StaticModelSourceRenderer.Builder()
+		.withEntityPositioning(entityPositioning)
+		.withFirstPersonPositioning(firstPersonPositioning)
+		.withThirdPersonPositioning(thirdPersonPositioning)
+		.withInventoryPositioning(inventoryPositioning)
+		.withEntityModelPositioning(entityModelPositioning)
+		.withFirstPersonModelPositioning(firstPersonModelPositioning)
+		.withThirdPersonModelPositioning(thirdPersonModelPositioning)
+		.withInventoryModelPositioning(inventoryModelPositioning)
+		.withModId(modId)
+		.build();
+	}
+
 
 	private static String stripFileExtension(String str, String extension) {
 		return str.endsWith(extension) ? str.substring(0, str.length() - 4) : str;

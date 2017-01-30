@@ -1,9 +1,10 @@
 package com.vicmatskiv.weaponlib;
 
-import io.netty.buffer.ByteBuf;
-import cpw.mods.fml.common.network.simpleimpl.IMessage;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleMessage;
 
-public class TryFireMessage implements IMessage {
+import io.netty.buffer.ByteBuf;
+
+public class TryFireMessage implements CompatibleMessage {
 
 	private boolean on;
 

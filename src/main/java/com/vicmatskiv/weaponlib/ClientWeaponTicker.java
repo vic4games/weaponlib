@@ -1,11 +1,11 @@
 package com.vicmatskiv.weaponlib;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.lwjgl.input.Mouse;
 
-import cpw.mods.fml.client.FMLClientHandler;
-import net.minecraft.client.entity.EntityClientPlayerMP;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 
@@ -34,7 +34,7 @@ class ClientWeaponTicker extends Thread {
 		while(running.get()) {
 			try {
 				Weapon currentWeapon = getCurrentWeapon();
-				EntityClientPlayerMP player = FMLClientHandler.instance().getClientPlayerEntity();
+				EntityPlayer player = compatibility.getClientPlayer();
 
 				if(Mouse.isCreated() && Mouse.isButtonDown(0)) {
 					// Capture the current item index
@@ -63,24 +63,19 @@ class ClientWeaponTicker extends Thread {
 		}
 	}
 	
-	private void update(EntityClientPlayerMP player) {
-		//currentWeapon.tick(player);
-		reloadManager.update(player.getHeldItem(), player);
-		fireManager.update(player.getHeldItem(), player);
+	private void update(EntityPlayer player) {
+		reloadManager.update(compatibility.getHeldItemMainHand(player), player);
+		fireManager.update(compatibility.getHeldItemMainHand(player), player);
 	}
 
 	private boolean isInteracting() {
 		return false;
-		/*
-		MovingObjectPosition object = safeGlobals.objectMouseOver.get();
-		return object.typeOfHit == MovingObjectType.BLOCK || object.typeOfHit == MovingObjectType.ENTITY;
-		*/
 	}
 	
 	private Weapon getCurrentWeapon() {
-		EntityPlayer clientPlayerEntity = FMLClientHandler.instance().getClientPlayerEntity();
-		if(clientPlayerEntity == null) return null;
-		ItemStack heldItem = clientPlayerEntity.getHeldItem();
+		EntityPlayer player = compatibility.getClientPlayer();
+		if(player == null) return null;
+		ItemStack heldItem = compatibility.getHeldItemMainHand(player);
 		return heldItem != null && heldItem.getItem() instanceof Weapon ? (Weapon) heldItem.getItem() : null;
 	}
 }

@@ -4,12 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
+import com.vicmatskiv.weaponlib.compatibility.CompatibleItem;
+
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
-public class ItemAttachment<T> extends Item implements ModelSource {
+public class ItemAttachment<T> extends CompatibleItem implements ModelSource {
 
 	private AttachmentCategory category;
 	private String crosshair;
@@ -50,6 +52,9 @@ public class ItemAttachment<T> extends Item implements ModelSource {
 		this.remove = remove;
 	}
 	
+	public Item setTextureName(String name) {
+		return this;
+	}
 	
 	public Part getRenderablePart() {
 		return renderablePart;

@@ -1,14 +1,14 @@
 package com.vicmatskiv.weaponlib;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
 import org.lwjgl.input.Keyboard;
 
-import cpw.mods.fml.client.registry.ClientRegistry;
 import net.minecraft.client.settings.KeyBinding;
 
 public class KeyBindings {
 
 	public static KeyBinding reloadKey;
-	//public static KeyBinding unloadKey;
 	public static KeyBinding attachmentKey;
 	public static KeyBinding upArrowKey;
 	public static KeyBinding downArrowKey;
@@ -39,12 +39,12 @@ public class KeyBindings {
 		rightArrowKey = new KeyBinding("key.texture_change", Keyboard.KEY_RIGHT,
 				"key.categories.weaponlib");
 		
-		ClientRegistry.registerKeyBinding(reloadKey);
-		ClientRegistry.registerKeyBinding(attachmentKey);
-		ClientRegistry.registerKeyBinding(upArrowKey);
-		ClientRegistry.registerKeyBinding(downArrowKey);
-		ClientRegistry.registerKeyBinding(leftArrowKey);
-		ClientRegistry.registerKeyBinding(rightArrowKey);
-		ClientRegistry.registerKeyBinding(laserSwitchKey);
+		compatibility.registerKeyBinding(reloadKey);
+		compatibility.registerKeyBinding(attachmentKey);
+		compatibility.registerKeyBinding(upArrowKey);
+		compatibility.registerKeyBinding(downArrowKey);
+		compatibility.registerKeyBinding(leftArrowKey);
+		compatibility.registerKeyBinding(rightArrowKey);
+		compatibility.registerKeyBinding(laserSwitchKey);
 	}
 }

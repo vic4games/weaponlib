@@ -1,11 +1,13 @@
 package com.vicmatskiv.weaponlib;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
 import java.util.Random;
+
+import com.vicmatskiv.weaponlib.Weapon.State;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-
-import com.vicmatskiv.weaponlib.Weapon.State;
 
 public class FireManager {
 	
@@ -20,7 +22,7 @@ public class FireManager {
 	}
 
 	void clientTryFire(EntityPlayer player) {
-		ItemStack itemStack = player.getHeldItem();
+		ItemStack itemStack = compatibility.getHeldItemMainHand(player);
 		if(!(itemStack.getItem() instanceof Weapon)) {
 			return;
 		}
@@ -34,7 +36,7 @@ public class FireManager {
 				storage.setEjectSpentRoundStartedAt(System.currentTimeMillis());
 				storage.setState(State.EJECT_SPENT_ROUND);
 				modContext.runSyncTick(() -> {
-					player.playSound(weapon.builder.ejectSpentRoundSound, 1F, 1F);
+					compatibility.playSound(player, weapon.getEjectSpentRoundSound(), 1F, 1F);
 				});
 			}
 			return;
@@ -48,12 +50,14 @@ public class FireManager {
 				&& storage.getCurrentAmmo().getAndAccumulate(0, (current, ignore) -> current > 0 ? current - 1 : 0) > 0) {
 			
 			storage.setState(State.SHOOTING);
-			modContext.getChannel().sendToServer(new TryFireMessage(true));
-			ItemStack heldItem = player.getHeldItem();
 			
+			modContext.getChannel().getChannel().sendToServer(new TryFireMessage(true));
+			ItemStack heldItem = compatibility.getHeldItemMainHand(player);
+
 			modContext.runSyncTick(() -> {
-				player.playSound(modContext.getAttachmentManager().isSilencerOn(heldItem) ? weapon.builder.silencedShootSound : weapon.builder.shootSound, 1F, 1F);
+				compatibility.playSound(player, modContext.getAttachmentManager().isSilencerOn(heldItem) ? weapon.getSilencedShootSound() : weapon.getShootSound(), 1F, 1F);
 			});
+
 			
 			player.rotationPitch = player.rotationPitch - storage.getRecoil();						
 			float rotationYawFactor = -1.0f + random.nextFloat() * 2.0f;
@@ -61,7 +65,7 @@ public class FireManager {
 			
 			if(weapon.builder.flashIntensity > 0) {
 				EffectManager.getInstance().spawnFlashParticle(player, weapon.builder.flashIntensity,
-						Weapon.isZoomed(itemStack) ? FLASH_X_OFFSET_ZOOMED : FLASH_X_OFFSET_NORMAL);
+						Weapon.isZoomed(player, itemStack) ? FLASH_X_OFFSET_ZOOMED : FLASH_X_OFFSET_NORMAL);
 			}
 			
 			EffectManager.getInstance().spawnSmokeParticle(player);
@@ -77,17 +81,19 @@ public class FireManager {
 		if(!(itemStack.getItem() instanceof Weapon)) {
 			return;
 		}
+
 		Weapon weapon = (Weapon) itemStack.getItem();
 		int currentAmmo = Tags.getAmmo(itemStack);
 		if(currentAmmo > 0) {
-			if(!Weapon.isZoomed(itemStack)) {
+			if(!Weapon.isZoomed(player, itemStack)) {
 				Tags.setAimed(itemStack, true);
 			}
 			Tags.setAmmo(itemStack, currentAmmo - 1);
 			for(int i = 0; i < weapon.builder.pellets; i++) {
-				player.worldObj.spawnEntityInWorld(weapon.builder.spawnEntityWith.apply(weapon, player));
+				WeaponSpawnEntity spawnEntity = weapon.builder.spawnEntityWith.apply(weapon, player);
+				player.worldObj.spawnEntityInWorld(spawnEntity);
 			}
-			player.worldObj.playSoundToNearExcept(player, modContext.getAttachmentManager().isSilencerOn(itemStack) ? weapon.builder.silencedShootSound : weapon.builder.shootSound, 1.0F, 1.0F);
+			compatibility.playSoundToNearExcept(player, modContext.getAttachmentManager().isSilencerOn(itemStack) ? weapon.getSilencedShootSound() : weapon.getShootSound(), 1.0F, 1.0F);
 		} else {
 			System.err.println("Invalid state: attempted to fire a weapon without ammo");
 		}
@@ -97,13 +103,13 @@ public class FireManager {
 		if(!(itemStack.getItem() instanceof Weapon)) {
 			return;
 		}
-		if(!Weapon.isZoomed(itemStack)) {
+		if(!Weapon.isZoomed(player, itemStack)) {
 			Tags.setAimed(itemStack, false);
 		}
 	}
 
 	void clientTryStopFire(EntityPlayer player) {
-		ItemStack itemStack = player.getHeldItem();
+		ItemStack itemStack = compatibility.getHeldItemMainHand(player);
 		if(!(itemStack.getItem() instanceof Weapon)) {
 			return;
 		}
@@ -118,23 +124,24 @@ public class FireManager {
 			} else {
 				storage.setState(State.READY);
 			}
-//			if(storage.getLastShotFiredAt() + weapon.builder.pumpTimeoutMilliseconds <= System.currentTimeMillis()) {
-//				storage.setState(State.READY);
-//			} else {
-//				storage.setState(State.EJECT_SPENT_ROUND_REQUIRED);
-//			}
-			modContext.getChannel().sendToServer(new TryFireMessage(false));
+			
+			modContext.runInMainThread(() -> {
+				modContext.getChannel().getChannel().sendToServer(new TryFireMessage(false));
+			});
 		}
 	}
 
 	void update(ItemStack itemStack, EntityPlayer player) {
-		Weapon weapon = (Weapon) itemStack.getItem();
-		WeaponClientStorage storage = modContext.getWeaponClientStorageManager().getWeaponClientStorage(player, weapon);
-		if(storage == null) return;
-		
-		if(storage.getState() == State.EJECT_SPENT_ROUND && storage.getEjectSpentRoundStartedAt() + weapon.builder.pumpTimeoutMilliseconds <= System.currentTimeMillis()) {
-			storage.setState(State.READY);
+		if(itemStack != null) {
+			Weapon weapon = (Weapon) itemStack.getItem();
+			WeaponClientStorage storage = modContext.getWeaponClientStorageManager().getWeaponClientStorage(player, weapon);
+			if(storage == null) return;
+			
+			if(storage.getState() == State.EJECT_SPENT_ROUND && storage.getEjectSpentRoundStartedAt() + weapon.builder.pumpTimeoutMilliseconds <= System.currentTimeMillis()) {
+				storage.setState(State.READY);
+			}
 		}
+		
 	}
 
 }

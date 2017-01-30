@@ -1,9 +1,10 @@
 package com.vicmatskiv.weaponlib;
 
+import com.vicmatskiv.weaponlib.compatibility.CompatibleTransformType;
+
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.client.IItemRenderer.ItemRenderType;
 
 public interface CustomRenderer {
 
-	public void render(ItemRenderType type, ItemStack itemStack);
+	public void render(CompatibleTransformType type, ItemStack itemStack);
 }

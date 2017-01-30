@@ -1,12 +1,14 @@
 package com.vicmatskiv.weaponlib;
 
-import cpw.mods.fml.common.network.simpleimpl.IMessage;
-import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
-import cpw.mods.fml.common.network.simpleimpl.MessageContext;
-import cpw.mods.fml.relauncher.Side;
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
+import com.vicmatskiv.weaponlib.compatibility.CompatibleMessage;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageHandler;
+
 import net.minecraft.entity.player.EntityPlayer;
 
-public class AttachmentModeMessageHandler implements IMessageHandler<AttachmentModeMessage, IMessage> {
+public class AttachmentModeMessageHandler implements CompatibleMessageHandler<AttachmentModeMessage, CompatibleMessage> {
 	
 	private AttachmentManager attachmentManager;
 
@@ -15,15 +17,14 @@ public class AttachmentModeMessageHandler implements IMessageHandler<AttachmentM
 	}
 
 	@Override
-	public IMessage onMessage(AttachmentModeMessage message, MessageContext ctx) {
-		if(ctx.side == Side.SERVER) {
-			EntityPlayer player = ctx.getServerHandler().playerEntity;
-			attachmentManager.toggleServerAttachmentSelectionMode(player.getHeldItem(), player);
+	public <T extends CompatibleMessage> T onCompatibleMessage(AttachmentModeMessage message, CompatibleMessageContext ctx) {
+		if(ctx.isServerSide()) {
+			EntityPlayer player = ctx.getPlayer();
+			ctx.runInMainThread(() -> {
+				attachmentManager.toggleServerAttachmentSelectionMode(compatibility.getHeldItemMainHand(player), player);
+			});
 		}
 		
 		return null;
 	}
-	
-	
-
 }

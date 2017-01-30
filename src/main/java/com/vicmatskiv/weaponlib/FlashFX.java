@@ -1,20 +1,20 @@
 package com.vicmatskiv.weaponlib;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
+import org.lwjgl.opengl.GL11;
+
+import com.vicmatskiv.weaponlib.compatibility.CompatibleParticle;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleTessellator;
+
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.particle.EntityFX;
-import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
-public class FlashFX extends EntityFX {
+public class FlashFX extends CompatibleParticle {
 	
 	private static final float FLASH_ALPHA_FACTOR = 0.8f;
 
 	private static final double FLASH_SCALE_FACTOR = 1.1;
 	
-	private static final String DEFAULT_PARTICLES_TEXTURE = "textures/particle/particles.png";
 	private static final String FLASH_TEXTURE = "weaponlib:/com/vicmatskiv/weaponlib/resources/flashes.png";
 		
 	private int imageIndex;
@@ -62,7 +62,7 @@ public class FlashFX extends EntityFX {
         this.prevPosZ = this.posZ;
 
         if (this.particleAge++ >= this.particleMaxAge) {
-            this.setDead();
+            this.setExpired();
         }
 
         this.moveEntity(this.motionX, this.motionY, this.motionZ);
@@ -75,30 +75,41 @@ public class FlashFX extends EntityFX {
         
         this.particleScale *= FLASH_SCALE_FACTOR;
         
-        if (this.onGround) {
+        if (isCollided()) {
             this.motionX *= 0.699999988079071D;
             this.motionZ *= 0.699999988079071D;
         }
 	}
     
     @Override
-    @SideOnly(Side.CLIENT)
-    public void renderParticle(Tessellator tesselator, float par2, float par3, float par4, float par5, float par6, float par7)
+    public void renderParticle(CompatibleTessellator tessellator, float partialTicks, float par3, float par4, float par5, float par6, float par7)
     {
-    	tesselator.draw();
     	
 		Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation(FLASH_TEXTURE));
-    	tesselator.startDrawingQuads();
-    	
-    	tesselator.setBrightness(200);
+
+		GL11.glPushMatrix();
+		GL11.glPushAttrib(GL11.GL_ENABLE_BIT);
+		
+        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+        GL11.glDepthMask(false);
+        GL11.glEnable(GL11.GL_BLEND);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        GL11.glAlphaFunc(GL11.GL_GREATER, 0.003921569F);
+
+        tessellator.startDrawingQuads();
+
+        int i = this.getBrightnessForRender(partialTicks); // or simply set it to 200?
+        int j = i >> 16 & 65535;
+        int k = i & 65535;
+        tessellator.setLightMap(j, k);
     	
         float f10 = 0.1F * this.particleScale;
 
-        float f11 = (float)(this.prevPosX + (this.posX - this.prevPosX) * (double)par2 - interpPosX);
-        float f12 = (float)(this.prevPosY + (this.posY - this.prevPosY) * (double)par2 - interpPosY);
-        float f13 = (float)(this.prevPosZ + (this.posZ - this.prevPosZ) * (double)par2 - interpPosZ);
+        float f11 = (float)(this.prevPosX + (this.posX - this.prevPosX) * (double)partialTicks - interpPosX);
+        float f12 = (float)(this.prevPosY + (this.posY - this.prevPosY) * (double)partialTicks - interpPosY);
+        float f13 = (float)(this.prevPosZ + (this.posZ - this.prevPosZ) * (double)partialTicks - interpPosZ);
         
-        tesselator.setColorRGBA_F(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha);
+        tessellator.setColorRgba(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha);
         
         /*
          *  (cU, cV)   (bU, bV)
@@ -121,14 +132,19 @@ public class FlashFX extends EntityFX {
         float dU = imageIndex * uWidth;
         float dV = 1f;
         
-        tesselator.addVertexWithUV((double)(f11 - par3 * f10 - par6 * f10), (double)(f12 - par4 * f10), (double)(f13 - par5 * f10 - par7 * f10), aU, aV); //1, 1); //(double)f7, (double)f9); // a
-        tesselator.addVertexWithUV((double)(f11 - par3 * f10 + par6 * f10), (double)(f12 + par4 * f10), (double)(f13 - par5 * f10 + par7 * f10), bU, bV); //1, 0); //(double)f7, (double)f8); // b
-        tesselator.addVertexWithUV((double)(f11 + par3 * f10 + par6 * f10), (double)(f12 + par4 * f10), (double)(f13 + par5 * f10 + par7 * f10), cU, cV); //0, 0); //(double)f6, (double)f8); // c
-        tesselator.addVertexWithUV((double)(f11 + par3 * f10 - par6 * f10), (double)(f12 - par4 * f10), (double)(f13 + par5 * f10 - par7 * f10), dU, dV); //0, 1); //(double)f6, (double)f9); // d
+        tessellator.addVertexWithUV((double)(f11 - par3 * f10 - par6 * f10), (double)(f12 - par4 * f10), (double)(f13 - par5 * f10 - par7 * f10), aU, aV); //1, 1); //(double)f7, (double)f9); // a
+        tessellator.addVertexWithUV((double)(f11 - par3 * f10 + par6 * f10), (double)(f12 + par4 * f10), (double)(f13 - par5 * f10 + par7 * f10), bU, bV); //1, 0); //(double)f7, (double)f8); // b
+        tessellator.addVertexWithUV((double)(f11 + par3 * f10 + par6 * f10), (double)(f12 + par4 * f10), (double)(f13 + par5 * f10 + par7 * f10), cU, cV); //0, 0); //(double)f6, (double)f8); // c
+        tessellator.addVertexWithUV((double)(f11 + par3 * f10 - par6 * f10), (double)(f12 - par4 * f10), (double)(f13 + par5 * f10 - par7 * f10), dU, dV); //0, 1); //(double)f6, (double)f9); // d
     	
-    	tesselator.draw();
-    	
-    	Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation(DEFAULT_PARTICLES_TEXTURE));
-    	tesselator.startDrawingQuads();
+        tessellator.draw();
+
+        GL11.glPopAttrib();
+        GL11.glPopMatrix();
+    }
+
+    @Override
+    public int getFXLayer() {
+    	return 3;
     }
 }

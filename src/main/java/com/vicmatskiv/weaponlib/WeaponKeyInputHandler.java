@@ -2,24 +2,25 @@ package com.vicmatskiv.weaponlib;
 
 import java.util.function.Function;
 
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
+
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.InputEvent;
-import cpw.mods.fml.common.network.simpleimpl.MessageContext;
-import cpw.mods.fml.common.network.simpleimpl.SimpleNetworkWrapper;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 
 public class WeaponKeyInputHandler {
 	
-	private SimpleNetworkWrapper channel;
-	private Function<MessageContext, EntityPlayer> entityPlayerSupplier;
+	private CompatibleChannel channel;
+	private Function<CompatibleMessageContext, EntityPlayer> entityPlayerSupplier;
 	private AttachmentManager attachmentManager;
 	private ReloadManager reloadManager;
 	
-	public WeaponKeyInputHandler(Function<MessageContext, EntityPlayer> entityPlayerSupplier, 
+	public WeaponKeyInputHandler(Function<CompatibleMessageContext, EntityPlayer> entityPlayerSupplier, 
 			AttachmentManager attachmentManager,
 			ReloadManager reloadManager,
-			SimpleNetworkWrapper channel) {
+			CompatibleChannel channel) {
 		this.entityPlayerSupplier = entityPlayerSupplier;
 		this.attachmentManager = attachmentManager;
 		this.reloadManager = reloadManager;
@@ -38,7 +39,7 @@ public class WeaponKeyInputHandler {
         }
         
         else if(KeyBindings.laserSwitchKey.isPressed()) {
-        	channel.sendToServer(new LaserSwitchMessage()); 
+        	channel.getChannel().sendToServer(new LaserSwitchMessage()); 
         }
         
         else if(KeyBindings.attachmentKey.isPressed()) {
@@ -50,19 +51,19 @@ public class WeaponKeyInputHandler {
         } 
         
         else if(KeyBindings.upArrowKey.isPressed()) {
-        	channel.sendToServer(new ChangeAttachmentMessage(AttachmentCategory.SCOPE)); 
+        	channel.getChannel().sendToServer(new ChangeAttachmentMessage(AttachmentCategory.SCOPE)); 
         } 
         
         else if(KeyBindings.rightArrowKey.isPressed()) {
-        	channel.sendToServer(new ChangeTextureMessage()); 
+        	channel.getChannel().sendToServer(new ChangeTextureMessage()); 
         } 
         
         else if(KeyBindings.downArrowKey.isPressed()) {
-        	channel.sendToServer(new ChangeAttachmentMessage(AttachmentCategory.GRIP)); 
+        	channel.getChannel().sendToServer(new ChangeAttachmentMessage(AttachmentCategory.GRIP)); 
         } 
         
         else if(KeyBindings.leftArrowKey.isPressed()) {
-        	channel.sendToServer(new ChangeAttachmentMessage(AttachmentCategory.SILENCER)); 
+        	channel.getChannel().sendToServer(new ChangeAttachmentMessage(AttachmentCategory.SILENCER)); 
         }
     }
 }

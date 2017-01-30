@@ -1,12 +1,12 @@
 package com.vicmatskiv.weaponlib;
 
-import io.netty.buffer.ByteBuf;
-
 import java.util.Random;
 
-import cpw.mods.fml.common.network.simpleimpl.IMessage;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleMessage;
 
-public class AttachmentModeMessage implements IMessage {
+import io.netty.buffer.ByteBuf;
+
+public class AttachmentModeMessage implements CompatibleMessage {
 
 	private int value;
 
