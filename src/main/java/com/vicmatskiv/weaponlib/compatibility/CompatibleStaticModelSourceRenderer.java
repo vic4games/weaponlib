@@ -9,7 +9,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.opengl.GL11;
 
 import com.vicmatskiv.weaponlib.ModelSource;
-import com.vicmatskiv.weaponlib.ModelSourceRenderer;
 import com.vicmatskiv.weaponlib.StaticModelSourceRenderer.Builder;
 import com.vicmatskiv.weaponlib.Tuple;
 

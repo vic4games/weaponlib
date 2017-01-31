@@ -1,11 +1,13 @@
 package com.vicmatskiv.weaponlib.compatibility;
 
 import java.util.Iterator;
+import java.util.function.Predicate;
 
 import com.vicmatskiv.weaponlib.Weapon;
 import com.vicmatskiv.weaponlib.WeaponSpawnEntity;
 import com.vicmatskiv.weaponlib.WorldHelper;
 
+import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
@@ -18,9 +20,12 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.IAttribute;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.FOVUpdateEvent;
 import net.minecraftforge.client.event.GuiOpenEvent;
@@ -39,8 +44,8 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class Compatibility1_10_2 implements Compatibility {
-	
-	private static CompatibleMathHelper mathHelper;
+
+	private static CompatibleMathHelper mathHelper = new CompatibleMathHelper();
 
 	@Override
 	public NBTTagCompound getTagCompound(ItemStack itemStack) {
@@ -88,8 +93,8 @@ public class Compatibility1_10_2 implements Compatibility {
 	public WeaponSpawnEntity getSpawnEntity(Weapon weapon, World world, EntityPlayer player, float speed,
 			float gravityVelocity, float inaccuracy, float damage, float explosionRadius,
 			Material... damageableBlockMaterials) {
-		return new WeaponSpawnEntity(weapon, player.worldObj, player, speed,
-				gravityVelocity, inaccuracy, damage, explosionRadius);
+		return new WeaponSpawnEntity(weapon, player.worldObj, player, speed, gravityVelocity, inaccuracy, damage,
+				explosionRadius);
 	}
 
 	@Override
@@ -109,7 +114,7 @@ public class Compatibility1_10_2 implements Compatibility {
 
 	@Override
 	public void playSoundToNearExcept(EntityPlayer player, CompatibleSound sound, float volume, float pitch) {
-		player.worldObj.playSound(player, player.posX, player.posY, player.posZ, sound.getSound(), 
+		player.worldObj.playSound(player, player.posX, player.posY, player.posZ, sound.getSound(),
 				player.getSoundCategory(), volume, pitch);
 
 	}
@@ -127,16 +132,19 @@ public class Compatibility1_10_2 implements Compatibility {
 	}
 
 	@Override
+	@SideOnly(Side.CLIENT)
 	public ScaledResolution getResolution(Pre event) {
 		return event.getResolution();
 	}
 
 	@Override
+	@SideOnly(Side.CLIENT)
 	public ElementType getEventType(Pre event) {
 		return event.getType();
 	}
 
 	@Override
+	@SideOnly(Side.CLIENT)
 	public ItemStack getHelmet() {
 		Iterator<ItemStack> equipmentIterator = Minecraft.getMinecraft().thePlayer.getEquipmentAndArmor().iterator();
 		return equipmentIterator.hasNext() ? equipmentIterator.next() : null;
@@ -146,7 +154,7 @@ public class Compatibility1_10_2 implements Compatibility {
 	public CompatibleVec3 getLookVec(EntityPlayer player) {
 		return new CompatibleVec3(player.getLookVec());
 	}
-	
+
 	@Override
 	@SideOnly(Side.CLIENT)
 	public void registerKeyBinding(KeyBinding key) {
@@ -155,12 +163,12 @@ public class Compatibility1_10_2 implements Compatibility {
 
 	@Override
 	public void registerWithEventBus(Object object) {
-		MinecraftForge.EVENT_BUS.register(object); 
+		MinecraftForge.EVENT_BUS.register(object);
 	}
 
 	@Override
 	public void registerWithFmlEventBus(Object object) {
-		MinecraftForge.EVENT_BUS.register(object); 
+		MinecraftForge.EVENT_BUS.register(object);
 	}
 
 	@Override
@@ -189,13 +197,14 @@ public class Compatibility1_10_2 implements Compatibility {
 	public void registerRenderingRegistry(CompatibleRenderingRegistry rendererRegistry) {
 		MinecraftForge.EVENT_BUS.register(rendererRegistry);
 	}
-	
+
 	@Override
 	public <T, E> T getPrivateValue(Class<? super E> classToAccess, E instance, String... fieldNames) {
 		return ObfuscationReflectionHelper.getPrivateValue(classToAccess, instance, fieldNames);
 	}
 
 	@Override
+	@SideOnly(Side.CLIENT)
 	public int getButton(MouseEvent event) {
 		return event.getButton();
 	}
@@ -231,12 +240,69 @@ public class Compatibility1_10_2 implements Compatibility {
 	@Override
 	@SideOnly(Side.CLIENT)
 	public void setAimed(RenderPlayer rp, boolean aimed) {
-		if (aimed) {				
+		if (aimed) {
 			rp.getMainModel().leftArmPose = ArmPose.BOW_AND_ARROW;
 			rp.getMainModel().rightArmPose = ArmPose.BOW_AND_ARROW;
 		} else {
 			rp.getMainModel().leftArmPose = ArmPose.EMPTY;
 			rp.getMainModel().rightArmPose = ArmPose.ITEM;
 		}
+	}
+
+	@Override
+	public CompatibleRayTraceResult getObjectMouseOver() {
+		return new CompatibleRayTraceResult(Minecraft.getMinecraft().objectMouseOver);
+	}
+
+	@Override
+	public Block getBlockAtPosition(World world, CompatibleRayTraceResult position) {
+		Block block = world
+				.getBlockState(new BlockPos(position.getBlockPosX(), position.getBlockPosY(), position.getBlockPosZ()))
+				.getBlock();
+		return block;
+	}
+
+	@Override
+	public void destroyBlock(World world, CompatibleRayTraceResult position) {
+		world.destroyBlock(new BlockPos(position.getBlockPosX(), position.getBlockPosY(), position.getBlockPosZ()),
+				true);
+	}
+
+	@Override
+	public boolean consumeInventoryItem(InventoryPlayer inventoryPlayer, Item item) {
+		boolean result = false;
+		for (int i = 0; i < inventoryPlayer.getSizeInventory(); i++) {
+			ItemStack stack = inventoryPlayer.getStackInSlot(i);
+			if (stack != null && stack.getItem() == item) {
+				if (--stack.stackSize <= 0) {
+					inventoryPlayer.setInventorySlotContents(i, null);
+				}
+				result = true;
+				break;
+			}
+		}
+
+		return result;
+	}
+
+	@Override
+	public ItemStack itemStackForItem(Item item, Predicate<ItemStack> condition, EntityPlayer player) {
+		ItemStack result = null;
+
+		for (int i = 0; i < player.inventory.getSizeInventory(); i++) {
+			ItemStack stack = player.inventory.getStackInSlot(i);
+			if (stack != null && stack.getItem() == item && condition.test(stack)) {
+				result = stack;
+				break;
+			}
+		}
+
+		return result;
+	}
+
+	@Override
+	public boolean isGlassBlock(Block block) {
+		return block == Blocks.GLASS || block == Blocks.GLASS_PANE || block == Blocks.STAINED_GLASS
+				|| block == Blocks.STAINED_GLASS_PANE;
 	}
 }

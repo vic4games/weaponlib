@@ -6,7 +6,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.vicmatskiv.weaponlib.ModelSourceRenderer;
 import com.vicmatskiv.weaponlib.SpawnEntityRenderer;
 import com.vicmatskiv.weaponlib.WeaponSpawnEntity;
 

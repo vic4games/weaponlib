@@ -1,8 +1,11 @@
 package com.vicmatskiv.weaponlib.compatibility;
 
+import java.util.function.Predicate;
+
 import com.vicmatskiv.weaponlib.Weapon;
 import com.vicmatskiv.weaponlib.WeaponSpawnEntity;
 
+import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
@@ -12,6 +15,7 @@ import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.ai.attributes.IAttribute;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -32,9 +36,9 @@ public interface Compatibility {
 	public IAttribute getMovementSpeedAttribute();
 	
 	public NBTTagCompound getTagCompound(ItemStack itemStack);
-
-	public void setTagCompound(ItemStack itemStack, NBTTagCompound tagCompound);
 	
+	public void setTagCompound(ItemStack itemStack, NBTTagCompound tagCompound);
+
 	public ItemStack getItemStack(ItemTossEvent event);
 	
 	public EntityPlayer getPlayer(ItemTossEvent event);
@@ -44,14 +48,14 @@ public interface Compatibility {
 	public boolean consumeInventoryItem(EntityPlayer player, Item item);
 	
 	public void ensureTagCompound(ItemStack itemStack);
+	
+	public void playSound(EntityPlayer player, CompatibleSound sound, float volume, float pitch);
+	
+	public void playSoundToNearExcept(EntityPlayer player, CompatibleSound object, float volume, float pitch);
 
 	public boolean isClientSide();
 
 	public CompatibleMathHelper getMathHelper();
-
-	public void playSound(EntityPlayer player, CompatibleSound sound, float volume, float pitch);
-	
-	public void playSoundToNearExcept(EntityPlayer player, CompatibleSound object, float volume, float pitch);
 
 	public EntityPlayer getClientPlayer();
 
@@ -97,4 +101,16 @@ public interface Compatibility {
 	public GuiScreen getGui(GuiOpenEvent event);
 
 	public void setAimed(RenderPlayer rp, boolean aimed);
+
+	public CompatibleRayTraceResult getObjectMouseOver();
+
+	public Block getBlockAtPosition(World world, CompatibleRayTraceResult position);
+
+	public void destroyBlock(World world, CompatibleRayTraceResult position);
+
+	public boolean consumeInventoryItem(InventoryPlayer inventoryPlayer, Item item);
+
+	public ItemStack itemStackForItem(Item item, Predicate<ItemStack> condition, EntityPlayer player);
+
+	public boolean isGlassBlock(Block block);
 }

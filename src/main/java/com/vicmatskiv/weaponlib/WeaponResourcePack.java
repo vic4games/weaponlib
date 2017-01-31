@@ -7,12 +7,11 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import net.minecraft.client.resources.IResourcePack;
-import net.minecraft.client.resources.data.IMetadataSection;
-import net.minecraft.client.resources.data.MetadataSerializer;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleResourcePack;
+
 import net.minecraft.util.ResourceLocation;
 
-public class WeaponResourcePack implements IResourcePack {
+public class WeaponResourcePack extends CompatibleResourcePack {
 	
 	private static final String WEAPONLIB_RESOURCE_DOMAIN = "weaponlib";
 	
@@ -32,7 +31,7 @@ public class WeaponResourcePack implements IResourcePack {
 	}
 
 	@Override
-	public Set<String> getResourceDomains() {
+	public Set<String> getCompatibleResourceDomains() {
 		return RESOURCE_DOMAINS;
 	}
 
@@ -45,11 +44,4 @@ public class WeaponResourcePack implements IResourcePack {
 	public String getPackName() {
 		return getClass().getSimpleName();
 	}
-
-	@Override
-	public <T extends IMetadataSection> T getPackMetadata(MetadataSerializer metadataSerializer,
-			String metadataSectionName) throws IOException {
-		return null;
-	}
-
 }

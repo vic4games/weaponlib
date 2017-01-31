@@ -16,10 +16,10 @@ public class CompatibleTessellator {
 	
 	private static Tessellator tessellator = Tessellator.getInstance();
 	
-	private static CompatibleTessellator compatibleTesselator = new CompatibleTessellator();
+	private static CompatibleTessellator compatibleTessellator = new CompatibleTessellator();
 
 	public static CompatibleTessellator getInstance() {
-		return compatibleTesselator;
+		return compatibleTessellator;
 	}
 	
 	private boolean hasColor; //Pay special attention to the fact this class is stateful.
@@ -35,7 +35,11 @@ public class CompatibleTessellator {
 	public void startDrawingQuads() {
 		VertexBuffer vertextBuffer = tessellator.getBuffer();
 		vertextBuffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-
+	}
+	
+	public void startDrawingLines() {
+		VertexBuffer renderer = tessellator.getBuffer();
+		renderer.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_TEX_NORMAL);
 	}
 
 	public void addVertexWithUV(double d, double e, double zLevel, double u, double v) {
@@ -69,4 +73,11 @@ public class CompatibleTessellator {
 		this.alpha = alpha;
 	}
 
+	public void addVertex(float x, float y, float z) {
+		tessellator.getBuffer().pos(x, y, z);
+	}
+
+	public void endVertex() {
+		tessellator.getBuffer().endVertex();
+	}
 }

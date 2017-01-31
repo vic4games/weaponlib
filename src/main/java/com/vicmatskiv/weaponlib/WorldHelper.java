@@ -1,5 +1,7 @@
 package com.vicmatskiv.weaponlib;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -8,77 +10,31 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class WorldHelper {
 
 	public static Block getBlockAtPosition(World world, CompatibleRayTraceResult position) {
-		Block block = world.getBlockState(new BlockPos(position.getBlockPosX(), position.getBlockPosY(),
-				position.getBlockPosZ())).getBlock();
-		return block;
+		return compatibility.getBlockAtPosition(world, position);
 	}
 
 	public static void destroyBlock(World world, CompatibleRayTraceResult position) {
-		world.destroyBlock(new BlockPos(position.getBlockPosX(), position.getBlockPosY(),
-				position.getBlockPosZ()), true);
+		compatibility.destroyBlock(world, position);
 	}
-
+	
 	public static boolean isGlassBlock(Block block) {
-		return block == Blocks.GLASS || block == Blocks.GLASS_PANE || block == Blocks.STAINED_GLASS || block == Blocks.STAINED_GLASS_PANE;
+		return compatibility.isGlassBlock(block);
 	}
 
-	public static boolean consumeInventoryItem(InventoryPlayer inventoryPlayer, Item itemIn)
-	{
-		boolean result = false;
-		for(int i = 0; i < inventoryPlayer.getSizeInventory(); i++) {
-			ItemStack stack = inventoryPlayer.getStackInSlot(i);
-			if(stack != null && stack.getItem() == itemIn) {
-				if (--stack.stackSize <= 0)
-	            {
-					inventoryPlayer.setInventorySlotContents(i, null);
-	            }
-				result = true;
-				break;
-			}
-		}
-		
-		return result;
+	public static boolean consumeInventoryItem(InventoryPlayer inventoryPlayer, Item item) {
+		return compatibility.consumeInventoryItem(inventoryPlayer, item);
 	}
 
 	static ItemStack itemStackForItem(Item item, Predicate<ItemStack> condition, EntityPlayer player) {
-	    ItemStack result = null;
-		
-		for(int i = 0; i < player.inventory.getSizeInventory(); i++) {
-			ItemStack stack = player.inventory.getStackInSlot(i);
-			if (stack != null && stack.getItem() == item
-	        		&& condition.test(stack)) {
-	            result = stack;
-	            break;
-	        }
-		}
-	
-	    return result;
+	    return compatibility.itemStackForItem(item, condition, player);
 	}
-	
-
-//	static ItemStack consumeInventoryItem(Item item, Predicate<ItemStack> condition, EntityPlayer player)
-//	{
-//		ItemStack result = null;
-//		for(int i = 0; i < player.inventory.getSizeInventory(); i++) {
-//			ItemStack stack = player.inventory.getStackInSlot(i);
-//			if(stack != null && stack.getItem() == item && condition.test(stack)) {
-//				if (--stack.stackSize <= 0) {
-//					player.inventory.setInventorySlotContents(i, null);
-//	            }
-//				result = stack;
-//				break;
-//			}
-//		}
-//	}
 	
 	private static int itemSlotIndex(Item item, Predicate<ItemStack> condition, EntityPlayer player) {
 	    for (int i = 0; i < player.inventory.mainInventory.length; ++i) {

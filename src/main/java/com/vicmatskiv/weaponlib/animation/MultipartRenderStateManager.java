@@ -179,7 +179,7 @@ public class MultipartRenderStateManager<State, Part, Context> {
 				currentMatrix = new Matrix4f();
 				currentMatrix.load(buf); 
 			}
-						
+
 			Matrix4f m1 = scale(beforeMatrix, 1 - progress); //start * (1 - progress)
 			Matrix4f m2 = scale(afterMatrix, progress);
 			
@@ -226,9 +226,7 @@ public class MultipartRenderStateManager<State, Part, Context> {
 		private Matrix4f getMatrixForPositioning(MultipartTransition<Part, Context> transition, Part part, Context context) {
 			GL11.glPushMatrix();
 			GL11.glMatrixMode(GL11.GL_MODELVIEW);
-			//if(part != mainPart) {
-				GL11.glLoadIdentity();
-			//}
+			GL11.glLoadIdentity();
 			FloatBuffer buf = BufferUtils.createFloatBuffer(16);
 			transition.position(part, context);
 			GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, buf);
