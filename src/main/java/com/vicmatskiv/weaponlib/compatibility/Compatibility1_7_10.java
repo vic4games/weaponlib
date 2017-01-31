@@ -1,5 +1,7 @@
 package com.vicmatskiv.weaponlib.compatibility;
 
+import java.util.function.Predicate;
+
 import com.vicmatskiv.weaponlib.Weapon;
 import com.vicmatskiv.weaponlib.WeaponSpawnEntity;
 
@@ -11,6 +13,7 @@ import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
@@ -22,6 +25,8 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.IAttribute;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -140,16 +145,19 @@ public class Compatibility1_7_10 implements Compatibility {
 	}
 
 	@Override
+	@SideOnly(Side.CLIENT)
 	public ScaledResolution getResolution(Pre event) {
 		return event.resolution;
 	}
 
 	@Override
+	@SideOnly(Side.CLIENT)
 	public ElementType getEventType(Pre event) {
 		return event.type;
 	}
 
 	@Override
+	@SideOnly(Side.CLIENT)
 	public ItemStack getHelmet() {
 		return Minecraft.getMinecraft().thePlayer.getEquipmentInSlot(4);
 	}
@@ -212,16 +220,19 @@ public class Compatibility1_7_10 implements Compatibility {
 	}
 
 	@Override
+	@SideOnly(Side.CLIENT)
 	public EntityPlayer getEntity(FOVUpdateEvent event) {
 		return event.entity;
 	}
 
 	@Override
+	@SideOnly(Side.CLIENT)
 	public EntityLivingBase getEntity(RenderLivingEvent.Pre event) {
 		return event.entity;
 	}
 
 	@Override
+	@SideOnly(Side.CLIENT)
 	public void setNewFov(FOVUpdateEvent event, float fov) {
 		event.newfov = fov;
 	}
@@ -233,12 +244,55 @@ public class Compatibility1_7_10 implements Compatibility {
 	}
 
 	@Override
+	@SideOnly(Side.CLIENT)
 	public GuiScreen getGui(GuiOpenEvent event) {
 		return event.gui;
 	}
 
 	@Override
+	@SideOnly(Side.CLIENT)
 	public void setAimed(RenderPlayer rp, boolean aimed) {
 		rp.modelBipedMain.aimedBow = aimed;
+	}
+
+	@Override
+	public CompatibleRayTraceResult getObjectMouseOver() {
+		return new CompatibleRayTraceResult(Minecraft.getMinecraft().objectMouseOver);
+	}
+
+	@Override
+	public boolean consumeInventoryItem(InventoryPlayer inventoryPlayer, Item item) {
+		return inventoryPlayer.consumeInventoryItem(item);
+	}
+
+	@Override
+	public Block getBlockAtPosition(World world, CompatibleRayTraceResult position) {
+		return world.getBlock(position.getBlockPosX(), position.getBlockPosY(), position.getBlockPosZ());
+	}
+
+	@Override
+	public void destroyBlock(World world, CompatibleRayTraceResult position) {
+		world.func_147480_a(position.getBlockPosX(), position.getBlockPosY(), position.getBlockPosZ(), true);
+	}
+
+	@Override
+	public ItemStack itemStackForItem(Item item, Predicate<ItemStack> condition, EntityPlayer player) {
+		ItemStack result = null;
+		for (int i = 0; i < player.inventory.mainInventory.length; ++i) {
+	        if (player.inventory.mainInventory[i] != null 
+	        		&& player.inventory.mainInventory[i].getItem() == item
+	        		&& condition.test(player.inventory.mainInventory[i])) {
+	            result = player.inventory.mainInventory[i];
+	            break;
+	        }
+	    }
+	
+	    return result;
+	}
+
+	@Override
+	public boolean isGlassBlock(Block block) {
+		return block == Blocks.glass || block == Blocks.glass_pane || block == Blocks.stained_glass 
+				|| block == Blocks.stained_glass_pane;
 	}
 }

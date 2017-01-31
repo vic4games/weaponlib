@@ -73,7 +73,7 @@ public class CommonModContext implements ModContext {
 		channel.registerMessage(new LaserSwitchMessageHandler(),
 				LaserSwitchMessage.class, 13, CompatibleSide.CLIENT);
 		
-		compatibility.registerWithEventBus(attachmentManager);
+		compatibility.registerWithEventBus(new ServerEventHandler(attachmentManager));
 		
 		compatibility.registerWithFmlEventBus(new WeaponKeyInputHandler((ctx) -> getPlayer(ctx), 
 				attachmentManager, reloadManager, channel));

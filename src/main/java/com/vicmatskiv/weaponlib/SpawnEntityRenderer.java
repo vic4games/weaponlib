@@ -1,6 +1,5 @@
 package com.vicmatskiv.weaponlib;
 
-
 import org.lwjgl.opengl.GL11;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleEntityRenderer;

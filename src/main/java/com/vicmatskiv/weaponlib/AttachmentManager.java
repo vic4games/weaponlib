@@ -8,11 +8,9 @@ import java.util.List;
 
 import com.vicmatskiv.weaponlib.Weapon.State;
 
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.event.entity.item.ItemTossEvent;
 
 public final class AttachmentManager {
 	
@@ -24,19 +22,6 @@ public final class AttachmentManager {
 	
 	AttachmentManager(ModContext modContext) {
 		this.modContext = modContext;
-	}
-
-	@SubscribeEvent
-	public void onItemToss(ItemTossEvent itemTossEvent) {
-		ItemStack itemStack = compatibility.getItemStack(itemTossEvent);
-		Item item = itemStack.getItem();
-		if(!(item instanceof Weapon)) {
-			return; 
-		}
-		
-		if(Weapon.isModifying(itemStack)) {
-			exitAttachmentSelectionMode(itemStack, compatibility.getPlayer(itemTossEvent));
-		}
 	}
 	
 	void toggleClientAttachmentSelectionMode(ItemStack itemStack, EntityPlayer player) {
@@ -76,7 +61,7 @@ public final class AttachmentManager {
 		
 		int selectedAttachmentIndexes[] = new int[AttachmentCategory.values.length];
 		compatibility.getTagCompound(itemStack).setIntArray(SELECTED_ATTACHMENT_INDEXES_TAG, selectedAttachmentIndexes);
-		
+
 		compatibility.getTagCompound(itemStack).setIntArray(PREVIOUSLY_SELECTED_ATTACHMENT_TAG, 
 				Arrays.copyOf(activeAttachmentsIds, activeAttachmentsIds.length));
 		
@@ -119,7 +104,6 @@ public final class AttachmentManager {
 				if(compatibleAttachment != null) {
 					activeAttachments.add(compatibleAttachment);
 				}
-				
 			}
 			
 		}

@@ -1,18 +1,19 @@
 package com.vicmatskiv.weaponlib;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
 import java.util.Queue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.common.gameevent.TickEvent;
-import cpw.mods.fml.common.gameevent.TickEvent.Phase;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleClientTickEvent;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleClientTickEvent.Phase;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
+
 import net.minecraft.client.Minecraft;
 
-public class ClientEventHandler {
-	
+public class ClientEventHandler extends CompatibleClientEventHandler {
+
 	private Lock mainLoopLock = new ReentrantLock();
 	private SafeGlobals safeGlobals;
 	private Queue<Runnable> runInClientThreadQueue;
@@ -23,15 +24,13 @@ public class ClientEventHandler {
 		this.runInClientThreadQueue = runInClientThreadQueue;
 	}
 
-	@SideOnly(Side.CLIENT)
-	@SubscribeEvent
-	public void onClientTick(TickEvent.ClientTickEvent event) {		
-		if(event.phase == Phase.START) {
+	public void onCompatibleClientTick(CompatibleClientTickEvent event) {		
+		if(event.getPhase() == Phase.START) {
 			mainLoopLock.lock();
-		} else if(event.phase == Phase.END) {
+		} else if(event.getPhase() == Phase.END) {
 			mainLoopLock.unlock();
 			processRunInClientThreadQueue();
-			safeGlobals.objectMouseOver.set(Minecraft.getMinecraft().objectMouseOver);
+			safeGlobals.objectMouseOver.set(compatibility.getObjectMouseOver());
 			if(Minecraft.getMinecraft().thePlayer != null) {
 				safeGlobals.currentItemIndex.set(Minecraft.getMinecraft().thePlayer.inventory.currentItem);
 			}

@@ -1,5 +1,7 @@
 package com.vicmatskiv.weaponlib;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -8,41 +10,30 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
 public class WorldHelper {
-	
-	public static boolean consumeInventoryItem(InventoryPlayer inventoryPlayer, Item item) {
-		return inventoryPlayer.consumeInventoryItem(item);
+
+	public static Block getBlockAtPosition(World world, CompatibleRayTraceResult position) {
+		return compatibility.getBlockAtPosition(world, position);
 	}
 
-	public static Block getBlockAtPosition(World world, /*MovingObjectPosition*/ CompatibleRayTraceResult position) {
-		return world.getBlock(position.getBlockPosX(), position.getBlockPosY(), position.getBlockPosZ());
-	}
-
-	public static void destroyBlock(World world, /*MovingObjectPosition*/ CompatibleRayTraceResult position) {
-		world.func_147480_a(position.getBlockPosX(), position.getBlockPosY(), position.getBlockPosZ(), true);
+	public static void destroyBlock(World world, CompatibleRayTraceResult position) {
+		compatibility.destroyBlock(world, position);
 	}
 	
 	public static boolean isGlassBlock(Block block) {
-		return block == Blocks.glass || block == Blocks.glass_pane || block == Blocks.stained_glass || block == Blocks.stained_glass_pane;
+		return compatibility.isGlassBlock(block);
+	}
+
+	public static boolean consumeInventoryItem(InventoryPlayer inventoryPlayer, Item item) {
+		return compatibility.consumeInventoryItem(inventoryPlayer, item);
 	}
 
 	static ItemStack itemStackForItem(Item item, Predicate<ItemStack> condition, EntityPlayer player) {
-	    ItemStack result = null;
-		for (int i = 0; i < player.inventory.mainInventory.length; ++i) {
-	        if (player.inventory.mainInventory[i] != null 
-	        		&& player.inventory.mainInventory[i].getItem() == item
-	        		&& condition.test(player.inventory.mainInventory[i])) {
-	            result = player.inventory.mainInventory[i];
-	            break;
-	        }
-	    }
-	
-	    return result;
+	    return compatibility.itemStackForItem(item, condition, player);
 	}
 	
 	private static int itemSlotIndex(Item item, Predicate<ItemStack> condition, EntityPlayer player) {
@@ -74,7 +65,6 @@ public class WorldHelper {
 			if (stackInSlot.stackSize <= 0) {
 				player.inventory.mainInventory[i] = null;
 			}
-	
 			return result;
 		}
 	}
