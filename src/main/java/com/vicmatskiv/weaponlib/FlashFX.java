@@ -96,7 +96,7 @@ public class FlashFX extends CompatibleParticle {
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
         GL11.glAlphaFunc(GL11.GL_GREATER, 0.003921569F);
 
-        tessellator.startDrawingQuads();
+        tessellator.startDrawingParticles();
 
         int i = this.getBrightnessForRender(partialTicks); // or simply set it to 200?
         int j = i >> 16 & 65535;

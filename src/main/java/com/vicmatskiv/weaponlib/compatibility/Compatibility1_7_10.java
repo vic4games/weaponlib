@@ -295,4 +295,19 @@ public class Compatibility1_7_10 implements Compatibility {
 		return block == Blocks.glass || block == Blocks.glass_pane || block == Blocks.stained_glass 
 				|| block == Blocks.stained_glass_pane;
 	}
+
+	@Override
+	public float getEffectOffsetX() {
+		return 0f;
+	}
+
+	@Override
+	public float getEffectOffsetY() {
+		return 0f;
+	}
+
+	@Override
+	public float getEffectScaleFactor() {
+		return 2.3f;
+	}
 }

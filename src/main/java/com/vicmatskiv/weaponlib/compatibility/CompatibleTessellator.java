@@ -18,6 +18,11 @@ public class CompatibleTessellator {
 		tessellator.startDrawingQuads();
 	}
 	
+
+	public void startDrawingParticles() {
+		tessellator.startDrawing(GL11.GL_QUADS);
+	}
+	
 	public void startDrawingLines() {
 		tessellator.startDrawing(GL11.GL_LINES);
 	}
@@ -46,4 +51,5 @@ public class CompatibleTessellator {
 		// TODO Auto-generated method stub
 		
 	}
+
 }

@@ -87,7 +87,7 @@ public class SmokeFX extends CompatibleParticle {
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
         GL11.glAlphaFunc(GL11.GL_GREATER, 0.003921569F);
 
-        tessellator.startDrawingQuads();
+        tessellator.startDrawingParticles();
     	
         float f10 = 0.1F * this.particleScale;
 

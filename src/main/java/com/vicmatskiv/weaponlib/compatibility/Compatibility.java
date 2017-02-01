@@ -113,4 +113,10 @@ public interface Compatibility {
 	public ItemStack itemStackForItem(Item item, Predicate<ItemStack> condition, EntityPlayer player);
 
 	public boolean isGlassBlock(Block block);
+
+	public float getEffectOffsetX();
+	
+	public float getEffectOffsetY();
+
+	public float getEffectScaleFactor();
 }
