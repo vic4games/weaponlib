@@ -37,6 +37,11 @@ public class CompatibleTessellator {
 		vertextBuffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
 	}
 	
+	public void startDrawingParticles() {
+		VertexBuffer vertextBuffer = tessellator.getBuffer();
+		vertextBuffer.begin(GL11.GL_QUADS, DefaultVertexFormats.PARTICLE_POSITION_TEX_COLOR_LMAP);
+	}
+	
 	public void startDrawingLines() {
 		VertexBuffer renderer = tessellator.getBuffer();
 		renderer.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_TEX_NORMAL);
@@ -46,11 +51,11 @@ public class CompatibleTessellator {
 		VertexBuffer vertextBuffer = tessellator.getBuffer();
 		vertextBuffer.pos(d, e, zLevel);
 		vertextBuffer.tex(u, v);
-		if(hasLightMap) {
-			vertextBuffer.lightmap(i, j);
-		}
 		if(hasColor) {
 			vertextBuffer.color(red, green, blue, alpha);
+		}
+		if(hasLightMap) {
+			vertextBuffer.lightmap(i, j);
 		}
 		vertextBuffer.endVertex();
 	}
@@ -80,4 +85,10 @@ public class CompatibleTessellator {
 	public void endVertex() {
 		tessellator.getBuffer().endVertex();
 	}
+	
+	public VertexBuffer getBuffer() { // Temporary debug only code
+		return tessellator.getBuffer();
+	}
+
+
 }

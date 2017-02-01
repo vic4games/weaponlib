@@ -12,7 +12,6 @@ import net.minecraft.item.ItemStack;
 public class FireManager {
 	
 	private static final float FLASH_X_OFFSET_ZOOMED = 0f;
-	private static final float FLASH_X_OFFSET_NORMAL = 0.1f;
 	
 	private ModContext modContext;
 	private Random random = new Random();
@@ -65,10 +64,12 @@ public class FireManager {
 			
 			if(weapon.builder.flashIntensity > 0) {
 				EffectManager.getInstance().spawnFlashParticle(player, weapon.builder.flashIntensity,
-						Weapon.isZoomed(player, itemStack) ? FLASH_X_OFFSET_ZOOMED : FLASH_X_OFFSET_NORMAL);
+						Weapon.isZoomed(player, itemStack) ? FLASH_X_OFFSET_ZOOMED : compatibility.getEffectOffsetX(),
+								compatibility.getEffectOffsetY());
 			}
 			
-			EffectManager.getInstance().spawnSmokeParticle(player);
+			EffectManager.getInstance().spawnSmokeParticle(player, compatibility.getEffectOffsetX(),
+					compatibility.getEffectOffsetY());
 			
 			storage.setLastShotFiredAt(System.currentTimeMillis());
 			
