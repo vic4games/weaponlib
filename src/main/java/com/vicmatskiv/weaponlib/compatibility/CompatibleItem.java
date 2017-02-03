@@ -30,6 +30,11 @@ public abstract class CompatibleItem extends Item {
 	protected boolean onItemUseFirst(ItemStack stack, EntityPlayer player, World world) {
 		return false;
 	}
+	
+	@Override
+	public boolean shouldCauseReequipAnimation(ItemStack oldStack, ItemStack newStack, boolean slotChanged) {
+		return true;
+	}
 
 	@Override
 	public EnumActionResult onItemUse(ItemStack stack, EntityPlayer playerIn, World worldIn, BlockPos pos,
