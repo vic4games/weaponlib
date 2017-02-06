@@ -625,12 +625,22 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 	private Map<EntityPlayer, MultipartRenderStateManager<RenderableState, Part, RenderContext>> firstPersonStateManagers;
 		
 	private MultipartTransitionProvider<RenderableState, Part, RenderContext> weaponTransitionProvider;
+	
+	protected ClientModContext clientModContext;
 			
-	private WeaponRenderer (Builder builder) {
+	private WeaponRenderer(Builder builder) {
 		super(builder);
 		this.builder = builder;
 		this.firstPersonStateManagers = new HashMap<>();
 		this.weaponTransitionProvider = new WeaponPositionProvider();
+	}
+
+	protected ClientModContext getClientModContext() {
+		return clientModContext;
+	}
+	
+	protected void setClientModContext(ClientModContext clientModContext) {
+		this.clientModContext = clientModContext;
 	}
 
 	@Override

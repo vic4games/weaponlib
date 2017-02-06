@@ -27,9 +27,14 @@ public class ClientModContext extends CommonModContext {
 	
 	private CompatibleRenderingRegistry rendererRegistry;
 	
+	private Framebuffer framebuffer;
+	
 	@Override
 	public void init(Object mod, String modId, CompatibleChannel channel) {
 		super.init(mod, modId, channel);
+		
+		this.framebuffer = new Framebuffer(200, 200, true);
+        this.framebuffer.setFramebufferColor(0.0F, 0.0F, 0.0F, 0.0F);
 		
 		rendererRegistry = new CompatibleRenderingRegistry(modId);
 
@@ -62,10 +67,15 @@ public class ClientModContext extends CommonModContext {
 		rendererRegistry.registerEntityRenderingHandler(WeaponSpawnEntity.class, new SpawnEntityRenderer());
 	}
 	
+	public Framebuffer getFramebuffer() {
+		return framebuffer;
+	}
+
 	@Override
 	public void registerWeapon(String name, Weapon weapon, WeaponRenderer renderer) {
 		super.registerWeapon(name, weapon, renderer);
 		rendererRegistry.register(weapon, weapon.getName(), weapon.getRenderer());
+		renderer.setClientModContext(this);
 	}
 	
 	@Override

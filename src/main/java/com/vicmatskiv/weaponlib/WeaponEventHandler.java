@@ -4,6 +4,9 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponEventHandler;
 
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.TickEvent;
+import cpw.mods.fml.common.gameevent.TickEvent.Phase;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.entity.player.EntityPlayer;
@@ -26,6 +29,7 @@ public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 		safeGlobals.guiOpen.set(compatibility.getGui(event) != null);
 	}
 	
+	public static float overridenFov = 1.0f;
 	@Override
 	public void compatibleZoom(FOVUpdateEvent event) {
 
@@ -33,7 +37,7 @@ public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 		if (stack != null) {
 			if (stack.getItem() instanceof Weapon) {
 				if (compatibility.getTagCompound(stack) != null) {
-					compatibility.setNewFov(event, Tags.getZoom(stack));
+					compatibility.setNewFov(event, 1f); //Tags.getZoom(stack));
 				}
 			}
 		}
@@ -70,5 +74,4 @@ public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 			}
 		}
 	}
-
 }

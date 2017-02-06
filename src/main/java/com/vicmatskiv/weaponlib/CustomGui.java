@@ -66,6 +66,63 @@ public class CustomGui extends CompatibleGui {
 			return;
 		}
 		
+//		{
+//			GL11.glClear(GL11.GL_DEPTH_BUFFER_BIT);
+//			GL11.glEnable(GL11.GL_STENCIL_TEST);
+//			GL11.glColorMask(false, false, false, false);
+//			GL11.glDepthMask(false);
+//			GL11.glStencilFunc(GL11.GL_NEVER, 1, 0xFF);
+//			GL11.glStencilOp(GL11.GL_REPLACE, GL11.GL_KEEP, GL11.GL_KEEP);  // draw 1s on test fail (always)
+//
+//    		GL11.glStencilMask(0xFF);
+//    		GL11.glClear(GL11.GL_STENCIL_BUFFER_BIT); 
+//    		  
+//			float items = 360;
+//    		float SECTORS = 10;
+//    		float RADIUS = 100;
+//			float multiplier = SECTORS / items;
+// 			GL11.glColor4f(1, 1F, 1F, 0F);
+//			GL11.glBegin(GL11.GL_TRIANGLE_FAN);
+//			float x = 100; 
+//			float y = 100;
+//			GL11.glVertex2f(x, y);
+//			for(int i = 0; i < items; i++)
+//			{
+//				for(float n = 0 + (i * multiplier); n <= (SECTORS / items) + (i * multiplier); n += 1)
+//				{
+//					float t = (float) (2 * Math.PI * (float) n / (float) SECTORS);
+//					GL11.glVertex2d(x + Math.sin(t) * RADIUS, y + Math.cos(t) * RADIUS);
+//				}
+//			}
+//			GL11.glEnd();
+//			
+//			GL11.glColorMask(true, true, true, false);
+//			GL11.glDepthMask(true);
+//			
+//			GL11.glStencilMask(0x00);
+//			  // draw where stencil's value is 0
+//			GL11.glStencilFunc(GL11.GL_EQUAL, 0, 0xFF);
+//			  /* (nothing to draw) */
+//			  // draw only where stencil's value is 1
+//			GL11.glStencilFunc(GL11.GL_EQUAL, 1, 0xFF);
+//			
+//        }
+//		
+//		GL11.glPushAttrib(GL11.GL_ENABLE_BIT);
+//		
+////		GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+////		GL11.glDisable(GL11.GL_LIGHTING);
+////        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+////		GL11.glEnable(GL11.GL_BLEND);
+//		
+////		this.mc.renderEngine.bindTexture(new ResourceLocation("test"));
+//
+//		
+//		drawTexturedModalRect(0, 0, 0, 0, BUFF_ICON_SIZE, BUFF_ICON_SIZE);
+//		
+//		GL11.glPopAttrib();
+		
+		
 		ItemStack itemStack = compatibility.getHeldItemMainHand(mc.thePlayer);
 		if(itemStack == null) {
 			return;
@@ -96,11 +153,11 @@ public class CustomGui extends CompatibleGui {
 		        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 				GL11.glEnable(GL11.GL_BLEND);
 				
-				if(weaponItem.isCrosshairFullScreen(itemStack))	 {
-					drawTexturedQuadFit(0, 0, width, height, 0);
-				} else {
-					drawTexturedModalRect(xPos, yPos, 0, 0, BUFF_ICON_SIZE, BUFF_ICON_SIZE);
-				}
+//				if(weaponItem.isCrosshairFullScreen(itemStack))	 {
+//					drawTexturedQuadFit(0, 0, width, height, 0);
+//				} else {
+//					drawTexturedModalRect(xPos, yPos, 0, 0, BUFF_ICON_SIZE, BUFF_ICON_SIZE);
+//				}
 				
 				if(Weapon.isModifying(itemStack) /*weaponItem.getState(weapon) == Weapon.STATE_MODIFYING*/) {
 					fontRender.drawStringWithShadow("Attachment selection mode. Press [f] to exit.", 10, 10, color);
