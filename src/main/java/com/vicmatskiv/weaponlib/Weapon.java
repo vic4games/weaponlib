@@ -373,7 +373,7 @@ public class Weapon extends CompatibleItem implements AttachmentContainer {
 			if (spawnEntityWith == null) {
 
 				spawnEntityWith = (weapon, player) -> {
-					return compatibility.getSpawnEntity(weapon, player.worldObj, player, spawnEntitySpeed,
+					return compatibility.getSpawnEntity(weapon, compatibility.world(player), player, spawnEntitySpeed,
 							spawnEntityGravityVelocity, inaccuracy, spawnEntityDamage, spawnEntityExplosionRadius);
 				};
 			}

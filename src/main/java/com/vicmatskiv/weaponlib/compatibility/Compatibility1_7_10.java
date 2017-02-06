@@ -21,6 +21,7 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.IAttribute;
@@ -43,6 +44,32 @@ import net.minecraftforge.event.entity.item.ItemTossEvent;
 public class Compatibility1_7_10 implements Compatibility {
 	
 	private static CompatibleMathHelper mathHelper = new CompatibleMathHelper();
+	
+	@Override
+	public World world(Entity entity) {
+		return entity.worldObj;
+	}
+
+	@Override
+	@SideOnly(Side.CLIENT)
+	public EntityPlayer clientPlayer() {
+		return Minecraft.getMinecraft().thePlayer;
+	}
+
+	@Override
+	public void spawnEntity(EntityPlayer player, Entity entity) {
+		player.worldObj.spawnEntityInWorld(entity);
+	}
+
+	@Override
+	public void moveParticle(CompatibleParticle particle, double motionX, double motionY, double motionZ) {
+		particle.moveEntity(motionX, motionY, motionZ);
+	}
+
+	@Override
+	public int getStackSize(ItemStack consumedStack) {
+		return consumedStack.stackSize;
+	}
 	
 	@Override
 	public NBTTagCompound getTagCompound(ItemStack itemStack) {
@@ -261,6 +288,11 @@ public class Compatibility1_7_10 implements Compatibility {
 	}
 
 	@Override
+	public ItemStack consumeInventoryItem(Item item, Predicate<ItemStack> condition, EntityPlayer player, int maxSize) {
+		throw new UnsupportedOperationException("Implement me");
+	}
+	
+	@Override
 	public boolean consumeInventoryItem(InventoryPlayer inventoryPlayer, Item item) {
 		return inventoryPlayer.consumeInventoryItem(item);
 	}
@@ -310,4 +342,6 @@ public class Compatibility1_7_10 implements Compatibility {
 	public float getEffectScaleFactor() {
 		return 2.3f;
 	}
+
+	
 }

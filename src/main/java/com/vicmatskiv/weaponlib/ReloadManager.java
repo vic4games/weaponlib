@@ -64,7 +64,7 @@ public class ReloadManager {
 		
 		if (storage.getState() != State.RELOAD_REQUESTED && storage.getState() != State.RELOAD_CONFIRMED
 				&& (weapon.getAmmoCapacity() == 0 || storage.getCurrentAmmo().get() < weapon.getAmmoCapacity())) {
-			storage.getReloadingStopsAt().set(player.worldObj.getTotalWorldTime() + Weapon.MAX_RELOAD_TIMEOUT_TICKS);
+			storage.getReloadingStopsAt().set(compatibility.world(player).getTotalWorldTime() + Weapon.MAX_RELOAD_TIMEOUT_TICKS);
 			storage.setState(State.RELOAD_REQUESTED);
 			modContext.getChannel().getChannel().sendToServer(new ReloadMessage(weapon));
 		}
@@ -84,7 +84,7 @@ public class ReloadManager {
 				storage.getCurrentAmmo().set(ammo);
 				if ((itemMagazine != null || ammo > 0) && !forceQuietReload) {
 					storage.setState(State.RELOAD_CONFIRMED);
-					long reloadingStopsAt = player.worldObj.getTotalWorldTime() + weapon.builder.reloadingTimeout;
+					long reloadingStopsAt = compatibility.world(player).getTotalWorldTime() + weapon.builder.reloadingTimeout;
 					storage.getReloadingStopsAt().set(reloadingStopsAt);
 					compatibility.playSound(player, weapon.getReloadSound(), 1.0F, 1.0F);
 				} else {
@@ -105,8 +105,8 @@ public class ReloadManager {
 			int currentAmmo = Tags.getAmmo(magazineItemStack);
 			if(Tags.getState(magazineItemStack) != Weapon.State.RELOAD_CONFIRMED && currentAmmo < magazine.getAmmo() && (consumedStack = WorldHelper.tryConsumingCompatibleItem(compatibleBullets, magazine.getAmmo() - currentAmmo, player)) != null) {
 				Tags.setState(magazineItemStack, Weapon.State.RELOAD_CONFIRMED);
-				Tags.setDefaultTimer(magazineItemStack, player.worldObj.getTotalWorldTime() + magazine.getReloadTimeout());
-				Tags.setAmmo(magazineItemStack, currentAmmo + consumedStack.stackSize);
+				Tags.setDefaultTimer(magazineItemStack, compatibility.world(player).getTotalWorldTime() + magazine.getReloadTimeout());
+				Tags.setAmmo(magazineItemStack, currentAmmo + compatibility.getStackSize(consumedStack));
 				compatibility.playSound(player, magazine.getReloadSound(), 1.0F, 1.0F);
 			}
 			modContext.getChannel().getChannel().sendTo(new ReloadMessage(null, ReloadMessage.Type.LOAD, magazine, currentAmmo), (EntityPlayerMP) player);
@@ -137,7 +137,7 @@ public class ReloadManager {
 					
 				} else if(!compatibleBullets.isEmpty() && (consumedStack = WorldHelper.tryConsumingCompatibleItem(compatibleBullets,
 						Math.min(weapon.getMaxBulletsPerReload(), weapon.getAmmoCapacity() - Tags.getAmmo(weaponItemStack)), player)) != null) {
-					int ammo = Tags.getAmmo(weaponItemStack) + consumedStack.stackSize;
+					int ammo = Tags.getAmmo(weaponItemStack) + compatibility.getStackSize(consumedStack);
 					Tags.setAmmo(weaponItemStack, ammo);
 					modContext.getChannel().getChannel().sendTo(new ReloadMessage(weapon, ammo), (EntityPlayerMP) player);
 					compatibility.playSoundToNearExcept(player, weapon.getReloadSound(), 1.0F, 1.0F);
@@ -173,7 +173,7 @@ public class ReloadManager {
 		 *       The server will remove a magazine attachment immediately
 		 */
 		if (storage.getState() != State.UNLOAD_STARTED && storage.getState() != State.UNLOAD_REQUESTED_FROM_SERVER && storage.getState() != State.UNLOAD_CONFIRMED) {
-			storage.getReloadingStopsAt().set(player.worldObj.getTotalWorldTime() + weapon.getUnloadTimeoutTicks());
+			storage.getReloadingStopsAt().set(compatibility.world(player).getTotalWorldTime() + weapon.getUnloadTimeoutTicks());
 			storage.setState(State.UNLOAD_STARTED);
 			compatibility.playSound(player, weapon.getUnloadSound(), 1.0F, 1.0F);
 		}
@@ -198,7 +198,7 @@ public class ReloadManager {
 		 *       The server will remove a magazine attachment immediately
 		 */
 		if (storage.getState() == State.UNLOAD_STARTED) {
-			storage.getReloadingStopsAt().set(player.worldObj.getTotalWorldTime() + Weapon.MAX_RELOAD_TIMEOUT_TICKS);
+			storage.getReloadingStopsAt().set(compatibility.world(player).getTotalWorldTime() + Weapon.MAX_RELOAD_TIMEOUT_TICKS);
 			storage.setState(State.UNLOAD_REQUESTED_FROM_SERVER);
 			modContext.getChannel().getChannel().sendToServer(new ReloadMessage(weapon, ReloadMessage.Type.UNLOAD, null, 
 					storage.getCurrentAmmo().get()));
@@ -254,17 +254,17 @@ public class ReloadManager {
 			State state = storage.getState();
 			
 			if(state == State.RELOAD_REQUESTED || state == State.RELOAD_CONFIRMED) {
-				long currentTime = player.worldObj.getTotalWorldTime();
+				long currentTime = compatibility.world(player).getTotalWorldTime();
 				if(storage.getReloadingStopsAt().get() <= currentTime) {
 					storage.setState(State.READY);
 				}
 			} else if(state == State.UNLOAD_STARTED) {
-				long currentTime = player.worldObj.getTotalWorldTime();
+				long currentTime = compatibility.world(player).getTotalWorldTime();
 				if(storage.getReloadingStopsAt().get() <= currentTime) {
 					requestUnloadFromServer(itemStack, player);
 				}
 			} else if(state == State.UNLOAD_REQUESTED_FROM_SERVER || state == State.UNLOAD_CONFIRMED) {
-				long currentTime = player.worldObj.getTotalWorldTime();
+				long currentTime = compatibility.world(player).getTotalWorldTime();
 				if(storage.getReloadingStopsAt().get() <= currentTime) {
 					storage.setState(State.READY);
 				}

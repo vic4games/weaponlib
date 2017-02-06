@@ -66,14 +66,14 @@ public class CustomGui extends CompatibleGui {
 			return;
 		}
 		
-		ItemStack itemStack = compatibility.getHeldItemMainHand(mc.thePlayer);
+		ItemStack itemStack = compatibility.getHeldItemMainHand(compatibility.clientPlayer());
 		if(itemStack == null) {
 			return;
 		}
 		
 		if(itemStack.getItem() instanceof Weapon) {
 			Weapon weaponItem = (Weapon) itemStack.getItem();
-			String crosshair = weaponItem != null ? weaponItem.getCrosshair(itemStack, mc.thePlayer) : null;
+			String crosshair = weaponItem != null ? weaponItem.getCrosshair(itemStack, compatibility.clientPlayer()) : null;
 			if(crosshair != null) {
 				ScaledResolution scaledResolution = compatibility.getResolution(event);
 				int width = scaledResolution.getScaledWidth();
@@ -121,7 +121,7 @@ public class CustomGui extends CompatibleGui {
 					if(weaponItem.getAmmoCapacity() == 0 && totalCapacity == 0) {
 						text = "No magazine";
 					} else {
-						text = "Ammo: " + weaponItem.getCurrentAmmo(mc.thePlayer) + "/" + totalCapacity;
+						text = "Ammo: " + weaponItem.getCurrentAmmo(compatibility.clientPlayer()) + "/" + totalCapacity;
 					}
 					
 					int x = width - 80;

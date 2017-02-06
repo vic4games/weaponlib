@@ -84,18 +84,18 @@ public class WeaponSpawnEntity extends CompatibleWeaponSpawnEntity {
 	 */
 	@Override
 	protected void onImpact(CompatibleRayTraceResult position) {
-		if(!this.worldObj.isRemote) {
+		if(!compatibility.world(this).isRemote) {
 			if (position.getEntityHit() != null) {
 				if(explosionRadius > 0) {
-					this.worldObj.createExplosion(this, this.posX, this.posY, this.posZ, explosionRadius, true);
+					compatibility.world(this).createExplosion(this, this.posX, this.posY, this.posZ, explosionRadius, true);
 				}
 				position.getEntityHit().attackEntityFrom(DamageSource.causeThrownDamage(this, this.getThrower()), damage);
 				position.getEntityHit().hurtResistantTime = 0;
 				position.getEntityHit().prevRotationYaw -= 0.3D;
 			} else if(explosionRadius > 0) {
-				this.worldObj.createExplosion(this, position.getBlockPosX(), position.getBlockPosY(), position.getBlockPosZ(), explosionRadius, true);
+				compatibility.world(this).createExplosion(this, position.getBlockPosX(), position.getBlockPosY(), position.getBlockPosZ(), explosionRadius, true);
 			} else if(position.getTypeOfHit() == CompatibleRayTraceResult.Type.BLOCK) {
-				weapon.onSpawnEntityBlockImpact(worldObj, null, this, position);
+				weapon.onSpawnEntityBlockImpact(compatibility.world(this), null, this, position);
 			}
 			this.setDead();
 		}

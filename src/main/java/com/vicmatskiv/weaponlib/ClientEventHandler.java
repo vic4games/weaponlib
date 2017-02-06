@@ -6,11 +6,9 @@ import java.util.Queue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientTickEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientTickEvent.Phase;
-import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
-
-import net.minecraft.client.Minecraft;
 
 public class ClientEventHandler extends CompatibleClientEventHandler {
 
@@ -31,8 +29,8 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 			mainLoopLock.unlock();
 			processRunInClientThreadQueue();
 			safeGlobals.objectMouseOver.set(compatibility.getObjectMouseOver());
-			if(Minecraft.getMinecraft().thePlayer != null) {
-				safeGlobals.currentItemIndex.set(Minecraft.getMinecraft().thePlayer.inventory.currentItem);
+			if(compatibility.clientPlayer() != null) {
+				safeGlobals.currentItemIndex.set(compatibility.clientPlayer().inventory.currentItem);
 			}
 		}
 	}

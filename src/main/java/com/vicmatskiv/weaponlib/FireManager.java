@@ -92,7 +92,7 @@ public class FireManager {
 			Tags.setAmmo(itemStack, currentAmmo - 1);
 			for(int i = 0; i < weapon.builder.pellets; i++) {
 				WeaponSpawnEntity spawnEntity = weapon.builder.spawnEntityWith.apply(weapon, player);
-				player.worldObj.spawnEntityInWorld(spawnEntity);
+				compatibility.spawnEntity(player, spawnEntity);
 			}
 			compatibility.playSoundToNearExcept(player, modContext.getAttachmentManager().isSilencerOn(itemStack) ? weapon.getSilencedShootSound() : weapon.getShootSound(), 1.0F, 1.0F);
 		} else {

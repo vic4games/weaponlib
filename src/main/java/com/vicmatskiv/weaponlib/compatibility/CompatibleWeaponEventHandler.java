@@ -17,21 +17,21 @@ public abstract class CompatibleWeaponEventHandler {
 	protected abstract void onCompatibleGuiOpenEvent(GuiOpenEvent event);
 
 	@SubscribeEvent
-	protected final void zoom(FOVUpdateEvent event) {
+	public final void zoom(FOVUpdateEvent event) {
 		compatibleZoom(event);
 	}
 
 	protected abstract void compatibleZoom(FOVUpdateEvent event);
 
 	@SubscribeEvent
-	protected final void onMouse(MouseEvent event) {
+	public final void onMouse(MouseEvent event) {
 		onCompatibleMouse(event);
 	}
 
 	protected abstract void onCompatibleMouse(MouseEvent event);
 
 	@SubscribeEvent
-	protected final void handleRenderLivingEvent(RenderLivingEvent.Pre event) {
+	public final void handleRenderLivingEvent(RenderLivingEvent.Pre event) {
 		onCompatibleHandleRenderLivingEvent(event);
 	}
 
