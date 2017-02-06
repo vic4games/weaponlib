@@ -12,6 +12,7 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.ai.attributes.IAttribute;
 import net.minecraft.entity.player.EntityPlayer;
@@ -29,6 +30,10 @@ import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
 
 public interface Compatibility {
+	
+	public World world(Entity entity);
+	
+	public EntityPlayer clientPlayer();
 	
 	public WeaponSpawnEntity getSpawnEntity(Weapon weapon, World world, EntityPlayer player, float speed, 
 			float gravityVelocity, float inaccuracy, float damage, float explosionRadius, Material...damageableBlockMaterials);
@@ -119,4 +124,12 @@ public interface Compatibility {
 	public float getEffectOffsetY();
 	
 	public float getEffectScaleFactor();
+
+	public void spawnEntity(EntityPlayer player, Entity entity);
+
+	public void moveParticle(CompatibleParticle particle, double motionX, double motionY, double motionZ);
+
+	public int getStackSize(ItemStack consumedStack);
+
+	public ItemStack consumeInventoryItem(Item item, Predicate<ItemStack> condition, EntityPlayer player, int maxSize);
 }

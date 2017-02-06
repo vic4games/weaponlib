@@ -76,7 +76,7 @@ public class ClientModContext extends CommonModContext {
 	
 	@Override
 	protected EntityPlayer getPlayer(CompatibleMessageContext ctx) {
-		return Minecraft.getMinecraft().thePlayer;
+		return compatibility.clientPlayer();
 	}
 	
 	@Override

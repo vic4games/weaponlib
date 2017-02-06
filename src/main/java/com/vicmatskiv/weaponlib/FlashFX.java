@@ -1,5 +1,7 @@
 package com.vicmatskiv.weaponlib;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
 import org.lwjgl.opengl.GL11;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleParticle;
@@ -65,7 +67,7 @@ public class FlashFX extends CompatibleParticle {
             this.setExpired();
         }
 
-        this.moveEntity(this.motionX, this.motionY, this.motionZ);
+        compatibility.moveParticle(this, this.motionX, this.motionY, this.motionZ);
         
         this.motionX *= 0.9999999785423279D;
         this.motionY *= 0.9999999785423279D;

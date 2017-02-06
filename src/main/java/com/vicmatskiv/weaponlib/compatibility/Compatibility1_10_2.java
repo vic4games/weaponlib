@@ -16,6 +16,7 @@ import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.model.ModelBiped.ArmPose;
 import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.IAttribute;
@@ -47,6 +48,39 @@ public class Compatibility1_10_2 implements Compatibility {
 
 	private static CompatibleMathHelper mathHelper = new CompatibleMathHelper();
 
+	@Override
+	public World world(Entity entity) {
+		return entity.worldObj;
+	}
+
+	@Override
+	@SideOnly(Side.CLIENT)
+	public EntityPlayer clientPlayer() {
+		return Minecraft.getMinecraft().thePlayer;
+	}
+
+	@Override
+	public void spawnEntity(EntityPlayer player, Entity entity) {
+		player.worldObj.spawnEntityInWorld(entity);
+	}
+
+	@Override
+	public void moveParticle(CompatibleParticle particle, double motionX, double motionY, double motionZ) {
+		particle.moveEntity(motionX, motionY, motionZ);
+	}
+
+	@Override
+	public int getStackSize(ItemStack consumedStack) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public ItemStack consumeInventoryItem(Item item, Predicate<ItemStack> condition, EntityPlayer player, int maxSize) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
 	@Override
 	public NBTTagCompound getTagCompound(ItemStack itemStack) {
 		return itemStack.getTagCompound();
@@ -320,4 +354,6 @@ public class Compatibility1_10_2 implements Compatibility {
 	public float getEffectScaleFactor() {
 		return 1f;
 	}
+
+	
 }

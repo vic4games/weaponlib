@@ -4,7 +4,6 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponEventHandler;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -42,13 +41,13 @@ public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 	@Override
 	public void onCompatibleMouse(MouseEvent event) {
 		if(compatibility.getButton(event) == 0) {
-			ItemStack heldItem = compatibility.getHeldItemMainHand(Minecraft.getMinecraft().thePlayer);
+			ItemStack heldItem = compatibility.getHeldItemMainHand(compatibility.clientPlayer());
 			if(heldItem != null && heldItem.getItem() instanceof Weapon) {
 				event.setCanceled(true);
 			}
 		} else if(compatibility.getButton(event) == 1) {
-			ItemStack heldItem = compatibility.getHeldItemMainHand(Minecraft.getMinecraft().thePlayer);			if(heldItem != null && heldItem.getItem() instanceof Weapon 
-					&& Weapon.isEjectedSpentRound(Minecraft.getMinecraft().thePlayer, heldItem)) {
+			ItemStack heldItem = compatibility.getHeldItemMainHand(compatibility.clientPlayer());			if(heldItem != null && heldItem.getItem() instanceof Weapon 
+					&& Weapon.isEjectedSpentRound(compatibility.clientPlayer(), heldItem)) {
 				event.setCanceled(true);
 			}
 		}

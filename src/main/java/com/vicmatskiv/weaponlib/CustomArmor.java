@@ -243,7 +243,6 @@ public class CustomArmor extends CompatibleCustomArmor {
 	
 	private ItemAttachment<CustomArmor> nextCompatibleAttachment(AttachmentCategory category, Item currentAttachment, EntityPlayer player) {
 		
-		//EntityClientPlayerMP player = Minecraft.getMinecraft().thePlayer;
 		ItemAttachment<CustomArmor> nextAttachment = null;
 		boolean foundCurrent = false;
 		for (int i = 0; i < 36; i++) {

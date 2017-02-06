@@ -1,5 +1,7 @@
 package com.vicmatskiv.weaponlib.compatibility;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -150,7 +152,7 @@ public class CompatibleStaticModelSourceRenderer extends ModelSourceRenderer imp
 		GL11.glPushMatrix();
 		
 		GL11.glScaled(-1F, -1F, 1F);
-		AbstractClientPlayer player = Minecraft.getMinecraft().thePlayer;
+		EntityPlayer player = compatibility.clientPlayer();
 		switch (transformType)
 		{
 		case GROUND:
