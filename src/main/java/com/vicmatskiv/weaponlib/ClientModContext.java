@@ -11,9 +11,11 @@ import java.util.concurrent.locks.ReentrantLock;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderingRegistry;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleWorldRenderer;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.IResourcePack;
+import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 
@@ -27,9 +29,15 @@ public class ClientModContext extends CommonModContext {
 	
 	private CompatibleRenderingRegistry rendererRegistry;
 	
+	private Framebuffer framebuffer;
+	private CompatibleWorldRenderer entityRenderer;
+	
 	@Override
 	public void init(Object mod, String modId, CompatibleChannel channel) {
 		super.init(mod, modId, channel);
+		
+		this.framebuffer = new Framebuffer(200, 200, true);
+        this.framebuffer.setFramebufferColor(0.0F, 0.0F, 0.0F, 0.0F);
 		
 		rendererRegistry = new CompatibleRenderingRegistry(modId);
 
@@ -62,10 +70,23 @@ public class ClientModContext extends CommonModContext {
 		rendererRegistry.registerEntityRenderingHandler(WeaponSpawnEntity.class, new SpawnEntityRenderer());
 	}
 	
+	protected CompatibleWorldRenderer getSecondWorldRenderer() {
+		if(this.entityRenderer == null) {
+			this.entityRenderer = new CompatibleWorldRenderer(Minecraft.getMinecraft(), 
+	        		Minecraft.getMinecraft().getResourceManager());
+		}
+		return this.entityRenderer;
+	}
+	
+	public Framebuffer getFramebuffer() {
+		return framebuffer;
+	}
+
 	@Override
 	public void registerWeapon(String name, Weapon weapon, WeaponRenderer renderer) {
 		super.registerWeapon(name, weapon, renderer);
 		rendererRegistry.register(weapon, weapon.getName(), weapon.getRenderer());
+		renderer.setClientModContext(this);
 	}
 	
 	@Override

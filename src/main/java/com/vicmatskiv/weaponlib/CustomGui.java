@@ -67,6 +67,7 @@ public class CustomGui extends CompatibleGui {
 		}
 		
 		ItemStack itemStack = compatibility.getHeldItemMainHand(compatibility.clientPlayer());
+
 		if(itemStack == null) {
 			return;
 		}
@@ -96,11 +97,11 @@ public class CustomGui extends CompatibleGui {
 		        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 				GL11.glEnable(GL11.GL_BLEND);
 				
-				if(weaponItem.isCrosshairFullScreen(itemStack))	 {
-					drawTexturedQuadFit(0, 0, width, height, 0);
-				} else {
-					drawTexturedModalRect(xPos, yPos, 0, 0, BUFF_ICON_SIZE, BUFF_ICON_SIZE);
-				}
+//				if(weaponItem.isCrosshairFullScreen(itemStack))	 {
+//					drawTexturedQuadFit(0, 0, width, height, 0);
+//				} else {
+//					drawTexturedModalRect(xPos, yPos, 0, 0, BUFF_ICON_SIZE, BUFF_ICON_SIZE);
+//				}
 				
 				if(Weapon.isModifying(itemStack) /*weaponItem.getState(weapon) == Weapon.STATE_MODIFYING*/) {
 					fontRender.drawStringWithShadow("Attachment selection mode. Press [f] to exit.", 10, 10, color);

@@ -5,13 +5,12 @@ import java.util.List;
 import org.lwjgl.opengl.GL11;
 
 import com.vicmatskiv.weaponlib.AttachmentContainer;
+import com.vicmatskiv.weaponlib.ClientModContext;
 import com.vicmatskiv.weaponlib.CompatibleAttachment;
-import com.vicmatskiv.weaponlib.CustomRenderer;
-import com.vicmatskiv.weaponlib.ItemAttachment;
 import com.vicmatskiv.weaponlib.ModelWithAttachments;
 import com.vicmatskiv.weaponlib.Part;
+import com.vicmatskiv.weaponlib.RenderContext;
 import com.vicmatskiv.weaponlib.RenderableState;
-import com.vicmatskiv.weaponlib.Tuple;
 import com.vicmatskiv.weaponlib.Weapon;
 import com.vicmatskiv.weaponlib.WeaponRenderer.Builder;
 import com.vicmatskiv.weaponlib.animation.MultipartPositioning;
@@ -22,34 +21,14 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
-import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.entity.RenderPlayer;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.IItemRenderer;
 
 public abstract class CompatibleWeaponRenderer implements IItemRenderer {
-	
-	protected static class RenderContext {
-		private EntityPlayer player;
-		private ItemStack weapon;
-
-		public RenderContext(EntityPlayer player, ItemStack weapon) {
-			this.player = player;
-			this.weapon = weapon;
-		}
-
-		public EntityPlayer getPlayer() {
-			return player;
-		}
-
-		public ItemStack getWeapon() {
-			return weapon;
-		}
-	}
 	
 	protected static class StateDescriptor {
 		protected MultipartRenderStateManager<RenderableState, Part, RenderContext> stateManager;
@@ -70,6 +49,8 @@ public abstract class CompatibleWeaponRenderer implements IItemRenderer {
 		this.builder = builder;
 	}
 	
+	protected abstract ClientModContext getClientModContext();
+	
 	protected abstract StateDescriptor getStateDescriptor(EntityPlayer player, ItemStack itemStack);
 	
 	@Override
@@ -85,31 +66,46 @@ public abstract class CompatibleWeaponRenderer implements IItemRenderer {
 	
 	@SideOnly(Side.CLIENT)
 	@Override
-	public void renderItem(ItemRenderType type, ItemStack item, Object... data)
+	public void renderItem(ItemRenderType type, ItemStack weaponItemStack, Object... data)
 	{
+		
 		GL11.glPushMatrix();
 		
 		GL11.glScaled(-1F, -1F, 1F);
 		EntityPlayer player = Minecraft.getMinecraft().thePlayer;
-		RenderContext renderContext = new RenderContext(player, item);
+		
+		RenderContext renderContext = new RenderContext(player, weaponItemStack);
+		
+		//loat limbSwing, float flimbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scale
+		//0.0F, 0.0f, -0.4f, 0.0f, 0.0f, 0.08f);
+		renderContext.setAgeInTicks(-0.4f);
+		renderContext.setScale(0.08f);
+		renderContext.setCompatibleTransformType(CompatibleTransformType.fromItemRenderType(type));
+		
 		Positioner<Part, RenderContext> positioner = null;
 		switch (type)
 		{
 		case ENTITY:
-			builder.getEntityPositioning().accept(item);
+			builder.getEntityPositioning().accept(weaponItemStack);
 			break;
+			
 		case INVENTORY:
-			builder.getInventoryPositioning().accept(item);
+			builder.getInventoryPositioning().accept(weaponItemStack);
 			break;
+			
 		case EQUIPPED:
-			
-			builder.getThirdPersonPositioning().accept(player, item);
-			
+			builder.getThirdPersonPositioning().accept(player, weaponItemStack);
 			break;
+			
 		case EQUIPPED_FIRST_PERSON:
 			
-			StateDescriptor stateDescriptor = getStateDescriptor(player, item);
+			StateDescriptor stateDescriptor = getStateDescriptor(player, weaponItemStack);
+			
 			MultipartPositioning<Part, RenderContext> multipartPositioning = stateDescriptor.stateManager.nextPositioning();
+			
+			renderContext.setTransitionProgress(multipartPositioning.getProgress());
+			
+			renderContext.setFromState(multipartPositioning.getFromState(RenderableState.class));
 			
 			positioner = multipartPositioning.getPositioner();
 						
@@ -129,65 +125,31 @@ public abstract class CompatibleWeaponRenderer implements IItemRenderer {
 			Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(builder.getModId() 
 					+ ":textures/models/" + builder.getTextureName()));
 		} else {
-			Weapon weapon = ((Weapon) item.getItem());
-			String textureName = weapon.getActiveTextureName(item);
+			Weapon weapon = ((Weapon) weaponItemStack.getItem());
+			String textureName = weapon.getActiveTextureName(weaponItemStack);
 			if(textureName != null) {
 				Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(builder.getModId() 
 						+ ":textures/models/" + textureName));
 			}
 		}
 		
-		builder.getModel().render(null,  0.0F, 0.0f, -0.4f, 0.0f, 0.0f, 0.08f);
+		//limbSwing, float flimbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scale
+		builder.getModel().render(null,  
+				renderContext.getLimbSwing(), 
+				renderContext.getFlimbSwingAmount(), 
+				renderContext.getAgeInTicks(), 
+				renderContext.getNetHeadYaw(), 
+				renderContext.getHeadPitch(), 
+				renderContext.getScale());
+		
 		if(builder.getModel() instanceof ModelWithAttachments) {
-			List<CompatibleAttachment<? extends AttachmentContainer>> attachments = ((Weapon) item.getItem()).getActiveAttachments(item);
-			renderAttachments(positioner, renderContext, item, type, attachments , null,  0.0F, 0.0f, -0.4f, 0.0f, 0.0f, 0.08f);
+			List<CompatibleAttachment<? extends AttachmentContainer>> attachments = ((Weapon) weaponItemStack.getItem()).getActiveAttachments(weaponItemStack);
+			renderAttachments(positioner, renderContext, attachments);
 		}
 		
 		GL11.glPopMatrix();
-	   
 	}
 	
-	private void renderAttachments(Positioner<Part, RenderContext> positioner, RenderContext renderContext,
-			ItemStack itemStack, ItemRenderType type, List<CompatibleAttachment<? extends AttachmentContainer>> attachments, Entity entity, float f, float f1, float f2, float f3, float f4, float f5) {
-		
-		for(CompatibleAttachment<?> compatibleAttachment: attachments) {
-			if(compatibleAttachment != null) {
-				GL11.glPushMatrix();
-				
-				ItemAttachment<?> itemAttachment = compatibleAttachment.getAttachment();
-				
-				if(positioner != null) {
-					if(itemAttachment instanceof Part) {
-						positioner.position((Part) itemAttachment, renderContext);
-					} else if(itemAttachment.getRenderablePart() != null) {
-						positioner.position(itemAttachment.getRenderablePart(), renderContext);
-					}
-				}
-				
-
-				for(Tuple<ModelBase, String> texturedModel: compatibleAttachment.getAttachment().getTexturedModels()) {
-					Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(builder.getModId() 
-							+ ":textures/models/" + texturedModel.getV()));
-					GL11.glPushMatrix();
-					GL11.glPushAttrib(GL11.GL_ENABLE_BIT);
-					if(compatibleAttachment.getPositioning() != null) {
-						compatibleAttachment.getPositioning().accept(texturedModel.getU());
-					}
-					texturedModel.getU().render(entity, f, f1, f2, f3, f4, f5);
-
-					CustomRenderer postRenderer = compatibleAttachment.getAttachment().getPostRenderer();
-					if(postRenderer != null) {
-						postRenderer.render(CompatibleTransformType.fromItemRenderType(type), itemStack);
-					}
-					GL11.glPopAttrib();
-					GL11.glPopMatrix();
-				}
-				
-				GL11.glPopMatrix();
-			}
-		}
-		
-	}
 
 	private void renderRightArm(EntityPlayer player, RenderContext renderContext,
 			Positioner<Part, RenderContext> positioner) {
@@ -235,4 +197,7 @@ public abstract class CompatibleWeaponRenderer implements IItemRenderer {
 		
 		GL11.glPopMatrix();
 	}
+
+	public abstract void renderAttachments(Positioner<Part, RenderContext> positioner, RenderContext renderContext,
+			List<CompatibleAttachment<? extends AttachmentContainer>> attachments);
 }

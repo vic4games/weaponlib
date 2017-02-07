@@ -8,7 +8,6 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleTessellator;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTransformType;
 
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 
 public class LaserBeamRenderer implements CustomRenderer {
 	
@@ -20,14 +19,15 @@ public class LaserBeamRenderer implements CustomRenderer {
 	}
 
 	@Override
-	public void render(CompatibleTransformType type, ItemStack itemStack) {
+	public void render(RenderContext renderContext) {
 		
-		Item item = itemStack.getItem();
+		Item item = renderContext.getWeapon().getItem();
 		if(!(item instanceof Weapon)) {
 			throw new IllegalStateException("Item is not weapon");
 		}
 
-		if(Tags.isLaserOn(itemStack) && (
+		CompatibleTransformType type = renderContext.getCompatibleTransformType();
+		if(Tags.isLaserOn(renderContext.getWeapon()) && (
 				type == CompatibleTransformType.THIRD_PERSON_LEFT_HAND 
 				|| type == CompatibleTransformType.THIRD_PERSON_RIGHT_HAND 
 				|| type == CompatibleTransformType.FIRST_PERSON_LEFT_HAND

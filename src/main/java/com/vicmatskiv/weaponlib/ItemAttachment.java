@@ -1,6 +1,7 @@
 package com.vicmatskiv.weaponlib;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
@@ -24,12 +25,13 @@ public class ItemAttachment<T> extends CompatibleItem implements ModelSource {
 	private String name;
 	private Function<ItemStack, String> informationProvider;
 	
+	private List<CompatibleAttachment<T>> attachments = new ArrayList<>();
+	
 	private List<Weapon> compatibleWeapons = new ArrayList<>();
 	
 	public static interface ApplyHandler<T> {
 		public void apply(ItemAttachment<T> itemAttachment, T target, EntityPlayer player);
 	}
-
 
 	public ItemAttachment(String modId, AttachmentCategory category, ModelBase model, String textureName, String crosshair, 
 			ApplyHandler<T> apply, ApplyHandler<T> remove) {
@@ -147,6 +149,14 @@ public class ItemAttachment<T> extends CompatibleItem implements ModelSource {
 		this.preRenderer = preRenderer;
 	}
 	
+	protected void addCompatibleAttachment(CompatibleAttachment<T> attachment) {
+		attachments.add(attachment);
+	}
+	
+	public List<CompatibleAttachment<T>> getAttachments() {
+		return Collections.unmodifiableList(attachments);
+	}
+
 	@Override
 	public String toString() {
 		return name != null ? "Attachment [" + name + "]" : super.toString();

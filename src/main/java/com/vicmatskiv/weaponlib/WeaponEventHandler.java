@@ -25,6 +25,7 @@ public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 		safeGlobals.guiOpen.set(compatibility.getGui(event) != null);
 	}
 	
+	public static float overridenFov = 1.0f;
 	@Override
 	public void compatibleZoom(FOVUpdateEvent event) {
 
@@ -32,7 +33,7 @@ public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 		if (stack != null) {
 			if (stack.getItem() instanceof Weapon) {
 				if (compatibility.getTagCompound(stack) != null) {
-					compatibility.setNewFov(event, Tags.getZoom(stack));
+					compatibility.setNewFov(event, 1f); //Tags.getZoom(stack));
 				}
 			}
 		}
@@ -69,5 +70,4 @@ public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 			}
 		}
 	}
-
 }

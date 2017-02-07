@@ -25,6 +25,12 @@ public class MultipartRenderStateManager<State, Part, Context> {
 			this.state = state;
 		}
 		
+		
+		@Override
+		public float getProgress() {
+			return 1f;
+		}
+		
 		@Override
 		public boolean isExpired(Queue<MultipartPositioning<Part, Context>> positioningQueue) {
 			return !positioningQueue.isEmpty();
@@ -51,6 +57,14 @@ public class MultipartRenderStateManager<State, Part, Context> {
 				}
 			};
 		}
+
+
+		@Override
+		public <T> T getFromState(Class<T> stateClass) {
+			return stateClass.cast(state);
+		}
+
+		
 	}
 	
 	private class TransitionedPositioning implements MultipartPositioning<Part, Context> {
@@ -60,6 +74,9 @@ public class MultipartRenderStateManager<State, Part, Context> {
 		}
 		private Map<Part, PartData> partDataMap = new HashMap<>();
 //		private Map<Part, List<Matrix4f>> partMatrices = new HashMap<>();
+		
+		private Long startTime;
+		private long totalDuration;
 		
 		private int currentIndex;
 		private long currentStartTime;
@@ -75,12 +92,23 @@ public class MultipartRenderStateManager<State, Part, Context> {
 		private State fromState;
 		private State toState;
 		
+		
+		
 		TransitionedPositioning(State fromState, State toState) {
 			this.fromState = fromState;
 			this.toState = toState;
 			fromPositioning = transitionProvider.getPositioning(fromState);
 			toPositioning = transitionProvider.getPositioning(toState);
 			segmentCount = toPositioning.size();
+			
+			for(MultipartTransition<Part, Context> t : toPositioning) {
+				totalDuration += t.getDuration() + t.getPause();
+			}
+		}
+		
+		@Override
+		public float getProgress() {
+			return startTime != null ? (float)(System.currentTimeMillis() - startTime) / totalDuration : 0f;
 		}
 		
 		@Override
@@ -88,6 +116,12 @@ public class MultipartRenderStateManager<State, Part, Context> {
 			return expired;
 		}
 		
+
+		@Override
+		public <T> T getFromState(Class<T> stateClass) {
+			return stateClass.cast(fromState);
+		}
+
 		private PartData getPartData(Part part, Context context) {
 			try {
 				return partDataMap.computeIfAbsent(part, p -> { 
@@ -108,17 +142,33 @@ public class MultipartRenderStateManager<State, Part, Context> {
 		public Positioner<Part, Context> getPositioner() {
 			
 			long currentTime = System.currentTimeMillis();
-			long currentDuration = toPositioning.get(currentIndex).getDuration();
-			long currentPause = toPositioning.get(currentIndex).getPause();
+			MultipartTransition<Part, Context> targetState = toPositioning.get(currentIndex);
 			
+			long currentDuration = targetState.getDuration();
+			long currentPause = targetState.getPause();
+			
+			if(currentIndex == 0 && startTime == null) {
+				startTime = currentTime;
+			}
+			
+			//boolean uglyFlag = false;
 			if(currentStartTime == 0) {
 				currentStartTime = currentTime;
 			} else if(currentTime > currentStartTime + currentDuration + currentPause) {
 				currentIndex++;
 				currentStartTime = currentTime;
+				//uglyFlag = true;
 			}
 			
 			long currentOffset = currentTime - currentStartTime;
+			
+			float currentProgress = (float)currentOffset / currentDuration;
+			
+			if(currentProgress > 1f) {
+				currentProgress = 1f;
+			}
+			
+			float finalCurrentProgress = /*uglyFlag ? 1f : */ currentProgress;
 			
 			if(currentIndex >= segmentCount) {
 				expired = true;
@@ -137,13 +187,6 @@ public class MultipartRenderStateManager<State, Part, Context> {
 				};
 			}
 
-			float currentProgress = (float)currentOffset / currentDuration;
-						
-			if(currentProgress > 1f) {
-				currentProgress = 1f;
-			}
-
-			float finalCurrentProgress = currentProgress;
 			
 			return new Positioner<Part, Context> () {
 				@Override
@@ -236,7 +279,7 @@ public class MultipartRenderStateManager<State, Part, Context> {
 			GL11.glPopMatrix();
 			return matrix;
 		}
-		
+
 	}
 	
 	private State currentState;
@@ -244,12 +287,9 @@ public class MultipartRenderStateManager<State, Part, Context> {
 	private MultipartTransitionProvider<State, Part, Context> transitionProvider;
 	
 	private Deque<MultipartPositioning<Part, Context>> positioningQueue;
-	
-	private Part mainPart;
 
 	public MultipartRenderStateManager(State initialState, MultipartTransitionProvider<State, Part, Context> transitionProvider, Part mainPart) {
 		this.transitionProvider = transitionProvider;
-		this.mainPart = mainPart;
 		this.positioningQueue = new LinkedList<>();
 		this.randomizer = new Randomizer();
 		setState(initialState, false, true);

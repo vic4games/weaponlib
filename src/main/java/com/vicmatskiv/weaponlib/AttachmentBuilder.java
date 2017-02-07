@@ -3,7 +3,9 @@ package com.vicmatskiv.weaponlib;
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -37,6 +39,7 @@ public class AttachmentBuilder<T> {
 	private List<Tuple<ModelBase, String>> texturedModels = new ArrayList<>();
 	private boolean isRenderablePart;
 	
+	Map<ItemAttachment<T>, CompatibleAttachment<T>> compatibleAttachments = new HashMap<>();
 
 	public AttachmentBuilder<T> withCategory(AttachmentCategory attachmentCategory) {
 		this.attachmentCategory = attachmentCategory;
@@ -55,6 +58,11 @@ public class AttachmentBuilder<T> {
 
 	public AttachmentBuilder<T> withModId(String modId) {
 		this.modId = modId;
+		return this;
+	}
+	
+	public AttachmentBuilder<T> withCompatibleAttachment(ItemAttachment<T> attachment, Consumer<ModelBase> positioner) {
+		compatibleAttachments.put(attachment, new CompatibleAttachment<>(attachment, positioner));
 		return this;
 	}
 	
@@ -171,6 +179,8 @@ public class AttachmentBuilder<T> {
 		}
 		
 		texturedModels.forEach(tm -> attachment.addModel(tm.getU(), tm.getV()));
+		
+		compatibleAttachments.values().forEach(a -> attachment.addCompatibleAttachment(a));
 		
 		if((model != null || !texturedModels.isEmpty())) {
 			modContext.registerRenderableItem(name, attachment, compatibility.isClientSide() ? registerRenderer(attachment) : null);
