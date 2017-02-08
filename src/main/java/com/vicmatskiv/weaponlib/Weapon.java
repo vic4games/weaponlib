@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -293,12 +294,28 @@ public class Weapon extends CompatibleItem implements AttachmentContainer {
 			compatibleAttachments.put(bullet, new CompatibleAttachment<>(bullet, positioner));
 			return this;
 		}
+		
+		public Builder withCompatibleAttachment(ItemAttachment<Weapon> attachment, BiConsumer<EntityPlayer, ItemStack> positioning, Consumer<ModelBase> modelPositioning) {
+			compatibleAttachments.put(attachment, new CompatibleAttachment<>(attachment, positioning, modelPositioning, false));
+			return this;
+		}
+		
+		public Builder withCompatibleAttachment(ItemAttachment<Weapon> attachment, BiConsumer<EntityPlayer, ItemStack> positioning) {
+			compatibleAttachments.put(attachment, new CompatibleAttachment<>(attachment, positioning, null, false));
+			return this;
+		}
 
 		public Builder withCompatibleAttachment(ItemAttachment<Weapon> attachment, Consumer<ModelBase> positioner) {
 			compatibleAttachments.put(attachment, new CompatibleAttachment<>(attachment, positioner));
 			return this;
 		}
 
+		public Builder withCompatibleAttachment(ItemAttachment<Weapon> attachment, boolean isDefault,
+				BiConsumer<EntityPlayer, ItemStack> positioning, Consumer<ModelBase> modelPositioning) {
+			compatibleAttachments.put(attachment, new CompatibleAttachment<>(attachment, positioning, modelPositioning, isDefault));
+			return this;
+		}
+		
 		public Builder withCompatibleAttachment(ItemAttachment<Weapon> attachment, boolean isDefault,
 				Consumer<ModelBase> positioner) {
 			compatibleAttachments.put(attachment, new CompatibleAttachment<>(attachment, positioner, isDefault));

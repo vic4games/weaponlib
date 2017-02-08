@@ -853,8 +853,14 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			Positioner<Part, RenderContext> positioner, RenderContext renderContext) {
 		
 		GL11.glPushMatrix();
+		GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_CURRENT_BIT);
+		
+		if(compatibleAttachment.getPositioning() != null) {
+			compatibleAttachment.getPositioning().accept(renderContext.getPlayer(), renderContext.getWeapon());
+		}
 		
 		ItemAttachment<?> itemAttachment = compatibleAttachment.getAttachment();
+		
 		
 		if(positioner != null) {
 			if(itemAttachment instanceof Part) {
@@ -868,9 +874,9 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(builder.getModId() 
 					+ ":textures/models/" + texturedModel.getV()));
 			GL11.glPushMatrix();
-			GL11.glPushAttrib(GL11.GL_ENABLE_BIT);
-			if(compatibleAttachment.getPositioning() != null) {
-				compatibleAttachment.getPositioning().accept(texturedModel.getU());
+			GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_CURRENT_BIT);
+			if(compatibleAttachment.getModelPositioning() != null) {
+				compatibleAttachment.getModelPositioning().accept(texturedModel.getU());
 			}
 			texturedModel.getU().render(renderContext.getPlayer(), 
 					renderContext.getLimbSwing(), 
@@ -886,13 +892,18 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		
 		CustomRenderer postRenderer = compatibleAttachment.getAttachment().getPostRenderer();
 		if(postRenderer != null) {
+			GL11.glPushMatrix();
+			GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_CURRENT_BIT);
 			postRenderer.render(renderContext);
+			GL11.glPopAttrib();
+			GL11.glPopMatrix();
 		}
 		
 		for(CompatibleAttachment<?> childAttachment: itemAttachment.getAttachments()) {
 			renderCompatibleAttachment(childAttachment, positioner, renderContext);
 		}
 		
+		GL11.glPopAttrib();
 		GL11.glPopMatrix();
 	}
 

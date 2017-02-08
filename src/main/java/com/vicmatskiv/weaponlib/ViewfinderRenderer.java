@@ -39,7 +39,7 @@ public class ViewfinderRenderer implements CustomRenderer {
 		}
 		
 		GL11.glPushMatrix();
-		GL11.glPushAttrib(GL11.GL_ENABLE_BIT);
+		GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_CURRENT_BIT);
 
 		positioning.accept(renderContext.getPlayer(), renderContext.getWeapon());
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, renderContext.getClientModContext().getFramebuffer().framebufferTexture);
