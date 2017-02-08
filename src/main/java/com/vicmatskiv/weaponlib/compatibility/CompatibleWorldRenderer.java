@@ -470,9 +470,9 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
             this.fovModifierHand = 1.5F;
         }
 
-        if (this.fovModifierHand < 0.1F)
+        if (this.fovModifierHand < 0.05F)
         {
-            this.fovModifierHand = 0.1F;
+            this.fovModifierHand = 0.05F;
         }
     }
 
