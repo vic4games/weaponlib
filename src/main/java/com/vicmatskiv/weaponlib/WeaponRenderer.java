@@ -16,12 +16,11 @@ import java.util.stream.Collectors;
 
 import org.lwjgl.opengl.GL11;
 
+import com.vicmatskiv.weaponlib.animation.MultipartPositioning.Positioner;
 import com.vicmatskiv.weaponlib.animation.MultipartRenderStateManager;
 import com.vicmatskiv.weaponlib.animation.MultipartTransition;
 import com.vicmatskiv.weaponlib.animation.MultipartTransitionProvider;
 import com.vicmatskiv.weaponlib.animation.Transition;
-import com.vicmatskiv.weaponlib.animation.MultipartPositioning.Positioner;
-import com.vicmatskiv.weaponlib.compatibility.CompatibleTransformType;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponRenderer;
 
 import net.minecraft.client.Minecraft;
@@ -848,10 +847,6 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				renderCompatibleAttachment(compatibleAttachment, positioner, renderContext);
 			}
 		}
-		
-		if(renderContext.getCompatibleTransformType() == CompatibleTransformType.FIRST_PERSON_RIGHT_HAND) {
-			renderViewfinder(renderContext);
-		}
 	}
 
 	private void renderCompatibleAttachment(CompatibleAttachment<?> compatibleAttachment,
@@ -901,35 +896,10 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		GL11.glPopMatrix();
 	}
 
-	private Viewfinder viewfinder = new Viewfinder(
-			() -> this.getClientModContext().getFramebuffer().framebufferTexture,
-			(p, s) -> {
-				GL11.glScalef(0.79f, 0.79f, 0.79f);
-				GL11.glTranslatef(0.13f, -1.6f, 1.5f);
-			});
-	
-	private void renderViewfinder(RenderContext renderContext) {
-		
-		float brightness = 0f;
-		boolean zoomed = Weapon.isZoomed(null, renderContext.getWeapon());
-		float progress = renderContext.getTransitionProgress();
-		if(progress > 0f && zoomed) {
-			brightness = progress;
-		} else if((renderContext.getFromState() == RenderableState.ZOOMING 
-				|| renderContext.getFromState() == RenderableState.ZOOMING_RECOILED
-				|| renderContext.getFromState() == RenderableState.ZOOMING_RECOILED)
-				&& progress > 0f && !zoomed) {
-			brightness = Math.max(1 - progress, 0f);
-		}
-				
-		viewfinder.render(
-				renderContext.getPlayer(), 
-				renderContext.getWeapon(), brightness,
-				renderContext.getLimbSwing(), 
-				renderContext.getFlimbSwingAmount(), 
-				renderContext.getAgeInTicks(), 
-				renderContext.getNetHeadYaw(), 
-				renderContext.getHeadPitch(), 
-				renderContext.getScale());
-	}
+//	private ViewfinderRenderer viewfinder = new ViewfinderRenderer(
+//			() -> this.getClientModContext().getFramebuffer().framebufferTexture,
+//			(p, s) -> {
+//				GL11.glScalef(0.79f, 0.79f, 0.79f);
+//				GL11.glTranslatef(0.13f, -1.6f, 1.5f);
+//			});
 }

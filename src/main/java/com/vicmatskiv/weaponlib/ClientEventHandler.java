@@ -52,16 +52,14 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 		}
 	}
 	
-	static int counter = 0;
-	
 	@SubscribeEvent
 	public final void onRenderTickEvent(TickEvent.RenderTickEvent event) {
 		
-		if(event.phase == TickEvent.Phase.START && Minecraft.getMinecraft().renderViewEntity != null) {
-			
+		if(event.phase == TickEvent.Phase.START && compatibility.clientPlayer() != null) {
+			safeGlobals.renderingPhase.set(RenderingPhase.RENDER_VIEWFINDER);
 			long p_78471_2_ = this.renderEndNanoTime + (long)(1000000000 / 60);
 			
-			if(Weapon.isZoomed(null, Minecraft.getMinecraft().thePlayer.getHeldItem())) {
+			if(Weapon.isZoomed(null, compatibility.getHeldItemMainHand(compatibility.clientPlayer()))) {
 				modContext.getFramebuffer().bindFramebuffer(true);
 				modContext.getSecondWorldRenderer().updateRenderer();
 				modContext.getSecondWorldRenderer().renderWorld(event.renderTickTime, p_78471_2_);
@@ -70,6 +68,10 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 				
 			
 			this.renderEndNanoTime = System.nanoTime();
-		}		
+			
+			safeGlobals.renderingPhase.set(RenderingPhase.NORMAL);
+		} else if(event.phase == TickEvent.Phase.END) {
+			safeGlobals.renderingPhase.set(null);
+		}
 	}
 }

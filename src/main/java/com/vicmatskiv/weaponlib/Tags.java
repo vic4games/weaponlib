@@ -7,6 +7,7 @@ import net.minecraft.item.ItemStack;
 public final class Tags {
 
 	private static final String ZOOM_TAG = "Zoom";
+	private static final String ZOOM_MODE_TAG = "ZoomMode";
 	private static final String ALLOWED_ZOOM_TAG = "AllowedZoom";
 	private static final String AIMED_TAG = "Aimed";
 	private static final String RECOIL_TAG = "Recoil";
@@ -54,20 +55,31 @@ public final class Tags {
 	}
 
 	static void setAllowedZoom(ItemStack itemStack, float zoom) {
+		setAllowedZoom(itemStack, zoom, false);
+	}
+	
+	static void setAllowedZoom(ItemStack itemStack, float zoom, boolean attachmentOnlyZoomMode) {
 		if (itemStack == null || itemStack.getTagCompound() == null) {
 			return;
 		}
 		itemStack.getTagCompound().setFloat(ALLOWED_ZOOM_TAG, zoom);
+		compatibility.getTagCompound(itemStack).setBoolean(ZOOM_MODE_TAG, attachmentOnlyZoomMode);
 	}
 
 	static float getZoom(ItemStack itemStack) {
 		if(itemStack == null || compatibility.getTagCompound(itemStack) == null) return 0f;
 		return compatibility.getTagCompound(itemStack).getFloat(ZOOM_TAG);
 	}
+	
+	static boolean isAttachmentOnlyZoom(ItemStack itemStack) {
+		if(itemStack == null || compatibility.getTagCompound(itemStack) == null) return false;
+		return compatibility.getTagCompound(itemStack).getBoolean(ZOOM_MODE_TAG);
+	}
 
 	static void setZoom(ItemStack itemStack, float zoom) {
 		if(itemStack == null || compatibility.getTagCompound(itemStack) == null) return;
 		compatibility.getTagCompound(itemStack).setFloat(ZOOM_TAG, zoom);
+		
 	}
 
 	static void setActiveTexture(ItemStack itemStack, int currentIndex) {

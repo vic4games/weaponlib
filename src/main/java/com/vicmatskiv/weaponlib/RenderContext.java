@@ -18,10 +18,16 @@ public class RenderContext {
 	private float transitionProgress;
 	private CompatibleTransformType compatibleTransformType;
 	private RenderableState fromState;
+	private ClientModContext clientModContext;
 
-	public RenderContext(EntityPlayer player, ItemStack weapon) {
+	public RenderContext(ClientModContext clientModContext, EntityPlayer player, ItemStack weapon) {
+		this.clientModContext = clientModContext;
 		this.player = player;
 		this.weapon = weapon;
+	}
+
+	public ClientModContext getClientModContext() {
+		return clientModContext;
 	}
 
 	public float getLimbSwing() {

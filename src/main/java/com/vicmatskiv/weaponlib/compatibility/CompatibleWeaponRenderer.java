@@ -74,9 +74,9 @@ public abstract class CompatibleWeaponRenderer implements IItemRenderer {
 		GL11.glScaled(-1F, -1F, 1F);
 		EntityPlayer player = Minecraft.getMinecraft().thePlayer;
 		
-		RenderContext renderContext = new RenderContext(player, weaponItemStack);
+		RenderContext renderContext = new RenderContext(getClientModContext(), player, weaponItemStack);
 		
-		//loat limbSwing, float flimbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scale
+		//float limbSwing, float flimbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scale
 		//0.0F, 0.0f, -0.4f, 0.0f, 0.0f, 0.08f);
 		renderContext.setAgeInTicks(-0.4f);
 		renderContext.setScale(0.08f);

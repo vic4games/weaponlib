@@ -25,15 +25,34 @@ public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 		safeGlobals.guiOpen.set(compatibility.getGui(event) != null);
 	}
 	
-	public static float overridenFov = 1.0f;
 	@Override
 	public void compatibleZoom(FOVUpdateEvent event) {
+		/*
+		 * TODO: if optical zoom is on then
+		 * 			if rendering phase is "render viewfinder" then 
+		 * 				setNewFov(getZoom());
+		 *          else if rendering phase is normal then
+		 *              setNewFov(1);
+		 *       else if optical zoom is off
+		 *       	setNewFov(getZoom())
+		 */
 
 		ItemStack stack = compatibility.getHeldItemMainHand(compatibility.getEntity(event));
 		if (stack != null) {
 			if (stack.getItem() instanceof Weapon) {
 				if (compatibility.getTagCompound(stack) != null) {
-					compatibility.setNewFov(event, 1f); //Tags.getZoom(stack));
+					final float fov;
+					if(Tags.isAttachmentOnlyZoom(stack)) {
+						if(safeGlobals.renderingPhase.get() == RenderingPhase.RENDER_VIEWFINDER) {
+							fov = Tags.getZoom(stack);
+						} else {
+							fov = 1f;
+						}
+					} else {
+						fov = Tags.getZoom(stack);
+					}
+					
+					compatibility.setNewFov(event, fov); //Tags.getZoom(stack));
 				}
 			}
 		}
@@ -47,7 +66,8 @@ public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 				event.setCanceled(true);
 			}
 		} else if(compatibility.getButton(event) == 1) {
-			ItemStack heldItem = compatibility.getHeldItemMainHand(compatibility.clientPlayer());			if(heldItem != null && heldItem.getItem() instanceof Weapon 
+			ItemStack heldItem = compatibility.getHeldItemMainHand(compatibility.clientPlayer());			
+			if(heldItem != null && heldItem.getItem() instanceof Weapon 
 					&& Weapon.isEjectedSpentRound(compatibility.clientPlayer(), heldItem)) {
 				event.setCanceled(true);
 			}

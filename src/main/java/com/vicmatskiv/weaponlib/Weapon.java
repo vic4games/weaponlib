@@ -600,13 +600,17 @@ public class Weapon extends CompatibleItem implements AttachmentContainer {
 		}
 	}
 	
-	public void changeZoom(EntityPlayer player, float factor) {
+	public void changeZoom(EntityPlayer player, float factor, boolean attachmentOnlyMode) {
 		ItemStack itemStack = compatibility.getHeldItemMainHand(player);
 		if(itemStack != null) {
 			ensureItemStack(itemStack);
 			float zoom = builder.zoom * factor;
-			Tags.setAllowedZoom(itemStack, zoom);
+			Tags.setAllowedZoom(itemStack, zoom, attachmentOnlyMode);
 		}
+	}
+	
+	public void changeZoom(EntityPlayer player, float factor) {
+		changeZoom(player, factor, false);
 	}
 	
 	Map<ItemAttachment<Weapon>, CompatibleAttachment<Weapon>> getCompatibleAttachments() {

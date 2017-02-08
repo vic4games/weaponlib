@@ -456,11 +456,11 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
         if (mc.renderViewEntity instanceof EntityPlayerSP)
         {
             EntityPlayerSP entityplayersp = (EntityPlayerSP)this.mc.renderViewEntity;
-            this.fovMultiplierTemp = 1f; // TODO: fix this: entityplayersp.getFOVMultiplier();
+            this.fovMultiplierTemp = entityplayersp.getFOVMultiplier();
         }
         else
         {
-            this.fovMultiplierTemp = 1f; // mc.thePlayer.getFOVMultiplier();
+            this.fovMultiplierTemp = mc.thePlayer.getFOVMultiplier();
         }
         this.fovModifierHandPrev = this.fovModifierHand;
         this.fovModifierHand += (this.fovMultiplierTemp - this.fovModifierHand) * 0.5F;
@@ -679,7 +679,7 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
             GL11.glScaled(this.cameraZoom, this.cameraZoom, 1.0D);
         }
 
-        Project.gluPerspective(this.getFOVModifier(p_78479_1_, true) - 100, 
+        Project.gluPerspective(this.getFOVModifier(p_78479_1_, true), 
         		1, //(float)this.mc.displayWidth / (float)this.mc.displayHeight, 
         		0.05F, 
         		this.farPlaneDistance * 2.0F);
