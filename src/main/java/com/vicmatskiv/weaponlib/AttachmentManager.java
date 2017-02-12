@@ -24,6 +24,11 @@ public final class AttachmentManager {
 		this.modContext = modContext;
 	}
 	
+	/*
+	 * stateManager.allow(State.READY, State.MODIFYING, StateManager.TimeoutPredicate(50, TimeUnit.MILLISECONDS);
+	 * stateManager.allow(State.MODIFYING, State.READY);
+	 */
+	
 	void toggleClientAttachmentSelectionMode(ItemStack itemStack, EntityPlayer player) {
 		Item item = itemStack.getItem();
 		if(!(item instanceof Weapon && compatibility.getHeldItemMainHand(player) == itemStack)) {
@@ -32,6 +37,12 @@ public final class AttachmentManager {
 		Weapon weapon = (Weapon) item;
 		WeaponClientStorage storage = weapon.getWeaponClientStorage(player);
 		if(storage == null) return;
+		/*
+		 * if(stateManager.nextState(context)) {
+		 *     modContext.getChannel().getChannel().sendToServer(new AttachmentModeMessage());
+		 * }
+		 *    
+		 */
 		if(storage.getState() == State.EJECT_SPENT_ROUND) {
 			return;
 		}
