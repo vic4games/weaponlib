@@ -6,17 +6,28 @@ import java.util.function.BiConsumer;
 import org.junit.Assert;
 import org.junit.Test;
 
-import io.netty.buffer.ByteBuf;
-
 public class StateManagerTest {
+	
+	private static enum MyState implements ManagedState {
+		STATE1, STATE2_REQUESTED, STATE2(STATE2_REQUESTED), STATE3;
 
-	private static class MyState { 
-		private static final ManagedState STATE1 = new ManagedState("State1");
-		private static final ManagedState STATE2 = new ManagedState("State2");
-		private static final ManagedState STATE3 = new ManagedState("State3");
+		private MyState permitRequested;
+		
+		private MyState() {
+			this(null);
+		}
+		
+		private MyState(MyState permitRequested) {
+			this.permitRequested = permitRequested;
+		}
+		
+		@Override
+		public ManagedState permitRequested() {
+			return permitRequested;
+		}
 	};
 	
-	private static class MyStateContainer implements StateContainer<ManagedState> {
+	private static class MyStateContainer implements ManagedStateContainer<ManagedState> {
 		
 		private AtomicReference<ManagedState> ref;
 		
@@ -25,29 +36,35 @@ public class StateManagerTest {
 		}
 
 		@Override
-		public boolean compareAndSetState(ManagedState expectedState, ManagedState updateToState) {
+		public boolean compareAndSetManagedState(ManagedState expectedState, ManagedState updateToState) {
 			return ref.compareAndSet(expectedState, updateToState);
 		}
 
 		@Override
-		public ManagedState get() {
+		public ManagedState getManagedState() {
 			return ref.get();
+		}
+
+		@Override
+		public long getLastManagedStateUpdateTimestamp() {
+			// TODO Auto-generated method stub
+			return 0;
 		}
 		
 	}
 	
 	private static class MyStateContext implements StateContext {
 		boolean flag;
-		private StateContainer<ManagedState> stateContainer;
+		private ManagedStateContainer<ManagedState> stateContainer;
 		
 		//private StateContainer<? extends State> stateContainer;
 
-		public MyStateContext(StateContainer<ManagedState> stateContainer) {
+		public MyStateContext(ManagedStateContainer<ManagedState> stateContainer) {
 			this.stateContainer = stateContainer;
 		}
 
 		@Override
-		public StateContainer<ManagedState> getStateContainer() {
+		public ManagedStateContainer<ManagedState> getStateContainer() {
 			return stateContainer;
 		}
 	}
@@ -68,49 +85,39 @@ public class StateManagerTest {
 	}
 	
 	static class MyNetworkPermit extends Permit {
-		private static RegisteredUuid typeUuid = Permit.register(MyNetworkPermit.class, "cd06aa6c-b43a-4264-8526-a7d97a8db63a");
 
+		public MyNetworkPermit(ManagedState state) {
+			super(state);
+		}
+		
 		@Override
 		public Status getStatus() {
 			return Status.GRANTED;
 		}
 
-		@Override
-		protected RegisteredUuid getTypeUuid() {
-			return typeUuid;
-		}
-
-		@Override
-		protected void init(ByteBuf buf) {
-			// TODO Auto-generated method stub
-			
-		}
-
-		@Override
-		public ManagedState getTargetState() {
-			// TODO Auto-generated method stub
-			return null;
-		}
 	}
 	
 	@Test
 	public void testAlwaysWithPermit() {
 		
 		class NetworkContext implements StateContext {
-			Permit permit = new MyNetworkPermit();
+			Permit permit;
 			
-			private StateContainer<ManagedState> stateContainer;
+			private ManagedStateContainer<ManagedState> stateContainer;
 			
-			public NetworkContext(StateContainer<ManagedState> stateContainer) {
+			public NetworkContext(ManagedStateContainer<ManagedState> stateContainer) {
 				this.stateContainer = stateContainer;
 			}
 			
 			public Permit getPermit(ManagedState state) {
+				if(permit == null) {
+					permit = new MyNetworkPermit(state);
+				}
 				return permit;
 			}
 			
 			@Override
-			public StateContainer<ManagedState> getStateContainer() {
+			public ManagedStateContainer<ManagedState> getStateContainer() {
 				return stateContainer;
 			}
 		};
@@ -118,9 +125,20 @@ public class StateManagerTest {
 		NetworkContext context = new NetworkContext(new MyStateContainer(MyState.STATE1));
 		
 		PermitManager<NetworkContext> permitManager = new PermitManager<NetworkContext>() {
+
+
 			@Override
-			public void request(Permit permit, NetworkContext context, BiConsumer<Permit, NetworkContext> callback) {
+			public <T extends Permit> void registerEvaluator(Class<T> permitClass,
+					BiConsumer<T, NetworkContext> evaluator) {
 				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public <T extends Permit> void request(T permit, NetworkContext context,
+					BiConsumer<Permit, NetworkContext> callback) {
+				// TODO Auto-generated method stub
+				
 			}
 		};
 		
@@ -128,7 +146,7 @@ public class StateManagerTest {
 		stateManager
 				.in(NetworkContext.class)
 				.change(MyState.STATE1).to(MyState.STATE2)
-				.withPermit(NetworkContext::getPermit, permitManager)
+				.withPermit((s, c) -> c.getPermit(s), permitManager)
 				.allowed();
 		
 		StateManager.Result result;

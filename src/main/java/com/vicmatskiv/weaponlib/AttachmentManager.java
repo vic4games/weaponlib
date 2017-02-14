@@ -121,7 +121,7 @@ public final class AttachmentManager {
 		return activeAttachments;
 	}
 
-	private int[] ensureActiveAttachments(ItemStack itemStack) {
+	private static int[] ensureActiveAttachments(ItemStack itemStack) {
 		int activeAttachmentsIds[] = compatibility.getTagCompound(itemStack).getIntArray(ACTIVE_ATTACHMENT_TAG);
 		
 		Weapon weapon = (Weapon) itemStack.getItem();
@@ -316,7 +316,7 @@ public final class AttachmentManager {
 		return currentAttachment;
 	}
 	
-	ItemAttachment<Weapon> getActiveAttachment(ItemStack itemStack, AttachmentCategory category) {
+	static ItemAttachment<Weapon> getActiveAttachment(ItemStack itemStack, AttachmentCategory category) {
 		compatibility.ensureTagCompound(itemStack);
 		
 		Weapon weapon = (Weapon) itemStack.getItem();

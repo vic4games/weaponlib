@@ -1,11 +1,12 @@
 package com.vicmatskiv.weaponlib.state;
 
+import com.vicmatskiv.weaponlib.network.RegisteredUuid;
+import com.vicmatskiv.weaponlib.network.UniversalObject;
+
 import io.netty.buffer.ByteBuf;
 
 public class TestPermit extends UniversalObject {
-	
-	static RegisteredUuid uuid = register(TestPermit.class, "ff9c1e73-25f4-461e-98de-ef89f5edd73d");
-	
+
 	private int amount;
 	
 	public TestPermit() {
@@ -18,15 +19,12 @@ public class TestPermit extends UniversalObject {
 	public int getAmount() {
 		return amount;
 	}
-	
-	@Override
-	protected RegisteredUuid getTypeUuid() {
-		return uuid;
-	}
 
 	@Override
-	protected void init(ByteBuf buf) {
+	public boolean init(ByteBuf buf) {
+		super.init(buf);
 		amount = buf.readInt();
+		return true;
 	}
 
 	@Override

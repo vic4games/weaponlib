@@ -2,6 +2,8 @@ package com.vicmatskiv.weaponlib.state;
 
 import org.junit.Test;
 
+import com.vicmatskiv.weaponlib.network.UniversalObject;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 

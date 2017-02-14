@@ -2,6 +2,8 @@ package com.vicmatskiv.weaponlib;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
+import com.vicmatskiv.weaponlib.state.ManagedState;
+
 import net.minecraft.item.ItemStack;
 
 public final class Tags {
@@ -15,6 +17,7 @@ public final class Tags {
 	private static final String LASER_ON_TAG = "LaserOn";
 	private static final String AMMO_TAG = "Ammo";
 	private static final String STATE_TAG = "State";
+	private static final String MANAGED_STATE_TAG = "ManagedState";
 	private static final String DEFAULT_TIMER_TAG = "DefaultTimer";
 
 	static boolean isLaserOn(ItemStack itemStack) {
@@ -107,9 +110,15 @@ public final class Tags {
 		return Weapon.State.values()[compatibility.getTagCompound(itemStack).getInteger(STATE_TAG)];
 	}
 	
+	
 	static void setState(ItemStack itemStack, Weapon.State state) {
 		if(itemStack == null || compatibility.getTagCompound(itemStack) == null) return;
 		compatibility.getTagCompound(itemStack).setInteger(STATE_TAG, state.ordinal());
+	}
+	
+	static ManagedState getManagedState(ItemStack itemStack) {
+		if(itemStack == null || compatibility.getTagCompound(itemStack) == null) return null;
+		return WeaponState.values()[compatibility.getTagCompound(itemStack).getInteger(MANAGED_STATE_TAG)];
 	}
 	
 	public static long getDefaultTimer(ItemStack itemStack) {

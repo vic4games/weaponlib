@@ -343,5 +343,15 @@ public class Compatibility1_7_10 implements Compatibility {
 		return 2.3f;
 	}
 
+	@Override
+	public int getCurrentInventoryItemIndex(EntityPlayer player) {
+		return player.inventory.currentItem;
+	}
+
+	@Override
+	public ItemStack getInventoryItemStack(EntityPlayer player, int inventoryItemIndex) {
+		return player.inventory.getStackInSlot(inventoryItemIndex);
+	}
+
 	
 }

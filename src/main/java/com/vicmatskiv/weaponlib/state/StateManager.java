@@ -4,40 +4,27 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
-import java.util.function.Function;
+import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
 import com.vicmatskiv.weaponlib.state.Permit.Status;
 
-
-/*
- * Use case:
- * 
- * 1) Target state is known
- * 
- * 2) Target state depends on the current state
- * 
- * Question: does each aspect need to be aware of all the transitons even outside of this aspect?
- * for example, can reload manager deal with reload-related states only?
- * 
- * No, because if we  want to capture last state transition timestamp.
- * 
- * Should this class be stateless? Where do we store last state transition timestamp?
- * With the state itself?
- */
 public class StateManager {
 	
 	public class RuleBuilder<Context extends StateContext> {
+		
+		private static final long DEFAULT_REQUEST_TIMEOUT = 5000L;
 		
 		private Class<Context> contextClass;
 		private ManagedState fromState;
 		private ManagedState toState;
 		private Action<Context> action;
 		private Predicate<Context> predicate;
-		private BiFunction<Context, ManagedState, Permit> permitProvider;
+		private BiFunction<ManagedState, Context, Permit> permitProvider;
+		//private PermitProvider<Context> permitProvider;
 		private PermitManager<? super Context> permitManager;
+		private long requestTimeout = DEFAULT_REQUEST_TIMEOUT;
 			
 		public RuleBuilder(Class<Context> contextClass) {
 			this.contextClass = contextClass;
@@ -58,7 +45,8 @@ public class StateManager {
 			return this;
 		}
 		
-		public RuleBuilder<Context> withPermit(BiFunction<Context, ManagedState, Permit> permitProvider,
+		public RuleBuilder<Context> withPermit(
+				BiFunction<ManagedState, Context, Permit> permitProvider,
 				PermitManager<? super Context> permitManager) {
 			this.permitProvider = permitProvider;
 			this.permitManager = permitManager;
@@ -100,30 +88,34 @@ public class StateManager {
 				 *     toState.permitRequested -> fromState (if permit denied)
 				 */
 	
-				contextRules.add(new TransitionRule(contextClass, fromState, toState.permitRequested(), 
-						(Predicate<Object>) predicate, 
-						(c) -> permitProvider.apply(contextClass.cast(c), toState),
+				contextRules.add(new TransitionRule(fromState, toState.permitRequested(), 
+						(c, p) -> predicate.test(contextClass.cast(c)), 
 						(c, f, t) -> { permitManager.request(
-								permitProvider.apply(contextClass.cast(c), toState), (Context) c, 
-									(p1, c1) -> {StateManager.this.changeState(contextClass.cast(c1), toState);});
+								permitProvider.apply(toState, contextClass.cast(c)), (Context) c, 
+									(p1, c1) -> {
+										System.out.println("Applying permit with status " + p1.getStatus()
+											+ ", trying to change state _ to " + toState);
+										StateManager.this.changeStateWithPermit(contextClass.cast(c1), p1, toState.permitRequested(), toState);
+									});
 								return null;
 						}));
 				
-				contextRules.add(new TransitionRule(contextClass, toState.permitRequested(), toState, 
-						(c) -> permitProvider.apply(contextClass.cast(c), toState).getStatus() == Status.GRANTED,
-						null,
+				contextRules.add(new TransitionRule(toState.permitRequested(), toState, 
+						(c, p) -> p != null? p.getStatus() == Status.GRANTED : false,
 						(c, f, t) -> action.execute(contextClass.cast(c), f, t)));
 				
-				contextRules.add(new TransitionRule(contextClass, toState.permitRequested(), fromState, 
-						(c) -> {Status status = permitProvider.apply(contextClass.cast(c), toState).getStatus(); 
-								return status == Status.DENIED || status == Status.TIMED_OUT;},
-						null,
+				BiPredicate<Object, Permit> permitDenied = (c, p) -> p != null ? p.getStatus() == Status.DENIED : false;
+
+				BiPredicate<Object, Permit> requestTimedout = (c, p) -> 
+						System.currentTimeMillis() > contextClass.cast(c).getStateContainer().getLastManagedStateUpdateTimestamp() + requestTimeout;
+				
+				contextRules.add(new TransitionRule(toState.permitRequested(), fromState, 
+						permitDenied.or(requestTimedout),
 						(c, f, t) -> action.execute(contextClass.cast(c), f, t)));
 				
 			} else {
-				contextRules.add(new TransitionRule(contextClass, fromState, toState,
-						(Predicate<Object>) predicate, null,
-						(c, f, t) -> action.execute(contextClass.cast(c), f, t)));
+				contextRules.add(new TransitionRule(fromState, toState,
+						(c, p) -> predicate.test(contextClass.cast(c)), (c, f, t) -> action.execute(contextClass.cast(c), f, t)));
 			}
 			
 			return StateManager.this;
@@ -169,26 +161,33 @@ public class StateManager {
 	private static class TransitionRule {
 		ManagedState fromState;
 		ManagedState toState;
-		Predicate<Object> predicate;
+		BiPredicate<Object, Permit> predicate;
 		Action<Object> action;
-		Class<?> contextClass;
 		
-		TransitionRule(Class<?> contextClass, ManagedState fromState, ManagedState toState, 
-				Predicate<Object> predicate, Function<Object, Permit> permitProvider, Action<Object> action) {
-			this.contextClass = contextClass;
+		TransitionRule(
+				ManagedState fromState, 
+				ManagedState toState, 
+				BiPredicate<Object, Permit> predicate, 
+				Action<Object> action) {
+			if(fromState == null) {
+				throw new IllegalArgumentException("From-state cannot be null");
+			}
+			if(toState == null) {
+				throw new IllegalArgumentException("To-state cannot be null");
+			}
 			this.fromState = fromState;
 			this.toState = toState;
 			this.predicate = predicate;
 			this.action = action;
 		}
 		
-		boolean matches(StateComparator stateComparator, Object context, ManagedState fromState, ManagedState...targetStates) {
+		boolean matches(StateComparator stateComparator, Object context, Permit permit, ManagedState fromState, ManagedState...targetStates) {
 			
 			return stateComparator.compare(this.fromState, fromState) 
 					&& (targetStates.length == 0 || Arrays.stream(targetStates).anyMatch(targetState -> stateComparator.compare(toState, targetState) 
 						|| (targetState.permitRequested() != null 
 							&& stateComparator.compare(toState, targetState.permitRequested()))))
-					&& predicate.test(contextClass.cast(context));
+					&& predicate.test(context, permit);
 		}
 	}
 	
@@ -203,46 +202,47 @@ public class StateManager {
 		return new RuleBuilder<T>(contextClass);
 	}
 	
-	/**
-	 * Changes state in the given context to any of the target states;
-	 * 
-	 * TODO: this method must be thread safe
-	 * @param context
-	 * @param targetStates
-	 * @return
-	 */
 	public <Context extends StateContext> Result changeState(Context context, ManagedState...targetStates) {
+		ManagedState currentState = context.getStateContainer().getManagedState();
+		return changeStateWithPermit(context, null, currentState, targetStates);
+	}
+	
+	protected <Context extends StateContext> Result changeStateWithPermit(Context context, 
+			Permit permit, ManagedState fromState, ManagedState...targetStates) {
 		
-		ManagedState currentState = context.getStateContainer().get();
-		TransitionRule newStateRule = findNextStateRule(context, currentState, targetStates);
+		//System.out.println("Current state: " + currentState);
+		// If current state matches any of the target states, return immediately
+		if(Arrays.stream(targetStates).anyMatch(target -> stateComparator.compare(fromState, target))) {
+			return new Result(false, fromState);
+		}
+		TransitionRule newStateRule = findNextStateRule(context, permit, fromState, targetStates);
 		Result result = null;
 		if(newStateRule != null) {
-			if(context.getStateContainer().compareAndSetState(currentState, newStateRule.toState)) {
+			if(context.getStateContainer().compareAndSetManagedState(fromState, newStateRule.toState)) {
 				// Update state if the current state state did not change during this evaluation
+				System.out.println("State changed from " + fromState + " to "+ newStateRule.toState);
 				result = new Result(true, newStateRule.toState);
 				if(newStateRule.action != null) {
-					result.actionResult = newStateRule.action.execute(context, currentState, newStateRule.toState);
+					result.actionResult = newStateRule.action.execute(context, fromState, newStateRule.toState);
 				}
-			} else {
-				// Transition rule was found, however the current state changed during this evaluation
 			}
 		} 
 		
 		if(result == null) {
-			result = new Result(false, currentState);
+			result = new Result(false, fromState);
 		}
 		
 		return result;
 	}
 
 
-	private <Context> TransitionRule findNextStateRule(Context context, ManagedState currentState, ManagedState... targetStates) {
+	private <Context> TransitionRule findNextStateRule(Context context, Permit permit, ManagedState currentState, ManagedState... targetStates) {
 				
 		return contextRules.entrySet().stream()
 				.filter(e -> e.getKey().isAssignableFrom(context.getClass())) // check if a rule context class is a base class for the provided context class
 				.map(e -> e.getValue()) // convert entry to a list of rules
 				.flatMap(LinkedHashSet::stream) // merge the rule list
-				.filter(rule -> rule.matches(stateComparator, context, currentState, targetStates)) // find matching rule
+				.filter(rule -> rule.matches(stateComparator, context, permit, currentState, targetStates)) // find matching rule
 				.findFirst() // stop on the first found rule
 				.orElse(null); // default to null if rule not found
 	}

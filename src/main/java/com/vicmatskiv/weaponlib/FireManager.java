@@ -70,9 +70,7 @@ public class FireManager {
 			
 			EffectManager.getInstance().spawnSmokeParticle(player, compatibility.getEffectOffsetX(),
 					compatibility.getEffectOffsetY());
-			
-			storage.setLastShotFiredAt(System.currentTimeMillis());
-			
+						
 			storage.addShot();
 			
 		}

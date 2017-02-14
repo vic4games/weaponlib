@@ -8,10 +8,14 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import com.google.common.util.concurrent.AtomicDouble;
 import com.vicmatskiv.weaponlib.Weapon.State;
+import com.vicmatskiv.weaponlib.state.ManagedState;
+import com.vicmatskiv.weaponlib.state.ManagedStateContainer;
 
-final class WeaponClientStorage {
+final class WeaponClientStorage implements ManagedStateContainer<ManagedState>{
 	private AtomicInteger currentAmmo;
 	private AtomicLong reloadingStopsAt;
+	
+	private long lastManagedStateUpdateTimestamp;
 
 	private long lastShotFiredAt;
 	private long ejectSpentRoundStartedAt;
@@ -22,18 +26,18 @@ final class WeaponClientStorage {
 
 	private AtomicReference<State> state;
 	
+	private AtomicReference<ManagedState> managedState;
+	
 	private boolean automatic;
-
-//	private int recoilableShotCount;
-//	private boolean recoiledForCurrentShot;
 
 	private Queue<ExpirableRenderableState> expirableRenderableStates = new ArrayBlockingQueue<>(100);
 
-	public WeaponClientStorage(State state, int currentAmmo, float zoom, float recoil, float fireRate, boolean automatic) {
+	public WeaponClientStorage(ManagedState managedState, State state, int currentAmmo, float zoom, float recoil, float fireRate, boolean automatic) {
 		this.currentAmmo = new AtomicInteger(currentAmmo);
 		this.reloadingStopsAt = new AtomicLong();
 		this.recoil = new AtomicDouble(recoil);
 		this.state = new AtomicReference<>(state);
+		this.managedState = new AtomicReference<>(managedState);
 		this.zoom = zoom;
 		this.fireRate = fireRate;
 		this.automatic = automatic;
@@ -87,39 +91,9 @@ final class WeaponClientStorage {
 		this.recoil.set(recoil);
 	}
 
-//	public synchronized void addRecoilableShot() {
-//		if (recoilableShotCount < 0) {
-//			recoilableShotCount = 0;
-//		}
-//		if (recoilableShotCount == 0) {
-//			recoiledForCurrentShot = false;
-//		}
-//		recoilableShotCount++;
-//	}
-//
-//	public synchronized boolean hasRecoiled() {
-//		return recoiledForCurrentShot;
-//	}
-//
-//	public synchronized boolean checkIfNotRecoiledAndRecoil() {
-//		if (recoilableShotCount > 0) {
-//			if (!recoiledForCurrentShot) {
-//				recoilableShotCount--;
-//				recoiledForCurrentShot = true;
-//				return true;
-//			} else {
-//				return false;
-//			}
-//		} else {
-//			return false;
-//		}
-//	}
-//
-//	public synchronized void resetRecoiled() {
-//		recoiledForCurrentShot = false;
-//	}
-
 	public void addShot() {
+		setLastShotFiredAt(System.currentTimeMillis());
+		
 		if (shotsInternal++ == 0) {
 			// disposableRenderableStates.add(RenderableState.RECOILED);
 		}
@@ -165,7 +139,23 @@ final class WeaponClientStorage {
 		shotsInternal = 0;
 	}
 
-	// public void resetDisposableRenderableQueue() {
-	// disposableRenderableStates.clear();
-	// }
+	@Override
+	public boolean compareAndSetManagedState(ManagedState expectedState, ManagedState updateToState) {
+		if(managedState.compareAndSet(expectedState, updateToState)) {
+			lastManagedStateUpdateTimestamp = System.currentTimeMillis();
+			return true;
+		}
+		return false;
+	}
+
+	@Override
+	public ManagedState getManagedState() {
+		return managedState.get();
+	}
+
+	@Override
+	public long getLastManagedStateUpdateTimestamp() {
+		return lastManagedStateUpdateTimestamp;
+	}
+
 }

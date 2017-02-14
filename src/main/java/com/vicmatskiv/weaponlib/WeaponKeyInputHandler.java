@@ -4,6 +4,7 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 
 import java.util.function.Function;
 
+import com.vicmatskiv.weaponlib.ReloadAspect.ReloadContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponKeyInputHandler;
@@ -17,14 +18,17 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
 	private Function<CompatibleMessageContext, EntityPlayer> entityPlayerSupplier;
 	private AttachmentManager attachmentManager;
 	private ReloadManager reloadManager;
+	private ReloadAspect reloadAspect;
 	
 	public WeaponKeyInputHandler(Function<CompatibleMessageContext, EntityPlayer> entityPlayerSupplier, 
 			AttachmentManager attachmentManager,
 			ReloadManager reloadManager,
+			ReloadAspect reloadAspect,
 			CompatibleChannel channel) {
 		this.entityPlayerSupplier = entityPlayerSupplier;
 		this.attachmentManager = attachmentManager;
 		this.reloadManager = reloadManager;
+		this.reloadAspect = reloadAspect;
 		this.channel = channel;
 	}
 
@@ -35,7 +39,12 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
         	EntityPlayer player = entityPlayerSupplier.apply(null);
         	ItemStack itemStack = compatibility.getHeldItemMainHand(player);
     		if(itemStack != null) {
-    			reloadManager.toggleReload(itemStack, player);
+//    			reloadManager.toggleReload(itemStack, player);
+    			ReloadContext reloadContext = reloadAspect.contextForPlayer(player);
+    			if(reloadContext != null) {
+    				reloadAspect.onReloadAction(reloadContext);
+    			}
+    			
     		}
         }
         

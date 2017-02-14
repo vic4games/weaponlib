@@ -3,18 +3,9 @@ package com.vicmatskiv.weaponlib;
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
 import java.util.List;
-import java.util.function.BiConsumer;
-import java.util.function.Predicate;
 
 import com.vicmatskiv.weaponlib.Weapon.State;
-import com.vicmatskiv.weaponlib.state.NetworkPermitManager;
-import com.vicmatskiv.weaponlib.state.Permit;
-import com.vicmatskiv.weaponlib.state.PermitManager;
-import com.vicmatskiv.weaponlib.state.RegisteredUuid;
-import com.vicmatskiv.weaponlib.state.StateManager;
-import com.vicmatskiv.weaponlib.state.UniversalObject;
 
-import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
@@ -22,122 +13,13 @@ import net.minecraft.item.ItemStack;
 public class ReloadManager {
 	
 	private ModContext modContext;
-	
-	
-	
-	
-	class ReloadContext extends CommonWeaponAspectContext {
 		
-	}
-	
-	StateManager stateManager; // TODO: weapon and magazine each needs to have its own state manager!
-	
-	private Predicate<ReloadContext> magazineAttached;
-	private Predicate<ReloadContext> supportsDirectBulletLoad;
-	private Predicate<ReloadContext> receivedAmmo;
-	private Predicate<ReloadContext> quietReload;
-	private Predicate<ReloadContext> reloadRequestTimeoutExpired;
-	private Predicate<CommonWeaponAspectContext> reloadAnimationCompleted;
-
-	private Predicate<ReloadContext> unloadingAnimationCompleted;
-
-	private Predicate<CommonWeaponAspectContext> unloadAnimationCompleted;
-
-	private BiConsumer<Permit, CommonWeaponAspectContext> serverAction;
-	
-	static class States { 
-		static final com.vicmatskiv.weaponlib.state.ManagedState READY = new com.vicmatskiv.weaponlib.state.ManagedState();
-		static final com.vicmatskiv.weaponlib.state.ManagedState RELOAD = new com.vicmatskiv.weaponlib.state.ManagedState();
-		static final com.vicmatskiv.weaponlib.state.ManagedState UNLOAD = new com.vicmatskiv.weaponlib.state.ManagedState();
-	};
-	
 	ReloadManager(ModContext modContext) {
 		this.modContext = modContext;
-		
-
-		PermitManager<CommonWeaponAspectContext> weaponPermitManager = new NetworkPermitManager<CommonWeaponAspectContext>(modContext, serverAction);
-		
-		stateManager
-		
-		.in(ReloadContext.class).change(States.READY).to(States.RELOAD)
-			.when(supportsDirectBulletLoad.or(magazineAttached.negate()))
-			.withPermit(ReloadContext::getPermit, weaponPermitManager)
-			.allowed()
-
-		.in(CommonWeaponAspectContext.class).change(States.RELOAD).to(States.READY) // note the use of base context
-			.when(reloadAnimationCompleted)
-			.allowed()
-			
-		.in(ReloadContext.class).change(States.READY).to(States.UNLOAD)
-			.when(magazineAttached)
-			.withPermit(ReloadContext::getPermit, weaponPermitManager)
-			.allowed()
-		
-		.in(CommonWeaponAspectContext.class).change(States.UNLOAD).to(States.READY) // note the use of base context
-			.when(unloadAnimationCompleted)
-			.allowed();
-
-				
 	}
-//	
-//	private void startUnload(MyStateContext context) {
-//
-//	}
-//
-//	private void requestLoadFromServer(MyStateContext context) {
-//
-//	}
-//	
-//	private void requestUnloadFromServer(MyStateContext context) {
-//		// TODO Auto-generated method stub
-//
-//	}
-
-//	void toggleReload(ReloadContext context) {
-//		stateManager.changeState(context, States.RELOAD, States.UNLOAD);
-//	}
-//	
-//	void completeLoad(MyStateContext context) {
-//		stateManager.changeState(context, Weapon.State.RELOAD_CONFIRMED, Weapon.State.READY);
-//	}
-//	
-//	void completeUnload(MyStateContext context) {
-//		stateManager.changeState(context, Weapon.State.READY);
-//	}
-//	
-//	void update(MyStateContext context) {
-//		stateManager.changeState(context, Weapon.State.UNLOAD_REQUESTED_FROM_SERVER, Weapon.State.READY);
-//	}
 	
 	//@SideOnly(Side.CLIENT)
 	void toggleReload(ItemStack itemStack, EntityPlayer player) {
-		/*
-		 * Required rule for weapon:
-		 * 
-		 * 
-		 * from: "ready" to "load" if ammoCapacity > 0 (weapon with non-magazine load)
-		 * 
-		 * from: "ready" to "load if ammoCapacity == 0 and no magazine attached
-		 * 
-		 * from: "ready" to "unload" if magazine attached
-		 * 
-		 * stateManager.addRule("read", "load", (context) -> ammoCapacity > 0);
-		 * 
-		 * 
-		 * stateManager.addRule(
-		 * 		"UNLOAD_STARTED", 
-		 * 		"UNLOAD_REQUEST_FROM_SERVER", 
-		 * 		(context) -> afterTimeout(10, TimeUnit.MILLISECONDS),
-		 *      (context, fromState, toState) -> doSomething()
-
-		 * 
-		 * 
-		 * switch(stateManager.findNextState(context, "UNLOAD_STARTED", "RELOAD_REQUESTED")) {
-		 *   case "UNLOAD_STARTED": break;
-		 *   case "RELOAD_REQUESTED": break;
-		 * }
-		 */
-	
 		
 		if(itemStack.getItem() instanceof Weapon) {
 			if(Weapon.isModifying(itemStack) || Weapon.isEjectedSpentRound(player, itemStack)) {

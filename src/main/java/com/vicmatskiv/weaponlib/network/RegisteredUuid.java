@@ -1,4 +1,4 @@
-package com.vicmatskiv.weaponlib.state;
+package com.vicmatskiv.weaponlib.network;
 
 import java.util.UUID;
 

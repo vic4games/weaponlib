@@ -52,6 +52,8 @@ public interface Compatibility {
 	
 	public boolean consumeInventoryItem(EntityPlayer player, Item item);
 	
+	public int getCurrentInventoryItemIndex(EntityPlayer player);
+	
 	public void ensureTagCompound(ItemStack itemStack);
 	
 	public void playSound(EntityPlayer player, CompatibleSound sound, float volume, float pitch);
@@ -132,4 +134,6 @@ public interface Compatibility {
 	public int getStackSize(ItemStack consumedStack);
 
 	public ItemStack consumeInventoryItem(Item item, Predicate<ItemStack> condition, EntityPlayer player, int maxSize);
+
+	public ItemStack getInventoryItemStack(EntityPlayer player, int inventoryItemIndex);
 }

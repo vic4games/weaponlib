@@ -12,6 +12,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderingRegistry;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleWorldRenderer;
+import com.vicmatskiv.weaponlib.state.StateManager;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.IResourcePack;
@@ -51,9 +52,14 @@ public class ClientModContext extends CommonModContext {
 		compatibility.registerWithEventBus(new CustomGui(Minecraft.getMinecraft(), attachmentManager));
 		compatibility.registerWithEventBus(new WeaponEventHandler(safeGlobals));
 		
-		KeyBindings.init();	
+		KeyBindings.init();
+		
+		StateManager stateManager = new StateManager((s1, s2) -> s1 == s2); // implement comparator properly, ref equality will not work on server after deserialization
+		
+		reloadAspect.setPermitManager(permitManager);
+		reloadAspect.setStateManager(stateManager);
 
-		ClientWeaponTicker clientWeaponTicker = new ClientWeaponTicker(safeGlobals, fireManager, reloadManager);
+		ClientWeaponTicker clientWeaponTicker = new ClientWeaponTicker(safeGlobals, fireManager, reloadManager, reloadAspect);
 		
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
 			clientWeaponTicker.shutdown();

@@ -9,6 +9,9 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSide;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
+import com.vicmatskiv.weaponlib.network.NetworkPermitManager;
+import com.vicmatskiv.weaponlib.network.PermitMessage;
+import com.vicmatskiv.weaponlib.network.UniversalObject;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -21,10 +24,15 @@ public class CommonModContext implements ModContext {
 	protected AttachmentManager attachmentManager;
 	protected FireManager fireManager;
 	protected ReloadManager reloadManager;
+	protected ReloadAspect reloadAspect;
+	
+	@SuppressWarnings("rawtypes")
+	protected NetworkPermitManager permitManager;
 	private String modId;
 	
 	private Map<ResourceLocation, CompatibleSound> registeredSounds = new HashMap<>();
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public void init(Object mod, String modId, CompatibleChannel channel) {
 		this.channel = channel;
@@ -33,6 +41,8 @@ public class CommonModContext implements ModContext {
 		this.attachmentManager = new AttachmentManager(this);
 		this.fireManager = new FireManager(this);
 		this.reloadManager = new ReloadManager(this);
+		this.reloadAspect = new ReloadAspect(this);
+		this.permitManager = new NetworkPermitManager<>(this);
 		
 		channel.registerMessage(new ReloadMessageHandler(reloadManager, (ctx) -> getServerPlayer(ctx)),
 				ReloadMessage.class, 1, CompatibleSide.SERVER);
@@ -73,10 +83,16 @@ public class CommonModContext implements ModContext {
 		channel.registerMessage(new LaserSwitchMessageHandler(),
 				LaserSwitchMessage.class, 13, CompatibleSide.CLIENT);
 		
+		channel.registerMessage(permitManager,
+				PermitMessage.class, 14, CompatibleSide.SERVER);
+		
+		channel.registerMessage(permitManager,
+				PermitMessage.class, 15, CompatibleSide.CLIENT);
+		
 		compatibility.registerWithEventBus(new ServerEventHandler(attachmentManager));
 		
 		compatibility.registerWithFmlEventBus(new WeaponKeyInputHandler((ctx) -> getPlayer(ctx), 
-				attachmentManager, reloadManager, channel));
+				attachmentManager, reloadManager, reloadAspect, channel));
 	}
 	
 	

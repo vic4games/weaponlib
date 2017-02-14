@@ -1,6 +1,7 @@
-package com.vicmatskiv.weaponlib.state;
+package com.vicmatskiv.weaponlib.network;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessage;
+import com.vicmatskiv.weaponlib.state.Permit;
 
 import io.netty.buffer.ByteBuf;
 
@@ -11,8 +12,9 @@ public class PermitMessage<Context extends UniversalObject> implements Compatibl
 
 	public PermitMessage() {}
 	
-	public PermitMessage(Permit permit) {
+	public PermitMessage(Permit permit, Context context) {
 		this.permit = permit;
+		this.context = context;
 	}
 
 	public Permit getPermit() {
@@ -34,6 +36,5 @@ public class PermitMessage<Context extends UniversalObject> implements Compatibl
 		context.serialize(buf);
 		permit.serialize(buf);
 	}
-
 
 }
