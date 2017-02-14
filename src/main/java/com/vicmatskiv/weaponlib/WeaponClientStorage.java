@@ -11,7 +11,7 @@ import com.vicmatskiv.weaponlib.Weapon.State;
 import com.vicmatskiv.weaponlib.state.ManagedState;
 import com.vicmatskiv.weaponlib.state.ManagedStateContainer;
 
-final class WeaponClientStorage implements ManagedStateContainer<ManagedState>{
+public final class WeaponClientStorage implements ManagedStateContainer<ManagedState> {
 	private AtomicInteger currentAmmo;
 	private AtomicLong reloadingStopsAt;
 	

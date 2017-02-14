@@ -167,7 +167,7 @@ public class StateManagerTest {
 		StateManager stateManager = new StateManager(
 				(s1, s2) -> s1 == s2)
 				.in(MyStateContext.class)
-				.change(MyState.STATE1).to(MyState.STATE2).withAction((context, from, to) -> actionResult).allowed();
+				.change(MyState.STATE1).to(MyState.STATE2).withAction((context, from, to, permit) -> actionResult).allowed();
 		
 		MyStateContext context = new MyStateContext(new MyStateContainer(MyState.STATE1));		
 		StateManager.Result result;
@@ -223,7 +223,7 @@ public class StateManagerTest {
 				
 				.in(MyStateContext.class)
 				.change(MyState.STATE2).to(MyState.STATE3)
-					.withAction((context, from, to) -> actionResult)
+					.withAction((context, from, to, permit) -> actionResult)
 					.when((context) -> context.flag)
 				.allowed();
 		

@@ -40,10 +40,7 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
         	ItemStack itemStack = compatibility.getHeldItemMainHand(player);
     		if(itemStack != null) {
 //    			reloadManager.toggleReload(itemStack, player);
-    			ReloadContext reloadContext = reloadAspect.contextForPlayer(player);
-    			if(reloadContext != null) {
-    				reloadAspect.onReloadAction(reloadContext);
-    			}
+    			reloadAspect.reloadMainHeldItem(player);
     			
     		}
         }

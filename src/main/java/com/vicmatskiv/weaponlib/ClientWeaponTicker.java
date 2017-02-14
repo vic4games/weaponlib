@@ -6,8 +6,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.lwjgl.input.Mouse;
 
-import com.vicmatskiv.weaponlib.ReloadAspect.ReloadContext;
-
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 
@@ -69,10 +67,7 @@ class ClientWeaponTicker extends Thread {
 	
 	private void update(EntityPlayer player) {
 		
-		ReloadContext reloadContext = reloadAspect.contextForPlayer(player);
-		if(reloadContext != null) {
-			reloadAspect.onUpdate(reloadContext);
-		}
+		reloadAspect.updateMainHeldItem(player);
 		
 		reloadManager.update(compatibility.getHeldItemMainHand(player), player);
 		fireManager.update(compatibility.getHeldItemMainHand(player), player);

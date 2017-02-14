@@ -7,9 +7,10 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 
-import com.vicmatskiv.weaponlib.CommonWeaponAspectContext;
 import com.vicmatskiv.weaponlib.ModContext;
-import com.vicmatskiv.weaponlib.PlayerContext;
+import com.vicmatskiv.weaponlib.PlayerItemContext;
+import com.vicmatskiv.weaponlib.Weapon;
+import com.vicmatskiv.weaponlib.WeaponClientStorage;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessage;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageHandler;
@@ -18,7 +19,7 @@ import com.vicmatskiv.weaponlib.state.PermitManager;
 
 import net.minecraft.entity.player.EntityPlayerMP;
 
-public class NetworkPermitManager<Context extends PlayerContext> implements PermitManager<Context>, CompatibleMessageHandler<PermitMessage<Context>, CompatibleMessage>  {
+public class NetworkPermitManager<Context extends PlayerItemContext> implements PermitManager<Context>, CompatibleMessageHandler<PermitMessage<Context>, CompatibleMessage>  {
 	
 	private ModContext modContext;
 	private Map<UUID, BiConsumer<Permit, Context>> permitCallbacks = new HashMap<>();
@@ -62,9 +63,9 @@ public class NetworkPermitManager<Context extends PlayerContext> implements Perm
 				context.setPlayer(compatibility.clientPlayer());
 				
 				// This needs to be redesigned, because this class should not have any knowledge about CommonWeaponAspectContext
-				context.setManagedStateContainer(
-						modContext.getWeaponClientStorageManager().getWeaponClientStorage(context.getPlayer(), 
-								((CommonWeaponAspectContext)context).getWeapon()));
+				WeaponClientStorage container = modContext.getWeaponClientStorageManager().getWeaponClientStorage(context.getPlayer(), 
+						(Weapon) ((PlayerItemContext)context).getItem());
+				((PlayerItemContext)context).setManagedStateContainer(container);
 				
 				
 				BiConsumer<Permit, Context> callback = permitCallbacks.remove(permit.getUuid());

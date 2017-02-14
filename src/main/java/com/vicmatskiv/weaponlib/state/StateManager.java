@@ -59,7 +59,7 @@ public class StateManager {
 		}
 		
 		public RuleBuilder<Context> withAction(VoidAction<Context> action) {
-			this.action = (context, from, to) -> { action.execute(context, from, to); return null;};
+			this.action = (context, from, to, permit) -> { action.execute(context, from, to, permit); return null;};
 			return this;
 		}
 		
@@ -74,7 +74,7 @@ public class StateManager {
 			}
 			
 			if(action == null) {
-				action = (c, f, t) -> null;
+				action = (c, f, t, p) -> null;
 			}
 			
 			if(permitProvider != null) {
@@ -90,7 +90,7 @@ public class StateManager {
 	
 				contextRules.add(new TransitionRule(fromState, toState.permitRequested(), 
 						(c, p) -> predicate.test(contextClass.cast(c)), 
-						(c, f, t) -> { permitManager.request(
+						(c, f, t, p) -> { permitManager.request(
 								permitProvider.apply(toState, contextClass.cast(c)), (Context) c, 
 									(p1, c1) -> {
 										System.out.println("Applying permit with status " + p1.getStatus()
@@ -102,7 +102,7 @@ public class StateManager {
 				
 				contextRules.add(new TransitionRule(toState.permitRequested(), toState, 
 						(c, p) -> p != null? p.getStatus() == Status.GRANTED : false,
-						(c, f, t) -> action.execute(contextClass.cast(c), f, t)));
+						(c, f, t, p) -> action.execute(contextClass.cast(c), f, t, p)));
 				
 				BiPredicate<Object, Permit> permitDenied = (c, p) -> p != null ? p.getStatus() == Status.DENIED : false;
 
@@ -111,11 +111,11 @@ public class StateManager {
 				
 				contextRules.add(new TransitionRule(toState.permitRequested(), fromState, 
 						permitDenied.or(requestTimedout),
-						(c, f, t) -> action.execute(contextClass.cast(c), f, t)));
+						(c, f, t, p) -> action.execute(contextClass.cast(c), f, t, p)));
 				
 			} else {
 				contextRules.add(new TransitionRule(fromState, toState,
-						(c, p) -> predicate.test(contextClass.cast(c)), (c, f, t) -> action.execute(contextClass.cast(c), f, t)));
+						(c, p) -> predicate.test(contextClass.cast(c)), (c, f, t, p) -> action.execute(contextClass.cast(c), f, t, p)));
 			}
 			
 			return StateManager.this;
@@ -151,11 +151,11 @@ public class StateManager {
 	}
 	
 	public static interface Action<Context> {
-		public Object execute(Context stateContext, ManagedState fromState, ManagedState toState);
+		public Object execute(Context stateContext, ManagedState fromState, ManagedState toState, Permit permit);
 	}
 	
 	public static interface VoidAction<Context> {
-		public void execute(Context stateContext, ManagedState fromState, ManagedState toState);
+		public void execute(Context stateContext, ManagedState fromState, ManagedState toState, Permit permit);
 	}
 	
 	private static class TransitionRule {
@@ -223,7 +223,7 @@ public class StateManager {
 				System.out.println("State changed from " + fromState + " to "+ newStateRule.toState);
 				result = new Result(true, newStateRule.toState);
 				if(newStateRule.action != null) {
-					result.actionResult = newStateRule.action.execute(context, fromState, newStateRule.toState);
+					result.actionResult = newStateRule.action.execute(context, fromState, newStateRule.toState, permit);
 				}
 			}
 		} 

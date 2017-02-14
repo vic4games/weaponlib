@@ -23,10 +23,10 @@ public class FireAspect extends CommonWeaponAspect {
 //	static final ManagedState EJECTED_SPENT_ROUND = new ManagedState();
 //	static final ManagedState EJECT_SPENT_ROUND_REQUIRED = new ManagedState();
 	
-	static class FireAspectContext extends CommonWeaponAspectContext {
+	static class FireAspectContext extends PlayerItemContext {
 		
 		public FireAspectContext(WeaponClientStorage weaponClientStorage) {
-			super(weaponClientStorage);
+			
 		}
 		private EntityPlayer player;
 		private Weapon weapon;
@@ -75,12 +75,12 @@ public class FireAspect extends CommonWeaponAspect {
 			.allowed()
 		
 		.in(FireAspectContext.class).change(WeaponState.FIRING).to(WeaponState.STOPPED)
-			.withAction((c, f, t) -> resetShots(c))
+			.withAction((c, f, t, p) -> resetShots(c))
 			.allowed()
 		
 		.in(FireAspectContext.class).change(WeaponState.STOPPED).to(WeaponState.EJECTED_SPENT_ROUND)
 			.when(ejectSpentRoundRequired)
-			.withAction((c, f, t) -> ejectSpentRound(c))
+			.withAction((c, f, t, p) -> ejectSpentRound(c))
 			.allowed()
 		
 		.in(FireAspectContext.class).change(WeaponState.STOPPED).to(WeaponState.READY)

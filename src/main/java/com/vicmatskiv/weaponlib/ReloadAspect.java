@@ -11,11 +11,8 @@ import com.vicmatskiv.weaponlib.state.Permit;
 import com.vicmatskiv.weaponlib.state.Permit.Status;
 import com.vicmatskiv.weaponlib.state.PermitManager;
 import com.vicmatskiv.weaponlib.state.StateManager;
-import com.vicmatskiv.weaponlib.state.StateManager.Result;
 
-import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
 public class ReloadAspect extends CommonWeaponAspect {
@@ -38,52 +35,16 @@ public class ReloadAspect extends CommonWeaponAspect {
 		}
 	}
 	
-	public static class ReloadContext extends CommonWeaponAspectContext {
-		private int inventoryItemIndex;
-		private Weapon weapon;
-		private ItemStack itemStack;
+	public static class ReloadContext extends PlayerItemContext {
 		
 		public ReloadContext() {}
 		
 		public ReloadContext(WeaponClientStorage storage, EntityPlayer player) {
-			super(storage);
-			setPlayer(player);
-			itemStack = compatibility.getHeldItemMainHand(player);
-			weapon = (Weapon) itemStack.getItem();
-			inventoryItemIndex = compatibility.getCurrentInventoryItemIndex(player);
+			super(storage, player);
 		}
-
 
 		public Weapon getWeapon() {
-			return weapon;
-		}
-
-		public ItemStack getItemStack() {
-			if(this.itemStack == null) {
-				ItemStack itemStack = compatibility.getInventoryItemStack(getPlayer(), inventoryItemIndex);
-				this.itemStack = itemStack.getItem() == weapon ? itemStack : null;
-			}
-			
-			return this.itemStack;
-		}
-		
-		@Override
-		public boolean init(ByteBuf buf) {
-			super.init(buf);
-			Item item = Item.getItemById(buf.readInt());
-			if(!(item instanceof Weapon)) {
-				return false;
-			}
-			weapon = (Weapon) item;
-			inventoryItemIndex = buf.readInt();
-			return true;
-		}
-		
-		@Override
-		public void serialize(ByteBuf buf) {
-			super.serialize(buf);
-			buf.writeInt(Item.getIdFromItem(weapon));
-			buf.writeInt(inventoryItemIndex);
+			return (Weapon)item;
 		}
 	}
 	
@@ -98,8 +59,6 @@ public class ReloadAspect extends CommonWeaponAspect {
 	private static Predicate<ReloadContext> quietReload = (c) -> false;
 	
 	private ModContext modContext;
-	
-	
 	
 	public ReloadAspect(ModContext modContext) {
 		this.modContext = modContext;
@@ -117,7 +76,7 @@ public class ReloadAspect extends CommonWeaponAspect {
 		.in(ReloadContext.class).change(WeaponState.READY).to(WeaponState.LOAD)
 			.when(supportsDirectBulletLoad.or(magazineAttached.negate()))
 			.withPermit((s, c) -> new LoadPermit(s), permitManager)
-			.withAction((c, f, t) -> doPermittedLoad(c))
+			.withAction((c, f, t, p) -> doPermittedLoad(c, p))
 			.allowed()
 
 		.in(ReloadContext.class).change(WeaponState.LOAD).to(WeaponState.READY)
@@ -127,7 +86,7 @@ public class ReloadAspect extends CommonWeaponAspect {
 		.in(ReloadContext.class).change(WeaponState.READY).to(WeaponState.UNLOAD)
 			.when(magazineAttached)
 			.withPermit((s, c) -> new UnloadPermit(s), permitManager)
-			.withAction((c, f, t) -> doPermittedUnload(c))
+			.withAction((c, f, t, p) -> doPermittedUnload(c, p))
 			.allowed()
 		
 		.in(ReloadContext.class).change(WeaponState.UNLOAD).to(WeaponState.READY)
@@ -143,13 +102,14 @@ public class ReloadAspect extends CommonWeaponAspect {
 	}
 	
 
-	void onReloadAction(ReloadContext context) {
-		Result result = stateManager.changeState(context, WeaponState.LOAD, WeaponState.UNLOAD);
-		//System.out.println("State changed: " + result.isStateChanged() + ", current: " + result.getState());
+	void reloadMainHeldItem(EntityPlayer player) {
+		ReloadContext reloadContext = contextForPlayer(player);
+		stateManager.changeState(reloadContext, WeaponState.LOAD, WeaponState.UNLOAD);
 	}
 
-	void onUpdate(ReloadContext context) {
-		stateManager.changeState(context, WeaponState.READY);
+	void updateMainHeldItem(EntityPlayer player) {
+		ReloadContext reloadContext = contextForPlayer(player);
+		stateManager.changeState(reloadContext, WeaponState.READY);
 	}
 	
 	private void evaluateLoad(LoadPermit p, ReloadContext reloadContext) {
@@ -208,7 +168,7 @@ public class ReloadAspect extends CommonWeaponAspect {
 		p.setStatus(Status.GRANTED);
 	}
 	
-	private void doPermittedLoad(ReloadContext c) {
+	private void doPermittedLoad(ReloadContext c, Permit permit) {
 //		storage.getCurrentAmmo().set(ammo);
 //		if ((itemMagazine != null || ammo > 0) && !forceQuietReload) {
 //			storage.setState(State.RELOAD_CONFIRMED);
@@ -220,11 +180,11 @@ public class ReloadAspect extends CommonWeaponAspect {
 //		}
 	}
 	
-	private void doPermittedUnload(ReloadContext c) {
+	private void doPermittedUnload(ReloadContext c, Permit p) {
 		System.out.println("Doing permitted unload");
 	}
 
-	public ReloadContext contextForPlayer(EntityPlayer player) {
+	private ReloadContext contextForPlayer(EntityPlayer player) {
 		ItemStack itemStack = compatibility.getHeldItemMainHand(player);
 		if(itemStack != null && itemStack.getItem() instanceof Weapon) {
 			WeaponClientStorage storage = modContext.getWeaponClientStorageManager().getWeaponClientStorage(player, 
