@@ -9,9 +9,9 @@ import java.util.concurrent.atomic.AtomicReference;
 import com.google.common.util.concurrent.AtomicDouble;
 import com.vicmatskiv.weaponlib.Weapon.State;
 import com.vicmatskiv.weaponlib.state.ManagedState;
-import com.vicmatskiv.weaponlib.state.ManagedStateContainer;
+import com.vicmatskiv.weaponlib.state.ExtendedState;
 
-public final class WeaponClientStorage implements ManagedStateContainer<ManagedState> {
+public final class WeaponClientStorage {
 	private AtomicInteger currentAmmo;
 	private AtomicLong reloadingStopsAt;
 	
@@ -137,25 +137,6 @@ public final class WeaponClientStorage implements ManagedStateContainer<ManagedS
 
 	public void resetShots() {
 		shotsInternal = 0;
-	}
-
-	@Override
-	public boolean compareAndSetManagedState(ManagedState expectedState, ManagedState updateToState) {
-		if(managedState.compareAndSet(expectedState, updateToState)) {
-			lastManagedStateUpdateTimestamp = System.currentTimeMillis();
-			return true;
-		}
-		return false;
-	}
-
-	@Override
-	public ManagedState getManagedState() {
-		return managedState.get();
-	}
-
-	@Override
-	public long getLastManagedStateUpdateTimestamp() {
-		return lastManagedStateUpdateTimestamp;
 	}
 
 }

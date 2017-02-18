@@ -1,10 +1,8 @@
 package com.vicmatskiv.weaponlib.state;
 
-import com.vicmatskiv.weaponlib.network.UniversalObject;
+public interface Aspect<T extends ManagedState<T>, E extends ExtendedState<T>> {
 
-public interface Aspect {
+	public void setStateManager(StateManager<T, ? super E> stateManager);
 
-	public void setStateManager(StateManager stateManager);
-
-	public void setPermitManager(PermitManager<UniversalObject> permitManager);
+	public void setPermitManager(PermitManager permitManager);
 }

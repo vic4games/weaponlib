@@ -1,10 +1,14 @@
 package com.vicmatskiv.weaponlib.state;
 
-public interface ManagedState {
+import com.vicmatskiv.weaponlib.network.UniversallySerializable;
 
-	public ManagedState permitRequested();
+public interface ManagedState<T extends ManagedState<T>> extends UniversallySerializable {
+
+	public T permitRequested();
 	
 	public default boolean isTransient() {
 		return false;
 	}
+	
+	public int ordinal();
 }

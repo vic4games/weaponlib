@@ -25,4 +25,6 @@ public interface ModContext {
 	public CompatibleSound registerSound(String sound);
 
 	public void runInMainThread(Runnable runnable);
+
+	PlayerItemRegistry getPlayerItemRegistry();
 }

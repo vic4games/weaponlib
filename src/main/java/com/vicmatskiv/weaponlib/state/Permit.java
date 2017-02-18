@@ -1,26 +1,29 @@
 package com.vicmatskiv.weaponlib.state;
 
+import com.vicmatskiv.weaponlib.network.TypeRegistry;
 import com.vicmatskiv.weaponlib.network.UniversalObject;
 
 import io.netty.buffer.ByteBuf;
 
-public abstract class Permit extends UniversalObject {
+public abstract class Permit<S extends ManagedState<S>> extends UniversalObject {
 	
 	public enum Status { REQUESTED, GRANTED, DENIED, UNKNOWN };
 	
-	protected ManagedState state;
+	protected S state;
 	protected Status status;
+	protected long timestamp;
 	
 	public Permit() {
 		this.status = Status.UNKNOWN;
 	}
 	
-	protected Permit(ManagedState state) {
+	protected Permit(S state) {
 		this.state = state;
 		this.status = Status.REQUESTED;
+		this.timestamp = System.currentTimeMillis();
 	}
 
-	public ManagedState getState() {
+	public S getState() {
 		return state;
 	}
 	
@@ -32,17 +35,24 @@ public abstract class Permit extends UniversalObject {
 		return status;
 	}
 	
+	public long getTimestamp() {
+		return timestamp;
+	}
+
 	@Override
-	public boolean init(ByteBuf buf) {
+	public void init(ByteBuf buf) {
 		super.init(buf);
+		timestamp = buf.readLong();
 		status = Status.values()[buf.readInt()];
-		return true;
+		state = TypeRegistry.getInstance().fromBytes(buf);
 	}
 	
 	@Override
 	public void serialize(ByteBuf buf) {
 		super.serialize(buf);
+		buf.writeLong(timestamp);
 		buf.writeInt(status.ordinal());
+		TypeRegistry.getInstance().toBytes(state, buf);
 	}
 	
 }

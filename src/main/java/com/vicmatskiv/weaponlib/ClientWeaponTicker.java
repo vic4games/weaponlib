@@ -14,13 +14,14 @@ class ClientWeaponTicker extends Thread {
 	private boolean mouseWasPressed;
 	
 	private AtomicBoolean running = new AtomicBoolean(true);
-	private SafeGlobals safeGlobals;
+//	private SafeGlobals safeGlobals;
 	private FireManager fireManager;
 	private ReloadManager reloadManager;
 	private ReloadAspect reloadAspect;
+	private ClientModContext clientModContext;
 
-	public ClientWeaponTicker(SafeGlobals safeGlobals, FireManager fireManager, ReloadManager reloadManager, ReloadAspect reloadAspect) {
-		this.safeGlobals = safeGlobals;
+	public ClientWeaponTicker(ClientModContext clientModContext, FireManager fireManager, ReloadManager reloadManager, ReloadAspect reloadAspect) {
+		this.clientModContext = clientModContext;
 		this.fireManager = fireManager;
 		this.reloadManager = reloadManager;
 		this.reloadAspect = reloadAspect;
@@ -31,7 +32,7 @@ class ClientWeaponTicker extends Thread {
 	}
 	
 	public void run() {
-		
+		SafeGlobals safeGlobals = clientModContext.getSafeGlobals();
 		int currentItemIndex = safeGlobals.currentItemIndex.get();
 		while(running.get()) {
 			try {
@@ -67,7 +68,9 @@ class ClientWeaponTicker extends Thread {
 	
 	private void update(EntityPlayer player) {
 		
-		reloadAspect.updateMainHeldItem(player);
+		clientModContext.runSyncTick(() -> {
+			reloadAspect.updateMainHeldItem(player);
+		});
 		
 		reloadManager.update(compatibility.getHeldItemMainHand(player), player);
 		fireManager.update(compatibility.getHeldItemMainHand(player), player);

@@ -32,6 +32,10 @@ public class ClientModContext extends CommonModContext {
 	
 	private Framebuffer framebuffer;
 	private CompatibleWorldRenderer entityRenderer;
+	private SafeGlobals safeGlobals = new SafeGlobals();
+	//static ReloadAspect.ReloadContext context;
+	
+	private PlayerItemRegistry playerItemRegistry;
 	
 	@Override
 	public void init(Object mod, String modId, CompatibleChannel channel) {
@@ -46,20 +50,22 @@ public class ClientModContext extends CommonModContext {
 				Minecraft.class, Minecraft.getMinecraft(), "defaultResourcePacks", "field_110449_ao") ; 
         defaultResourcePacks.add(new WeaponResourcePack()) ;
    
+        this.playerItemRegistry = new PlayerItemRegistry();
+        
         this.weaponClientStorageManager = new WeaponClientStorageManager();
-		SafeGlobals safeGlobals = new SafeGlobals();
+		
 		
 		compatibility.registerWithEventBus(new CustomGui(Minecraft.getMinecraft(), attachmentManager));
 		compatibility.registerWithEventBus(new WeaponEventHandler(safeGlobals));
 		
 		KeyBindings.init();
 		
-		StateManager stateManager = new StateManager((s1, s2) -> s1 == s2); // implement comparator properly, ref equality will not work on server after deserialization
+		StateManager<WeaponState, PlayerItemState<WeaponState>> stateManager = new StateManager<>((s1, s2) -> s1 == s2); // implement comparator properly, ref equality will not work on server after deserialization
 		
 		reloadAspect.setPermitManager(permitManager);
 		reloadAspect.setStateManager(stateManager);
 
-		ClientWeaponTicker clientWeaponTicker = new ClientWeaponTicker(safeGlobals, fireManager, reloadManager, reloadAspect);
+		ClientWeaponTicker clientWeaponTicker = new ClientWeaponTicker(this, fireManager, reloadManager, reloadAspect);
 		
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
 			clientWeaponTicker.shutdown();
@@ -84,6 +90,10 @@ public class ClientModContext extends CommonModContext {
 		return this.entityRenderer;
 	}
 	
+	public SafeGlobals getSafeGlobals() {
+		return safeGlobals;
+	}
+
 	public Framebuffer getFramebuffer() {
 		return framebuffer;
 	}
@@ -124,5 +134,10 @@ public class ClientModContext extends CommonModContext {
 	@Override
 	public WeaponClientStorageManager getWeaponClientStorageManager() {
 		return weaponClientStorageManager;
+	}
+
+	@Override
+	public PlayerItemRegistry getPlayerItemRegistry() {
+		return playerItemRegistry;
 	}
 }

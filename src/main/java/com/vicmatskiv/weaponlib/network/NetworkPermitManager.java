@@ -8,69 +8,74 @@ import java.util.UUID;
 import java.util.function.BiConsumer;
 
 import com.vicmatskiv.weaponlib.ModContext;
-import com.vicmatskiv.weaponlib.PlayerItemContext;
-import com.vicmatskiv.weaponlib.Weapon;
-import com.vicmatskiv.weaponlib.WeaponClientStorage;
+import com.vicmatskiv.weaponlib.PlayerContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessage;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageHandler;
+import com.vicmatskiv.weaponlib.state.ExtendedState;
+import com.vicmatskiv.weaponlib.state.ManagedState;
 import com.vicmatskiv.weaponlib.state.Permit;
 import com.vicmatskiv.weaponlib.state.PermitManager;
 
 import net.minecraft.entity.player.EntityPlayerMP;
 
-public class NetworkPermitManager<Context extends PlayerItemContext> implements PermitManager<Context>, CompatibleMessageHandler<PermitMessage<Context>, CompatibleMessage>  {
+public class NetworkPermitManager
+implements PermitManager, CompatibleMessageHandler<PermitMessage, CompatibleMessage>  {
 	
 	private ModContext modContext;
-	private Map<UUID, BiConsumer<Permit, Context>> permitCallbacks = new HashMap<>();
-	private Map<Class<?>, BiConsumer<Permit, Context>> evaluators = new HashMap<>();
-
+	private Map<UUID, Object /*BiConsumer<Permit<?>, ?>*/> permitCallbacks = new HashMap<>();
+	private Map<Class<?>, BiConsumer<Permit<?>, ?>> evaluators = new HashMap<>();
+	
 	public NetworkPermitManager(ModContext modContext) {
 		this.modContext = modContext;
 	}
 	
 	@Override
-	public <T extends Permit> void request(T permit, Context context, BiConsumer<Permit, Context> callback) {
+	public <S extends ManagedState<S>, P extends Permit<S>, E extends ExtendedState<S>> void request(
+			P permit, E extendedState, BiConsumer<P, E> callback) {
 		permitCallbacks.put(permit.getUuid(), callback);
-		modContext.getChannel().getChannel().sendToServer(new PermitMessage<>(permit, context));
+		modContext.getChannel().getChannel().sendToServer(new PermitMessage(permit, extendedState));
 	}
 
 	@Override
-	public <T extends Permit> void registerEvaluator(Class<T> permitClass, BiConsumer<T, Context> evaluator) {
-		evaluators.put(permitClass,  (p, c) -> { evaluator.accept(permitClass.cast(p), c); });
+	public <S extends ManagedState<S>, P extends Permit<S>, E extends ExtendedState<S>> void registerEvaluator(
+			Class<? extends P> permitClass,
+			Class<? extends E> esClass,
+			BiConsumer<P, E> evaluator) {
+		evaluators.put(permitClass,  (p, c) -> { 
+			System.out.println("Requesting permit");
+			evaluator.accept(permitClass.cast(p), esClass.cast(c)); 
+		});
 	}
 	
 	@Override
-	public <T extends CompatibleMessage> T onCompatibleMessage(PermitMessage<Context> permitMessage,
+	public <T extends CompatibleMessage> T onCompatibleMessage(PermitMessage permitMessage,
 			CompatibleMessageContext ctx) {
 		
-		Permit permit = permitMessage.getPermit();
-		Context context = permitMessage.getContext();
+		Permit<?> permit = permitMessage.getPermit();
+		Object extendedState = permitMessage.getContext();
 		
 		if(ctx.isServerSide()) {
-			context.setPlayer(ctx.getPlayer());
-			//((Object) context).setPermit(permit); TODO: set permit in context somehow
+			if(extendedState instanceof PlayerContext) { // TODO: think of something better than upcasting
+				((PlayerContext) extendedState).setPlayer(ctx.getPlayer());
+			}
 			ctx.runInMainThread(() -> {
 				//serverAction.accept(permit, context);
-				BiConsumer<Permit, Context> evaluator = evaluators.get(permit.getClass());
+				BiConsumer<Permit<?>, Object> evaluator = (BiConsumer<Permit<?>, Object>) evaluators.get(permit.getClass());
 				if(evaluator != null) {
-					evaluator.accept(permit, context);
+					evaluator.accept(permit, extendedState);
 				}
-				modContext.getChannel().getChannel().sendTo(new PermitMessage<>(permit, context), (EntityPlayerMP) ctx.getPlayer());
+				PermitMessage message = new PermitMessage(permit, extendedState);
+				modContext.getChannel().getChannel().sendTo(message, (EntityPlayerMP) ctx.getPlayer());
 			});
 		} else {
 			compatibility.runInMainClientThread(() -> {
-				context.setPlayer(compatibility.clientPlayer());
-				
-				// This needs to be redesigned, because this class should not have any knowledge about CommonWeaponAspectContext
-				WeaponClientStorage container = modContext.getWeaponClientStorageManager().getWeaponClientStorage(context.getPlayer(), 
-						(Weapon) ((PlayerItemContext)context).getItem());
-				((PlayerItemContext)context).setManagedStateContainer(container);
-				
-				
-				BiConsumer<Permit, Context> callback = permitCallbacks.remove(permit.getUuid());
+				if(extendedState instanceof PlayerContext) {
+					((PlayerContext) extendedState).setPlayer(compatibility.clientPlayer());
+				}
+				BiConsumer<Permit<?>, Object> callback = (BiConsumer<Permit<?>, Object>) permitCallbacks.remove(permit.getUuid());
 				if(callback != null) {
-					callback.accept(permit, context);
+					callback.accept(permit, extendedState);
 				}
 			});
 		}
@@ -80,5 +85,5 @@ public class NetworkPermitManager<Context extends PlayerItemContext> implements 
 
 
 
-
+	
 }

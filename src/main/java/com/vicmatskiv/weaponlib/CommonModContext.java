@@ -11,7 +11,6 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleSide;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 import com.vicmatskiv.weaponlib.network.NetworkPermitManager;
 import com.vicmatskiv.weaponlib.network.PermitMessage;
-import com.vicmatskiv.weaponlib.network.UniversalObject;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -26,13 +25,12 @@ public class CommonModContext implements ModContext {
 	protected ReloadManager reloadManager;
 	protected ReloadAspect reloadAspect;
 	
-	@SuppressWarnings("rawtypes")
 	protected NetworkPermitManager permitManager;
+	
 	private String modId;
 	
 	private Map<ResourceLocation, CompatibleSound> registeredSounds = new HashMap<>();
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public void init(Object mod, String modId, CompatibleChannel channel) {
 		this.channel = channel;
@@ -42,7 +40,7 @@ public class CommonModContext implements ModContext {
 		this.fireManager = new FireManager(this);
 		this.reloadManager = new ReloadManager(this);
 		this.reloadAspect = new ReloadAspect(this);
-		this.permitManager = new NetworkPermitManager<>(this);
+		this.permitManager = new NetworkPermitManager(this);
 		
 		channel.registerMessage(new ReloadMessageHandler(reloadManager, (ctx) -> getServerPlayer(ctx)),
 				ReloadMessage.class, 1, CompatibleSide.SERVER);
@@ -150,5 +148,11 @@ public class CommonModContext implements ModContext {
 	@Override
 	public void registerRenderableItem(String name, Item item, Object renderer) {
 		compatibility.registerItem(item, name);
+	}
+
+
+	@Override
+	public PlayerItemRegistry getPlayerItemRegistry() {
+		throw new UnsupportedOperationException();
 	}
 }

@@ -5,8 +5,8 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 import java.util.Random;
 import java.util.function.Predicate;
 
-import com.vicmatskiv.weaponlib.Weapon.State;
-import com.vicmatskiv.weaponlib.state.ManagedState;
+import com.vicmatskiv.weaponlib.state.Aspect;
+import com.vicmatskiv.weaponlib.state.PermitManager;
 import com.vicmatskiv.weaponlib.state.StateManager;
 import com.vicmatskiv.weaponlib.state.StateManager.Result;
 
@@ -16,102 +16,109 @@ import net.minecraft.item.ItemStack;
 /*
  * On a client side this class is used from within a separate client "ticker" thread
  */
-public class FireAspect extends CommonWeaponAspect {
+public class FireAspect implements Aspect<WeaponState, PlayerWeaponState> {
 
 //	static final ManagedState FIRING = new ManagedState();
 //	static final ManagedState STOPPED = new ManagedState();
 //	static final ManagedState EJECTED_SPENT_ROUND = new ManagedState();
 //	static final ManagedState EJECT_SPENT_ROUND_REQUIRED = new ManagedState();
 	
-	static class FireAspectContext extends PlayerItemContext {
-		
-		public FireAspectContext(WeaponClientStorage weaponClientStorage) {
-			
-		}
-		private EntityPlayer player;
-		private Weapon weapon;
-		private WeaponClientStorage storage;
-		private Random random;
-		
-		public EntityPlayer getPlayer() {
-			return player;
-		}
-		public Weapon getWeapon() {
-			return weapon;
-		}
-		public WeaponClientStorage getStorage() {
-			return storage;
-		}
-		public Random getRandom() {
-			return random;
-		}
-	}
+//	static class FireAspectContext extends PlayerItemState<WeaponState> {
+//		
+//		public FireAspectContext(WeaponClientStorage weaponClientStorage) {
+//			
+//		}
+//		private EntityPlayer player;
+//		private Weapon weapon;
+//		private WeaponClientStorage storage;
+//		private Random random;
+//		
+//		public EntityPlayer getPlayer() {
+//			return player;
+//		}
+//		public Weapon getWeapon() {
+//			return weapon;
+//		}
+//		public WeaponClientStorage getStorage() {
+//			return storage;
+//		}
+//		public Random getRandom() {
+//			return random;
+//		}
+//	}
 	
 	private static final float FLASH_X_OFFSET_ZOOMED = 0;
 	
-	private static Predicate<FireAspectContext> readyToShootAccordingToFireRate;
+	private static Predicate<PlayerWeaponState> readyToShootAccordingToFireRate;
     
-	private static Predicate<FireAspectContext> readyToShootAccordingToFireMode;
+	private static Predicate<PlayerWeaponState> readyToShootAccordingToFireMode;
              
-	private static Predicate<FireAspectContext> hasAmmo;
+	private static Predicate<PlayerWeaponState> hasAmmo;
              
-	private static Predicate<FireAspectContext> ejectSpentRoundRequired;
+	private static Predicate<PlayerWeaponState> ejectSpentRoundRequired;
 	         
-	private static Predicate<FireAspectContext> ejectSpentRoundTimeoutExpired;
+	private static Predicate<PlayerWeaponState> ejectSpentRoundTimeoutExpired;
                           
-	private static Predicate<FireAspectContext> sprinting;
+	private static Predicate<PlayerWeaponState> sprinting;
              
 	private ModContext modContext;
+
+	private StateManager<WeaponState, ? super PlayerWeaponState> stateManager;
+
+	private PermitManager permitManager;
 	
-	       
 	@Override
-	public void setStateManager(StateManager stateManager) {
-		super.setStateManager(stateManager);
+	public void setStateManager(StateManager<WeaponState, ? super PlayerWeaponState> stateManager) {
+		this.stateManager = stateManager;
 		
 		stateManager
 		
-		.in(FireAspectContext.class).change(WeaponState.READY).to(WeaponState.FIRING)
+		.in(this).change(WeaponState.READY).to(WeaponState.FIRING)
 			.when(sprinting.negate().and(readyToShootAccordingToFireRate).and(readyToShootAccordingToFireMode).and(hasAmmo))
 			.allowed()
 		
-		.in(FireAspectContext.class).change(WeaponState.FIRING).to(WeaponState.STOPPED)
+		.in(this).change(WeaponState.FIRING).to(WeaponState.STOPPED)
 			.withAction((c, f, t, p) -> resetShots(c))
 			.allowed()
 		
-		.in(FireAspectContext.class).change(WeaponState.STOPPED).to(WeaponState.EJECTED_SPENT_ROUND)
+		.in(this).change(WeaponState.STOPPED).to(WeaponState.EJECTED_SPENT_ROUND)
 			.when(ejectSpentRoundRequired)
 			.withAction((c, f, t, p) -> ejectSpentRound(c))
 			.allowed()
 		
-		.in(FireAspectContext.class).change(WeaponState.STOPPED).to(WeaponState.READY)
+		.in(this).change(WeaponState.STOPPED).to(WeaponState.READY)
 			.when(ejectSpentRoundRequired.negate())
 			.allowed()
 		
-		.in(FireAspectContext.class).change(WeaponState.EJECTED_SPENT_ROUND).to(WeaponState.READY)
+		.in(this).change(WeaponState.EJECTED_SPENT_ROUND).to(WeaponState.READY)
 			.when(ejectSpentRoundTimeoutExpired)
 			.allowed();
 	}
 	
-	void onFireButtonClick(FireAspectContext context) {
-		Result result = stateManager.changeState(context, WeaponState.FIRING, WeaponState.EJECTED_SPENT_ROUND);
+	public void setPermitManager(PermitManager permitManager) {
+		this.permitManager = permitManager;
+	}
+	
+	void onFireButtonClick(PlayerWeaponState context) {
+		Result result = stateManager.changeState(this, context, WeaponState.FIRING, WeaponState.EJECTED_SPENT_ROUND);
 		if(result.getState() == WeaponState.FIRING) {
 			fire(context);
 		}
 	}
 	
-	void onFireButtonRelease(FireAspectContext context) {
-		stateManager.changeState(context, WeaponState.STOPPED);
+	void onFireButtonRelease(PlayerWeaponState context) {
+		stateManager.changeState(this, context, WeaponState.STOPPED);
 	}
 	
-	void onUpdate(FireAspectContext context) {
-		stateManager.changeState(context, WeaponState.READY);
+	void onUpdate(PlayerWeaponState context) {
+		stateManager.changeState(this, context, WeaponState.READY);
 	}
 	
-	private void fire(FireAspectContext context) {
+	private void fire(PlayerItemState<WeaponState> context) {
 		EntityPlayer player = context.getPlayer();
-		Weapon weapon = context.getWeapon();
-		WeaponClientStorage storage = context.getStorage();
-		Random random = context.getRandom();
+		Weapon weapon = (Weapon) context.getItem();
+		WeaponClientStorage storage = null; //context.getStorage();
+		Random random = player.getRNG();
 		
 		modContext.getChannel().getChannel().sendToServer(new TryFireMessage(true));
 		ItemStack heldItem = compatibility.getHeldItemMainHand(player); // TODO: move out
@@ -137,26 +144,28 @@ public class FireAspect extends CommonWeaponAspect {
 		storage.addShot();
 	}
 
-	private void ejectSpentRound(FireAspectContext context) {
+	private void ejectSpentRound(PlayerItemState<WeaponState> context) {
 		EntityPlayer player = context.getPlayer();
 		ItemStack itemStack = compatibility.getHeldItemMainHand(player); // TODO: move out
 		if(!Tags.isAimed(itemStack)) {
-			WeaponClientStorage storage = context.getStorage();
-			storage.setEjectSpentRoundStartedAt(System.currentTimeMillis());
-			storage.setState(State.EJECT_SPENT_ROUND);
-			modContext.runSyncTick(() -> {
-				Weapon weapon = context.getWeapon();
-				compatibility.playSound(player, weapon.getEjectSpentRoundSound(), 1F, 1F);
-			});
+//			WeaponClientStorage storage = context.getStorage();
+//			storage.setEjectSpentRoundStartedAt(System.currentTimeMillis());
+//			storage.setState(State.EJECT_SPENT_ROUND);
+//			modContext.runSyncTick(() -> {
+//				Weapon weapon = context.getWeapon();
+//				compatibility.playSound(player, weapon.getEjectSpentRoundSound(), 1F, 1F);
+//			});
 		}
 	}
 	
-	private void resetShots(FireAspectContext context) {
-		WeaponClientStorage storage = context.getStorage();
-		storage.resetShots();
-		modContext.runInMainThread(() -> {
-			modContext.getChannel().getChannel().sendToServer(new TryFireMessage(false));
-		});
+	private void resetShots(PlayerItemState<WeaponState> context) {
+//		WeaponClientStorage storage = context.getStorage();
+//		storage.resetShots();
+//		modContext.runInMainThread(() -> {
+//			modContext.getChannel().getChannel().sendToServer(new TryFireMessage(false));
+//		});
 	}
+
+	
 
 }

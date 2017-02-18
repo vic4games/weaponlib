@@ -2,9 +2,11 @@ package com.vicmatskiv.weaponlib.state;
 
 import java.util.function.BiConsumer;
 
-public interface PermitManager<Context> {
+public interface PermitManager {
 	
-	public <T extends Permit> void request(T permit, Context context, BiConsumer<Permit, Context> callback);
+	public <S extends ManagedState<S>, P extends Permit<S>, E extends ExtendedState<S>> 
+		void request(P permit, E extendedState, BiConsumer<P, E> callback);
 	
-	public <T extends Permit> void registerEvaluator(Class<T> permitClass, BiConsumer<T, Context> evaluator);
+	public <S extends ManagedState<S>, P extends Permit<S>, E extends ExtendedState<S>> 
+		void registerEvaluator(Class<? extends P> permitClass, Class<? extends E> esClass, BiConsumer<P, E> evaluator);
 }

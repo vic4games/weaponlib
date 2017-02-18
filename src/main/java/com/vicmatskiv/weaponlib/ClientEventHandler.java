@@ -23,13 +23,17 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 	
 	
 	private ClientModContext modContext;
+	
+	//private ReloadAspect reloadAspect;
 
-	public ClientEventHandler(ClientModContext modContext, Lock mainLoopLock, SafeGlobals safeGlobals, Queue<Runnable> runInClientThreadQueue) {
+	public ClientEventHandler(ClientModContext modContext, Lock mainLoopLock, SafeGlobals safeGlobals, 
+			Queue<Runnable> runInClientThreadQueue /*, ReloadAspect reloadAspect*/) {
 		this.modContext = modContext;
 		this.mainLoopLock = mainLoopLock;
 		this.safeGlobals = safeGlobals;
 		this.runInClientThreadQueue = runInClientThreadQueue;
         this.renderEndNanoTime = System.nanoTime();
+        //this.reloadAspect = reloadAspect;
 	}
 
 	public void onCompatibleClientTick(CompatibleClientTickEvent event) {		
@@ -41,7 +45,10 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 			safeGlobals.objectMouseOver.set(compatibility.getObjectMouseOver());
 			if(compatibility.clientPlayer() != null) {
 				safeGlobals.currentItemIndex.set(compatibility.clientPlayer().inventory.currentItem);
+				
+				//reloadAspect.updateMainHeldItem(compatibility.clientPlayer());
 			}
+			
 		}
 	}
 
