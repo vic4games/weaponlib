@@ -5,23 +5,25 @@ import java.util.UUID;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class UniversalObjectTest {
+public class TypeRegistryTest {
 
 	@Test
 	public void test() {
-		UniversalObject o1 = new UniversalObject() {};
+		class Test {};
 		
-		UUID uuid1 = o1.createUuid();
+		TypeRegistry typeRegistry = TypeRegistry.getInstance();
 		
-		UUID uuid2 = o1.createUuid();
+		UUID uuid1 = typeRegistry.createUuid(Test.class);
+		
+		UUID uuid2 = typeRegistry.createUuid(Test.class);
 		
 		Assert.assertEquals(uuid1, uuid2);
 		
-		UniversalObject o2 = new UniversalObject() {};
+		class Test2 {};
 		
-		UUID uuid3 = o2.createUuid();
+		UUID uuid3 = typeRegistry.createUuid(Test2.class);
 		
-		UUID uuid4 = o2.createUuid();
+		UUID uuid4 = typeRegistry.createUuid(Test2.class);
 		
 		Assert.assertEquals(uuid3, uuid4);
 		

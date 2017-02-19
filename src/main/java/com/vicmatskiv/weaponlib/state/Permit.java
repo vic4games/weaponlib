@@ -5,7 +5,11 @@ import com.vicmatskiv.weaponlib.network.UniversalObject;
 
 import io.netty.buffer.ByteBuf;
 
-public abstract class Permit<S extends ManagedState<S>> extends UniversalObject {
+public class Permit<S extends ManagedState<S>> extends UniversalObject {
+	
+	static {
+		TypeRegistry.getInstance().register(Permit.class);
+	}
 	
 	public enum Status { REQUESTED, GRANTED, DENIED, UNKNOWN };
 	
@@ -17,7 +21,7 @@ public abstract class Permit<S extends ManagedState<S>> extends UniversalObject 
 		this.status = Status.UNKNOWN;
 	}
 	
-	protected Permit(S state) {
+	public Permit(S state) {
 		this.state = state;
 		this.status = Status.REQUESTED;
 		this.timestamp = System.currentTimeMillis();

@@ -9,6 +9,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponKeyInputHandler;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
 public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
@@ -17,30 +18,33 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
 	private Function<CompatibleMessageContext, EntityPlayer> entityPlayerSupplier;
 	private AttachmentManager attachmentManager;
 	private ReloadManager reloadManager;
-	private ReloadAspect reloadAspect;
+	//private WeaponReloadAspect reloadAspect;
 	
 	public WeaponKeyInputHandler(Function<CompatibleMessageContext, EntityPlayer> entityPlayerSupplier, 
 			AttachmentManager attachmentManager,
 			ReloadManager reloadManager,
-			ReloadAspect reloadAspect,
+			//WeaponReloadAspect reloadAspect,
 			CompatibleChannel channel) {
 		this.entityPlayerSupplier = entityPlayerSupplier;
 		this.attachmentManager = attachmentManager;
 		this.reloadManager = reloadManager;
-		this.reloadAspect = reloadAspect;
+		//this.reloadAspect = reloadAspect;
 		this.channel = channel;
 	}
 
 	@Override
     public void onCompatibleKeyInput() {
 		
+		EntityPlayer player = entityPlayerSupplier.apply(null);
+    	ItemStack itemStack = compatibility.getHeldItemMainHand(player);
+    	
         if(KeyBindings.reloadKey.isPressed()) {
-        	EntityPlayer player = entityPlayerSupplier.apply(null);
-        	ItemStack itemStack = compatibility.getHeldItemMainHand(player);
     		if(itemStack != null) {
-    			//reloadManager.toggleReload(itemStack, player);
-    			reloadAspect.reloadMainHeldItem(player);
-    			
+//    			reloadManager.toggleReload(itemStack, player);
+    			Item item = itemStack.getItem();
+    			if(item instanceof Reloadable) {
+    				((Reloadable) item).reloadMainHeldItemForPlayer(player);
+    			}
     		}
         }
         
@@ -49,8 +53,6 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
         }
         
         else if(KeyBindings.attachmentKey.isPressed()) {
-        	EntityPlayer player = entityPlayerSupplier.apply(null);
-    		ItemStack itemStack = compatibility.getHeldItemMainHand(player);
     		if(itemStack != null && itemStack.getItem() instanceof Weapon) {
     			attachmentManager.toggleClientAttachmentSelectionMode(itemStack, player);
     		}

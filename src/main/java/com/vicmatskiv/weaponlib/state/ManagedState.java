@@ -6,6 +6,8 @@ public interface ManagedState<T extends ManagedState<T>> extends UniversallySeri
 
 	public T permitRequested();
 	
+	public T transactionFinalState();
+	
 	public default boolean isTransient() {
 		return false;
 	}

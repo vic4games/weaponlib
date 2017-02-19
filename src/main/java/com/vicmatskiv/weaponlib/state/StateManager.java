@@ -8,12 +8,12 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import com.vicmatskiv.weaponlib.state.Permit.Status;
+
 public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>> {
 	
 	public class RuleBuilder<EE extends E> {
 		
-		private static final long PERMIT_EVALUATION_DELAY_SAFE_OFFSET = 20L;
-
 		private static final long DEFAULT_REQUEST_TIMEOUT = 5000L;
 		
 		private Aspect<S, EE> aspect;
@@ -22,7 +22,7 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 		private Action<S, EE> action;
 		private Predicate<EE> predicate;
 		private BiFunction<S, EE, Permit<S>> permitProvider;
-		private Function<EE, EE> stateMerger;
+		private BiFunction<S, EE, Boolean> stateUpdater;
 		private PermitManager permitManager;
 		private long requestTimeout = DEFAULT_REQUEST_TIMEOUT;
 		
@@ -47,10 +47,10 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 		
 		public RuleBuilder<EE> withPermit(
 				BiFunction<S, EE, Permit<S>> permitProvider,
-				Function<EE, EE> stateMerger,
+				BiFunction<S, EE, Boolean> stateUpdater,
 				PermitManager permitManager) {
 			this.permitProvider = permitProvider;
-			this.stateMerger = stateMerger;
+			this.stateUpdater = stateUpdater;
 			this.permitManager = permitManager;
 			return this;
 		}
@@ -89,7 +89,7 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 						}));
 
 				Predicate<E> requestTimedout = c -> 
-						System.currentTimeMillis() > c.getStateUpdateTimestamp() + requestTimeout + PERMIT_EVALUATION_DELAY_SAFE_OFFSET;
+						System.currentTimeMillis() > c.getStateUpdateTimestamp() + requestTimeout;
 				
 				contextRules.add(new TransitionRule<>(toState.permitRequested(), fromState, 
 						requestTimedout,
@@ -106,28 +106,35 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 		private void applyPermit(Permit<S> processedPermit, E updatedState) {
 			// This is a permit granted callback which sets state to the final toState
 			
-			if(System.currentTimeMillis() >= processedPermit.getTimestamp() + requestTimeout) {
-				System.out.println("Permit applied too late, ignoring...");
-				return;
+//			if(updatedState != stateUpdater.apply(safeCast(updatedState))) {
+//				System.out.println("Failed to match updated state");
+//				return;
+//			}
+			
+			S updateToState = processedPermit.getStatus() == Status.GRANTED ? toState : fromState;
+			System.out.println("Applying permit with status " + processedPermit.getStatus()
+				+ ", changing state to " + toState);
+			
+			if(stateUpdater.apply(updateToState, safeCast(updatedState))) {
+				action.execute(safeCast(updatedState), fromState, toState, processedPermit);
 			}
 			
-			updatedState = stateMerger.apply(safeCast(updatedState));
-			switch(processedPermit.getStatus()) {
-			
-			case GRANTED: 
-				System.out.println("Applying permit with status " + processedPermit.getStatus()
-					+ ", changing state to " + toState);
-				updatedState.setState(toState);
-				action.execute(safeCast(updatedState), fromState, toState, processedPermit);
-				break;
-			
-			default: 
-				System.out.println("Applying permit with status " + processedPermit.getStatus()
-					+ ", reverting state back to " + fromState);
-				updatedState.setState(fromState);
-				action.execute(safeCast(updatedState), fromState, toState, processedPermit);
-				break;
-			}
+//			switch(processedPermit.getStatus()) {
+//			
+//			case GRANTED: 
+//				System.out.println("Applying permit with status " + processedPermit.getStatus()
+//					+ ", changing state to " + toState);
+//				updatedState.setState(toState);
+//				action.execute(safeCast(updatedState), fromState, toState, processedPermit);
+//				break;
+//			
+//			default: 
+//				System.out.println("Applying permit with status " + processedPermit.getStatus()
+//					+ ", reverting state back to " + fromState);
+//				updatedState.setState(fromState);
+//				action.execute(safeCast(updatedState), fromState, toState, processedPermit);
+//				break;
+//			}
 		}
 	}
 

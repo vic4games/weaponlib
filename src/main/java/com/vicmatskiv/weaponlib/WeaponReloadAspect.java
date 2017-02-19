@@ -15,12 +15,12 @@ import com.vicmatskiv.weaponlib.state.StateManager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 
-public class ReloadAspect implements Aspect<WeaponState, PlayerWeaponState> {
+public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponState> {
 	
 	static {
 		TypeRegistry.getInstance().register(UnloadPermit.class);
-		TypeRegistry.getInstance().register(LoadPermit.class);
-		//TypeRegistry.getInstance().register(ReloadContext.class);
+		TypeRegistry.getInstance().register(LoadPermit.class);		
+		TypeRegistry.getInstance().register(PlayerWeaponState.class); // TODO: move it out
 	}
 	
 	public static class UnloadPermit extends Permit<WeaponState> {
@@ -46,11 +46,14 @@ public class ReloadAspect implements Aspect<WeaponState, PlayerWeaponState> {
 			
 	private static Predicate<PlayerWeaponState> magazineAttached = 
 			(c) -> AttachmentManager.getActiveAttachment(c.getItemStack(), AttachmentCategory.MAGAZINE) != null;
+
+	private static long reloadAnimationDuration = 1000;
 		
-	private static Predicate<PlayerWeaponState> reloadAnimationCompleted = (c) -> true;
+	private static Predicate<PlayerWeaponState> reloadAnimationCompleted = es -> 
+		System.currentTimeMillis() >= es.getStateUpdateTimestamp() + reloadAnimationDuration; // TODO: read reload animation duration from the state itself
 	
-	private static Predicate<PlayerWeaponState> unloadAnimationCompleted = (c) -> 
-		{ System.out.println("Checking if unload animation completed"); return true; };
+	private static Predicate<PlayerWeaponState> unloadAnimationCompleted = es -> 
+		System.currentTimeMillis() >= es.getStateUpdateTimestamp() + reloadAnimationDuration;
 		
 	private static Predicate<PlayerItemState<WeaponState>> quietReload = (c) -> false;
 	
@@ -60,7 +63,7 @@ public class ReloadAspect implements Aspect<WeaponState, PlayerWeaponState> {
 
 	private StateManager<WeaponState, ? super PlayerWeaponState> stateManager;
 	
-	public ReloadAspect(ModContext modContext) {
+	public WeaponReloadAspect(ModContext modContext) {
 		this.modContext = modContext;
 	}
 
@@ -76,10 +79,10 @@ public class ReloadAspect implements Aspect<WeaponState, PlayerWeaponState> {
 		.in(this)
 			.change(WeaponState.READY).to(WeaponState.LOAD)
 			.when(supportsDirectBulletLoad.or(magazineAttached.negate()))
-			.withPermit((s, c) -> new LoadPermit(s),
-					(updatedState) -> modContext.getPlayerItemRegistry().update(updatedState),
+			.withPermit((s, es) -> new LoadPermit(s),
+					modContext.getPlayerItemRegistry()::update,
 					permitManager)
-			.withAction((c, f, t, p) -> doPermittedLoad(c, p))
+			.withAction((c, f, t, p) -> doPermittedLoad(c, (LoadPermit)p))
 			.allowed()
 
 		.in(this)
@@ -93,7 +96,7 @@ public class ReloadAspect implements Aspect<WeaponState, PlayerWeaponState> {
 			.withPermit((s, c) -> new UnloadPermit(s),
 					modContext.getPlayerItemRegistry()::update,
 					permitManager)
-			.withAction((c, f, t, p) -> doPermittedUnload(c, p))
+			.withAction((c, f, t, p) -> doPermittedUnload(c, (UnloadPermit)p))
 			.allowed()
 		
 		.in(this)
@@ -110,28 +113,29 @@ public class ReloadAspect implements Aspect<WeaponState, PlayerWeaponState> {
 	}
 	
 
-	void reloadMainHeldItem(EntityPlayer player) {
+	public void reloadMainHeldItem(EntityPlayer player) {
 		PlayerWeaponState state = (PlayerWeaponState) contextForPlayer(player);
 		stateManager.changeState(this, state, WeaponState.LOAD, WeaponState.UNLOAD);
 	}
 
 	void updateMainHeldItem(EntityPlayer player) {
 		PlayerWeaponState state = (PlayerWeaponState) contextForPlayer(player);
-		//stateManager.changeState(reloadContext, WeaponState.READY);
-		stateManager.changeStateFromAnyOf(this, state, WeaponState.READY, WeaponState.UNLOAD_REQUESTED, WeaponState.UNLOAD);
+		stateManager.changeStateFromAnyOf(this, state, WeaponState.READY, 
+				WeaponState.UNLOAD_REQUESTED, 
+				WeaponState.UNLOAD, 
+				WeaponState.LOAD_REQUESTED, 
+				WeaponState.LOAD);
 	}
 	
 	private void evaluateLoad(LoadPermit p, PlayerItemState<WeaponState> playerItemState) {
 		
-
-
 		ItemStack weaponItemStack = playerItemState.getItemStack();
 		
 		if(weaponItemStack == null) {
 			// Since reload request was sent for an item, the item was removed from the original slot
 			return;
 		}
-		
+		Status status = Status.GRANTED;
 		Weapon weapon = (Weapon) playerItemState.getItem();
 		EntityPlayer player = playerItemState.getPlayer();
 		if (compatibility.getTagCompound(weaponItemStack) != null && !player.isSprinting()) {
@@ -168,24 +172,46 @@ public class ReloadAspect implements Aspect<WeaponState, PlayerWeaponState> {
 				compatibility.playSoundToNearExcept(player, weapon.getReloadSound(), 1.0F, 1.0F);
 			} else {
 				Tags.setAmmo(weaponItemStack, 0);
+				status = Status.DENIED;
 				// Update permit isntead: modContext.getChannel().getChannel().sendTo(new ReloadMessage(weapon, 0), (EntityPlayerMP) player);
 			}
 		} 
-	
+		
+		p.setStatus(status);
 	}
 	
-	private void evaluateUnload(UnloadPermit p, PlayerWeaponState c) {
+	private void evaluateUnload(UnloadPermit p, PlayerWeaponState playerWeaponState) {
 		System.out.println("Evaluating unload");
-		try {
-			Thread.sleep(4500);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		ItemStack weaponItemStack = playerWeaponState.getItemStack();
+		EntityPlayer player = playerWeaponState.getPlayer();
+		
+		Weapon weapon = (Weapon) weaponItemStack.getItem();
+		if (compatibility.getTagCompound(weaponItemStack) != null && !player.isSprinting()) {
+			ItemAttachment<Weapon> attachment = modContext.getAttachmentManager().removeAttachment(AttachmentCategory.MAGAZINE, weaponItemStack, player);
+			if(attachment instanceof ItemMagazine) {
+				ItemStack attachmentItemStack = ((ItemMagazine) attachment).createItemStack();
+				Tags.setAmmo(attachmentItemStack, playerWeaponState.getAmmo());
+
+				if(!player.inventory.addItemStackToInventory(attachmentItemStack)) {
+					System.err.println("Cannot add item back to the inventory: " + attachment);
+				}
+			} else {
+				//throw new IllegalStateException();
+			}
+
+			Tags.setAmmo(weaponItemStack, 0);
+			//modContext.getChannel().getChannel().sendTo(new ReloadMessage(weapon, ReloadMessage.Type.UNLOAD, null, 0), (EntityPlayerMP) player);
+			compatibility.playSoundToNearExcept(player, weapon.getReloadSound(), 1.0F, 1.0F);
+			
+			p.setStatus(Status.GRANTED);
+		} else {
+			p.setStatus(Status.DENIED);
 		}
+
 		p.setStatus(Status.GRANTED);
 	}
 	
-	private void doPermittedLoad(PlayerWeaponState c, Permit<WeaponState> permit) {
+	private void doPermittedLoad(PlayerWeaponState c, LoadPermit permit) {
 //		storage.getCurrentAmmo().set(ammo);
 //		if ((itemMagazine != null || ammo > 0) && !forceQuietReload) {
 //			storage.setState(State.RELOAD_CONFIRMED);
@@ -197,7 +223,7 @@ public class ReloadAspect implements Aspect<WeaponState, PlayerWeaponState> {
 //		}
 	}
 	
-	private void doPermittedUnload(PlayerItemState<WeaponState> c, Permit<WeaponState> p) {
+	private void doPermittedUnload(PlayerItemState<WeaponState> c, UnloadPermit p) {
 		
 //		ClientModContext.context = c; // TODO: generalize  context synchronization
 //		ClientModContext.context.setPlayer(compatibility.getClientPlayer());
@@ -209,18 +235,7 @@ public class ReloadAspect implements Aspect<WeaponState, PlayerWeaponState> {
 		
 		ItemStack itemStack = compatibility.getHeldItemMainHand(player);
 		if(itemStack != null && itemStack.getItem() instanceof Weapon) {
-//			/*
-//			WeaponClientStorage storage = modContext.getWeaponClientStorageManager().getWeaponClientStorage(player, 
-//					(Weapon) itemStack.getItem());
-//			ReloadContext context = new ReloadContext(storage, player);
-//			*/
-//			if(ClientModContext.context == null) {
-//				ClientModContext.context = new ReloadContext();
-//				ClientModContext.context.setState(WeaponState.READY);
-//			}
-//			ClientModContext.context.itemStack = itemStack;
-//			return ClientModContext.context;
-			return (PlayerItemState<WeaponState>) ((ClientModContext)modContext).getPlayerItemRegistry().getMainHandItemContext(player);
+			return (PlayerItemState<WeaponState>) modContext.getPlayerItemRegistry().getMainHandItemState(player);
 		}
 		return null;
 	}

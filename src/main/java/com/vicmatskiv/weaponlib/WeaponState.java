@@ -7,11 +7,11 @@ import io.netty.buffer.ByteBuf;
 
 public enum WeaponState implements ManagedState<WeaponState> {
 
-	READY, 
+	READY(false), 
 	LOAD_REQUESTED, 
-	LOAD(LOAD_REQUESTED), 
+	LOAD(LOAD_REQUESTED, null), 
 	UNLOAD_REQUESTED, 
-	UNLOAD(UNLOAD_REQUESTED),
+	UNLOAD(UNLOAD_REQUESTED, READY),
 	FIRING, 
 	STOPPED, 
 	EJECT_SPENT_ROUND_REQUIRED, 
@@ -19,12 +19,31 @@ public enum WeaponState implements ManagedState<WeaponState> {
 
 	private WeaponState permitRequestedState;
 	
+	private WeaponState transactionFinalState;
+	
+	private boolean isTransient;
+	
 	private WeaponState() {
-		this(null);
+		this(null, null);
 	}
 	
-	private WeaponState(WeaponState permitRequestedState) {
+	private WeaponState(boolean isTransient) {
+		this(null, null, isTransient);
+	}
+	
+	private WeaponState(WeaponState permitRequestedState, WeaponState transactionFinalState) {
+		this(permitRequestedState, transactionFinalState, true);
+	}
+	
+	private WeaponState(WeaponState permitRequestedState, WeaponState transactionFinalState, boolean isTransient) {
 		this.permitRequestedState = permitRequestedState;
+		this.transactionFinalState = transactionFinalState;
+		this.isTransient = isTransient;
+	}
+	
+	@Override
+	public boolean isTransient() {
+		return isTransient;
 	}
 	
 	@Override
@@ -44,6 +63,11 @@ public enum WeaponState implements ManagedState<WeaponState> {
 	
 	static {
 		TypeRegistry.getInstance().register(WeaponState.class);
+	}
+
+	@Override
+	public WeaponState transactionFinalState() {
+		return transactionFinalState;
 	}
 	
 }

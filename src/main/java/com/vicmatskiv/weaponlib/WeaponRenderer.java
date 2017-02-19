@@ -652,6 +652,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		float rate = builder.normalRandomizingRate;
 		RenderableState currentState = null;
 		Weapon weapon = (Weapon) itemStack.getItem();
+		
+		
 		if(Weapon.isModifying(itemStack)) {
 			currentState = builder.firstPersonPositioningModifying != null ? RenderableState.MODIFYING : RenderableState.NORMAL;
 		} else if(Weapon.isUnloadingStarted(player, itemStack)) {

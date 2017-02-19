@@ -40,6 +40,9 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 		if(event.getPhase() == Phase.START) {
 			mainLoopLock.lock();
 		} else if(event.getPhase() == Phase.END) {
+			
+			modContext.getSyncManager().run();
+			
 			mainLoopLock.unlock();
 			processRunInClientThreadQueue();
 			safeGlobals.objectMouseOver.set(compatibility.getObjectMouseOver());
@@ -48,7 +51,6 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 				
 				//reloadAspect.updateMainHeldItem(compatibility.clientPlayer());
 			}
-			
 		}
 	}
 

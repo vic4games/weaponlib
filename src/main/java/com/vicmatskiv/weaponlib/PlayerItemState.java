@@ -16,13 +16,24 @@ public class PlayerItemState<S extends ManagedState<S>> extends UniversalObject 
 	
 	static {
 		TypeRegistry.getInstance().register(PlayerItemState.class);
+		TypeRegistry.getInstance().register(PlayerWeaponState.class);
 	}
+	
+//	public static interface PlayerItemStateListener<S extends ManagedState<S>> {
+//		void stateChanged(PlayerItemState<S> playerItemState);
+//	}
 
 	protected S state;
 	protected long stateUpdateTimestamp;
+	protected long updateId;
 	protected EntityPlayer player;
 	protected Item item;
 	protected int itemInventoryIndex;
+	private PlayerItemState<S> preparedState;
+	private boolean dirty;
+	
+	
+//	private Set<PlayerItemStateListener<S>> listeners = new HashSet<>();
 	
 	public PlayerItemState() {}
 	
@@ -63,12 +74,18 @@ public class PlayerItemState<S extends ManagedState<S>> extends UniversalObject 
 	public int getItemInventoryIndex() {
 		return itemInventoryIndex;
 	}
+	
+	@SuppressWarnings("unchecked")
+	protected <T extends PlayerItemState<S>> T getPreparedState() {
+		return (T)preparedState;
+	}
 
 	@Override
 	public void init(ByteBuf buf) {
 		super.init(buf);
 		item = Item.getItemById(buf.readInt());
 		itemInventoryIndex = buf.readInt();
+		updateId = buf.readLong();
 		state = TypeRegistry.getInstance().fromBytes(buf);
 	}
 
@@ -77,6 +94,7 @@ public class PlayerItemState<S extends ManagedState<S>> extends UniversalObject 
 		super.serialize(buf);
 		buf.writeInt(Item.getIdFromItem(item));
 		buf.writeInt(itemInventoryIndex);
+		buf.writeLong(updateId);
 		TypeRegistry.getInstance().toBytes(state, buf);
 	}
 
@@ -84,7 +102,32 @@ public class PlayerItemState<S extends ManagedState<S>> extends UniversalObject 
 	public boolean setState(S state) {
 		this.state = state;
 		stateUpdateTimestamp = System.currentTimeMillis();
+		updateId++;
+		if(preparedState != null) { // TODO: use comparator or equals?
+			if(preparedState.getState().transactionFinalState() == state) {
+				System.out.println("Committing state " + preparedState.getState() 
+					+ " to " + preparedState.getState().transactionFinalState());
+				updateWith(preparedState, false);
+			} else {
+				rollback();
+			}
+			
+			preparedState = null;
+		}
+//		notifyListeners();
 		return false;
+	}
+
+	protected void rollback() {
+	}
+
+	/**
+	 * Commits pending state
+	 */
+	protected void updateWith(PlayerItemState<S> otherState, boolean updateManagedState) {
+		if(updateManagedState) {
+			setState(otherState.getState());
+		}
 	}
 
 	@Override
@@ -96,4 +139,35 @@ public class PlayerItemState<S extends ManagedState<S>> extends UniversalObject 
 	public long getStateUpdateTimestamp() {
 		return stateUpdateTimestamp;
 	}
+
+	public long getUpdateId() {
+		return updateId;
+	}
+
+	@Override
+	public <E extends ExtendedState<S>> void prepareTransaction(E preparedExtendedState) {
+		setState(preparedExtendedState.getState());
+		this.preparedState = (PlayerItemState<S>) preparedExtendedState;
+	}
+	
+	public boolean isDirty() {
+		return dirty;
+	}
+	
+	protected void setDirty(boolean dirty) {
+		this.dirty = dirty;
+	}
+	
+//	public void addListener(PlayerItemStateListener<S> listener) {
+//		listeners.add(listener);
+//	}
+//	
+//	public void removeListener(PlayerItemStateListener<S> listener) {
+//		listeners.remove(listener);
+//	}
+//	
+//	protected void notifyListeners() {
+//		listeners.forEach(l -> l.stateChanged(this));
+//	}
+
 }

@@ -35,6 +35,8 @@ public class ClientModContext extends CommonModContext {
 	private SafeGlobals safeGlobals = new SafeGlobals();
 	//static ReloadAspect.ReloadContext context;
 	
+	private SyncManager<?> syncManager;
+	
 	private PlayerItemRegistry playerItemRegistry;
 	
 	@Override
@@ -50,7 +52,9 @@ public class ClientModContext extends CommonModContext {
 				Minecraft.class, Minecraft.getMinecraft(), "defaultResourcePacks", "field_110449_ao") ; 
         defaultResourcePacks.add(new WeaponResourcePack()) ;
    
-        this.playerItemRegistry = new PlayerItemRegistry();
+        this.syncManager = new SyncManager<>(permitManager);
+        
+        this.playerItemRegistry = new PlayerItemRegistry(syncManager);
         
         this.weaponClientStorageManager = new WeaponClientStorageManager();
 		
@@ -62,10 +66,11 @@ public class ClientModContext extends CommonModContext {
 		
 		StateManager<WeaponState, PlayerItemState<WeaponState>> stateManager = new StateManager<>((s1, s2) -> s1 == s2); // implement comparator properly, ref equality will not work on server after deserialization
 		
-		reloadAspect.setPermitManager(permitManager);
-		reloadAspect.setStateManager(stateManager);
+		
+		weaponReloadAspect.setPermitManager(permitManager);
+		weaponReloadAspect.setStateManager(stateManager);
 
-		ClientWeaponTicker clientWeaponTicker = new ClientWeaponTicker(this, fireManager, reloadManager, reloadAspect);
+		ClientWeaponTicker clientWeaponTicker = new ClientWeaponTicker(this, fireManager, reloadManager);
 		
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
 			clientWeaponTicker.shutdown();
@@ -139,5 +144,9 @@ public class ClientModContext extends CommonModContext {
 	@Override
 	public PlayerItemRegistry getPlayerItemRegistry() {
 		return playerItemRegistry;
+	}
+	
+	protected SyncManager<?> getSyncManager() {
+		return syncManager;
 	}
 }

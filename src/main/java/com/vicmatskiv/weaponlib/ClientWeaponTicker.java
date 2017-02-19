@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.lwjgl.input.Mouse;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
 class ClientWeaponTicker extends Thread {
@@ -17,14 +18,14 @@ class ClientWeaponTicker extends Thread {
 //	private SafeGlobals safeGlobals;
 	private FireManager fireManager;
 	private ReloadManager reloadManager;
-	private ReloadAspect reloadAspect;
+	//private WeaponReloadAspect reloadAspect;
 	private ClientModContext clientModContext;
 
-	public ClientWeaponTicker(ClientModContext clientModContext, FireManager fireManager, ReloadManager reloadManager, ReloadAspect reloadAspect) {
+	public ClientWeaponTicker(ClientModContext clientModContext, FireManager fireManager, ReloadManager reloadManager/*, WeaponReloadAspect reloadAspect*/) {
 		this.clientModContext = clientModContext;
 		this.fireManager = fireManager;
 		this.reloadManager = reloadManager;
-		this.reloadAspect = reloadAspect;
+		//this.reloadAspect = reloadAspect;
 	}
 
 	void shutdown() {
@@ -69,7 +70,10 @@ class ClientWeaponTicker extends Thread {
 	private void update(EntityPlayer player) {
 		
 		clientModContext.runSyncTick(() -> {
-			reloadAspect.updateMainHeldItem(player);
+			Item item = getHeldItemMainHand();
+			if(item instanceof Updatable) {
+				((Updatable) item).updateMainHeldItemForPlayer(player);
+			}
 		});
 		
 		reloadManager.update(compatibility.getHeldItemMainHand(player), player);
@@ -81,9 +85,14 @@ class ClientWeaponTicker extends Thread {
 	}
 	
 	private Weapon getCurrentWeapon() {
+		Item item = getHeldItemMainHand();
+		return item instanceof Weapon ? (Weapon) item : null;
+	}
+	
+	private Item getHeldItemMainHand() {
 		EntityPlayer player = compatibility.getClientPlayer();
 		if(player == null) return null;
-		ItemStack heldItem = compatibility.getHeldItemMainHand(player);
-		return heldItem != null && heldItem.getItem() instanceof Weapon ? (Weapon) heldItem.getItem() : null;
+		ItemStack itemStack = compatibility.getHeldItemMainHand(player);
+		return itemStack != null ? itemStack.getItem() : null;
 	}
 }

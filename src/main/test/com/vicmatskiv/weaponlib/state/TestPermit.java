@@ -1,6 +1,6 @@
 package com.vicmatskiv.weaponlib.state;
 
-import com.vicmatskiv.weaponlib.network.RegisteredUuid;
+import com.vicmatskiv.weaponlib.network.TypeRegistry;
 import com.vicmatskiv.weaponlib.network.UniversalObject;
 
 import io.netty.buffer.ByteBuf;
@@ -21,10 +21,9 @@ public class TestPermit extends UniversalObject {
 	}
 
 	@Override
-	public boolean init(ByteBuf buf) {
+	public void init(ByteBuf buf) {
 		super.init(buf);
 		amount = buf.readInt();
-		return true;
 	}
 
 	@Override
