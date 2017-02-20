@@ -16,14 +16,15 @@ class ClientWeaponTicker extends Thread {
 	
 	private AtomicBoolean running = new AtomicBoolean(true);
 //	private SafeGlobals safeGlobals;
-	private FireManager fireManager;
+//	private FireManager fireManager;
 	private ReloadManager reloadManager;
-	//private WeaponReloadAspect reloadAspect;
+	private WeaponReloadAspect reloadAspect;
+	private FireAspect fireAspect;
 	private ClientModContext clientModContext;
 
 	public ClientWeaponTicker(ClientModContext clientModContext, FireManager fireManager, ReloadManager reloadManager/*, WeaponReloadAspect reloadAspect*/) {
 		this.clientModContext = clientModContext;
-		this.fireManager = fireManager;
+//		this.fireManager = fireManager;
 		this.reloadManager = reloadManager;
 		//this.reloadAspect = reloadAspect;
 	}
@@ -47,13 +48,19 @@ class ClientWeaponTicker extends Thread {
 						mouseWasPressed = true;
 					}
 					if(currentWeapon != null && !safeGlobals.guiOpen.get() && !isInteracting()) {
-						fireManager.clientTryFire(player);
+//						fireManager.clientTryFire(player);
+						clientModContext.runSyncTick(() -> { currentWeapon.tryFire(player);});
+						
 					}
 				} else if(mouseWasPressed || currentItemIndex != safeGlobals.currentItemIndex.get()) { // if switched item while pressing mouse down and then released
 					mouseWasPressed = false;
 					currentItemIndex = safeGlobals.currentItemIndex.get();
 					if(currentWeapon != null) {
-						fireManager.clientTryStopFire(player);
+//						fireManager.clientTryStopFire(player);
+//						fireAspect.onFireButtonRelease(extendedState);
+						
+						clientModContext.runSyncTick(() -> { currentWeapon.tryStopFire(player);}
+					);
 					}
 				}
 				
@@ -77,7 +84,7 @@ class ClientWeaponTicker extends Thread {
 		});
 		
 		reloadManager.update(compatibility.getHeldItemMainHand(player), player);
-		fireManager.update(compatibility.getHeldItemMainHand(player), player);
+//		fireManager.update(compatibility.getHeldItemMainHand(player), player);
 	}
 
 	private boolean isInteracting() {

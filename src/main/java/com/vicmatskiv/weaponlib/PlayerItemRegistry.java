@@ -68,8 +68,8 @@ public class PlayerItemRegistry {
 				 * do not update the entire state
 				 */
 				extendedStateToMerge.setState(newManagedState); // why do we set it here?
-				if(newManagedState.transactionFinalState() != null) {
-					System.out.println("Preparing transaction for state " + newManagedState.transactionFinalState());
+				if(newManagedState.commitPhase() != null) {
+					System.out.println("Preparing transaction for state " + newManagedState.commitPhase());
 					currentState.prepareTransaction(extendedStateToMerge);
 				} else {
 					//slotContexts.put(extendedStateToMerge.getItemInventoryIndex(), extendedStateToMerge);
@@ -89,12 +89,12 @@ public class PlayerItemRegistry {
 		}
 		PlayerItemState<?> result;
 		if(itemStack.getItem() instanceof Weapon) {
-			PlayerWeaponState state = new PlayerWeaponState(player, itemStack);
+			PlayerWeaponState state = new PlayerWeaponState(slot, player, itemStack);
 			state.setAmmo(Tags.getAmmo(itemStack));
 			state.setState(WeaponState.READY); // TODO: why is it ready by default? Shouldn't it be deserialized from item stack?
 			result = state;
 		} else {
-			result = new PlayerItemState<>(player, itemStack);
+			result = new PlayerItemState<>(slot, player, itemStack);
 		}
 
 		return result;

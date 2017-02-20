@@ -37,7 +37,8 @@ public class PlayerItemState<S extends ManagedState<S>> extends UniversalObject 
 	
 	public PlayerItemState() {}
 	
-	public PlayerItemState(EntityPlayer player) {
+	public PlayerItemState(int itemInventoryIndex, EntityPlayer player) {
+		this.itemInventoryIndex = itemInventoryIndex;
 		this.player = player;
 		ItemStack itemStack = compatibility.getHeldItemMainHand(player);
 		if(itemStack != null) {
@@ -45,7 +46,8 @@ public class PlayerItemState<S extends ManagedState<S>> extends UniversalObject 
 		}
 	}
 	
-	public PlayerItemState(EntityPlayer player, ItemStack itemStack) {
+	public PlayerItemState(int itemInventoryIndex, EntityPlayer player, ItemStack itemStack) {
+		this.itemInventoryIndex = itemInventoryIndex;
 		this.player = player;
 		//this.itemStack = itemStack;
 		if(itemStack != null) {
@@ -104,9 +106,9 @@ public class PlayerItemState<S extends ManagedState<S>> extends UniversalObject 
 		stateUpdateTimestamp = System.currentTimeMillis();
 		updateId++;
 		if(preparedState != null) { // TODO: use comparator or equals?
-			if(preparedState.getState().transactionFinalState() == state) {
+			if(preparedState.getState().commitPhase() == state) {
 				System.out.println("Committing state " + preparedState.getState() 
-					+ " to " + preparedState.getState().transactionFinalState());
+					+ " to " + preparedState.getState().commitPhase());
 				updateWith(preparedState, false);
 			} else {
 				rollback();

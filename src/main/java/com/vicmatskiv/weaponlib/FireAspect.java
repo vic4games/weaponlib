@@ -49,17 +49,20 @@ public class FireAspect implements Aspect<WeaponState, PlayerWeaponState> {
 	
 	private static final float FLASH_X_OFFSET_ZOOMED = 0;
 	
-	private static Predicate<PlayerWeaponState> readyToShootAccordingToFireRate;
+	private static Predicate<PlayerWeaponState> readyToShootAccordingToFireRate = s -> 
+		System.currentTimeMillis() - s.getLastFireTimestamp() >= 50f / s.getWeapon().builder.fireRate;
     
-	private static Predicate<PlayerWeaponState> readyToShootAccordingToFireMode;
+	private static Predicate<PlayerWeaponState> readyToShootAccordingToFireMode = 
+			s -> s.getSeriesShotCount() < s.getWeapon().builder.maxShots;
              
-	private static Predicate<PlayerWeaponState> hasAmmo;
+	private static Predicate<PlayerWeaponState> hasAmmo = s -> true;
              
-	private static Predicate<PlayerWeaponState> ejectSpentRoundRequired;
+	private static Predicate<PlayerWeaponState> ejectSpentRoundRequired = s -> s.getWeapon().ejectSpentRoundRequired();
 	         
-	private static Predicate<PlayerWeaponState> ejectSpentRoundTimeoutExpired;
+	private static Predicate<PlayerWeaponState> ejectSpentRoundTimeoutExpired = s -> 
+		System.currentTimeMillis() >= s.getWeapon().builder.pumpTimeoutMilliseconds + s.getStateUpdateTimestamp();
                           
-	private static Predicate<PlayerWeaponState> sprinting;
+	private static Predicate<PlayerWeaponState> sprinting = s -> s.getPlayer().isSprinting();
              
 	private ModContext modContext;
 
@@ -67,6 +70,10 @@ public class FireAspect implements Aspect<WeaponState, PlayerWeaponState> {
 
 	private PermitManager permitManager;
 	
+	public FireAspect(CommonModContext modContext) {
+		this.modContext = modContext;
+	}
+
 	@Override
 	public void setStateManager(StateManager<WeaponState, ? super PlayerWeaponState> stateManager) {
 		this.stateManager = stateManager;
@@ -74,63 +81,87 @@ public class FireAspect implements Aspect<WeaponState, PlayerWeaponState> {
 		stateManager
 		
 		.in(this).change(WeaponState.READY).to(WeaponState.FIRING)
-			.when(sprinting.negate().and(readyToShootAccordingToFireRate).and(readyToShootAccordingToFireMode).and(hasAmmo))
-			.allowed()
+		.when(hasAmmo.and(sprinting.negate()))
+		.withAction(this::fire)
+		.manual() // on start fire
 		
-		.in(this).change(WeaponState.FIRING).to(WeaponState.STOPPED)
-			.withAction((c, f, t, p) -> resetShots(c))
-			.allowed()
+		.in(this).change(WeaponState.FIRING).to(WeaponState.RECOILED)
+		.automatic() // unconditional
 		
-		.in(this).change(WeaponState.STOPPED).to(WeaponState.EJECTED_SPENT_ROUND)
-			.when(ejectSpentRoundRequired)
-			.withAction((c, f, t, p) -> ejectSpentRound(c))
-			.allowed()
+		.in(this).change(WeaponState.RECOILED).to(WeaponState.PAUSED)
+		.automatic() // unconditional
 		
-		.in(this).change(WeaponState.STOPPED).to(WeaponState.READY)
-			.when(ejectSpentRoundRequired.negate())
-			.allowed()
+		.in(this).change(WeaponState.PAUSED).to(WeaponState.EJECT_REQUIRED)
+		.when(ejectSpentRoundRequired)
+		.manual() // on stop
 		
-		.in(this).change(WeaponState.EJECTED_SPENT_ROUND).to(WeaponState.READY)
-			.when(ejectSpentRoundTimeoutExpired)
-			.allowed();
+		.in(this).change(WeaponState.EJECT_REQUIRED).to(WeaponState.EJECTING)
+		.withAction(this::ejectSpentRound)
+		.manual() // on fire ?
+		
+		.in(this).change(WeaponState.EJECTING).to(WeaponState.READY)
+		.when(ejectSpentRoundTimeoutExpired) // TODO: enforce it only if a trigger was released
+		.automatic() // on stop fire and eject animation completed
+		
+		.in(this).change(WeaponState.PAUSED).to(WeaponState.FIRING)
+		.when(hasAmmo.and(sprinting.negate()).and(readyToShootAccordingToFireMode).and(readyToShootAccordingToFireRate))
+		.withAction(this::fire)
+		.manual() // on fire
+		
+		.in(this).change(WeaponState.PAUSED).to(WeaponState.READY)
+		.when(ejectSpentRoundRequired.negate())
+		.withAction(c -> { c.setSeriesShotCount(0);})
+		.manual() // on stop
+		;
+		
 	}
 	
 	public void setPermitManager(PermitManager permitManager) {
 		this.permitManager = permitManager;
 	}
 	
-	void onFireButtonClick(PlayerWeaponState context) {
-		Result result = stateManager.changeState(this, context, WeaponState.FIRING, WeaponState.EJECTED_SPENT_ROUND);
-		if(result.getState() == WeaponState.FIRING) {
-			fire(context);
+	void onFireButtonClick(EntityPlayer player) {
+		PlayerWeaponState extendedState = (PlayerWeaponState) contextForPlayer(player); // TODO: take care of slot changes?
+		if(extendedState != null) {
+			//System.out.println("Attempting to fire from state " + extendedState.getState());
+			stateManager.changeState(this, extendedState, WeaponState.FIRING, WeaponState.EJECTING);
 		}
 	}
 	
-	void onFireButtonRelease(PlayerWeaponState context) {
-		stateManager.changeState(this, context, WeaponState.STOPPED);
+	void onFireButtonRelease(EntityPlayer player) {
+		//System.out.println("Releasing trigger");
+		PlayerWeaponState extendedState = (PlayerWeaponState) contextForPlayer(player); // TODO: take care of slot changes?
+		if(extendedState != null) {
+			stateManager.changeState(this, extendedState, WeaponState.EJECT_REQUIRED, WeaponState.READY);
+		}
 	}
 	
-	void onUpdate(PlayerWeaponState context) {
-		stateManager.changeState(this, context, WeaponState.READY);
+	void onUpdate(EntityPlayer player) {
+		//System.out.println("Updating...");
+		PlayerWeaponState extendedState = (PlayerWeaponState) contextForPlayer(player); // TODO: take care of slot changes?
+		if(extendedState != null) {
+			stateManager.changeState(this, extendedState);
+		}
 	}
 	
-	private void fire(PlayerItemState<WeaponState> context) {
-		EntityPlayer player = context.getPlayer();
-		Weapon weapon = (Weapon) context.getItem();
-		WeaponClientStorage storage = null; //context.getStorage();
+	private void fire(PlayerWeaponState extendedState) {
+		EntityPlayer player = extendedState.getPlayer();
+		Weapon weapon = (Weapon) extendedState.getItem();
+		//WeaponClientStorage storage = null; //context.getStorage();
 		Random random = player.getRNG();
 		
-		modContext.getChannel().getChannel().sendToServer(new TryFireMessage(true));
+//		modContext.getChannel().getChannel().sendToServer(new TryFireMessage(true));
 		ItemStack heldItem = compatibility.getHeldItemMainHand(player); // TODO: move out
-
-		modContext.runSyncTick(() -> {
-			compatibility.playSound(player, modContext.getAttachmentManager().isSilencerOn(heldItem) ? weapon.getSilencedShootSound() : weapon.getShootSound(), 1F, 1F);
-		});
-
+//
+//		modContext.runSyncTick(() -> {
+//			compatibility.playSound(player, modContext.getAttachmentManager().isSilencerOn(heldItem) ? weapon.getSilencedShootSound() : weapon.getShootSound(), 1F, 1F);
+//		});
 		
-		player.rotationPitch = player.rotationPitch - storage.getRecoil();						
+		compatibility.playSound(player, modContext.getAttachmentManager().isSilencerOn(heldItem) ? weapon.getSilencedShootSound() : weapon.getShootSound(), 1F, 1F);
+
+		player.rotationPitch = player.rotationPitch - extendedState.getRecoil();						
 		float rotationYawFactor = -1.0f + random.nextFloat() * 2.0f;
-		player.rotationYaw = player.rotationYaw + storage.getRecoil() * rotationYawFactor;
+		player.rotationYaw = player.rotationYaw + extendedState.getRecoil() * rotationYawFactor;
 		
 		if(weapon.builder.flashIntensity > 0) {
 			EffectManager.getInstance().spawnFlashParticle(player, weapon.builder.flashIntensity,
@@ -140,32 +171,28 @@ public class FireAspect implements Aspect<WeaponState, PlayerWeaponState> {
 		
 		EffectManager.getInstance().spawnSmokeParticle(player, compatibility.getEffectOffsetX(),
 				compatibility.getEffectOffsetY());
-				
-		storage.addShot();
+			
+		
+		extendedState.setSeriesShotCount(extendedState.getSeriesShotCount() + 1);
+		extendedState.setLastFireTimestamp(System.currentTimeMillis());
 	}
 
-	private void ejectSpentRound(PlayerItemState<WeaponState> context) {
-		EntityPlayer player = context.getPlayer();
+	private void ejectSpentRound(PlayerWeaponState extendedState) {
+		EntityPlayer player = extendedState.getPlayer();
 		ItemStack itemStack = compatibility.getHeldItemMainHand(player); // TODO: move out
 		if(!Tags.isAimed(itemStack)) {
-//			WeaponClientStorage storage = context.getStorage();
-//			storage.setEjectSpentRoundStartedAt(System.currentTimeMillis());
-//			storage.setState(State.EJECT_SPENT_ROUND);
-//			modContext.runSyncTick(() -> {
-//				Weapon weapon = context.getWeapon();
-//				compatibility.playSound(player, weapon.getEjectSpentRoundSound(), 1F, 1F);
-//			});
+			Weapon weapon = extendedState.getWeapon();
+			compatibility.playSound(player, weapon.getEjectSpentRoundSound(), 1F, 1F);
 		}
 	}
-	
-	private void resetShots(PlayerItemState<WeaponState> context) {
-//		WeaponClientStorage storage = context.getStorage();
-//		storage.resetShots();
-//		modContext.runInMainThread(() -> {
-//			modContext.getChannel().getChannel().sendToServer(new TryFireMessage(false));
-//		});
-	}
 
-	
+	private PlayerItemState<WeaponState> contextForPlayer(EntityPlayer player) {
+		
+		ItemStack itemStack = compatibility.getHeldItemMainHand(player);
+		if(itemStack != null && itemStack.getItem() instanceof Weapon) {
+			return (PlayerItemState<WeaponState>) modContext.getPlayerItemRegistry().getMainHandItemState(player);
+		}
+		return null;
+	}
 
 }

@@ -9,35 +9,48 @@ public enum WeaponState implements ManagedState<WeaponState> {
 
 	READY(false), 
 	LOAD_REQUESTED, 
-	LOAD(LOAD_REQUESTED, null), 
-	UNLOAD_REQUESTED, 
-	UNLOAD(UNLOAD_REQUESTED, READY),
-	FIRING, 
-	STOPPED, 
-	EJECT_SPENT_ROUND_REQUIRED, 
-	EJECTED_SPENT_ROUND;
-
-	private WeaponState permitRequestedState;
+	LOAD(null, LOAD_REQUESTED, null, true), 
 	
-	private WeaponState transactionFinalState;
+	UNLOAD_PREPARING, 
+	UNLOAD_REQUESTED, 
+	UNLOAD(UNLOAD_PREPARING, UNLOAD_REQUESTED, READY, true),
+	
+	FIRING,
+	RECOILED,
+	PAUSED,
+	EJECT_REQUIRED,
+	EJECTING,
+	
+//	STOPPED, 
+//	EJECT_SPENT_ROUND_REQUIRED, 
+//	EJECTED_SPENT_ROUND,
+	
+	MODIFYING;
+
+	private WeaponState preparingPhase;
+	
+	private WeaponState permitRequestedPhase;
+	
+	private WeaponState commitPhase;
 	
 	private boolean isTransient;
 	
 	private WeaponState() {
-		this(null, null);
+		this(null, null, null, true);
 	}
 	
 	private WeaponState(boolean isTransient) {
-		this(null, null, isTransient);
+		this(null, null, null, isTransient);
 	}
 	
-	private WeaponState(WeaponState permitRequestedState, WeaponState transactionFinalState) {
-		this(permitRequestedState, transactionFinalState, true);
-	}
+//	private WeaponState(WeaponState permitRequestedState, WeaponState transactionFinalState) {
+//		this(permitRequestedState, transactionFinalState, true);
+//	}
 	
-	private WeaponState(WeaponState permitRequestedState, WeaponState transactionFinalState, boolean isTransient) {
-		this.permitRequestedState = permitRequestedState;
-		this.transactionFinalState = transactionFinalState;
+	private WeaponState(WeaponState preparingPhase, WeaponState permitRequestedState, WeaponState transactionFinalState, boolean isTransient) {
+		this.preparingPhase = preparingPhase;
+		this.permitRequestedPhase = permitRequestedState;
+		this.commitPhase = transactionFinalState;
 		this.isTransient = isTransient;
 	}
 	
@@ -47,8 +60,19 @@ public enum WeaponState implements ManagedState<WeaponState> {
 	}
 	
 	@Override
-	public WeaponState permitRequested() {
-		return permitRequestedState;
+	public WeaponState preparingPhase() {
+		return preparingPhase;
+	}
+	
+	@Override
+	public WeaponState permitRequestedPhase() {
+		return permitRequestedPhase;
+	}
+	
+
+	@Override
+	public WeaponState commitPhase() {
+		return commitPhase;
 	}
 
 	@Override
@@ -65,9 +89,5 @@ public enum WeaponState implements ManagedState<WeaponState> {
 		TypeRegistry.getInstance().register(WeaponState.class);
 	}
 
-	@Override
-	public WeaponState transactionFinalState() {
-		return transactionFinalState;
-	}
 	
 }

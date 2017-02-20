@@ -665,6 +665,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		} else if(player.isSprinting() && builder.firstPersonPositioningRunning != null) {
 			currentState = RenderableState.RUNNING;
 		} else if(Weapon.isZoomed(player, itemStack)) {
+			
 			WeaponClientStorage storage = weapon.getWeaponClientStorage(player);
 
 			if(storage != null) {
@@ -687,16 +688,47 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			amplitude = builder.zoomRandomizingAmplitude; // Zoom amplitude is enforced even when firing
 			//System.out.println("Rendering state: " + currentState);
 		} else {
-			WeaponClientStorage storage = weapon.getWeaponClientStorage(player);
-
-			if(storage != null) {
-				currentState = storage.getNextDisposableRenderableState();
-				if(currentState == RenderableState.AUTO_SHOOTING) {
-					currentState = RenderableState.NORMAL;
-					rate = builder.firingRandomizingRate;
-					amplitude = builder.firingRandomizingAmplitude;
+			
+			PlayerWeaponState playerWeaponState = weapon.getPlayerWeaponState(player);
+			if(playerWeaponState != null) {
+				WeaponState state = playerWeaponState.nextHistoryState();
+				
+				
+				if(weapon.builder.maxShots > 1) { // TODO: replace with method e.g. isAutomaticMode
+					// automatic mode
+					switch(state) {
+					case FIRING: case RECOILED: case PAUSED: 
+						currentState = RenderableState.NORMAL; 
+						rate = builder.firingRandomizingRate;
+						amplitude = builder.firingRandomizingAmplitude;
+						break;
+					}
+				} else {
+					switch(state) {
+					case FIRING: currentState = RenderableState.SHOOTING; break;
+					case RECOILED: case PAUSED: currentState = RenderableState.RECOILED; break;
+					}
+				}
+				
+				if(state != WeaponState.READY) {
+					System.out.println("Mapped " + state + " to " + currentState 
+							+ ", rate: " + builder.firingRandomizingRate 
+							+ ", amplitude: " + builder.firingRandomizingAmplitude);
 				}
 			}
+			
+//			
+//			
+//			WeaponClientStorage storage = weapon.getWeaponClientStorage(player);
+//
+//			if(storage != null) {
+//				currentState = storage.getNextDisposableRenderableState();
+//				if(currentState == RenderableState.AUTO_SHOOTING) {
+//					currentState = RenderableState.NORMAL;
+//					rate = builder.firingRandomizingRate;
+//					amplitude = builder.firingRandomizingAmplitude;
+//				}
+//			}
 		}
 		
 		if(currentState == null) {

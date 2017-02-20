@@ -48,6 +48,8 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponState
 			(c) -> AttachmentManager.getActiveAttachment(c.getItemStack(), AttachmentCategory.MAGAZINE) != null;
 
 	private static long reloadAnimationDuration = 1000;
+	
+	private static long unloadAnimationDuration = 1000;
 		
 	private static Predicate<PlayerWeaponState> reloadAnimationCompleted = es -> 
 		System.currentTimeMillis() >= es.getStateUpdateTimestamp() + reloadAnimationDuration; // TODO: read reload animation duration from the state itself
@@ -55,13 +57,17 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponState
 	private static Predicate<PlayerWeaponState> unloadAnimationCompleted = es -> 
 		System.currentTimeMillis() >= es.getStateUpdateTimestamp() + reloadAnimationDuration;
 		
-	private static Predicate<PlayerItemState<WeaponState>> quietReload = (c) -> false;
+	private static Predicate<PlayerItemState<WeaponState>> quietReload = c -> false;
+	
+	private Predicate<PlayerItemState<WeaponState>> inventoryHasFreeSlots = c -> true; // TODO implement free slot check
 	
 	private ModContext modContext;
 
 	private PermitManager permitManager;
 
 	private StateManager<WeaponState, ? super PlayerWeaponState> stateManager;
+
+
 	
 	public WeaponReloadAspect(ModContext modContext) {
 		this.modContext = modContext;
@@ -83,26 +89,28 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponState
 					modContext.getPlayerItemRegistry()::update,
 					permitManager)
 			.withAction((c, f, t, p) -> doPermittedLoad(c, (LoadPermit)p))
-			.allowed()
+			.manual()
 
 		.in(this)
 			.change(WeaponState.LOAD).to(WeaponState.READY)
 			.when(reloadAnimationCompleted)
-			.allowed()
+			.automatic()
 			
 		.in(this)
+			.prepare((c, f, t) -> { prepareUnload(c); }, unloadAnimationDuration)
 			.change(WeaponState.READY).to(WeaponState.UNLOAD)
-			.when(magazineAttached)
+			.when(magazineAttached.and(inventoryHasFreeSlots))
 			.withPermit((s, c) -> new UnloadPermit(s),
 					modContext.getPlayerItemRegistry()::update,
 					permitManager)
 			.withAction((c, f, t, p) -> doPermittedUnload(c, (UnloadPermit)p))
-			.allowed()
+			.manual()
 		
 		.in(this)
 			.change(WeaponState.UNLOAD).to(WeaponState.READY)
-			.when(unloadAnimationCompleted.or(quietReload))
-			.allowed();
+			//.when(unloadAnimationCompleted.or(quietReload))
+			.automatic()
+		;
 	}
 	
 	@Override
@@ -112,7 +120,6 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponState
 		permitManager.registerEvaluator(UnloadPermit.class, PlayerWeaponState.class, (p, c) -> { evaluateUnload(p, c); });
 	}
 	
-
 	public void reloadMainHeldItem(EntityPlayer player) {
 		PlayerWeaponState state = (PlayerWeaponState) contextForPlayer(player);
 		stateManager.changeState(this, state, WeaponState.LOAD, WeaponState.UNLOAD);
@@ -120,24 +127,20 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponState
 
 	void updateMainHeldItem(EntityPlayer player) {
 		PlayerWeaponState state = (PlayerWeaponState) contextForPlayer(player);
-		stateManager.changeStateFromAnyOf(this, state, WeaponState.READY, 
-				WeaponState.UNLOAD_REQUESTED, 
-				WeaponState.UNLOAD, 
-				WeaponState.LOAD_REQUESTED, 
-				WeaponState.LOAD);
+		stateManager.changeState(this, state); // no target state specified, will trigger auto-transitions
 	}
 	
-	private void evaluateLoad(LoadPermit p, PlayerItemState<WeaponState> playerItemState) {
+	private void evaluateLoad(LoadPermit p, PlayerWeaponState playerWeaponState) {
 		
-		ItemStack weaponItemStack = playerItemState.getItemStack();
+		ItemStack weaponItemStack = playerWeaponState.getItemStack();
 		
 		if(weaponItemStack == null) {
 			// Since reload request was sent for an item, the item was removed from the original slot
 			return;
 		}
 		Status status = Status.GRANTED;
-		Weapon weapon = (Weapon) playerItemState.getItem();
-		EntityPlayer player = playerItemState.getPlayer();
+		Weapon weapon = (Weapon) playerWeaponState.getItem();
+		EntityPlayer player = playerWeaponState.getPlayer();
 		if (compatibility.getTagCompound(weaponItemStack) != null && !player.isSprinting()) {
 			List<ItemMagazine> compatibleMagazines = weapon.getCompatibleMagazines();
 			List<ItemAttachment<Weapon>> compatibleBullets = weapon.getCompatibleAttachments(ItemBullet.class);
@@ -154,30 +157,39 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponState
 						newMagazine = (ItemMagazine) magazineItemStack.getItem();
 						ammo = Tags.getAmmo(magazineItemStack);
 						Tags.setAmmo(weaponItemStack, ammo);
+						System.out.println("Setting server side ammo for the weapon to " + ammo);
 						modContext.getAttachmentManager().addAttachment((ItemAttachment<Weapon>) magazineItemStack.getItem(), weaponItemStack, player);
 						compatibility.playSoundToNearExcept(player, weapon.getReloadSound(), 1.0F, 1.0F);
 					}
 				}
 				// Update permit instead: modContext.getChannel().getChannel().sendTo(new ReloadMessage(weapon, ReloadMessage.Type.LOAD, newMagazine, ammo), (EntityPlayerMP) player);
-				
+				playerWeaponState.setAmmo(ammo);
 			} else if(!compatibleBullets.isEmpty() && (consumedStack = WorldHelper.tryConsumingCompatibleItem(compatibleBullets,
 					Math.min(weapon.getMaxBulletsPerReload(), weapon.getAmmoCapacity() - Tags.getAmmo(weaponItemStack)), player)) != null) {
 				int ammo = Tags.getAmmo(weaponItemStack) + compatibility.getStackSize(consumedStack);
 				Tags.setAmmo(weaponItemStack, ammo);
 				// Update permit instead modContext.getChannel().getChannel().sendTo(new ReloadMessage(weapon, ammo), (EntityPlayerMP) player);
+				playerWeaponState.setAmmo(ammo);
 				compatibility.playSoundToNearExcept(player, weapon.getReloadSound(), 1.0F, 1.0F);
 			} else if (WorldHelper.consumeInventoryItem(player.inventory, weapon.builder.ammo)) {
 				Tags.setAmmo(weaponItemStack, weapon.builder.ammoCapacity);
 				// Update permit instead: modContext.getChannel().getChannel().sendTo(new ReloadMessage(weapon, weapon.builder.ammoCapacity), (EntityPlayerMP) player);
+				playerWeaponState.setAmmo(weapon.builder.ammoCapacity);
 				compatibility.playSoundToNearExcept(player, weapon.getReloadSound(), 1.0F, 1.0F);
 			} else {
+				System.out.println("No ammo found, denying...");
 				Tags.setAmmo(weaponItemStack, 0);
+				playerWeaponState.setAmmo(0);
 				status = Status.DENIED;
-				// Update permit isntead: modContext.getChannel().getChannel().sendTo(new ReloadMessage(weapon, 0), (EntityPlayerMP) player);
+				// Update permit instead: modContext.getChannel().getChannel().sendTo(new ReloadMessage(weapon, 0), (EntityPlayerMP) player);
 			}
 		} 
 		
 		p.setStatus(status);
+	}
+	
+	private void prepareUnload(PlayerWeaponState playerWeaponState) {
+		compatibility.playSound(playerWeaponState.getPlayer(), playerWeaponState.getWeapon().getUnloadSound(), 1.0F, 1.0F);
 	}
 	
 	private void evaluateUnload(UnloadPermit p, PlayerWeaponState playerWeaponState) {
@@ -212,23 +224,16 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponState
 	}
 	
 	private void doPermittedLoad(PlayerWeaponState c, LoadPermit permit) {
-//		storage.getCurrentAmmo().set(ammo);
-//		if ((itemMagazine != null || ammo > 0) && !forceQuietReload) {
-//			storage.setState(State.RELOAD_CONFIRMED);
-//			long reloadingStopsAt = compatibility.world(player).getTotalWorldTime() + weapon.builder.reloadingTimeout;
-//			storage.getReloadingStopsAt().set(reloadingStopsAt);
-//			compatibility.playSound(player, weapon.getReloadSound(), 1.0F, 1.0F);
-//		} else {
-//			storage.setState(State.READY);
-//		}
+		if(permit == null) {
+			System.err.println("Permit is null, something went wrong");
+			return;
+		}
+		if(permit.getStatus() == Status.GRANTED) {
+			compatibility.playSound(c.getPlayer(), c.getWeapon().getReloadSound(), 1.0F, 1.0F);
+		}
 	}
 	
 	private void doPermittedUnload(PlayerItemState<WeaponState> c, UnloadPermit p) {
-		
-//		ClientModContext.context = c; // TODO: generalize  context synchronization
-//		ClientModContext.context.setPlayer(compatibility.getClientPlayer());
-		System.out.println("Doing permitted unload");
-		c.setPlayer(compatibility.getClientPlayer());
 	}
 
 	private PlayerItemState<WeaponState> contextForPlayer(EntityPlayer player) {

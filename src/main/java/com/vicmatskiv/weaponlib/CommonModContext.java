@@ -5,15 +5,12 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 import java.util.HashMap;
 import java.util.Map;
 
-import com.vicmatskiv.weaponlib.WeaponReloadAspect.LoadPermit;
-import com.vicmatskiv.weaponlib.WeaponReloadAspect.UnloadPermit;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSide;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 import com.vicmatskiv.weaponlib.network.NetworkPermitManager;
 import com.vicmatskiv.weaponlib.network.PermitMessage;
-import com.vicmatskiv.weaponlib.network.TypeRegistry;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -27,6 +24,8 @@ public class CommonModContext implements ModContext {
 	protected FireManager fireManager;
 	protected ReloadManager reloadManager;
 	protected WeaponReloadAspect weaponReloadAspect;
+	
+	protected FireAspect weaponFireAspect;
 	
 	protected NetworkPermitManager permitManager;
 	
@@ -43,6 +42,7 @@ public class CommonModContext implements ModContext {
 		this.fireManager = new FireManager(this);
 		this.reloadManager = new ReloadManager(this);
 		this.weaponReloadAspect = new WeaponReloadAspect(this);
+		this.weaponFireAspect = new FireAspect(this);
 		this.permitManager = new NetworkPermitManager(this);
 		
 		channel.registerMessage(new ReloadMessageHandler(reloadManager, (ctx) -> getServerPlayer(ctx)),
@@ -153,15 +153,18 @@ public class CommonModContext implements ModContext {
 		compatibility.registerItem(item, name);
 	}
 
-
 	@Override
 	public PlayerItemRegistry getPlayerItemRegistry() {
 		throw new UnsupportedOperationException();
 	}
 
-
 	@Override
 	public WeaponReloadAspect getWeaponReloadAspect() {
 		return weaponReloadAspect;
+	}
+
+	@Override
+	public FireAspect getWeaponFireAspect() {
+		return weaponFireAspect;
 	}
 }

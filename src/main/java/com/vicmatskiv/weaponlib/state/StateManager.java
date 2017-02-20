@@ -3,9 +3,9 @@ package com.vicmatskiv.weaponlib.state;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 import com.vicmatskiv.weaponlib.state.Permit.Status;
@@ -14,20 +14,28 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 	
 	public class RuleBuilder<EE extends E> {
 		
-		private static final long DEFAULT_REQUEST_TIMEOUT = 5000L;
+		private static final long DEFAULT_REQUEST_TIMEOUT = 10000L;
 		
 		private Aspect<S, EE> aspect;
 		private S fromState;
 		private S toState;
-		private Action<S, EE> action;
+		private VoidAction<S, EE> prepareAction;
+		private PostAction<S, EE> action;
 		private Predicate<EE> predicate;
 		private BiFunction<S, EE, Permit<S>> permitProvider;
 		private BiFunction<S, EE, Boolean> stateUpdater;
 		private PermitManager permitManager;
+		private long prepareDuration;
 		private long requestTimeout = DEFAULT_REQUEST_TIMEOUT;
 		
 		public RuleBuilder(Aspect<S, EE> aspect) {
 			this.aspect = aspect;
+		}
+		
+		public RuleBuilder<EE> prepare(VoidAction<S, EE> prepareAction, long prepareDuration) {
+			this.prepareAction = prepareAction;
+			this.prepareDuration = prepareDuration;
+			return this;
 		}
 
 		public RuleBuilder<EE> change(S fromState) {
@@ -60,14 +68,32 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 //			return this;
 //		}
 		
-		public RuleBuilder<EE> withAction(VoidAction<S, EE> action) {
+		public RuleBuilder<EE> withAction(VoidPostAction<S, EE> action) {
 			this.action = (context, from, to, permit) -> { action.execute(context, from, to, permit); return null;};
 			return this;
 		}
 		
-		public StateManager<S, E> allowed() {
+		public RuleBuilder<EE> withAction(VoidAction2<EE> action) {
+			this.action = (context, from, to, permit) -> { action.execute(context); return null;};
+			return this;
+		}
+		
+//		public RuleBuilder<EE> automatically() {
+//			this.auto = true;
+//			return this;
+//		}
+		
+		public StateManager<S, E> automatic() {
+			return addRule(true);
+		}
+		
+		public StateManager<S, E> manual() {
+			return addRule(false);
+		}
+		
+		private StateManager<S, E> addRule(boolean auto) {
 			
-			LinkedHashSet<TransitionRule<S, E>> contextRules = StateManager.this.contextRules.computeIfAbsent(
+			LinkedHashSet<TransitionRule<S, E>> aspectRules = StateManager.this.contextRules.computeIfAbsent(
 					aspect, c -> new LinkedHashSet<>());
 			
 			if(predicate == null) {
@@ -78,26 +104,76 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 				action = (c, f, t, p) -> null;
 			}
 			
-			if(permitProvider != null) {
+			/*
+			 * Problem with updating state. Need to specify which update is required.
+			 * 
+			 * Option 1: specify what to update
+			 * 	cons: need to know the state transitioning details
+			 * 
+			 * Option 2: introduce auto-transitioned rules.
+			 * 	Auto-transitioned rule would apply when requestor does not set a target state
+			 * 
+			 * for example
+			 * 	rule could be auto-transitioned state
+			 * 
+			 */
+			
+			final S effectiveFromState;
+			final Predicate<E> effectivePredicate;
+			final boolean isRequestRuleAutoTransitioned;
+			
+			if(prepareAction != null || prepareDuration > 0) {
 				
-
-				contextRules.add(new TransitionRule<>(fromState, toState.permitRequested(), 
-						(originalState) -> predicate.test(safeCast(originalState)), 
+				if(auto) {
+					throw new IllegalStateException("Prepared transition cannot be automatic");
+				}
+				
+				TransitionRule<S, E> prepareRule = new TransitionRule<>(fromState, toState.preparingPhase(), 
+						(e) -> predicate.test(safeCast(e)), 
+						(c, f, t, p) -> {
+							if(prepareAction != null) {
+								prepareAction.execute(safeCast(c), f, t); 
+							}
+							return null;
+						},
+						false);
+				
+				aspectRules.add(prepareRule);
+				
+				effectiveFromState = toState.preparingPhase();
+				effectivePredicate = e -> System.currentTimeMillis() > e.getStateUpdateTimestamp() + prepareDuration;
+				isRequestRuleAutoTransitioned = true; // prepare -> request transition must be automatic
+			} else {
+				effectiveFromState = fromState;
+				effectivePredicate = e -> predicate.test(safeCast(e));
+				isRequestRuleAutoTransitioned = false; // from -> request transtion must be manual
+			}
+			
+			if(permitProvider != null) {
+				if(auto) {
+					throw new IllegalStateException("Permitted transitions cannot be automatic");
+				}
+				
+				TransitionRule<S, E> requestPermitRule = new TransitionRule<>(effectiveFromState, toState.permitRequestedPhase(), 
+						effectivePredicate, 
 						(s, f, t, p) -> { permitManager.request(
 								permitProvider.apply(t, safeCast(s)), s, this::applyPermit);
 								return null;
-						}));
-
-				Predicate<E> requestTimedout = c -> 
-						System.currentTimeMillis() > c.getStateUpdateTimestamp() + requestTimeout;
+						}, isRequestRuleAutoTransitioned);
 				
-				contextRules.add(new TransitionRule<>(toState.permitRequested(), fromState, 
-						requestTimedout,
-						(c, f, t, p) -> action.execute(safeCast(c), f, t, p)));
+				aspectRules.add(requestPermitRule);
+
+				TransitionRule<S, E> rollbackRule = new TransitionRule<>(toState.permitRequestedPhase(), fromState, 
+						c -> System.currentTimeMillis() > c.getStateUpdateTimestamp() + requestTimeout,
+						(c, f, t, p) -> action.execute(safeCast(c), f, t, p), 
+						true);
+				
+				aspectRules.add(rollbackRule);
 				
 			} else {
-				contextRules.add(new TransitionRule<>(fromState, toState,
-						c -> predicate.test(safeCast(c)), (c, f, t, p) -> action.execute(safeCast(c), f, t, p)));
+				TransitionRule<S, E> directTransitionRule = new TransitionRule<>(effectiveFromState, toState,
+						effectivePredicate, (c, f, t, p) -> action.execute(safeCast(c), f, t, p), auto);
+				aspectRules.add(directTransitionRule);
 			}
 			
 			return StateManager.this;
@@ -105,11 +181,6 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 
 		private void applyPermit(Permit<S> processedPermit, E updatedState) {
 			// This is a permit granted callback which sets state to the final toState
-			
-//			if(updatedState != stateUpdater.apply(safeCast(updatedState))) {
-//				System.out.println("Failed to match updated state");
-//				return;
-//			}
 			
 			S updateToState = processedPermit.getStatus() == Status.GRANTED ? toState : fromState;
 			System.out.println("Applying permit with status " + processedPermit.getStatus()
@@ -119,22 +190,7 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 				action.execute(safeCast(updatedState), fromState, toState, processedPermit);
 			}
 			
-//			switch(processedPermit.getStatus()) {
-//			
-//			case GRANTED: 
-//				System.out.println("Applying permit with status " + processedPermit.getStatus()
-//					+ ", changing state to " + toState);
-//				updatedState.setState(toState);
-//				action.execute(safeCast(updatedState), fromState, toState, processedPermit);
-//				break;
-//			
-//			default: 
-//				System.out.println("Applying permit with status " + processedPermit.getStatus()
-//					+ ", reverting state back to " + fromState);
-//				updatedState.setState(fromState);
-//				action.execute(safeCast(updatedState), fromState, toState, processedPermit);
-//				break;
-//			}
+			//TODO: changeState(aspect, updatedState);
 		}
 	}
 
@@ -166,12 +222,20 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 		}
 	}
 	
-	public static interface Action<S extends ManagedState<S>, EE> {
+	public static interface PostAction<S extends ManagedState<S>, EE> {
 		public Object execute(EE extendedState, S fromState, S toState, Permit<S> permit);
 	}
 	
-	public static interface VoidAction<S extends ManagedState<S>, EE> {
+	public static interface VoidPostAction<S extends ManagedState<S>, EE> {
 		public void execute(EE extendedState, S fromState, S toState, Permit<S> permit);
+	}
+	
+	public static interface VoidAction<S extends ManagedState<S>, EE> {
+		public void execute(EE extendedState, S fromState, S toState);
+	}
+	
+	public static interface VoidAction2<EE> {
+		public void execute(EE extendedState);
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -183,13 +247,15 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 		S fromState;
 		S toState;
 		Predicate<E> predicate;
-		Action<S, E> action;
+		PostAction<S, E> action;
+		boolean auto;
 		
 		TransitionRule(
 				S fromState, 
 				S toState, 
 				Predicate<E> predicate, 
-				Action<S, E> action) {
+				PostAction<S, E> action,
+				boolean auto) {
 			if(fromState == null) {
 				throw new IllegalArgumentException("From-state cannot be null");
 			}
@@ -200,15 +266,24 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 			this.toState = toState;
 			this.predicate = predicate;
 			this.action = action;
+			this.auto = auto;
 		}
 		
 		boolean matches(StateComparator<S> stateComparator, E context, S fromState, @SuppressWarnings("unchecked") S...targetStates) {
 			
 			boolean result = fromState == null || stateComparator.compare(this.fromState, fromState);
-			result = result && (targetStates.length == 0 
+			result = result && ((auto && targetStates.length == 0) 
 						|| Arrays.stream(targetStates).anyMatch(
-								targetState -> stateComparator.compare(toState, targetState) 
-									|| stateComparator.compare(toState, targetState.permitRequested())));
+								targetState -> 
+									/*
+									 *  When changeState() is invoked with "main" state as a target state,
+									 *  the rule should consider prepared phase permit phase of the "main" state as well.
+									 */
+									stateComparator.compare(toState, targetState)
+									|| stateComparator.compare(toState, targetState.preparingPhase())
+									|| stateComparator.compare(toState, targetState.permitRequestedPhase())
+									
+								));
 			
 			result = result && predicate.test(context);
 			return result;
@@ -233,9 +308,9 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 	}
 	
 	@SuppressWarnings("unchecked")
-	public Result changeStateFromAnyOf(Aspect<S, ? extends E> aspect, E extendedState, S targetState, S...expectedFromStates) {
+	public Result changeStateFromAnyOf(Aspect<S, ? extends E> aspect, E extendedState, List<S> fromStates, S targetState) {
 		S currentState = extendedState.getState();
-		if(!Arrays.stream(expectedFromStates).anyMatch(expectedFromState -> stateComparator.compare(expectedFromState, currentState))) {
+		if(!fromStates.stream().anyMatch(expectedFromState -> stateComparator.compare(expectedFromState, currentState))) {
 			return new Result(false, currentState);
 		}
 		return changeStateFromTo(aspect, extendedState, currentState, targetState);
@@ -247,24 +322,28 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 			return null;
 		}
 		
-		//System.out.println("Current state: " + fromState);
-		// If current state matches any of the target states, return immediately
 		if(Arrays.stream(targetStates).anyMatch(target -> stateComparator.compare(currentState, target))) {
 			return new Result(false, currentState);
 		}
-		TransitionRule<S, E> newStateRule = findNextStateRule(aspect, extendedState, currentState, targetStates);
+		
 		Result result = null;
-		if(newStateRule != null) {
+		
+		TransitionRule<S, E> newStateRule;
+		S s = currentState;
+		S ts[] = targetStates;
+		while((newStateRule = findNextStateRule(aspect, extendedState, s, ts)) != null) {
 			extendedState.setState(newStateRule.toState);
-			System.out.println("State changed from " + currentState + " to "+ newStateRule.toState);
+			System.out.println("State changed from " + s + " to "+ newStateRule.toState);
 			result = new Result(true, newStateRule.toState);
 			if(newStateRule.action != null) {
-				result.actionResult = newStateRule.action.execute(extendedState, currentState, newStateRule.toState, null);
+				result.actionResult = newStateRule.action.execute(extendedState, s, newStateRule.toState, null);
 			}
-		} 
+			s = newStateRule.toState;
+			ts = safeCast(new ManagedState[0]);
+		}
 		
 		if(result == null) {
-			result = new Result(false, currentState);
+			result = new Result(false, s);
 		}
 		
 		return result;

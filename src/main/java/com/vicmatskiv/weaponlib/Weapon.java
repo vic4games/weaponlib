@@ -692,7 +692,7 @@ public class Weapon extends CompatibleItem implements AttachmentContainer, Reloa
 
 		Weapon weapon = (Weapon) itemStack.getItem();
 		PlayerWeaponState playerWeaponState = weapon.getPlayerWeaponState(player);
-		return playerWeaponState != null && playerWeaponState.getState() == WeaponState.UNLOAD;
+		return playerWeaponState != null && WeaponState.UNLOAD.matches(playerWeaponState.getState());
 		
 		
 //		Weapon weapon = (Weapon) itemStack.getItem();
@@ -716,9 +716,13 @@ public class Weapon extends CompatibleItem implements AttachmentContainer, Reloa
 	}
 	
 	int getCurrentAmmo(EntityPlayer player) {
+		PlayerItemState<?> state = modContext.getPlayerItemRegistry().getMainHandItemState(player);
+		return state instanceof PlayerWeaponState ? ((PlayerWeaponState) state).getAmmo(): 0;
+		/*
 		WeaponClientStorage storage = getWeaponClientStorage(player);
 		if(storage == null) return 0;
 		return storage.getCurrentAmmo().get();
+		*/
 	}
 
 	int getAmmoCapacity() {
@@ -791,5 +795,14 @@ public class Weapon extends CompatibleItem implements AttachmentContainer, Reloa
 	@Override
 	public void updateMainHeldItemForPlayer(EntityPlayer player) {
 		modContext.getWeaponReloadAspect().updateMainHeldItem(player);
+		modContext.getWeaponFireAspect().onUpdate(player);
+	}
+
+	public void tryFire(EntityPlayer player) {
+		modContext.getWeaponFireAspect().onFireButtonClick(player);
+	}
+
+	public void tryStopFire(EntityPlayer player) {
+		modContext.getWeaponFireAspect().onFireButtonRelease(player);
 	}
 }

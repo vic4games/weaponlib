@@ -69,6 +69,9 @@ public class ClientModContext extends CommonModContext {
 		
 		weaponReloadAspect.setPermitManager(permitManager);
 		weaponReloadAspect.setStateManager(stateManager);
+		
+		weaponFireAspect.setPermitManager(permitManager);
+		weaponFireAspect.setStateManager(stateManager);
 
 		ClientWeaponTicker clientWeaponTicker = new ClientWeaponTicker(this, fireManager, reloadManager);
 		

@@ -21,6 +21,8 @@ public class FireManager {
 	}
 
 	void clientTryFire(EntityPlayer player) {
+		System.out.println("Try fire");
+		
 		ItemStack itemStack = compatibility.getHeldItemMainHand(player);
 		if(!(itemStack.getItem() instanceof Weapon)) {
 			return;
@@ -108,6 +110,9 @@ public class FireManager {
 	}
 
 	void clientTryStopFire(EntityPlayer player) {
+		
+		System.out.println("Try stop fire");
+		
 		ItemStack itemStack = compatibility.getHeldItemMainHand(player);
 		if(!(itemStack.getItem() instanceof Weapon)) {
 			return;

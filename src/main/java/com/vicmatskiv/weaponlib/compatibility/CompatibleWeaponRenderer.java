@@ -101,6 +101,8 @@ public abstract class CompatibleWeaponRenderer implements IItemRenderer {
 			
 			StateDescriptor stateDescriptor = getStateDescriptor(player, weaponItemStack);
 			
+//			System.out.println("Rendering rate " + stateDescriptor.rate + ", amplitude: " + stateDescriptor.amplitude);
+			
 			MultipartPositioning<Part, RenderContext> multipartPositioning = stateDescriptor.stateManager.nextPositioning();
 			
 			renderContext.setTransitionProgress(multipartPositioning.getProgress());
