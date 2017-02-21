@@ -1,6 +1,7 @@
 package com.vicmatskiv.weaponlib.state;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -308,12 +309,12 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 	}
 	
 	@SuppressWarnings("unchecked")
-	public Result changeStateFromAnyOf(Aspect<S, ? extends E> aspect, E extendedState, List<S> fromStates, S targetState) {
+	public Result changeStateFromAnyOf(Aspect<S, ? extends E> aspect, E extendedState, Collection<S> fromStates, S...targetStates) {
 		S currentState = extendedState.getState();
-		if(!fromStates.stream().anyMatch(expectedFromState -> stateComparator.compare(expectedFromState, currentState))) {
+		if(!fromStates.contains(currentState)) {
 			return new Result(false, currentState);
 		}
-		return changeStateFromTo(aspect, extendedState, currentState, targetState);
+		return changeStateFromTo(aspect, extendedState, currentState, targetStates);
 	}
 	
 	protected Result changeStateFromTo(Aspect<S, ? extends E> aspect, E extendedState, S currentState, @SuppressWarnings("unchecked") S...targetStates) {
@@ -333,7 +334,7 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 		S ts[] = targetStates;
 		while((newStateRule = findNextStateRule(aspect, extendedState, s, ts)) != null) {
 			extendedState.setState(newStateRule.toState);
-			System.out.println("State changed from " + s + " to "+ newStateRule.toState);
+			//System.out.println("State changed from " + s + " to "+ newStateRule.toState);
 			result = new Result(true, newStateRule.toState);
 			if(newStateRule.action != null) {
 				result.actionResult = newStateRule.action.execute(extendedState, s, newStateRule.toState, null);

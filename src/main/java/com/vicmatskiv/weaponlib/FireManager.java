@@ -21,7 +21,7 @@ public class FireManager {
 	}
 
 	void clientTryFire(EntityPlayer player) {
-		System.out.println("Try fire");
+		//System.out.println("Try fire");
 		
 		ItemStack itemStack = compatibility.getHeldItemMainHand(player);
 		if(!(itemStack.getItem() instanceof Weapon)) {
@@ -48,7 +48,9 @@ public class FireManager {
 				&& (storage.getState() == State.READY || storage.getState() == State.SHOOTING)
 				&& readyToShootAccordingToFireRate
 				&& storage.getShots() < weapon.builder.maxShots
-				&& storage.getCurrentAmmo().getAndAccumulate(0, (current, ignore) -> current > 0 ? current - 1 : 0) > 0) {
+				
+				// temporary set to unlimited ammo
+				/*&& storage.getCurrentAmmo().getAndAccumulate(0, (current, ignore) -> current > 0 ? current - 1 : 0) > 0*/ ) {
 			
 			storage.setState(State.SHOOTING);
 			
@@ -111,7 +113,7 @@ public class FireManager {
 
 	void clientTryStopFire(EntityPlayer player) {
 		
-		System.out.println("Try stop fire");
+		//System.out.println("Try stop fire");
 		
 		ItemStack itemStack = compatibility.getHeldItemMainHand(player);
 		if(!(itemStack.getItem() instanceof Weapon)) {

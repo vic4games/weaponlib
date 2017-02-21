@@ -2,16 +2,20 @@ package com.vicmatskiv.weaponlib;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Random;
+import java.util.Set;
 import java.util.function.Predicate;
 
 import com.vicmatskiv.weaponlib.state.Aspect;
 import com.vicmatskiv.weaponlib.state.PermitManager;
 import com.vicmatskiv.weaponlib.state.StateManager;
-import com.vicmatskiv.weaponlib.state.StateManager.Result;
+import com.vicmatskiv.weaponlib.state.StateManager.VoidPostAction;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+
 
 /*
  * On a client side this class is used from within a separate client "ticker" thread
@@ -64,6 +68,13 @@ public class FireAspect implements Aspect<WeaponState, PlayerWeaponState> {
                           
 	private static Predicate<PlayerWeaponState> sprinting = s -> s.getPlayer().isSprinting();
              
+	private static final Set<WeaponState> allowedFireOrEjectFromStates = new HashSet<>(
+			Arrays.asList(WeaponState.READY, WeaponState.PAUSED, WeaponState.EJECT_REQUIRED));
+	
+	private static final Set<WeaponState> allowedUpdateFromStates = new HashSet<>(
+			Arrays.asList(WeaponState.EJECTING, WeaponState.PAUSED, WeaponState.FIRING, 
+					WeaponState.RECOILED, WeaponState.PAUSED));
+	
 	private ModContext modContext;
 
 	private StateManager<WeaponState, ? super PlayerWeaponState> stateManager;
@@ -110,12 +121,12 @@ public class FireAspect implements Aspect<WeaponState, PlayerWeaponState> {
 		
 		.in(this).change(WeaponState.PAUSED).to(WeaponState.READY)
 		.when(ejectSpentRoundRequired.negate())
-		.withAction(c -> { c.setSeriesShotCount(0);})
+		.withAction(PlayerWeaponState::resetCurrentSeries)
 		.manual() // on stop
-		;
 		
+		;
 	}
-	
+
 	public void setPermitManager(PermitManager permitManager) {
 		this.permitManager = permitManager;
 	}
@@ -123,8 +134,7 @@ public class FireAspect implements Aspect<WeaponState, PlayerWeaponState> {
 	void onFireButtonClick(EntityPlayer player) {
 		PlayerWeaponState extendedState = (PlayerWeaponState) contextForPlayer(player); // TODO: take care of slot changes?
 		if(extendedState != null) {
-			//System.out.println("Attempting to fire from state " + extendedState.getState());
-			stateManager.changeState(this, extendedState, WeaponState.FIRING, WeaponState.EJECTING);
+			stateManager.changeStateFromAnyOf(this, extendedState, allowedFireOrEjectFromStates, WeaponState.FIRING, WeaponState.EJECTING);
 		}
 	}
 	
@@ -140,7 +150,7 @@ public class FireAspect implements Aspect<WeaponState, PlayerWeaponState> {
 		//System.out.println("Updating...");
 		PlayerWeaponState extendedState = (PlayerWeaponState) contextForPlayer(player); // TODO: take care of slot changes?
 		if(extendedState != null) {
-			stateManager.changeState(this, extendedState);
+			stateManager.changeStateFromAnyOf(this, extendedState, allowedUpdateFromStates);
 		}
 	}
 	

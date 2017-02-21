@@ -673,9 +673,13 @@ public class Weapon extends CompatibleItem implements AttachmentContainer, Reloa
 	}
 	
 	static boolean isEjectedSpentRound(EntityPlayer player, ItemStack itemStack) {
+//		Weapon weapon = (Weapon) itemStack.getItem();
+//		WeaponClientStorage storage = weapon.getWeaponClientStorage(player);
+//		return storage != null && storage.getState() == State.EJECT_SPENT_ROUND;
+		
 		Weapon weapon = (Weapon) itemStack.getItem();
-		WeaponClientStorage storage = weapon.getWeaponClientStorage(player);
-		return storage != null && storage.getState() == State.EJECT_SPENT_ROUND;
+		PlayerWeaponState playerWeaponState = weapon.getPlayerWeaponState(player);
+		return playerWeaponState != null && playerWeaponState.getState() == WeaponState.EJECTING;
 	}
 	
 	static boolean isReloadingConfirmed(EntityPlayer player, ItemStack itemStack) {
@@ -718,11 +722,11 @@ public class Weapon extends CompatibleItem implements AttachmentContainer, Reloa
 	int getCurrentAmmo(EntityPlayer player) {
 		PlayerItemState<?> state = modContext.getPlayerItemRegistry().getMainHandItemState(player);
 		return state instanceof PlayerWeaponState ? ((PlayerWeaponState) state).getAmmo(): 0;
-		/*
-		WeaponClientStorage storage = getWeaponClientStorage(player);
-		if(storage == null) return 0;
-		return storage.getCurrentAmmo().get();
-		*/
+		
+//		WeaponClientStorage storage = getWeaponClientStorage(player);
+//		if(storage == null) return 0;
+//		return storage.getCurrentAmmo().get();
+		
 	}
 
 	int getAmmoCapacity() {

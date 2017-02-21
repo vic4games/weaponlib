@@ -41,7 +41,7 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 			mainLoopLock.lock();
 		} else if(event.getPhase() == Phase.END) {
 			
-			modContext.getSyncManager().run();
+			//modContext.getSyncManager().run();
 			
 			mainLoopLock.unlock();
 			processRunInClientThreadQueue();

@@ -19,8 +19,9 @@ public class PlayerWeaponState extends PlayerItemState<WeaponState> {
 	private float recoil; // TODO: serialize, initialize etc
 	private int seriesShotCount; // TODO: serialize?
 	private long lastFireTimestamp;
+	private boolean aimed;
 	
-	private Queue<WeaponState> stateHistory = new ArrayBlockingQueue<>(100);
+	private Queue<Tuple<WeaponState, Long>> stateHistory = new ArrayBlockingQueue<>(100);
 
 	public PlayerWeaponState() {
 		super();
@@ -37,16 +38,16 @@ public class PlayerWeaponState extends PlayerItemState<WeaponState> {
 	@Override
 	public boolean setState(WeaponState state) {
 		boolean result = super.setState(state);
-		stateHistory.add(state);
+		stateHistory.add(new Tuple<>(state, System.currentTimeMillis()));
 		return result;
 	}
 	
-	public WeaponState nextHistoryState() {
-		WeaponState result;
+	public Tuple<WeaponState, Long> nextHistoryState() {
+		Tuple<WeaponState, Long> result;
 		if(stateHistory.size() > 1) {
 			result = stateHistory.poll();
 		} else {
-			result = getState();
+			result = new Tuple<>(getState(), System.currentTimeMillis());
 		}
 		return result;
 	}
@@ -101,5 +102,25 @@ public class PlayerWeaponState extends PlayerItemState<WeaponState> {
 
 	public void setLastFireTimestamp(long lastFireTimestamp) {
 		this.lastFireTimestamp = lastFireTimestamp;
+	}
+
+	public void resetCurrentSeries() {
+		this.seriesShotCount = 0;
+	}
+
+	public float getFireRate() {
+		return getWeapon().builder.fireRate;
+	}
+	
+	public boolean isAutomaticModeEnabled() {
+		return getWeapon().builder.maxShots > 1;
+	}
+	
+	public boolean isAimed() {
+		return aimed;
+	}
+
+	public void setAimed(boolean aimed) {
+		this.aimed = aimed;
 	}
 }

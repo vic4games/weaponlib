@@ -653,83 +653,191 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		RenderableState currentState = null;
 		Weapon weapon = (Weapon) itemStack.getItem();
 		
-		
-		if(Weapon.isModifying(itemStack)) {
-			currentState = builder.firstPersonPositioningModifying != null ? RenderableState.MODIFYING : RenderableState.NORMAL;
-		} else if(Weapon.isUnloadingStarted(player, itemStack)) {
-			currentState = RenderableState.UNLOADING;
-		} else if(Weapon.isReloadingConfirmed(player, itemStack)) {
-			currentState = RenderableState.RELOADING;
-		} else if(Weapon.isEjectedSpentRound(player, itemStack)) {
-			currentState = RenderableState.EJECT_SPENT_ROUND;
-		} else if(player.isSprinting() && builder.firstPersonPositioningRunning != null) {
-			currentState = RenderableState.RUNNING;
-		} else if(Weapon.isZoomed(player, itemStack)) {
+		PlayerWeaponState playerWeaponState = weapon.getPlayerWeaponState(player);
+		if(playerWeaponState != null) {
+			WeaponState state = getNextNonExpiredState(playerWeaponState);
 			
-			WeaponClientStorage storage = weapon.getWeaponClientStorage(player);
-
-			if(storage != null) {
-				currentState = storage.getNextDisposableRenderableState();
-				if(currentState == RenderableState.AUTO_SHOOTING) {
-					currentState = RenderableState.ZOOMING;
-					rate = builder.firingRandomizingRate;
-				} else if(currentState == RenderableState.SHOOTING) {
-					currentState = RenderableState.ZOOMING_SHOOTING;
-					rate = builder.firingRandomizingRate;
-				} else if(currentState == RenderableState.RECOILED) {
-					currentState = RenderableState.ZOOMING_RECOILED;
-					rate = builder.zoomRandomizingRate;
-				} else {
-					currentState = RenderableState.ZOOMING;
-					rate = builder.zoomRandomizingRate;
-				}
+			switch(state) {
+//			case FIRING: //
+//				if(playerWeaponState.isAutomaticModeEnabled()) {
+//					if(playerWeaponState.isAimed()) {
+//						currentState = RenderableState.ZOOMING;
+//						rate = builder.firingRandomizingRate;
+//						amplitude = builder.zoomRandomizingAmplitude;
+//					} else {
+//						currentState = RenderableState.NORMAL; 
+//						rate = builder.firingRandomizingRate;
+//						amplitude = builder.firingRandomizingAmplitude;
+//					}
+//					
+//				} else if(playerWeaponState.isAimed()) {
+//					currentState = RenderableState.ZOOMING_SHOOTING;
+//					rate = builder.firingRandomizingRate;
+//					amplitude = builder.zoomRandomizingAmplitude;
+//				} else {
+//					currentState = RenderableState.SHOOTING; 
+//				}
+//				break;
 				
-			}
-			amplitude = builder.zoomRandomizingAmplitude; // Zoom amplitude is enforced even when firing
-			//System.out.println("Rendering state: " + currentState);
-		} else {
-			
-			PlayerWeaponState playerWeaponState = weapon.getPlayerWeaponState(player);
-			if(playerWeaponState != null) {
-				WeaponState state = playerWeaponState.nextHistoryState();
-				
-				
-				if(weapon.builder.maxShots > 1) { // TODO: replace with method e.g. isAutomaticMode
-					// automatic mode
-					switch(state) {
-					case FIRING: case RECOILED: case PAUSED: 
+			case RECOILED: 
+				if(playerWeaponState.isAutomaticModeEnabled()) {
+					if(playerWeaponState.isAimed()) {
+						currentState = RenderableState.ZOOMING;
+						rate = builder.firingRandomizingRate;
+						amplitude = builder.zoomRandomizingAmplitude;
+					} else {
 						currentState = RenderableState.NORMAL; 
 						rate = builder.firingRandomizingRate;
 						amplitude = builder.firingRandomizingAmplitude;
-						break;
 					}
+				} else if(playerWeaponState.isAimed()) {
+					currentState = RenderableState.ZOOMING_RECOILED;
+					amplitude = builder.zoomRandomizingAmplitude;
 				} else {
-					switch(state) {
-					case FIRING: currentState = RenderableState.SHOOTING; break;
-					case RECOILED: case PAUSED: currentState = RenderableState.RECOILED; break;
-					}
+					currentState = RenderableState.RECOILED; 
 				}
 				
-				if(state != WeaponState.READY) {
-					System.out.println("Mapped " + state + " to " + currentState 
-							+ ", rate: " + builder.firingRandomizingRate 
-							+ ", amplitude: " + builder.firingRandomizingAmplitude);
+				break;
+				
+			case PAUSED: 
+				if(playerWeaponState.isAutomaticModeEnabled()) {
+					if(playerWeaponState.isAimed()) {
+						currentState = RenderableState.ZOOMING;
+						rate = builder.firingRandomizingRate;
+						amplitude = builder.zoomRandomizingAmplitude;
+					} else {
+						currentState = RenderableState.NORMAL; 
+						rate = builder.firingRandomizingRate;
+						amplitude = builder.firingRandomizingAmplitude;
+					}
+				} else if(playerWeaponState.isAimed()) {
+					currentState = RenderableState.ZOOMING_SHOOTING;
+					rate = builder.firingRandomizingRate;
+					amplitude = builder.zoomRandomizingAmplitude;
+				} else {
+					currentState = RenderableState.SHOOTING;
+				}
+				
+				break;
+				
+			case UNLOAD_PREPARING: case UNLOAD_REQUESTED: case UNLOAD:
+				currentState = RenderableState.UNLOADING;
+				break;
+				
+			case LOAD:
+				currentState = RenderableState.RELOADING;
+				break;
+				
+			case EJECTING:
+				currentState = RenderableState.EJECT_SPENT_ROUND;
+				break;	
+				
+			default:
+				if(player.isSprinting() && builder.firstPersonPositioningRunning != null) {
+					currentState = RenderableState.RUNNING;
+				} else if(playerWeaponState.isAimed()) {
+					currentState = RenderableState.ZOOMING;
+					rate = builder.zoomRandomizingRate;
+					amplitude = builder.zoomRandomizingAmplitude;
 				}
 			}
 			
-//			
+			if(state != WeaponState.READY) {
+				System.out.println("Mapped state " + state + " to " + currentState);
+			}
+		}
+		
+		
+//		if(Weapon.isModifying(itemStack)) {
+//			currentState = builder.firstPersonPositioningModifying != null ? RenderableState.MODIFYING : RenderableState.NORMAL;
+//		} else if(Weapon.isUnloadingStarted(player, itemStack)) {
+//			currentState = RenderableState.UNLOADING;
+//		} else if(Weapon.isReloadingConfirmed(player, itemStack)) {
+//			currentState = RenderableState.RELOADING;
+//		} else if(Weapon.isEjectedSpentRound(player, itemStack)) {
+//			currentState = RenderableState.EJECT_SPENT_ROUND;
+//		} else if(player.isSprinting() && builder.firstPersonPositioningRunning != null) {
+//			currentState = RenderableState.RUNNING;
+//		} else if(Weapon.isZoomed(player, itemStack)) {
 //			
 //			WeaponClientStorage storage = weapon.getWeaponClientStorage(player);
 //
 //			if(storage != null) {
 //				currentState = storage.getNextDisposableRenderableState();
 //				if(currentState == RenderableState.AUTO_SHOOTING) {
-//					currentState = RenderableState.NORMAL;
+//					currentState = RenderableState.ZOOMING;
 //					rate = builder.firingRandomizingRate;
-//					amplitude = builder.firingRandomizingAmplitude;
+//				} else if(currentState == RenderableState.SHOOTING) {
+//					currentState = RenderableState.ZOOMING_SHOOTING;
+//					rate = builder.firingRandomizingRate;
+//				} else if(currentState == RenderableState.RECOILED) {
+//					currentState = RenderableState.ZOOMING_RECOILED;
+//					rate = builder.zoomRandomizingRate;
+//				} else {
+//					currentState = RenderableState.ZOOMING;
+//					rate = builder.zoomRandomizingRate;
 //				}
+//				
 //			}
-		}
+//			amplitude = builder.zoomRandomizingAmplitude; // Zoom amplitude is enforced even when firing
+//			//System.out.println("Rendering state: " + currentState);
+//		} else {
+//			
+//			PlayerWeaponState playerWeaponState = weapon.getPlayerWeaponState(player);
+//			if(playerWeaponState != null) {
+//				WeaponState state = getNextNonExpiredState(playerWeaponState, expirationTimeout);
+//				
+//				switch(state) {
+//				case FIRING: 
+//					if(weapon.builder.maxShots > 1) {
+//						currentState = RenderableState.NORMAL; 
+//					}
+//					break;
+//				case RECOILED: 
+//					if(weapon.builder.maxShots > 1) {
+//						currentState = RenderableState.NORMAL; 
+//					} else {
+//						currentState = RenderableState.RECOILED; 
+//					}
+//					
+//					break;
+//				case PAUSED: 
+//					if(weapon.builder.maxShots > 1) {
+//						currentState = RenderableState.NORMAL; 
+//					} else {
+//						currentState = RenderableState.SHOOTING; 
+//					}
+//					
+//					break;
+//				}
+//				
+////				if(weapon.builder.maxShots > 1) { // TODO: replace with method e.g. isAutomaticMode
+////					long expirationTimeout = (long) (50f / playerWeaponState.getFireRate());
+////					WeaponState state = getNextNonExpiredState(playerWeaponState, expirationTimeout);
+////					// automatic mode
+////					switch(state) {
+////					case FIRING: case RECOILED: case PAUSED: 
+////						currentState = RenderableState.NORMAL; 
+////						rate = builder.firingRandomizingRate;
+////						amplitude = builder.firingRandomizingAmplitude;
+////						break;
+////					}
+////				} else {
+////					long expirationTimeout = 150;
+////					WeaponState state = getNextNonExpiredState(playerWeaponState, expirationTimeout);
+////					if(state == WeaponState.FIRING) {
+////						state = getNextNonExpiredState(playerWeaponState, expirationTimeout);
+////					}
+////					switch(state) {
+////					//case FIRING: currentState = RenderableState.SHOOTING; break;
+////					case RECOILED: currentState = RenderableState.RECOILED; break;
+////					case PAUSED: currentState = RenderableState.SHOOTING; break;
+////					}
+////				}
+//
+//			}
+//			
+//		}
 		
 		if(currentState == null) {
 			currentState = RenderableState.NORMAL;
@@ -745,6 +853,33 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		}
 		
 		return new StateDescriptor(stateManager, rate, amplitude);
+	}
+
+	private WeaponState getNextNonExpiredState(PlayerWeaponState playerWeaponState) {
+		Tuple<WeaponState, Long> stateTuple = null;
+		while((stateTuple = playerWeaponState.nextHistoryState()) != null) {
+			long expirationTimeout;
+			if(stateTuple.getU() == WeaponState.FIRING || stateTuple.getU() == WeaponState.RECOILED 
+					|| stateTuple.getU() == WeaponState.PAUSED) 
+			{
+				if(playerWeaponState.isAutomaticModeEnabled()) {
+					expirationTimeout = (long) (50f / playerWeaponState.getFireRate());
+				} else {
+					expirationTimeout = 500;
+				}
+			} else {
+				expirationTimeout = System.currentTimeMillis(); // never expiring
+			}
+			
+			if(System.currentTimeMillis() < stateTuple.getV() + expirationTimeout) {
+				if(stateTuple.getU() == WeaponState.FIRING && !playerWeaponState.isAutomaticModeEnabled()) { // allow recoil for non-automatic weapons
+					continue;
+				} else {
+					break;
+				}
+			}
+		}
+		return stateTuple.getU();
 	}
 	
 	private BiConsumer<Part, RenderContext> createWeaponPartPositionFunction(BiConsumer<EntityPlayer, ItemStack> weaponPositionFunction) {

@@ -2,7 +2,10 @@ package com.vicmatskiv.weaponlib;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Predicate;
 
 import com.vicmatskiv.weaponlib.network.TypeRegistry;
@@ -22,6 +25,14 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponState
 		TypeRegistry.getInstance().register(LoadPermit.class);		
 		TypeRegistry.getInstance().register(PlayerWeaponState.class); // TODO: move it out
 	}
+	
+	private static final Set<WeaponState> allowedUpdateFromStates = new HashSet<>(
+			Arrays.asList(
+					WeaponState.LOAD_REQUESTED,  
+					WeaponState.LOAD, 
+					WeaponState.UNLOAD_PREPARING, 
+					WeaponState.UNLOAD_REQUESTED, 
+					WeaponState.UNLOAD));
 	
 	public static class UnloadPermit extends Permit<WeaponState> {
 		
@@ -127,7 +138,12 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponState
 
 	void updateMainHeldItem(EntityPlayer player) {
 		PlayerWeaponState state = (PlayerWeaponState) contextForPlayer(player);
-		stateManager.changeState(this, state); // no target state specified, will trigger auto-transitions
+		if(state != null) {
+			//allowedUpdateFromStates
+			//stateManager.changeState(this, state);
+			stateManager.changeStateFromAnyOf(this, state, allowedUpdateFromStates); // no target state specified, will trigger auto-transitions
+		}
+		
 	}
 	
 	private void evaluateLoad(LoadPermit p, PlayerWeaponState playerWeaponState) {

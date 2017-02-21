@@ -16,7 +16,7 @@ class ClientWeaponTicker extends Thread {
 	
 	private AtomicBoolean running = new AtomicBoolean(true);
 //	private SafeGlobals safeGlobals;
-//	private FireManager fireManager;
+	private FireManager fireManager;
 	private ReloadManager reloadManager;
 	private WeaponReloadAspect reloadAspect;
 	private FireAspect fireAspect;
@@ -24,7 +24,7 @@ class ClientWeaponTicker extends Thread {
 
 	public ClientWeaponTicker(ClientModContext clientModContext, FireManager fireManager, ReloadManager reloadManager/*, WeaponReloadAspect reloadAspect*/) {
 		this.clientModContext = clientModContext;
-//		this.fireManager = fireManager;
+		this.fireManager = fireManager;
 		this.reloadManager = reloadManager;
 		//this.reloadAspect = reloadAspect;
 	}
@@ -48,19 +48,23 @@ class ClientWeaponTicker extends Thread {
 						mouseWasPressed = true;
 					}
 					if(currentWeapon != null && !safeGlobals.guiOpen.get() && !isInteracting()) {
-//						fireManager.clientTryFire(player);
+						long t1 = System.currentTimeMillis();
+						//fireManager.clientTryFire(player);
 						clientModContext.runSyncTick(() -> { currentWeapon.tryFire(player);});
+						long t2 = System.currentTimeMillis();
+						//System.out.println("Try fire completed in " + (t2 - t1) + "ms");
+						//clientModContext.runSyncTick(() -> { currentWeapon.tryFire(player);});
 						
 					}
 				} else if(mouseWasPressed || currentItemIndex != safeGlobals.currentItemIndex.get()) { // if switched item while pressing mouse down and then released
 					mouseWasPressed = false;
 					currentItemIndex = safeGlobals.currentItemIndex.get();
 					if(currentWeapon != null) {
-//						fireManager.clientTryStopFire(player);
-//						fireAspect.onFireButtonRelease(extendedState);
+						//fireManager.clientTryStopFire(player);
+						//fireAspect.onFireButtonRelease(extendedState);
 						
-						clientModContext.runSyncTick(() -> { currentWeapon.tryStopFire(player);}
-					);
+						clientModContext.runSyncTick(() -> { currentWeapon.tryStopFire(player);});
+						//currentWeapon.tryStopFire(player);
 					}
 				}
 				
@@ -83,8 +87,8 @@ class ClientWeaponTicker extends Thread {
 			}
 		});
 		
-		reloadManager.update(compatibility.getHeldItemMainHand(player), player);
-//		fireManager.update(compatibility.getHeldItemMainHand(player), player);
+		//reloadManager.update(compatibility.getHeldItemMainHand(player), player);
+		//fireManager.update(compatibility.getHeldItemMainHand(player), player);
 	}
 
 	private boolean isInteracting() {
