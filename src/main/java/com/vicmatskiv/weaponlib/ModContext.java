@@ -26,7 +26,7 @@ public interface ModContext {
 
 	public void runInMainThread(Runnable runnable);
 
-	public PlayerItemRegistry getPlayerItemRegistry();
+	public PlayerItemInstanceRegistry getPlayerItemInstanceRegistry();
 
 	public WeaponReloadAspect getWeaponReloadAspect();
 	

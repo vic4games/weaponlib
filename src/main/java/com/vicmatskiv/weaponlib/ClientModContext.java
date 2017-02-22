@@ -37,7 +37,7 @@ public class ClientModContext extends CommonModContext {
 	
 	private SyncManager<?> syncManager;
 	
-	private PlayerItemRegistry playerItemRegistry;
+	private PlayerItemInstanceRegistry playerItemInstanceRegistry;
 	
 	@Override
 	public void init(Object mod, String modId, CompatibleChannel channel) {
@@ -54,17 +54,17 @@ public class ClientModContext extends CommonModContext {
    
         this.syncManager = new SyncManager<>(permitManager);
         
-        this.playerItemRegistry = new PlayerItemRegistry(syncManager);
+        this.playerItemInstanceRegistry = new PlayerItemInstanceRegistry(syncManager);
         
         this.weaponClientStorageManager = new WeaponClientStorageManager();
 		
 		
 		compatibility.registerWithEventBus(new CustomGui(Minecraft.getMinecraft(), attachmentManager));
-		compatibility.registerWithEventBus(new WeaponEventHandler(safeGlobals));
+		compatibility.registerWithEventBus(new WeaponEventHandler(this, safeGlobals));
 		
 		KeyBindings.init();
 		
-		StateManager<WeaponState, PlayerItemState<WeaponState>> stateManager = new StateManager<>((s1, s2) -> s1 == s2); // implement comparator properly, ref equality will not work on server after deserialization
+		StateManager<WeaponState, PlayerItemInstance<WeaponState>> stateManager = new StateManager<>((s1, s2) -> s1 == s2); // implement comparator properly, ref equality will not work on server after deserialization
 		
 		
 		weaponReloadAspect.setPermitManager(permitManager);
@@ -145,8 +145,8 @@ public class ClientModContext extends CommonModContext {
 	}
 
 	@Override
-	public PlayerItemRegistry getPlayerItemRegistry() {
-		return playerItemRegistry;
+	public PlayerItemInstanceRegistry getPlayerItemInstanceRegistry() {
+		return playerItemInstanceRegistry;
 	}
 	
 	protected SyncManager<?> getSyncManager() {

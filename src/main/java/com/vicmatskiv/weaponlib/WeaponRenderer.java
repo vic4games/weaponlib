@@ -651,9 +651,11 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		float amplitude = builder.normalRandomizingAmplitude;
 		float rate = builder.normalRandomizingRate;
 		RenderableState currentState = null;
-		Weapon weapon = (Weapon) itemStack.getItem();
+		//Weapon weapon = (Weapon) itemStack.getItem();
 		
-		PlayerWeaponState playerWeaponState = weapon.getPlayerWeaponState(player);
+		PlayerWeaponInstance playerWeaponState = clientModContext.getPlayerItemInstanceRegistry()
+				.getMainHandItemInstance(player, PlayerWeaponInstance.class); // TODO: cannot be always main hand, need to which hand from context
+		
 		if(playerWeaponState != null) {
 			WeaponState state = getNextNonExpiredState(playerWeaponState);
 			
@@ -742,9 +744,9 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				}
 			}
 			
-			if(state != WeaponState.READY) {
-				System.out.println("Mapped state " + state + " to " + currentState);
-			}
+//			if(state != WeaponState.READY) {
+//				System.out.println("Mapped state " + state + " to " + currentState);
+//			}
 		}
 		
 		
@@ -855,7 +857,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		return new StateDescriptor(stateManager, rate, amplitude);
 	}
 
-	private WeaponState getNextNonExpiredState(PlayerWeaponState playerWeaponState) {
+	private WeaponState getNextNonExpiredState(PlayerWeaponInstance playerWeaponState) {
 		Tuple<WeaponState, Long> stateTuple = null;
 		while((stateTuple = playerWeaponState.nextHistoryState()) != null) {
 			long expirationTimeout;

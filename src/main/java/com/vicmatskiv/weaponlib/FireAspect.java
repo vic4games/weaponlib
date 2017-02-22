@@ -11,7 +11,6 @@ import java.util.function.Predicate;
 import com.vicmatskiv.weaponlib.state.Aspect;
 import com.vicmatskiv.weaponlib.state.PermitManager;
 import com.vicmatskiv.weaponlib.state.StateManager;
-import com.vicmatskiv.weaponlib.state.StateManager.VoidPostAction;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -20,7 +19,7 @@ import net.minecraft.item.ItemStack;
 /*
  * On a client side this class is used from within a separate client "ticker" thread
  */
-public class FireAspect implements Aspect<WeaponState, PlayerWeaponState> {
+public class FireAspect implements Aspect<WeaponState, PlayerWeaponInstance> {
 
 //	static final ManagedState FIRING = new ManagedState();
 //	static final ManagedState STOPPED = new ManagedState();
@@ -53,20 +52,20 @@ public class FireAspect implements Aspect<WeaponState, PlayerWeaponState> {
 	
 	private static final float FLASH_X_OFFSET_ZOOMED = 0;
 	
-	private static Predicate<PlayerWeaponState> readyToShootAccordingToFireRate = s -> 
+	private static Predicate<PlayerWeaponInstance> readyToShootAccordingToFireRate = s -> 
 		System.currentTimeMillis() - s.getLastFireTimestamp() >= 50f / s.getWeapon().builder.fireRate;
     
-	private static Predicate<PlayerWeaponState> readyToShootAccordingToFireMode = 
+	private static Predicate<PlayerWeaponInstance> readyToShootAccordingToFireMode = 
 			s -> s.getSeriesShotCount() < s.getWeapon().builder.maxShots;
              
-	private static Predicate<PlayerWeaponState> hasAmmo = s -> true;
+	private static Predicate<PlayerWeaponInstance> hasAmmo = s -> true;
              
-	private static Predicate<PlayerWeaponState> ejectSpentRoundRequired = s -> s.getWeapon().ejectSpentRoundRequired();
+	private static Predicate<PlayerWeaponInstance> ejectSpentRoundRequired = s -> s.getWeapon().ejectSpentRoundRequired();
 	         
-	private static Predicate<PlayerWeaponState> ejectSpentRoundTimeoutExpired = s -> 
+	private static Predicate<PlayerWeaponInstance> ejectSpentRoundTimeoutExpired = s -> 
 		System.currentTimeMillis() >= s.getWeapon().builder.pumpTimeoutMilliseconds + s.getStateUpdateTimestamp();
                           
-	private static Predicate<PlayerWeaponState> sprinting = s -> s.getPlayer().isSprinting();
+	private static Predicate<PlayerWeaponInstance> sprinting = s -> s.getPlayer().isSprinting();
              
 	private static final Set<WeaponState> allowedFireOrEjectFromStates = new HashSet<>(
 			Arrays.asList(WeaponState.READY, WeaponState.PAUSED, WeaponState.EJECT_REQUIRED));
@@ -77,7 +76,7 @@ public class FireAspect implements Aspect<WeaponState, PlayerWeaponState> {
 	
 	private ModContext modContext;
 
-	private StateManager<WeaponState, ? super PlayerWeaponState> stateManager;
+	private StateManager<WeaponState, ? super PlayerWeaponInstance> stateManager;
 
 	private PermitManager permitManager;
 	
@@ -86,7 +85,7 @@ public class FireAspect implements Aspect<WeaponState, PlayerWeaponState> {
 	}
 
 	@Override
-	public void setStateManager(StateManager<WeaponState, ? super PlayerWeaponState> stateManager) {
+	public void setStateManager(StateManager<WeaponState, ? super PlayerWeaponInstance> stateManager) {
 		this.stateManager = stateManager;
 		
 		stateManager
@@ -121,7 +120,7 @@ public class FireAspect implements Aspect<WeaponState, PlayerWeaponState> {
 		
 		.in(this).change(WeaponState.PAUSED).to(WeaponState.READY)
 		.when(ejectSpentRoundRequired.negate())
-		.withAction(PlayerWeaponState::resetCurrentSeries)
+		.withAction(PlayerWeaponInstance::resetCurrentSeries)
 		.manual() // on stop
 		
 		;
@@ -132,31 +131,31 @@ public class FireAspect implements Aspect<WeaponState, PlayerWeaponState> {
 	}
 	
 	void onFireButtonClick(EntityPlayer player) {
-		PlayerWeaponState extendedState = (PlayerWeaponState) contextForPlayer(player); // TODO: take care of slot changes?
-		if(extendedState != null) {
-			stateManager.changeStateFromAnyOf(this, extendedState, allowedFireOrEjectFromStates, WeaponState.FIRING, WeaponState.EJECTING);
+		PlayerWeaponInstance weaponInstance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
+		if(weaponInstance != null) {
+			stateManager.changeStateFromAnyOf(this, weaponInstance, allowedFireOrEjectFromStates, WeaponState.FIRING, WeaponState.EJECTING);
 		}
 	}
 	
 	void onFireButtonRelease(EntityPlayer player) {
 		//System.out.println("Releasing trigger");
-		PlayerWeaponState extendedState = (PlayerWeaponState) contextForPlayer(player); // TODO: take care of slot changes?
-		if(extendedState != null) {
-			stateManager.changeState(this, extendedState, WeaponState.EJECT_REQUIRED, WeaponState.READY);
+		PlayerWeaponInstance weaponInstance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
+		if(weaponInstance != null) {
+			stateManager.changeState(this, weaponInstance, WeaponState.EJECT_REQUIRED, WeaponState.READY);
 		}
 	}
 	
 	void onUpdate(EntityPlayer player) {
 		//System.out.println("Updating...");
-		PlayerWeaponState extendedState = (PlayerWeaponState) contextForPlayer(player); // TODO: take care of slot changes?
-		if(extendedState != null) {
-			stateManager.changeStateFromAnyOf(this, extendedState, allowedUpdateFromStates);
+		PlayerWeaponInstance weaponInstance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
+		if(weaponInstance != null) {
+			stateManager.changeStateFromAnyOf(this, weaponInstance, allowedUpdateFromStates);
 		}
 	}
 	
-	private void fire(PlayerWeaponState extendedState) {
-		EntityPlayer player = extendedState.getPlayer();
-		Weapon weapon = (Weapon) extendedState.getItem();
+	private void fire(PlayerWeaponInstance weaponInstance) {
+		EntityPlayer player = weaponInstance.getPlayer();
+		Weapon weapon = (Weapon) weaponInstance.getItem();
 		//WeaponClientStorage storage = null; //context.getStorage();
 		Random random = player.getRNG();
 		
@@ -169,9 +168,9 @@ public class FireAspect implements Aspect<WeaponState, PlayerWeaponState> {
 		
 		compatibility.playSound(player, modContext.getAttachmentManager().isSilencerOn(heldItem) ? weapon.getSilencedShootSound() : weapon.getShootSound(), 1F, 1F);
 
-		player.rotationPitch = player.rotationPitch - extendedState.getRecoil();						
+		player.rotationPitch = player.rotationPitch - weaponInstance.getRecoil();						
 		float rotationYawFactor = -1.0f + random.nextFloat() * 2.0f;
-		player.rotationYaw = player.rotationYaw + extendedState.getRecoil() * rotationYawFactor;
+		player.rotationYaw = player.rotationYaw + weaponInstance.getRecoil() * rotationYawFactor;
 		
 		if(weapon.builder.flashIntensity > 0) {
 			EffectManager.getInstance().spawnFlashParticle(player, weapon.builder.flashIntensity,
@@ -183,26 +182,16 @@ public class FireAspect implements Aspect<WeaponState, PlayerWeaponState> {
 				compatibility.getEffectOffsetY());
 			
 		
-		extendedState.setSeriesShotCount(extendedState.getSeriesShotCount() + 1);
-		extendedState.setLastFireTimestamp(System.currentTimeMillis());
+		weaponInstance.setSeriesShotCount(weaponInstance.getSeriesShotCount() + 1);
+		weaponInstance.setLastFireTimestamp(System.currentTimeMillis());
 	}
 
-	private void ejectSpentRound(PlayerWeaponState extendedState) {
-		EntityPlayer player = extendedState.getPlayer();
+	private void ejectSpentRound(PlayerWeaponInstance weaponInstance) {
+		EntityPlayer player = weaponInstance.getPlayer();
 		ItemStack itemStack = compatibility.getHeldItemMainHand(player); // TODO: move out
 		if(!Tags.isAimed(itemStack)) {
-			Weapon weapon = extendedState.getWeapon();
+			Weapon weapon = weaponInstance.getWeapon();
 			compatibility.playSound(player, weapon.getEjectSpentRoundSound(), 1F, 1F);
 		}
 	}
-
-	private PlayerItemState<WeaponState> contextForPlayer(EntityPlayer player) {
-		
-		ItemStack itemStack = compatibility.getHeldItemMainHand(player);
-		if(itemStack != null && itemStack.getItem() instanceof Weapon) {
-			return (PlayerItemState<WeaponState>) modContext.getPlayerItemRegistry().getMainHandItemState(player);
-		}
-		return null;
-	}
-
 }

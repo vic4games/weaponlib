@@ -29,7 +29,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
-public class Weapon extends CompatibleItem implements AttachmentContainer, Reloadable, Updatable {
+public class Weapon extends CompatibleItem implements PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContainer, Reloadable, Updatable {
 	
 	public static class Builder {
 
@@ -672,36 +672,39 @@ public class Weapon extends CompatibleItem implements AttachmentContainer, Reloa
 		return weapon.modContext.getAttachmentManager().isActiveAttachment(itemStack, attachment);
 	}
 	
+	@Deprecated
 	static boolean isEjectedSpentRound(EntityPlayer player, ItemStack itemStack) {
-//		Weapon weapon = (Weapon) itemStack.getItem();
-//		WeaponClientStorage storage = weapon.getWeaponClientStorage(player);
-//		return storage != null && storage.getState() == State.EJECT_SPENT_ROUND;
-		
 		Weapon weapon = (Weapon) itemStack.getItem();
-		PlayerWeaponState playerWeaponState = weapon.getPlayerWeaponState(player);
-		return playerWeaponState != null && playerWeaponState.getState() == WeaponState.EJECTING;
+		WeaponClientStorage storage = weapon.getWeaponClientStorage(player);
+		return storage != null && storage.getState() == State.EJECT_SPENT_ROUND;
+		
+//		Weapon weapon = (Weapon) itemStack.getItem();
+//		PlayerWeaponInstance playerWeaponState = weapon.getPlayerWeaponState(player);
+//		return playerWeaponState != null && playerWeaponState.getState() == WeaponState.EJECTING;
 	}
 	
+	@Deprecated
 	static boolean isReloadingConfirmed(EntityPlayer player, ItemStack itemStack) {
-		Weapon weapon = (Weapon) itemStack.getItem();
-		PlayerWeaponState playerWeaponState = weapon.getPlayerWeaponState(player);
-		return playerWeaponState != null && playerWeaponState.getState() == WeaponState.LOAD;
-		
 //		Weapon weapon = (Weapon) itemStack.getItem();
-//		WeaponClientStorage storage = weapon.getWeaponClientStorage(player);
-//		return storage != null && storage.getState() == State.RELOAD_CONFIRMED;
+//		PlayerWeaponInstance playerWeaponState = weapon.getPlayerWeaponState(player);
+//		return playerWeaponState != null && playerWeaponState.getState() == WeaponState.LOAD;
+		
+		Weapon weapon = (Weapon) itemStack.getItem();
+		WeaponClientStorage storage = weapon.getWeaponClientStorage(player);
+		return storage != null && storage.getState() == State.RELOAD_CONFIRMED;
 	}
 
+	@Deprecated
 	static boolean isUnloadingStarted(EntityPlayer player, ItemStack itemStack) {
 
-		Weapon weapon = (Weapon) itemStack.getItem();
-		PlayerWeaponState playerWeaponState = weapon.getPlayerWeaponState(player);
-		return playerWeaponState != null && WeaponState.UNLOAD.matches(playerWeaponState.getState());
-		
-		
 //		Weapon weapon = (Weapon) itemStack.getItem();
-//		WeaponClientStorage storage = weapon.getWeaponClientStorage(player);
-//		return storage != null && storage.getState() == State.UNLOAD_STARTED;
+//		PlayerWeaponInstance playerWeaponState = weapon.getPlayerWeaponState(player);
+//		return playerWeaponState != null && WeaponState.UNLOAD.matches(playerWeaponState.getState());
+		
+		
+		Weapon weapon = (Weapon) itemStack.getItem();
+		WeaponClientStorage storage = weapon.getWeaponClientStorage(player);
+		return storage != null && storage.getState() == State.UNLOAD_STARTED;
 		
 	}
 
@@ -714,14 +717,13 @@ public class Weapon extends CompatibleItem implements AttachmentContainer, Reloa
 		return modContext.getWeaponClientStorageManager().getWeaponClientStorage(player, this);
 	}
 	
-	PlayerWeaponState getPlayerWeaponState(EntityPlayer player) {
-		PlayerItemState<?> state = modContext.getPlayerItemRegistry().getMainHandItemState(player);
-		return state instanceof PlayerWeaponState ? (PlayerWeaponState) state: null;
-	}
+//	PlayerWeaponInstance getPlayerWeaponState(EntityPlayer player) {
+//		return modContext.getPlayerItemRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
+//	}
 	
 	int getCurrentAmmo(EntityPlayer player) {
-		PlayerItemState<?> state = modContext.getPlayerItemRegistry().getMainHandItemState(player);
-		return state instanceof PlayerWeaponState ? ((PlayerWeaponState) state).getAmmo(): 0;
+		PlayerWeaponInstance state = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
+		return state.getAmmo();
 		
 //		WeaponClientStorage storage = getWeaponClientStorage(player);
 //		if(storage == null) return 0;
@@ -808,5 +810,13 @@ public class Weapon extends CompatibleItem implements AttachmentContainer, Reloa
 
 	public void tryStopFire(EntityPlayer player) {
 		modContext.getWeaponFireAspect().onFireButtonRelease(player);
+	}
+
+	@Override
+	public PlayerWeaponInstance createItemInstance(EntityPlayer player, ItemStack itemStack, int slot){
+		PlayerWeaponInstance state = new PlayerWeaponInstance(slot, player, itemStack);
+		state.setAmmo(Tags.getAmmo(itemStack));
+		state.setState(WeaponState.READY);
+		return state;
 	}
 }

@@ -154,7 +154,7 @@ public class CommonModContext implements ModContext {
 	}
 
 	@Override
-	public PlayerItemRegistry getPlayerItemRegistry() {
+	public PlayerItemInstanceRegistry getPlayerItemInstanceRegistry() {
 		throw new UnsupportedOperationException();
 	}
 

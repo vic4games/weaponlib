@@ -80,8 +80,6 @@ public class TypeRegistry {
 			instance.init(buf);
 		}
 		
-		
-		
         return targetClass.cast(instance);
     }
 

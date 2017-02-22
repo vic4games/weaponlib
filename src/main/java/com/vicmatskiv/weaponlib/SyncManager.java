@@ -13,37 +13,37 @@ public class SyncManager<S extends ManagedState<S>> {
 	
 	private PermitManager permitManager;
 	
-	private Map<PlayerItemState<?>, Long> watchables = new LinkedHashMap<>();
+	private Map<PlayerItemInstance<?>, Long> watchables = new LinkedHashMap<>();
 	
 	@SuppressWarnings("unchecked")
 	public SyncManager(PermitManager permitManager) {
 		this.permitManager = permitManager;
-		this.permitManager.registerEvaluator(Permit.class, PlayerItemState.class, this::syncOnServer);
+		this.permitManager.registerEvaluator(Permit.class, PlayerItemInstance.class, this::syncOnServer);
 	}
 	
-	private void syncOnServer(Permit<S> permit, PlayerItemState<S> state) {
+	private void syncOnServer(Permit<S> permit, PlayerItemInstance<S> state) {
 		System.out.println("Syncing state " + state + " on server");
 	}
 
-	public void watch(PlayerItemState<?> watchable) {
-		watchables.put(watchable, watchable.getUpdateId());
+	public void watch(PlayerItemInstance<?> watchableInstance) {
+		watchables.put(watchableInstance, watchableInstance.getUpdateId());
 	}
 	
-	public void unwatch(PlayerItemState<S> watchable) {
-		watchables.remove(watchable);
+	public void unwatch(PlayerItemInstance<S> watchableInstance) {
+		watchables.remove(watchableInstance);
 	}
 	
 	public void run() {
-		List<PlayerItemState<?>> updates = watchables.entrySet().stream()
+		List<PlayerItemInstance<?>> instancesToUpdate = watchables.entrySet().stream()
 				.filter(e -> e.getKey().getUpdateId() != e.getValue() && !e.getKey().getState().isTransient())
 				.map(e -> e.getKey())
 				.collect(Collectors.toList());
-		updates.forEach(this::sync);
+		instancesToUpdate.forEach(this::sync);
 	}
 	
 	@SuppressWarnings("unchecked")
-	private void sync(PlayerItemState<?> watchable) {
-		permitManager.request(new Permit<S>((S) watchable.getState()), (PlayerItemState<S>)watchable, (p, e) -> {
+	private void sync(PlayerItemInstance<?> watchable) {
+		permitManager.request(new Permit<S>((S) watchable.getState()), (PlayerItemInstance<S>)watchable, (p, e) -> {
 			watchables.put(watchable, watchable.getUpdateId());
 		});
 	}

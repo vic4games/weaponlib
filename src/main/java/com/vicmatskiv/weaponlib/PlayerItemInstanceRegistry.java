@@ -13,50 +13,60 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
-public class PlayerItemRegistry {
+public class PlayerItemInstanceRegistry {
 
-	private Map<UUID, Map<Integer, PlayerItemState<?>>> registry = new HashMap<>();
+	private Map<UUID, Map<Integer, PlayerItemInstance<?>>> registry = new HashMap<>();
 	
 	private SyncManager<?> syncManager;
 	
-	public PlayerItemRegistry(SyncManager<?> syncManager) {
+	public PlayerItemInstanceRegistry(SyncManager<?> syncManager) {
 		this.syncManager = syncManager;
 	}
 
-	public PlayerItemState<?> getMainHandItemState(EntityPlayer player) {
-		return getItemState(player, compatibility.getCurrentInventoryItemIndex(player));
+	/**
+	 * Returns instance of the target class, or null if there is no instance or instance class does not match.
+	 * 
+	 * @param player
+	 * @param targetClass
+	 * @return
+	 */
+	public <T extends PlayerItemInstance<S>, S extends ManagedState<S>> T getMainHandItemInstance(EntityPlayer player, Class<T> targetClass) {
+		PlayerItemInstance<?> instance = getItemInstance(player, compatibility.getCurrentInventoryItemIndex(player));
+		return targetClass.isInstance(instance) ? targetClass.cast(instance) : null;
 	}
 	
-	public PlayerItemState<?> getItemState(EntityPlayer player, int slot) {
-		Map<Integer, PlayerItemState<?>> slotContexts = registry.computeIfAbsent(player.getUniqueID(), p -> new HashMap<>());
-		PlayerItemState<?> result = slotContexts.get(slot);
+	public PlayerItemInstance<?> getItemInstance(EntityPlayer player, int slot) {
+		Map<Integer, PlayerItemInstance<?>> slotContexts = registry.computeIfAbsent(player.getPersistentID(), p -> new HashMap<>());
+		PlayerItemInstance<?> result = slotContexts.get(slot);
 		if (result == null) {
 			System.out.println("State not found, creating...");
-			result = createItemState(player, slot);
+			result = createItemInstance(player, slot);
 			if(result != null) {
 				slotContexts.put(slot, result);
 				syncManager.watch(result);
 			}
+		} else {
+			
 		}
 		return result;
 	}
 	
 	// if input item does not match stored item, keep the old value, otherwise replace with new value
-	BiFunction<? super PlayerItemState<?>, ? super PlayerItemState<?>, ? extends PlayerItemState<?>> merge = (currentState, newState) -> 
+	BiFunction<? super PlayerItemInstance<?>, ? super PlayerItemInstance<?>, ? extends PlayerItemInstance<?>> merge = (currentState, newState) -> 
 		isSameItem(currentState, newState) && isSameUpdateId(currentState, newState) ? currentState : newState;
 
-	private boolean isSameUpdateId(PlayerItemState<?> currentState, PlayerItemState<?> newState) {
+	private boolean isSameUpdateId(PlayerItemInstance<?> currentState, PlayerItemInstance<?> newState) {
 		return currentState.getUpdateId() == newState.getUpdateId();
 	}
 
-	private boolean isSameItem(PlayerItemState<?> currentState, PlayerItemState<?> newState) {
-		return Item.getIdFromItem(currentState.getItem()) == Item.getIdFromItem(newState.getItem());
+	private boolean isSameItem(PlayerItemInstance<?> instance1, PlayerItemInstance<?> instance2) {
+		return Item.getIdFromItem(instance1.getItem()) == Item.getIdFromItem(instance2.getItem());
 	}
 	
 	@SuppressWarnings("unchecked")
-	public <S extends ManagedState<S>, T extends PlayerItemState<S>> boolean update(S newManagedState, T extendedStateToMerge) {
+	public <S extends ManagedState<S>, T extends PlayerItemInstance<S>> boolean update(S newManagedState, T extendedStateToMerge) {
 		
-		Map<Integer, PlayerItemState<?>> slotContexts = registry.get(extendedStateToMerge.getPlayer().getUniqueID());
+		Map<Integer, PlayerItemInstance<?>> slotContexts = registry.get(extendedStateToMerge.getPlayer().getUniqueID());
 		
 		boolean result = false;
 		
@@ -82,19 +92,16 @@ public class PlayerItemRegistry {
 		return result;
 	}
 
-	private PlayerItemState<?> createItemState(EntityPlayer player, int slot) {
+	private PlayerItemInstance<?> createItemInstance(EntityPlayer player, int slot) {
 		ItemStack itemStack = compatibility.getInventoryItemStack(player, slot);
 		if(itemStack == null) {
 			return null;
 		}
-		PlayerItemState<?> result;
-		if(itemStack.getItem() instanceof Weapon) {
-			PlayerWeaponState state = new PlayerWeaponState(slot, player, itemStack);
-			state.setAmmo(Tags.getAmmo(itemStack));
-			state.setState(WeaponState.READY); // TODO: why is it ready by default? Shouldn't it be deserialized from item stack?
-			result = state;
+		PlayerItemInstance<?> result;
+		if(itemStack.getItem() instanceof PlayerItemInstanceFactory) {
+			return ((PlayerItemInstanceFactory<?, ?>) itemStack.getItem()).createItemInstance(player, itemStack, slot);	
 		} else {
-			result = new PlayerItemState<>(slot, player, itemStack);
+			result = new PlayerItemInstance<>(slot, player, itemStack);
 		}
 
 		return result;

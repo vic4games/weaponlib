@@ -12,11 +12,11 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
-public class PlayerItemState<S extends ManagedState<S>> extends UniversalObject implements ExtendedState<S>, PlayerContext {
+public class PlayerItemInstance<S extends ManagedState<S>> extends UniversalObject implements ExtendedState<S>, PlayerContext {
 	
 	static {
-		TypeRegistry.getInstance().register(PlayerItemState.class);
-		TypeRegistry.getInstance().register(PlayerWeaponState.class);
+		TypeRegistry.getInstance().register(PlayerItemInstance.class);
+		TypeRegistry.getInstance().register(PlayerWeaponInstance.class);
 	}
 	
 //	public static interface PlayerItemStateListener<S extends ManagedState<S>> {
@@ -29,15 +29,15 @@ public class PlayerItemState<S extends ManagedState<S>> extends UniversalObject 
 	protected EntityPlayer player;
 	protected Item item;
 	protected int itemInventoryIndex;
-	private PlayerItemState<S> preparedState;
+	private PlayerItemInstance<S> preparedState;
 	private boolean dirty;
 	
 	
 //	private Set<PlayerItemStateListener<S>> listeners = new HashSet<>();
 	
-	public PlayerItemState() {}
+	public PlayerItemInstance() {}
 	
-	public PlayerItemState(int itemInventoryIndex, EntityPlayer player) {
+	public PlayerItemInstance(int itemInventoryIndex, EntityPlayer player) {
 		this.itemInventoryIndex = itemInventoryIndex;
 		this.player = player;
 		ItemStack itemStack = compatibility.getHeldItemMainHand(player);
@@ -46,7 +46,7 @@ public class PlayerItemState<S extends ManagedState<S>> extends UniversalObject 
 		}
 	}
 	
-	public PlayerItemState(int itemInventoryIndex, EntityPlayer player, ItemStack itemStack) {
+	public PlayerItemInstance(int itemInventoryIndex, EntityPlayer player, ItemStack itemStack) {
 		this.itemInventoryIndex = itemInventoryIndex;
 		this.player = player;
 		//this.itemStack = itemStack;
@@ -78,7 +78,7 @@ public class PlayerItemState<S extends ManagedState<S>> extends UniversalObject 
 	}
 	
 	@SuppressWarnings("unchecked")
-	protected <T extends PlayerItemState<S>> T getPreparedState() {
+	protected <T extends PlayerItemInstance<S>> T getPreparedState() {
 		return (T)preparedState;
 	}
 
@@ -126,7 +126,7 @@ public class PlayerItemState<S extends ManagedState<S>> extends UniversalObject 
 	/**
 	 * Commits pending state
 	 */
-	protected void updateWith(PlayerItemState<S> otherState, boolean updateManagedState) {
+	protected void updateWith(PlayerItemInstance<S> otherState, boolean updateManagedState) {
 		if(updateManagedState) {
 			setState(otherState.getState());
 		}
@@ -149,7 +149,7 @@ public class PlayerItemState<S extends ManagedState<S>> extends UniversalObject 
 	@Override
 	public <E extends ExtendedState<S>> void prepareTransaction(E preparedExtendedState) {
 		setState(preparedExtendedState.getState());
-		this.preparedState = (PlayerItemState<S>) preparedExtendedState;
+		this.preparedState = (PlayerItemInstance<S>) preparedExtendedState;
 	}
 	
 	public boolean isDirty() {

@@ -9,10 +9,11 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 
-public class PlayerWeaponState extends PlayerItemState<WeaponState> {
+
+public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 	
 	static {
-		TypeRegistry.getInstance().register(PlayerWeaponState.class);
+		TypeRegistry.getInstance().register(PlayerWeaponInstance.class);
 	}
 	
 	private int ammo;
@@ -23,15 +24,15 @@ public class PlayerWeaponState extends PlayerItemState<WeaponState> {
 	
 	private Queue<Tuple<WeaponState, Long>> stateHistory = new ArrayBlockingQueue<>(100);
 
-	public PlayerWeaponState() {
+	public PlayerWeaponInstance() {
 		super();
 	}
 
-	public PlayerWeaponState(int itemInventoryIndex, EntityPlayer player, ItemStack itemStack) {
+	public PlayerWeaponInstance(int itemInventoryIndex, EntityPlayer player, ItemStack itemStack) {
 		super(itemInventoryIndex, player, itemStack);
 	}
 
-	public PlayerWeaponState(int itemInventoryIndex, EntityPlayer player) {
+	public PlayerWeaponInstance(int itemInventoryIndex, EntityPlayer player) {
 		super(itemInventoryIndex, player);
 	}
 	
@@ -73,11 +74,11 @@ public class PlayerWeaponState extends PlayerItemState<WeaponState> {
 	}
 	
 	@Override
-	protected void updateWith(PlayerItemState<WeaponState> otherItemState, boolean updateManagedState) {
-		super.updateWith(otherItemState, updateManagedState);
-		PlayerWeaponState other = (PlayerWeaponState) otherItemState;
-		System.out.println("Updating state with ammo " + other.ammo);
-		setAmmo(other.ammo);
+	protected void updateWith(PlayerItemInstance<WeaponState> otherItemInstance, boolean updateManagedState) {
+		super.updateWith(otherItemInstance, updateManagedState);
+		PlayerWeaponInstance otherWeaponInstance = (PlayerWeaponInstance) otherItemInstance;
+		System.out.println("Updating instance with ammo " + otherWeaponInstance.ammo);
+		setAmmo(otherWeaponInstance.ammo);
 	}
 
 	public Weapon getWeapon() {

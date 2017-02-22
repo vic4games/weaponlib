@@ -16,7 +16,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
-public final class AttachmentAspect implements Aspect<WeaponState, PlayerWeaponState> {
+public final class AttachmentAspect implements Aspect<WeaponState, PlayerWeaponInstance> {
 	
 	private static final String ACTIVE_ATTACHMENT_TAG = "ActiveAttachments";
 	private static final String SELECTED_ATTACHMENT_INDEXES_TAG = "SelectedAttachments";
@@ -24,14 +24,14 @@ public final class AttachmentAspect implements Aspect<WeaponState, PlayerWeaponS
 	
 	private ModContext modContext;
 	private PermitManager permitManager;
-	private StateManager<WeaponState, ? super PlayerWeaponState> stateManager;
+	private StateManager<WeaponState, ? super PlayerWeaponInstance> stateManager;
 
 	AttachmentAspect(ModContext modContext) {
 		this.modContext = modContext;
 	}
 	
 	@Override
-	public void setStateManager(StateManager<WeaponState, ? super PlayerWeaponState> stateManager) {
+	public void setStateManager(StateManager<WeaponState, ? super PlayerWeaponInstance> stateManager) {
 
 		if(permitManager == null) {
 			throw new IllegalStateException("Permit manager not initialized");
@@ -42,14 +42,14 @@ public final class AttachmentAspect implements Aspect<WeaponState, PlayerWeaponS
 		.in(this)
 			.change(WeaponState.READY).to(WeaponState.MODIFYING)
 			.withPermit((s, es) -> new Permit<>(s),
-					modContext.getPlayerItemRegistry()::update,
+					modContext.getPlayerItemInstanceRegistry()::update,
 					permitManager)
 			.manual()
 			
 		.in(this)
 			.change(WeaponState.MODIFYING).to(WeaponState.READY)
 			.withPermit((s, es) -> new Permit<>(s),
-					modContext.getPlayerItemRegistry()::update,
+					modContext.getPlayerItemInstanceRegistry()::update,
 					permitManager)
 			.manual()
 			

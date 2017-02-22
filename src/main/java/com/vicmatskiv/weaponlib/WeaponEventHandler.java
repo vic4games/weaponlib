@@ -15,8 +15,10 @@ import net.minecraftforge.client.event.RenderLivingEvent;
 public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 	
 	private SafeGlobals safeGlobals;
+	private ModContext modContext;
 
-	public WeaponEventHandler(SafeGlobals safeGlobals) {
+	public WeaponEventHandler(ModContext modContext, SafeGlobals safeGlobals) {
+		this.modContext = modContext;
 		this.safeGlobals = safeGlobals;
 	}
 	
@@ -61,14 +63,28 @@ public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 	@Override
 	public void onCompatibleMouse(MouseEvent event) {
 		if(compatibility.getButton(event) == 0) {
-			ItemStack heldItem = compatibility.getHeldItemMainHand(compatibility.clientPlayer());
-			if(heldItem != null && heldItem.getItem() instanceof Weapon) {
+			
+			PlayerWeaponInstance mainHandHeldWeaponInstance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(
+					compatibility.clientPlayer(), PlayerWeaponInstance.class);
+			if(mainHandHeldWeaponInstance != null) {
 				event.setCanceled(true);
 			}
+			
+//			ItemStack heldItem = compatibility.getHeldItemMainHand(compatibility.clientPlayer());
+//			if(heldItem != null && heldItem.getItem() instanceof Weapon) {
+//				event.setCanceled(true);
+//			}
 		} else if(compatibility.getButton(event) == 1) {
-			ItemStack heldItem = compatibility.getHeldItemMainHand(compatibility.clientPlayer());			
-			if(heldItem != null && heldItem.getItem() instanceof Weapon 
-					&& Weapon.isEjectedSpentRound(compatibility.clientPlayer(), heldItem)) {
+//			ItemStack heldItem = compatibility.getHeldItemMainHand(compatibility.clientPlayer());			
+//			if(heldItem != null && heldItem.getItem() instanceof Weapon 
+//					&& Weapon.isEjectedSpentRound(compatibility.clientPlayer(), heldItem)) {
+//				event.setCanceled(true);
+//			}
+			
+			PlayerWeaponInstance mainHandHeldWeaponInstance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(
+					compatibility.clientPlayer(), PlayerWeaponInstance.class);
+			if(mainHandHeldWeaponInstance != null 
+					&& mainHandHeldWeaponInstance.getState() == WeaponState.EJECT_REQUIRED) {
 				event.setCanceled(true);
 			}
 		}
