@@ -9,11 +9,15 @@ import com.vicmatskiv.weaponlib.state.ManagedState;
 import com.vicmatskiv.weaponlib.state.Permit;
 import com.vicmatskiv.weaponlib.state.PermitManager;
 
+import net.minecraft.item.ItemStack;
+
 public class SyncManager<S extends ManagedState<S>> {
 	
 	private PermitManager permitManager;
 	
 	private Map<PlayerItemInstance<?>, Long> watchables = new LinkedHashMap<>();
+	
+	private long syncTimeout = 10000;
 	
 	@SuppressWarnings("unchecked")
 	public SyncManager(PermitManager permitManager) {
@@ -21,8 +25,12 @@ public class SyncManager<S extends ManagedState<S>> {
 		this.permitManager.registerEvaluator(Permit.class, PlayerItemInstance.class, this::syncOnServer);
 	}
 	
-	private void syncOnServer(Permit<S> permit, PlayerItemInstance<S> state) {
-		System.out.println("Syncing state " + state + " on server");
+	private void syncOnServer(Permit<S> permit, PlayerItemInstance<S> instance) {
+		System.out.println("Syncing state " + instance + " on server");
+		ItemStack itemStack = instance.getItemStack();
+		if(itemStack != null) {
+			Tags.setInstance(itemStack, instance);
+		}
 	}
 
 	public void watch(PlayerItemInstance<?> watchableInstance) {
@@ -35,7 +43,9 @@ public class SyncManager<S extends ManagedState<S>> {
 	
 	public void run() {
 		List<PlayerItemInstance<?>> instancesToUpdate = watchables.entrySet().stream()
-				.filter(e -> e.getKey().getUpdateId() != e.getValue() && !e.getKey().getState().isTransient())
+				.filter(e -> e.getKey().getUpdateId() != e.getValue() 
+							&& !e.getKey().getState().isTransient()
+							&& e.getKey().getSyncStartTimestamp() + syncTimeout < System.currentTimeMillis())
 				.map(e -> e.getKey())
 				.collect(Collectors.toList());
 		instancesToUpdate.forEach(this::sync);
@@ -43,8 +53,10 @@ public class SyncManager<S extends ManagedState<S>> {
 	
 	@SuppressWarnings("unchecked")
 	private void sync(PlayerItemInstance<?> watchable) {
+		watchable.setSyncStartTimestamp(System.currentTimeMillis());
 		permitManager.request(new Permit<S>((S) watchable.getState()), (PlayerItemInstance<S>)watchable, (p, e) -> {
-			watchables.put(watchable, watchable.getUpdateId());
+			watchables.put(watchable, watchable.getUpdateId()); // TODO: prevent syncing while another syncing in progress
+			watchable.setSyncStartTimestamp(0);
 		});
 	}
 }

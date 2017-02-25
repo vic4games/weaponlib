@@ -3,6 +3,7 @@ package com.vicmatskiv.weaponlib;
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
 import java.util.Queue;
+import java.util.UUID;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -13,8 +14,14 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleClientTickEvent.Phase;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 import net.minecraft.client.Minecraft;
+import net.minecraft.entity.ai.attributes.AttributeModifier;
+import net.minecraft.entity.player.EntityPlayer;
 
 public class ClientEventHandler extends CompatibleClientEventHandler {
+	
+	private static final UUID SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER_UUID = UUID.fromString("8efa8469-0256-4f8e-bdd9-3e7b23970663");
+	private static final AttributeModifier SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER = (new AttributeModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER_UUID, "Slow Down While Zooming", -0.5, 2)).setSaved(false);
+
 
 	private Lock mainLoopLock = new ReentrantLock();
 	private SafeGlobals safeGlobals;
@@ -40,9 +47,8 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 		if(event.getPhase() == Phase.START) {
 			mainLoopLock.lock();
 		} else if(event.getPhase() == Phase.END) {
-			
-			//modContext.getSyncManager().run();
-			
+			update();
+			modContext.getSyncManager().run();
 			mainLoopLock.unlock();
 			processRunInClientThreadQueue();
 			safeGlobals.objectMouseOver.set(compatibility.getObjectMouseOver());
@@ -51,6 +57,39 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 				
 				//reloadAspect.updateMainHeldItem(compatibility.clientPlayer());
 			}
+		}
+	}
+
+	private void update() {
+		EntityPlayer player = compatibility.clientPlayer();
+		PlayerWeaponInstance mainHandHeldWeaponInstance = modContext.getMainHeldWeapon();
+		if(mainHandHeldWeaponInstance != null) {
+			if(player.isSprinting()) {
+				mainHandHeldWeaponInstance.setAimed(false);
+			}
+			if(mainHandHeldWeaponInstance.isAimed()) {
+				slowPlayerDown(mainHandHeldWeaponInstance.getPlayer());
+			} else {
+				restorePlayerSpeed(mainHandHeldWeaponInstance.getPlayer());
+			}
+		}
+	}
+	
+	// TODO: create player utils, move this method
+	private void restorePlayerSpeed(EntityPlayer entityPlayer) {
+		if(entityPlayer.getEntityAttribute(compatibility.getMovementSpeedAttribute())
+				.getModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER.getID()) != null) {
+			entityPlayer.getEntityAttribute(compatibility.getMovementSpeedAttribute())
+				.removeModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER);
+		}
+	}
+
+	// TODO: create player utils, move this method
+	private void slowPlayerDown(EntityPlayer entityPlayer) {
+		if(entityPlayer.getEntityAttribute(compatibility.getMovementSpeedAttribute())
+				.getModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER.getID()) == null) {
+			entityPlayer.getEntityAttribute(compatibility.getMovementSpeedAttribute())
+				.applyModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER);
 		}
 	}
 

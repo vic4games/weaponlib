@@ -1,12 +1,13 @@
 package com.vicmatskiv.weaponlib;
 
-import java.util.Queue;
-import java.util.concurrent.ArrayBlockingQueue;
+import java.util.Deque;
+import java.util.concurrent.LinkedBlockingDeque;
 
 import com.vicmatskiv.weaponlib.network.TypeRegistry;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
 
@@ -21,8 +22,14 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 	private int seriesShotCount; // TODO: serialize?
 	private long lastFireTimestamp;
 	private boolean aimed;
-	
-	private Queue<Tuple<WeaponState, Long>> stateHistory = new ArrayBlockingQueue<>(100);
+		
+	/*
+	 * Upon adding an element to the head of the queue, all existing elements with lower priority are removed 
+	 * from the queue. Elements with the same priority are not removed.
+	 * This ensures the queue is always sorted by priority, lowest (head) to highest (tail).
+	 */
+	private Deque<Tuple<WeaponState, Long>> filteredStateQueue = new LinkedBlockingDeque<>();
+	private int[] activeAttachmentsIds;
 
 	public PlayerWeaponInstance() {
 		super();
@@ -36,17 +43,32 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 		super(itemInventoryIndex, player);
 	}
 	
+	private void addStateToHistory(WeaponState state) {
+		Tuple<WeaponState, Long> t;
+		
+		// Remove existing items from lower priorities from the top of the stack; stop when same or higher priority item is found
+		while((t = filteredStateQueue.peekFirst()) != null) {
+			if(t.getU().getPriority() < state.getPriority()) {
+				filteredStateQueue.pollFirst();
+			} else {
+				break;
+			}
+		}
+		
+		filteredStateQueue.addFirst(new Tuple<>(state, System.currentTimeMillis()));
+	}
+	
 	@Override
 	public boolean setState(WeaponState state) {
 		boolean result = super.setState(state);
-		stateHistory.add(new Tuple<>(state, System.currentTimeMillis()));
+		addStateToHistory(state);
 		return result;
 	}
 	
 	public Tuple<WeaponState, Long> nextHistoryState() {
 		Tuple<WeaponState, Long> result;
-		if(stateHistory.size() > 1) {
-			result = stateHistory.poll();
+		if(filteredStateQueue.size() > 1) {
+			result = filteredStateQueue.pollLast();
 		} else {
 			result = new Tuple<>(getState(), System.currentTimeMillis());
 		}
@@ -58,26 +80,34 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 	}
 	
 	protected void setAmmo(int ammo) {
-		this.ammo = ammo;
+		if(ammo != this.ammo) {
+			System.out.println("Updating instance with ammo " + ammo);
+			this.ammo = ammo;
+			//updateId++; //TODO: what's going on with this update id?
+		}
+		
 	}
 	
 	@Override
 	public void init(ByteBuf buf) {
 		super.init(buf);
 		ammo = buf.readInt();
+		aimed = buf.readBoolean();
+		recoil = buf.readFloat();
 	}
 	
 	@Override
 	public void serialize(ByteBuf buf) {
 		super.serialize(buf);
 		buf.writeInt(ammo);
+		buf.writeBoolean(aimed);
+		buf.writeFloat(recoil);
 	}
 	
 	@Override
 	protected void updateWith(PlayerItemInstance<WeaponState> otherItemInstance, boolean updateManagedState) {
 		super.updateWith(otherItemInstance, updateManagedState);
 		PlayerWeaponInstance otherWeaponInstance = (PlayerWeaponInstance) otherItemInstance;
-		System.out.println("Updating instance with ammo " + otherWeaponInstance.ammo);
 		setAmmo(otherWeaponInstance.ammo);
 	}
 
@@ -87,6 +117,14 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 
 	public float getRecoil() {
 		return recoil;
+	}
+
+	public void setRecoil(float recoil) {
+		if(recoil != this.recoil) {
+			this.recoil = recoil;
+			updateId++;
+		}
+		
 	}
 
 	public int getSeriesShotCount() {
@@ -122,6 +160,25 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 	}
 
 	public void setAimed(boolean aimed) {
-		this.aimed = aimed;
+		if(aimed != this.aimed) {
+			this.aimed = aimed;
+			updateId++;
+		}
+	}
+
+	public int[] getActiveAttachmentIds() {
+		if(activeAttachmentsIds == null || activeAttachmentsIds.length != AttachmentCategory.values.length) {
+			activeAttachmentsIds = new int[AttachmentCategory.values.length];
+			for(CompatibleAttachment<Weapon> attachment: getWeapon().getCompatibleAttachments().values()) {
+				if(attachment.isDefault()) {
+					activeAttachmentsIds[attachment.getAttachment().getCategory().ordinal()] = Item.getIdFromItem(attachment.getAttachment());
+				}
+			}
+		}
+		return activeAttachmentsIds;
+	}
+
+	public void setActiveAttachmentIds(int[] activeAttachmentIds) {
+		this.activeAttachmentsIds = activeAttachmentIds;
 	}
 }

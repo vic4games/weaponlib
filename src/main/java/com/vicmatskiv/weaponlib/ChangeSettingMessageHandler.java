@@ -35,11 +35,11 @@ public class ChangeSettingMessageHandler implements CompatibleMessageHandler<Cha
 	private void onServerMessage(ChangeSettingsMessage message, CompatibleMessageContext ctx) {
 		EntityPlayer player = ctx.getPlayer();
 		
-		if(message.aimingChanged() && compatibility.getHeldItemMainHand(player) != null 
-				&& compatibility.getHeldItemMainHand(player).getItem() instanceof Weapon
-				&& compatibility.getHeldItemMainHand(player).getItem() == message.getWeapon()) {
-			message.getWeapon().toggleAiming(compatibility.getHeldItemMainHand(player), player);
-		}
+//		if(message.aimingChanged() && compatibility.getHeldItemMainHand(player) != null 
+//				&& compatibility.getHeldItemMainHand(player).getItem() instanceof Weapon
+//				&& compatibility.getHeldItemMainHand(player).getItem() == message.getWeapon()) {
+//			message.getWeapon().toggleAiming(compatibility.getHeldItemMainHand(player), player);
+//		}
 	}
 
 	private void onClientMessage(ChangeSettingsMessage message, CompatibleMessageContext ctx) {

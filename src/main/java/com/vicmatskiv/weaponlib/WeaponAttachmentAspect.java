@@ -4,69 +4,120 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.function.Predicate;
 
-import com.vicmatskiv.weaponlib.Weapon.State;
+import com.vicmatskiv.weaponlib.network.TypeRegistry;
+import com.vicmatskiv.weaponlib.state.Aspect;
+import com.vicmatskiv.weaponlib.state.Permit;
+import com.vicmatskiv.weaponlib.state.Permit.Status;
+import com.vicmatskiv.weaponlib.state.PermitManager;
+import com.vicmatskiv.weaponlib.state.StateManager;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
-public final class AttachmentManager {
+public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerWeaponInstance> {
+	
+	static {
+		TypeRegistry.getInstance().register(EnterAttachmentModePermit.class);
+		TypeRegistry.getInstance().register(ExitAttachmentModePermit.class);		
+	}
 	
 	private static final String ACTIVE_ATTACHMENT_TAG = "ActiveAttachments";
 	private static final String SELECTED_ATTACHMENT_INDEXES_TAG = "SelectedAttachments";
 	private static final String PREVIOUSLY_SELECTED_ATTACHMENT_TAG = "PreviouslySelectedAttachments";
 	
-	private ModContext modContext;
+	public static class EnterAttachmentModePermit extends Permit<WeaponState> {
+		
+		public EnterAttachmentModePermit() {}
+		
+		public EnterAttachmentModePermit(WeaponState state) {
+			super(state);
+		}
+	}
 	
-	AttachmentManager(ModContext modContext) {
+	public static class ExitAttachmentModePermit extends Permit<WeaponState> {
+		
+		public ExitAttachmentModePermit() {}
+		
+		public ExitAttachmentModePermit(WeaponState state) {
+			super(state);
+		}
+	}
+	
+	private ModContext modContext;
+	private PermitManager permitManager;
+	private StateManager<WeaponState, ? super PlayerWeaponInstance> stateManager;
+	
+	private long clickSpammingTimeout = 100;
+	
+	private Predicate<PlayerWeaponInstance> clickSpammingPreventer = es ->
+		System.currentTimeMillis() >= es.getStateUpdateTimestamp() + clickSpammingTimeout;
+		
+	private Collection<WeaponState> allowedUpdateFromStates = Arrays.asList(WeaponState.MODIFYING_REQUESTED);
+
+	WeaponAttachmentAspect(ModContext modContext) {
 		this.modContext = modContext;
 	}
 	
-	/*
-	 * stateManager.allow(State.READY, State.MODIFYING, StateManager.TimeoutPredicate(50, TimeUnit.MILLISECONDS);
-	 * stateManager.allow(State.MODIFYING, State.READY);
-	 */
-	
-	void toggleClientAttachmentSelectionMode(ItemStack itemStack, EntityPlayer player) {
-		Item item = itemStack.getItem();
-		if(!(item instanceof Weapon && compatibility.getHeldItemMainHand(player) == itemStack)) {
-			return; 
-		}
-		Weapon weapon = (Weapon) item;
-		WeaponClientStorage storage = weapon.getWeaponClientStorage(player);
-		if(storage == null) return;
-		/*
-		 * if(stateManager.nextState(context)) {
-		 *     modContext.getChannel().getChannel().sendToServer(new AttachmentModeMessage());
-		 * }
-		 *    
-		 */
-		if(storage.getState() == State.EJECT_SPENT_ROUND) {
-			return;
-		}
-		if(storage.getState() != State.MODIFYING) {
-			storage.setState(State.MODIFYING);
-		} else {
-			storage.setState(State.READY);
-		}
-    	modContext.getChannel().getChannel().sendToServer(new AttachmentModeMessage());
-	}
-	
-	void toggleServerAttachmentSelectionMode(ItemStack itemStack, EntityPlayer player) {
-		if(!(itemStack.getItem() instanceof Weapon)) {
-			return;
+	@Override
+	public void setStateManager(StateManager<WeaponState, ? super PlayerWeaponInstance> stateManager) {
+
+		if(permitManager == null) {
+			throw new IllegalStateException("Permit manager not initialized");
 		}
 		
-		if(!Weapon.isModifying(itemStack)) {
-			enterAttachmentSelectionMode(itemStack);
-		} else {
-			exitAttachmentSelectionMode(itemStack, player);
+		this.stateManager = stateManager
+		
+			.in(this)
+			.change(WeaponState.READY).to(WeaponState.MODIFYING)
+			.when(clickSpammingPreventer)
+			.withPermit((s, es) -> new EnterAttachmentModePermit(s),
+					modContext.getPlayerItemInstanceRegistry()::update,
+					permitManager)
+			.manual()
+			
+		.in(this)
+			.change(WeaponState.MODIFYING).to(WeaponState.READY)
+			.when(clickSpammingPreventer)
+			.withAction((instance) -> {permitManager.request(new ExitAttachmentModePermit(WeaponState.READY), 
+					instance, (p, e) -> { /* do nothing on callback */});})
+			.manual()
+		;
+	}
+	
+	@Override
+	public void setPermitManager(PermitManager permitManager) {
+		this.permitManager = permitManager;
+		permitManager.registerEvaluator(EnterAttachmentModePermit.class, PlayerWeaponInstance.class, 
+				this::enterAttachmentSelectionMode);
+		permitManager.registerEvaluator(ExitAttachmentModePermit.class, PlayerWeaponInstance.class, 
+				this::exitAttachmentSelectionMode);
+		
+	}
+	
+	public void toggleClientAttachmentSelectionMode(EntityPlayer player) {
+		
+		PlayerWeaponInstance weaponInstance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
+		if(weaponInstance != null) {
+			stateManager.changeState(this, weaponInstance, WeaponState.MODIFYING, WeaponState.READY);
 		}
 	}
 	
-	void enterAttachmentSelectionMode(ItemStack itemStack) {
+	void updateMainHeldItem(EntityPlayer player) {
+		PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
+		if(instance != null) {
+			stateManager.changeStateFromAnyOf(this, instance, allowedUpdateFromStates); // no target state specified, will trigger auto-transitions
+		}
+	}
+	
+	
+	private void enterAttachmentSelectionMode(EnterAttachmentModePermit permit, PlayerWeaponInstance weaponInstance) {
+		System.out.println("Entering attachment mode on server");
+		ItemStack itemStack = weaponInstance.getItemStack();
 		compatibility.ensureTagCompound(itemStack);
 		int activeAttachmentsIds[] = ensureActiveAttachments(itemStack);
 		
@@ -76,12 +127,21 @@ public final class AttachmentManager {
 		compatibility.getTagCompound(itemStack).setIntArray(PREVIOUSLY_SELECTED_ATTACHMENT_TAG, 
 				Arrays.copyOf(activeAttachmentsIds, activeAttachmentsIds.length));
 		
-		Weapon.setModifying(itemStack, true);
+		permit.setStatus(Status.GRANTED);
 	}
 	
-	void exitAttachmentSelectionMode(ItemStack itemStack, EntityPlayer player) {
+	private void exitAttachmentSelectionMode(ExitAttachmentModePermit permit, PlayerWeaponInstance weaponInstance) {
+		System.out.println("Exiting attachment mode on server");
+		ItemStack itemStack = weaponInstance.getItemStack();
 		compatibility.ensureTagCompound(itemStack);
 		
+		exitAttachmentSelectionMode(weaponInstance.getPlayer(), itemStack);
+		if(permit != null) {
+			permit.setStatus(Status.GRANTED);
+		}
+	}
+
+	void exitAttachmentSelectionMode(EntityPlayer player, ItemStack itemStack) {
 		int activeAttachmentsIds[] = compatibility.getTagCompound(itemStack).getIntArray(ACTIVE_ATTACHMENT_TAG);
 		int previouslySelectedAttachmentIds[] = compatibility.getTagCompound(itemStack).getIntArray(PREVIOUSLY_SELECTED_ATTACHMENT_TAG);
 		for(int i = 0; i < activeAttachmentsIds.length; i++) {
@@ -94,8 +154,6 @@ public final class AttachmentManager {
 				}
 			}
 		}
-		
-		Weapon.setModifying(itemStack, false);
 	}
 
 	List<CompatibleAttachment<? extends AttachmentContainer>> getActiveAttachments(ItemStack itemStack) {
@@ -139,8 +197,7 @@ public final class AttachmentManager {
 	
 	@SuppressWarnings("unchecked")
 	void changeAttachment(AttachmentCategory attachmentCategory, ItemStack itemStack, EntityPlayer player) {
-		if(itemStack == null || !(itemStack.getItem() instanceof Weapon) || 
-				!Weapon.isModifying(itemStack) /*((Weapon) itemStack.getItem()).getState(itemStack) != Weapon.STATE_MODIFYING*/) {
+		if(itemStack == null || !(itemStack.getItem() instanceof Weapon) /*|| !Weapon.isModifying(itemStack)*/) {
 			return;
 		}
 		
@@ -357,10 +414,6 @@ public final class AttachmentManager {
 			return;
 		}
 		
-		if(!Weapon.isModifying(itemStack)) {
-			return;
-		}
-		
 		Weapon weapon = (Weapon) itemStack.getItem();
 		compatibility.ensureTagCompound(itemStack);
 		int currentIndex = Tags.getActiveTexture(itemStack);
@@ -374,4 +427,5 @@ public final class AttachmentManager {
 		}
 		Tags.setActiveTexture(itemStack, currentIndex);
 	}
+
 }

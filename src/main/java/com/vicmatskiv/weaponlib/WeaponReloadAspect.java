@@ -56,7 +56,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 			(c) -> ((Weapon)c.getItem()).getAmmoCapacity() > 0;
 			
 	private static Predicate<PlayerWeaponInstance> magazineAttached = 
-			(c) -> AttachmentManager.getActiveAttachment(c.getItemStack(), AttachmentCategory.MAGAZINE) != null;
+			(c) -> WeaponAttachmentAspect.getActiveAttachment(c.getItemStack(), AttachmentCategory.MAGAZINE) != null;
 
 	private static long reloadAnimationDuration = 1000;
 	
@@ -68,9 +68,12 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 	private static Predicate<PlayerWeaponInstance> unloadAnimationCompleted = es -> 
 		System.currentTimeMillis() >= es.getStateUpdateTimestamp() + reloadAnimationDuration;
 		
-	private static Predicate<PlayerItemInstance<WeaponState>> quietReload = c -> false;
+	private static Predicate<PlayerItemInstance<?>> quietReload = c -> false;
 	
-	private Predicate<PlayerItemInstance<WeaponState>> inventoryHasFreeSlots = c -> true; // TODO implement free slot check
+	private Predicate<PlayerItemInstance<?>> inventoryHasFreeSlots = c -> true; // TODO implement free slot check
+	
+	private Predicate<ItemStack> magazineNotEmpty = magazineStack -> Tags.getAmmo(magazineStack) > 0;
+
 	
 	private ModContext modContext;
 
@@ -160,20 +163,22 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 			List<ItemAttachment<Weapon>> compatibleBullets = weapon.getCompatibleAttachments(ItemBullet.class);
 			ItemStack consumedStack;
 			if(!compatibleMagazines.isEmpty()) {
-				ItemAttachment<Weapon> existingMagazine = modContext.getAttachmentManager().getActiveAttachment(weaponItemStack, AttachmentCategory.MAGAZINE);
+				ItemAttachment<Weapon> existingMagazine = WeaponAttachmentAspect.getActiveAttachment(weaponItemStack, AttachmentCategory.MAGAZINE);
 				int ammo = Tags.getAmmo(weaponItemStack);
 				ItemMagazine newMagazine = null;
 				if(existingMagazine == null) {
 					ammo = 0;
 					ItemStack magazineItemStack = WorldHelper.tryConsumingCompatibleItem(compatibleMagazines,
-							1, player, magazineStack -> Tags.getAmmo(magazineStack) > 0, magazineStack -> true);
+							1, player, magazineNotEmpty, magazineStack -> true);
 					if(magazineItemStack != null) {
 						newMagazine = (ItemMagazine) magazineItemStack.getItem();
 						ammo = Tags.getAmmo(magazineItemStack);
 						Tags.setAmmo(weaponItemStack, ammo);
 						System.out.println("Setting server side ammo for the weapon to " + ammo);
-						modContext.getAttachmentManager().addAttachment((ItemAttachment<Weapon>) magazineItemStack.getItem(), weaponItemStack, player);
+						modContext.getAttachmentAspect().addAttachment((ItemAttachment<Weapon>) magazineItemStack.getItem(), weaponItemStack, player);
 						compatibility.playSoundToNearExcept(player, weapon.getReloadSound(), 1.0F, 1.0F);
+					} else {
+						status = Status.DENIED;
 					}
 				}
 				// Update permit instead: modContext.getChannel().getChannel().sendTo(new ReloadMessage(weapon, ReloadMessage.Type.LOAD, newMagazine, ammo), (EntityPlayerMP) player);
@@ -199,6 +204,8 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 			}
 		} 
 		
+//		Tags.setInstance(weaponItemStack, weaponInstance);
+		
 		p.setStatus(status);
 	}
 	
@@ -213,7 +220,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 		
 		Weapon weapon = (Weapon) weaponItemStack.getItem();
 		if (compatibility.getTagCompound(weaponItemStack) != null && !player.isSprinting()) {
-			ItemAttachment<Weapon> attachment = modContext.getAttachmentManager().removeAttachment(AttachmentCategory.MAGAZINE, weaponItemStack, player);
+			ItemAttachment<Weapon> attachment = modContext.getAttachmentAspect().removeAttachment(AttachmentCategory.MAGAZINE, weaponItemStack, player);
 			if(attachment instanceof ItemMagazine) {
 				ItemStack attachmentItemStack = ((ItemMagazine) attachment).createItemStack();
 				Tags.setAmmo(attachmentItemStack, weaponInstance.getAmmo());
@@ -234,6 +241,8 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 			p.setStatus(Status.DENIED);
 		}
 
+//		System.out.println("Syncing immediately");
+//		Tags.setInstance(weaponItemStack, weaponInstance); // to sync immediately without waiting for tick sync
 		p.setStatus(Status.GRANTED);
 	}
 	

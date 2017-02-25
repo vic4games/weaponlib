@@ -29,7 +29,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
-public class Weapon extends CompatibleItem implements PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContainer, Reloadable, Updatable {
+public class Weapon extends CompatibleItem implements 
+	PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContainer, Reloadable, Modifiable, Updatable {
 	
 	public static class Builder {
 
@@ -441,9 +442,6 @@ public class Weapon extends CompatibleItem implements PlayerItemInstanceFactory<
 		}
 	}
 
-	private static final UUID SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER_UUID = UUID.fromString("8efa8469-0256-4f8e-bdd9-3e7b23970663");
-	private static final AttributeModifier SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER = (new AttributeModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER_UUID, "Slow Down While Zooming", -0.5, 2)).setSaved(false);
-
 	private static final long DEFAULT_RELOADING_TIMEOUT_TICKS = 10;
 	private static final long DEFAULT_UNLOADING_TIMEOUT_TICKS = 10;
 	static final long MAX_RELOAD_TIMEOUT_TICKS = 60;
@@ -502,70 +500,23 @@ public class Weapon extends CompatibleItem implements PlayerItemInstanceFactory<
 	
 	@Override
 	protected ItemStack onCompatibleItemRightClick(ItemStack itemStack, World world, EntityPlayer player, boolean mainHand) {
-		if(mainHand) {
-			toggleAiming(itemStack, player);
+		if(mainHand && world.isRemote) {
+			toggleAiming();
 		}
 		return itemStack;
 	}
 
-	void toggleAiming(ItemStack itemStack, EntityPlayer entityPlayer) {
+	private void toggleAiming() {
+		System.out.println("Switching aiming...");
+		PlayerWeaponInstance mainHandHeldWeaponInstance = modContext.getMainHeldWeapon();
 		
-		compatibility.ensureTagCompound(itemStack);
-		
-		if(Weapon.isModifying(itemStack)) {
-			return;
-		}
-		
-		float currentZoom = Tags.getZoom(itemStack);
-		
-		if (currentZoom != 1.0f || entityPlayer.isSprinting()) {
-			Tags.setZoom(itemStack, 1.0f);
-			Tags.setAimed(itemStack, false);
-			restoreNormalSpeed(entityPlayer);
-		} else {
-			float allowedZoom = Tags.getAllowedZoom(itemStack);
-			if(allowedZoom > 0f) {
-				Tags.setZoom(itemStack, allowedZoom);
-			} else {
-				allowedZoom = builder.zoom;
-				Tags.setAllowedZoom(itemStack, allowedZoom);
-				Tags.setZoom(itemStack, allowedZoom);
-			}
-			slowDown(entityPlayer);
-			Tags.setAimed(itemStack, true);
-		}
-	}
-
-	private void restoreNormalSpeed(EntityPlayer entityPlayer) {
-		if(entityPlayer.getEntityAttribute(compatibility.getMovementSpeedAttribute())
-				.getModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER.getID()) != null) {
-			entityPlayer.getEntityAttribute(compatibility.getMovementSpeedAttribute())
-				.removeModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER);
-		} else {
-			System.err.println("Attempted to remove modifier that was not applied: " + SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER);
-		}
-	}
-
-	private void slowDown(EntityPlayer entityPlayer) {
-		if(entityPlayer.getEntityAttribute(compatibility.getMovementSpeedAttribute())
-				.getModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER.getID()) == null) {
-			entityPlayer.getEntityAttribute(compatibility.getMovementSpeedAttribute())
-				.applyModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER);
-		}  else {
-			System.err.println("Attempted to add duplicate modifier: " + SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER);
+		if(mainHandHeldWeaponInstance != null) {
+			mainHandHeldWeaponInstance.setAimed(!mainHandHeldWeaponInstance.isAimed());
 		}
 	}
 
 	@Override
 	public void onUpdate(ItemStack itemStack, World world, Entity entity, int p_77663_4_, boolean active) {
-		ensureItemStack(itemStack);
-		float currentZoom = Tags.getZoom(itemStack);
-		EntityPlayer player = (EntityPlayer) entity;
-		if (currentZoom != 1.0f && (entity.isSprinting() || compatibility.getHeldItemMainHand(player) != itemStack)) {
-			Tags.setZoom(itemStack, 1.0f);
-			Tags.setAimed(itemStack, false);
-			restoreNormalSpeed(player);
-		}
 	}
 
 	private void ensureItemStack(ItemStack itemStack) {
@@ -574,7 +525,6 @@ public class Weapon extends CompatibleItem implements PlayerItemInstanceFactory<
 			Tags.setAmmo(itemStack, 0);
 			Tags.setZoom(itemStack, 1.0f);
 			Tags.setRecoil(itemStack, builder.recoil);
-			setModifying(itemStack, false);
 		}
 	}
 	
@@ -590,17 +540,6 @@ public class Weapon extends CompatibleItem implements PlayerItemInstanceFactory<
 		return Tags.getZoom(itemStack) != 1.0f;
 	}
 	
-	static void setModifying(ItemStack itemStack, boolean modifying) {
-		if(modifying) {
-			Tags.setState(itemStack, State.MODIFYING);
-		} else {
-			Tags.setState(itemStack, State.READY);
-		}
-	}
-	
-	static boolean isModifying(ItemStack itemStack) {
-		return Tags.getState(itemStack) == State.MODIFYING;
-	}
 	
 	public void changeRecoil(EntityPlayer player, float factor) {
 		ItemStack itemStack = compatibility.getHeldItemMainHand(player);
@@ -637,7 +576,7 @@ public class Weapon extends CompatibleItem implements PlayerItemInstanceFactory<
 	String getCrosshair(ItemStack itemStack, EntityPlayer thePlayer) {
 		if(isZoomed(thePlayer, itemStack)) {
 			String crosshair = null;
-			ItemAttachment<Weapon> scopeAttachment = modContext.getAttachmentManager().getActiveAttachment(itemStack, AttachmentCategory.SCOPE);
+			ItemAttachment<Weapon> scopeAttachment = modContext.getAttachmentAspect().getActiveAttachment(itemStack, AttachmentCategory.SCOPE);
 			if(scopeAttachment != null) {
 				crosshair = scopeAttachment.getCrosshair();
 			}
@@ -669,7 +608,7 @@ public class Weapon extends CompatibleItem implements PlayerItemInstanceFactory<
 	
 	public static boolean isActiveAttachment(ItemStack itemStack, ItemAttachment<Weapon> attachment) {
 		Weapon weapon = (Weapon) itemStack.getItem();
-		return weapon.modContext.getAttachmentManager().isActiveAttachment(itemStack, attachment);
+		return weapon.modContext.getAttachmentAspect().isActiveAttachment(itemStack, attachment);
 	}
 	
 	@Deprecated
@@ -755,7 +694,7 @@ public class Weapon extends CompatibleItem implements PlayerItemInstanceFactory<
 	
 	@Override
 	public List<CompatibleAttachment<? extends AttachmentContainer>> getActiveAttachments(ItemStack itemStack) {
-		return modContext.getAttachmentManager().getActiveAttachments(itemStack);
+		return modContext.getAttachmentAspect().getActiveAttachments(itemStack);
 	}
 	
 	long getUnloadTimeoutTicks() {
@@ -802,6 +741,7 @@ public class Weapon extends CompatibleItem implements PlayerItemInstanceFactory<
 	public void updateMainHeldItemForPlayer(EntityPlayer player) {
 		modContext.getWeaponReloadAspect().updateMainHeldItem(player);
 		modContext.getWeaponFireAspect().onUpdate(player);
+		modContext.getAttachmentAspect().updateMainHeldItem(player);
 	}
 
 	public void tryFire(EntityPlayer player) {
@@ -815,8 +755,21 @@ public class Weapon extends CompatibleItem implements PlayerItemInstanceFactory<
 	@Override
 	public PlayerWeaponInstance createItemInstance(EntityPlayer player, ItemStack itemStack, int slot){
 		PlayerWeaponInstance state = new PlayerWeaponInstance(slot, player, itemStack);
-		state.setAmmo(Tags.getAmmo(itemStack));
+		//state.setAmmo(Tags.getAmmo(itemStack)); // TODO: get ammo properly
 		state.setState(WeaponState.READY);
+		state.setRecoil(builder.recoil);
 		return state;
+	}
+
+	@Override
+	public void toggleClientAttachmentSelectionMode(EntityPlayer player) {
+		modContext.getAttachmentAspect().toggleClientAttachmentSelectionMode(player);
+	}
+	
+	@Override
+	public boolean onDroppedByPlayer(ItemStack itemStack, EntityPlayer player) {
+		// Server side only method
+		PlayerWeaponInstance instance = (PlayerWeaponInstance) Tags.getInstance(itemStack);
+		return instance == null || instance.getState() == WeaponState.READY;
 	}
 }

@@ -20,12 +20,11 @@ public class CommonModContext implements ModContext {
 	
 	protected CompatibleChannel channel;
 	
-	protected AttachmentManager attachmentManager;
-	protected FireManager fireManager;
-	protected ReloadManager reloadManager;
 	protected WeaponReloadAspect weaponReloadAspect;
+	protected WeaponAttachmentAspect weaponAttachmentAspect;
+	protected WeaponFireAspect weaponFireAspect;
 	
-	protected FireAspect weaponFireAspect;
+	protected MagazineReloadAspect magazineReloadAspect;
 	
 	protected NetworkPermitManager permitManager;
 	
@@ -38,35 +37,29 @@ public class CommonModContext implements ModContext {
 		this.channel = channel;
 		this.modId = modId;
 		
-		this.attachmentManager = new AttachmentManager(this);
-		this.fireManager = new FireManager(this);
-		this.reloadManager = new ReloadManager(this);
+//		this.attachmentManager = new AttachmentManager(this);
 		this.weaponReloadAspect = new WeaponReloadAspect(this);
-		this.weaponFireAspect = new FireAspect(this);
+		this.magazineReloadAspect = new MagazineReloadAspect(this);
+		this.weaponFireAspect = new WeaponFireAspect(this);
+		this.weaponAttachmentAspect = new WeaponAttachmentAspect(this);
 		this.permitManager = new NetworkPermitManager(this);
 		
-		channel.registerMessage(new ReloadMessageHandler(reloadManager, (ctx) -> getServerPlayer(ctx)),
-				ReloadMessage.class, 1, CompatibleSide.SERVER);
+//		channel.registerMessage(new AttachmentModeMessageHandler(attachmentManager),
+//				AttachmentModeMessage.class, 3, CompatibleSide.SERVER);
+//		
+//		channel.registerMessage(new AttachmentModeMessageHandler(attachmentManager),
+//				AttachmentModeMessage.class, 4, CompatibleSide.CLIENT);
 		
-		channel.registerMessage(new ReloadMessageHandler(reloadManager, (ctx) -> getPlayer(ctx)),
-				ReloadMessage.class, 2, CompatibleSide.CLIENT);
-		
-		channel.registerMessage(new AttachmentModeMessageHandler(attachmentManager),
-				AttachmentModeMessage.class, 3, CompatibleSide.SERVER);
-		
-		channel.registerMessage(new AttachmentModeMessageHandler(attachmentManager),
-				AttachmentModeMessage.class, 4, CompatibleSide.CLIENT);
-		
-		channel.registerMessage(new ChangeAttachmentMessageHandler(attachmentManager),
+		channel.registerMessage(new ChangeAttachmentMessageHandler(weaponAttachmentAspect),
 				ChangeAttachmentMessage.class, 5, CompatibleSide.SERVER);
 		
-		channel.registerMessage(new ChangeAttachmentMessageHandler(attachmentManager),
+		channel.registerMessage(new ChangeAttachmentMessageHandler(weaponAttachmentAspect),
 				ChangeAttachmentMessage.class, 6, CompatibleSide.CLIENT);
 		
-		channel.registerMessage(new ChangeTextureMessageHandler(attachmentManager),
+		channel.registerMessage(new ChangeTextureMessageHandler(weaponAttachmentAspect),
 				ChangeTextureMessage.class, 7, CompatibleSide.SERVER);
 		
-		channel.registerMessage(new ChangeTextureMessageHandler(attachmentManager),
+		channel.registerMessage(new ChangeTextureMessageHandler(weaponAttachmentAspect),
 				ChangeTextureMessage.class, 8, CompatibleSide.CLIENT);
 		
 		channel.registerMessage(new ChangeSettingMessageHandler((ctx) -> getPlayer(ctx)),
@@ -75,7 +68,7 @@ public class CommonModContext implements ModContext {
 		channel.registerMessage(new ChangeSettingMessageHandler((ctx) -> getPlayer(ctx)),
 				ChangeSettingsMessage.class, 10, CompatibleSide.SERVER);
 
-		channel.registerMessage(new TryFireMessageHandler(fireManager),
+		channel.registerMessage(new TryFireMessageHandler(weaponFireAspect),
 				TryFireMessage.class, 11, CompatibleSide.SERVER);
 		
 		channel.registerMessage(new LaserSwitchMessageHandler(),
@@ -90,10 +83,13 @@ public class CommonModContext implements ModContext {
 		channel.registerMessage(permitManager,
 				PermitMessage.class, 15, CompatibleSide.CLIENT);
 		
-		compatibility.registerWithEventBus(new ServerEventHandler(attachmentManager));
+		channel.registerMessage(new ItemTossMessageHandler(this),
+				ItemTossMessage.class, 16, CompatibleSide.CLIENT);
 		
-		compatibility.registerWithFmlEventBus(new WeaponKeyInputHandler((ctx) -> getPlayer(ctx), 
-				attachmentManager, reloadManager, channel));
+		compatibility.registerWithEventBus(new ServerEventHandler(this));
+		
+		compatibility.registerWithFmlEventBus(new WeaponKeyInputHandler(this, (ctx) -> getPlayer(ctx), 
+				weaponAttachmentAspect, channel));
 	}
 	
 	
@@ -138,11 +134,6 @@ public class CommonModContext implements ModContext {
 	}
 
 	@Override
-	public AttachmentManager getAttachmentManager() {
-		return attachmentManager;
-	}
-
-	@Override
 	public WeaponClientStorageManager getWeaponClientStorageManager() {
 		return null;
 		//throw new IllegalStateException("Attempted to get instance of " + WeaponClientStorageManager.class.getSimpleName());
@@ -164,7 +155,23 @@ public class CommonModContext implements ModContext {
 	}
 
 	@Override
-	public FireAspect getWeaponFireAspect() {
+	public WeaponFireAspect getWeaponFireAspect() {
 		return weaponFireAspect;
+	}
+
+	@Override
+	public WeaponAttachmentAspect getAttachmentAspect() {
+		return weaponAttachmentAspect;
+	}
+
+	@Override
+	public MagazineReloadAspect getMagazineReloadAspect() {
+		return magazineReloadAspect;
+	}
+
+
+	@Override
+	public PlayerWeaponInstance getMainHeldWeapon() {
+		throw new IllegalStateException();
 	}
 }

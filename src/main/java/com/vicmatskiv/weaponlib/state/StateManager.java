@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
 
@@ -323,7 +324,7 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 			return null;
 		}
 		
-		if(Arrays.stream(targetStates).anyMatch(target -> stateComparator.compare(currentState, target))) {
+		if(targetStates.length == 1 && Arrays.stream(targetStates).anyMatch(target -> stateComparator.compare(currentState, target))) {
 			return new Result(false, currentState);
 		}
 		
@@ -334,6 +335,7 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 		S ts[] = targetStates;
 		while((newStateRule = findNextStateRule(aspect, extendedState, s, ts)) != null) {
 			extendedState.setState(newStateRule.toState);
+			System.out.println("State changed to " + newStateRule.toState + " at " + System.currentTimeMillis());
 			//System.out.println("State changed from " + s + " to "+ newStateRule.toState);
 			result = new Result(true, newStateRule.toState);
 			if(newStateRule.action != null) {
@@ -352,7 +354,7 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 
 
 	private TransitionRule<S, E> findNextStateRule(Aspect<S, ? extends E> aspect, E extendedState, S currentState, @SuppressWarnings("unchecked") S... targetStates) {
-				
+		
 		return contextRules.entrySet().stream()
 				.filter(e -> e.getKey() == aspect) 
 				.map(e -> e.getValue()) // convert entry to a list of rules
@@ -361,4 +363,21 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 				.findFirst() // stop on the first found rule
 				.orElse(null); // default to null if rule not found
 	}
+	
+//  Non-stream version to test performance
+//
+//	private TransitionRule<S, E> findNextStateRule(Aspect<S, ? extends E> aspect, E extendedState, S currentState, @SuppressWarnings("unchecked") S... targetStates) {
+//		
+//		LinkedHashSet<TransitionRule<S, E>> aspectRules = contextRules.get(aspect);
+//		TransitionRule<S, E> result = null;
+//		if(aspectRules != null) {
+//			for(TransitionRule<S, E> rule: aspectRules) {
+//				if(rule.matches(stateComparator, extendedState, currentState, targetStates)) {
+//					result = rule;
+//					break;
+//				}
+//			}
+//		}
+//		return result;
+//	}
 }

@@ -5,51 +5,33 @@ import com.vicmatskiv.weaponlib.state.ManagedState;
 
 import io.netty.buffer.ByteBuf;
 
-public enum WeaponState implements ManagedState<WeaponState> {
+public enum MagazineState implements ManagedState<MagazineState> {
 
 	READY(false), 
 	LOAD_REQUESTED, 
-	LOAD(null, LOAD_REQUESTED, null, true), 
-	
-	UNLOAD_PREPARING, 
-	UNLOAD_REQUESTED, 
-	UNLOAD(UNLOAD_PREPARING, UNLOAD_REQUESTED, READY, true),
-	
-	FIRING(9),
-	RECOILED(10),
-	PAUSED(10),
-	EJECT_REQUIRED,
-	EJECTING,
-	
-//	STOPPED, 
-//	EJECT_SPENT_ROUND_REQUIRED, 
-//	EJECTED_SPENT_ROUND,
-	
-	MODIFYING_REQUESTED(1),
-	
-	MODIFYING(2, null, MODIFYING_REQUESTED, null, false);
+	LOAD(null, LOAD_REQUESTED, null, true);
 	
 	private static final int DEFAULT_PRIORITY = 0;
 
-	private WeaponState preparingPhase;
+	private MagazineState preparingPhase;
 	
-	private WeaponState permitRequestedPhase;
+	private MagazineState permitRequestedPhase;
 	
-	private WeaponState commitPhase;
+	private MagazineState commitPhase;
 	
 	private boolean isTransient;
 	
 	private int priority = DEFAULT_PRIORITY;
 	
-	private WeaponState() {
+	private MagazineState() {
 		this(null, null, null, true);
 	}
 	
-	private WeaponState(int priority) {
+	private MagazineState(int priority) {
 		this(priority, null, null, null, true);
 	}
 	
-	private WeaponState(boolean isTransient) {
+	private MagazineState(boolean isTransient) {
 		this(null, null, null, isTransient);
 	}
 	
@@ -57,11 +39,11 @@ public enum WeaponState implements ManagedState<WeaponState> {
 //		this(permitRequestedState, transactionFinalState, true);
 //	}
 	
-	private WeaponState(WeaponState preparingPhase, WeaponState permitRequestedState, WeaponState transactionFinalState, boolean isTransient) {
+	private MagazineState(MagazineState preparingPhase, MagazineState permitRequestedState, MagazineState transactionFinalState, boolean isTransient) {
 		this(DEFAULT_PRIORITY, preparingPhase, permitRequestedState, transactionFinalState, isTransient);
 	}
 	
-	private WeaponState(int priority, WeaponState preparingPhase, WeaponState permitRequestedState, WeaponState transactionFinalState, boolean isTransient) {
+	private MagazineState(int priority, MagazineState preparingPhase, MagazineState permitRequestedState, MagazineState transactionFinalState, boolean isTransient) {
 		this.priority = priority;
 		this.preparingPhase = preparingPhase;
 		this.permitRequestedPhase = permitRequestedState;
@@ -77,18 +59,18 @@ public enum WeaponState implements ManagedState<WeaponState> {
 	}
 	
 	@Override
-	public WeaponState preparingPhase() {
+	public MagazineState preparingPhase() {
 		return preparingPhase;
 	}
 	
 	@Override
-	public WeaponState permitRequestedPhase() {
+	public MagazineState permitRequestedPhase() {
 		return permitRequestedPhase;
 	}
 	
 
 	@Override
-	public WeaponState commitPhase() {
+	public MagazineState commitPhase() {
 		return commitPhase;
 	}
 	
@@ -107,7 +89,7 @@ public enum WeaponState implements ManagedState<WeaponState> {
 	}
 	
 	static {
-		TypeRegistry.getInstance().register(WeaponState.class);
+		TypeRegistry.getInstance().register(MagazineState.class);
 	}
 
 	

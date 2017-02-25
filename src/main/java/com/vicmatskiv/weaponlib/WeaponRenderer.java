@@ -658,7 +658,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		
 		if(playerWeaponState != null) {
 			WeaponState state = getNextNonExpiredState(playerWeaponState);
-			
+			//System.out.println("Rendering state " + state + " at " + System.currentTimeMillis());
 			switch(state) {
 //			case FIRING: //
 //				if(playerWeaponState.isAutomaticModeEnabled()) {
@@ -682,6 +682,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 //				break;
 				
 			case RECOILED: 
+				System.out.println("Recoil started at " + System.currentTimeMillis());
 				if(playerWeaponState.isAutomaticModeEnabled()) {
 					if(playerWeaponState.isAimed()) {
 						currentState = RenderableState.ZOOMING;
@@ -732,6 +733,10 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				
 			case EJECTING:
 				currentState = RenderableState.EJECT_SPENT_ROUND;
+				break;
+				
+			case MODIFYING: case MODIFYING_REQUESTED:
+				currentState = RenderableState.MODIFYING;
 				break;	
 				
 			default:
@@ -744,10 +749,15 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				}
 			}
 			
+
+//			
 //			if(state != WeaponState.READY) {
-//				System.out.println("Mapped state " + state + " to " + currentState);
+//				System.out.println("Mapped state " + state + " to " + currentState + " at " + System.currentTimeMillis());
 //			}
 		}
+		
+//		System.out.println("Rendering " + currentState + " at " + System.currentTimeMillis());
+
 		
 		
 //		if(Weapon.isModifying(itemStack)) {

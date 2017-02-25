@@ -83,6 +83,7 @@ public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 			
 			PlayerWeaponInstance mainHandHeldWeaponInstance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(
 					compatibility.clientPlayer(), PlayerWeaponInstance.class);
+			
 			if(mainHandHeldWeaponInstance != null 
 					&& mainHandHeldWeaponInstance.getState() == WeaponState.EJECT_REQUIRED) {
 				event.setCanceled(true);

@@ -57,23 +57,28 @@ public class ClientModContext extends CommonModContext {
         this.playerItemInstanceRegistry = new PlayerItemInstanceRegistry(syncManager);
         
         this.weaponClientStorageManager = new WeaponClientStorageManager();
+        
+		StateManager<WeaponState, PlayerWeaponInstance> weaponStateManager = new StateManager<>((s1, s2) -> s1 == s2);
+		weaponReloadAspect.setPermitManager(permitManager);
+		weaponReloadAspect.setStateManager(weaponStateManager);
 		
+		weaponFireAspect.setPermitManager(permitManager);
+		weaponFireAspect.setStateManager(weaponStateManager);
 		
-		compatibility.registerWithEventBus(new CustomGui(Minecraft.getMinecraft(), attachmentManager));
+		weaponAttachmentAspect.setPermitManager(permitManager);
+		weaponAttachmentAspect.setStateManager(weaponStateManager);
+		
+		StateManager<MagazineState, PlayerMagazineInstance> magazineStateManager = new StateManager<>((s1, s2) -> s1 == s2);
+
+		magazineReloadAspect.setPermitManager(permitManager);
+		magazineReloadAspect.setStateManager(magazineStateManager);
+		
+		compatibility.registerWithEventBus(new CustomGui(Minecraft.getMinecraft(), this, weaponAttachmentAspect));
 		compatibility.registerWithEventBus(new WeaponEventHandler(this, safeGlobals));
 		
 		KeyBindings.init();
 		
-		StateManager<WeaponState, PlayerItemInstance<WeaponState>> stateManager = new StateManager<>((s1, s2) -> s1 == s2); // implement comparator properly, ref equality will not work on server after deserialization
-		
-		
-		weaponReloadAspect.setPermitManager(permitManager);
-		weaponReloadAspect.setStateManager(stateManager);
-		
-		weaponFireAspect.setPermitManager(permitManager);
-		weaponFireAspect.setStateManager(stateManager);
-
-		ClientWeaponTicker clientWeaponTicker = new ClientWeaponTicker(this, fireManager, reloadManager);
+		ClientWeaponTicker clientWeaponTicker = new ClientWeaponTicker(this);
 		
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
 			clientWeaponTicker.shutdown();
@@ -151,5 +156,11 @@ public class ClientModContext extends CommonModContext {
 	
 	protected SyncManager<?> getSyncManager() {
 		return syncManager;
+	}
+	
+	@Override
+	public PlayerWeaponInstance getMainHeldWeapon() {
+		return getPlayerItemInstanceRegistry().getMainHandItemInstance(compatibility.clientPlayer(), 
+				PlayerWeaponInstance.class);
 	}
 }

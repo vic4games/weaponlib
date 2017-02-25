@@ -17,7 +17,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
-public class ItemMagazine extends ItemAttachment<Weapon> implements Part {
+public class ItemMagazine extends ItemAttachment<Weapon> implements PlayerItemInstanceFactory<PlayerMagazineInstance, MagazineState>, 
+Reloadable, Updatable, Part {
 	
 	private static final long DEFAULT_RELOADING_TIMEOUT_TICKS = 25;
 	
@@ -55,6 +56,7 @@ public class ItemMagazine extends ItemAttachment<Weapon> implements Part {
 			if(reloadSound != null) {
 				magazine.reloadSound = modContext.registerSound(reloadSound);
 			}
+			magazine.modContext = modContext;
 			return magazine;
 		}
 	}
@@ -65,12 +67,13 @@ public class ItemMagazine extends ItemAttachment<Weapon> implements Part {
 	private long reloadingTimeout;
 	private List<ItemBullet> compatibleBullets;
 	private CompatibleSound reloadSound;
-
-	public ItemMagazine(String modId, ModelBase model, String textureName, int ammo) {
+	private ModContext modContext;
+	
+	ItemMagazine(String modId, ModelBase model, String textureName, int ammo) {
 		this(modId, model, textureName, ammo, null, null);
 	}
 
-	public ItemMagazine(String modId, ModelBase model, String textureName, int ammo,
+	ItemMagazine(String modId, ModelBase model, String textureName, int ammo,
 			com.vicmatskiv.weaponlib.ItemAttachment.ApplyHandler<Weapon> apply,
 			com.vicmatskiv.weaponlib.ItemAttachment.ApplyHandler<Weapon> remove) {
 		super(modId, AttachmentCategory.MAGAZINE, model, textureName, null, apply, remove);
@@ -134,6 +137,23 @@ public class ItemMagazine extends ItemAttachment<Weapon> implements Part {
 	@Override
 	public Part getRenderablePart() {
 		return this;
+	}
+
+	@Override
+	public PlayerMagazineInstance createItemInstance(EntityPlayer player, ItemStack itemStack, int slot) {
+		PlayerMagazineInstance instance = new PlayerMagazineInstance(slot, player, itemStack);
+		instance.setState(MagazineState.READY);
+		return instance;
+	}
+
+	@Override
+	public void updateMainHeldItemForPlayer(EntityPlayer player) {
+		modContext.getMagazineReloadAspect().updateMainHeldItem(player);
+	}
+
+	@Override
+	public void reloadMainHeldItemForPlayer(EntityPlayer player) {
+		modContext.getMagazineReloadAspect().reloadMainHeldItem(player);
 	}
 	
 }

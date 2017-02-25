@@ -16,18 +16,19 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
 	
 	private CompatibleChannel channel;
 	private Function<CompatibleMessageContext, EntityPlayer> entityPlayerSupplier;
-	private AttachmentManager attachmentManager;
-	private ReloadManager reloadManager;
+	private WeaponAttachmentAspect attachmentAspect;
 	//private WeaponReloadAspect reloadAspect;
+	private ModContext modContext;
 	
-	public WeaponKeyInputHandler(Function<CompatibleMessageContext, EntityPlayer> entityPlayerSupplier, 
-			AttachmentManager attachmentManager,
-			ReloadManager reloadManager,
+	public WeaponKeyInputHandler(
+			ModContext modContext,
+			Function<CompatibleMessageContext, EntityPlayer> entityPlayerSupplier, 
+			WeaponAttachmentAspect attachmentAspect,
 			//WeaponReloadAspect reloadAspect,
 			CompatibleChannel channel) {
+		this.modContext = modContext;
 		this.entityPlayerSupplier = entityPlayerSupplier;
-		this.attachmentManager = attachmentManager;
-		this.reloadManager = reloadManager;
+		this.attachmentAspect = attachmentAspect;
 		//this.reloadAspect = reloadAspect;
 		this.channel = channel;
 	}
@@ -54,24 +55,43 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
         
         else if(KeyBindings.attachmentKey.isPressed()) {
     		if(itemStack != null && itemStack.getItem() instanceof Weapon) {
-    			attachmentManager.toggleClientAttachmentSelectionMode(itemStack, player);
+//    			attachmentManager.toggleClientAttachmentSelectionMode(itemStack, player);
+    			Item item = itemStack.getItem();
+    			if(item instanceof Modifiable) {
+    				System.out.println("Attachment mode toggled at " + System.currentTimeMillis());
+    				((Modifiable) item).toggleClientAttachmentSelectionMode(player);
+    			}
     		}
         } 
         
         else if(KeyBindings.upArrowKey.isPressed()) {
-        	channel.getChannel().sendToServer(new ChangeAttachmentMessage(AttachmentCategory.SCOPE)); 
+        	// TODO: this needs to be handled entirely by attachment aspect
+    		PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
+    		if(instance != null && instance.getState() == WeaponState.MODIFYING) {
+    			channel.getChannel().sendToServer(new ChangeAttachmentMessage(AttachmentCategory.SCOPE)); 
+    		}
+        	
         } 
         
         else if(KeyBindings.rightArrowKey.isPressed()) {
-        	channel.getChannel().sendToServer(new ChangeTextureMessage()); 
+        	PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
+    		if(instance != null && instance.getState() == WeaponState.MODIFYING) {
+    			channel.getChannel().sendToServer(new ChangeTextureMessage()); 
+    		}
         } 
         
         else if(KeyBindings.downArrowKey.isPressed()) {
-        	channel.getChannel().sendToServer(new ChangeAttachmentMessage(AttachmentCategory.GRIP)); 
+        	PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
+    		if(instance != null && instance.getState() == WeaponState.MODIFYING) {
+    			channel.getChannel().sendToServer(new ChangeAttachmentMessage(AttachmentCategory.GRIP)); 
+    		}
         } 
         
         else if(KeyBindings.leftArrowKey.isPressed()) {
-        	channel.getChannel().sendToServer(new ChangeAttachmentMessage(AttachmentCategory.SILENCER)); 
+        	PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
+    		if(instance != null && instance.getState() == WeaponState.MODIFYING) {
+    			channel.getChannel().sendToServer(new ChangeAttachmentMessage(AttachmentCategory.SILENCER)); 
+    		}
         }
     }
 }

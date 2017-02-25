@@ -30,8 +30,7 @@ public class PlayerItemInstance<S extends ManagedState<S>> extends UniversalObje
 	protected Item item;
 	protected int itemInventoryIndex;
 	private PlayerItemInstance<S> preparedState;
-	private boolean dirty;
-	
+	private long syncStartTimestamp;
 	
 //	private Set<PlayerItemStateListener<S>> listeners = new HashSet<>();
 	
@@ -151,13 +150,13 @@ public class PlayerItemInstance<S extends ManagedState<S>> extends UniversalObje
 		setState(preparedExtendedState.getState());
 		this.preparedState = (PlayerItemInstance<S>) preparedExtendedState;
 	}
-	
-	public boolean isDirty() {
-		return dirty;
+
+	public long getSyncStartTimestamp() {
+		return syncStartTimestamp;
 	}
-	
-	protected void setDirty(boolean dirty) {
-		this.dirty = dirty;
+
+	public void setSyncStartTimestamp(long syncStartTimestamp) {
+		this.syncStartTimestamp = syncStartTimestamp;
 	}
 	
 //	public void addListener(PlayerItemStateListener<S> listener) {

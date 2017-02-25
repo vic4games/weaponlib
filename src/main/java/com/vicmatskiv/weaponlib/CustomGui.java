@@ -16,11 +16,13 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent;
 
 public class CustomGui extends CompatibleGui {
 	private Minecraft mc;
-	private AttachmentManager attachmentManager;
+	private WeaponAttachmentAspect attachmentAspect;
+	private ModContext modContext;
 
-	public CustomGui(Minecraft mc, AttachmentManager attachmentManager) {
+	public CustomGui(Minecraft mc, ModContext modContext, WeaponAttachmentAspect attachmentAspect) {
 		this.mc = mc;
-		this.attachmentManager = attachmentManager;
+		this.modContext = modContext;
+		this.attachmentAspect = attachmentAspect;
 	}
 	private static final int BUFF_ICON_SIZE = 256;
 	
@@ -103,14 +105,17 @@ public class CustomGui extends CompatibleGui {
 //					drawTexturedModalRect(xPos, yPos, 0, 0, BUFF_ICON_SIZE, BUFF_ICON_SIZE);
 //				}
 				
-				if(Weapon.isModifying(itemStack) /*weaponItem.getState(weapon) == Weapon.STATE_MODIFYING*/) {
+				PlayerWeaponInstance weaponInstance = modContext.getPlayerItemInstanceRegistry()
+						.getMainHandItemInstance(compatibility.clientPlayer(), PlayerWeaponInstance.class);
+				
+				if(weaponInstance.getState() == WeaponState.MODIFYING /*Weapon.isModifying(itemStack)*/ /*weaponItem.getState(weapon) == Weapon.STATE_MODIFYING*/) {
 					fontRender.drawStringWithShadow("Attachment selection mode. Press [f] to exit.", 10, 10, color);
 					fontRender.drawStringWithShadow("Press [up] to add optic", width / 2 - 40, 60, color);
 					fontRender.drawStringWithShadow("Press [left] to add barrel rig", 10, height / 2 - 10, color);
 					fontRender.drawStringWithShadow("Press [right] to change camo", width / 2 + 60, height / 2 - 20, color);
 					fontRender.drawStringWithShadow("Press [down] to add under-barrel rig", 10, height - 40, color);
 				} else {
-					ItemMagazine magazine = (ItemMagazine) attachmentManager.getActiveAttachment(itemStack, AttachmentCategory.MAGAZINE);
+					ItemMagazine magazine = (ItemMagazine) attachmentAspect.getActiveAttachment(itemStack, AttachmentCategory.MAGAZINE);
 					int totalCapacity;
 					if(magazine != null) {
 						totalCapacity = magazine.getAmmo();

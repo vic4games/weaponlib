@@ -16,16 +16,13 @@ class ClientWeaponTicker extends Thread {
 	
 	private AtomicBoolean running = new AtomicBoolean(true);
 //	private SafeGlobals safeGlobals;
-	private FireManager fireManager;
-	private ReloadManager reloadManager;
+
 	private WeaponReloadAspect reloadAspect;
-	private FireAspect fireAspect;
+	private WeaponFireAspect fireAspect;
 	private ClientModContext clientModContext;
 
-	public ClientWeaponTicker(ClientModContext clientModContext, FireManager fireManager, ReloadManager reloadManager/*, WeaponReloadAspect reloadAspect*/) {
+	public ClientWeaponTicker(ClientModContext clientModContext/*, WeaponReloadAspect reloadAspect*/) {
 		this.clientModContext = clientModContext;
-		this.fireManager = fireManager;
-		this.reloadManager = reloadManager;
 		//this.reloadAspect = reloadAspect;
 	}
 
@@ -68,9 +65,10 @@ class ClientWeaponTicker extends Thread {
 					}
 				}
 				
-				if(currentWeapon != null) {
-					update(player);
-				}
+//				if(currentWeapon != null) {
+//					update(player);
+//				}
+				update(player);
 				Thread.sleep(10);
 			} catch(InterruptedException e) {
 				break;

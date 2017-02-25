@@ -2,8 +2,11 @@ package com.vicmatskiv.weaponlib;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
+import com.vicmatskiv.weaponlib.network.TypeRegistry;
 import com.vicmatskiv.weaponlib.state.ManagedState;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import net.minecraft.item.ItemStack;
 
 public final class Tags {
@@ -19,6 +22,8 @@ public final class Tags {
 	private static final String STATE_TAG = "State";
 	private static final String MANAGED_STATE_TAG = "ManagedState";
 	private static final String DEFAULT_TIMER_TAG = "DefaultTimer";
+	
+	private static final String INSTANCE_TAG = "Instance";
 
 	static boolean isLaserOn(ItemStack itemStack) {
 		if(itemStack == null || compatibility.getTagCompound(itemStack) == null) return false;
@@ -129,5 +134,37 @@ public final class Tags {
 	static void setDefaultTimer(ItemStack itemStack, long ammo) {
 		if(itemStack == null || compatibility.getTagCompound(itemStack) == null) return;
 		compatibility.getTagCompound(itemStack).setLong(DEFAULT_TIMER_TAG, ammo);
+	}
+		
+	static PlayerItemInstance<?> getInstance(ItemStack itemStack) {
+		if(itemStack == null || compatibility.getTagCompound(itemStack) == null) return null;
+		
+		byte[] bytes = compatibility.getTagCompound(itemStack).getByteArray(INSTANCE_TAG);
+		if(bytes != null && bytes.length > 0) {
+			return TypeRegistry.getInstance().fromBytes(Unpooled.wrappedBuffer(bytes));
+		}
+		return null;
+	}
+	
+	static <T extends PlayerItemInstance<?>> T getInstance(ItemStack itemStack, Class<T> targetClass) {
+		if(itemStack == null || compatibility.getTagCompound(itemStack) == null) return null;
+		
+		byte[] bytes = compatibility.getTagCompound(itemStack).getByteArray(INSTANCE_TAG);
+		if(bytes != null && bytes.length > 0) {
+			return targetClass.cast(TypeRegistry.getInstance().fromBytes(Unpooled.wrappedBuffer(bytes)));
+		}
+		return null;
+	}
+	
+	static void setInstance(ItemStack itemStack, PlayerItemInstance<?> instance) {
+		if(itemStack == null || compatibility.getTagCompound(itemStack) == null) return;
+		ByteBuf buf = Unpooled.buffer();
+		if(instance != null) {
+			TypeRegistry.getInstance().toBytes(instance, buf);
+			compatibility.getTagCompound(itemStack).setByteArray(INSTANCE_TAG, buf.array());
+		} else {
+			compatibility.getTagCompound(itemStack).removeTag(INSTANCE_TAG);
+		}
+		
 	}
 }

@@ -10,10 +10,10 @@ import net.minecraft.entity.player.EntityPlayer;
 
 public class ChangeAttachmentMessageHandler implements CompatibleMessageHandler<ChangeAttachmentMessage, CompatibleMessage> {
 	
-	private AttachmentManager attachmentManager;
+	private WeaponAttachmentAspect attachmentAspect;
 
-	public ChangeAttachmentMessageHandler(AttachmentManager attachmentManager) {
-		this.attachmentManager = attachmentManager;
+	public ChangeAttachmentMessageHandler(WeaponAttachmentAspect attachmentManager) {
+		this.attachmentAspect = attachmentManager;
 	}
 
 	@Override
@@ -21,7 +21,7 @@ public class ChangeAttachmentMessageHandler implements CompatibleMessageHandler<
 		if(ctx.isServerSide()) {
 			EntityPlayer player = ctx.getPlayer();
 			ctx.runInMainThread(() -> {
-				attachmentManager.changeAttachment(message.getAttachmentCategory(), compatibility.getHeldItemMainHand(player), player);
+				attachmentAspect.changeAttachment(message.getAttachmentCategory(), compatibility.getHeldItemMainHand(player), player);
 			});
 		}
 		

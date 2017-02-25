@@ -31,6 +31,9 @@ public class PlayerItemInstanceRegistry {
 	 * @return
 	 */
 	public <T extends PlayerItemInstance<S>, S extends ManagedState<S>> T getMainHandItemInstance(EntityPlayer player, Class<T> targetClass) {
+		if(player == null) {
+			return null;
+		}
 		PlayerItemInstance<?> instance = getItemInstance(player, compatibility.getCurrentInventoryItemIndex(player));
 		return targetClass.isInstance(instance) ? targetClass.cast(instance) : null;
 	}
@@ -94,10 +97,24 @@ public class PlayerItemInstanceRegistry {
 
 	private PlayerItemInstance<?> createItemInstance(EntityPlayer player, int slot) {
 		ItemStack itemStack = compatibility.getInventoryItemStack(player, slot);
-		if(itemStack == null) {
+		
+		PlayerItemInstance<?> result;
+		if(itemStack != null) {
+			try {
+				result = Tags.getInstance(itemStack);
+				if(result != null) {
+					
+					//
+					result.setPlayer(player);
+					return result;
+				}
+			} catch(RuntimeException e) {
+				System.err.println("Opps, looks like serialization format has been changed for this item");
+			}
+		} else {
 			return null;
 		}
-		PlayerItemInstance<?> result;
+		
 		if(itemStack.getItem() instanceof PlayerItemInstanceFactory) {
 			return ((PlayerItemInstanceFactory<?, ?>) itemStack.getItem()).createItemInstance(player, itemStack, slot);	
 		} else {
@@ -105,5 +122,21 @@ public class PlayerItemInstanceRegistry {
 		}
 
 		return result;
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public void removeItemInstance(EntityPlayer player, int slot) {
+		System.out.println("Removing instance from slot " + slot);
+		Map<Integer, PlayerItemInstance<?>> slotContexts = registry.get(player.getPersistentID());
+		if(slotContexts != null) {
+			PlayerItemInstance<?> instance = slotContexts.remove(slot);
+			if(instance != null) {
+				syncManager.unwatch((PlayerItemInstance) instance);
+			}
+//			if(instance instanceof PlayerWeaponInstance) {
+//				instance.setState(WeaponState.READY); //TODO make it ready
+//			}
+		}
+
 	}
 }

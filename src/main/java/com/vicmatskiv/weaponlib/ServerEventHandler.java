@@ -4,28 +4,28 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleServerEventHandler;
 
-import net.minecraft.item.Item;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
 
 public class ServerEventHandler extends CompatibleServerEventHandler {
 	
-	private AttachmentManager attachmentManager;
+	private ModContext modContext;
 
-	public ServerEventHandler(AttachmentManager attachmentManager) {
-		this.attachmentManager = attachmentManager;
+	public ServerEventHandler(ModContext modContext) {
+		this.modContext = modContext;
 	}
 
 	@Override
 	protected void onCompatibleItemToss(ItemTossEvent itemTossEvent) {
 		ItemStack itemStack = compatibility.getItemStack(itemTossEvent);
-		Item item = itemStack.getItem();
-		if(!(item instanceof Weapon)) {
-			return; 
-		}
-		
-		if(Weapon.isModifying(itemStack)) {
-			attachmentManager.exitAttachmentSelectionMode(itemStack, compatibility.getPlayer(itemTossEvent));
+		if(itemStack != null) {
+			PlayerItemInstance<?> instance = Tags.getInstance(itemStack);
+			if(instance != null) {
+				// Making client remove the instance from the instance registry
+				modContext.getChannel().getChannel().sendTo(new ItemTossMessage(instance.getItemInventoryIndex()), 
+						(EntityPlayerMP) compatibility.getPlayer(itemTossEvent));
+			}
 		}
 	}
 

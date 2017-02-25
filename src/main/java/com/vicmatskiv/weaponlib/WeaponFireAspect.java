@@ -19,37 +19,8 @@ import net.minecraft.item.ItemStack;
 /*
  * On a client side this class is used from within a separate client "ticker" thread
  */
-public class FireAspect implements Aspect<WeaponState, PlayerWeaponInstance> {
+public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstance> {
 
-//	static final ManagedState FIRING = new ManagedState();
-//	static final ManagedState STOPPED = new ManagedState();
-//	static final ManagedState EJECTED_SPENT_ROUND = new ManagedState();
-//	static final ManagedState EJECT_SPENT_ROUND_REQUIRED = new ManagedState();
-	
-//	static class FireAspectContext extends PlayerItemState<WeaponState> {
-//		
-//		public FireAspectContext(WeaponClientStorage weaponClientStorage) {
-//			
-//		}
-//		private EntityPlayer player;
-//		private Weapon weapon;
-//		private WeaponClientStorage storage;
-//		private Random random;
-//		
-//		public EntityPlayer getPlayer() {
-//			return player;
-//		}
-//		public Weapon getWeapon() {
-//			return weapon;
-//		}
-//		public WeaponClientStorage getStorage() {
-//			return storage;
-//		}
-//		public Random getRandom() {
-//			return random;
-//		}
-//	}
-	
 	private static final float FLASH_X_OFFSET_ZOOMED = 0;
 	
 	private static Predicate<PlayerWeaponInstance> readyToShootAccordingToFireRate = s -> 
@@ -58,7 +29,7 @@ public class FireAspect implements Aspect<WeaponState, PlayerWeaponInstance> {
 	private static Predicate<PlayerWeaponInstance> readyToShootAccordingToFireMode = 
 			s -> s.getSeriesShotCount() < s.getWeapon().builder.maxShots;
              
-	private static Predicate<PlayerWeaponInstance> hasAmmo = s -> true;
+	private static Predicate<PlayerWeaponInstance> hasAmmo = s -> s.getAmmo() > 0;
              
 	private static Predicate<PlayerWeaponInstance> ejectSpentRoundRequired = s -> s.getWeapon().ejectSpentRoundRequired();
 	         
@@ -80,7 +51,7 @@ public class FireAspect implements Aspect<WeaponState, PlayerWeaponInstance> {
 
 	private PermitManager permitManager;
 	
-	public FireAspect(CommonModContext modContext) {
+	public WeaponFireAspect(CommonModContext modContext) {
 		this.modContext = modContext;
 	}
 
@@ -159,15 +130,12 @@ public class FireAspect implements Aspect<WeaponState, PlayerWeaponInstance> {
 		//WeaponClientStorage storage = null; //context.getStorage();
 		Random random = player.getRNG();
 		
-//		modContext.getChannel().getChannel().sendToServer(new TryFireMessage(true));
+		modContext.getChannel().getChannel().sendToServer(new TryFireMessage(true));
 		ItemStack heldItem = compatibility.getHeldItemMainHand(player); // TODO: move out
-//
-//		modContext.runSyncTick(() -> {
-//			compatibility.playSound(player, modContext.getAttachmentManager().isSilencerOn(heldItem) ? weapon.getSilencedShootSound() : weapon.getShootSound(), 1F, 1F);
-//		});
 		
-		compatibility.playSound(player, modContext.getAttachmentManager().isSilencerOn(heldItem) ? weapon.getSilencedShootSound() : weapon.getShootSound(), 1F, 1F);
-
+		compatibility.playSound(player, modContext.getAttachmentAspect().isSilencerOn(heldItem) ? weapon.getSilencedShootSound() : weapon.getShootSound(), 1F, 1F);
+		System.out.println("Sound played at " + System.currentTimeMillis());
+		
 		player.rotationPitch = player.rotationPitch - weaponInstance.getRecoil();						
 		float rotationYawFactor = -1.0f + random.nextFloat() * 2.0f;
 		player.rotationYaw = player.rotationYaw + weaponInstance.getRecoil() * rotationYawFactor;
@@ -184,6 +152,7 @@ public class FireAspect implements Aspect<WeaponState, PlayerWeaponInstance> {
 		
 		weaponInstance.setSeriesShotCount(weaponInstance.getSeriesShotCount() + 1);
 		weaponInstance.setLastFireTimestamp(System.currentTimeMillis());
+		weaponInstance.setAmmo(weaponInstance.getAmmo() - 1);
 	}
 
 	private void ejectSpentRound(PlayerWeaponInstance weaponInstance) {
@@ -193,5 +162,19 @@ public class FireAspect implements Aspect<WeaponState, PlayerWeaponInstance> {
 			Weapon weapon = weaponInstance.getWeapon();
 			compatibility.playSound(player, weapon.getEjectSpentRoundSound(), 1F, 1F);
 		}
+	}
+	
+	void serverFire(EntityPlayer player, ItemStack itemStack) {
+		if(!(itemStack.getItem() instanceof Weapon)) {
+			return;
+		}
+
+		Weapon weapon = (Weapon) itemStack.getItem();
+		for(int i = 0; i < weapon.builder.pellets; i++) {
+			WeaponSpawnEntity spawnEntity = weapon.builder.spawnEntityWith.apply(weapon, player);
+			compatibility.spawnEntity(player, spawnEntity);
+		}
+		compatibility.playSoundToNearExcept(player, modContext.getAttachmentAspect().isSilencerOn(itemStack) ? weapon.getSilencedShootSound() : weapon.getShootSound(), 1.0F, 1.0F);
+
 	}
 }
