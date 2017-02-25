@@ -18,13 +18,13 @@ public class ChangeAttachmentMessageHandler implements CompatibleMessageHandler<
 
 	@Override
 	public <T extends CompatibleMessage> T onCompatibleMessage(ChangeAttachmentMessage message, CompatibleMessageContext ctx) {
-		if(ctx.isServerSide()) {
-			EntityPlayer player = ctx.getPlayer();
-			ctx.runInMainThread(() -> {
-				attachmentAspect.changeAttachment(message.getAttachmentCategory(), compatibility.getHeldItemMainHand(player), player);
-			});
-		}
-		
+//		if(ctx.isServerSide()) {
+//			EntityPlayer player = ctx.getPlayer();
+//			ctx.runInMainThread(() -> {
+//				attachmentAspect.changeAttachment(message.getAttachmentCategory(), compatibility.getHeldItemMainHand(player), player);
+//			});
+//		}
+//		
 		return null;
 	}
 }

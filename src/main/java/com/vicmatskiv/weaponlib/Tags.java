@@ -151,7 +151,11 @@ public final class Tags {
 		
 		byte[] bytes = compatibility.getTagCompound(itemStack).getByteArray(INSTANCE_TAG);
 		if(bytes != null && bytes.length > 0) {
-			return targetClass.cast(TypeRegistry.getInstance().fromBytes(Unpooled.wrappedBuffer(bytes)));
+			try {
+				return targetClass.cast(TypeRegistry.getInstance().fromBytes(Unpooled.wrappedBuffer(bytes)));
+			} catch(RuntimeException e) {
+				return null;
+			}
 		}
 		return null;
 	}

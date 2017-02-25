@@ -353,5 +353,17 @@ public class Compatibility1_7_10 implements Compatibility {
 		return player.inventory.getStackInSlot(inventoryItemIndex);
 	}
 
+	@Override
+	public int getInventorySlot(EntityPlayer player, ItemStack itemStack) {
+		int slot = -1;
+		for(int i = 0; i < player.inventory.mainInventory.length; i++) {
+			if(player.inventory.mainInventory[i] == itemStack) {
+				slot = i;
+				break;
+			}
+		}
+		return slot;
+	}
+
 	
 }

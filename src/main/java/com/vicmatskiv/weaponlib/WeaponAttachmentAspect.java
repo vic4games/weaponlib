@@ -5,6 +5,7 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -27,8 +28,8 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 	}
 	
 	private static final String ACTIVE_ATTACHMENT_TAG = "ActiveAttachments";
-	private static final String SELECTED_ATTACHMENT_INDEXES_TAG = "SelectedAttachments";
-	private static final String PREVIOUSLY_SELECTED_ATTACHMENT_TAG = "PreviouslySelectedAttachments";
+//	private static final String SELECTED_ATTACHMENT_INDEXES_TAG = "SelectedAttachments";
+//	private static final String PREVIOUSLY_SELECTED_ATTACHMENT_TAG = "PreviouslySelectedAttachments";
 	
 	public static class EnterAttachmentModePermit extends Permit<WeaponState> {
 		
@@ -119,13 +120,17 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 		System.out.println("Entering attachment mode on server");
 		ItemStack itemStack = weaponInstance.getItemStack();
 		compatibility.ensureTagCompound(itemStack);
-		int activeAttachmentsIds[] = ensureActiveAttachments(itemStack);
+		int activeAttachmentsIds[] = weaponInstance.getActiveAttachmentIds();
 		
 		int selectedAttachmentIndexes[] = new int[AttachmentCategory.values.length];
-		compatibility.getTagCompound(itemStack).setIntArray(SELECTED_ATTACHMENT_INDEXES_TAG, selectedAttachmentIndexes);
-
-		compatibility.getTagCompound(itemStack).setIntArray(PREVIOUSLY_SELECTED_ATTACHMENT_TAG, 
-				Arrays.copyOf(activeAttachmentsIds, activeAttachmentsIds.length));
+//		compatibility.getTagCompound(itemStack).setIntArray(SELECTED_ATTACHMENT_INDEXES_TAG, selectedAttachmentIndexes);
+//
+//		compatibility.getTagCompound(itemStack).setIntArray(PREVIOUSLY_SELECTED_ATTACHMENT_TAG, 
+//				Arrays.copyOf(activeAttachmentsIds, activeAttachmentsIds.length));
+		
+		
+		weaponInstance.setSelectedAttachmentIndexes(selectedAttachmentIndexes);
+		weaponInstance.setPreviouslyAttachmentIds(Arrays.copyOf(activeAttachmentsIds, activeAttachmentsIds.length));
 		
 		permit.setStatus(Status.GRANTED);
 	}
@@ -134,34 +139,52 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 		System.out.println("Exiting attachment mode on server");
 		ItemStack itemStack = weaponInstance.getItemStack();
 		compatibility.ensureTagCompound(itemStack);
+		EntityPlayer player = weaponInstance.getPlayer();
 		
-		exitAttachmentSelectionMode(weaponInstance.getPlayer(), itemStack);
-		if(permit != null) {
-			permit.setStatus(Status.GRANTED);
-		}
-	}
-
-	void exitAttachmentSelectionMode(EntityPlayer player, ItemStack itemStack) {
-		int activeAttachmentsIds[] = compatibility.getTagCompound(itemStack).getIntArray(ACTIVE_ATTACHMENT_TAG);
-		int previouslySelectedAttachmentIds[] = compatibility.getTagCompound(itemStack).getIntArray(PREVIOUSLY_SELECTED_ATTACHMENT_TAG);
+		int activeAttachmentsIds[] = weaponInstance.getActiveAttachmentIds(); //compatibility.getTagCompound(itemStack).getIntArray(ACTIVE_ATTACHMENT_TAG);
+		int previouslySelectedAttachmentIds[] = weaponInstance.getPreviouslyAttachmentIds(); // compatibility.getTagCompound(itemStack).getIntArray(PREVIOUSLY_SELECTED_ATTACHMENT_TAG);
+		boolean hasValidPreviousAttachmentIds = previouslySelectedAttachmentIds != null
+				&& previouslySelectedAttachmentIds.length == activeAttachmentsIds.length;
 		for(int i = 0; i < activeAttachmentsIds.length; i++) {
-			if(activeAttachmentsIds[i] != previouslySelectedAttachmentIds[i]) {
+			if(!hasValidPreviousAttachmentIds || activeAttachmentsIds[i] != previouslySelectedAttachmentIds[i]) {
 				Item newItem = Item.getItemById(activeAttachmentsIds[i]);
-				Item oldItem = Item.getItemById(previouslySelectedAttachmentIds[i]);
 				compatibility.consumeInventoryItem(player, newItem);
+			}
+			if(hasValidPreviousAttachmentIds && activeAttachmentsIds[i] != previouslySelectedAttachmentIds[i]) {
+				Item oldItem = Item.getItemById(previouslySelectedAttachmentIds[i]);
 				if(!player.inventory.addItemStackToInventory(new ItemStack(oldItem))) {
 					System.err.println("Cannot add item back to the inventory: " + oldItem);
 				}
 			}
 		}
+		if(permit != null) {
+			permit.setStatus(Status.GRANTED);
+		}
 	}
 
 	List<CompatibleAttachment<? extends AttachmentContainer>> getActiveAttachments(ItemStack itemStack) {
+		if(true) {
+			return Collections.emptyList();
+			
+		}
 		compatibility.ensureTagCompound(itemStack);
 		
 		List<CompatibleAttachment<? extends AttachmentContainer>> activeAttachments = new ArrayList<>();
 		
-		int[] activeAttachmentsIds = ensureActiveAttachments(itemStack);
+		PlayerItemInstance<?> itemInstance = modContext.getPlayerItemInstanceRegistry().getItemInstance(compatibility.clientPlayer(), itemStack);
+		PlayerWeaponInstance weaponInstance;
+		if(itemInstance instanceof PlayerWeaponInstance) {
+			weaponInstance = (PlayerWeaponInstance) itemInstance;
+		} else {
+			weaponInstance = Tags.getInstance(itemStack, PlayerWeaponInstance.class);
+		}
+		
+		
+		if(weaponInstance == null) {
+			return Collections.emptyList();
+		}
+		
+		int[] activeAttachmentsIds = weaponInstance.getActiveAttachmentIds();
 		
 		Weapon weapon = (Weapon) itemStack.getItem();
 		
@@ -179,62 +202,62 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 		return activeAttachments;
 	}
 
-	private static int[] ensureActiveAttachments(ItemStack itemStack) {
-		int activeAttachmentsIds[] = compatibility.getTagCompound(itemStack).getIntArray(ACTIVE_ATTACHMENT_TAG);
-		
-		Weapon weapon = (Weapon) itemStack.getItem();
-		if(activeAttachmentsIds == null || activeAttachmentsIds.length != AttachmentCategory.values.length) {
-			activeAttachmentsIds = new int[AttachmentCategory.values.length];
-			compatibility.getTagCompound(itemStack).setIntArray(ACTIVE_ATTACHMENT_TAG, activeAttachmentsIds);
-			for(CompatibleAttachment<Weapon> attachment: weapon.getCompatibleAttachments().values()) {
-				if(attachment.isDefault()) {
-					activeAttachmentsIds[attachment.getAttachment().getCategory().ordinal()] = Item.getIdFromItem(attachment.getAttachment());
-				}
-			}
-		}
-		return activeAttachmentsIds;
-	}
+//	private static int[] ensureActiveAttachments(ItemStack itemStack) {
+//		int activeAttachmentsIds[] = compatibility.getTagCompound(itemStack).getIntArray(ACTIVE_ATTACHMENT_TAG);
+//		
+//		Weapon weapon = (Weapon) itemStack.getItem();
+//		if(activeAttachmentsIds == null || activeAttachmentsIds.length != AttachmentCategory.values.length) {
+//			activeAttachmentsIds = new int[AttachmentCategory.values.length];
+//			compatibility.getTagCompound(itemStack).setIntArray(ACTIVE_ATTACHMENT_TAG, activeAttachmentsIds);
+//			for(CompatibleAttachment<Weapon> attachment: weapon.getCompatibleAttachments().values()) {
+//				if(attachment.isDefault()) {
+//					activeAttachmentsIds[attachment.getAttachment().getCategory().ordinal()] = Item.getIdFromItem(attachment.getAttachment());
+//				}
+//			}
+//		}
+//		return activeAttachmentsIds;
+//	}
 	
 	@SuppressWarnings("unchecked")
-	void changeAttachment(AttachmentCategory attachmentCategory, ItemStack itemStack, EntityPlayer player) {
-		if(itemStack == null || !(itemStack.getItem() instanceof Weapon) /*|| !Weapon.isModifying(itemStack)*/) {
-			return;
-		}
+	void changeAttachment(AttachmentCategory attachmentCategory, PlayerWeaponInstance weaponInstance) {
 		
-		compatibility.ensureTagCompound(itemStack);
-		Weapon weapon = (Weapon) itemStack.getItem();
-		
-		int[] activeAttachmentsIds = ensureActiveAttachments(itemStack);
-		int activeAttachmentIdForThisCategory = activeAttachmentsIds[attachmentCategory.ordinal()];
+		int[] originalActiveAttachmentIds = weaponInstance.getActiveAttachmentIds();
+		int[] activeAttachmentIds = Arrays.copyOf(originalActiveAttachmentIds, originalActiveAttachmentIds.length);
+		int activeAttachmentIdForThisCategory = activeAttachmentIds[attachmentCategory.ordinal()];
 		ItemAttachment<Weapon> currentAttachment = null;
 		if(activeAttachmentIdForThisCategory > 0) {
 			currentAttachment = (ItemAttachment<Weapon>) Item.getItemById(activeAttachmentIdForThisCategory);
 		}
 		
-		ItemAttachment<Weapon> nextAttachment = nextCompatibleAttachment(attachmentCategory, currentAttachment, player, itemStack);
+		ItemAttachment<Weapon> nextAttachment = nextCompatibleAttachment(attachmentCategory, currentAttachment, 
+				weaponInstance);
+		
+		if(nextAttachment != null) {
+			System.out.println("Found next attachment " + nextAttachment);
+		}
 
 		if(currentAttachment != null && currentAttachment.getRemove() != null) {
-			currentAttachment.getRemove().apply(currentAttachment, weapon, player);
+			currentAttachment.getRemove().apply(currentAttachment, weaponInstance.getWeapon(), weaponInstance.getPlayer());
 		}
 		
 		if(nextAttachment != null && nextAttachment.getApply() != null) {
-			nextAttachment.getApply().apply(nextAttachment, weapon, player);
+			nextAttachment.getApply().apply(nextAttachment, weaponInstance.getWeapon(), weaponInstance.getPlayer());
 		}
 		
-		activeAttachmentsIds[attachmentCategory.ordinal()] = Item.getIdFromItem(nextAttachment);;
+		activeAttachmentIds[attachmentCategory.ordinal()] = Item.getIdFromItem(nextAttachment);;
 		
-		compatibility.getTagCompound(itemStack).setIntArray(ACTIVE_ATTACHMENT_TAG, activeAttachmentsIds);
+		weaponInstance.setActiveAttachmentIds(activeAttachmentIds);
 	}
 		
 	@SuppressWarnings("unchecked")
-	private ItemAttachment<Weapon> nextCompatibleAttachment(AttachmentCategory category, Item currentAttachment, EntityPlayer player, ItemStack itemStack) {
-		Weapon weapon = (Weapon) itemStack.getItem();
+	private ItemAttachment<Weapon> nextCompatibleAttachment(AttachmentCategory category, Item currentAttachment, PlayerWeaponInstance weaponInstance) {
 		
-		int[] selectedAttachmentIndexes = compatibility.getTagCompound(itemStack).getIntArray(SELECTED_ATTACHMENT_INDEXES_TAG);
-		if(selectedAttachmentIndexes == null || selectedAttachmentIndexes.length != AttachmentCategory.values.length) {
+		int[] originallySelectedAttachmentIndexes = weaponInstance.getSelectedAttachmentIds();
+		if(originallySelectedAttachmentIndexes == null || originallySelectedAttachmentIndexes.length != AttachmentCategory.values.length) {
 			return null;
 		}
 
+		int[] selectedAttachmentIndexes = Arrays.copyOf(originallySelectedAttachmentIndexes, originallySelectedAttachmentIndexes.length);
 		int activeIndex = selectedAttachmentIndexes[category.ordinal()];
 		
 		/*
@@ -273,7 +296,7 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 			
 			if(currentIndex == 0) {
 				// Select original attachment that was there prior to entering attachment mode
-				int previouslySelectedAttachmentIds[] = compatibility.getTagCompound(itemStack).getIntArray(PREVIOUSLY_SELECTED_ATTACHMENT_TAG);
+				int previouslySelectedAttachmentIds[] = weaponInstance.getPreviouslyAttachmentIds();
 				nextCompatibleAttachment = (ItemAttachment<Weapon>) Item.getItemById(previouslySelectedAttachmentIds[category.ordinal()]);
 				if(nextCompatibleAttachment != null) {
 					// if original attachment existed, exit, iterate till found one
@@ -283,10 +306,10 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 					continue;
 				}
 			}
-			ItemStack slotItemStack = player.inventory.getStackInSlot(currentIndex - 1);
+			ItemStack slotItemStack = weaponInstance.getPlayer().inventory.getStackInSlot(currentIndex - 1);
 			if(slotItemStack != null && slotItemStack.getItem() instanceof ItemAttachment) {
 				ItemAttachment<Weapon> attachmentItemFromInventory = (ItemAttachment<Weapon>) slotItemStack.getItem();
-				if(attachmentItemFromInventory.getCategory() == category && weapon.getCompatibleAttachments().containsKey(attachmentItemFromInventory)
+				if(attachmentItemFromInventory.getCategory() == category && weaponInstance.getWeapon().getCompatibleAttachments().containsKey(attachmentItemFromInventory)
 						&& attachmentItemFromInventory != currentAttachment) {
 					nextCompatibleAttachment = attachmentItemFromInventory;
 					break;
@@ -298,7 +321,8 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 		}
 		
 		selectedAttachmentIndexes[category.ordinal()] = currentIndex;
-		compatibility.getTagCompound(itemStack).setIntArray(SELECTED_ATTACHMENT_INDEXES_TAG, selectedAttachmentIndexes);
+		//compatibility.getTagCompound(itemStack).setIntArray(SELECTED_ATTACHMENT_INDEXES_TAG, selectedAttachmentIndexes);
+		weaponInstance.setSelectedAttachmentIndexes(selectedAttachmentIndexes);
 		return nextCompatibleAttachment;
 	}
 	
@@ -310,15 +334,9 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 	 * @param itemStack
 	 * @param player
 	 */
-	void addAttachment(ItemAttachment<Weapon> attachment, ItemStack weaponStack, EntityPlayer player) {
-		if(!(weaponStack.getItem() instanceof Weapon)) {
-			throw new IllegalStateException();
-		}
+	void addAttachment(ItemAttachment<Weapon> attachment, PlayerWeaponInstance weaponInstance) {
 		
-		compatibility.ensureTagCompound(weaponStack);
-		Weapon weapon = (Weapon) weaponStack.getItem();
-		
-		int[] activeAttachmentsIds = ensureActiveAttachments(weaponStack);
+		int[] activeAttachmentsIds = weaponInstance.getActiveAttachmentIds();
 		int activeAttachmentIdForThisCategory = activeAttachmentsIds[attachment.getCategory().ordinal()];
 		ItemAttachment<Weapon> currentAttachment = null;
 		if(activeAttachmentIdForThisCategory > 0) {
@@ -328,7 +346,7 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 		if(currentAttachment == null) {
 			
 			if(attachment != null && attachment.getApply() != null) {
-				attachment.getApply().apply(attachment, weapon, player);
+				attachment.getApply().apply(attachment, weaponInstance.getWeapon(), weaponInstance.getPlayer());
 			}
 			
 			activeAttachmentsIds[attachment.getCategory().ordinal()] = Item.getIdFromItem(attachment);;
@@ -346,47 +364,39 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 	 * @param player
 	 * @return
 	 */
-	ItemAttachment<Weapon> removeAttachment(AttachmentCategory attachmentCategory, ItemStack weaponStack, EntityPlayer player) {
-		if(!(weaponStack.getItem() instanceof Weapon)) {
-			throw new IllegalStateException();
-		}
+	ItemAttachment<Weapon> removeAttachment(AttachmentCategory attachmentCategory, PlayerWeaponInstance weaponInstance) {
 		
-		compatibility.ensureTagCompound(weaponStack);
-		Weapon weapon = (Weapon) weaponStack.getItem();
-		
-		int[] activeAttachmentsIds = ensureActiveAttachments(weaponStack);
-		int activeAttachmentIdForThisCategory = activeAttachmentsIds[attachmentCategory.ordinal()];
+		int[] activeAttachmentIds = weaponInstance.getActiveAttachmentIds();
+		int activeAttachmentIdForThisCategory = activeAttachmentIds[attachmentCategory.ordinal()];
 		ItemAttachment<Weapon> currentAttachment = null;
 		if(activeAttachmentIdForThisCategory > 0) {
 			currentAttachment = (ItemAttachment<Weapon>) Item.getItemById(activeAttachmentIdForThisCategory);
 		}
 		
 		if(currentAttachment != null && currentAttachment.getRemove() != null) {
-			currentAttachment.getRemove().apply(currentAttachment, weapon, player);
+			currentAttachment.getRemove().apply(currentAttachment, weaponInstance.getWeapon(), weaponInstance.getPlayer());
 		}
 		
 		if(currentAttachment != null) {
-			activeAttachmentsIds[attachmentCategory.ordinal()] = -1;
-			compatibility.getTagCompound(weaponStack).setIntArray(ACTIVE_ATTACHMENT_TAG, activeAttachmentsIds);
+			activeAttachmentIds[attachmentCategory.ordinal()] = -1;
+			weaponInstance.setActiveAttachmentIds(activeAttachmentIds);
 		}
 		
 		return currentAttachment;
 	}
 	
-	static ItemAttachment<Weapon> getActiveAttachment(ItemStack itemStack, AttachmentCategory category) {
-		compatibility.ensureTagCompound(itemStack);
-		
-		Weapon weapon = (Weapon) itemStack.getItem();
+	static ItemAttachment<Weapon> getActiveAttachment(AttachmentCategory category, PlayerWeaponInstance weaponInstance) {
+
 		
 		ItemAttachment<Weapon> itemAttachment = null;
 		
-		int[] activeAttachmentsIds = ensureActiveAttachments(itemStack);
+		int[] activeAttachmentIds = weaponInstance.getActiveAttachmentIds();
 		
-		for(int activeIndex: activeAttachmentsIds) {
+		for(int activeIndex: activeAttachmentIds) {
 			if(activeIndex == 0) continue;
 			Item item = Item.getItemById(activeIndex);
 			if(item instanceof ItemAttachment) {
-				CompatibleAttachment<Weapon> compatibleAttachment = weapon.getCompatibleAttachments().get(item);
+				CompatibleAttachment<Weapon> compatibleAttachment = weaponInstance.getWeapon().getCompatibleAttachments().get(item);
 				if(compatibleAttachment != null && category == compatibleAttachment.getAttachment().getCategory()) {
 					itemAttachment = compatibleAttachment.getAttachment();
 					break;
@@ -397,14 +407,13 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 		return itemAttachment;
 	}
 	
-	boolean isActiveAttachment(ItemStack itemStack, ItemAttachment<Weapon> attachment) {
-		int[] activeAttachmentsIds = ensureActiveAttachments(itemStack);
-		return Arrays.stream(activeAttachmentsIds).anyMatch((attachmentId) -> attachment == Item.getItemById(attachmentId));
+	static boolean isActiveAttachment(ItemAttachment<Weapon> attachment, PlayerWeaponInstance weaponInstance) {
+		int[] activeAttachmentIds = weaponInstance.getActiveAttachmentIds();
+		return Arrays.stream(activeAttachmentIds).anyMatch((attachmentId) -> attachment == Item.getItemById(attachmentId));
 	}
 	
-	boolean isSilencerOn(ItemStack itemStack) {
-		if(compatibility.getTagCompound(itemStack) == null) return false;
-		int[] activeAttachmentsIds = ensureActiveAttachments(itemStack);
+	boolean isSilencerOn(PlayerWeaponInstance weaponInstance) {
+		int[] activeAttachmentsIds = weaponInstance.getActiveAttachmentIds();
 		int activeAttachmentIdForThisCategory = activeAttachmentsIds[AttachmentCategory.SILENCER.ordinal()];
 		return activeAttachmentIdForThisCategory > 0;
 	}

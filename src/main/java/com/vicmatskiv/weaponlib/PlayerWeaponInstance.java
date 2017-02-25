@@ -9,6 +9,7 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import scala.actors.threadpool.Arrays;
 
 
 public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
@@ -29,7 +30,9 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 	 * This ensures the queue is always sorted by priority, lowest (head) to highest (tail).
 	 */
 	private Deque<Tuple<WeaponState, Long>> filteredStateQueue = new LinkedBlockingDeque<>();
-	private int[] activeAttachmentsIds;
+	private int[] activeAttachmentIds;
+	private int[] selectedAttachmentIndexes;
+	private int[] previouslyAttachmentIds;
 
 	public PlayerWeaponInstance() {
 		super();
@@ -91,6 +94,9 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 	@Override
 	public void init(ByteBuf buf) {
 		super.init(buf);
+		activeAttachmentIds = initIntArray(buf);
+		previouslyAttachmentIds = initIntArray(buf);
+		selectedAttachmentIndexes = initIntArray(buf);
 		ammo = buf.readInt();
 		aimed = buf.readBoolean();
 		recoil = buf.readFloat();
@@ -99,16 +105,40 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 	@Override
 	public void serialize(ByteBuf buf) {
 		super.serialize(buf);
+		serializeIntArray(buf, activeAttachmentIds);
+		serializeIntArray(buf, previouslyAttachmentIds);
+		serializeIntArray(buf, selectedAttachmentIndexes);
 		buf.writeInt(ammo);
 		buf.writeBoolean(aimed);
 		buf.writeFloat(recoil);
+	}
+	
+	private void serializeIntArray(ByteBuf buf, int a[]) {
+		buf.writeByte(a.length);
+		for(int i = 0; i < a.length; i++) {
+			buf.writeInt(a[i]);
+		}
+	}
+	
+	private int[] initIntArray(ByteBuf buf) {
+		int length = buf.readByte();
+		int a[] = new int[length];
+		for(int i = 0; i < length; i++) {
+			a[i] = buf.readInt();
+		}
+		return a;
 	}
 	
 	@Override
 	protected void updateWith(PlayerItemInstance<WeaponState> otherItemInstance, boolean updateManagedState) {
 		super.updateWith(otherItemInstance, updateManagedState);
 		PlayerWeaponInstance otherWeaponInstance = (PlayerWeaponInstance) otherItemInstance;
+		
 		setAmmo(otherWeaponInstance.ammo);
+		//TODO: do we need to set anything else? 
+		setSelectedAttachmentIndexes(otherWeaponInstance.selectedAttachmentIndexes);
+		setPreviouslyAttachmentIds(otherWeaponInstance.previouslyAttachmentIds);
+		setActiveAttachmentIds(otherWeaponInstance.activeAttachmentIds);
 	}
 
 	public Weapon getWeapon() {
@@ -167,18 +197,44 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 	}
 
 	public int[] getActiveAttachmentIds() {
-		if(activeAttachmentsIds == null || activeAttachmentsIds.length != AttachmentCategory.values.length) {
-			activeAttachmentsIds = new int[AttachmentCategory.values.length];
+		if(activeAttachmentIds == null || activeAttachmentIds.length != AttachmentCategory.values.length) {
+			activeAttachmentIds = new int[AttachmentCategory.values.length];
 			for(CompatibleAttachment<Weapon> attachment: getWeapon().getCompatibleAttachments().values()) {
 				if(attachment.isDefault()) {
-					activeAttachmentsIds[attachment.getAttachment().getCategory().ordinal()] = Item.getIdFromItem(attachment.getAttachment());
+					activeAttachmentIds[attachment.getAttachment().getCategory().ordinal()] = Item.getIdFromItem(attachment.getAttachment());
 				}
 			}
 		}
-		return activeAttachmentsIds;
+		return activeAttachmentIds;
 	}
 
-	public void setActiveAttachmentIds(int[] activeAttachmentIds) {
-		this.activeAttachmentsIds = activeAttachmentIds;
+	void setActiveAttachmentIds(int[] activeAttachmentIds) {
+		if(!Arrays.equals(this.activeAttachmentIds, activeAttachmentIds)) {
+			this.activeAttachmentIds = activeAttachmentIds;
+			System.out.println("Updating active attachment ids");
+			updateId++;
+		}
+	}
+
+	public int[] getSelectedAttachmentIds() {
+		return selectedAttachmentIndexes;
+	}
+
+	void setSelectedAttachmentIndexes(int[] selectedAttachmentIndexes) {
+		if(!Arrays.equals(this.selectedAttachmentIndexes, selectedAttachmentIndexes)) {
+			this.selectedAttachmentIndexes = selectedAttachmentIndexes;
+			updateId++;
+		}
+	}
+
+	public int[] getPreviouslyAttachmentIds() {
+		return previouslyAttachmentIds;
+	}
+
+	void setPreviouslyAttachmentIds(int[] previouslyAttachmentIds) {
+		if(!Arrays.equals(this.previouslyAttachmentIds, previouslyAttachmentIds)) {
+			this.previouslyAttachmentIds = previouslyAttachmentIds;
+			updateId++;
+		}
 	}
 }

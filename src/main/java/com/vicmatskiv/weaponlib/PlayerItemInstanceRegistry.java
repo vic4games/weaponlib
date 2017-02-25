@@ -75,7 +75,8 @@ public class PlayerItemInstanceRegistry {
 		
 		if(slotContexts != null) {
 			T currentState = (T) slotContexts.get(extendedStateToMerge.getItemInventoryIndex());
-			if(currentState != null && isSameItem(currentState, extendedStateToMerge) && isSameUpdateId(currentState, extendedStateToMerge)) {
+			if(currentState != null && isSameItem(currentState, extendedStateToMerge)
+					/*&& isSameUpdateId(currentState, extendedStateToMerge)*/) {
 				/*
 				 * If input.managedState has a transactional component, set current.managedState = input.managedState only,
 				 * do not update the entire state
@@ -138,5 +139,14 @@ public class PlayerItemInstanceRegistry {
 //			}
 		}
 
+	}
+
+	public PlayerItemInstance<?> getItemInstance(EntityPlayer player, ItemStack itemStack) {
+		int slot = compatibility.getInventorySlot(player, itemStack);
+		PlayerItemInstance<?> result = null;
+		if(slot >= 0) {
+			result = getItemInstance(player, slot);
+		}
+		return result;
 	}
 }

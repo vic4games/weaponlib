@@ -136,4 +136,6 @@ public interface Compatibility {
 	public ItemStack consumeInventoryItem(Item item, Predicate<ItemStack> condition, EntityPlayer player, int maxSize);
 
 	public ItemStack getInventoryItemStack(EntityPlayer player, int inventoryItemIndex);
+	
+	public int getInventorySlot(EntityPlayer player, ItemStack itemStack);
 }

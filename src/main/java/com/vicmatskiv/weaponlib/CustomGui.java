@@ -74,9 +74,12 @@ public class CustomGui extends CompatibleGui {
 			return;
 		}
 		
-		if(itemStack.getItem() instanceof Weapon) {
+		PlayerWeaponInstance weaponInstance = modContext.getMainHeldWeapon();
+		
+		if(weaponInstance != null) {
 			Weapon weaponItem = (Weapon) itemStack.getItem();
-			String crosshair = weaponItem != null ? weaponItem.getCrosshair(itemStack, compatibility.clientPlayer()) : null;
+			
+			String crosshair = weaponItem != null ? weaponItem.getCrosshair(weaponInstance) : null;
 			if(crosshair != null) {
 				ScaledResolution scaledResolution = compatibility.getResolution(event);
 				int width = scaledResolution.getScaledWidth();
@@ -105,9 +108,6 @@ public class CustomGui extends CompatibleGui {
 //					drawTexturedModalRect(xPos, yPos, 0, 0, BUFF_ICON_SIZE, BUFF_ICON_SIZE);
 //				}
 				
-				PlayerWeaponInstance weaponInstance = modContext.getPlayerItemInstanceRegistry()
-						.getMainHandItemInstance(compatibility.clientPlayer(), PlayerWeaponInstance.class);
-				
 				if(weaponInstance.getState() == WeaponState.MODIFYING /*Weapon.isModifying(itemStack)*/ /*weaponItem.getState(weapon) == Weapon.STATE_MODIFYING*/) {
 					fontRender.drawStringWithShadow("Attachment selection mode. Press [f] to exit.", 10, 10, color);
 					fontRender.drawStringWithShadow("Press [up] to add optic", width / 2 - 40, 60, color);
@@ -115,7 +115,7 @@ public class CustomGui extends CompatibleGui {
 					fontRender.drawStringWithShadow("Press [right] to change camo", width / 2 + 60, height / 2 - 20, color);
 					fontRender.drawStringWithShadow("Press [down] to add under-barrel rig", 10, height - 40, color);
 				} else {
-					ItemMagazine magazine = (ItemMagazine) attachmentAspect.getActiveAttachment(itemStack, AttachmentCategory.MAGAZINE);
+					ItemMagazine magazine = (ItemMagazine) attachmentAspect.getActiveAttachment(AttachmentCategory.MAGAZINE, weaponInstance);
 					int totalCapacity;
 					if(magazine != null) {
 						totalCapacity = magazine.getAmmo();

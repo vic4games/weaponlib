@@ -573,10 +573,10 @@ public class Weapon extends CompatibleItem implements
 		return builder.compatibleAttachments;
 	}
 
-	String getCrosshair(ItemStack itemStack, EntityPlayer thePlayer) {
-		if(isZoomed(thePlayer, itemStack)) {
+	String getCrosshair(PlayerWeaponInstance weaponInstance) {
+		if(weaponInstance.isAimed()) {
 			String crosshair = null;
-			ItemAttachment<Weapon> scopeAttachment = modContext.getAttachmentAspect().getActiveAttachment(itemStack, AttachmentCategory.SCOPE);
+			ItemAttachment<Weapon> scopeAttachment = modContext.getAttachmentAspect().getActiveAttachment(AttachmentCategory.SCOPE, weaponInstance);
 			if(scopeAttachment != null) {
 				crosshair = scopeAttachment.getCrosshair();
 			}
@@ -584,7 +584,7 @@ public class Weapon extends CompatibleItem implements
 				crosshair = builder.crosshairZoomed;
 			}
 			return crosshair;
-		} else if(thePlayer.isSprinting()){
+		} else if(weaponInstance.getPlayer().isSprinting()){
 			return builder.crosshairRunning;
 		}
 		return builder.crosshair;
@@ -607,8 +607,11 @@ public class Weapon extends CompatibleItem implements
 	}
 	
 	public static boolean isActiveAttachment(ItemStack itemStack, ItemAttachment<Weapon> attachment) {
-		Weapon weapon = (Weapon) itemStack.getItem();
-		return weapon.modContext.getAttachmentAspect().isActiveAttachment(itemStack, attachment);
+//		Weapon weapon = (Weapon) itemStack.getItem();
+//		return weapon.modContext.getAttachmentAspect().isActiveAttachment(itemStack, attachment);
+		PlayerWeaponInstance weaponInstance = Tags.getInstance(itemStack, PlayerWeaponInstance.class);
+		return weaponInstance != null ? 
+				WeaponAttachmentAspect.isActiveAttachment(attachment, weaponInstance) : false;
 	}
 	
 	@Deprecated

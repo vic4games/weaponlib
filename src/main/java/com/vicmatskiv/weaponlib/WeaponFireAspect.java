@@ -133,7 +133,7 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
 		modContext.getChannel().getChannel().sendToServer(new TryFireMessage(true));
 		ItemStack heldItem = compatibility.getHeldItemMainHand(player); // TODO: move out
 		
-		compatibility.playSound(player, modContext.getAttachmentAspect().isSilencerOn(heldItem) ? weapon.getSilencedShootSound() : weapon.getShootSound(), 1F, 1F);
+		compatibility.playSound(player, modContext.getAttachmentAspect().isSilencerOn(weaponInstance) ? weapon.getSilencedShootSound() : weapon.getShootSound(), 1F, 1F);
 		System.out.println("Sound played at " + System.currentTimeMillis());
 		
 		player.rotationPitch = player.rotationPitch - weaponInstance.getRecoil();						
@@ -170,11 +170,15 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
 		}
 
 		Weapon weapon = (Weapon) itemStack.getItem();
+		
 		for(int i = 0; i < weapon.builder.pellets; i++) {
 			WeaponSpawnEntity spawnEntity = weapon.builder.spawnEntityWith.apply(weapon, player);
 			compatibility.spawnEntity(player, spawnEntity);
 		}
-		compatibility.playSoundToNearExcept(player, modContext.getAttachmentAspect().isSilencerOn(itemStack) ? weapon.getSilencedShootSound() : weapon.getShootSound(), 1.0F, 1.0F);
+		PlayerWeaponInstance playerWeaponInstance = Tags.getInstance(itemStack, PlayerWeaponInstance.class);
+		
+		compatibility.playSoundToNearExcept(player, 
+				playerWeaponInstance !=null && modContext.getAttachmentAspect().isSilencerOn(playerWeaponInstance) ? weapon.getSilencedShootSound() : weapon.getShootSound(), 1.0F, 1.0F);
 
 	}
 }

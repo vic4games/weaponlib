@@ -53,20 +53,20 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 	}
 	
 	private static Predicate<PlayerWeaponInstance> supportsDirectBulletLoad = 
-			(c) -> ((Weapon)c.getItem()).getAmmoCapacity() > 0;
+			weaponInstance -> weaponInstance.getWeapon().getAmmoCapacity() > 0;
 			
 	private static Predicate<PlayerWeaponInstance> magazineAttached = 
-			(c) -> WeaponAttachmentAspect.getActiveAttachment(c.getItemStack(), AttachmentCategory.MAGAZINE) != null;
+			weaponInstance -> WeaponAttachmentAspect.getActiveAttachment(AttachmentCategory.MAGAZINE, weaponInstance) != null;
 
 	private static long reloadAnimationDuration = 1000;
 	
 	private static long unloadAnimationDuration = 1000;
 		
-	private static Predicate<PlayerWeaponInstance> reloadAnimationCompleted = es -> 
-		System.currentTimeMillis() >= es.getStateUpdateTimestamp() + reloadAnimationDuration; // TODO: read reload animation duration from the state itself
+	private static Predicate<PlayerWeaponInstance> reloadAnimationCompleted = weaponInstance -> 
+		System.currentTimeMillis() >= weaponInstance.getStateUpdateTimestamp() + reloadAnimationDuration; // TODO: read reload animation duration from the state itself
 	
-	private static Predicate<PlayerWeaponInstance> unloadAnimationCompleted = es -> 
-		System.currentTimeMillis() >= es.getStateUpdateTimestamp() + reloadAnimationDuration;
+	private static Predicate<PlayerWeaponInstance> unloadAnimationCompleted = weaponInstance -> 
+		System.currentTimeMillis() >= weaponInstance.getStateUpdateTimestamp() + reloadAnimationDuration;
 		
 	private static Predicate<PlayerItemInstance<?>> quietReload = c -> false;
 	
@@ -144,7 +144,6 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 		if(instance != null) {
 			stateManager.changeStateFromAnyOf(this, instance, allowedUpdateFromStates); // no target state specified, will trigger auto-transitions
 		}
-		
 	}
 	
 	private void evaluateLoad(LoadPermit p, PlayerWeaponInstance weaponInstance) {
@@ -163,7 +162,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 			List<ItemAttachment<Weapon>> compatibleBullets = weapon.getCompatibleAttachments(ItemBullet.class);
 			ItemStack consumedStack;
 			if(!compatibleMagazines.isEmpty()) {
-				ItemAttachment<Weapon> existingMagazine = WeaponAttachmentAspect.getActiveAttachment(weaponItemStack, AttachmentCategory.MAGAZINE);
+				ItemAttachment<Weapon> existingMagazine = WeaponAttachmentAspect.getActiveAttachment(AttachmentCategory.MAGAZINE, weaponInstance);
 				int ammo = Tags.getAmmo(weaponItemStack);
 				ItemMagazine newMagazine = null;
 				if(existingMagazine == null) {
@@ -175,7 +174,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 						ammo = Tags.getAmmo(magazineItemStack);
 						Tags.setAmmo(weaponItemStack, ammo);
 						System.out.println("Setting server side ammo for the weapon to " + ammo);
-						modContext.getAttachmentAspect().addAttachment((ItemAttachment<Weapon>) magazineItemStack.getItem(), weaponItemStack, player);
+						modContext.getAttachmentAspect().addAttachment((ItemAttachment<Weapon>) magazineItemStack.getItem(), weaponInstance);
 						compatibility.playSoundToNearExcept(player, weapon.getReloadSound(), 1.0F, 1.0F);
 					} else {
 						status = Status.DENIED;
@@ -220,7 +219,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 		
 		Weapon weapon = (Weapon) weaponItemStack.getItem();
 		if (compatibility.getTagCompound(weaponItemStack) != null && !player.isSprinting()) {
-			ItemAttachment<Weapon> attachment = modContext.getAttachmentAspect().removeAttachment(AttachmentCategory.MAGAZINE, weaponItemStack, player);
+			ItemAttachment<Weapon> attachment = modContext.getAttachmentAspect().removeAttachment(AttachmentCategory.MAGAZINE, weaponInstance);
 			if(attachment instanceof ItemMagazine) {
 				ItemStack attachmentItemStack = ((ItemMagazine) attachment).createItemStack();
 				Tags.setAmmo(attachmentItemStack, weaponInstance.getAmmo());

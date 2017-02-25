@@ -68,7 +68,8 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
         	// TODO: this needs to be handled entirely by attachment aspect
     		PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
     		if(instance != null && instance.getState() == WeaponState.MODIFYING) {
-    			channel.getChannel().sendToServer(new ChangeAttachmentMessage(AttachmentCategory.SCOPE)); 
+    			//channel.getChannel().sendToServer(new ChangeAttachmentMessage(AttachmentCategory.SCOPE));
+    			modContext.getAttachmentAspect().changeAttachment(AttachmentCategory.SCOPE, instance);
     		}
         	
         } 
