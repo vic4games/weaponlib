@@ -83,9 +83,6 @@ public class CommonModContext implements ModContext {
 		channel.registerMessage(permitManager,
 				PermitMessage.class, 15, CompatibleSide.CLIENT);
 		
-		channel.registerMessage(new ItemTossMessageHandler(this),
-				ItemTossMessage.class, 16, CompatibleSide.CLIENT);
-		
 		compatibility.registerWithEventBus(new ServerEventHandler(this));
 		
 		compatibility.registerWithFmlEventBus(new WeaponKeyInputHandler(this, (ctx) -> getPlayer(ctx), 

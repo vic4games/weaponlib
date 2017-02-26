@@ -19,6 +19,8 @@ public class KeyBindings {
 	public static KeyBinding addKey;
 	
 	public static KeyBinding subtractKey;
+	
+	public static KeyBinding fireModeKey;
 
 	public static void init() {
 		
@@ -49,6 +51,9 @@ public class KeyBindings {
 		subtractKey = new KeyBinding("key.add", Keyboard.KEY_SUBTRACT,
 				"key.categories.weaponlib");
 		
+		fireModeKey = new KeyBinding("key.fire_mode", Keyboard.KEY_RSHIFT,
+				"key.categories.weaponlib");
+		
 		compatibility.registerKeyBinding(reloadKey);
 		compatibility.registerKeyBinding(attachmentKey);
 		compatibility.registerKeyBinding(upArrowKey);
@@ -58,5 +63,6 @@ public class KeyBindings {
 		compatibility.registerKeyBinding(laserSwitchKey);
 		compatibility.registerKeyBinding(addKey);
 		compatibility.registerKeyBinding(subtractKey);
+		compatibility.registerKeyBinding(fireModeKey);
 	}
 }

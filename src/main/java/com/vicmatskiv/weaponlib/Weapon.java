@@ -4,9 +4,9 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -22,11 +22,11 @@ import net.minecraft.client.model.ModelBase;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ChatComponentText;
 import net.minecraft.world.World;
 
 public class Weapon extends CompatibleItem implements 
@@ -54,7 +54,7 @@ public class Weapon extends CompatibleItem implements
 		private CreativeTabs creativeTab;
 		private WeaponRenderer renderer;
 		float zoom = Weapon.DEFAULT_ZOOM;
-		int maxShots = Integer.MAX_VALUE;
+		List<Integer> maxShots = new ArrayList<>();
 		String crosshair;
 		String crosshairRunning;
 		String crosshairZoomed;
@@ -147,8 +147,10 @@ public class Weapon extends CompatibleItem implements
 			return this;
 		}
 
-		public Builder withMaxShots(int maxShots) {
-			this.maxShots = maxShots;
+		public Builder withMaxShots(int... maxShots) {
+			for(int m: maxShots) {
+				this.maxShots.add(m);
+			}
 			return this;
 		}
 
@@ -416,6 +418,10 @@ public class Weapon extends CompatibleItem implements
 			if(maxBulletsPerReload == 0) {
 				maxBulletsPerReload = ammoCapacity;
 			}
+			
+			if(maxShots.isEmpty()) {
+				maxShots.add(Integer.MAX_VALUE);
+			}
 
 			Weapon weapon = new Weapon(this, modContext);
 			
@@ -510,7 +516,7 @@ public class Weapon extends CompatibleItem implements
 		System.out.println("Switching aiming...");
 		PlayerWeaponInstance mainHandHeldWeaponInstance = modContext.getMainHeldWeapon();
 		
-		if(mainHandHeldWeaponInstance != null) {
+		if(mainHandHeldWeaponInstance != null && mainHandHeldWeaponInstance.getState() == WeaponState.READY) {
 			mainHandHeldWeaponInstance.setAimed(!mainHandHeldWeaponInstance.isAimed());
 		}
 	}
@@ -741,7 +747,7 @@ public class Weapon extends CompatibleItem implements
 	}
 
 	@Override
-	public void updateMainHeldItemForPlayer(EntityPlayer player) {
+	public void update(EntityPlayer player) {
 		modContext.getWeaponReloadAspect().updateMainHeldItem(player);
 		modContext.getWeaponFireAspect().onUpdate(player);
 		modContext.getAttachmentAspect().updateMainHeldItem(player);
@@ -757,11 +763,12 @@ public class Weapon extends CompatibleItem implements
 
 	@Override
 	public PlayerWeaponInstance createItemInstance(EntityPlayer player, ItemStack itemStack, int slot){
-		PlayerWeaponInstance state = new PlayerWeaponInstance(slot, player, itemStack);
+		PlayerWeaponInstance instance = new PlayerWeaponInstance(slot, player, itemStack);
 		//state.setAmmo(Tags.getAmmo(itemStack)); // TODO: get ammo properly
-		state.setState(WeaponState.READY);
-		state.setRecoil(builder.recoil);
-		return state;
+		instance.setState(WeaponState.READY);
+		instance.setRecoil(builder.recoil);
+		instance.setMaxShots(builder.maxShots.get(0));
+		return instance;
 	}
 
 	@Override
@@ -774,5 +781,31 @@ public class Weapon extends CompatibleItem implements
 		// Server side only method
 		PlayerWeaponInstance instance = (PlayerWeaponInstance) Tags.getInstance(itemStack);
 		return instance == null || instance.getState() == WeaponState.READY;
+	}
+
+	void changeFireMode(PlayerWeaponInstance instance) {
+		int result;
+		Iterator<Integer> it = builder.maxShots.iterator();
+		while(it.hasNext()) {
+			if(instance.getMaxShots() == it.next()) {
+				break;
+			}
+		}
+		if(it.hasNext()) {
+			result = it.next();
+		} else {
+			result = builder.maxShots.get(0);
+		}
+		System.out.println("Changing fire mode to " + result);
+		instance.setMaxShots(result);
+		String message;
+		if(result == 1) {
+			message = "Semi";
+		} else if(result == Integer.MAX_VALUE) {
+			message = "Auto";
+		} else {
+			message = "Burst";
+		}
+		instance.getPlayer().addChatMessage(new ChatComponentText("Fire mode changed to " + message));
 	}
 }

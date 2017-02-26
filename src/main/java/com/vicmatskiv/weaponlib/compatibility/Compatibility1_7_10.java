@@ -1,5 +1,7 @@
 package com.vicmatskiv.weaponlib.compatibility;
 
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import com.vicmatskiv.weaponlib.Weapon;
@@ -363,6 +365,14 @@ public class Compatibility1_7_10 implements Compatibility {
 			}
 		}
 		return slot;
+	}
+
+	@Override
+	public void forEachInventorySlot(BiConsumer<Integer, ItemStack> action) {
+		EntityPlayer clientPlayer = clientPlayer();
+		for(int i = 0; i < clientPlayer.inventory.mainInventory.length; i++) {
+			action.accept(i, clientPlayer.inventory.mainInventory[i]);
+		}
 	}
 
 	

@@ -76,6 +76,10 @@ public class PlayerItemInstance<S extends ManagedState<S>> extends UniversalObje
 		return itemInventoryIndex;
 	}
 	
+	protected void setItemInventoryIndex(int itemInventoryIndex) {
+		this.itemInventoryIndex = itemInventoryIndex;
+	}
+
 	@SuppressWarnings("unchecked")
 	protected <T extends PlayerItemInstance<S>> T getPreparedState() {
 		return (T)preparedState;

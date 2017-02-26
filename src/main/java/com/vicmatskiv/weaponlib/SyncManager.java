@@ -26,9 +26,10 @@ public class SyncManager<S extends ManagedState<S>> {
 	}
 	
 	private void syncOnServer(Permit<S> permit, PlayerItemInstance<S> instance) {
-		System.out.println("Syncing state " + instance + " on server");
+		System.out.println("Syncing " + instance + " in state " + instance.getState() + " on server");
 		ItemStack itemStack = instance.getItemStack();
 		if(itemStack != null) {
+			System.out.println("Stored " + instance + " in stack " + itemStack);
 			Tags.setInstance(itemStack, instance);
 		}
 	}
@@ -53,10 +54,16 @@ public class SyncManager<S extends ManagedState<S>> {
 	
 	@SuppressWarnings("unchecked")
 	private void sync(PlayerItemInstance<?> watchable) {
+		System.out.println("Start syncing watchable " + watchable
+				+ " with update id " + watchable.getUpdateId());
+		long updateId = watchable.getUpdateId(); // capturing update id
 		watchable.setSyncStartTimestamp(System.currentTimeMillis());
 		permitManager.request(new Permit<S>((S) watchable.getState()), (PlayerItemInstance<S>)watchable, (p, e) -> {
-			watchables.put(watchable, watchable.getUpdateId()); // TODO: prevent syncing while another syncing in progress
+			// During sync, the watchable.getUpdateId() can change, so using the original update id
+			watchables.put(watchable, updateId); 
 			watchable.setSyncStartTimestamp(0);
+			System.out.println("Completed syncing watchable " + watchable
+					+ " with update id " + updateId);
 		});
 	}
 }

@@ -23,20 +23,20 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
 
 	private static final float FLASH_X_OFFSET_ZOOMED = 0;
 	
-	private static Predicate<PlayerWeaponInstance> readyToShootAccordingToFireRate = s -> 
-		System.currentTimeMillis() - s.getLastFireTimestamp() >= 50f / s.getWeapon().builder.fireRate;
+	private static Predicate<PlayerWeaponInstance> readyToShootAccordingToFireRate = instance -> 
+		System.currentTimeMillis() - instance.getLastFireTimestamp() >= 50f / instance.getWeapon().builder.fireRate;
     
 	private static Predicate<PlayerWeaponInstance> readyToShootAccordingToFireMode = 
-			s -> s.getSeriesShotCount() < s.getWeapon().builder.maxShots;
+			instance -> instance.getSeriesShotCount() < instance.getMaxShots();
              
-	private static Predicate<PlayerWeaponInstance> hasAmmo = s -> s.getAmmo() > 0;
+	private static Predicate<PlayerWeaponInstance> hasAmmo = instance -> instance.getAmmo() > 0;
              
-	private static Predicate<PlayerWeaponInstance> ejectSpentRoundRequired = s -> s.getWeapon().ejectSpentRoundRequired();
+	private static Predicate<PlayerWeaponInstance> ejectSpentRoundRequired = instance -> instance.getWeapon().ejectSpentRoundRequired();
 	         
-	private static Predicate<PlayerWeaponInstance> ejectSpentRoundTimeoutExpired = s -> 
-		System.currentTimeMillis() >= s.getWeapon().builder.pumpTimeoutMilliseconds + s.getStateUpdateTimestamp();
+	private static Predicate<PlayerWeaponInstance> ejectSpentRoundTimeoutExpired = instance -> 
+		System.currentTimeMillis() >= instance.getWeapon().builder.pumpTimeoutMilliseconds + instance.getStateUpdateTimestamp();
                           
-	private static Predicate<PlayerWeaponInstance> sprinting = s -> s.getPlayer().isSprinting();
+	private static Predicate<PlayerWeaponInstance> sprinting = instance -> instance.getPlayer().isSprinting();
              
 	private static final Set<WeaponState> allowedFireOrEjectFromStates = new HashSet<>(
 			Arrays.asList(WeaponState.READY, WeaponState.PAUSED, WeaponState.EJECT_REQUIRED));

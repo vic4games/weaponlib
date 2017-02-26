@@ -94,5 +94,12 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
     			channel.getChannel().sendToServer(new ChangeAttachmentMessage(AttachmentCategory.SILENCER)); 
     		}
         }
+        
+        else if(KeyBindings.fireModeKey.isPressed()) {
+        	PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
+    		if(instance != null && instance.getState() == WeaponState.READY) {
+    			instance.getWeapon().changeFireMode(instance);
+    		}
+        }
     }
 }

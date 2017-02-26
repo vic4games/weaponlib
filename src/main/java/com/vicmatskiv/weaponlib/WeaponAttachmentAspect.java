@@ -27,7 +27,7 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 		TypeRegistry.getInstance().register(ExitAttachmentModePermit.class);		
 	}
 	
-	private static final String ACTIVE_ATTACHMENT_TAG = "ActiveAttachments";
+//	private static final String ACTIVE_ATTACHMENT_TAG = "ActiveAttachments";
 //	private static final String SELECTED_ATTACHMENT_INDEXES_TAG = "SelectedAttachments";
 //	private static final String PREVIOUSLY_SELECTED_ATTACHMENT_TAG = "PreviouslySelectedAttachments";
 	
@@ -163,10 +163,7 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 	}
 
 	List<CompatibleAttachment<? extends AttachmentContainer>> getActiveAttachments(ItemStack itemStack) {
-		if(true) {
-			return Collections.emptyList();
-			
-		}
+
 		compatibility.ensureTagCompound(itemStack);
 		
 		List<CompatibleAttachment<? extends AttachmentContainer>> activeAttachments = new ArrayList<>();

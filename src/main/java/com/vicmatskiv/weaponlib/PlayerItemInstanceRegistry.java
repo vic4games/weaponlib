@@ -9,6 +9,8 @@ import java.util.function.BiFunction;
 
 import com.vicmatskiv.weaponlib.state.ManagedState;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -39,21 +41,43 @@ public class PlayerItemInstanceRegistry {
 	}
 	
 	public PlayerItemInstance<?> getItemInstance(EntityPlayer player, int slot) {
-		Map<Integer, PlayerItemInstance<?>> slotContexts = registry.computeIfAbsent(player.getPersistentID(), p -> new HashMap<>());
-		PlayerItemInstance<?> result = slotContexts.get(slot);
+		Map<Integer, PlayerItemInstance<?>> slotInstances = registry.computeIfAbsent(player.getPersistentID(), p -> new HashMap<>());
+		PlayerItemInstance<?> result = slotInstances.get(slot);
 		if (result == null) {
-			System.out.println("State not found, creating...");
+			
 			result = createItemInstance(player, slot);
 			if(result != null) {
-				slotContexts.put(slot, result);
+				slotInstances.put(slot, result);
 				syncManager.watch(result);
 			}
 		} else {
+			// TODO: compare result with the actual slot content somehow
+			// if no match, unwatch, re-create and watch
+			ItemStack slotStack = compatibility.getInventoryItemStack(player, slot);
+			if(matches(slotStack, result)) {
+				System.err.println("Stored item instance does not match instance in slot");
+			}
+			if(result.getItemInventoryIndex() != slot) {
+				System.err.println("Invalid item slot id, correcting...");
+				result.setItemInventoryIndex(slot);
+			}
 			
 		}
 		return result;
 	}
 	
+	private boolean matches(ItemStack slotStack, PlayerItemInstance<?> result) {
+		byte instanceBytes[] = Tags.getInstanceBytes(slotStack);
+		if(instanceBytes == null || instanceBytes.length < 36) {
+			return false;
+		}
+		
+		ByteBuf buf = Unpooled.wrappedBuffer(instanceBytes);
+		buf.skipBytes(20); // skip serial version id (4 bytes) and type uuid (16 bytes)
+		UUID stackUuid = new UUID(buf.readLong(), buf.readLong()); // 16 more bytes
+		return stackUuid.equals(result);
+	}
+
 	// if input item does not match stored item, keep the old value, otherwise replace with new value
 	BiFunction<? super PlayerItemInstance<?>, ? super PlayerItemInstance<?>, ? extends PlayerItemInstance<?>> merge = (currentState, newState) -> 
 		isSameItem(currentState, newState) && isSameUpdateId(currentState, newState) ? currentState : newState;
@@ -101,11 +125,11 @@ public class PlayerItemInstanceRegistry {
 		
 		PlayerItemInstance<?> result;
 		if(itemStack != null) {
+			System.out.println("State for slot " + slot +  " not found, creating...");
 			try {
 				result = Tags.getInstance(itemStack);
 				if(result != null) {
-					
-					//
+					result.setItemInventoryIndex(slot);
 					result.setPlayer(player);
 					return result;
 				}
@@ -125,22 +149,6 @@ public class PlayerItemInstanceRegistry {
 		return result;
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public void removeItemInstance(EntityPlayer player, int slot) {
-		System.out.println("Removing instance from slot " + slot);
-		Map<Integer, PlayerItemInstance<?>> slotContexts = registry.get(player.getPersistentID());
-		if(slotContexts != null) {
-			PlayerItemInstance<?> instance = slotContexts.remove(slot);
-			if(instance != null) {
-				syncManager.unwatch((PlayerItemInstance) instance);
-			}
-//			if(instance instanceof PlayerWeaponInstance) {
-//				instance.setState(WeaponState.READY); //TODO make it ready
-//			}
-		}
-
-	}
-
 	public PlayerItemInstance<?> getItemInstance(EntityPlayer player, ItemStack itemStack) {
 		int slot = compatibility.getInventorySlot(player, itemStack);
 		PlayerItemInstance<?> result = null;
@@ -148,5 +156,24 @@ public class PlayerItemInstanceRegistry {
 			result = getItemInstance(player, slot);
 		}
 		return result;
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public void update(EntityPlayer player) {
+		if(player == null) {
+			return;
+		}
+		Map<Integer, PlayerItemInstance<?>> slotContexts = registry.get(player.getPersistentID());
+		if(slotContexts != null) {
+			compatibility.forEachInventorySlot((slot, stack) -> {
+				if(stack == null) {
+					PlayerItemInstance<?> instance = slotContexts.remove(slot);
+					if(instance != null) {
+						System.out.println("Removing instance " + instance);
+						syncManager.unwatch((PlayerItemInstance) instance);
+					}
+				}
+			});
+		}
 	}
 }

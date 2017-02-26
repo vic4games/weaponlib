@@ -61,7 +61,9 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 	}
 
 	private void update() {
+		
 		EntityPlayer player = compatibility.clientPlayer();
+		modContext.getPlayerItemInstanceRegistry().update(player);
 		PlayerWeaponInstance mainHandHeldWeaponInstance = modContext.getMainHeldWeapon();
 		if(mainHandHeldWeaponInstance != null) {
 			if(player.isSprinting()) {

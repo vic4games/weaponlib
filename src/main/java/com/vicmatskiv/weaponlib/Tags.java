@@ -171,4 +171,9 @@ public final class Tags {
 		}
 		
 	}
+
+	public static byte[] getInstanceBytes(ItemStack itemStack) {
+		if(itemStack == null || compatibility.getTagCompound(itemStack) == null) return null;
+		return compatibility.getTagCompound(itemStack).getByteArray(INSTANCE_TAG);
+	}
 }

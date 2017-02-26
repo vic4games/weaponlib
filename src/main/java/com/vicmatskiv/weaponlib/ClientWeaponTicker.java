@@ -81,7 +81,7 @@ class ClientWeaponTicker extends Thread {
 		clientModContext.runSyncTick(() -> {
 			Item item = getHeldItemMainHand();
 			if(item instanceof Updatable) {
-				((Updatable) item).updateMainHeldItemForPlayer(player);
+				((Updatable) item).update(player);
 			}
 		});
 		

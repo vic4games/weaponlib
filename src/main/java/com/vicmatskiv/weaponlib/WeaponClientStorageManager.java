@@ -56,16 +56,17 @@ public class WeaponClientStorageManager {
 	private Map<Key, WeaponClientStorage> weaponClientStorage = new HashMap<>();
 
 	public WeaponClientStorage getWeaponClientStorage(EntityPlayer player, Weapon weapon) {
-		if(player == null) return null;
-		return weaponClientStorage.computeIfAbsent(new Key(player.getPersistentID(), weapon), (w) ->
-			{
-				ItemStack itemStack = compatibility.getHeldItemMainHand(player);
-				return compatibility.getTagCompound(itemStack) != null ?
-						new WeaponClientStorage(
-								Tags.getManagedState(itemStack),
-								Tags.getState(itemStack), 
-								Tags.getAmmo(itemStack), weapon.builder.zoom,
-								Tags.getRecoil(itemStack), weapon.builder.fireRate, weapon.builder.maxShots > 1) : null;
-			});
+		throw new UnsupportedOperationException();
+//		if(player == null) return null;
+//		return weaponClientStorage.computeIfAbsent(new Key(player.getPersistentID(), weapon), (w) ->
+//			{
+//				ItemStack itemStack = compatibility.getHeldItemMainHand(player);
+//				return compatibility.getTagCompound(itemStack) != null ?
+//						new WeaponClientStorage(
+//								Tags.getManagedState(itemStack),
+//								Tags.getState(itemStack), 
+//								Tags.getAmmo(itemStack), weapon.builder.zoom,
+//								Tags.getRecoil(itemStack), weapon.builder.fireRate, weapon.builder.maxShots > 1) : null;
+//			});
 	}
 }

@@ -1,5 +1,7 @@
 package com.vicmatskiv.weaponlib.compatibility;
 
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import com.vicmatskiv.weaponlib.Weapon;
@@ -138,4 +140,6 @@ public interface Compatibility {
 	public ItemStack getInventoryItemStack(EntityPlayer player, int inventoryItemIndex);
 	
 	public int getInventorySlot(EntityPlayer player, ItemStack itemStack);
+
+	public void forEachInventorySlot(BiConsumer<Integer, ItemStack> action);
 }

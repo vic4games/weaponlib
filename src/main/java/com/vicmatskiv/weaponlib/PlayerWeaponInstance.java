@@ -23,6 +23,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 	private int seriesShotCount; // TODO: serialize?
 	private long lastFireTimestamp;
 	private boolean aimed;
+	private int maxShots;
 		
 	/*
 	 * Upon adding an element to the head of the queue, all existing elements with lower priority are removed 
@@ -30,9 +31,9 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 	 * This ensures the queue is always sorted by priority, lowest (head) to highest (tail).
 	 */
 	private Deque<Tuple<WeaponState, Long>> filteredStateQueue = new LinkedBlockingDeque<>();
-	private int[] activeAttachmentIds;
-	private int[] selectedAttachmentIndexes;
-	private int[] previouslyAttachmentIds;
+	private int[] activeAttachmentIds = new int[0];
+	private int[] selectedAttachmentIndexes = new int[0];
+	private int[] previouslyAttachmentIds = new int[0];
 
 	public PlayerWeaponInstance() {
 		super();
@@ -44,6 +45,11 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 
 	public PlayerWeaponInstance(int itemInventoryIndex, EntityPlayer player) {
 		super(itemInventoryIndex, player);
+	}
+	
+	@Override
+	protected int getSerialVersion() {
+		return 2;
 	}
 	
 	private void addStateToHistory(WeaponState state) {
@@ -100,6 +106,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 		ammo = buf.readInt();
 		aimed = buf.readBoolean();
 		recoil = buf.readFloat();
+		maxShots = buf.readShort();
 	}
 	
 	@Override
@@ -111,6 +118,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 		buf.writeInt(ammo);
 		buf.writeBoolean(aimed);
 		buf.writeFloat(recoil);
+		buf.writeShort(maxShots);
 	}
 	
 	private void serializeIntArray(ByteBuf buf, int a[]) {
@@ -154,7 +162,17 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 			this.recoil = recoil;
 			updateId++;
 		}
-		
+	}
+
+	public int getMaxShots() {
+		return maxShots;
+	}
+
+	void setMaxShots(int maxShots) {
+		if(this.maxShots != maxShots) {
+			this.maxShots = maxShots;
+			updateId++;
+		}
 	}
 
 	public int getSeriesShotCount() {
@@ -182,7 +200,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 	}
 	
 	public boolean isAutomaticModeEnabled() {
-		return getWeapon().builder.maxShots > 1;
+		return maxShots > 1;
 	}
 	
 	public boolean isAimed() {

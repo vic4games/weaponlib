@@ -147,7 +147,7 @@ Reloadable, Updatable, Part {
 	}
 
 	@Override
-	public void updateMainHeldItemForPlayer(EntityPlayer player) {
+	public void update(EntityPlayer player) {
 		modContext.getMagazineReloadAspect().updateMainHeldItem(player);
 	}
 
