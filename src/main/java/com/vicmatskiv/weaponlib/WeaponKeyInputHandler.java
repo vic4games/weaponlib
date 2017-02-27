@@ -97,5 +97,19 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
     			instance.getWeapon().changeFireMode(instance);
     		}
         }
+        
+        else if(KeyBindings.addKey.getIsKeyPressed()) {
+        	PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
+    		if(instance != null && instance.getState() == WeaponState.READY) {
+    			instance.incrementZoom();
+    		}
+        }
+        
+        else if(KeyBindings.subtractKey.isPressed()) {
+        	PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
+    		if(instance != null && instance.getState() == WeaponState.READY) {
+    			instance.decrementZoom();
+    		}
+        }
     }
 }

@@ -556,11 +556,10 @@ public class Weapon extends CompatibleItem implements
 		}
 	}
 	
-	public void changeZoom(EntityPlayer player, float factor, boolean attachmentOnlyMode) {
+	public void changeZoom(EntityPlayer player, float zoom, boolean attachmentOnlyMode) {
 		PlayerWeaponInstance instance = modContext.getMainHeldWeapon();
 		if(instance != null) {
-//			float zoom = instance.getWeapon().builder.zoom * factor;
-//			instance.setZoom(zoom);
+			instance.setZoom(zoom);
 		}
 //		ItemStack itemStack = compatibility.getHeldItemMainHand(player);
 //		if(itemStack != null) {

@@ -45,10 +45,10 @@ public class KeyBindings {
 		rightArrowKey = new KeyBinding("key.texture_change", Keyboard.KEY_RIGHT,
 				"key.categories.weaponlib");
 		
-		addKey = new KeyBinding("key.add", Keyboard.KEY_ADD,
+		addKey = new KeyBinding("key.add", Keyboard.KEY_I,
 				"key.categories.weaponlib");
 		
-		subtractKey = new KeyBinding("key.add", Keyboard.KEY_SUBTRACT,
+		subtractKey = new KeyBinding("key.subtract", Keyboard.KEY_O,
 				"key.categories.weaponlib");
 		
 		fireModeKey = new KeyBinding("key.fire_mode", Keyboard.KEY_RSHIFT,

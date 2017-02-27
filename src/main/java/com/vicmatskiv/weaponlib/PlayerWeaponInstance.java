@@ -3,6 +3,9 @@ package com.vicmatskiv.weaponlib;
 import java.util.Deque;
 import java.util.concurrent.LinkedBlockingDeque;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.vicmatskiv.weaponlib.network.TypeRegistry;
 
 import io.netty.buffer.ByteBuf;
@@ -14,6 +17,9 @@ import scala.actors.threadpool.Arrays;
 
 public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 	
+	private static final Logger logger = LogManager.getLogger(PlayerWeaponInstance.class);
+
+	
 	static {
 		TypeRegistry.getInstance().register(PlayerWeaponInstance.class);
 	}
@@ -24,7 +30,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 	private long lastFireTimestamp;
 	private boolean aimed;
 	private int maxShots;
-	private float zoom;
+	private float zoom = 1f;
 		
 	/*
 	 * Upon adding an element to the head of the queue, all existing elements with lower priority are removed 
@@ -286,21 +292,60 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 	}
 
 	public float getZoom() {
-		if(zoom == 0f) {
-			Item scopeItem = getAttachmentItemWithCategory(AttachmentCategory.SCOPE);
-			if(scopeItem instanceof ItemScope && ((ItemScope) scopeItem).isOptical()) {
-				float minZoom = ((ItemScope) scopeItem).getMinZoom();
-				float maxZoom = ((ItemScope) scopeItem).getMaxZoom();
-				zoom = minZoom + (maxZoom - minZoom) / 2f;
-			} else {
-				zoom = 1f;
-			}
-		}
+		//if(zoom == 0f) {
+//			Item scopeItem = getAttachmentItemWithCategory(AttachmentCategory.SCOPE);
+//			if(scopeItem instanceof ItemScope && ((ItemScope) scopeItem).isOptical()) {
+//				float minZoom = ((ItemScope) scopeItem).getMinZoom();
+//				float maxZoom = ((ItemScope) scopeItem).getMaxZoom();
+//				zoom = minZoom + (maxZoom - minZoom) / 2f;
+//			} else {
+//				zoom = 1f;
+//			}
+		//}
 		return zoom;
+	}
+	
+	public void setZoom(float zoom) {
+		if(this.zoom != zoom) {
+			this.zoom = zoom;
+			updateId++;
+		}
+		
+	}
+
+	void incrementZoom() {
+		Item scopeItem = getAttachmentItemWithCategory(AttachmentCategory.SCOPE);
+		if(scopeItem instanceof ItemScope && ((ItemScope) scopeItem).isOptical()) {
+			//float minZoom = ((ItemScope) scopeItem).getMinZoom();
+			float maxZoom = ((ItemScope) scopeItem).getMaxZoom();
+			if(zoom > maxZoom) {
+				setZoom(Math.max(zoom - 0.01f, maxZoom));
+			}
+			logger.debug("Changed optical zoom to " + zoom);
+		} else {
+			logger.debug("Cannot change non-optical zoom");
+		}
+	}
+	
+	void decrementZoom() {
+		Item scopeItem = getAttachmentItemWithCategory(AttachmentCategory.SCOPE);
+		if(scopeItem instanceof ItemScope && ((ItemScope) scopeItem).isOptical()) {
+			float minZoom = ((ItemScope) scopeItem).getMinZoom();
+			if(zoom < minZoom) {
+				setZoom(Math.min(zoom + 0.01f, minZoom));
+			}
+			logger.debug("Changed optical zoom to " + zoom);
+		} else {
+			logger.debug("Cannot change non-optical zoom");
+		}
 	}
 	
 	@Override
 	public String toString() {
 		return getWeapon().builder.name + "[" + getUuid() + "]";
 	}
+
+	
+
+	
 }
