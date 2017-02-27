@@ -148,6 +148,10 @@ public class PlayerItemInstance<S extends ManagedState<S>> extends UniversalObje
 	public long getUpdateId() {
 		return updateId;
 	}
+	
+	void markDirty() {
+		updateId++;
+	}
 
 	@Override
 	public <E extends ExtendedState<S>> void prepareTransaction(E preparedExtendedState) {

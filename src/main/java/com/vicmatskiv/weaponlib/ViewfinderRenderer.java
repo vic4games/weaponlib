@@ -14,8 +14,10 @@ public class ViewfinderRenderer implements CustomRenderer {
 	
 	private ViewfinderModel model = new ViewfinderModel();
 	private BiConsumer<EntityPlayer, ItemStack> positioning;
+	private ModContext modContext;
 
-	public ViewfinderRenderer(BiConsumer<EntityPlayer, ItemStack> positioning) {
+	public ViewfinderRenderer(ModContext modContext, BiConsumer<EntityPlayer, ItemStack> positioning) {
+		this.modContext = modContext;
 		this.positioning = positioning;
 	}
 
@@ -27,14 +29,15 @@ public class ViewfinderRenderer implements CustomRenderer {
 		}
 		
 		float brightness = 0f;
-		boolean zoomed = Weapon.isZoomed(null, renderContext.getWeapon());
+		PlayerWeaponInstance instance = modContext.getMainHeldWeapon();
+		boolean aimed = instance != null && instance.isAimed();
 		float progress = renderContext.getTransitionProgress();
-		if(progress > 0f && zoomed) {
+		if(progress > 0f && aimed) {
 			brightness = progress;
 		} else if((renderContext.getFromState() == RenderableState.ZOOMING 
 				|| renderContext.getFromState() == RenderableState.ZOOMING_RECOILED
 				|| renderContext.getFromState() == RenderableState.ZOOMING_RECOILED)
-				&& progress > 0f && !zoomed) {
+				&& progress > 0f && !aimed) {
 			brightness = Math.max(1 - progress, 0f);
 		}
 		
@@ -43,7 +46,6 @@ public class ViewfinderRenderer implements CustomRenderer {
 
 		positioning.accept(renderContext.getPlayer(), renderContext.getWeapon());
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, renderContext.getClientModContext().getFramebuffer().framebufferTexture);
-		
 		Minecraft.getMinecraft().entityRenderer.disableLightmap(0);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
 		//GL11.glDepthMask(true);

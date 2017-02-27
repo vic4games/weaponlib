@@ -25,7 +25,6 @@ public class ClientModContext extends CommonModContext {
 	private ClientEventHandler clientEventHandler;
 	private Lock mainLoopLock = new ReentrantLock();
 	private int modEntityID;
-	private WeaponClientStorageManager weaponClientStorageManager;
 	private Queue<Runnable> runInClientThreadQueue = new LinkedBlockingQueue<>();
 	
 	private CompatibleRenderingRegistry rendererRegistry;
@@ -55,9 +54,7 @@ public class ClientModContext extends CommonModContext {
         this.syncManager = new SyncManager<>(permitManager);
         
         this.playerItemInstanceRegistry = new PlayerItemInstanceRegistry(syncManager);
-        
-        this.weaponClientStorageManager = new WeaponClientStorageManager();
-        
+                
 		StateManager<WeaponState, PlayerWeaponInstance> weaponStateManager = new StateManager<>((s1, s2) -> s1 == s2);
 		weaponReloadAspect.setPermitManager(permitManager);
 		weaponReloadAspect.setStateManager(weaponStateManager);
@@ -142,11 +139,6 @@ public class ClientModContext extends CommonModContext {
 	@Override
 	public void runInMainThread(Runnable runnable) {
 		runInClientThreadQueue.add(runnable);
-	}
-	
-	@Override
-	public WeaponClientStorageManager getWeaponClientStorageManager() {
-		return weaponClientStorageManager;
 	}
 
 	@Override

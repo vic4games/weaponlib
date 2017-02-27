@@ -13,6 +13,9 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.vicmatskiv.weaponlib.compatibility.CompatibleItem;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
@@ -23,7 +26,6 @@ import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ChatComponentText;
@@ -32,6 +34,8 @@ import net.minecraft.world.World;
 public class Weapon extends CompatibleItem implements 
 	PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContainer, Reloadable, Modifiable, Updatable {
 	
+	private static final Logger logger = LogManager.getLogger(Weapon.class);
+
 	public static class Builder {
 
 	private static final float DEFAULT_SPAWN_ENTITY_SPEED = 10f;
@@ -513,9 +517,7 @@ public class Weapon extends CompatibleItem implements
 	}
 
 	private void toggleAiming() {
-		System.out.println("Switching aiming...");
 		PlayerWeaponInstance mainHandHeldWeaponInstance = modContext.getMainHeldWeapon();
-		
 		if(mainHandHeldWeaponInstance != null && mainHandHeldWeaponInstance.getState() == WeaponState.READY) {
 			mainHandHeldWeaponInstance.setAimed(!mainHandHeldWeaponInstance.isAimed());
 		}
@@ -529,8 +531,6 @@ public class Weapon extends CompatibleItem implements
 		if (compatibility.getTagCompound(itemStack) == null) {
 			compatibility.setTagCompound(itemStack, new NBTTagCompound());
 			Tags.setAmmo(itemStack, 0);
-			Tags.setZoom(itemStack, 1.0f);
-			Tags.setRecoil(itemStack, builder.recoil);
 		}
 	}
 	
@@ -538,37 +538,36 @@ public class Weapon extends CompatibleItem implements
 		Tags.setLaser(itemStack, !Tags.isLaserOn(itemStack));
 	}
 	
-	public static boolean isAimed(ItemStack itemStack) {
-		return Tags.isAimed(itemStack);
-	}
-
-	public static boolean isZoomed(EntityPlayer player, ItemStack itemStack) {
-		return Tags.getZoom(itemStack) != 1.0f;
-	}
+//	public static boolean isAimed(ItemStack itemStack) {
+//		return Tags.isAimed(itemStack);
+//	}
+//
+//	public static boolean isZoomed(EntityPlayer player, ItemStack itemStack) {
+//		return Tags.getZoom(itemStack) != 1.0f;
+//	}
 	
 	
 	public void changeRecoil(EntityPlayer player, float factor) {
-		ItemStack itemStack = compatibility.getHeldItemMainHand(player);
-		ensureItemStack(itemStack);
-		float recoil = builder.recoil * factor;
-		Tags.setRecoil(itemStack, recoil);
-		modContext.getChannel().getChannel().sendTo(new ChangeSettingsMessage(this, recoil), (EntityPlayerMP) player);
-	}
-	
-	void clientChangeRecoil(EntityPlayer player, float recoil) {
-		WeaponClientStorage weaponInstanceStorage = getWeaponClientStorage(player);
-		if(weaponInstanceStorage != null) {
-			weaponInstanceStorage.setRecoil(recoil);
+		PlayerWeaponInstance instance = modContext.getMainHeldWeapon();
+		if(instance != null) {
+			float recoil = instance.getWeapon().builder.recoil * factor;
+			logger.debug("Changing recoil to " + recoil + " for instance " + instance);
+			instance.setRecoil(recoil);
 		}
 	}
 	
 	public void changeZoom(EntityPlayer player, float factor, boolean attachmentOnlyMode) {
-		ItemStack itemStack = compatibility.getHeldItemMainHand(player);
-		if(itemStack != null) {
-			ensureItemStack(itemStack);
-			float zoom = builder.zoom * factor;
-			Tags.setAllowedZoom(itemStack, zoom, attachmentOnlyMode);
+		PlayerWeaponInstance instance = modContext.getMainHeldWeapon();
+		if(instance != null) {
+//			float zoom = instance.getWeapon().builder.zoom * factor;
+//			instance.setZoom(zoom);
 		}
+//		ItemStack itemStack = compatibility.getHeldItemMainHand(player);
+//		if(itemStack != null) {
+//			ensureItemStack(itemStack);
+//			float zoom = builder.zoom * factor;
+//			Tags.setAllowedZoom(itemStack, zoom, attachmentOnlyMode);
+//		}
 	}
 	
 	public void changeZoom(EntityPlayer player, float factor) {
@@ -596,13 +595,13 @@ public class Weapon extends CompatibleItem implements
 		return builder.crosshair;
 	}
 	
-	boolean isCrosshairFullScreen(ItemStack itemStack) {
-		if(isZoomed(null, itemStack)) {
-			return builder.crosshairZoomedFullScreen;
-		}
-		return builder.crosshairFullScreen;
-		
-	}
+//	boolean isCrosshairFullScreen(ItemStack itemStack) {
+//		if(isZoomed(null, itemStack)) {
+//			return builder.crosshairZoomedFullScreen;
+//		}
+//		return builder.crosshairFullScreen;
+//		
+//	}
 	
 	public String getActiveTextureName(ItemStack itemStack) {
 		ensureItemStack(itemStack);
@@ -619,58 +618,14 @@ public class Weapon extends CompatibleItem implements
 		return weaponInstance != null ? 
 				WeaponAttachmentAspect.isActiveAttachment(attachment, weaponInstance) : false;
 	}
-	
-	@Deprecated
-	static boolean isEjectedSpentRound(EntityPlayer player, ItemStack itemStack) {
-		Weapon weapon = (Weapon) itemStack.getItem();
-		WeaponClientStorage storage = weapon.getWeaponClientStorage(player);
-		return storage != null && storage.getState() == State.EJECT_SPENT_ROUND;
-		
-//		Weapon weapon = (Weapon) itemStack.getItem();
-//		PlayerWeaponInstance playerWeaponState = weapon.getPlayerWeaponState(player);
-//		return playerWeaponState != null && playerWeaponState.getState() == WeaponState.EJECTING;
-	}
-	
-	@Deprecated
-	static boolean isReloadingConfirmed(EntityPlayer player, ItemStack itemStack) {
-//		Weapon weapon = (Weapon) itemStack.getItem();
-//		PlayerWeaponInstance playerWeaponState = weapon.getPlayerWeaponState(player);
-//		return playerWeaponState != null && playerWeaponState.getState() == WeaponState.LOAD;
-		
-		Weapon weapon = (Weapon) itemStack.getItem();
-		WeaponClientStorage storage = weapon.getWeaponClientStorage(player);
-		return storage != null && storage.getState() == State.RELOAD_CONFIRMED;
-	}
-
-	@Deprecated
-	static boolean isUnloadingStarted(EntityPlayer player, ItemStack itemStack) {
-
-//		Weapon weapon = (Weapon) itemStack.getItem();
-//		PlayerWeaponInstance playerWeaponState = weapon.getPlayerWeaponState(player);
-//		return playerWeaponState != null && WeaponState.UNLOAD.matches(playerWeaponState.getState());
-		
-		
-		Weapon weapon = (Weapon) itemStack.getItem();
-		WeaponClientStorage storage = weapon.getWeaponClientStorage(player);
-		return storage != null && storage.getState() == State.UNLOAD_STARTED;
-		
-	}
 
 	@Override
 	public int getMaxItemUseDuration(ItemStack itemStack) {
 		return 0;
 	}
 	
-	WeaponClientStorage getWeaponClientStorage(EntityPlayer player) {
-		return modContext.getWeaponClientStorageManager().getWeaponClientStorage(player, this);
-	}
-	
-//	PlayerWeaponInstance getPlayerWeaponState(EntityPlayer player) {
-//		return modContext.getPlayerItemRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
-//	}
-	
 	int getCurrentAmmo(EntityPlayer player) {
-		PlayerWeaponInstance state = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
+		PlayerWeaponInstance state = modContext.getMainHeldWeapon();
 		return state.getAmmo();
 		
 //		WeaponClientStorage storage = getWeaponClientStorage(player);
@@ -796,7 +751,7 @@ public class Weapon extends CompatibleItem implements
 		} else {
 			result = builder.maxShots.get(0);
 		}
-		System.out.println("Changing fire mode to " + result);
+		
 		instance.setMaxShots(result);
 		String message;
 		if(result == 1) {
@@ -806,6 +761,8 @@ public class Weapon extends CompatibleItem implements
 		} else {
 			message = "Burst";
 		}
+		logger.debug("Changed fire mode of " + instance + " to " + result);
+		
 		instance.getPlayer().addChatMessage(new ChatComponentText("Fire mode changed to " + message));
 	}
 }

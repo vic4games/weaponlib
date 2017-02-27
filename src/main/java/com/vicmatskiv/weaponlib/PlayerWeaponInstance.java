@@ -24,6 +24,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 	private long lastFireTimestamp;
 	private boolean aimed;
 	private int maxShots;
+	private float zoom;
 		
 	/*
 	 * Upon adding an element to the head of the queue, all existing elements with lower priority are removed 
@@ -32,7 +33,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 	 */
 	private Deque<Tuple<WeaponState, Long>> filteredStateQueue = new LinkedBlockingDeque<>();
 	private int[] activeAttachmentIds = new int[0];
-	private int[] selectedAttachmentIndexes = new int[0];
+	private byte[] selectedAttachmentIndexes = new byte[0];
 	private int[] previouslyAttachmentIds = new int[0];
 
 	public PlayerWeaponInstance() {
@@ -49,7 +50,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 	
 	@Override
 	protected int getSerialVersion() {
-		return 2;
+		return 3;
 	}
 	
 	private void addStateToHistory(WeaponState state) {
@@ -90,11 +91,9 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 	
 	protected void setAmmo(int ammo) {
 		if(ammo != this.ammo) {
-			System.out.println("Updating instance with ammo " + ammo);
 			this.ammo = ammo;
-			//updateId++; //TODO: what's going on with this update id?
+			updateId++; //TODO: what's going on with this update id?
 		}
-		
 	}
 	
 	@Override
@@ -102,11 +101,12 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 		super.init(buf);
 		activeAttachmentIds = initIntArray(buf);
 		previouslyAttachmentIds = initIntArray(buf);
-		selectedAttachmentIndexes = initIntArray(buf);
+		selectedAttachmentIndexes = initByteArray(buf);
 		ammo = buf.readInt();
 		aimed = buf.readBoolean();
 		recoil = buf.readFloat();
 		maxShots = buf.readShort();
+		zoom = buf.readFloat();
 	}
 	
 	@Override
@@ -114,25 +114,42 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 		super.serialize(buf);
 		serializeIntArray(buf, activeAttachmentIds);
 		serializeIntArray(buf, previouslyAttachmentIds);
-		serializeIntArray(buf, selectedAttachmentIndexes);
+		serializeByteArray(buf, selectedAttachmentIndexes);
 		buf.writeInt(ammo);
 		buf.writeBoolean(aimed);
 		buf.writeFloat(recoil);
 		buf.writeShort(maxShots);
+		buf.writeFloat(zoom);
 	}
 	
-	private void serializeIntArray(ByteBuf buf, int a[]) {
+	private static void serializeIntArray(ByteBuf buf, int a[]) {
 		buf.writeByte(a.length);
 		for(int i = 0; i < a.length; i++) {
 			buf.writeInt(a[i]);
 		}
 	}
 	
-	private int[] initIntArray(ByteBuf buf) {
+	private static void serializeByteArray(ByteBuf buf, byte a[]) {
+		buf.writeByte(a.length);
+		for(int i = 0; i < a.length; i++) {
+			buf.writeByte(a[i]);
+		}
+	}
+	
+	private static int[] initIntArray(ByteBuf buf) {
 		int length = buf.readByte();
 		int a[] = new int[length];
 		for(int i = 0; i < length; i++) {
 			a[i] = buf.readInt();
+		}
+		return a;
+	}
+	
+	private static byte[] initByteArray(ByteBuf buf) {
+		int length = buf.readByte();
+		byte a[] = new byte[length];
+		for(int i = 0; i < length; i++) {
+			a[i] = buf.readByte();
 		}
 		return a;
 	}
@@ -229,16 +246,15 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 	void setActiveAttachmentIds(int[] activeAttachmentIds) {
 		if(!Arrays.equals(this.activeAttachmentIds, activeAttachmentIds)) {
 			this.activeAttachmentIds = activeAttachmentIds;
-			System.out.println("Updating active attachment ids");
 			updateId++;
 		}
 	}
 
-	public int[] getSelectedAttachmentIds() {
+	public byte[] getSelectedAttachmentIds() {
 		return selectedAttachmentIndexes;
 	}
 
-	void setSelectedAttachmentIndexes(int[] selectedAttachmentIndexes) {
+	void setSelectedAttachmentIndexes(byte[] selectedAttachmentIndexes) {
 		if(!Arrays.equals(this.selectedAttachmentIndexes, selectedAttachmentIndexes)) {
 			this.selectedAttachmentIndexes = selectedAttachmentIndexes;
 			updateId++;
@@ -254,5 +270,37 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 			this.previouslyAttachmentIds = previouslyAttachmentIds;
 			updateId++;
 		}
+	}
+	
+	public boolean isAttachmentZoomEnabled() {
+		Item scopeItem = getAttachmentItemWithCategory(AttachmentCategory.SCOPE);
+		return scopeItem instanceof ItemScope;
+	}
+
+	private Item getAttachmentItemWithCategory(AttachmentCategory category) {
+		if(activeAttachmentIds == null || activeAttachmentIds.length <= category.ordinal()) {
+			return null;
+		}
+		Item scopeItem = Item.getItemById(activeAttachmentIds[category.ordinal()]);
+		return scopeItem;
+	}
+
+	public float getZoom() {
+		if(zoom == 0f) {
+			Item scopeItem = getAttachmentItemWithCategory(AttachmentCategory.SCOPE);
+			if(scopeItem instanceof ItemScope && ((ItemScope) scopeItem).isOptical()) {
+				float minZoom = ((ItemScope) scopeItem).getMinZoom();
+				float maxZoom = ((ItemScope) scopeItem).getMaxZoom();
+				zoom = minZoom + (maxZoom - minZoom) / 2f;
+			} else {
+				zoom = 1f;
+			}
+		}
+		return zoom;
+	}
+	
+	@Override
+	public String toString() {
+		return getWeapon().builder.name + "[" + getUuid() + "]";
 	}
 }

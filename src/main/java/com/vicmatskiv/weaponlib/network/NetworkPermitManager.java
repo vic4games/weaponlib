@@ -7,6 +7,9 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.PlayerContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessage;
@@ -22,6 +25,8 @@ import net.minecraft.entity.player.EntityPlayerMP;
 public class NetworkPermitManager
 implements PermitManager, CompatibleMessageHandler<PermitMessage, CompatibleMessage>  {
 	
+	private static final Logger logger = LogManager.getLogger(NetworkPermitManager.class);
+
 	private ModContext modContext;
 	private Map<UUID, Object /*BiConsumer<Permit<?>, ?>*/> permitCallbacks = new HashMap<>();
 	private Map<Class<?>, BiConsumer<Permit<?>, ?>> evaluators = new HashMap<>();
@@ -43,7 +48,7 @@ implements PermitManager, CompatibleMessageHandler<PermitMessage, CompatibleMess
 			Class<? extends E> esClass,
 			BiConsumer<P, E> evaluator) {
 		evaluators.put(permitClass,  (p, c) -> { 
-			System.out.println("Requesting permit");
+			logger.debug("Processing permit " + p + " for instance " + c);
 			evaluator.accept(permitClass.cast(p), esClass.cast(c)); 
 		});
 	}
@@ -61,6 +66,7 @@ implements PermitManager, CompatibleMessageHandler<PermitMessage, CompatibleMess
 			}
 			ctx.runInMainThread(() -> {
 				//serverAction.accept(permit, context);
+				@SuppressWarnings("unchecked")
 				BiConsumer<Permit<?>, Object> evaluator = (BiConsumer<Permit<?>, Object>) evaluators.get(permit.getClass());
 				if(evaluator != null) {
 					evaluator.accept(permit, extendedState);
@@ -73,6 +79,7 @@ implements PermitManager, CompatibleMessageHandler<PermitMessage, CompatibleMess
 				if(extendedState instanceof PlayerContext) {
 					((PlayerContext) extendedState).setPlayer(compatibility.clientPlayer());
 				}
+				@SuppressWarnings("unchecked")
 				BiConsumer<Permit<?>, Object> callback = (BiConsumer<Permit<?>, Object>) permitCallbacks.remove(permit.getUuid());
 				if(callback != null) {
 					callback.accept(permit, extendedState);

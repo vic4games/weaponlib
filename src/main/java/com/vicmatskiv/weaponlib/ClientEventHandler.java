@@ -109,14 +109,14 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 			safeGlobals.renderingPhase.set(RenderingPhase.RENDER_VIEWFINDER);
 			long p_78471_2_ = this.renderEndNanoTime + (long)(1000000000 / 60);
 			
-			if(Weapon.isZoomed(null, compatibility.getHeldItemMainHand(compatibility.clientPlayer()))) {
+			PlayerWeaponInstance instance = modContext.getMainHeldWeapon();
+			if(instance != null && instance.isAimed()) {
 				modContext.getFramebuffer().bindFramebuffer(true);
 				modContext.getSecondWorldRenderer().updateRenderer();
 				modContext.getSecondWorldRenderer().renderWorld(event.renderTickTime, p_78471_2_);
 				Minecraft.getMinecraft().getFramebuffer().bindFramebuffer(true);
 			}
 				
-			
 			this.renderEndNanoTime = System.nanoTime();
 			
 			safeGlobals.renderingPhase.set(RenderingPhase.NORMAL);

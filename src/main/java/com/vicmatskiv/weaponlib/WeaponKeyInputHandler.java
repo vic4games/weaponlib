@@ -58,20 +58,16 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
 //    			attachmentManager.toggleClientAttachmentSelectionMode(itemStack, player);
     			Item item = itemStack.getItem();
     			if(item instanceof Modifiable) {
-    				System.out.println("Attachment mode toggled at " + System.currentTimeMillis());
     				((Modifiable) item).toggleClientAttachmentSelectionMode(player);
     			}
     		}
         } 
         
         else if(KeyBindings.upArrowKey.isPressed()) {
-        	// TODO: this needs to be handled entirely by attachment aspect
     		PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
     		if(instance != null && instance.getState() == WeaponState.MODIFYING) {
-    			//channel.getChannel().sendToServer(new ChangeAttachmentMessage(AttachmentCategory.SCOPE));
     			modContext.getAttachmentAspect().changeAttachment(AttachmentCategory.SCOPE, instance);
     		}
-        	
         } 
         
         else if(KeyBindings.rightArrowKey.isPressed()) {
@@ -84,14 +80,14 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
         else if(KeyBindings.downArrowKey.isPressed()) {
         	PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
     		if(instance != null && instance.getState() == WeaponState.MODIFYING) {
-    			channel.getChannel().sendToServer(new ChangeAttachmentMessage(AttachmentCategory.GRIP)); 
+    			modContext.getAttachmentAspect().changeAttachment(AttachmentCategory.GRIP, instance);
     		}
         } 
         
         else if(KeyBindings.leftArrowKey.isPressed()) {
         	PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
     		if(instance != null && instance.getState() == WeaponState.MODIFYING) {
-    			channel.getChannel().sendToServer(new ChangeAttachmentMessage(AttachmentCategory.SILENCER)); 
+    			modContext.getAttachmentAspect().changeAttachment(AttachmentCategory.SILENCER, instance);
     		}
         }
         

@@ -4,16 +4,19 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.vicmatskiv.weaponlib.state.Permit.Status;
 
 public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>> {
 	
+	private static final Logger logger = LogManager.getLogger(StateManager.class);
+
 	public class RuleBuilder<EE extends E> {
 		
 		private static final long DEFAULT_REQUEST_TIMEOUT = 10000L;
@@ -185,8 +188,8 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 			// This is a permit granted callback which sets state to the final toState
 			
 			S updateToState = processedPermit.getStatus() == Status.GRANTED ? toState : fromState;
-			System.out.println("Applying permit with status " + processedPermit.getStatus()
-				+ ", changing state to " + toState);
+			logger.debug("Applying permit with status " + processedPermit.getStatus()
+				+ " to " + updatedState + ", changing state to " + toState);
 			
 			if(stateUpdater.apply(updateToState, safeCast(updatedState))) {
 				action.execute(safeCast(updatedState), fromState, toState, processedPermit);
@@ -305,7 +308,6 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 	
 	public Result changeState(Aspect<S, ? extends E> aspect, E extendedState, @SuppressWarnings("unchecked") S...targetStates) {
 		S currentState = extendedState.getState();
-		//System.out.println("Current state: " + currentState);
 		return changeStateFromTo(aspect, extendedState, currentState, targetStates);
 	}
 	
@@ -335,8 +337,7 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 		S ts[] = targetStates;
 		while((newStateRule = findNextStateRule(aspect, extendedState, s, ts)) != null) {
 			extendedState.setState(newStateRule.toState);
-			System.out.println("State changed to " + newStateRule.toState + " at " + System.currentTimeMillis());
-			//System.out.println("State changed from " + s + " to "+ newStateRule.toState);
+			logger.debug("Changed state of " + extendedState + " to " + newStateRule.toState);
 			result = new Result(true, newStateRule.toState);
 			if(newStateRule.action != null) {
 				result.actionResult = newStateRule.action.execute(extendedState, s, newStateRule.toState, null);

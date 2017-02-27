@@ -39,24 +39,23 @@ public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 		 *       	setNewFov(getZoom())
 		 */
 
-		ItemStack stack = compatibility.getHeldItemMainHand(compatibility.getEntity(event));
-		if (stack != null) {
-			if (stack.getItem() instanceof Weapon) {
-				if (compatibility.getTagCompound(stack) != null) {
-					final float fov;
-					if(Tags.isAttachmentOnlyZoom(stack)) {
-						if(safeGlobals.renderingPhase.get() == RenderingPhase.RENDER_VIEWFINDER) {
-							fov = Tags.getZoom(stack);
-						} else {
-							fov = 1f;
-						}
-					} else {
-						fov = Tags.getZoom(stack);
-					}
-					
-					compatibility.setNewFov(event, fov); //Tags.getZoom(stack));
+		//ItemStack stack = compatibility.getHeldItemMainHand(compatibility.getEntity(event));
+		PlayerWeaponInstance instance = modContext.getMainHeldWeapon();
+		if (instance != null) {
+
+			final float fov;
+			if(instance.isAttachmentZoomEnabled()) {
+				if(safeGlobals.renderingPhase.get() == RenderingPhase.RENDER_VIEWFINDER) {
+					fov = instance.getZoom();
+				} else {
+					fov = 1f;
 				}
+			} else {
+				fov = instance.getZoom();
 			}
+
+			compatibility.setNewFov(event, fov); //Tags.getZoom(stack));
+
 		}
 	}
 	
@@ -102,8 +101,11 @@ public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 		if (itemStack != null && itemStack.getItem() instanceof Weapon) {
 			RenderPlayer rp = compatibility.getRenderer(event);
 
-			if (itemStack != null && compatibility.getTagCompound(itemStack) != null) {
-				compatibility.setAimed(rp, Weapon.isAimed(itemStack));
+			if (itemStack != null ) {
+				PlayerItemInstance<?> instance = modContext.getPlayerItemInstanceRegistry()
+						.getItemInstance((EntityPlayer)compatibility.getEntity(event), itemStack);
+				compatibility.setAimed(rp, instance != null && instance instanceof PlayerWeaponInstance
+						? ((PlayerWeaponInstance) instance).isAimed() : false);
 			}
 		}
 	}

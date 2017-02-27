@@ -48,12 +48,14 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
 	private ModContext modContext;
 
 	private StateManager<WeaponState, ? super PlayerWeaponInstance> stateManager;
-
-	private PermitManager permitManager;
 	
 	public WeaponFireAspect(CommonModContext modContext) {
 		this.modContext = modContext;
 	}
+	
+
+	@Override
+	public void setPermitManager(PermitManager permitManager) {}
 
 	@Override
 	public void setStateManager(StateManager<WeaponState, ? super PlayerWeaponInstance> stateManager) {
@@ -96,10 +98,6 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
 		
 		;
 	}
-
-	public void setPermitManager(PermitManager permitManager) {
-		this.permitManager = permitManager;
-	}
 	
 	void onFireButtonClick(EntityPlayer player) {
 		PlayerWeaponInstance weaponInstance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
@@ -109,7 +107,6 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
 	}
 	
 	void onFireButtonRelease(EntityPlayer player) {
-		//System.out.println("Releasing trigger");
 		PlayerWeaponInstance weaponInstance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
 		if(weaponInstance != null) {
 			stateManager.changeState(this, weaponInstance, WeaponState.EJECT_REQUIRED, WeaponState.READY);
@@ -117,7 +114,6 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
 	}
 	
 	void onUpdate(EntityPlayer player) {
-		//System.out.println("Updating...");
 		PlayerWeaponInstance weaponInstance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
 		if(weaponInstance != null) {
 			stateManager.changeStateFromAnyOf(this, weaponInstance, allowedUpdateFromStates);
@@ -127,14 +123,11 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
 	private void fire(PlayerWeaponInstance weaponInstance) {
 		EntityPlayer player = weaponInstance.getPlayer();
 		Weapon weapon = (Weapon) weaponInstance.getItem();
-		//WeaponClientStorage storage = null; //context.getStorage();
 		Random random = player.getRNG();
 		
 		modContext.getChannel().getChannel().sendToServer(new TryFireMessage(true));
-		ItemStack heldItem = compatibility.getHeldItemMainHand(player); // TODO: move out
 		
 		compatibility.playSound(player, modContext.getAttachmentAspect().isSilencerOn(weaponInstance) ? weapon.getSilencedShootSound() : weapon.getShootSound(), 1F, 1F);
-		System.out.println("Sound played at " + System.currentTimeMillis());
 		
 		player.rotationPitch = player.rotationPitch - weaponInstance.getRecoil();						
 		float rotationYawFactor = -1.0f + random.nextFloat() * 2.0f;
@@ -142,7 +135,7 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
 		
 		if(weapon.builder.flashIntensity > 0) {
 			EffectManager.getInstance().spawnFlashParticle(player, weapon.builder.flashIntensity,
-					Weapon.isZoomed(player, heldItem) ? FLASH_X_OFFSET_ZOOMED : compatibility.getEffectOffsetX(),
+					weaponInstance.isAimed() ? FLASH_X_OFFSET_ZOOMED : compatibility.getEffectOffsetX(),
 							compatibility.getEffectOffsetY());
 		}
 		
@@ -157,10 +150,8 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
 
 	private void ejectSpentRound(PlayerWeaponInstance weaponInstance) {
 		EntityPlayer player = weaponInstance.getPlayer();
-		ItemStack itemStack = compatibility.getHeldItemMainHand(player); // TODO: move out
-		if(!Tags.isAimed(itemStack)) {
-			Weapon weapon = weaponInstance.getWeapon();
-			compatibility.playSound(player, weapon.getEjectSpentRoundSound(), 1F, 1F);
+		if(!weaponInstance.isAimed()) {
+			compatibility.playSound(player, weaponInstance.getWeapon().getEjectSpentRoundSound(), 1F, 1F);
 		}
 	}
 	
@@ -181,4 +172,5 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
 				playerWeaponInstance !=null && modContext.getAttachmentAspect().isSilencerOn(playerWeaponInstance) ? weapon.getSilencedShootSound() : weapon.getShootSound(), 1.0F, 1.0F);
 
 	}
+
 }

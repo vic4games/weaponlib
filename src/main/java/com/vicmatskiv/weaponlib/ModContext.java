@@ -1,7 +1,5 @@
 package com.vicmatskiv.weaponlib;
 
-import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
-
 import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 
@@ -17,8 +15,6 @@ public interface ModContext {
 	
 	public void runSyncTick(Runnable runnable);
 		
-	public WeaponClientStorageManager getWeaponClientStorageManager();
-
 	public void registerRenderableItem(String name, Item weapon, Object renderer);
 
 	//TODO: append mod id in 1.7.10

@@ -141,5 +141,5 @@ public interface Compatibility {
 	
 	public int getInventorySlot(EntityPlayer player, ItemStack itemStack);
 
-	public void forEachInventorySlot(BiConsumer<Integer, ItemStack> action);
+	
 }

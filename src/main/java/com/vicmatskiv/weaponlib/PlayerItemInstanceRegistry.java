@@ -3,26 +3,39 @@ package com.vicmatskiv.weaponlib;
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 import java.util.function.BiFunction;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.vicmatskiv.weaponlib.state.ManagedState;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
 public class PlayerItemInstanceRegistry {
+	
+	private static final Logger logger = LogManager.getLogger(PlayerItemInstanceRegistry.class);
 
 	private Map<UUID, Map<Integer, PlayerItemInstance<?>>> registry = new HashMap<>();
 	
 	private SyncManager<?> syncManager;
 	
+	private Cache<ItemStack, PlayerItemInstance<?>> itemStackInstanceCache;
+	
 	public PlayerItemInstanceRegistry(SyncManager<?> syncManager) {
 		this.syncManager = syncManager;
+		
+		this.itemStackInstanceCache = CacheBuilder.newBuilder().maximumSize(100).build();
 	}
 
 	/**
@@ -44,39 +57,38 @@ public class PlayerItemInstanceRegistry {
 		Map<Integer, PlayerItemInstance<?>> slotInstances = registry.computeIfAbsent(player.getPersistentID(), p -> new HashMap<>());
 		PlayerItemInstance<?> result = slotInstances.get(slot);
 		if (result == null) {
-			
 			result = createItemInstance(player, slot);
 			if(result != null) {
 				slotInstances.put(slot, result);
 				syncManager.watch(result);
+				result.markDirty();
 			}
 		} else {
-			// TODO: compare result with the actual slot content somehow
-			// if no match, unwatch, re-create and watch
-			ItemStack slotStack = compatibility.getInventoryItemStack(player, slot);
-			if(matches(slotStack, result)) {
-				System.err.println("Stored item instance does not match instance in slot");
-			}
 			if(result.getItemInventoryIndex() != slot) {
-				System.err.println("Invalid item slot id, correcting...");
+				logger.warn("Invalid instance slot id, correcting...");
 				result.setItemInventoryIndex(slot);
+			}
+			if(result.getPlayer() != player) {
+				logger.warn("Invalid player " + result.getPlayer()
+						+ " associated with instance in slot, changing to " + player);
+				result.setPlayer(player);
 			}
 			
 		}
 		return result;
 	}
 	
-	private boolean matches(ItemStack slotStack, PlayerItemInstance<?> result) {
-		byte instanceBytes[] = Tags.getInstanceBytes(slotStack);
-		if(instanceBytes == null || instanceBytes.length < 36) {
-			return false;
-		}
-		
-		ByteBuf buf = Unpooled.wrappedBuffer(instanceBytes);
-		buf.skipBytes(20); // skip serial version id (4 bytes) and type uuid (16 bytes)
-		UUID stackUuid = new UUID(buf.readLong(), buf.readLong()); // 16 more bytes
-		return stackUuid.equals(result);
-	}
+//	private boolean matches(ItemStack slotStack, PlayerItemInstance<?> result) {
+//		byte instanceBytes[] = Tags.getInstanceBytes(slotStack);
+//		if(instanceBytes == null || instanceBytes.length < 36) {
+//			return false;
+//		}
+//		
+//		ByteBuf buf = Unpooled.wrappedBuffer(instanceBytes);
+//		buf.skipBytes(20); // skip serial version id (4 bytes) and type uuid (16 bytes)
+//		UUID stackUuid = new UUID(buf.readLong(), buf.readLong()); // 16 more bytes
+//		return stackUuid.equals(result);
+//	}
 
 	// if input item does not match stored item, keep the old value, otherwise replace with new value
 	BiFunction<? super PlayerItemInstance<?>, ? super PlayerItemInstance<?>, ? extends PlayerItemInstance<?>> merge = (currentState, newState) -> 
@@ -107,7 +119,6 @@ public class PlayerItemInstanceRegistry {
 				 */
 				extendedStateToMerge.setState(newManagedState); // why do we set it here?
 				if(newManagedState.commitPhase() != null) {
-					System.out.println("Preparing transaction for state " + newManagedState.commitPhase());
 					currentState.prepareTransaction(extendedStateToMerge);
 				} else {
 					//slotContexts.put(extendedStateToMerge.getItemInventoryIndex(), extendedStateToMerge);
@@ -123,29 +134,21 @@ public class PlayerItemInstanceRegistry {
 	private PlayerItemInstance<?> createItemInstance(EntityPlayer player, int slot) {
 		ItemStack itemStack = compatibility.getInventoryItemStack(player, slot);
 		
-		PlayerItemInstance<?> result;
-		if(itemStack != null) {
-			System.out.println("State for slot " + slot +  " not found, creating...");
+		PlayerItemInstance<?> result = null;
+		if(itemStack != null && itemStack.getItem() instanceof PlayerItemInstanceFactory) {
+			logger.debug("Creating instance for slot " + slot +  " from item stack "+ itemStack);
 			try {
 				result = Tags.getInstance(itemStack);
-				if(result != null) {
-					result.setItemInventoryIndex(slot);
-					result.setPlayer(player);
-					return result;
-				}
 			} catch(RuntimeException e) {
-				System.err.println("Opps, looks like serialization format has been changed for this item");
+				logger.debug("Failed to deserialize instance from " + itemStack);
 			}
-		} else {
-			return null;
+			if(result == null) {
+				result = ((PlayerItemInstanceFactory<?, ?>) itemStack.getItem()).createItemInstance(player, itemStack, slot);
+			}
+			result.setItemInventoryIndex(slot);
+			result.setPlayer(player);
 		}
 		
-		if(itemStack.getItem() instanceof PlayerItemInstanceFactory) {
-			return ((PlayerItemInstanceFactory<?, ?>) itemStack.getItem()).createItemInstance(player, itemStack, slot);	
-		} else {
-			result = new PlayerItemInstance<>(slot, player, itemStack);
-		}
-
 		return result;
 	}
 
@@ -154,6 +157,31 @@ public class PlayerItemInstanceRegistry {
 		PlayerItemInstance<?> result = null;
 		if(slot >= 0) {
 			result = getItemInstance(player, slot);
+		} else {
+			// For everything else use cache
+			result = getItemInstance(itemStack);
+		}
+		return result;
+	}
+
+	private PlayerItemInstance<?> getItemInstance(ItemStack itemStack) {
+		PlayerItemInstance<?> result = null;
+		try {
+			result = itemStackInstanceCache.get(itemStack, () -> {
+				logger.debug("Initializing instance from stack " + itemStack);
+				PlayerItemInstance<?> instance = null;
+				try {
+					instance = Tags.getInstance(itemStack);
+				} catch(RuntimeException e) {
+					logger.error("Failed to initialize instance from " + itemStack, e.getCause());
+				}
+				if(instance == null && itemStack.getItem() instanceof PlayerItemInstanceFactory) {
+					instance = ((PlayerItemInstanceFactory<?, ?>) itemStack.getItem()).createItemInstance(null, itemStack, -1);
+				}
+				return instance;
+			});
+		} catch (UncheckedExecutionException | ExecutionException e) {
+			logger.error("Failed to initialize cache instance from " + itemStack, e.getCause());
 		}
 		return result;
 	}
@@ -163,17 +191,18 @@ public class PlayerItemInstanceRegistry {
 		if(player == null) {
 			return;
 		}
+		
 		Map<Integer, PlayerItemInstance<?>> slotContexts = registry.get(player.getPersistentID());
 		if(slotContexts != null) {
-			compatibility.forEachInventorySlot((slot, stack) -> {
-				if(stack == null) {
-					PlayerItemInstance<?> instance = slotContexts.remove(slot);
-					if(instance != null) {
-						System.out.println("Removing instance " + instance);
-						syncManager.unwatch((PlayerItemInstance) instance);
-					}
+			for(Iterator<Entry<Integer, PlayerItemInstance<?>>> it = slotContexts.entrySet().iterator(); it.hasNext();) {
+				Entry<Integer, PlayerItemInstance<?>> e = it.next();
+				ItemStack slotStack = compatibility.getInventoryItemStack(player, e.getKey());
+				if(slotStack == null) {
+					logger.debug("Removing instance in slot " + e.getKey());
+					syncManager.unwatch((PlayerItemInstance) e.getValue());
+					it.remove();
 				}
-			});
+			}
 		}
 	}
 }

@@ -50,23 +50,17 @@ public class CommonModContext implements ModContext {
 //		channel.registerMessage(new AttachmentModeMessageHandler(attachmentManager),
 //				AttachmentModeMessage.class, 4, CompatibleSide.CLIENT);
 		
-		channel.registerMessage(new ChangeAttachmentMessageHandler(weaponAttachmentAspect),
-				ChangeAttachmentMessage.class, 5, CompatibleSide.SERVER);
-		
-		channel.registerMessage(new ChangeAttachmentMessageHandler(weaponAttachmentAspect),
-				ChangeAttachmentMessage.class, 6, CompatibleSide.CLIENT);
+//		channel.registerMessage(new ChangeAttachmentMessageHandler(weaponAttachmentAspect),
+//				ChangeAttachmentMessage.class, 5, CompatibleSide.SERVER);
+//		
+//		channel.registerMessage(new ChangeAttachmentMessageHandler(weaponAttachmentAspect),
+//				ChangeAttachmentMessage.class, 6, CompatibleSide.CLIENT);
 		
 		channel.registerMessage(new ChangeTextureMessageHandler(weaponAttachmentAspect),
 				ChangeTextureMessage.class, 7, CompatibleSide.SERVER);
 		
 		channel.registerMessage(new ChangeTextureMessageHandler(weaponAttachmentAspect),
 				ChangeTextureMessage.class, 8, CompatibleSide.CLIENT);
-		
-		channel.registerMessage(new ChangeSettingMessageHandler((ctx) -> getPlayer(ctx)),
-				ChangeSettingsMessage.class, 9, CompatibleSide.CLIENT);
-		
-		channel.registerMessage(new ChangeSettingMessageHandler((ctx) -> getPlayer(ctx)),
-				ChangeSettingsMessage.class, 10, CompatibleSide.SERVER);
 
 		channel.registerMessage(new TryFireMessageHandler(weaponFireAspect),
 				TryFireMessage.class, 11, CompatibleSide.SERVER);
@@ -128,12 +122,6 @@ public class CommonModContext implements ModContext {
 	@Override
 	public void runInMainThread(Runnable runnable) {
 		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public WeaponClientStorageManager getWeaponClientStorageManager() {
-		return null;
-		//throw new IllegalStateException("Attempted to get instance of " + WeaponClientStorageManager.class.getSimpleName());
 	}
 
 	@Override

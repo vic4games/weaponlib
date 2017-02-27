@@ -434,14 +434,21 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				};
 			}
 			
+			WeaponRenderer renderer = new WeaponRenderer(this);
+			
 			if(firstPersonPositioning == null) {
 				firstPersonPositioning = (player, itemStack) -> {
 					GL11.glRotatef(45F, 0f, 1f, 0f);
-					if(compatibility.getTagCompound(itemStack) != null && Tags.getZoom(itemStack) != 1.0f) {
-						GL11.glTranslatef(xOffsetZoom, yOffsetZoom, weaponProximity);
-					} else {
-						GL11.glTranslatef(0F, -1.2F, 0F);
+
+					if(renderer.getClientModContext() != null) {
+						PlayerWeaponInstance instance = renderer.getClientModContext().getMainHeldWeapon();
+						if(instance != null && instance.isAimed()) {
+							GL11.glTranslatef(xOffsetZoom, yOffsetZoom, weaponProximity);
+						} else {
+							GL11.glTranslatef(0F, -1.2F, 0F);
+						}
 					}
+					
 				};
 			}
 			
@@ -593,7 +600,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				}
 			});
 			
-			return new WeaponRenderer(this);
+			
+			return renderer;
 		}
 
 		public Consumer<ItemStack> getEntityPositioning() {
@@ -651,38 +659,15 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		float amplitude = builder.normalRandomizingAmplitude;
 		float rate = builder.normalRandomizingRate;
 		RenderableState currentState = null;
-		//Weapon weapon = (Weapon) itemStack.getItem();
 		
 		PlayerWeaponInstance playerWeaponState = clientModContext.getPlayerItemInstanceRegistry()
 				.getMainHandItemInstance(player, PlayerWeaponInstance.class); // TODO: cannot be always main hand, need to which hand from context
 		
 		if(playerWeaponState != null) {
 			WeaponState state = getNextNonExpiredState(playerWeaponState);
-			//System.out.println("Rendering state " + state + " at " + System.currentTimeMillis());
 			switch(state) {
-//			case FIRING: //
-//				if(playerWeaponState.isAutomaticModeEnabled()) {
-//					if(playerWeaponState.isAimed()) {
-//						currentState = RenderableState.ZOOMING;
-//						rate = builder.firingRandomizingRate;
-//						amplitude = builder.zoomRandomizingAmplitude;
-//					} else {
-//						currentState = RenderableState.NORMAL; 
-//						rate = builder.firingRandomizingRate;
-//						amplitude = builder.firingRandomizingAmplitude;
-//					}
-//					
-//				} else if(playerWeaponState.isAimed()) {
-//					currentState = RenderableState.ZOOMING_SHOOTING;
-//					rate = builder.firingRandomizingRate;
-//					amplitude = builder.zoomRandomizingAmplitude;
-//				} else {
-//					currentState = RenderableState.SHOOTING; 
-//				}
-//				break;
 				
 			case RECOILED: 
-				System.out.println("Recoil started at " + System.currentTimeMillis());
 				if(playerWeaponState.isAutomaticModeEnabled()) {
 					if(playerWeaponState.isAimed()) {
 						currentState = RenderableState.ZOOMING;
@@ -748,108 +733,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 					amplitude = builder.zoomRandomizingAmplitude;
 				}
 			}
-			
-
-//			
-//			if(state != WeaponState.READY) {
-//				System.out.println("Mapped state " + state + " to " + currentState + " at " + System.currentTimeMillis());
-//			}
 		}
-		
-//		System.out.println("Rendering " + currentState + " at " + System.currentTimeMillis());
-
-		
-		
-//		if(Weapon.isModifying(itemStack)) {
-//			currentState = builder.firstPersonPositioningModifying != null ? RenderableState.MODIFYING : RenderableState.NORMAL;
-//		} else if(Weapon.isUnloadingStarted(player, itemStack)) {
-//			currentState = RenderableState.UNLOADING;
-//		} else if(Weapon.isReloadingConfirmed(player, itemStack)) {
-//			currentState = RenderableState.RELOADING;
-//		} else if(Weapon.isEjectedSpentRound(player, itemStack)) {
-//			currentState = RenderableState.EJECT_SPENT_ROUND;
-//		} else if(player.isSprinting() && builder.firstPersonPositioningRunning != null) {
-//			currentState = RenderableState.RUNNING;
-//		} else if(Weapon.isZoomed(player, itemStack)) {
-//			
-//			WeaponClientStorage storage = weapon.getWeaponClientStorage(player);
-//
-//			if(storage != null) {
-//				currentState = storage.getNextDisposableRenderableState();
-//				if(currentState == RenderableState.AUTO_SHOOTING) {
-//					currentState = RenderableState.ZOOMING;
-//					rate = builder.firingRandomizingRate;
-//				} else if(currentState == RenderableState.SHOOTING) {
-//					currentState = RenderableState.ZOOMING_SHOOTING;
-//					rate = builder.firingRandomizingRate;
-//				} else if(currentState == RenderableState.RECOILED) {
-//					currentState = RenderableState.ZOOMING_RECOILED;
-//					rate = builder.zoomRandomizingRate;
-//				} else {
-//					currentState = RenderableState.ZOOMING;
-//					rate = builder.zoomRandomizingRate;
-//				}
-//				
-//			}
-//			amplitude = builder.zoomRandomizingAmplitude; // Zoom amplitude is enforced even when firing
-//			//System.out.println("Rendering state: " + currentState);
-//		} else {
-//			
-//			PlayerWeaponState playerWeaponState = weapon.getPlayerWeaponState(player);
-//			if(playerWeaponState != null) {
-//				WeaponState state = getNextNonExpiredState(playerWeaponState, expirationTimeout);
-//				
-//				switch(state) {
-//				case FIRING: 
-//					if(weapon.builder.maxShots > 1) {
-//						currentState = RenderableState.NORMAL; 
-//					}
-//					break;
-//				case RECOILED: 
-//					if(weapon.builder.maxShots > 1) {
-//						currentState = RenderableState.NORMAL; 
-//					} else {
-//						currentState = RenderableState.RECOILED; 
-//					}
-//					
-//					break;
-//				case PAUSED: 
-//					if(weapon.builder.maxShots > 1) {
-//						currentState = RenderableState.NORMAL; 
-//					} else {
-//						currentState = RenderableState.SHOOTING; 
-//					}
-//					
-//					break;
-//				}
-//				
-////				if(weapon.builder.maxShots > 1) { // TODO: replace with method e.g. isAutomaticMode
-////					long expirationTimeout = (long) (50f / playerWeaponState.getFireRate());
-////					WeaponState state = getNextNonExpiredState(playerWeaponState, expirationTimeout);
-////					// automatic mode
-////					switch(state) {
-////					case FIRING: case RECOILED: case PAUSED: 
-////						currentState = RenderableState.NORMAL; 
-////						rate = builder.firingRandomizingRate;
-////						amplitude = builder.firingRandomizingAmplitude;
-////						break;
-////					}
-////				} else {
-////					long expirationTimeout = 150;
-////					WeaponState state = getNextNonExpiredState(playerWeaponState, expirationTimeout);
-////					if(state == WeaponState.FIRING) {
-////						state = getNextNonExpiredState(playerWeaponState, expirationTimeout);
-////					}
-////					switch(state) {
-////					//case FIRING: currentState = RenderableState.SHOOTING; break;
-////					case RECOILED: currentState = RenderableState.RECOILED; break;
-////					case PAUSED: currentState = RenderableState.SHOOTING; break;
-////					}
-////				}
-//
-//			}
-//			
-//		}
 		
 		if(currentState == null) {
 			currentState = RenderableState.NORMAL;
@@ -1087,11 +971,4 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		GL11.glPopAttrib();
 		GL11.glPopMatrix();
 	}
-
-//	private ViewfinderRenderer viewfinder = new ViewfinderRenderer(
-//			() -> this.getClientModContext().getFramebuffer().framebufferTexture,
-//			(p, s) -> {
-//				GL11.glScalef(0.79f, 0.79f, 0.79f);
-//				GL11.glTranslatef(0.13f, -1.6f, 1.5f);
-//			});
 }

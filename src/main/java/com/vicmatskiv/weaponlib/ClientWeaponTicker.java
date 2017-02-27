@@ -15,15 +15,11 @@ class ClientWeaponTicker extends Thread {
 	private boolean mouseWasPressed;
 	
 	private AtomicBoolean running = new AtomicBoolean(true);
-//	private SafeGlobals safeGlobals;
 
-	private WeaponReloadAspect reloadAspect;
-	private WeaponFireAspect fireAspect;
 	private ClientModContext clientModContext;
 
-	public ClientWeaponTicker(ClientModContext clientModContext/*, WeaponReloadAspect reloadAspect*/) {
+	public ClientWeaponTicker(ClientModContext clientModContext) {
 		this.clientModContext = clientModContext;
-		//this.reloadAspect = reloadAspect;
 	}
 
 	void shutdown() {
@@ -45,23 +41,13 @@ class ClientWeaponTicker extends Thread {
 						mouseWasPressed = true;
 					}
 					if(currentWeapon != null && !safeGlobals.guiOpen.get() && !isInteracting()) {
-						long t1 = System.currentTimeMillis();
-						//fireManager.clientTryFire(player);
 						clientModContext.runSyncTick(() -> { currentWeapon.tryFire(player);});
-						long t2 = System.currentTimeMillis();
-						//System.out.println("Try fire completed in " + (t2 - t1) + "ms");
-						//clientModContext.runSyncTick(() -> { currentWeapon.tryFire(player);});
-						
 					}
 				} else if(mouseWasPressed || currentItemIndex != safeGlobals.currentItemIndex.get()) { // if switched item while pressing mouse down and then released
 					mouseWasPressed = false;
 					currentItemIndex = safeGlobals.currentItemIndex.get();
 					if(currentWeapon != null) {
-						//fireManager.clientTryStopFire(player);
-						//fireAspect.onFireButtonRelease(extendedState);
-						
 						clientModContext.runSyncTick(() -> { currentWeapon.tryStopFire(player);});
-						//currentWeapon.tryStopFire(player);
 					}
 				}
 				
@@ -77,16 +63,12 @@ class ClientWeaponTicker extends Thread {
 	}
 	
 	private void update(EntityPlayer player) {
-		
 		clientModContext.runSyncTick(() -> {
 			Item item = getHeldItemMainHand();
 			if(item instanceof Updatable) {
 				((Updatable) item).update(player);
 			}
 		});
-		
-		//reloadManager.update(compatibility.getHeldItemMainHand(player), player);
-		//fireManager.update(compatibility.getHeldItemMainHand(player), player);
 	}
 
 	private boolean isInteracting() {

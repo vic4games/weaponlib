@@ -7,7 +7,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.vicmatskiv.weaponlib.Weapon.State;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 
 import net.minecraft.client.model.ModelBase;
@@ -109,12 +108,6 @@ Reloadable, Updatable, Part {
 	@Override
 	public void onUpdate(ItemStack stack, World world, Entity entity, int p_77663_4_, boolean p_77663_5_) {
 		ensureItemStack(stack);
-		State state = Tags.getState(stack);
-		// TODO: this needs to be moved to reload manager
-		if(state == Weapon.State.RELOAD_CONFIRMED && Tags.getDefaultTimer(stack) <= world.getTotalWorldTime()) {
-			Tags.setState(stack, Weapon.State.READY);
-		}
-		
 		super.onUpdate(stack, world, entity, p_77663_4_, p_77663_5_);
 	}
 

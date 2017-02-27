@@ -122,12 +122,7 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 		compatibility.ensureTagCompound(itemStack);
 		int activeAttachmentsIds[] = weaponInstance.getActiveAttachmentIds();
 		
-		int selectedAttachmentIndexes[] = new int[AttachmentCategory.values.length];
-//		compatibility.getTagCompound(itemStack).setIntArray(SELECTED_ATTACHMENT_INDEXES_TAG, selectedAttachmentIndexes);
-//
-//		compatibility.getTagCompound(itemStack).setIntArray(PREVIOUSLY_SELECTED_ATTACHMENT_TAG, 
-//				Arrays.copyOf(activeAttachmentsIds, activeAttachmentsIds.length));
-		
+		byte selectedAttachmentIndexes[] = new byte[AttachmentCategory.values.length];
 		
 		weaponInstance.setSelectedAttachmentIndexes(selectedAttachmentIndexes);
 		weaponInstance.setPreviouslyAttachmentIds(Arrays.copyOf(activeAttachmentsIds, activeAttachmentsIds.length));
@@ -157,6 +152,10 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 				}
 			}
 		}
+		
+		weaponInstance.setPreviouslyAttachmentIds(new int[0]);
+		weaponInstance.setSelectedAttachmentIndexes(new byte[0]);
+		
 		if(permit != null) {
 			permit.setStatus(Status.GRANTED);
 		}
@@ -249,12 +248,12 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 	@SuppressWarnings("unchecked")
 	private ItemAttachment<Weapon> nextCompatibleAttachment(AttachmentCategory category, Item currentAttachment, PlayerWeaponInstance weaponInstance) {
 		
-		int[] originallySelectedAttachmentIndexes = weaponInstance.getSelectedAttachmentIds();
+		byte[] originallySelectedAttachmentIndexes = weaponInstance.getSelectedAttachmentIds();
 		if(originallySelectedAttachmentIndexes == null || originallySelectedAttachmentIndexes.length != AttachmentCategory.values.length) {
 			return null;
 		}
 
-		int[] selectedAttachmentIndexes = Arrays.copyOf(originallySelectedAttachmentIndexes, originallySelectedAttachmentIndexes.length);
+		byte[] selectedAttachmentIndexes = Arrays.copyOf(originallySelectedAttachmentIndexes, originallySelectedAttachmentIndexes.length);
 		int activeIndex = selectedAttachmentIndexes[category.ordinal()];
 		
 		/*
@@ -317,7 +316,7 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 			currentIndex = -1;
 		}
 		
-		selectedAttachmentIndexes[category.ordinal()] = currentIndex;
+		selectedAttachmentIndexes[category.ordinal()] = (byte)currentIndex;
 		//compatibility.getTagCompound(itemStack).setIntArray(SELECTED_ATTACHMENT_INDEXES_TAG, selectedAttachmentIndexes);
 		weaponInstance.setSelectedAttachmentIndexes(selectedAttachmentIndexes);
 		return nextCompatibleAttachment;

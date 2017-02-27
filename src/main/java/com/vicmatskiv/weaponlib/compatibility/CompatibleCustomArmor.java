@@ -72,7 +72,8 @@ public class CompatibleCustomArmor extends ItemArmor {
 				armorModel.heldItemRight = entityLiving.getEquipmentInSlot(0) != null ? 1 : 0;
 				
 				if (entityLiving instanceof EntityPlayer) {
-					boolean isAimedWeapon = Weapon.isAimed(entityLiving.getEquipmentInSlot(0));
+					System.err.println("TODO: implement armor aiming properly");
+					boolean isAimedWeapon = false; // TODO: Weapon.isAimed(entityLiving.getEquipmentInSlot(0));
 					armorModel.aimedBow = ((EntityPlayer) entityLiving).getItemInUseDuration() > 0 
 							|| isAimedWeapon;
 				}
