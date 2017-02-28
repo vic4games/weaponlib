@@ -33,14 +33,15 @@ public class ViewfinderRenderer implements CustomRenderer {
 		PlayerWeaponInstance instance = modContext.getMainHeldWeapon();
 		boolean aimed = instance != null && instance.isAimed();
 		float progress = Math.min(1f, renderContext.getTransitionProgress());
-		if(progress > 0f && aimed) {
+		
+		if(isAimingState(renderContext.getFromState()) && isAimingState(renderContext.getToState())) {
+			brightness = 1f;
+		} else if(progress > 0f && aimed) {
 			brightness = progress;
 		} else if(isAimingState(renderContext.getFromState()) && progress > 0f && !aimed) {
 			brightness = Math.max(1 - progress, 0f);
-		} else if(isAimingState(renderContext.getFromState()) && isAimingState(renderContext.getToState())) {
-			brightness = 1f;
-		}
-		
+		} 
+				
 		GL11.glPushMatrix();
 		GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_CURRENT_BIT);
 

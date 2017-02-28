@@ -5,7 +5,6 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -178,11 +177,17 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 //		}
 		
 		
+		int[] activeAttachmentsIds;
 		if(!(itemInstance instanceof PlayerWeaponInstance)) {
-			return Collections.emptyList();
+			activeAttachmentsIds = new int[AttachmentCategory.values.length];
+			for(CompatibleAttachment<Weapon> attachment: ((Weapon) itemStack.getItem()).getCompatibleAttachments().values()) {
+				if(attachment.isDefault()) {
+					activeAttachmentsIds[attachment.getAttachment().getCategory().ordinal()] = Item.getIdFromItem(attachment.getAttachment());
+				}
+			}
+		} else {
+			activeAttachmentsIds = ((PlayerWeaponInstance) itemInstance).getActiveAttachmentIds();
 		}
-		
-		int[] activeAttachmentsIds = ((PlayerWeaponInstance) itemInstance).getActiveAttachmentIds();
 		
 		Weapon weapon = (Weapon) itemStack.getItem();
 		

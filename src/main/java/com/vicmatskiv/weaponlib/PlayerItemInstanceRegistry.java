@@ -26,7 +26,7 @@ import net.minecraft.item.ItemStack;
 
 public class PlayerItemInstanceRegistry {
 	
-	private static final int CACHE_EXPIRATION_TIMEOUT_SECONDS = 60;
+	private static final int CACHE_EXPIRATION_TIMEOUT_SECONDS = 5;
 
 	private static final Logger logger = LogManager.getLogger(PlayerItemInstanceRegistry.class);
 
@@ -38,9 +38,9 @@ public class PlayerItemInstanceRegistry {
 	
 	public PlayerItemInstanceRegistry(SyncManager<?> syncManager) {
 		this.syncManager = syncManager;
-		
 		this.itemStackInstanceCache = CacheBuilder
 				.newBuilder()
+				.weakKeys()
 				.maximumSize(1000)
 				.expireAfterAccess(CACHE_EXPIRATION_TIMEOUT_SECONDS, TimeUnit.SECONDS)
 				.build();
@@ -174,7 +174,7 @@ public class PlayerItemInstanceRegistry {
 					try {
 						instance = Tags.getInstance(itemStack);
 					} catch(RuntimeException e) {
-						logger.error("Failed to deserialize instance from stack " + itemStack +". " + e);
+						logger.error("Failed to deserialize instance from stack " + itemStack + ". " + e);
 					}
 				}
 				return Optional.ofNullable(instance);
