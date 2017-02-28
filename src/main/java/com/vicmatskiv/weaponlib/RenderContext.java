@@ -18,6 +18,7 @@ public class RenderContext {
 	private float transitionProgress;
 	private CompatibleTransformType compatibleTransformType;
 	private RenderableState fromState;
+	private RenderableState toState;
 	private ClientModContext clientModContext;
 
 	public RenderContext(ClientModContext clientModContext, EntityPlayer player, ItemStack weapon) {
@@ -108,6 +109,14 @@ public class RenderContext {
 
 	public void setFromState(RenderableState fromState) {
 		this.fromState = fromState;
+	}
+
+	public RenderableState getToState() {
+		return toState;
+	}
+
+	public void setToState(RenderableState toState) {
+		this.toState = toState;
 	}
 
 	public float getTransitionProgress() {

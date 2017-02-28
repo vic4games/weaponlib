@@ -24,21 +24,21 @@ public class ViewfinderRenderer implements CustomRenderer {
 	@Override
 	public void render(RenderContext renderContext) {
 		
-		if(renderContext.getCompatibleTransformType() != CompatibleTransformType.FIRST_PERSON_RIGHT_HAND) {
+		if(renderContext.getCompatibleTransformType() != CompatibleTransformType.FIRST_PERSON_RIGHT_HAND
+				&& renderContext.getCompatibleTransformType() != CompatibleTransformType.FIRST_PERSON_LEFT_HAND) {
 			return;
 		}
 		
 		float brightness = 0f;
 		PlayerWeaponInstance instance = modContext.getMainHeldWeapon();
 		boolean aimed = instance != null && instance.isAimed();
-		float progress = renderContext.getTransitionProgress();
+		float progress = Math.min(1f, renderContext.getTransitionProgress());
 		if(progress > 0f && aimed) {
 			brightness = progress;
-		} else if((renderContext.getFromState() == RenderableState.ZOOMING 
-				|| renderContext.getFromState() == RenderableState.ZOOMING_RECOILED
-				|| renderContext.getFromState() == RenderableState.ZOOMING_RECOILED)
-				&& progress > 0f && !aimed) {
+		} else if(isAimingState(renderContext.getFromState()) && progress > 0f && !aimed) {
 			brightness = Math.max(1 - progress, 0f);
+		} else if(isAimingState(renderContext.getFromState()) && isAimingState(renderContext.getToState())) {
+			brightness = 1f;
 		}
 		
 		GL11.glPushMatrix();
@@ -64,5 +64,11 @@ public class ViewfinderRenderer implements CustomRenderer {
 		
 		GL11.glPopAttrib();
 		GL11.glPopMatrix();
+	}
+	
+	private static boolean isAimingState(RenderableState renderableState) {
+		return renderableState == RenderableState.ZOOMING
+				|| renderableState ==RenderableState.ZOOMING_RECOILED
+				|| renderableState ==RenderableState.ZOOMING_SHOOTING;
 	}
 }

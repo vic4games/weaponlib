@@ -7,6 +7,9 @@ import java.util.UUID;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientTickEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientTickEvent.Phase;
@@ -22,6 +25,8 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 	private static final UUID SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER_UUID = UUID.fromString("8efa8469-0256-4f8e-bdd9-3e7b23970663");
 	private static final AttributeModifier SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER = (new AttributeModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER_UUID, "Slow Down While Zooming", -0.5, 2)).setSaved(false);
 
+	@SuppressWarnings("unused")
+	private static final Logger logger = LogManager.getLogger(ClientEventHandler.class);
 
 	private Lock mainLoopLock = new ReentrantLock();
 	private SafeGlobals safeGlobals;
@@ -61,7 +66,6 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 	}
 
 	private void update() {
-		
 		EntityPlayer player = compatibility.clientPlayer();
 		modContext.getPlayerItemInstanceRegistry().update(player);
 		PlayerWeaponInstance mainHandHeldWeaponInstance = modContext.getMainHeldWeapon();
@@ -70,10 +74,12 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 				mainHandHeldWeaponInstance.setAimed(false);
 			}
 			if(mainHandHeldWeaponInstance.isAimed()) {
-				slowPlayerDown(mainHandHeldWeaponInstance.getPlayer());
+				slowPlayerDown(player);
 			} else {
-				restorePlayerSpeed(mainHandHeldWeaponInstance.getPlayer());
+				restorePlayerSpeed(player);
 			}
+		} else if(player != null){
+			restorePlayerSpeed(player);
 		}
 	}
 	
@@ -115,6 +121,8 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 				modContext.getSecondWorldRenderer().updateRenderer();
 				modContext.getSecondWorldRenderer().renderWorld(event.renderTickTime, p_78471_2_);
 				Minecraft.getMinecraft().getFramebuffer().bindFramebuffer(true);
+			} else {
+				//logger.debug("Either instance is null or not aimed");
 			}
 				
 			this.renderEndNanoTime = System.nanoTime();

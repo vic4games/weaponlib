@@ -109,6 +109,8 @@ public abstract class CompatibleWeaponRenderer implements IItemRenderer {
 			
 			renderContext.setFromState(multipartPositioning.getFromState(RenderableState.class));
 			
+			renderContext.setToState(multipartPositioning.getToState(RenderableState.class));
+			
 			positioner = multipartPositioning.getPositioner();
 						
 			positioner.randomize(stateDescriptor.rate, stateDescriptor.amplitude);
@@ -145,7 +147,8 @@ public abstract class CompatibleWeaponRenderer implements IItemRenderer {
 				renderContext.getScale());
 		
 		if(builder.getModel() instanceof ModelWithAttachments) {
-			List<CompatibleAttachment<? extends AttachmentContainer>> attachments = ((Weapon) weaponItemStack.getItem()).getActiveAttachments(weaponItemStack);
+			List<CompatibleAttachment<? extends AttachmentContainer>> attachments = 
+					((Weapon) weaponItemStack.getItem()).getActiveAttachments(weaponItemStack);
 			renderAttachments(positioner, renderContext, attachments);
 		}
 		

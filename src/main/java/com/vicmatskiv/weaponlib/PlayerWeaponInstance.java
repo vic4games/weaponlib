@@ -319,7 +319,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 			//float minZoom = ((ItemScope) scopeItem).getMinZoom();
 			float maxZoom = ((ItemScope) scopeItem).getMaxZoom();
 			if(zoom > maxZoom) {
-				setZoom(Math.max(zoom - 0.01f, maxZoom));
+				setZoom(Math.max(zoom - 0.02f, maxZoom));
 			}
 			logger.debug("Changed optical zoom to " + zoom);
 		} else {
@@ -332,7 +332,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 		if(scopeItem instanceof ItemScope && ((ItemScope) scopeItem).isOptical()) {
 			float minZoom = ((ItemScope) scopeItem).getMinZoom();
 			if(zoom < minZoom) {
-				setZoom(Math.min(zoom + 0.01f, minZoom));
+				setZoom(Math.min(zoom + 0.02f, minZoom));
 			}
 			logger.debug("Changed optical zoom to " + zoom);
 		} else {

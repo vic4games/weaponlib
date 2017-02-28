@@ -58,13 +58,15 @@ public class MultipartRenderStateManager<State, Part, Context> {
 			};
 		}
 
-
 		@Override
 		public <T> T getFromState(Class<T> stateClass) {
 			return stateClass.cast(state);
 		}
-
 		
+		@Override
+		public <T> T getToState(Class<T> stateClass) {
+			return stateClass.cast(state);
+		}
 	}
 	
 	private class TransitionedPositioning implements MultipartPositioning<Part, Context> {
@@ -115,11 +117,15 @@ public class MultipartRenderStateManager<State, Part, Context> {
 		public boolean isExpired(Queue<MultipartPositioning<Part, Context>> positioningQueue) {
 			return expired;
 		}
-		
 
 		@Override
 		public <T> T getFromState(Class<T> stateClass) {
 			return stateClass.cast(fromState);
+		}
+		
+		@Override
+		public <T> T getToState(Class<T> stateClass) {
+			return stateClass.cast(toState);
 		}
 
 		private PartData getPartData(Part part, Context context) {

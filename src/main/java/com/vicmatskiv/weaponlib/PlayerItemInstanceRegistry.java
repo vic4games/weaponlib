@@ -6,8 +6,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 
 import org.apache.logging.log4j.LogManager;
@@ -24,18 +26,24 @@ import net.minecraft.item.ItemStack;
 
 public class PlayerItemInstanceRegistry {
 	
+	private static final int CACHE_EXPIRATION_TIMEOUT_SECONDS = 60;
+
 	private static final Logger logger = LogManager.getLogger(PlayerItemInstanceRegistry.class);
 
 	private Map<UUID, Map<Integer, PlayerItemInstance<?>>> registry = new HashMap<>();
 	
 	private SyncManager<?> syncManager;
 	
-	private Cache<ItemStack, PlayerItemInstance<?>> itemStackInstanceCache;
+	private Cache<ItemStack, Optional<PlayerItemInstance<?>>> itemStackInstanceCache;
 	
 	public PlayerItemInstanceRegistry(SyncManager<?> syncManager) {
 		this.syncManager = syncManager;
 		
-		this.itemStackInstanceCache = CacheBuilder.newBuilder().maximumSize(100).build();
+		this.itemStackInstanceCache = CacheBuilder
+				.newBuilder()
+				.maximumSize(1000)
+				.expireAfterAccess(CACHE_EXPIRATION_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+				.build();
 	}
 
 	/**
@@ -151,40 +159,65 @@ public class PlayerItemInstanceRegistry {
 		
 		return result;
 	}
-
+	
 	public PlayerItemInstance<?> getItemInstance(EntityPlayer player, ItemStack itemStack) {
-		int slot = compatibility.getInventorySlot(player, itemStack);
-		PlayerItemInstance<?> result = null;
-		if(slot >= 0) {
-			result = getItemInstance(player, slot);
-		} else {
-			// For everything else use cache
-			result = getItemInstance(itemStack);
-		}
-		return result;
-	}
-
-	private PlayerItemInstance<?> getItemInstance(ItemStack itemStack) {
-		PlayerItemInstance<?> result = null;
+		Optional<PlayerItemInstance<?>> result = Optional.empty();
 		try {
 			result = itemStackInstanceCache.get(itemStack, () -> {
-				logger.debug("Initializing instance from stack " + itemStack);
+				logger.debug("ItemStack " + itemStack + " not found in cache, initializing...");
+				int slot = compatibility.getInventorySlot(player, itemStack);
 				PlayerItemInstance<?> instance = null;
-				try {
-					instance = Tags.getInstance(itemStack);
-				} catch(RuntimeException e) {
-					logger.error("Failed to initialize instance from " + itemStack, e.getCause());
+				if(slot >= 0) {
+					instance = getItemInstance(player, slot);
+					logger.debug("Resolved item stack instance " + instance + " from slot " + slot);
+				} else {
+					try {
+						instance = Tags.getInstance(itemStack);
+					} catch(RuntimeException e) {
+						logger.error("Failed to deserialize instance from stack " + itemStack +". " + e);
+					}
 				}
-				if(instance == null && itemStack.getItem() instanceof PlayerItemInstanceFactory) {
-					instance = ((PlayerItemInstanceFactory<?, ?>) itemStack.getItem()).createItemInstance(null, itemStack, -1);
-				}
-				return instance;
+				return Optional.ofNullable(instance);
 			});
 		} catch (UncheckedExecutionException | ExecutionException e) {
 			logger.error("Failed to initialize cache instance from " + itemStack, e.getCause());
 		}
-		return result;
+		return result.orElse(null);
 	}
+
+//	public PlayerItemInstance<?> getItemInstance2(EntityPlayer player, ItemStack itemStack) {
+//		int slot = compatibility.getInventorySlot(player, itemStack);
+//		PlayerItemInstance<?> result = null;
+//		if(slot >= 0) {
+//			result = getItemInstance(player, slot);
+//		} else {
+//			// For everything else use cache
+//			result = getItemInstance(itemStack);
+//		}
+//		return result;
+//	}
+
+//	private PlayerItemInstance<?> getItemInstance(ItemStack itemStack) {
+//		PlayerItemInstance<?> result = null;
+//		try {
+//			result = itemStackInstanceCache.get(itemStack, () -> {
+//				logger.debug("Initializing instance from stack " + itemStack);
+//				PlayerItemInstance<?> instance = null;
+//				try {
+//					instance = Tags.getInstance(itemStack);
+//				} catch(RuntimeException e) {
+//					logger.error("Failed to initialize instance from " + itemStack, e.getCause());
+//				}
+//				if(instance == null && itemStack.getItem() instanceof PlayerItemInstanceFactory) {
+//					instance = ((PlayerItemInstanceFactory<?, ?>) itemStack.getItem()).createItemInstance(null, itemStack, -1);
+//				}
+//				return instance;
+//			});
+//		} catch (UncheckedExecutionException | ExecutionException e) {
+//			logger.error("Failed to initialize cache instance from " + itemStack, e.getCause());
+//		}
+//		return result;
+//	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public void update(EntityPlayer player) {

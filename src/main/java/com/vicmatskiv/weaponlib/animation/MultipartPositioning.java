@@ -11,6 +11,8 @@ public interface MultipartPositioning<Part, Context> {
 	
 	public <T> T getFromState(Class<T> stateClass);
 	
+	public <T> T getToState(Class<T> stateClass);
+	
 	public boolean isExpired(Queue<MultipartPositioning<Part, Context>> positioningQueue);
 	
 	public Positioner<Part, Context> getPositioner();

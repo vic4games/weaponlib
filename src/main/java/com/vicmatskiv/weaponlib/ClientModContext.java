@@ -42,9 +42,6 @@ public class ClientModContext extends CommonModContext {
 	public void init(Object mod, String modId, CompatibleChannel channel) {
 		super.init(mod, modId, channel);
 		
-		this.framebuffer = new Framebuffer(200, 200, true);
-        this.framebuffer.setFramebufferColor(0.0F, 0.0F, 0.0F, 0.0F);
-		
 		rendererRegistry = new CompatibleRenderingRegistry(modId);
 
 		List<IResourcePack> defaultResourcePacks = compatibility.getPrivateValue(
@@ -105,6 +102,11 @@ public class ClientModContext extends CommonModContext {
 	}
 
 	public Framebuffer getFramebuffer() {
+		if(framebuffer == null) {
+			framebuffer = new Framebuffer(200, 200, true);
+	        framebuffer.setFramebufferColor(0.0F, 0.0F, 0.0F, 0.0F);
+		}
+		
 		return framebuffer;
 	}
 

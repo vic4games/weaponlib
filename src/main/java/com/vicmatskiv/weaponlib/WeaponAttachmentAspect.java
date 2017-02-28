@@ -167,20 +167,22 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 		
 		List<CompatibleAttachment<? extends AttachmentContainer>> activeAttachments = new ArrayList<>();
 		
-		PlayerItemInstance<?> itemInstance = modContext.getPlayerItemInstanceRegistry().getItemInstance(compatibility.clientPlayer(), itemStack);
-		PlayerWeaponInstance weaponInstance;
-		if(itemInstance instanceof PlayerWeaponInstance) {
-			weaponInstance = (PlayerWeaponInstance) itemInstance;
-		} else {
-			weaponInstance = Tags.getInstance(itemStack, PlayerWeaponInstance.class);
-		}
+		PlayerItemInstance<?> itemInstance = modContext.getPlayerItemInstanceRegistry()
+				.getItemInstance(compatibility.clientPlayer(), itemStack);
+		
+//		PlayerWeaponInstance weaponInstance;
+//		if(itemInstance instanceof PlayerWeaponInstance) {
+//			weaponInstance = (PlayerWeaponInstance) itemInstance;
+//		} else {
+//			weaponInstance = Tags.getInstance(itemStack, PlayerWeaponInstance.class);
+//		}
 		
 		
-		if(weaponInstance == null) {
+		if(!(itemInstance instanceof PlayerWeaponInstance)) {
 			return Collections.emptyList();
 		}
 		
-		int[] activeAttachmentsIds = weaponInstance.getActiveAttachmentIds();
+		int[] activeAttachmentsIds = ((PlayerWeaponInstance) itemInstance).getActiveAttachmentIds();
 		
 		Weapon weapon = (Weapon) itemStack.getItem();
 		
