@@ -32,6 +32,7 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 		private PermitManager permitManager;
 		private long prepareDuration;
 		private long requestTimeout = DEFAULT_REQUEST_TIMEOUT;
+		private boolean isPermitRequired;
 		
 		public RuleBuilder(Aspect<S, EE> aspect) {
 			this.aspect = aspect;
@@ -62,6 +63,7 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 				BiFunction<S, EE, Permit<S>> permitProvider,
 				BiFunction<S, EE, Boolean> stateUpdater,
 				PermitManager permitManager) {
+			this.isPermitRequired = true;
 			this.permitProvider = permitProvider;
 			this.stateUpdater = stateUpdater;
 			this.permitManager = permitManager;
@@ -154,15 +156,16 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 				isRequestRuleAutoTransitioned = false; // from -> request transtion must be manual
 			}
 			
-			if(permitProvider != null) {
+			if(isPermitRequired) {
 				if(auto) {
 					throw new IllegalStateException("Permitted transitions cannot be automatic");
 				}
 				
 				TransitionRule<S, E> requestPermitRule = new TransitionRule<>(effectiveFromState, toState.permitRequestedPhase(), 
 						effectivePredicate, 
-						(s, f, t, p) -> { permitManager.request(
-								permitProvider.apply(t, safeCast(s)), s, this::applyPermit);
+						(s, f, t, p) -> {
+							permitManager.request(
+								p != null ? p : permitProvider.apply(t, safeCast(s)), s, this::applyPermit);
 								return null;
 						}, isRequestRuleAutoTransitioned);
 				
@@ -307,8 +310,12 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 	}
 	
 	public Result changeState(Aspect<S, ? extends E> aspect, E extendedState, @SuppressWarnings("unchecked") S...targetStates) {
+		return changeState(aspect, extendedState, null, targetStates);
+	}
+	
+	public Result changeState(Aspect<S, ? extends E> aspect, E extendedState, Permit<S> permit, @SuppressWarnings("unchecked") S...targetStates) {
 		S currentState = extendedState.getState();
-		return changeStateFromTo(aspect, extendedState, currentState, targetStates);
+		return changeStateFromTo(aspect, extendedState, permit, currentState, targetStates);
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -321,6 +328,10 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 	}
 	
 	protected Result changeStateFromTo(Aspect<S, ? extends E> aspect, E extendedState, S currentState, @SuppressWarnings("unchecked") S...targetStates) {
+		return changeStateFromTo(aspect, extendedState, null, currentState, targetStates);
+	}
+	
+	protected Result changeStateFromTo(Aspect<S, ? extends E> aspect, E extendedState, Permit<S> permit, S currentState, @SuppressWarnings("unchecked") S...targetStates) {
 		
 		if(extendedState == null) {
 			return null;
@@ -340,7 +351,7 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 			logger.debug("Changed state of " + extendedState + " to " + newStateRule.toState);
 			result = new Result(true, newStateRule.toState);
 			if(newStateRule.action != null) {
-				result.actionResult = newStateRule.action.execute(extendedState, s, newStateRule.toState, null);
+				result.actionResult = newStateRule.action.execute(extendedState, s, newStateRule.toState, permit);
 			}
 			s = newStateRule.toState;
 			ts = safeCast(new ManagedState[0]);

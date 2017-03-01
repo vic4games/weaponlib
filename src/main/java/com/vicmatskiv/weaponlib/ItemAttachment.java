@@ -18,6 +18,8 @@ public class ItemAttachment<T> extends CompatibleItem implements ModelSource {
 	private String crosshair;
 	private ApplyHandler<T> apply;
 	private ApplyHandler<T> remove;
+	protected ApplyHandler2<T> apply2;
+	protected ApplyHandler2<T> remove2;
 	private List<Tuple<ModelBase, String>> texturedModels = new ArrayList<>();
 	private CustomRenderer postRenderer;
 	private CustomRenderer preRenderer;
@@ -31,6 +33,10 @@ public class ItemAttachment<T> extends CompatibleItem implements ModelSource {
 	
 	public static interface ApplyHandler<T> {
 		public void apply(ItemAttachment<T> itemAttachment, T target, EntityPlayer player);
+	}
+	
+	public static interface ApplyHandler2<T> {
+		public void apply(ItemAttachment<T> itemAttachment, PlayerWeaponInstance instance);
 	}
 
 	public ItemAttachment(String modId, AttachmentCategory category, ModelBase model, String textureName, String crosshair, 
@@ -165,5 +171,13 @@ public class ItemAttachment<T> extends CompatibleItem implements ModelSource {
 	@Override
 	public String toString() {
 		return name != null ? "Attachment [" + name + "]" : super.toString();
+	}
+
+	protected ApplyHandler2<T> getApply2() {
+		return apply2;
+	}
+
+	protected ApplyHandler2<T> getRemove2() {
+		return remove2;
 	}
 }

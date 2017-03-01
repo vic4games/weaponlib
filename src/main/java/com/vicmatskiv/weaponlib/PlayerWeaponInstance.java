@@ -164,7 +164,8 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 		PlayerWeaponInstance otherWeaponInstance = (PlayerWeaponInstance) otherItemInstance;
 		
 		setAmmo(otherWeaponInstance.ammo);
-		//TODO: do we need to set anything else? 
+		setZoom(otherWeaponInstance.zoom);
+		setRecoil(otherWeaponInstance.recoil);
 		setSelectedAttachmentIndexes(otherWeaponInstance.selectedAttachmentIndexes);
 		setActiveAttachmentIds(otherWeaponInstance.activeAttachmentIds);
 	}

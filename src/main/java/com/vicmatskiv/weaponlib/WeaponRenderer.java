@@ -720,7 +720,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				currentState = RenderableState.EJECT_SPENT_ROUND;
 				break;
 				
-			case MODIFYING: case MODIFYING_REQUESTED:
+			case MODIFYING: case MODIFYING_REQUESTED: case NEXT_ATTACHMENT: case NEXT_ATTACHMENT_REQUESTED:
 				currentState = RenderableState.MODIFYING;
 				break;	
 				

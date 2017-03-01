@@ -18,6 +18,7 @@ import com.vicmatskiv.weaponlib.state.Permit.Status;
 import com.vicmatskiv.weaponlib.state.PermitManager;
 import com.vicmatskiv.weaponlib.state.StateManager;
 
+import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -29,7 +30,8 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 	
 	static {
 		TypeRegistry.getInstance().register(EnterAttachmentModePermit.class);
-		TypeRegistry.getInstance().register(ExitAttachmentModePermit.class);		
+		TypeRegistry.getInstance().register(ExitAttachmentModePermit.class);
+		TypeRegistry.getInstance().register(ChangeAttachmentPermit.class);
 	}
 	
 	public static class EnterAttachmentModePermit extends Permit<WeaponState> {
@@ -47,6 +49,30 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 		
 		public ExitAttachmentModePermit(WeaponState state) {
 			super(state);
+		}
+	}
+	
+	public static class ChangeAttachmentPermit extends Permit<WeaponState> {
+		
+		AttachmentCategory attachmentCategory;
+
+		public ChangeAttachmentPermit() {}
+		
+		public ChangeAttachmentPermit(AttachmentCategory attachmentCategory) {
+			super(WeaponState.NEXT_ATTACHMENT);
+			this.attachmentCategory = attachmentCategory;
+		}
+		
+		@Override
+		public void init(ByteBuf buf) {
+			super.init(buf);
+			attachmentCategory = AttachmentCategory.values()[buf.readInt()];
+		}
+		
+		@Override
+		public void serialize(ByteBuf buf) {
+			super.serialize(buf);
+			buf.writeInt(attachmentCategory.ordinal());
 		}
 	}
 	
@@ -74,7 +100,7 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 		
 		this.stateManager = stateManager
 		
-			.in(this)
+		.in(this)
 			.change(WeaponState.READY).to(WeaponState.MODIFYING)
 			.when(clickSpammingPreventer)
 			.withPermit((s, es) -> new EnterAttachmentModePermit(s),
@@ -88,6 +114,18 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 			.withAction((instance) -> {permitManager.request(new ExitAttachmentModePermit(WeaponState.READY), 
 					instance, (p, e) -> { /* do nothing on callback */});})
 			.manual()
+			
+		.in(this)
+			.change(WeaponState.MODIFYING).to(WeaponState.NEXT_ATTACHMENT)
+			.when(clickSpammingPreventer)
+			.withPermit(null,
+					modContext.getPlayerItemInstanceRegistry()::update,
+					permitManager)
+			.manual()
+			
+		.in(this)
+			.change(WeaponState.NEXT_ATTACHMENT).to(WeaponState.MODIFYING)
+			.automatic()
 		;
 	}
 	
@@ -98,6 +136,8 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 				this::enterAttachmentSelectionMode);
 		permitManager.registerEvaluator(ExitAttachmentModePermit.class, PlayerWeaponInstance.class, 
 				this::exitAttachmentSelectionMode);
+		permitManager.registerEvaluator(ChangeAttachmentPermit.class, PlayerWeaponInstance.class, 
+				this::changeAttachment);
 		
 	}
 	
@@ -171,9 +211,16 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 		return activeAttachments;
 	}
 	
-	@SuppressWarnings("unchecked")
 	void changeAttachment(AttachmentCategory attachmentCategory, PlayerWeaponInstance weaponInstance) {
-		
+		if(weaponInstance != null) {
+			stateManager.changeState(this, weaponInstance, new ChangeAttachmentPermit(attachmentCategory), 
+					WeaponState.NEXT_ATTACHMENT);
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	private void changeAttachment(ChangeAttachmentPermit permit, PlayerWeaponInstance weaponInstance) {
+		AttachmentCategory attachmentCategory = permit.attachmentCategory;
 		int[] originalActiveAttachmentIds = weaponInstance.getActiveAttachmentIds();
 		int[] activeAttachmentIds = Arrays.copyOf(originalActiveAttachmentIds, originalActiveAttachmentIds.length);
 		int activeAttachmentIdForThisCategory = activeAttachmentIds[attachmentCategory.ordinal()];
@@ -184,12 +231,25 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 		
 		int nextAttachmentSlot = next(attachmentCategory, currentAttachment, weaponInstance);
 		
+		if(currentAttachment != null) {
+			// Need to apply removal functions first before applying addition functions
+			if(currentAttachment.getRemove() != null) {
+				currentAttachment.getRemove().apply(currentAttachment, weaponInstance.getWeapon(), weaponInstance.getPlayer());
+			}
+			if(currentAttachment.getRemove2() != null) {
+				currentAttachment.getRemove2().apply(currentAttachment, weaponInstance);
+			}
+		}
+		
 		if(nextAttachmentSlot >= 0) {
 			ItemStack slotItemStack = weaponInstance.getPlayer().inventory.getStackInSlot(nextAttachmentSlot);
 			ItemAttachment<Weapon> nextAttachment = (ItemAttachment<Weapon>) slotItemStack.getItem();
 			
 			if(nextAttachment.getApply() != null) {
 				nextAttachment.getApply().apply(nextAttachment, weaponInstance.getWeapon(), weaponInstance.getPlayer());
+			}
+			if(nextAttachment.getApply2() != null) {
+				nextAttachment.getApply2().apply(nextAttachment, weaponInstance);
 			}
 			compatibility.consumeInventoryItemFromSlot(weaponInstance.getPlayer(), nextAttachmentSlot);
 			
@@ -199,9 +259,7 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 		}
 
 		if(currentAttachment != null) {
-			if(currentAttachment.getRemove() != null) {
-				currentAttachment.getRemove().apply(currentAttachment, weaponInstance.getWeapon(), weaponInstance.getPlayer());
-			}
+			// Item must be added to the same spot the next attachment comes from or to any spot if there is no next attachment
 			compatibility.addItemToPlayerInventory(weaponInstance.getPlayer(), currentAttachment, nextAttachmentSlot);
 		}
 		

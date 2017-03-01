@@ -108,7 +108,7 @@ public class CustomGui extends CompatibleGui {
 //					drawTexturedModalRect(xPos, yPos, 0, 0, BUFF_ICON_SIZE, BUFF_ICON_SIZE);
 //				}
 				
-				if(weaponInstance.getState() == WeaponState.MODIFYING /*Weapon.isModifying(itemStack)*/ /*weaponItem.getState(weapon) == Weapon.STATE_MODIFYING*/) {
+				if(isInModifyingState(weaponInstance) /*Weapon.isModifying(itemStack)*/ /*weaponItem.getState(weapon) == Weapon.STATE_MODIFYING*/) {
 					fontRender.drawStringWithShadow("Press [up] to add optic", width / 2 - 40, 60, color);
 					fontRender.drawStringWithShadow("Press [left] to add barrel rig", 10, height / 2 - 10, color);
 					fontRender.drawStringWithShadow("Press [right] to change camo", width / 2 + 60, height / 2 - 20, color);
@@ -154,6 +154,14 @@ public class CustomGui extends CompatibleGui {
 			fontRender.drawStringWithShadow(text, x, y, color);
 			event.setCanceled(true);
 		}
+	}
+
+
+	private boolean isInModifyingState(PlayerWeaponInstance weaponInstance) {
+		return weaponInstance.getState() == WeaponState.MODIFYING
+				|| weaponInstance.getState() == WeaponState.MODIFYING_REQUESTED
+				|| weaponInstance.getState() == WeaponState.NEXT_ATTACHMENT
+				|| weaponInstance.getState() == WeaponState.NEXT_ATTACHMENT_REQUESTED;
 	}
 	
 	private static void drawTexturedQuadFit(double x, double y, double width, double height, double zLevel){

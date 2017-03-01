@@ -58,13 +58,17 @@ public class ItemScope extends ItemAttachment<Weapon> {
 	
 	private ItemScope(Builder builder) {
 		super(builder.modId, AttachmentCategory.SCOPE, builder.model, builder.textureName, null, 
-				(a, t, p) -> {
-					float zoom = builder.minZoom + (builder.maxZoom - builder.minZoom) / 2f;
-					t.changeZoom(p, zoom);
-				}, (a, t, p) -> {
-					t.changeZoom(p, 1f);
-				});
+				null, null);
 		this.builder = builder;
+		this.apply2 = (a, instance) -> {
+			float zoom = builder.minZoom + (builder.maxZoom - builder.minZoom) / 2f;
+			System.out.println("Changing zoom to " + zoom);
+			instance.setZoom(zoom);
+		};
+		this.remove2 = (a, instance) -> {
+			System.out.println("Resetting zoom to 1");
+			instance.setZoom(1);
+		};
 		setMaxStackSize(DEFAULT_MAX_STACK_SIZE);
 	}
 	
