@@ -8,6 +8,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Predicate;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.vicmatskiv.weaponlib.network.TypeRegistry;
 import com.vicmatskiv.weaponlib.state.Aspect;
 import com.vicmatskiv.weaponlib.state.Permit;
@@ -21,14 +24,13 @@ import net.minecraft.item.ItemStack;
 
 public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerWeaponInstance> {
 	
+	private static final Logger logger = LogManager.getLogger(WeaponAttachmentAspect.class);
+
+	
 	static {
 		TypeRegistry.getInstance().register(EnterAttachmentModePermit.class);
 		TypeRegistry.getInstance().register(ExitAttachmentModePermit.class);		
 	}
-	
-//	private static final String ACTIVE_ATTACHMENT_TAG = "ActiveAttachments";
-//	private static final String SELECTED_ATTACHMENT_INDEXES_TAG = "SelectedAttachments";
-//	private static final String PREVIOUSLY_SELECTED_ATTACHMENT_TAG = "PreviouslySelectedAttachments";
 	
 	public static class EnterAttachmentModePermit extends Permit<WeaponState> {
 		
@@ -116,48 +118,19 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 	
 	
 	private void enterAttachmentSelectionMode(EnterAttachmentModePermit permit, PlayerWeaponInstance weaponInstance) {
-		System.out.println("Entering attachment mode on server");
-		ItemStack itemStack = weaponInstance.getItemStack();
-		compatibility.ensureTagCompound(itemStack);
-		int activeAttachmentsIds[] = weaponInstance.getActiveAttachmentIds();
-		
+		logger.debug("Entering attachment mode");
 		byte selectedAttachmentIndexes[] = new byte[AttachmentCategory.values.length];
-		
+		Arrays.fill(selectedAttachmentIndexes, (byte)-1);
 		weaponInstance.setSelectedAttachmentIndexes(selectedAttachmentIndexes);
-		weaponInstance.setPreviouslyAttachmentIds(Arrays.copyOf(activeAttachmentsIds, activeAttachmentsIds.length));
 		
 		permit.setStatus(Status.GRANTED);
 	}
 	
 	private void exitAttachmentSelectionMode(ExitAttachmentModePermit permit, PlayerWeaponInstance weaponInstance) {
-		System.out.println("Exiting attachment mode on server");
-		ItemStack itemStack = weaponInstance.getItemStack();
-		compatibility.ensureTagCompound(itemStack);
-		EntityPlayer player = weaponInstance.getPlayer();
-		
-		int activeAttachmentsIds[] = weaponInstance.getActiveAttachmentIds(); //compatibility.getTagCompound(itemStack).getIntArray(ACTIVE_ATTACHMENT_TAG);
-		int previouslySelectedAttachmentIds[] = weaponInstance.getPreviouslyAttachmentIds(); // compatibility.getTagCompound(itemStack).getIntArray(PREVIOUSLY_SELECTED_ATTACHMENT_TAG);
-		boolean hasValidPreviousAttachmentIds = previouslySelectedAttachmentIds != null
-				&& previouslySelectedAttachmentIds.length == activeAttachmentsIds.length;
-		for(int i = 0; i < activeAttachmentsIds.length; i++) {
-			if(!hasValidPreviousAttachmentIds || activeAttachmentsIds[i] != previouslySelectedAttachmentIds[i]) {
-				Item newItem = Item.getItemById(activeAttachmentsIds[i]);
-				compatibility.consumeInventoryItem(player, newItem);
-			}
-			if(hasValidPreviousAttachmentIds && activeAttachmentsIds[i] != previouslySelectedAttachmentIds[i]) {
-				Item oldItem = Item.getItemById(previouslySelectedAttachmentIds[i]);
-				if(!player.inventory.addItemStackToInventory(new ItemStack(oldItem))) {
-					System.err.println("Cannot add item back to the inventory: " + oldItem);
-				}
-			}
-		}
-		
-		weaponInstance.setPreviouslyAttachmentIds(new int[0]);
+		logger.debug("Exiting attachment mode");
 		weaponInstance.setSelectedAttachmentIndexes(new byte[0]);
 		
-		if(permit != null) {
-			permit.setStatus(Status.GRANTED);
-		}
+		permit.setStatus(Status.GRANTED);
 	}
 
 	List<CompatibleAttachment<? extends AttachmentContainer>> getActiveAttachments(ItemStack itemStack) {
@@ -169,14 +142,7 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 		PlayerItemInstance<?> itemInstance = modContext.getPlayerItemInstanceRegistry()
 				.getItemInstance(compatibility.clientPlayer(), itemStack);
 		
-//		PlayerWeaponInstance weaponInstance;
-//		if(itemInstance instanceof PlayerWeaponInstance) {
-//			weaponInstance = (PlayerWeaponInstance) itemInstance;
-//		} else {
-//			weaponInstance = Tags.getInstance(itemStack, PlayerWeaponInstance.class);
-//		}
-		
-		
+
 		int[] activeAttachmentsIds;
 		if(!(itemInstance instanceof PlayerWeaponInstance)) {
 			activeAttachmentsIds = new int[AttachmentCategory.values.length];
@@ -204,22 +170,6 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 		}
 		return activeAttachments;
 	}
-
-//	private static int[] ensureActiveAttachments(ItemStack itemStack) {
-//		int activeAttachmentsIds[] = compatibility.getTagCompound(itemStack).getIntArray(ACTIVE_ATTACHMENT_TAG);
-//		
-//		Weapon weapon = (Weapon) itemStack.getItem();
-//		if(activeAttachmentsIds == null || activeAttachmentsIds.length != AttachmentCategory.values.length) {
-//			activeAttachmentsIds = new int[AttachmentCategory.values.length];
-//			compatibility.getTagCompound(itemStack).setIntArray(ACTIVE_ATTACHMENT_TAG, activeAttachmentsIds);
-//			for(CompatibleAttachment<Weapon> attachment: weapon.getCompatibleAttachments().values()) {
-//				if(attachment.isDefault()) {
-//					activeAttachmentsIds[attachment.getAttachment().getCategory().ordinal()] = Item.getIdFromItem(attachment.getAttachment());
-//				}
-//			}
-//		}
-//		return activeAttachmentsIds;
-//	}
 	
 	@SuppressWarnings("unchecked")
 	void changeAttachment(AttachmentCategory attachmentCategory, PlayerWeaponInstance weaponInstance) {
@@ -232,101 +182,97 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 			currentAttachment = (ItemAttachment<Weapon>) Item.getItemById(activeAttachmentIdForThisCategory);
 		}
 		
-		ItemAttachment<Weapon> nextAttachment = nextCompatibleAttachment(attachmentCategory, currentAttachment, 
-				weaponInstance);
+		int nextAttachmentSlot = next(attachmentCategory, currentAttachment, weaponInstance);
 		
-		if(nextAttachment != null) {
-			System.out.println("Found next attachment " + nextAttachment);
+		if(nextAttachmentSlot >= 0) {
+			ItemStack slotItemStack = weaponInstance.getPlayer().inventory.getStackInSlot(nextAttachmentSlot);
+			ItemAttachment<Weapon> nextAttachment = (ItemAttachment<Weapon>) slotItemStack.getItem();
+			
+			if(nextAttachment.getApply() != null) {
+				nextAttachment.getApply().apply(nextAttachment, weaponInstance.getWeapon(), weaponInstance.getPlayer());
+			}
+			compatibility.consumeInventoryItemFromSlot(weaponInstance.getPlayer(), nextAttachmentSlot);
+			
+			activeAttachmentIds[attachmentCategory.ordinal()] = Item.getIdFromItem(nextAttachment);
+		} else {
+			activeAttachmentIds[attachmentCategory.ordinal()] = -1;
 		}
 
-		if(currentAttachment != null && currentAttachment.getRemove() != null) {
-			currentAttachment.getRemove().apply(currentAttachment, weaponInstance.getWeapon(), weaponInstance.getPlayer());
+		if(currentAttachment != null) {
+			if(currentAttachment.getRemove() != null) {
+				currentAttachment.getRemove().apply(currentAttachment, weaponInstance.getWeapon(), weaponInstance.getPlayer());
+			}
+			compatibility.addItemToPlayerInventory(weaponInstance.getPlayer(), currentAttachment, nextAttachmentSlot);
 		}
-		
-		if(nextAttachment != null && nextAttachment.getApply() != null) {
-			nextAttachment.getApply().apply(nextAttachment, weaponInstance.getWeapon(), weaponInstance.getPlayer());
-		}
-		
-		activeAttachmentIds[attachmentCategory.ordinal()] = Item.getIdFromItem(nextAttachment);;
 		
 		weaponInstance.setActiveAttachmentIds(activeAttachmentIds);
 	}
-		
-	@SuppressWarnings("unchecked")
-	private ItemAttachment<Weapon> nextCompatibleAttachment(AttachmentCategory category, Item currentAttachment, PlayerWeaponInstance weaponInstance) {
+	
+	private int next(AttachmentCategory category, Item currentAttachment, PlayerWeaponInstance weaponInstance) {
+		/*
+		 * Start with selected index -1 (current attachment).
+		 * Current index = selected index
+		 * Iterate through the inventory until found a compatible attachment
+		 * If hit the end, reset the counter to 0 and continue
+		 * 
+		 * If had current attachment and no other attachment found, nothing changes
+		 * e.g.
+		 * 	   selectedIndex = -1, currentIndex starts with selectedIndex + 1 = 0
+		 * 	   currentIndex: from 0 -> 36
+		 * 
+		 * If had current attachment and other attachment found at index 10:
+		 * e.g.
+		 * 	   selectedIndex = -1
+		 *     currentIndex: from 0 -> 10
+		 *     		addItemToPlayerInventory
+		 *     selectedIndex = 10
+		 *     
+		 * when entering attachment mode, all selected indexes are set to -1
+		 * selected indexes are really startSearchFromIndexes
+		 */
 		
 		byte[] originallySelectedAttachmentIndexes = weaponInstance.getSelectedAttachmentIds();
 		if(originallySelectedAttachmentIndexes == null || originallySelectedAttachmentIndexes.length != AttachmentCategory.values.length) {
-			return null;
+			return -1;
 		}
-
+		
 		byte[] selectedAttachmentIndexes = Arrays.copyOf(originallySelectedAttachmentIndexes, originallySelectedAttachmentIndexes.length);
 		int activeIndex = selectedAttachmentIndexes[category.ordinal()];
 		
-		/*
-		 * 0 - original attachment
-		 * 1 - 36 - attachments from inventory
-		 * -1 - no attachment
-		 */
-		
-
-		/*
-		 * No original attachment (0), no compatible attachments, starting from 0
-		 *    currentIndex: 0 -> -1
-		 *    
-		 * No original attachment (0), no compatible attachments, starting from -1
-		 *    currentIndex: -1 -> 0
-		 *    
-		 *    
-		 * No original attachment (0), compatible attachment found
-		 *    currentIndex: 0 -> [1 - 36]
-		 * 
-		 * No original attachment (0), compatible attachment found, starting from [1 - 35]
-		 *    currentIndex: [1 - 35] -> [1 - 35] + 1
-		 *    
-		 * No original attachment (0), compatible attachment found, starting from [36]
-		 *    currentIndex: 36 -> 37 -> -1
-		 *    
-		 * No original attachment (0), compatible attachment found, starting from [-1]
-		 *    currentIndex: -1 -> 0 (visual effect: no change, switching from no attachment to no attachment)
-		 * 
-		 */
-		
-		int currentIndex = activeIndex + 1;
-		
-		ItemAttachment<Weapon> nextCompatibleAttachment = null;
-		for(; currentIndex <= 36; currentIndex++) {
+		int nextAttachmentSlot = -1;
+		int offset = activeIndex + 1;
+		for(int i = 0; i < 37; i++) {
+			// i = 36 corresponds to "no attachment"
+			int currentIndex = i + offset;
 			
-			if(currentIndex == 0) {
-				// Select original attachment that was there prior to entering attachment mode
-				int previouslySelectedAttachmentIds[] = weaponInstance.getPreviouslyAttachmentIds();
-				nextCompatibleAttachment = (ItemAttachment<Weapon>) Item.getItemById(previouslySelectedAttachmentIds[category.ordinal()]);
-				if(nextCompatibleAttachment != null) {
-					// if original attachment existed, exit, iterate till found one
-					// reason: never stop on original attachment (index 0) if it's null
-					break;
-				} else {
-					continue;
-				}
+			if(currentIndex >= 36) {
+				currentIndex -= 37;
 			}
-			ItemStack slotItemStack = weaponInstance.getPlayer().inventory.getStackInSlot(currentIndex - 1);
+			
+			logger.debug("Searching for an attachment in slot " + currentIndex);
+			
+			if(currentIndex == -1) {
+				nextAttachmentSlot = -1;
+				break;
+			}
+			
+			ItemStack slotItemStack = weaponInstance.getPlayer().inventory.getStackInSlot(currentIndex);
 			if(slotItemStack != null && slotItemStack.getItem() instanceof ItemAttachment) {
+				@SuppressWarnings("unchecked")
 				ItemAttachment<Weapon> attachmentItemFromInventory = (ItemAttachment<Weapon>) slotItemStack.getItem();
 				if(attachmentItemFromInventory.getCategory() == category && weaponInstance.getWeapon().getCompatibleAttachments().containsKey(attachmentItemFromInventory)
 						&& attachmentItemFromInventory != currentAttachment) {
-					nextCompatibleAttachment = attachmentItemFromInventory;
+					//nextCompatibleAttachment = attachmentItemFromInventory;
+					nextAttachmentSlot = currentIndex;
 					break;
 				}
 			}
 		}
-		if(nextCompatibleAttachment == null) {
-			currentIndex = -1;
-		}
 		
-		selectedAttachmentIndexes[category.ordinal()] = (byte)currentIndex;
-		//compatibility.getTagCompound(itemStack).setIntArray(SELECTED_ATTACHMENT_INDEXES_TAG, selectedAttachmentIndexes);
+		selectedAttachmentIndexes[category.ordinal()] = (byte)nextAttachmentSlot;
 		weaponInstance.setSelectedAttachmentIndexes(selectedAttachmentIndexes);
-		return nextCompatibleAttachment;
+		
+		return nextAttachmentSlot;
 	}
 	
 	@SuppressWarnings("unchecked")

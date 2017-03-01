@@ -51,7 +51,7 @@ public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 					fov = 1f;
 				}
 			} else {
-				fov = instance.getZoom();
+				fov = instance.isAimed() ? instance.getZoom() : 1f;
 			}
 
 			compatibility.setNewFov(event, fov); //Tags.getZoom(stack));

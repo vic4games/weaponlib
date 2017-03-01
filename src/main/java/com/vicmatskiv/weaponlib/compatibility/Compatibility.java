@@ -1,7 +1,5 @@
 package com.vicmatskiv.weaponlib.compatibility;
 
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import com.vicmatskiv.weaponlib.Weapon;
@@ -116,6 +114,8 @@ public interface Compatibility {
 	public Block getBlockAtPosition(World world, CompatibleRayTraceResult position);
 
 	public void destroyBlock(World world, CompatibleRayTraceResult position);
+	
+	public boolean addItemToPlayerInventory(EntityPlayer player, final Item item, int slot);
 
 	public boolean consumeInventoryItem(InventoryPlayer inventoryPlayer, Item item);
 
@@ -140,6 +140,8 @@ public interface Compatibility {
 	public ItemStack getInventoryItemStack(EntityPlayer player, int inventoryItemIndex);
 	
 	public int getInventorySlot(EntityPlayer player, ItemStack itemStack);
+
+	public boolean consumeInventoryItemFromSlot(EntityPlayer player, int nextAttachmentSlot);
 
 	
 }

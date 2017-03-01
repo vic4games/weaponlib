@@ -54,6 +54,11 @@ public class ItemAttachment<T> extends CompatibleItem implements ModelSource {
 		this.remove = remove;
 	}
 	
+	@Override
+	public int getItemStackLimit() {
+		return 1;
+	}
+	
 	public Item setTextureName(String name) {
 		return this;
 	}

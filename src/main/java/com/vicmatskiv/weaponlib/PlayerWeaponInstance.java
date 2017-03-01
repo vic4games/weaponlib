@@ -17,9 +17,10 @@ import scala.actors.threadpool.Arrays;
 
 public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 	
+	private static final int SERIAL_VERSION = 5;
+	
 	private static final Logger logger = LogManager.getLogger(PlayerWeaponInstance.class);
 
-	
 	static {
 		TypeRegistry.getInstance().register(PlayerWeaponInstance.class);
 	}
@@ -40,7 +41,6 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 	private Deque<Tuple<WeaponState, Long>> filteredStateQueue = new LinkedBlockingDeque<>();
 	private int[] activeAttachmentIds = new int[0];
 	private byte[] selectedAttachmentIndexes = new byte[0];
-	private int[] previouslyAttachmentIds = new int[0];
 
 	public PlayerWeaponInstance() {
 		super();
@@ -56,7 +56,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 	
 	@Override
 	protected int getSerialVersion() {
-		return 3;
+		return SERIAL_VERSION;
 	}
 	
 	private void addStateToHistory(WeaponState state) {
@@ -106,7 +106,6 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 	public void init(ByteBuf buf) {
 		super.init(buf);
 		activeAttachmentIds = initIntArray(buf);
-		previouslyAttachmentIds = initIntArray(buf);
 		selectedAttachmentIndexes = initByteArray(buf);
 		ammo = buf.readInt();
 		aimed = buf.readBoolean();
@@ -119,7 +118,6 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 	public void serialize(ByteBuf buf) {
 		super.serialize(buf);
 		serializeIntArray(buf, activeAttachmentIds);
-		serializeIntArray(buf, previouslyAttachmentIds);
 		serializeByteArray(buf, selectedAttachmentIndexes);
 		buf.writeInt(ammo);
 		buf.writeBoolean(aimed);
@@ -168,7 +166,6 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 		setAmmo(otherWeaponInstance.ammo);
 		//TODO: do we need to set anything else? 
 		setSelectedAttachmentIndexes(otherWeaponInstance.selectedAttachmentIndexes);
-		setPreviouslyAttachmentIds(otherWeaponInstance.previouslyAttachmentIds);
 		setActiveAttachmentIds(otherWeaponInstance.activeAttachmentIds);
 	}
 
@@ -267,17 +264,6 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 		}
 	}
 
-	public int[] getPreviouslyAttachmentIds() {
-		return previouslyAttachmentIds;
-	}
-
-	void setPreviouslyAttachmentIds(int[] previouslyAttachmentIds) {
-		if(!Arrays.equals(this.previouslyAttachmentIds, previouslyAttachmentIds)) {
-			this.previouslyAttachmentIds = previouslyAttachmentIds;
-			updateId++;
-		}
-	}
-	
 	public boolean isAttachmentZoomEnabled() {
 		Item scopeItem = getAttachmentItemWithCategory(AttachmentCategory.SCOPE);
 		return scopeItem instanceof ItemScope;
@@ -292,16 +278,6 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 	}
 
 	public float getZoom() {
-		//if(zoom == 0f) {
-//			Item scopeItem = getAttachmentItemWithCategory(AttachmentCategory.SCOPE);
-//			if(scopeItem instanceof ItemScope && ((ItemScope) scopeItem).isOptical()) {
-//				float minZoom = ((ItemScope) scopeItem).getMinZoom();
-//				float maxZoom = ((ItemScope) scopeItem).getMaxZoom();
-//				zoom = minZoom + (maxZoom - minZoom) / 2f;
-//			} else {
-//				zoom = 1f;
-//			}
-		//}
 		return zoom;
 	}
 	
@@ -345,7 +321,4 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 		return getWeapon().builder.name + "[" + getUuid() + "]";
 	}
 
-	
-
-	
 }

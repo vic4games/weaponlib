@@ -364,4 +364,27 @@ public class Compatibility1_7_10 implements Compatibility {
 		}
 		return slot;
 	}
+	
+	public boolean addItemToPlayerInventory(EntityPlayer player, final Item item, int slot) {
+		boolean result = false;
+		if(slot == -1) {
+			player.inventory.addItemStackToInventory(new ItemStack(item));
+		} else if(player.inventory.mainInventory[slot] == null) {
+        	player.inventory.mainInventory[slot] = new ItemStack(item);
+        }
+        return result;
+    }
+
+	@Override
+	public boolean consumeInventoryItemFromSlot(EntityPlayer player, int slot) {
+		
+		if(player.inventory.mainInventory[slot] == null) {
+			return false;
+		}
+		
+		if (--player.inventory.mainInventory[slot].stackSize <= 0) {
+			player.inventory.mainInventory[slot] = null;
+        }
+		return true;
+	}
 }
