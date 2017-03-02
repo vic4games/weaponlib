@@ -691,12 +691,9 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				if(playerWeaponState.isAutomaticModeEnabled()) {
 					if(playerWeaponState.isAimed()) {
 						currentState = RenderableState.ZOOMING;
-						rate = builder.firingRandomizingRate;
 						amplitude = builder.zoomRandomizingAmplitude;
 					} else {
 						currentState = RenderableState.NORMAL; 
-						rate = builder.firingRandomizingRate;
-						amplitude = builder.firingRandomizingAmplitude;
 					}
 				} else if(playerWeaponState.isAimed()) {
 					currentState = RenderableState.ZOOMING_SHOOTING;
@@ -774,8 +771,13 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 					break;
 				}
 			}
+		}	
+		WeaponState state = stateTuple.getU();
+		
+		if(playerWeaponState.isAutomaticModeEnabled() && state == WeaponState.PAUSED) {
+			state = WeaponState.FIRING;
 		}
-		return stateTuple.getU();
+		return state;
 	}
 	
 	private BiConsumer<Part, RenderContext> createWeaponPartPositionFunction(BiConsumer<EntityPlayer, ItemStack> weaponPositionFunction) {
