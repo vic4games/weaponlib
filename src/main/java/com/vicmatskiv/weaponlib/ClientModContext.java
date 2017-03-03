@@ -38,9 +38,13 @@ public class ClientModContext extends CommonModContext {
 	
 	private PlayerItemInstanceRegistry playerItemInstanceRegistry;
 	
+	private StatusMessageCenter statusMessageCenter;
+	
 	@Override
 	public void init(Object mod, String modId, CompatibleChannel channel) {
 		super.init(mod, modId, channel);
+		
+		this.statusMessageCenter = new StatusMessageCenter();
 		
 		rendererRegistry = new CompatibleRenderingRegistry(modId);
 
@@ -156,5 +160,10 @@ public class ClientModContext extends CommonModContext {
 	public PlayerWeaponInstance getMainHeldWeapon() {
 		return getPlayerItemInstanceRegistry().getMainHandItemInstance(compatibility.clientPlayer(), 
 				PlayerWeaponInstance.class);
+	}
+	
+	@Override
+	public StatusMessageCenter getStatusMessageCenter() {
+		return statusMessageCenter;
 	}
 }

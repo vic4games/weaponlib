@@ -30,7 +30,7 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 		private BiFunction<S, EE, Permit<S>> permitProvider;
 		private BiFunction<S, EE, Boolean> stateUpdater;
 		private PermitManager permitManager;
-		private long prepareDuration;
+		private Predicate<EE> preparePredicate;
 		private long requestTimeout = DEFAULT_REQUEST_TIMEOUT;
 		private boolean isPermitRequired;
 		
@@ -38,9 +38,9 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 			this.aspect = aspect;
 		}
 		
-		public RuleBuilder<EE> prepare(VoidAction<S, EE> prepareAction, long prepareDuration) {
+		public RuleBuilder<EE> prepare(VoidAction<S, EE> prepareAction, Predicate<EE> preparePredicate) {
 			this.prepareAction = prepareAction;
-			this.prepareDuration = prepareDuration;
+			this.preparePredicate = preparePredicate;
 			return this;
 		}
 
@@ -129,7 +129,7 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 			final Predicate<E> effectivePredicate;
 			final boolean isRequestRuleAutoTransitioned;
 			
-			if(prepareAction != null || prepareDuration > 0) {
+			if(prepareAction != null || preparePredicate != null) {
 				
 				if(auto) {
 					throw new IllegalStateException("Prepared transition cannot be automatic");
@@ -148,7 +148,7 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 				aspectRules.add(prepareRule);
 				
 				effectiveFromState = toState.preparingPhase();
-				effectivePredicate = e -> System.currentTimeMillis() > e.getStateUpdateTimestamp() + prepareDuration;
+				effectivePredicate = e -> preparePredicate != null ? preparePredicate.test(safeCast(e)) : true; //e -> System.currentTimeMillis() > e.getStateUpdateTimestamp() + prepareDuration;
 				isRequestRuleAutoTransitioned = true; // prepare -> request transition must be automatic
 			} else {
 				effectiveFromState = fromState;

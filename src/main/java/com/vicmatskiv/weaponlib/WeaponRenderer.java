@@ -87,6 +87,9 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		private List<Transition> firstPersonLeftHandPositioningUnloading;
 		private List<Transition> firstPersonRightHandPositioningUnloading;
 		
+		private long totalReloadingDuration;
+		private long totalUnloadingDuration;
+		
 		private String modId;
 		
 		private int recoilAnimationDuration = DEFAULT_RECOIL_ANIMATION_DURATION;
@@ -460,8 +463,18 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				firstPersonPositioningReloading = Collections.singletonList(new Transition(firstPersonPositioning, DEFAULT_ANIMATION_DURATION));
 			}
 			
+			for(Transition t: firstPersonPositioningReloading) {
+				totalReloadingDuration += t.getDuration();
+				totalReloadingDuration += t.getPause();
+			}
+			
 			if(firstPersonPositioningUnloading == null) {
 				firstPersonPositioningUnloading = Collections.singletonList(new Transition(firstPersonPositioning, DEFAULT_ANIMATION_DURATION));
+			}
+			
+			for(Transition t: firstPersonPositioningUnloading) {
+				totalUnloadingDuration += t.getDuration();
+				totalUnloadingDuration += t.getPause();
 			}
 			
 			if(firstPersonPositioningRecoiled == null) {
@@ -645,6 +658,14 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		this.firstPersonStateManagers = new HashMap<>();
 		this.weaponTransitionProvider = new WeaponPositionProvider();
 	}
+	
+	protected long getTotalReloadingDuration() {
+		return builder.totalReloadingDuration;
+	}
+	
+	protected long getTotalUnloadingDuration() {
+		return builder.totalUnloadingDuration;
+	}
 
 	protected ClientModContext getClientModContext() {
 		return clientModContext;
@@ -660,16 +681,17 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		float rate = builder.normalRandomizingRate;
 		RenderableState currentState = null;
 		
-		PlayerWeaponInstance playerWeaponState = clientModContext.getPlayerItemInstanceRegistry()
+		PlayerWeaponInstance playerWeaponInstance = clientModContext.getPlayerItemInstanceRegistry()
 				.getMainHandItemInstance(player, PlayerWeaponInstance.class); // TODO: cannot be always main hand, need to which hand from context
 		
-		if(playerWeaponState != null) {
-			WeaponState state = getNextNonExpiredState(playerWeaponState);
-			switch(state) {
+		if(playerWeaponInstance != null) {
+			AsyncWeaponState asyncWeaponState = getNextNonExpiredState(playerWeaponInstance);
+			
+			switch(asyncWeaponState.getState()) {
 				
 			case RECOILED: 
-				if(playerWeaponState.isAutomaticModeEnabled()) {
-					if(playerWeaponState.isAimed()) {
+				if(playerWeaponInstance.isAutomaticModeEnabled()) {
+					if(playerWeaponInstance.isAimed()) {
 						currentState = RenderableState.ZOOMING;
 						rate = builder.firingRandomizingRate;
 						amplitude = builder.zoomRandomizingAmplitude;
@@ -678,7 +700,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 						rate = builder.firingRandomizingRate;
 						amplitude = builder.firingRandomizingAmplitude;
 					}
-				} else if(playerWeaponState.isAimed()) {
+				} else if(playerWeaponInstance.isAimed()) {
 					currentState = RenderableState.ZOOMING_RECOILED;
 					amplitude = builder.zoomRandomizingAmplitude;
 				} else {
@@ -688,14 +710,25 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				break;
 				
 			case PAUSED: 
-				if(playerWeaponState.isAutomaticModeEnabled()) {
-					if(playerWeaponState.isAimed()) {
+				if(playerWeaponInstance.isAutomaticModeEnabled()) {
+					
+					boolean isLongPaused = System.currentTimeMillis() - asyncWeaponState.getTimestamp() > (50f / playerWeaponInstance.getFireRate())
+							&& asyncWeaponState.isInfinite();
+					
+					if(playerWeaponInstance.isAimed()) {
 						currentState = RenderableState.ZOOMING;
+						if(!isLongPaused) {
+							rate = builder.firingRandomizingRate;
+						}
 						amplitude = builder.zoomRandomizingAmplitude;
 					} else {
 						currentState = RenderableState.NORMAL; 
+						if(!isLongPaused) {
+							rate = builder.firingRandomizingRate;
+							amplitude = builder.firingRandomizingAmplitude;
+						}
 					}
-				} else if(playerWeaponState.isAimed()) {
+				} else if(playerWeaponInstance.isAimed()) {
 					currentState = RenderableState.ZOOMING_SHOOTING;
 					rate = builder.firingRandomizingRate;
 					amplitude = builder.zoomRandomizingAmplitude;
@@ -724,7 +757,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			default:
 				if(player.isSprinting() && builder.firstPersonPositioningRunning != null) {
 					currentState = RenderableState.RUNNING;
-				} else if(playerWeaponState.isAimed()) {
+				} else if(playerWeaponInstance.isAimed()) {
 					currentState = RenderableState.ZOOMING;
 					rate = builder.zoomRandomizingRate;
 					amplitude = builder.zoomRandomizingAmplitude;
@@ -748,36 +781,20 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		return new StateDescriptor(stateManager, rate, amplitude);
 	}
 
-	private WeaponState getNextNonExpiredState(PlayerWeaponInstance playerWeaponState) {
-		Tuple<WeaponState, Long> stateTuple = null;
-		while((stateTuple = playerWeaponState.nextHistoryState()) != null) {
-			long expirationTimeout;
-			if(stateTuple.getU() == WeaponState.FIRING || stateTuple.getU() == WeaponState.RECOILED 
-					|| stateTuple.getU() == WeaponState.PAUSED) 
-			{
-				if(playerWeaponState.isAutomaticModeEnabled()) {
-					expirationTimeout = (long) (50f / playerWeaponState.getFireRate());
-				} else {
-					expirationTimeout = 500;
-				}
-			} else {
-				expirationTimeout = System.currentTimeMillis(); // never expiring
-			}
+	private AsyncWeaponState getNextNonExpiredState(PlayerWeaponInstance playerWeaponState) {
+		AsyncWeaponState asyncWeaponState = null;
+		while((asyncWeaponState = playerWeaponState.nextHistoryState()) != null) {
 			
-			if(System.currentTimeMillis() < stateTuple.getV() + expirationTimeout) {
-				if(stateTuple.getU() == WeaponState.FIRING && !playerWeaponState.isAutomaticModeEnabled()) { // allow recoil for non-automatic weapons
+			if(System.currentTimeMillis() < asyncWeaponState.getTimestamp() + asyncWeaponState.getDuration()) {
+				if(asyncWeaponState.getState() == WeaponState.FIRING && !playerWeaponState.isAutomaticModeEnabled()) { // allow recoil for non-automatic weapons
 					continue;
 				} else {
-					break;
+					break; // found non-expired-state
 				}
 			}
 		}	
-		WeaponState state = stateTuple.getU();
 		
-		if(playerWeaponState.isAutomaticModeEnabled() && state == WeaponState.PAUSED) {
-			state = WeaponState.FIRING;
-		}
-		return state;
+		return asyncWeaponState;
 	}
 	
 	private BiConsumer<Part, RenderContext> createWeaponPartPositionFunction(BiConsumer<EntityPlayer, ItemStack> weaponPositionFunction) {

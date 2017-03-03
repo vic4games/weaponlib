@@ -114,25 +114,15 @@ public class CustomGui extends CompatibleGui {
 					fontRender.drawStringWithShadow("Press [right] to change camo", width / 2 + 60, height / 2 - 20, color);
 					fontRender.drawStringWithShadow("Press [down] to add under-barrel rig", 10, height - 40, color);
 				} else {
-					ItemMagazine magazine = (ItemMagazine) attachmentAspect.getActiveAttachment(AttachmentCategory.MAGAZINE, weaponInstance);
-					int totalCapacity;
-					if(magazine != null) {
-						totalCapacity = magazine.getAmmo();
-					} else {
-						totalCapacity = weaponItem.getAmmoCapacity();
-					}
-					
-					String text;
-					if(weaponItem.getAmmoCapacity() == 0 && totalCapacity == 0) {
-						text = "No magazine";
-					} else {
-						text = "Ammo: " + weaponItem.getCurrentAmmo(compatibility.clientPlayer()) + "/" + totalCapacity;
+					String nextMessage = modContext.getStatusMessageCenter().nextMessage();
+					if(nextMessage == null) {
+						nextMessage = getDefaultWeaponMessage(weaponInstance);
 					}
 					
 					int x = width - 80;
 					int y = 10;
 
-					fontRender.drawStringWithShadow(text, x, y, color);
+					fontRender.drawStringWithShadow(nextMessage, x, y, color);
 				}
 				GL11.glPopAttrib();
 				
@@ -145,15 +135,45 @@ public class CustomGui extends CompatibleGui {
 			mc.entityRenderer.setupOverlayRendering();
 			int color = 0xFFFFFF;
 			
-			ItemMagazine magazine = (ItemMagazine) itemStack.getItem();
+			String nextMessage = modContext.getStatusMessageCenter().nextMessage();
+			if(nextMessage == null) {
+				nextMessage = getDefaultMagazineMessage(itemStack);
+			}
 			
-			String text = "Ammo: " + Tags.getAmmo(itemStack) + "/" + magazine.getAmmo();
 			int x = width - 80;
 			int y = 10;
 
-			fontRender.drawStringWithShadow(text, x, y, color);
+			fontRender.drawStringWithShadow(nextMessage, x, y, color);
 			event.setCanceled(true);
 		}
+	}
+
+
+	private String getDefaultMagazineMessage(ItemStack itemStack) {
+		ItemMagazine magazine = (ItemMagazine) itemStack.getItem();
+		
+		String text = "Ammo: " + Tags.getAmmo(itemStack) + "/" + magazine.getAmmo();
+		return text;
+	}
+
+
+	private String getDefaultWeaponMessage(PlayerWeaponInstance weaponInstance) {
+		@SuppressWarnings("static-access")
+		ItemMagazine magazine = (ItemMagazine) attachmentAspect.getActiveAttachment(AttachmentCategory.MAGAZINE, weaponInstance);
+		int totalCapacity;
+		if(magazine != null) {
+			totalCapacity = magazine.getAmmo();
+		} else {
+			totalCapacity = weaponInstance.getWeapon().getAmmoCapacity();
+		}
+		
+		String text;
+		if(weaponInstance.getWeapon().getAmmoCapacity() == 0 && totalCapacity == 0) {
+			text = "No magazine";
+		} else {
+			text = "Ammo: " + weaponInstance.getWeapon().getCurrentAmmo(compatibility.clientPlayer()) + "/" + totalCapacity;
+		}
+		return text;
 	}
 
 

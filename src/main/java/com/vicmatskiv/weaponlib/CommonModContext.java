@@ -159,4 +159,9 @@ public class CommonModContext implements ModContext {
 	public PlayerWeaponInstance getMainHeldWeapon() {
 		throw new IllegalStateException();
 	}
+	
+	@Override
+	public StatusMessageCenter getStatusMessageCenter() {
+		throw new IllegalStateException();
+	}
 }

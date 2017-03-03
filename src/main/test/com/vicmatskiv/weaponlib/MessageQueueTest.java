@@ -7,13 +7,13 @@ public class MessageQueueTest {
 
 	@Test
 	public void testEmpty() {
-		MessageQueue queue = new MessageQueue();
+		StatusMessageCenter queue = new StatusMessageCenter();
 		Assert.assertNull(queue.nextMessage());
 	}
 	
 	@Test
 	public void testSingleExpiringMessage() throws InterruptedException {
-		MessageQueue queue = new MessageQueue();
+		StatusMessageCenter queue = new StatusMessageCenter();
 		String message = "m1";
 		int duration = 10;
 		queue.addMessage(message, duration);
@@ -30,7 +30,7 @@ public class MessageQueueTest {
 	
 	@Test
 	public void testSecondMessageExpiringBeforeFirst() throws InterruptedException {
-		MessageQueue queue = new MessageQueue();
+		StatusMessageCenter queue = new StatusMessageCenter();
 		String message1 = "m1";
 		long duration1 = 1000;
 		queue.addMessage(message1, duration1);
@@ -51,7 +51,7 @@ public class MessageQueueTest {
 	
 	@Test
 	public void testSecondMessageExpiringAfterFirst() throws InterruptedException {
-		MessageQueue queue = new MessageQueue();
+		StatusMessageCenter queue = new StatusMessageCenter();
 		String message1 = "m1";
 		long duration1 = 10;
 		queue.addMessage(message1, duration1);
@@ -66,7 +66,7 @@ public class MessageQueueTest {
 	
 	@Test
 	public void testTwoMessagesWithTheSameExpirationTime() throws InterruptedException {
-		MessageQueue queue = new MessageQueue();
+		StatusMessageCenter queue = new StatusMessageCenter();
 		String message1 = "m1";
 		queue.addMessage(message1);
 		String message2 = "m2";

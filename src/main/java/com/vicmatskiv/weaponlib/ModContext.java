@@ -34,4 +34,6 @@ public interface ModContext {
 	
 	public PlayerWeaponInstance getMainHeldWeapon();
 
+	public StatusMessageCenter getStatusMessageCenter();
+
 }

@@ -63,13 +63,14 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 			
 	private static Predicate<PlayerWeaponInstance> magazineAttached = 
 			weaponInstance -> WeaponAttachmentAspect.getActiveAttachment(AttachmentCategory.MAGAZINE, weaponInstance) != null;
-
-	private static long reloadAnimationDuration = 1000;
-	
-	private static long unloadAnimationDuration = 1000;
 		
 	private static Predicate<PlayerWeaponInstance> reloadAnimationCompleted = weaponInstance -> 
-		System.currentTimeMillis() >= weaponInstance.getStateUpdateTimestamp() + reloadAnimationDuration; // TODO: read reload animation duration from the state itself
+		System.currentTimeMillis() >= weaponInstance.getStateUpdateTimestamp() 
+			+ weaponInstance.getWeapon().getTotalReloadingDuration();
+		
+	private static Predicate<PlayerWeaponInstance> unloadAnimationCompleted = weaponInstance -> 
+		System.currentTimeMillis() >= weaponInstance.getStateUpdateTimestamp() 
+			+ weaponInstance.getWeapon().getTotalUnloadingDuration();
 	
 	private Predicate<PlayerItemInstance<?>> inventoryHasFreeSlots = c -> true; // TODO implement free slot check
 	
@@ -112,7 +113,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 			.automatic()
 			
 		.in(this)
-			.prepare((c, f, t) -> { prepareUnload(c); }, unloadAnimationDuration)
+			.prepare((c, f, t) -> { prepareUnload(c); }, unloadAnimationCompleted)
 			.change(WeaponState.READY).to(WeaponState.UNLOAD)
 			.when(magazineAttached.and(inventoryHasFreeSlots))
 			.withPermit((s, c) -> new UnloadPermit(s),
@@ -123,7 +124,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 		
 		.in(this)
 			.change(WeaponState.UNLOAD).to(WeaponState.READY)
-			//.when(unloadAnimationCompleted.or(quietReload))
+			//.when(unloadAnimationCompleted)
 			.automatic()
 		;
 	}

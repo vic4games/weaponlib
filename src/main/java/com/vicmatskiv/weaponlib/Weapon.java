@@ -26,9 +26,9 @@ import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ChatComponentText;
 import net.minecraft.world.World;
 
 public class Weapon extends CompatibleItem implements 
@@ -762,6 +762,61 @@ public class Weapon extends CompatibleItem implements
 		}
 		logger.debug("Changed fire mode of " + instance + " to " + result);
 		
-		instance.getPlayer().addChatMessage(new ChatComponentText("Fire mode changed to " + message));
+		modContext.getStatusMessageCenter().addMessage("Mode: " + message, 2000);
+		
+		//instance.getPlayer().addChatMessage(new ChatComponentText("Fire mode changed to " + message));
+	}
+	
+	public long getTotalReloadingDuration() {
+		return builder.renderer.getTotalReloadingDuration();
+	}
+	
+	public long getTotalUnloadingDuration() {
+		logger.debug("Total unloading duration " + builder.renderer.getTotalUnloadingDuration());
+		return builder.renderer.getTotalUnloadingDuration();
+	}
+	
+	void incrementZoom(PlayerWeaponInstance instance) {
+		Item scopeItem = instance.getAttachmentItemWithCategory(AttachmentCategory.SCOPE);
+		if(scopeItem instanceof ItemScope && ((ItemScope) scopeItem).isOptical()) {
+			float minZoom = ((ItemScope) scopeItem).getMinZoom();
+			float maxZoom = ((ItemScope) scopeItem).getMaxZoom();
+			float increment = (minZoom - maxZoom) / 20f;
+			float zoom = instance.getZoom();
+			
+			if(zoom > maxZoom) {
+				zoom = Math.max(zoom - increment, maxZoom);
+			}
+			
+			instance.setZoom(zoom);
+			
+			float ratio = (minZoom - zoom) / (minZoom - maxZoom);
+			
+			modContext.getStatusMessageCenter().addMessage("Zoom: " + Math.round(ratio * 100) + "%", 1000);
+			logger.debug("Changed optical zoom to " + instance.getZoom());
+		} else {
+			logger.debug("Cannot change non-optical zoom");
+		}
+	}
+	
+	void decrementZoom(PlayerWeaponInstance instance) {
+		Item scopeItem = instance.getAttachmentItemWithCategory(AttachmentCategory.SCOPE);
+		if(scopeItem instanceof ItemScope && ((ItemScope) scopeItem).isOptical()) {
+			float minZoom = ((ItemScope) scopeItem).getMinZoom();
+			float maxZoom = ((ItemScope) scopeItem).getMaxZoom();
+			float increment = (minZoom - maxZoom) / 20f;
+			float zoom = instance.getZoom();
+			
+			if(zoom < minZoom) {
+				zoom = Math.min(zoom + increment, minZoom);
+			}
+			instance.setZoom(zoom);
+			
+			float ratio = (minZoom - zoom) / (minZoom - maxZoom);
+			modContext.getStatusMessageCenter().addMessage("Zoom: " + Math.round(ratio * 100) + "%", 1000);
+			logger.debug("Changed optical zoom to " + zoom);
+		} else {
+			logger.debug("Cannot change non-optical zoom");
+		}
 	}
 }

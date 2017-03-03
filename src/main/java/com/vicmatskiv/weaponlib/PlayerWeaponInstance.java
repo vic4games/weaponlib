@@ -38,7 +38,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 	 * from the queue. Elements with the same priority are not removed.
 	 * This ensures the queue is always sorted by priority, lowest (head) to highest (tail).
 	 */
-	private Deque<Tuple<WeaponState, Long>> filteredStateQueue = new LinkedBlockingDeque<>();
+	private Deque<AsyncWeaponState> filteredStateQueue = new LinkedBlockingDeque<>();
 	private int[] activeAttachmentIds = new int[0];
 	private byte[] selectedAttachmentIndexes = new byte[0];
 
@@ -60,18 +60,28 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 	}
 	
 	private void addStateToHistory(WeaponState state) {
-		Tuple<WeaponState, Long> t;
-		
+		AsyncWeaponState t;
 		// Remove existing items from lower priorities from the top of the stack; stop when same or higher priority item is found
 		while((t = filteredStateQueue.peekFirst()) != null) {
-			if(t.getU().getPriority() < state.getPriority()) {
+			if(t.getState().getPriority() < state.getPriority()) {
 				filteredStateQueue.pollFirst();
 			} else {
 				break;
 			}
 		}
 		
-		filteredStateQueue.addFirst(new Tuple<>(state, System.currentTimeMillis()));
+		long expirationTimeout;
+		
+		if(state == WeaponState.FIRING || state == WeaponState.RECOILED || state == WeaponState.PAUSED) {
+			if(isAutomaticModeEnabled()) {
+				expirationTimeout = (long) (50f / getFireRate());
+			} else {
+				expirationTimeout = 500;
+			}
+		} else {
+			expirationTimeout = Integer.MAX_VALUE;
+		}
+		filteredStateQueue.addFirst(new AsyncWeaponState(state, this.stateUpdateTimestamp, expirationTimeout));
 	}
 	
 	@Override
@@ -81,12 +91,14 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 		return result;
 	}
 	
-	public Tuple<WeaponState, Long> nextHistoryState() {
-		Tuple<WeaponState, Long> result;
-		if(filteredStateQueue.size() > 1) {
+	public AsyncWeaponState nextHistoryState() {
+//		logger.debug("State queue: " + filteredStateQueue.stream().map(t -> t.getState() + ":" + t.getDuration())
+//				.collect(Collectors.toList()));
+		AsyncWeaponState result;
+		if(filteredStateQueue.size() > 0) { // was > 1 earlier, why?
 			result = filteredStateQueue.pollLast();
 		} else {
-			result = new Tuple<>(getState(), System.currentTimeMillis());
+			result = new AsyncWeaponState(getState(), stateUpdateTimestamp);
 		}
 		return result;
 	}
@@ -270,7 +282,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 		return scopeItem instanceof ItemScope;
 	}
 
-	private Item getAttachmentItemWithCategory(AttachmentCategory category) {
+	Item getAttachmentItemWithCategory(AttachmentCategory category) {
 		if(activeAttachmentIds == null || activeAttachmentIds.length <= category.ordinal()) {
 			return null;
 		}
@@ -288,33 +300,6 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 			updateId++;
 		}
 		
-	}
-
-	void incrementZoom() {
-		Item scopeItem = getAttachmentItemWithCategory(AttachmentCategory.SCOPE);
-		if(scopeItem instanceof ItemScope && ((ItemScope) scopeItem).isOptical()) {
-			//float minZoom = ((ItemScope) scopeItem).getMinZoom();
-			float maxZoom = ((ItemScope) scopeItem).getMaxZoom();
-			if(zoom > maxZoom) {
-				setZoom(Math.max(zoom - 0.02f, maxZoom));
-			}
-			logger.debug("Changed optical zoom to " + zoom);
-		} else {
-			logger.debug("Cannot change non-optical zoom");
-		}
-	}
-	
-	void decrementZoom() {
-		Item scopeItem = getAttachmentItemWithCategory(AttachmentCategory.SCOPE);
-		if(scopeItem instanceof ItemScope && ((ItemScope) scopeItem).isOptical()) {
-			float minZoom = ((ItemScope) scopeItem).getMinZoom();
-			if(zoom < minZoom) {
-				setZoom(Math.min(zoom + 0.02f, minZoom));
-			}
-			logger.debug("Changed optical zoom to " + zoom);
-		} else {
-			logger.debug("Cannot change non-optical zoom");
-		}
 	}
 	
 	@Override

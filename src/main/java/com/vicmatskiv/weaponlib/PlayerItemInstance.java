@@ -24,7 +24,7 @@ public class PlayerItemInstance<S extends ManagedState<S>> extends UniversalObje
 //	}
 
 	protected S state;
-	protected long stateUpdateTimestamp;
+	protected long stateUpdateTimestamp = System.currentTimeMillis();
 	protected long updateId;
 	protected EntityPlayer player;
 	protected Item item;

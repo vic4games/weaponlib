@@ -16,20 +16,15 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
 	
 	private CompatibleChannel channel;
 	private Function<CompatibleMessageContext, EntityPlayer> entityPlayerSupplier;
-	private WeaponAttachmentAspect attachmentAspect;
-	//private WeaponReloadAspect reloadAspect;
 	private ModContext modContext;
 	
 	public WeaponKeyInputHandler(
 			ModContext modContext,
 			Function<CompatibleMessageContext, EntityPlayer> entityPlayerSupplier, 
 			WeaponAttachmentAspect attachmentAspect,
-			//WeaponReloadAspect reloadAspect,
 			CompatibleChannel channel) {
 		this.modContext = modContext;
 		this.entityPlayerSupplier = entityPlayerSupplier;
-		this.attachmentAspect = attachmentAspect;
-		//this.reloadAspect = reloadAspect;
 		this.channel = channel;
 	}
 
@@ -101,14 +96,14 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
         else if(KeyBindings.addKey.getIsKeyPressed()) {
         	PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
     		if(instance != null && instance.getState() == WeaponState.READY) {
-    			instance.incrementZoom();
+    			instance.getWeapon().incrementZoom(instance);
     		}
         }
         
         else if(KeyBindings.subtractKey.isPressed()) {
         	PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
     		if(instance != null && instance.getState() == WeaponState.READY) {
-    			instance.decrementZoom();
+    			instance.getWeapon().decrementZoom(instance);
     		}
         }
     }

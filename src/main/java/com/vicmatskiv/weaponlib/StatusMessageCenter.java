@@ -3,7 +3,7 @@ package com.vicmatskiv.weaponlib;
 import java.util.Deque;
 import java.util.LinkedList;
 
-final class MessageQueue {
+final class StatusMessageCenter {
 	
 	static class Message {
 		long expiresAt;
