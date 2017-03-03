@@ -32,11 +32,8 @@ public class ItemBullet extends ItemAttachment<Weapon> {
 		super(modId, category, model, textureName, crosshair, apply, remove);
 	}
 	
-//	@SuppressWarnings({ "rawtypes"})
-//	@Override
-//	public void addInformation(ItemStack itemStack, EntityPlayer entityPlayer, List info, boolean p_77624_4_) {
-//		//info.add("Compatible guns:");
-//
-//		//compatibleMagazines.forEach((m) -> info.add(GameRegistry.));
-//	}
+	@Override
+	public int getItemStackLimit() {
+		return 64;
+	}
 }

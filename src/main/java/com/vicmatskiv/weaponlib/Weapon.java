@@ -762,17 +762,17 @@ public class Weapon extends CompatibleItem implements
 		}
 		logger.debug("Changed fire mode of " + instance + " to " + result);
 		
-		modContext.getStatusMessageCenter().addMessage("Mode: " + message, 2000);
+		modContext.getStatusMessageCenter().addMessage("Firearm mode: " + message, 1000);
 		
 		//instance.getPlayer().addChatMessage(new ChatComponentText("Fire mode changed to " + message));
 	}
 	
 	public long getTotalReloadingDuration() {
+		//logger.debug("Total load duration " + builder.renderer.getTotalReloadingDuration());
 		return builder.renderer.getTotalReloadingDuration();
 	}
 	
 	public long getTotalUnloadingDuration() {
-		logger.debug("Total unloading duration " + builder.renderer.getTotalUnloadingDuration());
 		return builder.renderer.getTotalUnloadingDuration();
 	}
 	
@@ -792,7 +792,7 @@ public class Weapon extends CompatibleItem implements
 			
 			float ratio = (minZoom - zoom) / (minZoom - maxZoom);
 			
-			modContext.getStatusMessageCenter().addMessage("Zoom: " + Math.round(ratio * 100) + "%", 1000);
+			modContext.getStatusMessageCenter().addMessage("Zoom: " + Math.round(ratio * 100) + "%", 800);
 			logger.debug("Changed optical zoom to " + instance.getZoom());
 		} else {
 			logger.debug("Cannot change non-optical zoom");
@@ -813,7 +813,7 @@ public class Weapon extends CompatibleItem implements
 			instance.setZoom(zoom);
 			
 			float ratio = (minZoom - zoom) / (minZoom - maxZoom);
-			modContext.getStatusMessageCenter().addMessage("Zoom: " + Math.round(ratio * 100) + "%", 1000);
+			modContext.getStatusMessageCenter().addMessage("Zoom: " + Math.round(ratio * 100) + "%", 800);
 			logger.debug("Changed optical zoom to " + zoom);
 		} else {
 			logger.debug("Cannot change non-optical zoom");

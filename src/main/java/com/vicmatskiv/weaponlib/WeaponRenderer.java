@@ -14,6 +14,8 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL11;
 
 import com.vicmatskiv.weaponlib.animation.MultipartPositioning.Positioner;
@@ -30,6 +32,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 
 public class WeaponRenderer extends CompatibleWeaponRenderer {
+	
+	private static final Logger logger = LogManager.getLogger(WeaponRenderer.class);
+
 	
 	private static final float DEFAULT_RANDOMIZING_RATE = 0.33f;
 	private static final float DEFAULT_RANDOMIZING_FIRING_RATE = 20;
@@ -763,6 +768,9 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 					amplitude = builder.zoomRandomizingAmplitude;
 				}
 			}
+			
+
+			logger.trace("Rendering state {} created from {}", currentState, asyncWeaponState.getState());
 		}
 		
 		if(currentState == null) {
@@ -777,6 +785,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			stateManager.setState(currentState, true, currentState == RenderableState.SHOOTING
 					|| currentState == RenderableState.ZOOMING_SHOOTING);
 		}
+		
 		
 		return new StateDescriptor(stateManager, rate, amplitude);
 	}

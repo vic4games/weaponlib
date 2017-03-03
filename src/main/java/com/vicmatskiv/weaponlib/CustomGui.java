@@ -121,6 +121,12 @@ public class CustomGui extends CompatibleGui {
 					
 					int x = width - 80;
 					int y = 10;
+					
+
+					int stringWidth = fontRender.getStringWidth(nextMessage);
+					if(stringWidth > 80 ) {
+						x = width - stringWidth - 5;
+					}
 
 					fontRender.drawStringWithShadow(nextMessage, x, y, color);
 				}
@@ -143,6 +149,11 @@ public class CustomGui extends CompatibleGui {
 			int x = width - 80;
 			int y = 10;
 
+			int stringWidth = fontRender.getStringWidth(nextMessage);
+			if(stringWidth > 80 ) {
+				x = width - stringWidth - 5;
+			}
+			
 			fontRender.drawStringWithShadow(nextMessage, x, y, color);
 			event.setCanceled(true);
 		}

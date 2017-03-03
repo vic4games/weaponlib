@@ -66,11 +66,11 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 		
 	private static Predicate<PlayerWeaponInstance> reloadAnimationCompleted = weaponInstance -> 
 		System.currentTimeMillis() >= weaponInstance.getStateUpdateTimestamp() 
-			+ weaponInstance.getWeapon().getTotalReloadingDuration();
+			+ weaponInstance.getWeapon().getTotalReloadingDuration() * 1.1;
 		
 	private static Predicate<PlayerWeaponInstance> unloadAnimationCompleted = weaponInstance -> 
 		System.currentTimeMillis() >= weaponInstance.getStateUpdateTimestamp() 
-			+ weaponInstance.getWeapon().getTotalUnloadingDuration();
+			+ weaponInstance.getWeapon().getTotalUnloadingDuration() * 1.1;
 	
 	private Predicate<PlayerItemInstance<?>> inventoryHasFreeSlots = c -> true; // TODO implement free slot check
 	

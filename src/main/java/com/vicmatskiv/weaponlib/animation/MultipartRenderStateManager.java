@@ -9,11 +9,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Matrix4f;
 
 public class MultipartRenderStateManager<State, Part, Context> {
+	
+	private static final Logger logger = LogManager.getLogger(MultipartRenderStateManager.class);
 
 	private Randomizer randomizer;
 	
@@ -154,6 +158,7 @@ public class MultipartRenderStateManager<State, Part, Context> {
 			long currentPause = targetState.getPause();
 			
 			if(currentIndex == 0 && startTime == null) {
+				logger.debug("Starting transition {}, duration {}ms, pause {}ms", currentIndex, currentDuration, currentPause);
 				startTime = currentTime;
 			}
 			
@@ -161,7 +166,13 @@ public class MultipartRenderStateManager<State, Part, Context> {
 			if(currentStartTime == 0) {
 				currentStartTime = currentTime;
 			} else if(currentTime > currentStartTime + currentDuration + currentPause) {
+				logger.debug("Completed transition {}, duration {}ms, pause {}ms", currentIndex, currentDuration, currentPause);
 				currentIndex++;
+				if(logger.isDebugEnabled() && currentIndex < toPositioning.size()) {
+					MultipartTransition<Part, Context> multipartTransition = toPositioning.get(currentIndex);
+					logger.debug("Starting transition {}, duration {}ms, pause {}ms", currentIndex, 
+							multipartTransition.getDuration(), multipartTransition.getPause());
+				}
 				currentStartTime = currentTime;
 				//uglyFlag = true;
 			}
