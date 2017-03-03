@@ -9,6 +9,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSide;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
+import com.vicmatskiv.weaponlib.crafting.RecipeGenerator;
 import com.vicmatskiv.weaponlib.network.NetworkPermitManager;
 import com.vicmatskiv.weaponlib.network.PermitMessage;
 
@@ -17,6 +18,8 @@ import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
 
 public class CommonModContext implements ModContext {
+
+	private String modId;
 	
 	protected CompatibleChannel channel;
 	
@@ -28,33 +31,22 @@ public class CommonModContext implements ModContext {
 	
 	protected NetworkPermitManager permitManager;
 	
-	private String modId;
-	
 	private Map<ResourceLocation, CompatibleSound> registeredSounds = new HashMap<>();
+	
+	private RecipeGenerator recipeGenerator;
 
 	@Override
 	public void init(Object mod, String modId, CompatibleChannel channel) {
 		this.channel = channel;
 		this.modId = modId;
 		
-//		this.attachmentManager = new AttachmentManager(this);
 		this.weaponReloadAspect = new WeaponReloadAspect(this);
 		this.magazineReloadAspect = new MagazineReloadAspect(this);
 		this.weaponFireAspect = new WeaponFireAspect(this);
 		this.weaponAttachmentAspect = new WeaponAttachmentAspect(this);
 		this.permitManager = new NetworkPermitManager(this);
 		
-//		channel.registerMessage(new AttachmentModeMessageHandler(attachmentManager),
-//				AttachmentModeMessage.class, 3, CompatibleSide.SERVER);
-//		
-//		channel.registerMessage(new AttachmentModeMessageHandler(attachmentManager),
-//				AttachmentModeMessage.class, 4, CompatibleSide.CLIENT);
-		
-//		channel.registerMessage(new ChangeAttachmentMessageHandler(weaponAttachmentAspect),
-//				ChangeAttachmentMessage.class, 5, CompatibleSide.SERVER);
-//		
-//		channel.registerMessage(new ChangeAttachmentMessageHandler(weaponAttachmentAspect),
-//				ChangeAttachmentMessage.class, 6, CompatibleSide.CLIENT);
+		this.recipeGenerator = new RecipeGenerator();
 		
 		channel.registerMessage(new ChangeTextureMessageHandler(weaponAttachmentAspect),
 				ChangeTextureMessage.class, 7, CompatibleSide.SERVER);
@@ -163,5 +155,11 @@ public class CommonModContext implements ModContext {
 	@Override
 	public StatusMessageCenter getStatusMessageCenter() {
 		throw new IllegalStateException();
+	}
+
+
+	@Override
+	public RecipeGenerator getRecipeGenerator() {
+		return recipeGenerator;
 	}
 }

@@ -6,8 +6,6 @@ public class OptionsMetadata {
 	
 	public static final Object EMPTY_OPTION = new Object();
 	
-	public static enum Complexity {LOW, MEDIUM, HIGH};
-	
 	static class OptionMetadata {
 		private int minOccurs;
 		
@@ -60,25 +58,17 @@ public class OptionsMetadata {
             metadata.maxOccurs = maxOccurs;
             optionMetadata.put(option, metadata);
             return this;
-        }
+        } 
         
-        public OptionsMetadata buildSimple(Object...options) {
-        	if(options.length > slotCount) {
-        		throw new IllegalArgumentException("Option count must be less than slots");
-        	}
-        	for(Object option: options) {
-        		withOption(option, 1, 1);
-        	}
-        	withOption(EMPTY_OPTION, 0, slotCount - options.length);
-        	return build();
-        }
-        
-        public OptionsMetadata build(Complexity complexity, Object...options) {
+        public OptionsMetadata build(CraftingComplexity complexity, Object...options) {
         	int complexityIndex = complexity.ordinal() + 1;
         	if(options.length * complexityIndex > slotCount) {
         		throw new IllegalArgumentException("Too many options for complexity level " + complexity);
         	}
         	for(Object option: options) {
+        		if(option == null) {
+        			throw new IllegalArgumentException("Option cannot be null, make sure to initialize it before generating receipe"); 
+        		}
         		withOption(option, complexityIndex, complexityIndex);
         	}
         	withOption(EMPTY_OPTION, 0, slotCount - options.length * complexityIndex);

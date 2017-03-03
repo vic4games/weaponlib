@@ -6,9 +6,7 @@ import java.util.List;
 
 import org.junit.Test;
 
-import com.vicmatskiv.weaponlib.crafting.OptionsMetadata.Complexity;
-
-public class Gen3 {
+public class RecipeGeneratorTest {
 
     @Test
     public void test3() throws NoSuchAlgorithmException {
@@ -25,7 +23,7 @@ public class Gen3 {
         
         OptionsMetadata optionMetadata  = new OptionsMetadata.OptionMetadataBuilder()
                 .withSlotCount(9)
-                .build(Complexity.HIGH, "red", "green", "blue");
+                .build(CraftingComplexity.HIGH, "red", "green", "blue");
         
         List<String> values = new ArrayList<>();
         

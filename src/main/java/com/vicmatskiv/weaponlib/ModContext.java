@@ -2,6 +2,7 @@ package com.vicmatskiv.weaponlib;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
+import com.vicmatskiv.weaponlib.crafting.RecipeGenerator;
 
 import net.minecraft.item.Item;
 
@@ -35,5 +36,7 @@ public interface ModContext {
 	public PlayerWeaponInstance getMainHeldWeapon();
 
 	public StatusMessageCenter getStatusMessageCenter();
+	
+	public RecipeGenerator getRecipeGenerator();
 
 }

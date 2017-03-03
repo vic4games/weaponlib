@@ -19,7 +19,10 @@ import org.apache.logging.log4j.Logger;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleItem;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
+import com.vicmatskiv.weaponlib.crafting.CraftingComplexity;
+import com.vicmatskiv.weaponlib.crafting.OptionsMetadata;
 
+import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.creativetab.CreativeTabs;
@@ -30,6 +33,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
+import scala.actors.threadpool.Arrays;
 
 public class Weapon extends CompatibleItem implements 
 	PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContainer, Reloadable, Modifiable, Updatable {
@@ -94,6 +98,10 @@ public class Weapon extends CompatibleItem implements
 		public int maxBulletsPerReload;
 
 		private Function<ItemStack, List<String>> informationProvider;
+
+		private CraftingComplexity craftingComplexity;
+
+		private Object[] craftingMaterials;
 
 
 		public Builder withModId(String modId) {
@@ -364,6 +372,18 @@ public class Weapon extends CompatibleItem implements
 			this.flashIntensity = flashIntensity;
 			return this;
 		}
+		
+		public Builder withCrafting(CraftingComplexity craftingComplexity, Object...craftingMaterials) {
+			if(craftingComplexity == null) {
+				throw new IllegalArgumentException("Crafting complexity not set");
+			}
+			if(craftingMaterials.length < 2) {
+				throw new IllegalArgumentException("2 or more materials required for crafting");
+			}
+			this.craftingComplexity = craftingComplexity;
+			this.craftingMaterials = craftingMaterials;
+			return this;
+		}
 
 		public Weapon build(ModContext modContext) {
 			if (modId == null) {
@@ -448,6 +468,17 @@ public class Weapon extends CompatibleItem implements
 				attachment.addCompatibleWeapon(weapon);
 			}
 			modContext.registerWeapon(name, weapon, renderer);
+			
+			if(craftingComplexity != null) {
+				OptionsMetadata optionsMetadata = new OptionsMetadata.OptionMetadataBuilder()
+					.withSlotCount(9)
+                	.build(craftingComplexity, Arrays.copyOf(craftingMaterials, craftingMaterials.length));
+				
+				List<Object> shape = modContext.getRecipeGenerator().createShapedRecipe(weapon, optionsMetadata);
+				
+				GameRegistry.addShapedRecipe(new ItemStack(weapon), shape.toArray());
+				
+			}
 			return weapon;
 		}
 	}
