@@ -9,6 +9,7 @@ import com.vicmatskiv.weaponlib.ClientModContext;
 import com.vicmatskiv.weaponlib.CompatibleAttachment;
 import com.vicmatskiv.weaponlib.ModelWithAttachments;
 import com.vicmatskiv.weaponlib.Part;
+import com.vicmatskiv.weaponlib.PlayerWeaponInstance;
 import com.vicmatskiv.weaponlib.RenderContext;
 import com.vicmatskiv.weaponlib.RenderableState;
 import com.vicmatskiv.weaponlib.Weapon;
@@ -34,12 +35,15 @@ public abstract class CompatibleWeaponRenderer implements IItemRenderer {
 		protected MultipartRenderStateManager<RenderableState, Part, RenderContext> stateManager;
 		protected float rate;
 		protected float amplitude = 0.04f;
-		public StateDescriptor(MultipartRenderStateManager<RenderableState, Part, RenderContext> stateManager,
+		private PlayerWeaponInstance instance;
+		public StateDescriptor(PlayerWeaponInstance instance, MultipartRenderStateManager<RenderableState, Part, RenderContext> stateManager,
 				float rate, float amplitude) {
 			this.stateManager = stateManager;
 			this.rate = rate;
 			this.amplitude = amplitude;
 		}
+		
+		
 		
 	}
 	
@@ -94,30 +98,20 @@ public abstract class CompatibleWeaponRenderer implements IItemRenderer {
 			break;
 			
 		case EQUIPPED:
-			builder.getThirdPersonPositioning().accept(player, weaponItemStack);
+			builder.getThirdPersonPositioning().accept(renderContext);
 			break;
 			
 		case EQUIPPED_FIRST_PERSON:
 			
 			StateDescriptor stateDescriptor = getStateDescriptor(player, weaponItemStack);
 			
-//			System.out.println("Rendering rate " + stateDescriptor.rate + ", amplitude: " + stateDescriptor.amplitude);
-			
+			renderContext.setPlayerItemInstance(stateDescriptor.instance);
+						
 			MultipartPositioning<Part, RenderContext> multipartPositioning = stateDescriptor.stateManager.nextPositioning();
 			
 			renderContext.setTransitionProgress(multipartPositioning.getProgress());
 			
 			renderContext.setFromState(multipartPositioning.getFromState(RenderableState.class));
-	
-//			if(renderContext.getToState() == RenderableState.EJECT_SPENT_ROUND) {
-//				PlayerWeaponInstance playerWeaponInstance = this.getClientModContext().getPlayerItemInstanceRegistry()
-//						.getMainHandItemInstance(player, PlayerWeaponInstance.class);
-//				if(playerWeaponInstance.isAimed()) {
-//					GL11.glTranslatef(-0.1f, 0f, 0f);
-//					GL11.glRotatef(0, 0f, 0f, 0f);
-//				}
-//			
-//			}
 			
 			renderContext.setToState(multipartPositioning.getToState(RenderableState.class));
 			

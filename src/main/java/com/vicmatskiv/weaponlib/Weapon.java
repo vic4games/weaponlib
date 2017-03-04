@@ -643,10 +643,7 @@ public class Weapon extends CompatibleItem implements
 		return builder.textureNames.get(Tags.getActiveTexture(itemStack));
 	}
 	
-	public static boolean isActiveAttachment(ItemStack itemStack, ItemAttachment<Weapon> attachment) {
-//		Weapon weapon = (Weapon) itemStack.getItem();
-//		return weapon.modContext.getAttachmentAspect().isActiveAttachment(itemStack, attachment);
-		PlayerWeaponInstance weaponInstance = Tags.getInstance(itemStack, PlayerWeaponInstance.class);
+	public static boolean isActiveAttachment(PlayerWeaponInstance weaponInstance, ItemAttachment<Weapon> attachment) {
 		return weaponInstance != null ? 
 				WeaponAttachmentAspect.isActiveAttachment(attachment, weaponInstance) : false;
 	}

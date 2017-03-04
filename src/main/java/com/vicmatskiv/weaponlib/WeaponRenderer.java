@@ -59,30 +59,30 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		
 		private Consumer<ItemStack> entityPositioning;
 		private Consumer<ItemStack> inventoryPositioning;
-		private BiConsumer<EntityPlayer, ItemStack> thirdPersonPositioning;
+		private Consumer<RenderContext> thirdPersonPositioning;
 		
-		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioning;
-		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningZooming;
-		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningRunning;
-		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningModifying;
-		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningRecoiled;
-		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningShooting;
-		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningZoomingRecoiled;
-		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningZoomingShooting;
+		private Consumer<RenderContext> firstPersonPositioning;
+		private Consumer<RenderContext> firstPersonPositioningZooming;
+		private Consumer<RenderContext> firstPersonPositioningRunning;
+		private Consumer<RenderContext> firstPersonPositioningModifying;
+		private Consumer<RenderContext> firstPersonPositioningRecoiled;
+		private Consumer<RenderContext> firstPersonPositioningShooting;
+		private Consumer<RenderContext> firstPersonPositioningZoomingRecoiled;
+		private Consumer<RenderContext> firstPersonPositioningZoomingShooting;
 		
-		private BiConsumer<EntityPlayer, ItemStack> firstPersonLeftHandPositioning;
-		private BiConsumer<EntityPlayer, ItemStack> firstPersonLeftHandPositioningZooming;
-		private BiConsumer<EntityPlayer, ItemStack> firstPersonLeftHandPositioningRunning;
-		private BiConsumer<EntityPlayer, ItemStack> firstPersonLeftHandPositioningModifying;
-		private BiConsumer<EntityPlayer, ItemStack> firstPersonLeftHandPositioningRecoiled;
-		private BiConsumer<EntityPlayer, ItemStack> firstPersonLeftHandPositioningShooting;
+		private Consumer<RenderContext> firstPersonLeftHandPositioning;
+		private Consumer<RenderContext> firstPersonLeftHandPositioningZooming;
+		private Consumer<RenderContext> firstPersonLeftHandPositioningRunning;
+		private Consumer<RenderContext> firstPersonLeftHandPositioningModifying;
+		private Consumer<RenderContext> firstPersonLeftHandPositioningRecoiled;
+		private Consumer<RenderContext> firstPersonLeftHandPositioningShooting;
 		
-		private BiConsumer<EntityPlayer, ItemStack> firstPersonRightHandPositioning;
-		private BiConsumer<EntityPlayer, ItemStack> firstPersonRightHandPositioningZooming;
-		private BiConsumer<EntityPlayer, ItemStack> firstPersonRightHandPositioningRunning;
-		private BiConsumer<EntityPlayer, ItemStack> firstPersonRightHandPositioningModifying;
-		private BiConsumer<EntityPlayer, ItemStack> firstPersonRightHandPositioningRecoiled;
-		private BiConsumer<EntityPlayer, ItemStack> firstPersonRightHandPositioningShooting;
+		private Consumer<RenderContext> firstPersonRightHandPositioning;
+		private Consumer<RenderContext> firstPersonRightHandPositioningZooming;
+		private Consumer<RenderContext> firstPersonRightHandPositioningRunning;
+		private Consumer<RenderContext> firstPersonRightHandPositioningModifying;
+		private Consumer<RenderContext> firstPersonRightHandPositioningRecoiled;
+		private Consumer<RenderContext> firstPersonRightHandPositioningShooting;
 
 		private List<Transition> firstPersonPositioningReloading;
 		private List<Transition> firstPersonLeftHandPositioningReloading;
@@ -108,12 +108,12 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		private float zoomRandomizingAmplitude = DEFAULT_ZOOM_RANDOMIZING_AMPLITUDE;
 		private float firingRandomizingAmplitude = DEFAULT_FIRING_RANDOMIZING_AMPLITUDE;
 		
-		private LinkedHashMap<Part, BiConsumer<EntityPlayer, ItemStack>> firstPersonCustomPositioning = new LinkedHashMap<>();
+		private LinkedHashMap<Part, Consumer<RenderContext>> firstPersonCustomPositioning = new LinkedHashMap<>();
 		private LinkedHashMap<Part, List<Transition>> firstPersonCustomPositioningUnloading = new LinkedHashMap<>();
 		private LinkedHashMap<Part, List<Transition>> firstPersonCustomPositioningReloading = new LinkedHashMap<>();
-		private LinkedHashMap<Part, BiConsumer<EntityPlayer, ItemStack>> firstPersonCustomPositioningRecoiled = new LinkedHashMap<>();
-		private LinkedHashMap<Part, BiConsumer<EntityPlayer, ItemStack>> firstPersonCustomPositioningZoomingRecoiled = new LinkedHashMap<>();
-		private LinkedHashMap<Part, BiConsumer<EntityPlayer, ItemStack>> firstPersonCustomPositioningZoomingShooting = new LinkedHashMap<>();
+		private LinkedHashMap<Part, Consumer<RenderContext>> firstPersonCustomPositioningRecoiled = new LinkedHashMap<>();
+		private LinkedHashMap<Part, Consumer<RenderContext>> firstPersonCustomPositioningZoomingRecoiled = new LinkedHashMap<>();
+		private LinkedHashMap<Part, Consumer<RenderContext>> firstPersonCustomPositioningZoomingShooting = new LinkedHashMap<>();
 		
 		private List<Transition> firstPersonPositioningEjectSpentRound;
 		private List<Transition> firstPersonLeftHandPositioningEjectSpentRound;
@@ -200,42 +200,42 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			return this;
 		}
 
-		public Builder withThirdPersonPositioning(BiConsumer<EntityPlayer, ItemStack> thirdPersonPositioning) {
+		public Builder withThirdPersonPositioning(Consumer<RenderContext> thirdPersonPositioning) {
 			this.thirdPersonPositioning = thirdPersonPositioning;
 			return this;
 		}
 
-		public Builder withFirstPersonPositioning(BiConsumer<EntityPlayer, ItemStack> firstPersonPositioning) {
+		public Builder withFirstPersonPositioning(Consumer<RenderContext> firstPersonPositioning) {
 			this.firstPersonPositioning = firstPersonPositioning;
 			return this;
 		}
 		
-		public Builder withFirstPersonPositioningRunning(BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningRunning) {
+		public Builder withFirstPersonPositioningRunning(Consumer<RenderContext> firstPersonPositioningRunning) {
 			this.firstPersonPositioningRunning = firstPersonPositioningRunning;
 			return this;
 		}
 		
-		public Builder withFirstPersonPositioningZooming(BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningZooming) {
+		public Builder withFirstPersonPositioningZooming(Consumer<RenderContext> firstPersonPositioningZooming) {
 			this.firstPersonPositioningZooming = firstPersonPositioningZooming;
 			return this;
 		}
 		
-		public Builder withFirstPersonPositioningRecoiled(BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningRecoiled) {
+		public Builder withFirstPersonPositioningRecoiled(Consumer<RenderContext> firstPersonPositioningRecoiled) {
 			this.firstPersonPositioningRecoiled = firstPersonPositioningRecoiled;
 			return this;
 		}
 		
-		public Builder withFirstPersonPositioningShooting(BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningShooting) {
+		public Builder withFirstPersonPositioningShooting(Consumer<RenderContext> firstPersonPositioningShooting) {
 			this.firstPersonPositioningShooting = firstPersonPositioningShooting;
 			return this;
 		}
 		
-		public Builder withFirstPersonPositioningZoomingRecoiled(BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningZoomingRecoiled) {
+		public Builder withFirstPersonPositioningZoomingRecoiled(Consumer<RenderContext> firstPersonPositioningZoomingRecoiled) {
 			this.firstPersonPositioningZoomingRecoiled = firstPersonPositioningZoomingRecoiled;
 			return this;
 		}
 		
-		public Builder withFirstPersonPositioningZoomingShooting(BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningZoomingShooting) {
+		public Builder withFirstPersonPositioningZoomingShooting(Consumer<RenderContext> firstPersonPositioningZoomingShooting) {
 			this.firstPersonPositioningZoomingShooting = firstPersonPositioningZoomingShooting;
 			return this;
 		}
@@ -258,15 +258,15 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			return this;
 		}
 		
-		public Builder withFirstPersonPositioningModifying(BiConsumer<EntityPlayer, ItemStack> firstPersonPositioningModifying) {
+		public Builder withFirstPersonPositioningModifying(Consumer<RenderContext> firstPersonPositioningModifying) {
 			this.firstPersonPositioningModifying = firstPersonPositioningModifying;
 			return this;
 		}
 		
 		
 		public Builder withFirstPersonHandPositioning(
-				BiConsumer<EntityPlayer, ItemStack> leftHand,
-				BiConsumer<EntityPlayer, ItemStack> rightHand) 
+				Consumer<RenderContext> leftHand,
+				Consumer<RenderContext> rightHand) 
 		{
 			this.firstPersonLeftHandPositioning = leftHand;
 			this.firstPersonRightHandPositioning = rightHand;
@@ -274,8 +274,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		}
 		
 		public Builder withFirstPersonHandPositioningRunning(
-				BiConsumer<EntityPlayer, ItemStack> leftHand,
-				BiConsumer<EntityPlayer, ItemStack> rightHand) 
+				Consumer<RenderContext> leftHand,
+				Consumer<RenderContext> rightHand) 
 		{
 			this.firstPersonLeftHandPositioningRunning = leftHand;
 			this.firstPersonRightHandPositioningRunning = rightHand;
@@ -283,8 +283,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		}
 		
 		public Builder withFirstPersonHandPositioningZooming(
-				BiConsumer<EntityPlayer, ItemStack> leftHand,
-				BiConsumer<EntityPlayer, ItemStack> rightHand)
+				Consumer<RenderContext> leftHand,
+				Consumer<RenderContext> rightHand)
 		{
 			this.firstPersonLeftHandPositioningZooming = leftHand;
 			this.firstPersonRightHandPositioningZooming = rightHand;
@@ -292,8 +292,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		}
 		
 		public Builder withFirstPersonHandPositioningRecoiled(
-				BiConsumer<EntityPlayer, ItemStack> leftHand,
-				BiConsumer<EntityPlayer, ItemStack> rightHand)
+				Consumer<RenderContext> leftHand,
+				Consumer<RenderContext> rightHand)
 		{
 			this.firstPersonLeftHandPositioningRecoiled = leftHand;
 			this.firstPersonRightHandPositioningRecoiled = rightHand;
@@ -301,8 +301,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		}
 		
 		public Builder withFirstPersonHandPositioningShooting(
-				BiConsumer<EntityPlayer, ItemStack> leftHand,
-				BiConsumer<EntityPlayer, ItemStack> rightHand)
+				Consumer<RenderContext> leftHand,
+				Consumer<RenderContext> rightHand)
 		{
 			this.firstPersonLeftHandPositioningShooting = leftHand;
 			this.firstPersonRightHandPositioningShooting = rightHand;
@@ -347,15 +347,15 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		}
 		
 		public Builder withFirstPersonHandPositioningModifying(
-				BiConsumer<EntityPlayer, ItemStack> leftHand,
-				BiConsumer<EntityPlayer, ItemStack> rightHand)
+				Consumer<RenderContext> leftHand,
+				Consumer<RenderContext> rightHand)
 		{
 			this.firstPersonLeftHandPositioningModifying = leftHand;
 			this.firstPersonRightHandPositioningModifying = rightHand;
 			return this;
 		}
 		
-		public Builder withFirstPersonCustomPositioning(Part part, BiConsumer<EntityPlayer, ItemStack> positioning) {
+		public Builder withFirstPersonCustomPositioning(Part part, Consumer<RenderContext> positioning) {
 			if(part instanceof DefaultPart) {
 				throw new IllegalArgumentException("Part " + part + " is not custom");
 			}
@@ -365,7 +365,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			return this;
 		}
 		
-		public Builder withFirstPersonPositioningCustomRecoiled(Part part, BiConsumer<EntityPlayer, ItemStack> positioning) {
+		public Builder withFirstPersonPositioningCustomRecoiled(Part part, Consumer<RenderContext> positioning) {
 			if(part instanceof DefaultPart) {
 				throw new IllegalArgumentException("Part " + part + " is not custom");
 			}
@@ -375,7 +375,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			return this;
 		}
 		
-		public Builder withFirstPersonPositioningCustomZoomingShooting(Part part, BiConsumer<EntityPlayer, ItemStack> positioning) {
+		public Builder withFirstPersonPositioningCustomZoomingShooting(Part part, Consumer<RenderContext> positioning) {
 			if(part instanceof DefaultPart) {
 				throw new IllegalArgumentException("Part " + part + " is not custom");
 			}
@@ -385,7 +385,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			return this;
 		}
 		
-		public Builder withFirstPersonPositioningCustomZoomingRecoiled(Part part, BiConsumer<EntityPlayer, ItemStack> positioning) {
+		public Builder withFirstPersonPositioningCustomZoomingRecoiled(Part part, Consumer<RenderContext> positioning) {
 			if(part instanceof DefaultPart) {
 				throw new IllegalArgumentException("Part " + part + " is not custom");
 			}
@@ -445,7 +445,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			WeaponRenderer renderer = new WeaponRenderer(this);
 			
 			if(firstPersonPositioning == null) {
-				firstPersonPositioning = (player, itemStack) -> {
+				firstPersonPositioning = (renderContext) -> {
 					GL11.glRotatef(45F, 0f, 1f, 0f);
 
 					if(renderer.getClientModContext() != null) {
@@ -507,7 +507,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			}
 			
 			if(thirdPersonPositioning == null) {
-				thirdPersonPositioning = (player, itemStack) -> {
+				thirdPersonPositioning = (context) -> {
 					GL11.glTranslatef(-0.4F, 0.2F, 0.4F);
 					GL11.glRotatef(-45F, 0f, 1f, 0f);
 					GL11.glRotatef(70F, 1f, 0f, 0f);
@@ -517,7 +517,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			// Left hand positioning
 			
 			if(firstPersonLeftHandPositioning == null) {
-				firstPersonLeftHandPositioning = (player, itemStack) -> {};
+				firstPersonLeftHandPositioning = (context) -> {};
 			}
 			
 			if(firstPersonLeftHandPositioningReloading == null) {
@@ -551,7 +551,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			// Right hand positioning
 			
 			if(firstPersonRightHandPositioning == null) {
-				firstPersonRightHandPositioning = (player, itemStack) -> {};
+				firstPersonRightHandPositioning = (context) -> {};
 			}
 			
 			if(firstPersonRightHandPositioningReloading == null) {
@@ -630,7 +630,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			return inventoryPositioning;
 		}
 
-		public BiConsumer<EntityPlayer, ItemStack> getThirdPersonPositioning() {
+		public Consumer<RenderContext> getThirdPersonPositioning() {
 			return thirdPersonPositioning;
 		}
 
@@ -735,7 +735,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 					}
 				} else if(playerWeaponInstance.isAimed()) {
 					currentState = RenderableState.ZOOMING_SHOOTING;
-					rate = builder.firingRandomizingRate;
+					//rate = builder.firingRandomizingRate;
 					amplitude = builder.zoomRandomizingAmplitude;
 				} else {
 					currentState = RenderableState.SHOOTING;
@@ -787,7 +787,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		}
 		
 		
-		return new StateDescriptor(stateManager, rate, amplitude);
+		return new StateDescriptor(playerWeaponInstance, stateManager, rate, amplitude);
 	}
 
 	private AsyncWeaponState getNextNonExpiredState(PlayerWeaponInstance playerWeaponState) {
@@ -806,8 +806,22 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		return asyncWeaponState;
 	}
 	
-	private BiConsumer<Part, RenderContext> createWeaponPartPositionFunction(BiConsumer<EntityPlayer, ItemStack> weaponPositionFunction) {
-		return (part, context) -> weaponPositionFunction.accept(context.getPlayer(), context.getWeapon());
+	private BiConsumer<Part, RenderContext> createWeaponPartPositionFunction(Transition t) {
+		Consumer<RenderContext> weaponPositionFunction = t.getItemPositioning();
+		if(weaponPositionFunction != null) {
+			return (part, context) -> weaponPositionFunction.accept(context);
+		} 
+		
+		return (part, context) -> {};
+		
+	}
+	
+	private BiConsumer<Part, RenderContext> createWeaponPartPositionFunction(Consumer<RenderContext> weaponPositionFunction) {
+		if(weaponPositionFunction != null) {
+			return (part, context) -> weaponPositionFunction.accept(context);
+		} 
+		return (part, context) -> {};
+		
 	}
 	
 	private List<MultipartTransition<Part, RenderContext>> getComplexTransition(
@@ -823,13 +837,13 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			Transition r = rht.get(i);
 			
 			MultipartTransition<Part, RenderContext> t = new MultipartTransition<Part, RenderContext>(p.getDuration(), p.getPause())
-					.withPartPositionFunction(Part.WEAPON, createWeaponPartPositionFunction(p.getPositioning()))
-					.withPartPositionFunction(Part.LEFT_HAND, createWeaponPartPositionFunction(l.getPositioning()))
-					.withPartPositionFunction(Part.RIGHT_HAND, createWeaponPartPositionFunction(r.getPositioning()));
+					.withPartPositionFunction(Part.WEAPON, createWeaponPartPositionFunction(p))
+					.withPartPositionFunction(Part.LEFT_HAND, createWeaponPartPositionFunction(l))
+					.withPartPositionFunction(Part.RIGHT_HAND, createWeaponPartPositionFunction(r));
 			
 			for(Entry<Part, List<Transition>> e: custom.entrySet()){
 				Transition partTransition = e.getValue().get(i);
-				t.withPartPositionFunction(e.getKey(), createWeaponPartPositionFunction(partTransition.getPositioning()));
+				t.withPartPositionFunction(e.getKey(), createWeaponPartPositionFunction(partTransition));
 			}
 	
 			result.add(t);
@@ -838,11 +852,11 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 	}
 	
 	private List<MultipartTransition<Part, RenderContext>> getSimpleTransition(
-			BiConsumer<EntityPlayer, ItemStack> w,
-			BiConsumer<EntityPlayer, ItemStack> lh,
-			BiConsumer<EntityPlayer, ItemStack> rh,
-			//BiConsumer<EntityPlayer, ItemStack> m,
-			LinkedHashMap<Part, BiConsumer<EntityPlayer, ItemStack>> custom,
+			Consumer<RenderContext> w,
+			Consumer<RenderContext> lh,
+			Consumer<RenderContext> rh,
+			//Consumer<RenderContext> m,
+			LinkedHashMap<Part, Consumer<RenderContext>> custom,
 			int duration) {
 		MultipartTransition<Part, RenderContext> mt = new MultipartTransition<Part, RenderContext>(duration, 0)
 				.withPartPositionFunction(Part.WEAPON, createWeaponPartPositionFunction(w))

@@ -35,7 +35,7 @@ public final class Tags {
 		compatibility.getTagCompound(itemStack).setBoolean(LASER_ON_TAG, enabled);
 	}
 
-	public static int getAmmo(ItemStack itemStack) {
+	static int getAmmo(ItemStack itemStack) {
 		if(itemStack == null || compatibility.getTagCompound(itemStack) == null) return 0;
 		return compatibility.getTagCompound(itemStack).getInteger(AMMO_TAG);
 	}

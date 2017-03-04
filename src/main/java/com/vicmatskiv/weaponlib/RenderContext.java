@@ -8,7 +8,7 @@ import net.minecraft.item.ItemStack;
 public class RenderContext {
 
 	private EntityPlayer player;
-	private ItemStack weapon;
+	private ItemStack itemStack;
 	private float limbSwing;
 	private float flimbSwingAmount;
 	private float ageInTicks;
@@ -20,11 +20,12 @@ public class RenderContext {
 	private RenderableState fromState;
 	private RenderableState toState;
 	private ClientModContext clientModContext;
+	private PlayerItemInstance<?> playerItemInstance;
 
-	public RenderContext(ClientModContext clientModContext, EntityPlayer player, ItemStack weapon) {
+	public RenderContext(ClientModContext clientModContext, EntityPlayer player, ItemStack itemStack) {
 		this.clientModContext = clientModContext;
 		this.player = player;
-		this.weapon = weapon;
+		this.itemStack = itemStack;
 	}
 
 	public ClientModContext getClientModContext() {
@@ -84,7 +85,7 @@ public class RenderContext {
 	}
 
 	public void setWeapon(ItemStack weapon) {
-		this.weapon = weapon;
+		this.itemStack = weapon;
 	}
 
 	public EntityPlayer getPlayer() {
@@ -92,7 +93,7 @@ public class RenderContext {
 	}
 
 	public ItemStack getWeapon() {
-		return weapon;
+		return itemStack;
 	}
 
 	public CompatibleTransformType getCompatibleTransformType() {
@@ -125,5 +126,25 @@ public class RenderContext {
 
 	public void setTransitionProgress(float transitionProgress) {
 		this.transitionProgress = transitionProgress;
+	}
+
+	public PlayerItemInstance<?> getPlayerItemInstance() {
+		return playerItemInstance;
+	}
+
+	public void setPlayerItemInstance(PlayerItemInstance<?> playerItemInstance) {
+		this.playerItemInstance = playerItemInstance;
+	}
+	
+	public PlayerWeaponInstance getWeaponInstance() {
+		if(playerItemInstance instanceof PlayerWeaponInstance) {
+			return (PlayerWeaponInstance) playerItemInstance;
+		}
+		PlayerWeaponInstance itemInstance = (PlayerWeaponInstance) clientModContext.getPlayerItemInstanceRegistry()
+				.getItemInstance(player, itemStack);
+		if(itemInstance instanceof PlayerWeaponInstance) {
+			return (PlayerWeaponInstance) itemInstance;
+		}
+		return null;
 	}
 }
