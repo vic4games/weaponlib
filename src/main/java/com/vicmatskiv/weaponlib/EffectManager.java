@@ -45,7 +45,8 @@ final class EffectManager {
 		Minecraft.getMinecraft().effectRenderer.addEffect(smokeParticle);
 	}
 	
-	void spawnFlashParticle(EntityPlayer player, float flashIntensity, float flashScale, float xOffset, float yOffset) {
+	void spawnFlashParticle(EntityPlayer player, float flashIntensity, float flashScale, 
+			float xOffset, float yOffset) {
 		
 		float distance = 0.5f;
 		
@@ -54,9 +55,9 @@ final class EffectManager {
 		
 		CompatibleVec3 look = compatibility.getLookVec(player);
 		
-		float motionX = (float)compatibility.world(player).rand.nextGaussian() * 0.01f;
-		float motionY = (float)compatibility.world(player).rand.nextGaussian() * 0.01f;
-		float motionZ = (float)compatibility.world(player).rand.nextGaussian() * 0.01f;
+		float motionX = (float)compatibility.world(player).rand.nextGaussian() * 0.005f;
+		float motionY = (float)compatibility.world(player).rand.nextGaussian() * 0.005f;
+		float motionZ = (float)compatibility.world(player).rand.nextGaussian() * 0.005f;
 		
 		double posX = player.posX + (look.getVec().xCoord * distance) + (compatibility.world(player).rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor + (-look.getVec().zCoord * xOffset);
 		double posY = player.posY + (look.getVec().yCoord * distance) + (compatibility.world(player).rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor - yOffset;

@@ -11,6 +11,7 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
@@ -90,9 +91,11 @@ public class Weapon extends CompatibleItem implements
 
 		float flashIntensity = 0.7f;
 		
-		float flashScale = 1f;
+		Supplier<Float> flashScale = () -> 1f;
 		
-		float flashOffsetX = 0f;
+		Supplier<Float> flashOffsetX = () -> 0f;
+		
+		Supplier<Float> flashOffsetY = () -> 0f;
 
 		long unloadingTimeout = Weapon.DEFAULT_UNLOADING_TIMEOUT_TICKS;
 		
@@ -376,15 +379,12 @@ public class Weapon extends CompatibleItem implements
 			return this;
 		}
 		
-		public Builder withFlashScale(float flashScale) {
-			if (flashScale < 0f || flashScale > 1f) {
-				throw new IllegalArgumentException("Invalid flash intencity");
-			}
+		public Builder withFlashScale(Supplier<Float> flashScale) {
 			this.flashScale = flashScale;
 			return this;
 		}
 		
-		public Builder withFlashOffsetX(float flashOffsetX) {
+		public Builder withFlashOffsetX(Supplier<Float> flashOffsetX) {
 			this.flashOffsetX = flashOffsetX;
 			return this;
 		}
