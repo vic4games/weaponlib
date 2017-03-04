@@ -64,7 +64,7 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
 		stateManager
 		
 		.in(this).change(WeaponState.READY).to(WeaponState.FIRING)
-		.when(hasAmmo.and(sprinting.negate()))
+		.when(hasAmmo.and(sprinting.negate()).and(readyToShootAccordingToFireRate))
 		.withAction(this::fire)
 		.manual() // on start fire
 		
@@ -150,9 +150,7 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
 
 	private void ejectSpentRound(PlayerWeaponInstance weaponInstance) {
 		EntityPlayer player = weaponInstance.getPlayer();
-		if(!weaponInstance.isAimed()) {
-			compatibility.playSound(player, weaponInstance.getWeapon().getEjectSpentRoundSound(), 1F, 1F);
-		}
+		compatibility.playSound(player, weaponInstance.getWeapon().getEjectSpentRoundSound(), 1F, 1F);
 	}
 	
 	void serverFire(EntityPlayer player, ItemStack itemStack) {

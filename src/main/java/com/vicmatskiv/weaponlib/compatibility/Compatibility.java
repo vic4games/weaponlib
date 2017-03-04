@@ -143,5 +143,9 @@ public interface Compatibility {
 
 	public boolean consumeInventoryItemFromSlot(EntityPlayer player, int nextAttachmentSlot);
 
+	public void addShapedRecipe(ItemStack itemStack, Object... materials);
+
+	public void disableLightMap();
+
 	
 }

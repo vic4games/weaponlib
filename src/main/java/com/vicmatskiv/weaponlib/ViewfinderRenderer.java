@@ -1,12 +1,13 @@
 package com.vicmatskiv.weaponlib;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
 import java.util.function.BiConsumer;
 
 import org.lwjgl.opengl.GL11;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTransformType;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 
@@ -47,7 +48,7 @@ public class ViewfinderRenderer implements CustomRenderer {
 
 		positioning.accept(renderContext.getPlayer(), renderContext.getWeapon());
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, renderContext.getClientModContext().getFramebuffer().framebufferTexture);
-		Minecraft.getMinecraft().entityRenderer.disableLightmap(0);
+		compatibility.disableLightMap();
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
 		//GL11.glDepthMask(true);
 		GL11.glDisable(GL11.GL_LIGHTING);

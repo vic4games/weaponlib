@@ -387,4 +387,14 @@ public class Compatibility1_7_10 implements Compatibility {
         }
 		return true;
 	}
+
+	@Override
+	public void addShapedRecipe(ItemStack itemStack,  Object... materials) {
+		GameRegistry.addShapedRecipe(itemStack, materials);
+	}
+
+	@Override
+	public void disableLightMap() {
+		Minecraft.getMinecraft().entityRenderer.disableLightmap(0);
+	}
 }

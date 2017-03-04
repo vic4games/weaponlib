@@ -80,13 +80,13 @@ public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 //				event.setCanceled(true);
 //			}
 			
-			PlayerWeaponInstance mainHandHeldWeaponInstance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(
-					compatibility.clientPlayer(), PlayerWeaponInstance.class);
-			
-			if(mainHandHeldWeaponInstance != null 
-					&& mainHandHeldWeaponInstance.getState() == WeaponState.EJECT_REQUIRED) {
-				event.setCanceled(true);
-			}
+//			PlayerWeaponInstance mainHandHeldWeaponInstance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(
+//					compatibility.clientPlayer(), PlayerWeaponInstance.class);
+//			
+//			if(mainHandHeldWeaponInstance != null 
+//					&& mainHandHeldWeaponInstance.getState() == WeaponState.EJECT_REQUIRED) {
+//				event.setCanceled(true);
+//			}
 		}
 	}
 

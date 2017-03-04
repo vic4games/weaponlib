@@ -1,4 +1,4 @@
-package com.vicmatskiv.weaponlib;
+package com.vicmatskiv.weaponlib.compatibility;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;

@@ -22,7 +22,6 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 import com.vicmatskiv.weaponlib.crafting.CraftingComplexity;
 import com.vicmatskiv.weaponlib.crafting.OptionsMetadata;
 
-import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.creativetab.CreativeTabs;
@@ -476,7 +475,7 @@ public class Weapon extends CompatibleItem implements
 				
 				List<Object> shape = modContext.getRecipeGenerator().createShapedRecipe(weapon, optionsMetadata);
 				
-				GameRegistry.addShapedRecipe(new ItemStack(weapon), shape.toArray());
+				compatibility.addShapedRecipe(new ItemStack(weapon), shape.toArray());
 				
 			}
 			return weapon;
@@ -549,7 +548,10 @@ public class Weapon extends CompatibleItem implements
 
 	private void toggleAiming() {
 		PlayerWeaponInstance mainHandHeldWeaponInstance = modContext.getMainHeldWeapon();
-		if(mainHandHeldWeaponInstance != null && mainHandHeldWeaponInstance.getState() == WeaponState.READY) {
+		if(mainHandHeldWeaponInstance != null 
+				&& (mainHandHeldWeaponInstance.getState() == WeaponState.READY 
+				|| mainHandHeldWeaponInstance.getState() == WeaponState.EJECT_REQUIRED)
+			) {
 			mainHandHeldWeaponInstance.setAimed(!mainHandHeldWeaponInstance.isAimed());
 		}
 	}

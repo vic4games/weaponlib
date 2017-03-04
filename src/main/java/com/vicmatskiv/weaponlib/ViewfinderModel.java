@@ -1,6 +1,6 @@
 package com.vicmatskiv.weaponlib;
 
-import com.vicmatskiv.weaponlib.FlatSurfaceModelBox;
+import com.vicmatskiv.weaponlib.compatibility.FlatSurfaceModelBox;
 
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;

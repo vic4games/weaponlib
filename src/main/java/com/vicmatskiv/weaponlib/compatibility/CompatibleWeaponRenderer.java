@@ -108,6 +108,16 @@ public abstract class CompatibleWeaponRenderer implements IItemRenderer {
 			renderContext.setTransitionProgress(multipartPositioning.getProgress());
 			
 			renderContext.setFromState(multipartPositioning.getFromState(RenderableState.class));
+	
+//			if(renderContext.getToState() == RenderableState.EJECT_SPENT_ROUND) {
+//				PlayerWeaponInstance playerWeaponInstance = this.getClientModContext().getPlayerItemInstanceRegistry()
+//						.getMainHandItemInstance(player, PlayerWeaponInstance.class);
+//				if(playerWeaponInstance.isAimed()) {
+//					GL11.glTranslatef(-0.1f, 0f, 0f);
+//					GL11.glRotatef(0, 0f, 0f, 0f);
+//				}
+//			
+//			}
 			
 			renderContext.setToState(multipartPositioning.getToState(RenderableState.class));
 			
