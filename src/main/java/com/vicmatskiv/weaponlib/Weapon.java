@@ -389,6 +389,11 @@ public class Weapon extends CompatibleItem implements
 			return this;
 		}
 		
+		public Builder withFlashOffsetY(Supplier<Float> flashOffsetY) {
+			this.flashOffsetY = flashOffsetY;
+			return this;
+		}
+		
 		public Builder withCrafting(CraftingComplexity craftingComplexity, Object...craftingMaterials) {
 			if(craftingComplexity == null) {
 				throw new IllegalArgumentException("Crafting complexity not set");
