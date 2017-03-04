@@ -4,32 +4,41 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.vicmatskiv.weaponlib.compatibility.CompatibleItem;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
+import com.vicmatskiv.weaponlib.crafting.CraftingComplexity;
+import com.vicmatskiv.weaponlib.crafting.OptionsMetadata;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
+import scala.actors.threadpool.Arrays;
 
-public class Weapon extends CompatibleItem implements AttachmentContainer {
+public class Weapon extends CompatibleItem implements 
+	PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContainer, Reloadable, Modifiable, Updatable {
 	
+	private static final Logger logger = LogManager.getLogger(Weapon.class);
+
 	public static class Builder {
 
 	private static final float DEFAULT_SPAWN_ENTITY_SPEED = 10f;
@@ -52,7 +61,7 @@ public class Weapon extends CompatibleItem implements AttachmentContainer {
 		private CreativeTabs creativeTab;
 		private WeaponRenderer renderer;
 		float zoom = Weapon.DEFAULT_ZOOM;
-		int maxShots = Integer.MAX_VALUE;
+		List<Integer> maxShots = new ArrayList<>();
 		String crosshair;
 		String crosshairRunning;
 		String crosshairZoomed;
@@ -88,6 +97,10 @@ public class Weapon extends CompatibleItem implements AttachmentContainer {
 		public int maxBulletsPerReload;
 
 		private Function<ItemStack, List<String>> informationProvider;
+
+		private CraftingComplexity craftingComplexity;
+
+		private Object[] craftingMaterials;
 
 
 		public Builder withModId(String modId) {
@@ -145,8 +158,10 @@ public class Weapon extends CompatibleItem implements AttachmentContainer {
 			return this;
 		}
 
-		public Builder withMaxShots(int maxShots) {
-			this.maxShots = maxShots;
+		public Builder withMaxShots(int... maxShots) {
+			for(int m: maxShots) {
+				this.maxShots.add(m);
+			}
 			return this;
 		}
 
@@ -293,12 +308,28 @@ public class Weapon extends CompatibleItem implements AttachmentContainer {
 			compatibleAttachments.put(bullet, new CompatibleAttachment<>(bullet, positioner));
 			return this;
 		}
+		
+		public Builder withCompatibleAttachment(ItemAttachment<Weapon> attachment, BiConsumer<EntityPlayer, ItemStack> positioning, Consumer<ModelBase> modelPositioning) {
+			compatibleAttachments.put(attachment, new CompatibleAttachment<>(attachment, positioning, modelPositioning, false));
+			return this;
+		}
+		
+		public Builder withCompatibleAttachment(ItemAttachment<Weapon> attachment, BiConsumer<EntityPlayer, ItemStack> positioning) {
+			compatibleAttachments.put(attachment, new CompatibleAttachment<>(attachment, positioning, null, false));
+			return this;
+		}
 
 		public Builder withCompatibleAttachment(ItemAttachment<Weapon> attachment, Consumer<ModelBase> positioner) {
 			compatibleAttachments.put(attachment, new CompatibleAttachment<>(attachment, positioner));
 			return this;
 		}
 
+		public Builder withCompatibleAttachment(ItemAttachment<Weapon> attachment, boolean isDefault,
+				BiConsumer<EntityPlayer, ItemStack> positioning, Consumer<ModelBase> modelPositioning) {
+			compatibleAttachments.put(attachment, new CompatibleAttachment<>(attachment, positioning, modelPositioning, isDefault));
+			return this;
+		}
+		
 		public Builder withCompatibleAttachment(ItemAttachment<Weapon> attachment, boolean isDefault,
 				Consumer<ModelBase> positioner) {
 			compatibleAttachments.put(attachment, new CompatibleAttachment<>(attachment, positioner, isDefault));
@@ -338,6 +369,18 @@ public class Weapon extends CompatibleItem implements AttachmentContainer {
 				throw new IllegalArgumentException("Invalid flash intencity");
 			}
 			this.flashIntensity = flashIntensity;
+			return this;
+		}
+		
+		public Builder withCrafting(CraftingComplexity craftingComplexity, Object...craftingMaterials) {
+			if(craftingComplexity == null) {
+				throw new IllegalArgumentException("Crafting complexity not set");
+			}
+			if(craftingMaterials.length < 2) {
+				throw new IllegalArgumentException("2 or more materials required for crafting");
+			}
+			this.craftingComplexity = craftingComplexity;
+			this.craftingMaterials = craftingMaterials;
 			return this;
 		}
 
@@ -398,6 +441,10 @@ public class Weapon extends CompatibleItem implements AttachmentContainer {
 			if(maxBulletsPerReload == 0) {
 				maxBulletsPerReload = ammoCapacity;
 			}
+			
+			if(maxShots.isEmpty()) {
+				maxShots.add(Integer.MAX_VALUE);
+			}
 
 			Weapon weapon = new Weapon(this, modContext);
 			
@@ -420,12 +467,20 @@ public class Weapon extends CompatibleItem implements AttachmentContainer {
 				attachment.addCompatibleWeapon(weapon);
 			}
 			modContext.registerWeapon(name, weapon, renderer);
+			
+			if(craftingComplexity != null) {
+				OptionsMetadata optionsMetadata = new OptionsMetadata.OptionMetadataBuilder()
+					.withSlotCount(9)
+                	.build(craftingComplexity, Arrays.copyOf(craftingMaterials, craftingMaterials.length));
+				
+				List<Object> shape = modContext.getRecipeGenerator().createShapedRecipe(weapon, optionsMetadata);
+				
+				compatibility.addShapedRecipe(new ItemStack(weapon), shape.toArray());
+				
+			}
 			return weapon;
 		}
 	}
-
-	private static final UUID SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER_UUID = UUID.fromString("8efa8469-0256-4f8e-bdd9-3e7b23970663");
-	private static final AttributeModifier SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER = (new AttributeModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER_UUID, "Slow Down While Zooming", -0.5, 2)).setSaved(false);
 
 	private static final long DEFAULT_RELOADING_TIMEOUT_TICKS = 10;
 	private static final long DEFAULT_UNLOADING_TIMEOUT_TICKS = 10;
@@ -485,79 +540,27 @@ public class Weapon extends CompatibleItem implements AttachmentContainer {
 	
 	@Override
 	protected ItemStack onCompatibleItemRightClick(ItemStack itemStack, World world, EntityPlayer player, boolean mainHand) {
-		if(mainHand) {
-			toggleAiming(itemStack, player);
+		if(mainHand && world.isRemote) {
+			toggleAiming();
 		}
 		return itemStack;
 	}
 
-	void toggleAiming(ItemStack itemStack, EntityPlayer entityPlayer) {
-		
-		compatibility.ensureTagCompound(itemStack);
-		
-		if(Weapon.isModifying(itemStack)) {
-			return;
-		}
-		
-		float currentZoom = Tags.getZoom(itemStack);
-		
-		if (currentZoom != 1.0f || entityPlayer.isSprinting()) {
-			Tags.setZoom(itemStack, 1.0f);
-			Tags.setAimed(itemStack, false);
-			restoreNormalSpeed(entityPlayer);
-		} else {
-			float allowedZoom = Tags.getAllowedZoom(itemStack);
-			if(allowedZoom > 0f) {
-				Tags.setZoom(itemStack, allowedZoom);
-			} else {
-				allowedZoom = builder.zoom;
-				Tags.setAllowedZoom(itemStack, allowedZoom);
-				Tags.setZoom(itemStack, allowedZoom);
-			}
-			slowDown(entityPlayer);
-			Tags.setAimed(itemStack, true);
-		}
-	}
-
-	private void restoreNormalSpeed(EntityPlayer entityPlayer) {
-		if(entityPlayer.getEntityAttribute(compatibility.getMovementSpeedAttribute())
-				.getModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER.getID()) != null) {
-			entityPlayer.getEntityAttribute(compatibility.getMovementSpeedAttribute())
-				.removeModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER);
-		} else {
-			System.err.println("Attempted to remove modifier that was not applied: " + SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER);
-		}
-	}
-
-	private void slowDown(EntityPlayer entityPlayer) {
-		if(entityPlayer.getEntityAttribute(compatibility.getMovementSpeedAttribute())
-				.getModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER.getID()) == null) {
-			entityPlayer.getEntityAttribute(compatibility.getMovementSpeedAttribute())
-				.applyModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER);
-		}  else {
-			System.err.println("Attempted to add duplicate modifier: " + SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER);
+	private void toggleAiming() {
+		PlayerWeaponInstance mainHandHeldWeaponInstance = modContext.getMainHeldWeapon();
+		if(mainHandHeldWeaponInstance != null && mainHandHeldWeaponInstance.getState() == WeaponState.READY) {
+			mainHandHeldWeaponInstance.setAimed(!mainHandHeldWeaponInstance.isAimed());
 		}
 	}
 
 	@Override
 	public void onUpdate(ItemStack itemStack, World world, Entity entity, int p_77663_4_, boolean active) {
-		ensureItemStack(itemStack);
-		float currentZoom = Tags.getZoom(itemStack);
-		EntityPlayer player = (EntityPlayer) entity;
-		if (currentZoom != 1.0f && (entity.isSprinting() || compatibility.getHeldItemMainHand(player) != itemStack)) {
-			Tags.setZoom(itemStack, 1.0f);
-			Tags.setAimed(itemStack, false);
-			restoreNormalSpeed(player);
-		}
 	}
 
 	private void ensureItemStack(ItemStack itemStack) {
 		if (compatibility.getTagCompound(itemStack) == null) {
 			compatibility.setTagCompound(itemStack, new NBTTagCompound());
 			Tags.setAmmo(itemStack, 0);
-			Tags.setZoom(itemStack, 1.0f);
-			Tags.setRecoil(itemStack, builder.recoil);
-			setModifying(itemStack, false);
 		}
 	}
 	
@@ -565,58 +568,49 @@ public class Weapon extends CompatibleItem implements AttachmentContainer {
 		Tags.setLaser(itemStack, !Tags.isLaserOn(itemStack));
 	}
 	
-	public static boolean isAimed(ItemStack itemStack) {
-		return Tags.isAimed(itemStack);
-	}
-
-	public static boolean isZoomed(EntityPlayer player, ItemStack itemStack) {
-		return Tags.getZoom(itemStack) != 1.0f;
-	}
+//	public static boolean isAimed(ItemStack itemStack) {
+//		return Tags.isAimed(itemStack);
+//	}
+//
+//	public static boolean isZoomed(EntityPlayer player, ItemStack itemStack) {
+//		return Tags.getZoom(itemStack) != 1.0f;
+//	}
 	
-	static void setModifying(ItemStack itemStack, boolean modifying) {
-		if(modifying) {
-			Tags.setState(itemStack, State.MODIFYING);
-		} else {
-			Tags.setState(itemStack, State.READY);
-		}
-	}
-	
-	static boolean isModifying(ItemStack itemStack) {
-		return Tags.getState(itemStack) == State.MODIFYING;
-	}
 	
 	public void changeRecoil(EntityPlayer player, float factor) {
-		ItemStack itemStack = compatibility.getHeldItemMainHand(player);
-		ensureItemStack(itemStack);
-		float recoil = builder.recoil * factor;
-		Tags.setRecoil(itemStack, recoil);
-		modContext.getChannel().getChannel().sendTo(new ChangeSettingsMessage(this, recoil), (EntityPlayerMP) player);
+		PlayerWeaponInstance instance = modContext.getMainHeldWeapon();
+		if(instance != null) {
+			float recoil = instance.getWeapon().builder.recoil * factor;
+			logger.debug("Changing recoil to " + recoil + " for instance " + instance);
+			instance.setRecoil(recoil);
+		}
 	}
 	
-	void clientChangeRecoil(EntityPlayer player, float recoil) {
-		WeaponClientStorage weaponInstanceStorage = getWeaponClientStorage(player);
-		if(weaponInstanceStorage != null) {
-			weaponInstanceStorage.setRecoil(recoil);
+	public void changeZoom(EntityPlayer player, float zoom, boolean attachmentOnlyMode) {
+		PlayerWeaponInstance instance = modContext.getMainHeldWeapon();
+		if(instance != null) {
+			instance.setZoom(zoom);
 		}
+//		ItemStack itemStack = compatibility.getHeldItemMainHand(player);
+//		if(itemStack != null) {
+//			ensureItemStack(itemStack);
+//			float zoom = builder.zoom * factor;
+//			Tags.setAllowedZoom(itemStack, zoom, attachmentOnlyMode);
+//		}
 	}
 	
 	public void changeZoom(EntityPlayer player, float factor) {
-		ItemStack itemStack = compatibility.getHeldItemMainHand(player);
-		if(itemStack != null) {
-			ensureItemStack(itemStack);
-			float zoom = builder.zoom * factor;
-			Tags.setAllowedZoom(itemStack, zoom);
-		}
+		changeZoom(player, factor, false);
 	}
 	
 	Map<ItemAttachment<Weapon>, CompatibleAttachment<Weapon>> getCompatibleAttachments() {
 		return builder.compatibleAttachments;
 	}
 
-	String getCrosshair(ItemStack itemStack, EntityPlayer thePlayer) {
-		if(isZoomed(thePlayer, itemStack)) {
+	String getCrosshair(PlayerWeaponInstance weaponInstance) {
+		if(weaponInstance.isAimed()) {
 			String crosshair = null;
-			ItemAttachment<Weapon> scopeAttachment = modContext.getAttachmentManager().getActiveAttachment(itemStack, AttachmentCategory.SCOPE);
+			ItemAttachment<Weapon> scopeAttachment = modContext.getAttachmentAspect().getActiveAttachment(AttachmentCategory.SCOPE, weaponInstance);
 			if(scopeAttachment != null) {
 				crosshair = scopeAttachment.getCrosshair();
 			}
@@ -624,19 +618,19 @@ public class Weapon extends CompatibleItem implements AttachmentContainer {
 				crosshair = builder.crosshairZoomed;
 			}
 			return crosshair;
-		} else if(thePlayer.isSprinting()){
+		} else if(weaponInstance.getPlayer().isSprinting()){
 			return builder.crosshairRunning;
 		}
 		return builder.crosshair;
 	}
 	
-	boolean isCrosshairFullScreen(ItemStack itemStack) {
-		if(isZoomed(null, itemStack)) {
-			return builder.crosshairZoomedFullScreen;
-		}
-		return builder.crosshairFullScreen;
-		
-	}
+//	boolean isCrosshairFullScreen(ItemStack itemStack) {
+//		if(isZoomed(null, itemStack)) {
+//			return builder.crosshairZoomedFullScreen;
+//		}
+//		return builder.crosshairFullScreen;
+//		
+//	}
 	
 	public String getActiveTextureName(ItemStack itemStack) {
 		ensureItemStack(itemStack);
@@ -647,26 +641,11 @@ public class Weapon extends CompatibleItem implements AttachmentContainer {
 	}
 	
 	public static boolean isActiveAttachment(ItemStack itemStack, ItemAttachment<Weapon> attachment) {
-		Weapon weapon = (Weapon) itemStack.getItem();
-		return weapon.modContext.getAttachmentManager().isActiveAttachment(itemStack, attachment);
-	}
-	
-	static boolean isEjectedSpentRound(EntityPlayer player, ItemStack itemStack) {
-		Weapon weapon = (Weapon) itemStack.getItem();
-		WeaponClientStorage storage = weapon.getWeaponClientStorage(player);
-		return storage != null && storage.getState() == State.EJECT_SPENT_ROUND;
-	}
-	
-	static boolean isReloadingConfirmed(EntityPlayer player, ItemStack itemStack) {
-		Weapon weapon = (Weapon) itemStack.getItem();
-		WeaponClientStorage storage = weapon.getWeaponClientStorage(player);
-		return storage != null && storage.getState() == State.RELOAD_CONFIRMED;
-	}
-
-	static boolean isUnloadingStarted(EntityPlayer player, ItemStack itemStack) {
-		Weapon weapon = (Weapon) itemStack.getItem();
-		WeaponClientStorage storage = weapon.getWeaponClientStorage(player);
-		return storage != null && storage.getState() == State.UNLOAD_STARTED;
+//		Weapon weapon = (Weapon) itemStack.getItem();
+//		return weapon.modContext.getAttachmentAspect().isActiveAttachment(itemStack, attachment);
+		PlayerWeaponInstance weaponInstance = Tags.getInstance(itemStack, PlayerWeaponInstance.class);
+		return weaponInstance != null ? 
+				WeaponAttachmentAspect.isActiveAttachment(attachment, weaponInstance) : false;
 	}
 
 	@Override
@@ -674,14 +653,14 @@ public class Weapon extends CompatibleItem implements AttachmentContainer {
 		return 0;
 	}
 	
-	WeaponClientStorage getWeaponClientStorage(EntityPlayer player) {
-		return modContext.getWeaponClientStorageManager().getWeaponClientStorage(player, this);
-	}
-	
 	int getCurrentAmmo(EntityPlayer player) {
-		WeaponClientStorage storage = getWeaponClientStorage(player);
-		if(storage == null) return 0;
-		return storage.getCurrentAmmo().get();
+		PlayerWeaponInstance state = modContext.getMainHeldWeapon();
+		return state.getAmmo();
+		
+//		WeaponClientStorage storage = getWeaponClientStorage(player);
+//		if(storage == null) return 0;
+//		return storage.getCurrentAmmo().get();
+		
 	}
 
 	int getAmmoCapacity() {
@@ -708,7 +687,7 @@ public class Weapon extends CompatibleItem implements AttachmentContainer {
 	
 	@Override
 	public List<CompatibleAttachment<? extends AttachmentContainer>> getActiveAttachments(ItemStack itemStack) {
-		return modContext.getAttachmentManager().getActiveAttachments(itemStack);
+		return modContext.getAttachmentAspect().getActiveAttachments(itemStack);
 	}
 	
 	long getUnloadTimeoutTicks() {
@@ -743,6 +722,131 @@ public class Weapon extends CompatibleItem implements AttachmentContainer {
 			@SuppressWarnings("rawtypes") List list, boolean p_77624_4_) {
 		if(list != null && builder.informationProvider != null) {
 			list.addAll(builder.informationProvider.apply(itemStack));
+		}
+	}
+
+	@Override
+	public void reloadMainHeldItemForPlayer(EntityPlayer player) {
+		modContext.getWeaponReloadAspect().reloadMainHeldItem(player);
+	}
+
+	@Override
+	public void update(EntityPlayer player) {
+		modContext.getWeaponReloadAspect().updateMainHeldItem(player);
+		modContext.getWeaponFireAspect().onUpdate(player);
+		modContext.getAttachmentAspect().updateMainHeldItem(player);
+	}
+
+	public void tryFire(EntityPlayer player) {
+		modContext.getWeaponFireAspect().onFireButtonClick(player);
+	}
+
+	public void tryStopFire(EntityPlayer player) {
+		modContext.getWeaponFireAspect().onFireButtonRelease(player);
+	}
+
+	@Override
+	public PlayerWeaponInstance createItemInstance(EntityPlayer player, ItemStack itemStack, int slot){
+		PlayerWeaponInstance instance = new PlayerWeaponInstance(slot, player, itemStack);
+		//state.setAmmo(Tags.getAmmo(itemStack)); // TODO: get ammo properly
+		instance.setState(WeaponState.READY);
+		instance.setRecoil(builder.recoil);
+		instance.setMaxShots(builder.maxShots.get(0));
+		return instance;
+	}
+
+	@Override
+	public void toggleClientAttachmentSelectionMode(EntityPlayer player) {
+		modContext.getAttachmentAspect().toggleClientAttachmentSelectionMode(player);
+	}
+	
+	@Override
+	public boolean onDroppedByPlayer(ItemStack itemStack, EntityPlayer player) {
+		// Server side only method
+		PlayerWeaponInstance instance = (PlayerWeaponInstance) Tags.getInstance(itemStack);
+		return instance == null || instance.getState() == WeaponState.READY;
+	}
+
+	void changeFireMode(PlayerWeaponInstance instance) {
+		int result;
+		Iterator<Integer> it = builder.maxShots.iterator();
+		while(it.hasNext()) {
+			if(instance.getMaxShots() == it.next()) {
+				break;
+			}
+		}
+		if(it.hasNext()) {
+			result = it.next();
+		} else {
+			result = builder.maxShots.get(0);
+		}
+		
+		instance.setMaxShots(result);
+		String message;
+		if(result == 1) {
+			message = "Semi";
+		} else if(result == Integer.MAX_VALUE) {
+			message = "Auto";
+		} else {
+			message = "Burst";
+		}
+		logger.debug("Changed fire mode of " + instance + " to " + result);
+		
+		modContext.getStatusMessageCenter().addMessage("Firearm mode: " + message, 1000);
+		
+		//instance.getPlayer().addChatMessage(new ChatComponentText("Fire mode changed to " + message));
+	}
+	
+	public long getTotalReloadingDuration() {
+		//logger.debug("Total load duration " + builder.renderer.getTotalReloadingDuration());
+		return builder.renderer.getTotalReloadingDuration();
+	}
+	
+	public long getTotalUnloadingDuration() {
+		return builder.renderer.getTotalUnloadingDuration();
+	}
+	
+	void incrementZoom(PlayerWeaponInstance instance) {
+		Item scopeItem = instance.getAttachmentItemWithCategory(AttachmentCategory.SCOPE);
+		if(scopeItem instanceof ItemScope && ((ItemScope) scopeItem).isOptical()) {
+			float minZoom = ((ItemScope) scopeItem).getMinZoom();
+			float maxZoom = ((ItemScope) scopeItem).getMaxZoom();
+			float increment = (minZoom - maxZoom) / 20f;
+			float zoom = instance.getZoom();
+			
+			if(zoom > maxZoom) {
+				zoom = Math.max(zoom - increment, maxZoom);
+			}
+			
+			instance.setZoom(zoom);
+			
+			float ratio = (minZoom - zoom) / (minZoom - maxZoom);
+			
+			modContext.getStatusMessageCenter().addMessage("Zoom: " + Math.round(ratio * 100) + "%", 800);
+			logger.debug("Changed optical zoom to " + instance.getZoom());
+		} else {
+			logger.debug("Cannot change non-optical zoom");
+		}
+	}
+	
+	void decrementZoom(PlayerWeaponInstance instance) {
+		Item scopeItem = instance.getAttachmentItemWithCategory(AttachmentCategory.SCOPE);
+		if(scopeItem instanceof ItemScope && ((ItemScope) scopeItem).isOptical()) {
+			float minZoom = ((ItemScope) scopeItem).getMinZoom();
+			float maxZoom = ((ItemScope) scopeItem).getMaxZoom();
+			float increment = (minZoom - maxZoom) / 20f;
+			float zoom = instance.getZoom();
+			
+			if(zoom < minZoom) {
+				zoom = Math.min(zoom + increment, minZoom);
+			}
+			instance.setZoom(zoom);
+			
+			float ratio = (minZoom - zoom) / (minZoom - maxZoom);
+			modContext.getStatusMessageCenter().addMessage("Zoom: " + Math.round(ratio * 100) + "%", 800);
+			logger.debug("Changed optical zoom to " + zoom);
+		} else {
+			logger.debug("Cannot change non-optical zoom");
 		}
 	}
 }

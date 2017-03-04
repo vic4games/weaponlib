@@ -52,6 +52,8 @@ public interface Compatibility {
 	
 	public boolean consumeInventoryItem(EntityPlayer player, Item item);
 	
+	public int getCurrentInventoryItemIndex(EntityPlayer player);
+	
 	public void ensureTagCompound(ItemStack itemStack);
 	
 	public void playSound(EntityPlayer player, CompatibleSound sound, float volume, float pitch);
@@ -97,11 +99,11 @@ public interface Compatibility {
 
 	public EntityPlayer getEntity(FOVUpdateEvent event);
 
-	public EntityLivingBase getEntity(RenderLivingEvent.Pre<? extends EntityLivingBase> event);
+	public EntityLivingBase getEntity(RenderLivingEvent.Pre event);
 
 	public void setNewFov(FOVUpdateEvent event, float fov);
 
-	public RenderPlayer getRenderer(RenderLivingEvent.Pre<? extends EntityLivingBase> event);
+	public RenderPlayer getRenderer(RenderLivingEvent.Pre event);
 
 	public GuiScreen getGui(GuiOpenEvent event);
 
@@ -112,6 +114,8 @@ public interface Compatibility {
 	public Block getBlockAtPosition(World world, CompatibleRayTraceResult position);
 
 	public void destroyBlock(World world, CompatibleRayTraceResult position);
+	
+	public boolean addItemToPlayerInventory(EntityPlayer player, final Item item, int slot);
 
 	public boolean consumeInventoryItem(InventoryPlayer inventoryPlayer, Item item);
 
@@ -132,4 +136,16 @@ public interface Compatibility {
 	public int getStackSize(ItemStack consumedStack);
 
 	public ItemStack consumeInventoryItem(Item item, Predicate<ItemStack> condition, EntityPlayer player, int maxSize);
+
+	public ItemStack getInventoryItemStack(EntityPlayer player, int inventoryItemIndex);
+	
+	public int getInventorySlot(EntityPlayer player, ItemStack itemStack);
+
+	public boolean consumeInventoryItemFromSlot(EntityPlayer player, int nextAttachmentSlot);
+
+	public void addShapedRecipe(ItemStack itemStack, Object... materials);
+
+	public void disableLightMap();
+
+	
 }

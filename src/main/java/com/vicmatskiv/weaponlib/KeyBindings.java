@@ -15,6 +15,12 @@ public class KeyBindings {
 	public static KeyBinding leftArrowKey;
 	public static KeyBinding rightArrowKey;
 	public static KeyBinding laserSwitchKey;
+	
+	public static KeyBinding addKey;
+	
+	public static KeyBinding subtractKey;
+	
+	public static KeyBinding fireModeKey;
 
 	public static void init() {
 		
@@ -39,6 +45,15 @@ public class KeyBindings {
 		rightArrowKey = new KeyBinding("key.texture_change", Keyboard.KEY_RIGHT,
 				"key.categories.weaponlib");
 		
+		addKey = new KeyBinding("key.add", Keyboard.KEY_I,
+				"key.categories.weaponlib");
+		
+		subtractKey = new KeyBinding("key.subtract", Keyboard.KEY_O,
+				"key.categories.weaponlib");
+		
+		fireModeKey = new KeyBinding("key.fire_mode", Keyboard.KEY_RSHIFT,
+				"key.categories.weaponlib");
+		
 		compatibility.registerKeyBinding(reloadKey);
 		compatibility.registerKeyBinding(attachmentKey);
 		compatibility.registerKeyBinding(upArrowKey);
@@ -46,5 +61,8 @@ public class KeyBindings {
 		compatibility.registerKeyBinding(leftArrowKey);
 		compatibility.registerKeyBinding(rightArrowKey);
 		compatibility.registerKeyBinding(laserSwitchKey);
+		compatibility.registerKeyBinding(addKey);
+		compatibility.registerKeyBinding(subtractKey);
+		compatibility.registerKeyBinding(fireModeKey);
 	}
 }

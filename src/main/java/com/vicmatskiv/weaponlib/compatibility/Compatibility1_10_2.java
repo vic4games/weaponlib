@@ -249,7 +249,7 @@ public class Compatibility1_10_2 implements Compatibility {
 	}
 
 	@Override
-	public EntityLivingBase getEntity(RenderLivingEvent.Pre<? extends EntityLivingBase> event) {
+	public EntityLivingBase getEntity(@SuppressWarnings("rawtypes") RenderLivingEvent.Pre event) {
 		return event.getEntity();
 	}
 
@@ -261,7 +261,7 @@ public class Compatibility1_10_2 implements Compatibility {
 
 	@Override
 	@SideOnly(Side.CLIENT)
-	public RenderPlayer getRenderer(RenderLivingEvent.Pre<? extends EntityLivingBase> event) {
+	public RenderPlayer getRenderer(@SuppressWarnings("rawtypes") RenderLivingEvent.Pre event) {
 		return (RenderPlayer) event.getRenderer();
 	}
 
@@ -353,6 +353,41 @@ public class Compatibility1_10_2 implements Compatibility {
 	@Override
 	public float getEffectScaleFactor() {
 		return 1f;
+	}
+
+	@Override
+	public int getCurrentInventoryItemIndex(EntityPlayer player) {
+		throw new UnsupportedOperationException("Implement me");
+	}
+
+	@Override
+	public boolean addItemToPlayerInventory(EntityPlayer player, Item item, int slot) {
+		throw new UnsupportedOperationException("Implement me");
+	}
+
+	@Override
+	public ItemStack getInventoryItemStack(EntityPlayer player, int inventoryItemIndex) {
+		throw new UnsupportedOperationException("Implement me");
+	}
+
+	@Override
+	public int getInventorySlot(EntityPlayer player, ItemStack itemStack) {
+		throw new UnsupportedOperationException("Implement me");
+	}
+
+	@Override
+	public boolean consumeInventoryItemFromSlot(EntityPlayer player, int nextAttachmentSlot) {
+		throw new UnsupportedOperationException("Implement me");
+	}
+
+	@Override
+	public void addShapedRecipe(ItemStack itemStack, Object... materials) {
+		throw new UnsupportedOperationException("Implement me");
+	}
+
+	@Override
+	public void disableLightMap() {
+		Minecraft.getMinecraft().entityRenderer.disableLightmap();
 	}
 
 	

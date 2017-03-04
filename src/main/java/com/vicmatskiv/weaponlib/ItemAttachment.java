@@ -1,6 +1,7 @@
 package com.vicmatskiv.weaponlib;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
@@ -17,6 +18,8 @@ public class ItemAttachment<T> extends CompatibleItem implements ModelSource {
 	private String crosshair;
 	private ApplyHandler<T> apply;
 	private ApplyHandler<T> remove;
+	protected ApplyHandler2<T> apply2;
+	protected ApplyHandler2<T> remove2;
 	private List<Tuple<ModelBase, String>> texturedModels = new ArrayList<>();
 	private CustomRenderer postRenderer;
 	private CustomRenderer preRenderer;
@@ -24,12 +27,17 @@ public class ItemAttachment<T> extends CompatibleItem implements ModelSource {
 	private String name;
 	private Function<ItemStack, String> informationProvider;
 	
+	private List<CompatibleAttachment<T>> attachments = new ArrayList<>();
+	
 	private List<Weapon> compatibleWeapons = new ArrayList<>();
 	
 	public static interface ApplyHandler<T> {
 		public void apply(ItemAttachment<T> itemAttachment, T target, EntityPlayer player);
 	}
-
+	
+	public static interface ApplyHandler2<T> {
+		public void apply(ItemAttachment<T> itemAttachment, PlayerWeaponInstance instance);
+	}
 
 	public ItemAttachment(String modId, AttachmentCategory category, ModelBase model, String textureName, String crosshair, 
 			ApplyHandler<T> apply, ApplyHandler<T> remove) {
@@ -50,6 +58,11 @@ public class ItemAttachment<T> extends CompatibleItem implements ModelSource {
 		this.crosshair = crosshair != null ? modId + ":" + "textures/crosshairs/" + crosshair + ".png" : null;
 		this.apply = apply;
 		this.remove = remove;
+	}
+	
+	@Override
+	public int getItemStackLimit() {
+		return 1;
 	}
 	
 	public Item setTextureName(String name) {
@@ -147,8 +160,24 @@ public class ItemAttachment<T> extends CompatibleItem implements ModelSource {
 		this.preRenderer = preRenderer;
 	}
 	
+	protected void addCompatibleAttachment(CompatibleAttachment<T> attachment) {
+		attachments.add(attachment);
+	}
+	
+	public List<CompatibleAttachment<T>> getAttachments() {
+		return Collections.unmodifiableList(attachments);
+	}
+
 	@Override
 	public String toString() {
 		return name != null ? "Attachment [" + name + "]" : super.toString();
+	}
+
+	protected ApplyHandler2<T> getApply2() {
+		return apply2;
+	}
+
+	protected ApplyHandler2<T> getRemove2() {
+		return remove2;
 	}
 }

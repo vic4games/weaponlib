@@ -11,9 +11,9 @@ import net.minecraft.item.ItemStack;
 
 public class TryFireMessageHandler implements CompatibleMessageHandler<TryFireMessage, CompatibleMessage> {
 	
-	private FireManager fireManager;
+	private WeaponFireAspect fireManager;
 
-	TryFireMessageHandler(FireManager fireManager) {
+	TryFireMessageHandler(WeaponFireAspect fireManager) {
 		this.fireManager = fireManager;
 	}
 
@@ -25,11 +25,7 @@ public class TryFireMessageHandler implements CompatibleMessageHandler<TryFireMe
 			if(itemStack != null && itemStack.getItem() instanceof Weapon) {
 				if(message.isOn()) {
 					ctx.runInMainThread(() -> {
-						fireManager.tryFire(player, itemStack);
-					});
-				} else {
-					ctx.runInMainThread(() -> {
-						fireManager.tryStopFire(player, itemStack);
+						fireManager.serverFire(player, itemStack);
 					});
 				}
 			}

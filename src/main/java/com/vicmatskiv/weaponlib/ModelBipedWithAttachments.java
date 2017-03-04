@@ -66,8 +66,8 @@ public class ModelBipedWithAttachments extends CompatibleModelBiped {
 					Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(modId 
 							+ ":textures/models/" + texturedModel.getV()));
 					GL11.glPushMatrix();
-					if(compatibleAttachment.getPositioning() != null) {
-						compatibleAttachment.getPositioning().accept(texturedModel.getU());
+					if(compatibleAttachment.getModelPositioning() != null) {
+						compatibleAttachment.getModelPositioning().accept(texturedModel.getU());
 					}
 					texturedModel.getU().render(entity, f, f1, f2, f3, f4, f5);
 					GL11.glPopMatrix();

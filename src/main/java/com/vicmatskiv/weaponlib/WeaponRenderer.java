@@ -14,26 +14,34 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL11;
 
+import com.vicmatskiv.weaponlib.animation.MultipartPositioning.Positioner;
 import com.vicmatskiv.weaponlib.animation.MultipartRenderStateManager;
 import com.vicmatskiv.weaponlib.animation.MultipartTransition;
 import com.vicmatskiv.weaponlib.animation.MultipartTransitionProvider;
 import com.vicmatskiv.weaponlib.animation.Transition;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponRenderer;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
 
 public class WeaponRenderer extends CompatibleWeaponRenderer {
+	
+	private static final Logger logger = LogManager.getLogger(WeaponRenderer.class);
+
 	
 	private static final float DEFAULT_RANDOMIZING_RATE = 0.33f;
 	private static final float DEFAULT_RANDOMIZING_FIRING_RATE = 20;
 	private static final float DEFAULT_RANDOMIZING_ZOOM_RATE = 0.25f;
 	
 	private static final float DEFAULT_NORMAL_RANDOMIZING_AMPLITUDE = 0.06f;
-	private static final float DEFAULT_ZOOM_RANDOMIZING_AMPLITUDE = 0.01f;
+	private static final float DEFAULT_ZOOM_RANDOMIZING_AMPLITUDE = 0.005f;
 	private static final float DEFAULT_FIRING_RANDOMIZING_AMPLITUDE = 0.03f;
 	
 	private static final int DEFAULT_ANIMATION_DURATION = 250;
@@ -83,6 +91,9 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		private List<Transition> firstPersonPositioningUnloading;
 		private List<Transition> firstPersonLeftHandPositioningUnloading;
 		private List<Transition> firstPersonRightHandPositioningUnloading;
+		
+		private long totalReloadingDuration;
+		private long totalUnloadingDuration;
 		
 		private String modId;
 		
@@ -431,14 +442,21 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				};
 			}
 			
+			WeaponRenderer renderer = new WeaponRenderer(this);
+			
 			if(firstPersonPositioning == null) {
 				firstPersonPositioning = (player, itemStack) -> {
 					GL11.glRotatef(45F, 0f, 1f, 0f);
-					if(compatibility.getTagCompound(itemStack) != null && Tags.getZoom(itemStack) != 1.0f) {
-						GL11.glTranslatef(xOffsetZoom, yOffsetZoom, weaponProximity);
-					} else {
-						GL11.glTranslatef(0F, -1.2F, 0F);
+
+					if(renderer.getClientModContext() != null) {
+						PlayerWeaponInstance instance = renderer.getClientModContext().getMainHeldWeapon();
+						if(instance != null && instance.isAimed()) {
+							GL11.glTranslatef(xOffsetZoom, yOffsetZoom, weaponProximity);
+						} else {
+							GL11.glTranslatef(0F, -1.2F, 0F);
+						}
 					}
+					
 				};
 			}
 			
@@ -450,8 +468,18 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				firstPersonPositioningReloading = Collections.singletonList(new Transition(firstPersonPositioning, DEFAULT_ANIMATION_DURATION));
 			}
 			
+			for(Transition t: firstPersonPositioningReloading) {
+				totalReloadingDuration += t.getDuration();
+				totalReloadingDuration += t.getPause();
+			}
+			
 			if(firstPersonPositioningUnloading == null) {
 				firstPersonPositioningUnloading = Collections.singletonList(new Transition(firstPersonPositioning, DEFAULT_ANIMATION_DURATION));
+			}
+			
+			for(Transition t: firstPersonPositioningUnloading) {
+				totalUnloadingDuration += t.getDuration();
+				totalUnloadingDuration += t.getPause();
 			}
 			
 			if(firstPersonPositioningRecoiled == null) {
@@ -590,7 +618,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				}
 			});
 			
-			return new WeaponRenderer(this);
+			
+			return renderer;
 		}
 
 		public Consumer<ItemStack> getEntityPositioning() {
@@ -625,12 +654,30 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 	private Map<EntityPlayer, MultipartRenderStateManager<RenderableState, Part, RenderContext>> firstPersonStateManagers;
 		
 	private MultipartTransitionProvider<RenderableState, Part, RenderContext> weaponTransitionProvider;
+	
+	protected ClientModContext clientModContext;
 			
-	private WeaponRenderer (Builder builder) {
+	private WeaponRenderer(Builder builder) {
 		super(builder);
 		this.builder = builder;
 		this.firstPersonStateManagers = new HashMap<>();
 		this.weaponTransitionProvider = new WeaponPositionProvider();
+	}
+	
+	protected long getTotalReloadingDuration() {
+		return builder.totalReloadingDuration;
+	}
+	
+	protected long getTotalUnloadingDuration() {
+		return builder.totalUnloadingDuration;
+	}
+
+	protected ClientModContext getClientModContext() {
+		return clientModContext;
+	}
+	
+	protected void setClientModContext(ClientModContext clientModContext) {
+		this.clientModContext = clientModContext;
 	}
 
 	@Override
@@ -638,50 +685,92 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		float amplitude = builder.normalRandomizingAmplitude;
 		float rate = builder.normalRandomizingRate;
 		RenderableState currentState = null;
-		Weapon weapon = (Weapon) itemStack.getItem();
-		if(Weapon.isModifying(itemStack)) {
-			currentState = builder.firstPersonPositioningModifying != null ? RenderableState.MODIFYING : RenderableState.NORMAL;
-		} else if(Weapon.isUnloadingStarted(player, itemStack)) {
-			currentState = RenderableState.UNLOADING;
-		} else if(Weapon.isReloadingConfirmed(player, itemStack)) {
-			currentState = RenderableState.RELOADING;
-		} else if(Weapon.isEjectedSpentRound(player, itemStack)) {
-			currentState = RenderableState.EJECT_SPENT_ROUND;
-		} else if(player.isSprinting() && builder.firstPersonPositioningRunning != null) {
-			currentState = RenderableState.RUNNING;
-		} else if(Weapon.isZoomed(player, itemStack)) {
-			WeaponClientStorage storage = weapon.getWeaponClientStorage(player);
-
-			if(storage != null) {
-				currentState = storage.getNextDisposableRenderableState();
-				if(currentState == RenderableState.AUTO_SHOOTING) {
-					currentState = RenderableState.ZOOMING;
-					rate = builder.firingRandomizingRate;
-				} else if(currentState == RenderableState.SHOOTING) {
-					currentState = RenderableState.ZOOMING_SHOOTING;
-					rate = builder.firingRandomizingRate;
-				} else if(currentState == RenderableState.RECOILED) {
+		
+		PlayerWeaponInstance playerWeaponInstance = clientModContext.getPlayerItemInstanceRegistry()
+				.getMainHandItemInstance(player, PlayerWeaponInstance.class); // TODO: cannot be always main hand, need to which hand from context
+		
+		if(playerWeaponInstance != null) {
+			AsyncWeaponState asyncWeaponState = getNextNonExpiredState(playerWeaponInstance);
+			
+			switch(asyncWeaponState.getState()) {
+				
+			case RECOILED: 
+				if(playerWeaponInstance.isAutomaticModeEnabled()) {
+					if(playerWeaponInstance.isAimed()) {
+						currentState = RenderableState.ZOOMING;
+						rate = builder.firingRandomizingRate;
+						amplitude = builder.zoomRandomizingAmplitude;
+					} else {
+						currentState = RenderableState.NORMAL; 
+						rate = builder.firingRandomizingRate;
+						amplitude = builder.firingRandomizingAmplitude;
+					}
+				} else if(playerWeaponInstance.isAimed()) {
 					currentState = RenderableState.ZOOMING_RECOILED;
-					rate = builder.zoomRandomizingRate;
+					amplitude = builder.zoomRandomizingAmplitude;
 				} else {
-					currentState = RenderableState.ZOOMING;
-					rate = builder.zoomRandomizingRate;
+					currentState = RenderableState.RECOILED; 
 				}
 				
-			}
-			amplitude = builder.zoomRandomizingAmplitude; // Zoom amplitude is enforced even when firing
-			//System.out.println("Rendering state: " + currentState);
-		} else {
-			WeaponClientStorage storage = weapon.getWeaponClientStorage(player);
-
-			if(storage != null) {
-				currentState = storage.getNextDisposableRenderableState();
-				if(currentState == RenderableState.AUTO_SHOOTING) {
-					currentState = RenderableState.NORMAL;
+				break;
+				
+			case PAUSED: 
+				if(playerWeaponInstance.isAutomaticModeEnabled()) {
+					
+					boolean isLongPaused = System.currentTimeMillis() - asyncWeaponState.getTimestamp() > (50f / playerWeaponInstance.getFireRate())
+							&& asyncWeaponState.isInfinite();
+					
+					if(playerWeaponInstance.isAimed()) {
+						currentState = RenderableState.ZOOMING;
+						if(!isLongPaused) {
+							rate = builder.firingRandomizingRate;
+						}
+						amplitude = builder.zoomRandomizingAmplitude;
+					} else {
+						currentState = RenderableState.NORMAL; 
+						if(!isLongPaused) {
+							rate = builder.firingRandomizingRate;
+							amplitude = builder.firingRandomizingAmplitude;
+						}
+					}
+				} else if(playerWeaponInstance.isAimed()) {
+					currentState = RenderableState.ZOOMING_SHOOTING;
 					rate = builder.firingRandomizingRate;
-					amplitude = builder.firingRandomizingAmplitude;
+					amplitude = builder.zoomRandomizingAmplitude;
+				} else {
+					currentState = RenderableState.SHOOTING;
+				}
+				
+				break;
+				
+			case UNLOAD_PREPARING: case UNLOAD_REQUESTED: case UNLOAD:
+				currentState = RenderableState.UNLOADING;
+				break;
+				
+			case LOAD:
+				currentState = RenderableState.RELOADING;
+				break;
+				
+			case EJECTING:
+				currentState = RenderableState.EJECT_SPENT_ROUND;
+				break;
+				
+			case MODIFYING: case MODIFYING_REQUESTED: case NEXT_ATTACHMENT: case NEXT_ATTACHMENT_REQUESTED:
+				currentState = RenderableState.MODIFYING;
+				break;	
+				
+			default:
+				if(player.isSprinting() && builder.firstPersonPositioningRunning != null) {
+					currentState = RenderableState.RUNNING;
+				} else if(playerWeaponInstance.isAimed()) {
+					currentState = RenderableState.ZOOMING;
+					rate = builder.zoomRandomizingRate;
+					amplitude = builder.zoomRandomizingAmplitude;
 				}
 			}
+			
+
+			logger.trace("Rendering state {} created from {}", currentState, asyncWeaponState.getState());
 		}
 		
 		if(currentState == null) {
@@ -697,7 +786,24 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 					|| currentState == RenderableState.ZOOMING_SHOOTING);
 		}
 		
+		
 		return new StateDescriptor(stateManager, rate, amplitude);
+	}
+
+	private AsyncWeaponState getNextNonExpiredState(PlayerWeaponInstance playerWeaponState) {
+		AsyncWeaponState asyncWeaponState = null;
+		while((asyncWeaponState = playerWeaponState.nextHistoryState()) != null) {
+			
+			if(System.currentTimeMillis() < asyncWeaponState.getTimestamp() + asyncWeaponState.getDuration()) {
+				if(asyncWeaponState.getState() == WeaponState.FIRING && !playerWeaponState.isAutomaticModeEnabled()) { // allow recoil for non-automatic weapons
+					continue;
+				} else {
+					break; // found non-expired-state
+				}
+			}
+		}	
+		
+		return asyncWeaponState;
 	}
 	
 	private BiConsumer<Part, RenderContext> createWeaponPartPositionFunction(BiConsumer<EntityPlayer, ItemStack> weaponPositionFunction) {
@@ -824,5 +930,73 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			}
 			return null;
 		}
+	}
+	
+	@Override
+	public void renderAttachments(Positioner<Part, RenderContext> positioner, RenderContext renderContext,List<CompatibleAttachment<? extends AttachmentContainer>> attachments) {
+		
+		for(CompatibleAttachment<?> compatibleAttachment: attachments) {
+			if(compatibleAttachment != null) {
+				renderCompatibleAttachment(compatibleAttachment, positioner, renderContext);
+			}
+		}
+	}
+
+	private void renderCompatibleAttachment(CompatibleAttachment<?> compatibleAttachment,
+			Positioner<Part, RenderContext> positioner, RenderContext renderContext) {
+		
+		GL11.glPushMatrix();
+		GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_CURRENT_BIT);
+		
+		if(compatibleAttachment.getPositioning() != null) {
+			compatibleAttachment.getPositioning().accept(renderContext.getPlayer(), renderContext.getWeapon());
+		}
+		
+		ItemAttachment<?> itemAttachment = compatibleAttachment.getAttachment();
+		
+		
+		if(positioner != null) {
+			if(itemAttachment instanceof Part) {
+				positioner.position((Part) itemAttachment, renderContext);
+			} else if(itemAttachment.getRenderablePart() != null) {
+				positioner.position(itemAttachment.getRenderablePart(), renderContext);
+			}
+		}
+
+		for(Tuple<ModelBase, String> texturedModel: compatibleAttachment.getAttachment().getTexturedModels()) {
+			Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(builder.getModId() 
+					+ ":textures/models/" + texturedModel.getV()));
+			GL11.glPushMatrix();
+			GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_CURRENT_BIT);
+			if(compatibleAttachment.getModelPositioning() != null) {
+				compatibleAttachment.getModelPositioning().accept(texturedModel.getU());
+			}
+			texturedModel.getU().render(renderContext.getPlayer(), 
+					renderContext.getLimbSwing(), 
+					renderContext.getFlimbSwingAmount(), 
+					renderContext.getAgeInTicks(), 
+					renderContext.getNetHeadYaw(), 
+					renderContext.getHeadPitch(), 
+					renderContext.getScale());
+
+			GL11.glPopAttrib();
+			GL11.glPopMatrix();
+		}
+		
+		CustomRenderer postRenderer = compatibleAttachment.getAttachment().getPostRenderer();
+		if(postRenderer != null) {
+			GL11.glPushMatrix();
+			GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_CURRENT_BIT);
+			postRenderer.render(renderContext);
+			GL11.glPopAttrib();
+			GL11.glPopMatrix();
+		}
+		
+		for(CompatibleAttachment<?> childAttachment: itemAttachment.getAttachments()) {
+			renderCompatibleAttachment(childAttachment, positioner, renderContext);
+		}
+		
+		GL11.glPopAttrib();
+		GL11.glPopMatrix();
 	}
 }

@@ -63,7 +63,7 @@ final class Randomizer {
 		Runnable c = () -> {
 			float xRandomOffset = amplitude * ((random.nextFloat() - 0.5f) * 2 + xbias);
 			float yRandomOffset = amplitude * ((random.nextFloat() - 0.5f) * 2 + ybias);
-			float zRandomOffset = amplitude * ((random.nextFloat() - 0.5f) * 2 + zbias);
+			float zRandomOffset = amplitude * ((random.nextFloat() - 0.5f) * 2 + zbias) / 2;
 			GL11.glTranslatef(xRandomOffset, yRandomOffset, zRandomOffset);
 		};
 		return getMatrixForPositioning(c);

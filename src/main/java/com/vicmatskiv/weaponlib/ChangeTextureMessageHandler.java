@@ -10,17 +10,17 @@ import net.minecraft.entity.player.EntityPlayer;
 
 public class ChangeTextureMessageHandler implements CompatibleMessageHandler<ChangeTextureMessage, CompatibleMessage> {
 	
-	private AttachmentManager attachmentManager;
+	private WeaponAttachmentAspect attachmentAspect;
 
-	ChangeTextureMessageHandler(AttachmentManager attachmentManager) {
-		this.attachmentManager = attachmentManager;
+	ChangeTextureMessageHandler(WeaponAttachmentAspect attachmentAspect) {
+		this.attachmentAspect = attachmentAspect;
 	}
 
 	@Override
 	public <T extends CompatibleMessage> T onCompatibleMessage(ChangeTextureMessage message, CompatibleMessageContext ctx) {
 		EntityPlayer player = ctx.getPlayer();
 		ctx.runInMainThread(() -> {
-			attachmentManager.changeTexture(compatibility.getHeldItemMainHand(player), player);
+			attachmentAspect.changeTexture(compatibility.getHeldItemMainHand(player), player);
 		});
 		
 		return null;
