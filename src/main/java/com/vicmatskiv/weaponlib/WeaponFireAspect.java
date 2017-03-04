@@ -135,8 +135,9 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
 		
 		if(weapon.builder.flashIntensity > 0) {
 			EffectManager.getInstance().spawnFlashParticle(player, weapon.builder.flashIntensity,
-					weaponInstance.isAimed() ? FLASH_X_OFFSET_ZOOMED : compatibility.getEffectOffsetX(),
-							compatibility.getEffectOffsetY());
+				weapon.builder.flashScale,
+				weaponInstance.isAimed() ? FLASH_X_OFFSET_ZOOMED : compatibility.getEffectOffsetX()+ weapon.builder.flashOffsetX,
+				compatibility.getEffectOffsetY());
 		}
 		
 		EffectManager.getInstance().spawnSmokeParticle(player, compatibility.getEffectOffsetX(),

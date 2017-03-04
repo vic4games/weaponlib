@@ -89,6 +89,10 @@ public class Weapon extends CompatibleItem implements
 		int pellets = 1;
 
 		float flashIntensity = 0.7f;
+		
+		float flashScale = 1f;
+		
+		float flashOffsetX = 0f;
 
 		long unloadingTimeout = Weapon.DEFAULT_UNLOADING_TIMEOUT_TICKS;
 		
@@ -372,6 +376,19 @@ public class Weapon extends CompatibleItem implements
 			return this;
 		}
 		
+		public Builder withFlashScale(float flashScale) {
+			if (flashScale < 0f || flashScale > 1f) {
+				throw new IllegalArgumentException("Invalid flash intencity");
+			}
+			this.flashScale = flashScale;
+			return this;
+		}
+		
+		public Builder withFlashOffsetX(float flashOffsetX) {
+			this.flashOffsetX = flashOffsetX;
+			return this;
+		}
+		
 		public Builder withCrafting(CraftingComplexity craftingComplexity, Object...craftingMaterials) {
 			if(craftingComplexity == null) {
 				throw new IllegalArgumentException("Crafting complexity not set");
@@ -473,7 +490,7 @@ public class Weapon extends CompatibleItem implements
 					.withSlotCount(9)
                 	.build(craftingComplexity, Arrays.copyOf(craftingMaterials, craftingMaterials.length));
 				
-				List<Object> shape = modContext.getRecipeGenerator().createShapedRecipe(weapon, optionsMetadata);
+				List<Object> shape = modContext.getRecipeGenerator().createShapedRecipe(weapon.getName(), optionsMetadata);
 				
 				compatibility.addShapedRecipe(new ItemStack(weapon), shape.toArray());
 				

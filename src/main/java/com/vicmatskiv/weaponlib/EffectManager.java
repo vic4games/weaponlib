@@ -45,11 +45,11 @@ final class EffectManager {
 		Minecraft.getMinecraft().effectRenderer.addEffect(smokeParticle);
 	}
 	
-	void spawnFlashParticle(EntityPlayer player, float flashIntensity, float xOffset, float yOffset) {
+	void spawnFlashParticle(EntityPlayer player, float flashIntensity, float flashScale, float xOffset, float yOffset) {
 		
 		float distance = 0.5f;
 		
-		float scale = 0.8f * compatibility.getEffectScaleFactor();
+		float scale = 0.8f * compatibility.getEffectScaleFactor() * flashScale;
 		float positionRandomizationFactor = 0.01f;
 		
 		CompatibleVec3 look = compatibility.getLookVec(player);

@@ -27,9 +27,9 @@ class SequenceGenerator {
 		}
     }
     
-    public List<Object> generate(Object o, OptionsMetadata optionMetadata) {
-        random.setSeed(o.toString().getBytes());
-        return generateUniqueSequence(o, optionMetadata);          
+    public List<Object> generate(Object obj, byte[] seed, OptionsMetadata optionMetadata) {
+        random.setSeed(seed);
+        return generateUniqueSequence(obj, optionMetadata);          
     }
     
     private List<Object> generateUniqueSequence(Object obj, OptionsMetadata optionMetadata) {

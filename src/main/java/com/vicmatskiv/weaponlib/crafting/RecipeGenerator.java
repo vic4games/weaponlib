@@ -12,8 +12,8 @@ public class RecipeGenerator {
 
 	private SequenceGenerator sequenceGenerator = new SequenceGenerator(SLOT_COUNT);
 	
-	public List<Object> createShapedRecipe(Object target, OptionsMetadata metadata) {
-		List<Object> sequence = sequenceGenerator.generate(target, metadata);
+	public List<Object> createShapedRecipe(String name, OptionsMetadata metadata) {
+		List<Object> sequence = sequenceGenerator.generate(name, createSeed(name, metadata), metadata);
     	LinkedHashMap<Object, Character> encodingMap = new LinkedHashMap<>();
     	char startFrom = 65;
 		for(OptionMetadata optionMetadata: metadata.getMetadata()) {
@@ -40,5 +40,9 @@ public class RecipeGenerator {
 			.forEach(e -> { output.add(e.getValue()); output.add(e.getKey());});
 		
 		return output;
+	}
+	
+	private byte[] createSeed(String name, OptionsMetadata metadata) {
+		return (name + metadata.getMetadata().length).getBytes();
 	}
 }
