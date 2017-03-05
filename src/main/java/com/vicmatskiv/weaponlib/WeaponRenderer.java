@@ -119,6 +119,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		private List<Transition> firstPersonLeftHandPositioningEjectSpentRound;
 		private List<Transition> firstPersonRightHandPositioningEjectSpentRound;
 		private LinkedHashMap<Part, List<Transition>> firstPersonCustomPositioningEjectSpentRound = new LinkedHashMap<>();
+		private boolean hasRecoilPositioningDefined;
 
 		public Builder withModId(String modId) {
 			this.modId = modId;
@@ -221,6 +222,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		}
 		
 		public Builder withFirstPersonPositioningRecoiled(Consumer<RenderContext> firstPersonPositioningRecoiled) {
+			this.hasRecoilPositioningDefined = true;
 			this.firstPersonPositioningRecoiled = firstPersonPositioningRecoiled;
 			return this;
 		}
@@ -695,7 +697,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			switch(asyncWeaponState.getState()) {
 				
 			case RECOILED: 
-				if(playerWeaponInstance.isAutomaticModeEnabled()) {
+				if(playerWeaponInstance.isAutomaticModeEnabled() && !hasRecoilPositioning()) {
 					if(playerWeaponInstance.isAimed()) {
 						currentState = RenderableState.ZOOMING;
 						rate = builder.firingRandomizingRate;
@@ -715,7 +717,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				break;
 				
 			case PAUSED: 
-				if(playerWeaponInstance.isAutomaticModeEnabled()) {
+				if(playerWeaponInstance.isAutomaticModeEnabled() && !hasRecoilPositioning()) {
 					
 					boolean isLongPaused = System.currentTimeMillis() - asyncWeaponState.getTimestamp() > (50f / playerWeaponInstance.getFireRate())
 							&& asyncWeaponState.isInfinite();
@@ -795,7 +797,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		while((asyncWeaponState = playerWeaponState.nextHistoryState()) != null) {
 			
 			if(System.currentTimeMillis() < asyncWeaponState.getTimestamp() + asyncWeaponState.getDuration()) {
-				if(asyncWeaponState.getState() == WeaponState.FIRING && !playerWeaponState.isAutomaticModeEnabled()) { // allow recoil for non-automatic weapons
+				if(asyncWeaponState.getState() == WeaponState.FIRING 
+						&& (hasRecoilPositioning() || !playerWeaponState.isAutomaticModeEnabled())) { // allow recoil for non-automatic weapons
 					continue;
 				} else {
 					break; // found non-expired-state
@@ -1012,5 +1015,9 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		
 		GL11.glPopAttrib();
 		GL11.glPopMatrix();
+	}
+
+	public boolean hasRecoilPositioning() {
+		return builder.hasRecoilPositioningDefined;
 	}
 }

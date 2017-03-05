@@ -635,7 +635,7 @@ public class Weapon extends CompatibleItem implements
 	String getCrosshair(PlayerWeaponInstance weaponInstance) {
 		if(weaponInstance.isAimed()) {
 			String crosshair = null;
-			ItemAttachment<Weapon> scopeAttachment = modContext.getAttachmentAspect().getActiveAttachment(AttachmentCategory.SCOPE, weaponInstance);
+			ItemAttachment<Weapon> scopeAttachment = WeaponAttachmentAspect.getActiveAttachment(AttachmentCategory.SCOPE, weaponInstance);
 			if(scopeAttachment != null) {
 				crosshair = scopeAttachment.getCrosshair();
 			}
@@ -828,6 +828,10 @@ public class Weapon extends CompatibleItem implements
 		return builder.renderer.getTotalUnloadingDuration();
 	}
 	
+	public boolean hasRecoilPositioning() {
+		return builder.renderer.hasRecoilPositioning();
+	}
+	
 	void incrementZoom(PlayerWeaponInstance instance) {
 		Item scopeItem = instance.getAttachmentItemWithCategory(AttachmentCategory.SCOPE);
 		if(scopeItem instanceof ItemScope && ((ItemScope) scopeItem).isOptical()) {
@@ -870,5 +874,24 @@ public class Weapon extends CompatibleItem implements
 		} else {
 			logger.debug("Cannot change non-optical zoom");
 		}
+	}
+	
+	public ItemAttachment.ApplyHandler2<Weapon> getEquivalentHandler(AttachmentCategory attachmentCategory) {
+		ItemAttachment.ApplyHandler2<Weapon> handler = (a, i) -> {};
+		switch(attachmentCategory) {
+		case SCOPE:
+			handler = (a, i) -> {
+				i.setZoom(builder.zoom);
+			};
+			break;
+		case GRIP:
+			handler = (a, i) -> {
+				i.setRecoil(builder.recoil);
+			};
+			break;
+		default:
+			break;
+		}
+		return handler;
 	}
 }
