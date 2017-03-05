@@ -104,8 +104,15 @@ public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 			if (itemStack != null ) {
 				PlayerItemInstance<?> instance = modContext.getPlayerItemInstanceRegistry()
 						.getItemInstance((EntityPlayer)compatibility.getEntity(event), itemStack);
-				compatibility.setAimed(rp, instance != null && instance instanceof PlayerWeaponInstance
-						? ((PlayerWeaponInstance) instance).isAimed() : false);
+				if(instance instanceof PlayerWeaponInstance) {
+					PlayerWeaponInstance weaponInstance = (PlayerWeaponInstance) instance;
+						compatibility.setAimed(rp, weaponInstance.isAimed()
+							|| weaponInstance.getState() == WeaponState.FIRING
+							|| weaponInstance.getState() == WeaponState.RECOILED
+							|| weaponInstance.getState() == WeaponState.PAUSED
+							);
+				}
+				
 			}
 		}
 	}
