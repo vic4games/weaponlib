@@ -93,7 +93,7 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
     		}
         }
         
-        else if(KeyBindings.addKey.getIsKeyPressed()) {
+        else if(KeyBindings.addKey.isPressed()) {
         	PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
     		if(instance != null && instance.getState() == WeaponState.READY) {
     			instance.getWeapon().incrementZoom(instance);

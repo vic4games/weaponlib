@@ -13,5 +13,13 @@ public abstract class CompatibleClientEventHandler {
 		onCompatibleClientTick(new CompatibleClientTickEvent(event));
 	}
 
+	@SideOnly(Side.CLIENT)
+	@SubscribeEvent
+	public final void onRenderTickEvent(TickEvent.RenderTickEvent event) {
+		onCompatibleRenerTickEvent(new CompatibleRenderTickEvent(event));
+	}
+
+	protected abstract void onCompatibleRenerTickEvent(CompatibleRenderTickEvent compatibleRenderTickEvent);
+
 	protected abstract void onCompatibleClientTick(CompatibleClientTickEvent compatibleClientTickEvent);
 }

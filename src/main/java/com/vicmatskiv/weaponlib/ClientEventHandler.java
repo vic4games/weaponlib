@@ -13,9 +13,8 @@ import org.apache.logging.log4j.Logger;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientTickEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientTickEvent.Phase;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderTickEvent;
 
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.common.gameevent.TickEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.player.EntityPlayer;
@@ -107,11 +106,10 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 			r.run();
 		}
 	}
-	
-	@SubscribeEvent
-	public final void onRenderTickEvent(TickEvent.RenderTickEvent event) {
-		
-		if(event.phase == TickEvent.Phase.START && compatibility.clientPlayer() != null) {
+
+	@Override
+	protected void onCompatibleRenerTickEvent(CompatibleRenderTickEvent event) {
+		if(event.getPhase() ==  CompatibleRenderTickEvent.Phase.START && compatibility.clientPlayer() != null) {
 			safeGlobals.renderingPhase.set(RenderingPhase.RENDER_VIEWFINDER);
 			long p_78471_2_ = this.renderEndNanoTime + (long)(1000000000 / 60);
 			
@@ -119,7 +117,7 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 			if(instance != null && instance.isAimed()) {
 				modContext.getFramebuffer().bindFramebuffer(true);
 				modContext.getSecondWorldRenderer().updateRenderer();
-				modContext.getSecondWorldRenderer().renderWorld(event.renderTickTime, p_78471_2_);
+				modContext.getSecondWorldRenderer().renderWorld(event.getRenderTickTime(), p_78471_2_);
 				Minecraft.getMinecraft().getFramebuffer().bindFramebuffer(true);
 			} else {
 				//logger.debug("Either instance is null or not aimed");
@@ -128,7 +126,7 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 			this.renderEndNanoTime = System.nanoTime();
 			
 			safeGlobals.renderingPhase.set(RenderingPhase.NORMAL);
-		} else if(event.phase == TickEvent.Phase.END) {
+		} else if(event.getPhase() ==  CompatibleRenderTickEvent.Phase.END) {
 			safeGlobals.renderingPhase.set(null);
 		}
 	}
