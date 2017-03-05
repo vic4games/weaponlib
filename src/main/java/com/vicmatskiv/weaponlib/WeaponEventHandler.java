@@ -61,32 +61,12 @@ public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 	
 	@Override
 	public void onCompatibleMouse(MouseEvent event) {
-		if(compatibility.getButton(event) == 0) {
-			
-			PlayerWeaponInstance mainHandHeldWeaponInstance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(
-					compatibility.clientPlayer(), PlayerWeaponInstance.class);
+		if(compatibility.getButton(event) == 0 || compatibility.getButton(event) == 1) {
+			// If the current player holds the weapon in their main hand, cancel default minecraft mouse processing
+			PlayerWeaponInstance mainHandHeldWeaponInstance = modContext.getMainHeldWeapon();
 			if(mainHandHeldWeaponInstance != null) {
 				event.setCanceled(true);
 			}
-			
-//			ItemStack heldItem = compatibility.getHeldItemMainHand(compatibility.clientPlayer());
-//			if(heldItem != null && heldItem.getItem() instanceof Weapon) {
-//				event.setCanceled(true);
-//			}
-		} else if(compatibility.getButton(event) == 1) {
-//			ItemStack heldItem = compatibility.getHeldItemMainHand(compatibility.clientPlayer());			
-//			if(heldItem != null && heldItem.getItem() instanceof Weapon 
-//					&& Weapon.isEjectedSpentRound(compatibility.clientPlayer(), heldItem)) {
-//				event.setCanceled(true);
-//			}
-			
-//			PlayerWeaponInstance mainHandHeldWeaponInstance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(
-//					compatibility.clientPlayer(), PlayerWeaponInstance.class);
-//			
-//			if(mainHandHeldWeaponInstance != null 
-//					&& mainHandHeldWeaponInstance.getState() == WeaponState.EJECT_REQUIRED) {
-//				event.setCanceled(true);
-//			}
 		}
 	}
 

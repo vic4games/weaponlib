@@ -559,16 +559,8 @@ public class Weapon extends CompatibleItem implements
 	public boolean onEntitySwing(EntityLivingBase entityLiving, ItemStack itemStack) {
 		return true;
 	}
-	
-	@Override
-	protected ItemStack onCompatibleItemRightClick(ItemStack itemStack, World world, EntityPlayer player, boolean mainHand) {
-		if(mainHand && world.isRemote) {
-			toggleAiming();
-		}
-		return itemStack;
-	}
 
-	private void toggleAiming() {
+	void toggleAiming() {
 		PlayerWeaponInstance mainHandHeldWeaponInstance = modContext.getMainHeldWeapon();
 		if(mainHandHeldWeaponInstance != null 
 				&& (mainHandHeldWeaponInstance.getState() == WeaponState.READY 
