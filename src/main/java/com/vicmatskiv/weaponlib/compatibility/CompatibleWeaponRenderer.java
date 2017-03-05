@@ -13,6 +13,7 @@ import com.vicmatskiv.weaponlib.ClientModContext;
 import com.vicmatskiv.weaponlib.CompatibleAttachment;
 import com.vicmatskiv.weaponlib.ModelWithAttachments;
 import com.vicmatskiv.weaponlib.Part;
+import com.vicmatskiv.weaponlib.PlayerWeaponInstance;
 import com.vicmatskiv.weaponlib.RenderContext;
 import com.vicmatskiv.weaponlib.RenderableState;
 import com.vicmatskiv.weaponlib.Weapon;
@@ -61,12 +62,15 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 		protected MultipartRenderStateManager<RenderableState, Part, RenderContext> stateManager;
 		protected float rate;
 		protected float amplitude = 0.04f;
-		public StateDescriptor(MultipartRenderStateManager<RenderableState, Part, RenderContext> stateManager,
+		private PlayerWeaponInstance instance;
+		public StateDescriptor(PlayerWeaponInstance instance, MultipartRenderStateManager<RenderableState, Part, RenderContext> stateManager,
 				float rate, float amplitude) {
 			this.stateManager = stateManager;
 			this.rate = rate;
 			this.amplitude = amplitude;
 		}
+		
+		
 		
 	}
 	
@@ -224,7 +228,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 			GL11.glRotatef(135F, 0f, 1f, 0f);
 			GL11.glRotatef(-180F, 0f, 0f, 1f);
 			
-			builder.getThirdPersonPositioning().accept(player, itemStack);
+			builder.getThirdPersonPositioning().accept(renderContext);
 			break;
 		case FIRST_PERSON_RIGHT_HAND: case FIRST_PERSON_LEFT_HAND:
 			
@@ -253,6 +257,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 			GL11.glScaled(-1F, -1F, 1F);
 			
 			StateDescriptor stateDescriptor = getStateDescriptor(player, itemStack);
+			renderContext.setPlayerItemInstance(stateDescriptor.instance);
 			MultipartPositioning<Part, RenderContext> multipartPositioning = stateDescriptor.stateManager.nextPositioning();
 			
 			renderContext.setTransitionProgress(multipartPositioning.getProgress());

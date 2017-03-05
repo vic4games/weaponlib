@@ -3,7 +3,6 @@ package com.vicmatskiv.weaponlib;
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
 import com.vicmatskiv.weaponlib.network.TypeRegistry;
-import com.vicmatskiv.weaponlib.state.ManagedState;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -11,16 +10,10 @@ import net.minecraft.item.ItemStack;
 
 public final class Tags {
 
-	private static final String ZOOM_TAG = "Zoom";
-	private static final String ZOOM_MODE_TAG = "ZoomMode";
-	private static final String ALLOWED_ZOOM_TAG = "AllowedZoom";
-	private static final String AIMED_TAG = "Aimed";
-	private static final String RECOIL_TAG = "Recoil";
 	private static final String ACTIVE_TEXTURE_INDEX_TAG = "ActiveTextureIndex";
 	private static final String LASER_ON_TAG = "LaserOn";
 	private static final String AMMO_TAG = "Ammo";
-	private static final String STATE_TAG = "State";
-	private static final String MANAGED_STATE_TAG = "ManagedState";
+
 	private static final String DEFAULT_TIMER_TAG = "DefaultTimer";
 	
 	private static final String INSTANCE_TAG = "Instance";
@@ -35,7 +28,7 @@ public final class Tags {
 		compatibility.getTagCompound(itemStack).setBoolean(LASER_ON_TAG, enabled);
 	}
 
-	public static int getAmmo(ItemStack itemStack) {
+	static int getAmmo(ItemStack itemStack) {
 		if(itemStack == null || compatibility.getTagCompound(itemStack) == null) return 0;
 		return compatibility.getTagCompound(itemStack).getInteger(AMMO_TAG);
 	}
@@ -98,11 +91,6 @@ public final class Tags {
 	static int getActiveTexture(ItemStack itemStack) {
 		if(itemStack == null || compatibility.getTagCompound(itemStack) == null) return 0;
 		return compatibility.getTagCompound(itemStack).getInteger(ACTIVE_TEXTURE_INDEX_TAG);
-	}
-
-	static ManagedState getManagedState(ItemStack itemStack) {
-		if(itemStack == null || compatibility.getTagCompound(itemStack) == null) return null;
-		return WeaponState.values()[compatibility.getTagCompound(itemStack).getInteger(MANAGED_STATE_TAG)];
 	}
 	
 	public static long getDefaultTimer(ItemStack itemStack) {

@@ -27,14 +27,16 @@ class SequenceGenerator {
 		}
     }
     
-    public List<Object> generate(Object o, OptionsMetadata optionMetadata) {
-        random.setSeed(o.toString().getBytes());
-        return generateUniqueSequence(o, optionMetadata);          
+    public List<Object> generate(Object obj, byte[] seed, OptionsMetadata optionMetadata) {
+        random.setSeed(seed);
+        return generateUniqueSequence(obj, optionMetadata);          
     }
     
     private List<Object> generateUniqueSequence(Object obj, OptionsMetadata optionMetadata) {
         List<Object> result;
+        int attempt = 0;
         do {
+        	System.out.println("Attempt " + ++attempt);
             result = generateSequence(optionMetadata.getMetadata());
         } while(uniqueSequenceMap.putIfAbsent(result, obj) != null);
         return result;

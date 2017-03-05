@@ -11,6 +11,7 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
@@ -89,6 +90,12 @@ public class Weapon extends CompatibleItem implements
 		int pellets = 1;
 
 		float flashIntensity = 0.7f;
+		
+		Supplier<Float> flashScale = () -> 1f;
+		
+		Supplier<Float> flashOffsetX = () -> 0f;
+		
+		Supplier<Float> flashOffsetY = () -> 0f;
 
 		long unloadingTimeout = Weapon.DEFAULT_UNLOADING_TIMEOUT_TICKS;
 		
@@ -372,6 +379,21 @@ public class Weapon extends CompatibleItem implements
 			return this;
 		}
 		
+		public Builder withFlashScale(Supplier<Float> flashScale) {
+			this.flashScale = flashScale;
+			return this;
+		}
+		
+		public Builder withFlashOffsetX(Supplier<Float> flashOffsetX) {
+			this.flashOffsetX = flashOffsetX;
+			return this;
+		}
+		
+		public Builder withFlashOffsetY(Supplier<Float> flashOffsetY) {
+			this.flashOffsetY = flashOffsetY;
+			return this;
+		}
+		
 		public Builder withCrafting(CraftingComplexity craftingComplexity, Object...craftingMaterials) {
 			if(craftingComplexity == null) {
 				throw new IllegalArgumentException("Crafting complexity not set");
@@ -473,7 +495,7 @@ public class Weapon extends CompatibleItem implements
 					.withSlotCount(9)
                 	.build(craftingComplexity, Arrays.copyOf(craftingMaterials, craftingMaterials.length));
 				
-				List<Object> shape = modContext.getRecipeGenerator().createShapedRecipe(weapon, optionsMetadata);
+				List<Object> shape = modContext.getRecipeGenerator().createShapedRecipe(weapon.getName(), optionsMetadata);
 				
 				compatibility.addShapedRecipe(new ItemStack(weapon), shape.toArray());
 				
@@ -537,18 +559,13 @@ public class Weapon extends CompatibleItem implements
 	public boolean onEntitySwing(EntityLivingBase entityLiving, ItemStack itemStack) {
 		return true;
 	}
-	
-	@Override
-	protected ItemStack onCompatibleItemRightClick(ItemStack itemStack, World world, EntityPlayer player, boolean mainHand) {
-		if(mainHand && world.isRemote) {
-			toggleAiming();
-		}
-		return itemStack;
-	}
 
-	private void toggleAiming() {
+	void toggleAiming() {
 		PlayerWeaponInstance mainHandHeldWeaponInstance = modContext.getMainHeldWeapon();
-		if(mainHandHeldWeaponInstance != null && mainHandHeldWeaponInstance.getState() == WeaponState.READY) {
+		if(mainHandHeldWeaponInstance != null 
+				&& (mainHandHeldWeaponInstance.getState() == WeaponState.READY 
+				|| mainHandHeldWeaponInstance.getState() == WeaponState.EJECT_REQUIRED)
+			) {
 			mainHandHeldWeaponInstance.setAimed(!mainHandHeldWeaponInstance.isAimed());
 		}
 	}
@@ -610,7 +627,7 @@ public class Weapon extends CompatibleItem implements
 	String getCrosshair(PlayerWeaponInstance weaponInstance) {
 		if(weaponInstance.isAimed()) {
 			String crosshair = null;
-			ItemAttachment<Weapon> scopeAttachment = modContext.getAttachmentAspect().getActiveAttachment(AttachmentCategory.SCOPE, weaponInstance);
+			ItemAttachment<Weapon> scopeAttachment = WeaponAttachmentAspect.getActiveAttachment(AttachmentCategory.SCOPE, weaponInstance);
 			if(scopeAttachment != null) {
 				crosshair = scopeAttachment.getCrosshair();
 			}
@@ -640,10 +657,7 @@ public class Weapon extends CompatibleItem implements
 		return builder.textureNames.get(Tags.getActiveTexture(itemStack));
 	}
 	
-	public static boolean isActiveAttachment(ItemStack itemStack, ItemAttachment<Weapon> attachment) {
-//		Weapon weapon = (Weapon) itemStack.getItem();
-//		return weapon.modContext.getAttachmentAspect().isActiveAttachment(itemStack, attachment);
-		PlayerWeaponInstance weaponInstance = Tags.getInstance(itemStack, PlayerWeaponInstance.class);
+	public static boolean isActiveAttachment(PlayerWeaponInstance weaponInstance, ItemAttachment<Weapon> attachment) {
 		return weaponInstance != null ? 
 				WeaponAttachmentAspect.isActiveAttachment(attachment, weaponInstance) : false;
 	}
@@ -806,6 +820,10 @@ public class Weapon extends CompatibleItem implements
 		return builder.renderer.getTotalUnloadingDuration();
 	}
 	
+	public boolean hasRecoilPositioning() {
+		return builder.renderer.hasRecoilPositioning();
+	}
+	
 	void incrementZoom(PlayerWeaponInstance instance) {
 		Item scopeItem = instance.getAttachmentItemWithCategory(AttachmentCategory.SCOPE);
 		if(scopeItem instanceof ItemScope && ((ItemScope) scopeItem).isOptical()) {
@@ -848,5 +866,24 @@ public class Weapon extends CompatibleItem implements
 		} else {
 			logger.debug("Cannot change non-optical zoom");
 		}
+	}
+	
+	public ItemAttachment.ApplyHandler2<Weapon> getEquivalentHandler(AttachmentCategory attachmentCategory) {
+		ItemAttachment.ApplyHandler2<Weapon> handler = (a, i) -> {};
+		switch(attachmentCategory) {
+		case SCOPE:
+			handler = (a, i) -> {
+				i.setZoom(builder.zoom);
+			};
+			break;
+		case GRIP:
+			handler = (a, i) -> {
+				i.setRecoil(builder.recoil);
+			};
+			break;
+		default:
+			break;
+		}
+		return handler;
 	}
 }

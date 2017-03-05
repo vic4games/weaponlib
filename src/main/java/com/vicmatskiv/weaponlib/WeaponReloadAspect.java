@@ -66,7 +66,8 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 		
 	private static Predicate<PlayerWeaponInstance> reloadAnimationCompleted = weaponInstance -> 
 		System.currentTimeMillis() >= weaponInstance.getStateUpdateTimestamp() 
-			+ weaponInstance.getWeapon().getTotalReloadingDuration() * 1.1;
+			+ Math.max(weaponInstance.getWeapon().builder.reloadingTimeout,
+					weaponInstance.getWeapon().getTotalReloadingDuration() * 1.1);
 		
 	private static Predicate<PlayerWeaponInstance> unloadAnimationCompleted = weaponInstance -> 
 		System.currentTimeMillis() >= weaponInstance.getStateUpdateTimestamp() 
@@ -185,8 +186,8 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 				// Update permit instead: modContext.getChannel().getChannel().sendTo(new ReloadMessage(weapon, ReloadMessage.Type.LOAD, newMagazine, ammo), (EntityPlayerMP) player);
 				weaponInstance.setAmmo(ammo);
 			} else if(!compatibleBullets.isEmpty() && (consumedStack = WorldHelper.tryConsumingCompatibleItem(compatibleBullets,
-					Math.min(weapon.getMaxBulletsPerReload(), weapon.getAmmoCapacity() - Tags.getAmmo(weaponItemStack)), player)) != null) {
-				int ammo = Tags.getAmmo(weaponItemStack) + compatibility.getStackSize(consumedStack);
+					Math.min(weapon.getMaxBulletsPerReload(), weapon.getAmmoCapacity() - weaponInstance.getAmmo()), player)) != null) {
+				int ammo = weaponInstance.getAmmo() + compatibility.getStackSize(consumedStack);
 				Tags.setAmmo(weaponItemStack, ammo);
 				// Update permit instead modContext.getChannel().getChannel().sendTo(new ReloadMessage(weapon, ammo), (EntityPlayerMP) player);
 				weaponInstance.setAmmo(ammo);
@@ -198,8 +199,8 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 				compatibility.playSoundToNearExcept(player, weapon.getReloadSound(), 1.0F, 1.0F);
 			} else {
 				logger.debug("No suitable ammo found for " + weaponInstance + ". Denying permit");
-				Tags.setAmmo(weaponItemStack, 0);
-				weaponInstance.setAmmo(0);
+//				Tags.setAmmo(weaponItemStack, 0);
+//				weaponInstance.setAmmo(0);
 				status = Status.DENIED;
 				// Update permit instead: modContext.getChannel().getChannel().sendTo(new ReloadMessage(weapon, 0), (EntityPlayerMP) player);
 			}
@@ -234,7 +235,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 			}
 
 			Tags.setAmmo(weaponItemStack, 0);
-			//modContext.getChannel().getChannel().sendTo(new ReloadMessage(weapon, ReloadMessage.Type.UNLOAD, null, 0), (EntityPlayerMP) player);
+			weaponInstance.setAmmo(0);
 			compatibility.playSoundToNearExcept(player, weapon.getReloadSound(), 1.0F, 1.0F);
 			
 			p.setStatus(Status.GRANTED);

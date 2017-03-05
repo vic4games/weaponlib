@@ -64,7 +64,7 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
 		stateManager
 		
 		.in(this).change(WeaponState.READY).to(WeaponState.FIRING)
-		.when(hasAmmo.and(sprinting.negate()))
+		.when(hasAmmo.and(sprinting.negate()).and(readyToShootAccordingToFireRate))
 		.withAction(this::fire)
 		.manual() // on start fire
 		
@@ -135,8 +135,11 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
 		
 		if(weapon.builder.flashIntensity > 0) {
 			EffectManager.getInstance().spawnFlashParticle(player, weapon.builder.flashIntensity,
-					weaponInstance.isAimed() ? FLASH_X_OFFSET_ZOOMED : compatibility.getEffectOffsetX(),
-							compatibility.getEffectOffsetY());
+				weapon.builder.flashScale.get(),
+				weaponInstance.isAimed() ? FLASH_X_OFFSET_ZOOMED : compatibility.getEffectOffsetX()
+						+ weapon.builder.flashOffsetX.get(),
+				compatibility.getEffectOffsetY()
+						+ weapon.builder.flashOffsetY.get());
 		}
 		
 		EffectManager.getInstance().spawnSmokeParticle(player, compatibility.getEffectOffsetX(),
@@ -150,9 +153,7 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
 
 	private void ejectSpentRound(PlayerWeaponInstance weaponInstance) {
 		EntityPlayer player = weaponInstance.getPlayer();
-		if(!weaponInstance.isAimed()) {
-			compatibility.playSound(player, weaponInstance.getWeapon().getEjectSpentRoundSound(), 1F, 1F);
-		}
+		compatibility.playSound(player, weaponInstance.getWeapon().getEjectSpentRoundSound(), 1F, 1F);
 	}
 	
 	void serverFire(EntityPlayer player, ItemStack itemStack) {

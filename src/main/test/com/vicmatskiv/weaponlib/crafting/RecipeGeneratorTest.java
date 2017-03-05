@@ -23,7 +23,7 @@ public class RecipeGeneratorTest {
         
         OptionsMetadata optionMetadata  = new OptionsMetadata.OptionMetadataBuilder()
                 .withSlotCount(9)
-                .build(CraftingComplexity.HIGH, "red", "green", "blue");
+                .build(CraftingComplexity.LOW, "red", "green", "blue", "yellow", "purple");
         
         List<String> values = new ArrayList<>();
         

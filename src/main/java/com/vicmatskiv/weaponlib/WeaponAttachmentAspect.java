@@ -11,6 +11,7 @@ import java.util.function.Predicate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.vicmatskiv.weaponlib.ItemAttachment.ApplyHandler2;
 import com.vicmatskiv.weaponlib.network.TypeRegistry;
 import com.vicmatskiv.weaponlib.state.Aspect;
 import com.vicmatskiv.weaponlib.state.Permit;
@@ -247,15 +248,23 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 			
 			if(nextAttachment.getApply() != null) {
 				nextAttachment.getApply().apply(nextAttachment, weaponInstance.getWeapon(), weaponInstance.getPlayer());
-			}
-			if(nextAttachment.getApply2() != null) {
+			} else if(nextAttachment.getApply2() != null) {
 				nextAttachment.getApply2().apply(nextAttachment, weaponInstance);
+			} else {
+				ApplyHandler2<Weapon> handler = weaponInstance.getWeapon().getEquivalentHandler(attachmentCategory);
+				if(handler != null) {
+					handler.apply(null, weaponInstance);
+				}
 			}
 			compatibility.consumeInventoryItemFromSlot(weaponInstance.getPlayer(), nextAttachmentSlot);
 			
 			activeAttachmentIds[attachmentCategory.ordinal()] = Item.getIdFromItem(nextAttachment);
 		} else {
 			activeAttachmentIds[attachmentCategory.ordinal()] = -1;
+			ApplyHandler2<Weapon> handler = weaponInstance.getWeapon().getEquivalentHandler(attachmentCategory);
+			if(handler != null) {
+				handler.apply(null, weaponInstance);
+			}
 		}
 
 		if(currentAttachment != null) {
@@ -351,11 +360,9 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 		}
 		
 		if(currentAttachment == null) {
-			
 			if(attachment != null && attachment.getApply() != null) {
 				attachment.getApply().apply(attachment, weaponInstance.getWeapon(), weaponInstance.getPlayer());
 			}
-			
 			activeAttachmentsIds[attachment.getCategory().ordinal()] = Item.getIdFromItem(attachment);;
 		} else {
 			System.err.println("Attachment of category " + attachment.getCategory() + " installed, remove it first");

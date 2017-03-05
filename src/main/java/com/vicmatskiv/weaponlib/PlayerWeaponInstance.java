@@ -19,6 +19,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 	
 	private static final int SERIAL_VERSION = 5;
 	
+	@SuppressWarnings("unused")
 	private static final Logger logger = LogManager.getLogger(PlayerWeaponInstance.class);
 
 	static {
@@ -73,11 +74,12 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 		long expirationTimeout;
 		
 		if(state == WeaponState.FIRING || state == WeaponState.RECOILED || state == WeaponState.PAUSED) {
-			if(isAutomaticModeEnabled()) {
+			if(isAutomaticModeEnabled() && !getWeapon().hasRecoilPositioning()) {
 				expirationTimeout = (long) (50f / getFireRate());
 			} else {
 				expirationTimeout = 500;
 			}
+			expirationTimeout = 500;
 		} else {
 			expirationTimeout = Integer.MAX_VALUE;
 		}

@@ -12,7 +12,8 @@ import net.minecraft.item.ItemStack;
 
 class ClientWeaponTicker extends Thread {
 	
-	private boolean mouseWasPressed;
+	boolean buttonsPressed[] = new boolean[2];
+	long buttonsPressedTimestamps[] = new long[2];
 	
 	private AtomicBoolean running = new AtomicBoolean(true);
 
@@ -29,31 +30,46 @@ class ClientWeaponTicker extends Thread {
 	public void run() {
 		SafeGlobals safeGlobals = clientModContext.getSafeGlobals();
 		int currentItemIndex = safeGlobals.currentItemIndex.get();
+
 		while(running.get()) {
 			try {
 				Weapon currentWeapon = getCurrentWeapon();
 				EntityPlayer player = compatibility.getClientPlayer();
+				
+				if(!Mouse.isCreated()) {
+					continue;
+				}
+				
+				if(Mouse.isButtonDown(1)) {
+					if(!buttonsPressed[1]) {
+						buttonsPressed[1] = true;
+						buttonsPressedTimestamps[1] = System.currentTimeMillis();
+						
+						if(currentWeapon != null && !safeGlobals.guiOpen.get() && !isInteracting()) {
+							clientModContext.runSyncTick(() -> { currentWeapon.toggleAiming();});
+						}
+					}
+				} else if(buttonsPressed[1]) {
+					buttonsPressed[1] = false;
+				}
 
-				if(Mouse.isCreated() && Mouse.isButtonDown(0)) {
+				if(Mouse.isButtonDown(0)) {
 					// Capture the current item index
 					currentItemIndex = safeGlobals.currentItemIndex.get();
-					if(!mouseWasPressed) {
-						mouseWasPressed = true;
+					if(!buttonsPressed[0]) {
+						buttonsPressed[0] = true;
 					}
 					if(currentWeapon != null && !safeGlobals.guiOpen.get() && !isInteracting()) {
 						clientModContext.runSyncTick(() -> { currentWeapon.tryFire(player);});
 					}
-				} else if(mouseWasPressed || currentItemIndex != safeGlobals.currentItemIndex.get()) { // if switched item while pressing mouse down and then released
-					mouseWasPressed = false;
+				} else if(buttonsPressed[0] || currentItemIndex != safeGlobals.currentItemIndex.get()) { // if switched item while pressing mouse down and then released
+					buttonsPressed[0] = false;
 					currentItemIndex = safeGlobals.currentItemIndex.get();
 					if(currentWeapon != null) {
 						clientModContext.runSyncTick(() -> { currentWeapon.tryStopFire(player);});
 					}
 				}
-				
-//				if(currentWeapon != null) {
-//					update(player);
-//				}
+
 				update(player);
 				Thread.sleep(10);
 			} catch(InterruptedException e) {
