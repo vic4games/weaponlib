@@ -64,6 +64,7 @@ public class ViewfinderRenderer implements CustomRenderer {
 				renderContext.getHeadPitch(), 
 				renderContext.getScale());
 		
+		compatibility.enableLightMap();
 		GL11.glPopAttrib();
 		GL11.glPopMatrix();
 	}
