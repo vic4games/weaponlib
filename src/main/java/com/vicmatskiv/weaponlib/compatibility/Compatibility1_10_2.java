@@ -357,28 +357,45 @@ public class Compatibility1_10_2 implements Compatibility {
 
 	@Override
 	public int getCurrentInventoryItemIndex(EntityPlayer player) {
-		throw new UnsupportedOperationException("Implement me");
+		return player.inventory.currentItem;
 	}
 
 	@Override
 	public boolean addItemToPlayerInventory(EntityPlayer player, Item item, int slot) {
-		throw new UnsupportedOperationException("Implement me");
-	}
+		boolean result = false;
+		if(slot == -1) {
+			player.inventory.addItemStackToInventory(new ItemStack(item));
+		} else if(player.inventory.mainInventory[slot] == null) {
+        	player.inventory.mainInventory[slot] = new ItemStack(item);
+        }
+        return result;	}
 
 	@Override
 	public ItemStack getInventoryItemStack(EntityPlayer player, int inventoryItemIndex) {
-		throw new UnsupportedOperationException("Implement me");
+		return player.inventory.getStackInSlot(inventoryItemIndex);
 	}
 
 	@Override
 	public int getInventorySlot(EntityPlayer player, ItemStack itemStack) {
-		throw new UnsupportedOperationException("Implement me");
-	}
+		int slot = -1;
+		for(int i = 0; i < player.inventory.mainInventory.length; i++) {
+			if(player.inventory.mainInventory[i] == itemStack) {
+				slot = i;
+				break;
+			}
+		}
+		return slot;	}
 
 	@Override
-	public boolean consumeInventoryItemFromSlot(EntityPlayer player, int nextAttachmentSlot) {
-		throw new UnsupportedOperationException("Implement me");
-	}
+	public boolean consumeInventoryItemFromSlot(EntityPlayer player, int slot) {
+		if(player.inventory.mainInventory[slot] == null) {
+			return false;
+		}
+		
+		if (--player.inventory.mainInventory[slot].stackSize <= 0) {
+			player.inventory.mainInventory[slot] = null;
+        }
+		return true;	}
 
 	@Override
 	public void addShapedRecipe(ItemStack itemStack, Object... materials) {
@@ -388,6 +405,11 @@ public class Compatibility1_10_2 implements Compatibility {
 	@Override
 	public void disableLightMap() {
 		Minecraft.getMinecraft().entityRenderer.disableLightmap();
+	}
+
+	@Override
+	public void enableLightMap() {
+		Minecraft.getMinecraft().entityRenderer.enableLightmap();
 	}
 
 	

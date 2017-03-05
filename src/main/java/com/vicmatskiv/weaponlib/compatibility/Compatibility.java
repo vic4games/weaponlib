@@ -147,5 +147,7 @@ public interface Compatibility {
 
 	public void disableLightMap();
 
+	public void enableLightMap();
+
 	
 }

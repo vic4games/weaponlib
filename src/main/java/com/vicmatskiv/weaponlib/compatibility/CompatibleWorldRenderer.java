@@ -500,9 +500,9 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
             this.fovModifierHand = 1.5F;
         }
 
-        if (this.fovModifierHand < 0.1F)
+        if (this.fovModifierHand < 0.05F)
         {
-            this.fovModifierHand = 0.1F;
+            this.fovModifierHand = 0.05F;
         }
     }
 
@@ -721,7 +721,7 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
             GlStateManager.scale(this.cameraZoom, this.cameraZoom, 1.0D);
         }
 
-        Project.gluPerspective(this.getFOVModifier(partialTicks, true), (float)this.mc.displayWidth / (float)this.mc.displayHeight, 0.05F, this.farPlaneDistance * MathHelper.SQRT_2);
+        Project.gluPerspective(this.getFOVModifier(partialTicks, true), 1f, 0.05F, this.farPlaneDistance * MathHelper.SQRT_2);
         GlStateManager.matrixMode(5888);
         GlStateManager.loadIdentity();
 
@@ -814,13 +814,13 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
 
             boolean flag = this.mc.getRenderViewEntity() instanceof EntityLivingBase && ((EntityLivingBase)this.mc.getRenderViewEntity()).isPlayerSleeping();
 
-            if (!net.minecraftforge.client.ForgeHooksClient.renderFirstPersonHand(mc.renderGlobal, partialTicks, pass))
-            if (this.mc.gameSettings.thirdPersonView == 0 && !flag && !this.mc.gameSettings.hideGUI && !this.mc.playerController.isSpectator())
-            {
-                this.enableLightmap();
-                this.itemRenderer.renderItemInFirstPerson(partialTicks);
-                this.disableLightmap();
-            }
+//            if (!net.minecraftforge.client.ForgeHooksClient.renderFirstPersonHand(mc.renderGlobal, partialTicks, pass))
+//            if (this.mc.gameSettings.thirdPersonView == 0 && !flag && !this.mc.gameSettings.hideGUI && !this.mc.playerController.isSpectator())
+//            {
+//                this.enableLightmap();
+//                this.itemRenderer.renderItemInFirstPerson(partialTicks);
+//                this.disableLightmap();
+//            }
 
             GlStateManager.popMatrix();
 
@@ -1243,20 +1243,7 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
         GlStateManager.alphaFunc(516, 0.5F);
         this.mc.mcProfiler.startSection("center");
 
-        if (this.mc.gameSettings.anaglyph)
-        {
-            anaglyphField = 0;
-            GlStateManager.colorMask(false, true, true, false);
-            this.renderWorldPass(0, partialTicks, finishTimeNano);
-            anaglyphField = 1;
-            GlStateManager.colorMask(true, false, false, false);
-            this.renderWorldPass(1, partialTicks, finishTimeNano);
-            GlStateManager.colorMask(true, true, true, false);
-        }
-        else
-        {
-            this.renderWorldPass(2, partialTicks, finishTimeNano);
-        }
+        this.renderWorldPass(2, partialTicks, finishTimeNano);
 
         this.mc.mcProfiler.endSection();
     }
@@ -1268,7 +1255,7 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
         boolean flag = this.isDrawBlockOutline();
         GlStateManager.enableCull();
         this.mc.mcProfiler.endStartSection("clear");
-        GlStateManager.viewport(0, 0, this.mc.displayWidth, this.mc.displayHeight);
+        GlStateManager.viewport(0, 0, 200, 200);
         this.updateFogColor(partialTicks);
         GlStateManager.clear(16640);
         this.mc.mcProfiler.endStartSection("camera");
@@ -1283,6 +1270,7 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
         double d1 = entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * (double)partialTicks;
         double d2 = entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * (double)partialTicks;
         icamera.setPosition(d0, d1, d2);
+        
 
         if (this.mc.gameSettings.renderDistanceChunks >= 4)
         {
@@ -1290,12 +1278,12 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
             this.mc.mcProfiler.endStartSection("sky");
             GlStateManager.matrixMode(5889);
             GlStateManager.loadIdentity();
-            Project.gluPerspective(this.getFOVModifier(partialTicks, true), (float)this.mc.displayWidth / (float)this.mc.displayHeight, 0.05F, this.farPlaneDistance * 2.0F);
+            Project.gluPerspective(this.getFOVModifier(partialTicks, true), 1f, 0.05F, this.farPlaneDistance * 2.0F);
             GlStateManager.matrixMode(5888);
             renderglobal.renderSky(partialTicks, pass);
             GlStateManager.matrixMode(5889);
             GlStateManager.loadIdentity();
-            Project.gluPerspective(this.getFOVModifier(partialTicks, true), (float)this.mc.displayWidth / (float)this.mc.displayHeight, 0.05F, this.farPlaneDistance * MathHelper.SQRT_2);
+            Project.gluPerspective(this.getFOVModifier(partialTicks, true), 1f, 0.05F, this.farPlaneDistance * MathHelper.SQRT_2);
             GlStateManager.matrixMode(5888);
         }
 
@@ -1307,19 +1295,27 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
             this.renderCloudsCheck(renderglobal, partialTicks, pass);
         }
 
+
+        
         this.mc.mcProfiler.endStartSection("prepareterrain");
         this.setupFog(0, partialTicks);
+        
+        
         this.mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
         RenderHelper.disableStandardItemLighting();
         this.mc.mcProfiler.endStartSection("terrain_setup");
-        renderglobal.setupTerrain(entity, (double)partialTicks, icamera, this.frameCount++, this.mc.thePlayer.isSpectator());
+        
+        
+        //renderglobal.setupTerrain(entity, (double)partialTicks, icamera, this.frameCount++, this.mc.thePlayer.isSpectator());
 
+        
         if (pass == 0 || pass == 2)
         {
             this.mc.mcProfiler.endStartSection("updatechunks");
             this.mc.renderGlobal.updateChunks(finishTimeNano);
         }
 
+ 
         this.mc.mcProfiler.endStartSection("terrain");
         GlStateManager.matrixMode(5888);
         GlStateManager.pushMatrix();
@@ -1373,17 +1369,17 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
         this.mc.getTextureManager().getTexture(TextureMap.LOCATION_BLOCKS_TEXTURE).restoreLastBlurMipmap();
         GlStateManager.disableBlend();
 
-        if (!this.debugView)
-        {
-            this.enableLightmap();
-            this.mc.mcProfiler.endStartSection("litParticles");
-            particlemanager.renderLitParticles(entity, partialTicks);
-            RenderHelper.disableStandardItemLighting();
-            this.setupFog(0, partialTicks);
-            this.mc.mcProfiler.endStartSection("particles");
-            particlemanager.renderParticles(entity, partialTicks);
-            this.disableLightmap();
-        }
+//        if (!this.debugView)
+//        {
+//            this.enableLightmap();
+//            this.mc.mcProfiler.endStartSection("litParticles");
+//            particlemanager.renderLitParticles(entity, partialTicks);
+//            RenderHelper.disableStandardItemLighting();
+//            this.setupFog(0, partialTicks);
+//            this.mc.mcProfiler.endStartSection("particles");
+//            particlemanager.renderParticles(entity, partialTicks);
+//            this.disableLightmap();
+//        }
 
         GlStateManager.depthMask(false);
         GlStateManager.enableCull();
@@ -1402,39 +1398,39 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
         GlStateManager.shadeModel(7425);
         this.mc.mcProfiler.endStartSection("translucent");
         renderglobal.renderBlockLayer(BlockRenderLayer.TRANSLUCENT, (double)partialTicks, pass, entity);
-        if (!this.debugView) //Only render if render pass 0 happens as well.
-        {
-            RenderHelper.enableStandardItemLighting();
-            this.mc.mcProfiler.endStartSection("entities");
-            net.minecraftforge.client.ForgeHooksClient.setRenderPass(1);
-            renderglobal.renderEntities(entity, icamera, partialTicks);
-            // restore blending function changed by RenderGlobal.preRenderDamagedBlocks
-            GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
-            net.minecraftforge.client.ForgeHooksClient.setRenderPass(-1);
-            RenderHelper.disableStandardItemLighting();
-        }
+//        if (!this.debugView) //Only render if render pass 0 happens as well.
+//        {
+//            RenderHelper.enableStandardItemLighting();
+//            this.mc.mcProfiler.endStartSection("entities");
+//            net.minecraftforge.client.ForgeHooksClient.setRenderPass(1);
+//            renderglobal.renderEntities(entity, icamera, partialTicks);
+//            // restore blending function changed by RenderGlobal.preRenderDamagedBlocks
+//            GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+//            net.minecraftforge.client.ForgeHooksClient.setRenderPass(-1);
+//            RenderHelper.disableStandardItemLighting();
+//        }
         GlStateManager.shadeModel(7424);
         GlStateManager.depthMask(true);
         GlStateManager.enableCull();
         GlStateManager.disableBlend();
         GlStateManager.disableFog();
 
-        if (entity.posY + (double)entity.getEyeHeight() >= 128.0D)
-        {
-            this.mc.mcProfiler.endStartSection("aboveClouds");
-            this.renderCloudsCheck(renderglobal, partialTicks, pass);
-        }
+//        if (entity.posY + (double)entity.getEyeHeight() >= 128.0D)
+//        {
+//            this.mc.mcProfiler.endStartSection("aboveClouds");
+//            this.renderCloudsCheck(renderglobal, partialTicks, pass);
+//        }
 
         this.mc.mcProfiler.endStartSection("forge_render_last");
-        net.minecraftforge.client.ForgeHooksClient.dispatchRenderLast(renderglobal, partialTicks);
+        //net.minecraftforge.client.ForgeHooksClient.dispatchRenderLast(renderglobal, partialTicks);
 
         this.mc.mcProfiler.endStartSection("hand");
 
-        if (this.renderHand)
-        {
-            GlStateManager.clear(256);
-            this.renderHand(partialTicks, pass);
-        }
+//        if (this.renderHand)
+//        {
+//            GlStateManager.clear(256);
+//            this.renderHand(partialTicks, pass);
+//        }
     }
 
     private void renderCloudsCheck(RenderGlobal renderGlobalIn, float partialTicks, int pass)
@@ -1444,7 +1440,7 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
             this.mc.mcProfiler.endStartSection("clouds");
             GlStateManager.matrixMode(5889);
             GlStateManager.loadIdentity();
-            Project.gluPerspective(this.getFOVModifier(partialTicks, true), (float)this.mc.displayWidth / (float)this.mc.displayHeight, 0.05F, this.farPlaneDistance * 4.0F);
+            Project.gluPerspective(this.getFOVModifier(partialTicks, true), 1f, 0.05F, this.farPlaneDistance * 4.0F);
             GlStateManager.matrixMode(5888);
             GlStateManager.pushMatrix();
             this.setupFog(0, partialTicks);
@@ -1453,7 +1449,7 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
             GlStateManager.popMatrix();
             GlStateManager.matrixMode(5889);
             GlStateManager.loadIdentity();
-            Project.gluPerspective(this.getFOVModifier(partialTicks, true), (float)this.mc.displayWidth / (float)this.mc.displayHeight, 0.05F, this.farPlaneDistance * MathHelper.SQRT_2);
+            Project.gluPerspective(this.getFOVModifier(partialTicks, true), 1f, 0.05F, this.farPlaneDistance * MathHelper.SQRT_2);
             GlStateManager.matrixMode(5888);
         }
     }

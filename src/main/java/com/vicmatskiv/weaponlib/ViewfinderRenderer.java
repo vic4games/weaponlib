@@ -2,14 +2,12 @@ package com.vicmatskiv.weaponlib;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
-
 import java.util.function.BiConsumer;
 
 import org.lwjgl.opengl.GL11;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTransformType;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 
@@ -66,6 +64,7 @@ public class ViewfinderRenderer implements CustomRenderer {
 				renderContext.getHeadPitch(), 
 				renderContext.getScale());
 		
+		compatibility.enableLightMap();
 		GL11.glPopAttrib();
 		GL11.glPopMatrix();
 	}
