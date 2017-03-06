@@ -70,6 +70,9 @@ import net.minecraftforge.common.MinecraftForge;
 public class CompatibleWorldRenderer extends EntityRenderer implements IResourceManagerReloadListener
 {
     private static final Logger logger = LogManager.getLogger();
+    
+	private static final float MAX_ZOOM = 0.01F;
+	
     private static final ResourceLocation locationRainPng = new ResourceLocation("textures/environment/rain.png");
     private static final ResourceLocation locationSnowPng = new ResourceLocation("textures/environment/snow.png");
     public static boolean anaglyphEnable;
@@ -174,6 +177,7 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
     /** Debug view direction (0=OFF, 1=Front, 2=Right, 3=Back, 4=Left, 5=TiltLeft, 6=TiltRight) */
     public int debugViewDirection;
     private static final String __OBFID = "CL_00000947";
+
 
     public CompatibleWorldRenderer(Minecraft p_i45076_1_, IResourceManager p_i45076_2_)
     {
@@ -470,9 +474,9 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
             this.fovModifierHand = 1.5F;
         }
 
-        if (this.fovModifierHand < 0.05F)
+        if (this.fovModifierHand < MAX_ZOOM)
         {
-            this.fovModifierHand = 0.05F;
+            this.fovModifierHand = MAX_ZOOM;
         }
     }
 
