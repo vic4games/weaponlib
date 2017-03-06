@@ -1369,17 +1369,17 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
         this.mc.getTextureManager().getTexture(TextureMap.LOCATION_BLOCKS_TEXTURE).restoreLastBlurMipmap();
         GlStateManager.disableBlend();
 
-//        if (!this.debugView)
-//        {
-//            this.enableLightmap();
-//            this.mc.mcProfiler.endStartSection("litParticles");
-//            particlemanager.renderLitParticles(entity, partialTicks);
-//            RenderHelper.disableStandardItemLighting();
-//            this.setupFog(0, partialTicks);
-//            this.mc.mcProfiler.endStartSection("particles");
-//            particlemanager.renderParticles(entity, partialTicks);
-//            this.disableLightmap();
-//        }
+        if (!this.debugView)
+        {
+            this.enableLightmap();
+            this.mc.mcProfiler.endStartSection("litParticles");
+            particlemanager.renderLitParticles(entity, partialTicks);
+            RenderHelper.disableStandardItemLighting();
+            this.setupFog(0, partialTicks);
+            this.mc.mcProfiler.endStartSection("particles");
+            particlemanager.renderParticles(entity, partialTicks);
+            this.disableLightmap();
+        }
 
         GlStateManager.depthMask(false);
         GlStateManager.enableCull();
@@ -1398,28 +1398,28 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
         GlStateManager.shadeModel(7425);
         this.mc.mcProfiler.endStartSection("translucent");
         renderglobal.renderBlockLayer(BlockRenderLayer.TRANSLUCENT, (double)partialTicks, pass, entity);
-//        if (!this.debugView) //Only render if render pass 0 happens as well.
-//        {
-//            RenderHelper.enableStandardItemLighting();
-//            this.mc.mcProfiler.endStartSection("entities");
-//            net.minecraftforge.client.ForgeHooksClient.setRenderPass(1);
-//            renderglobal.renderEntities(entity, icamera, partialTicks);
-//            // restore blending function changed by RenderGlobal.preRenderDamagedBlocks
-//            GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
-//            net.minecraftforge.client.ForgeHooksClient.setRenderPass(-1);
-//            RenderHelper.disableStandardItemLighting();
-//        }
+        if (!this.debugView) //Only render if render pass 0 happens as well.
+        {
+            RenderHelper.enableStandardItemLighting();
+            this.mc.mcProfiler.endStartSection("entities");
+            net.minecraftforge.client.ForgeHooksClient.setRenderPass(1);
+            renderglobal.renderEntities(entity, icamera, partialTicks);
+            // restore blending function changed by RenderGlobal.preRenderDamagedBlocks
+            GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+            net.minecraftforge.client.ForgeHooksClient.setRenderPass(-1);
+            RenderHelper.disableStandardItemLighting();
+        }
         GlStateManager.shadeModel(7424);
         GlStateManager.depthMask(true);
         GlStateManager.enableCull();
         GlStateManager.disableBlend();
         GlStateManager.disableFog();
 
-//        if (entity.posY + (double)entity.getEyeHeight() >= 128.0D)
-//        {
-//            this.mc.mcProfiler.endStartSection("aboveClouds");
-//            this.renderCloudsCheck(renderglobal, partialTicks, pass);
-//        }
+        if (entity.posY + (double)entity.getEyeHeight() >= 128.0D)
+        {
+            this.mc.mcProfiler.endStartSection("aboveClouds");
+            this.renderCloudsCheck(renderglobal, partialTicks, pass);
+        }
 
         this.mc.mcProfiler.endStartSection("forge_render_last");
         //net.minecraftforge.client.ForgeHooksClient.dispatchRenderLast(renderglobal, partialTicks);
