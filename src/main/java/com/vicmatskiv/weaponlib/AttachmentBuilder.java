@@ -175,10 +175,10 @@ public class AttachmentBuilder<T> {
 		}
 		
 		if(model != null) {
-			attachment.addModel(model, textureName);
+			attachment.addModel(model, addFileExtension(textureName, ".png"));
 		}
 		
-		texturedModels.forEach(tm -> attachment.addModel(tm.getU(), tm.getV()));
+		texturedModels.forEach(tm -> attachment.addModel(tm.getU(), addFileExtension(tm.getV(), ".png") ));
 		
 		compatibleAttachments.values().forEach(a -> attachment.addCompatibleAttachment(a));
 		
@@ -188,6 +188,7 @@ public class AttachmentBuilder<T> {
 		
 		return attachment;
 	}
+
 	
 	private Object registerRenderer(ItemAttachment<T> attachment) {
 		return new StaticModelSourceRenderer.Builder()
@@ -202,10 +203,14 @@ public class AttachmentBuilder<T> {
 		.withModId(modId)
 		.build();
 	}
+	
 
+	static String addFileExtension(String s, String ext) {
+		return s != null && !s.endsWith(ext) ? s + ext : s;
+	}
 
-	private static String stripFileExtension(String str, String extension) {
-		return str.endsWith(extension) ? str.substring(0, str.length() - 4) : str;
+	static String stripFileExtension(String str, String extension) {
+		return str.endsWith(extension) ? str.substring(0, str.length() - extension.length()) : str;
 	}
 	
 	public <V extends ItemAttachment<T>> V build(ModContext modContext, Class<V> target) {

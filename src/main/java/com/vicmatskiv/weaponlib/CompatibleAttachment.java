@@ -13,12 +13,20 @@ public class CompatibleAttachment<T> {
 	private Consumer<ModelBase> modelPositioning;
 	private BiConsumer<EntityPlayer, ItemStack> positioning;
 	private boolean isDefault;
+	private ItemAttachment.ApplyHandler2<T> applyHandler;
+	private ItemAttachment.ApplyHandler2<T> removeHandler;
 	
 	public CompatibleAttachment(ItemAttachment<T> attachment, BiConsumer<EntityPlayer, ItemStack> positioning, Consumer<ModelBase> modelPositioning, boolean isDefault) {
 		this.attachment = attachment;
 		this.positioning = positioning;
 		this.modelPositioning = modelPositioning;
 		this.isDefault = isDefault;
+	}
+	
+	public CompatibleAttachment(ItemAttachment<T> attachment, ItemAttachment.ApplyHandler2<T> applyHandler, ItemAttachment.ApplyHandler2<T> removeHandler) {
+		this.attachment = attachment;
+		this.applyHandler = applyHandler;
+		this.removeHandler = removeHandler;
 	}
 
 	public CompatibleAttachment(ItemAttachment<T> attachment, Consumer<ModelBase> positioning) {
@@ -45,5 +53,13 @@ public class CompatibleAttachment<T> {
 
 	public boolean isDefault() {
 		return isDefault;
+	}
+
+	public ItemAttachment.ApplyHandler2<T> getApplyHandler() {
+		return applyHandler;
+	}
+
+	public ItemAttachment.ApplyHandler2<T> getRemoveHandler() {
+		return removeHandler;
 	}
 }

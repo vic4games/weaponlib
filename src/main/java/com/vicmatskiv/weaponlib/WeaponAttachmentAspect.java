@@ -35,6 +35,11 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 		TypeRegistry.getInstance().register(ChangeAttachmentPermit.class);
 	}
 	
+	private static class AttachmentLookupResult {
+		CompatibleAttachment<Weapon> compatibleAttachment;
+		int index = -1;
+	}
+	
 	public static class EnterAttachmentModePermit extends Permit<WeaponState> {
 		
 		public EnterAttachmentModePermit() {}
@@ -243,7 +248,7 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 			currentAttachment = (ItemAttachment<Weapon>) Item.getItemById(activeAttachmentIdForThisCategory);
 		}
 		
-		int nextAttachmentSlot = next(attachmentCategory, currentAttachment, weaponInstance);
+		AttachmentLookupResult lookupResult = next(attachmentCategory, currentAttachment, weaponInstance);
 		
 		if(currentAttachment != null) {
 			// Need to apply removal functions first before applying addition functions
@@ -255,21 +260,23 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 			}
 		}
 		
-		if(nextAttachmentSlot >= 0) {
-			ItemStack slotItemStack = weaponInstance.getPlayer().inventory.getStackInSlot(nextAttachmentSlot);
+		if(lookupResult.index >= 0) {
+			ItemStack slotItemStack = weaponInstance.getPlayer().inventory.getStackInSlot(lookupResult.index);
 			ItemAttachment<Weapon> nextAttachment = (ItemAttachment<Weapon>) slotItemStack.getItem();
 			
 			if(nextAttachment.getApply() != null) {
 				nextAttachment.getApply().apply(nextAttachment, weaponInstance.getWeapon(), weaponInstance.getPlayer());
 			} else if(nextAttachment.getApply2() != null) {
 				nextAttachment.getApply2().apply(nextAttachment, weaponInstance);
+			} else if(lookupResult.compatibleAttachment.getApplyHandler() != null) {
+				lookupResult.compatibleAttachment.getApplyHandler().apply(nextAttachment, weaponInstance);
 			} else {
 				ApplyHandler2<Weapon> handler = weaponInstance.getWeapon().getEquivalentHandler(attachmentCategory);
 				if(handler != null) {
 					handler.apply(null, weaponInstance);
 				}
 			}
-			compatibility.consumeInventoryItemFromSlot(weaponInstance.getPlayer(), nextAttachmentSlot);
+			compatibility.consumeInventoryItemFromSlot(weaponInstance.getPlayer(), lookupResult.index);
 			
 			activeAttachmentIds[attachmentCategory.ordinal()] = Item.getIdFromItem(nextAttachment);
 		} else {
@@ -282,13 +289,13 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 
 		if(currentAttachment != null) {
 			// Item must be added to the same spot the next attachment comes from or to any spot if there is no next attachment
-			compatibility.addItemToPlayerInventory(weaponInstance.getPlayer(), currentAttachment, nextAttachmentSlot);
+			compatibility.addItemToPlayerInventory(weaponInstance.getPlayer(), currentAttachment, lookupResult.index);
 		}
 		
 		weaponInstance.setActiveAttachmentIds(activeAttachmentIds);
 	}
 	
-	private int next(AttachmentCategory category, Item currentAttachment, PlayerWeaponInstance weaponInstance) {
+	private AttachmentLookupResult next(AttachmentCategory category, Item currentAttachment, PlayerWeaponInstance weaponInstance) {
 		/*
 		 * Start with selected index -1 (current attachment).
 		 * Current index = selected index
@@ -311,15 +318,18 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 		 * selected indexes are really startSearchFromIndexes
 		 */
 		
+		AttachmentLookupResult result = new AttachmentLookupResult();
+		
 		byte[] originallySelectedAttachmentIndexes = weaponInstance.getSelectedAttachmentIds();
 		if(originallySelectedAttachmentIndexes == null || originallySelectedAttachmentIndexes.length != AttachmentCategory.values.length) {
-			return -1;
+			return result;
 		}
 		
 		byte[] selectedAttachmentIndexes = Arrays.copyOf(originallySelectedAttachmentIndexes, originallySelectedAttachmentIndexes.length);
 		int activeIndex = selectedAttachmentIndexes[category.ordinal()];
 		
-		int nextAttachmentSlot = -1;
+		
+		result.index = -1;
 		int offset = activeIndex + 1;
 		for(int i = 0; i < 37; i++) {
 			// i = 36 corresponds to "no attachment"
@@ -332,7 +342,7 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 			logger.debug("Searching for an attachment in slot " + currentIndex);
 			
 			if(currentIndex == -1) {
-				nextAttachmentSlot = -1;
+				result.index = -1;
 				break;
 			}
 			
@@ -340,19 +350,22 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 			if(slotItemStack != null && slotItemStack.getItem() instanceof ItemAttachment) {
 				@SuppressWarnings("unchecked")
 				ItemAttachment<Weapon> attachmentItemFromInventory = (ItemAttachment<Weapon>) slotItemStack.getItem();
-				if(attachmentItemFromInventory.getCategory() == category && weaponInstance.getWeapon().getCompatibleAttachments().containsKey(attachmentItemFromInventory)
+				CompatibleAttachment<Weapon> compatibleAttachment;
+				if(attachmentItemFromInventory.getCategory() == category 
+						&& (compatibleAttachment = weaponInstance.getWeapon().getCompatibleAttachments().get(attachmentItemFromInventory)) != null
 						&& attachmentItemFromInventory != currentAttachment) {
-					//nextCompatibleAttachment = attachmentItemFromInventory;
-					nextAttachmentSlot = currentIndex;
+					
+					result.index = currentIndex;
+					result.compatibleAttachment = compatibleAttachment;
 					break;
 				}
 			}
 		}
 		
-		selectedAttachmentIndexes[category.ordinal()] = (byte)nextAttachmentSlot;
+		selectedAttachmentIndexes[category.ordinal()] = (byte)result.index;
 		weaponInstance.setSelectedAttachmentIndexes(selectedAttachmentIndexes);
 		
-		return nextAttachmentSlot;
+		return result;
 	}
 	
 	@SuppressWarnings("unchecked")
