@@ -31,6 +31,8 @@ public class ItemAttachment<T> extends CompatibleItem implements ModelSource {
 	
 	private List<Weapon> compatibleWeapons = new ArrayList<>();
 	
+	protected String textureName;
+	
 	public static interface ApplyHandler<T> {
 		public void apply(ItemAttachment<T> itemAttachment, T target, EntityPlayer player);
 	}
@@ -46,6 +48,7 @@ public class ItemAttachment<T> extends CompatibleItem implements ModelSource {
 		if(model != null) {
 			this.texturedModels.add(new Tuple<ModelBase, String>(model, textureName));
 		}
+		this.textureName = textureName;
 		this.crosshair = crosshair != null ? modId + ":" + "textures/crosshairs/" + crosshair + ".png" : null;
 		this.apply = apply;
 		this.remove = remove;

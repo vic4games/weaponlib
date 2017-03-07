@@ -953,7 +953,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 	public void renderAttachments(Positioner<Part, RenderContext> positioner, RenderContext renderContext,List<CompatibleAttachment<? extends AttachmentContainer>> attachments) {
 		
 		for(CompatibleAttachment<?> compatibleAttachment: attachments) {
-			if(compatibleAttachment != null) {
+			if(compatibleAttachment != null && !(compatibleAttachment.getAttachment() instanceof ItemSkin)) {
 				renderCompatibleAttachment(compatibleAttachment, positioner, renderContext);
 			}
 		}

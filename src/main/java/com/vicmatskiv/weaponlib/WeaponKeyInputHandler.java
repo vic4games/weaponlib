@@ -66,9 +66,9 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
         } 
         
         else if(KeyBindings.rightArrowKey.isPressed()) {
-        	PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
+    		PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
     		if(instance != null && instance.getState() == WeaponState.MODIFYING) {
-    			channel.getChannel().sendToServer(new ChangeTextureMessage()); 
+    			modContext.getAttachmentAspect().changeAttachment(AttachmentCategory.SKIN, instance);
     		}
         } 
         

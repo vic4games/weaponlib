@@ -7,6 +7,8 @@ import org.lwjgl.opengl.GL11;
 import com.vicmatskiv.weaponlib.AttachmentContainer;
 import com.vicmatskiv.weaponlib.ClientModContext;
 import com.vicmatskiv.weaponlib.CompatibleAttachment;
+import com.vicmatskiv.weaponlib.ItemAttachment;
+import com.vicmatskiv.weaponlib.ItemSkin;
 import com.vicmatskiv.weaponlib.ModelWithAttachments;
 import com.vicmatskiv.weaponlib.Part;
 import com.vicmatskiv.weaponlib.PlayerWeaponInstance;
@@ -129,16 +131,26 @@ public abstract class CompatibleWeaponRenderer implements IItemRenderer {
 		default:
 		}
 		
+		List<CompatibleAttachment<? extends AttachmentContainer>> attachments = null;
+		if(builder.getModel() instanceof ModelWithAttachments) {
+			attachments = ((Weapon) weaponItemStack.getItem()).getActiveAttachments(weaponItemStack);
+		}
+		
 		if(builder.getTextureName() != null) {
 			Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(builder.getModId() 
 					+ ":textures/models/" + builder.getTextureName()));
 		} else {
-			Weapon weapon = ((Weapon) weaponItemStack.getItem());
-			String textureName = weapon.getActiveTextureName(weaponItemStack);
-			if(textureName != null) {
-				Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(builder.getModId() 
-						+ ":textures/models/" + textureName));
+			String textureName;
+			ItemSkin skin = (ItemSkin)attachments.stream().map(ca -> ca.getAttachment()).filter(a -> a instanceof ItemSkin).findAny().orElse(null);
+			if(skin != null) {
+				textureName = skin.getTextureName();
+			} else {
+				Weapon weapon = ((Weapon) weaponItemStack.getItem());
+				textureName = weapon.getTextureName();
 			}
+			
+			Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(builder.getModId() 
+					+ ":textures/models/" + textureName));
 		}
 		
 		//limbSwing, float flimbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scale
@@ -150,9 +162,7 @@ public abstract class CompatibleWeaponRenderer implements IItemRenderer {
 				renderContext.getHeadPitch(), 
 				renderContext.getScale());
 		
-		if(builder.getModel() instanceof ModelWithAttachments) {
-			List<CompatibleAttachment<? extends AttachmentContainer>> attachments = 
-					((Weapon) weaponItemStack.getItem()).getActiveAttachments(weaponItemStack);
+		if(attachments != null) {
 			renderAttachments(positioner, renderContext, attachments);
 		}
 		

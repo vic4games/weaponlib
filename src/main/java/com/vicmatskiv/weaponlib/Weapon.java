@@ -886,4 +886,8 @@ public class Weapon extends CompatibleItem implements
 		}
 		return handler;
 	}
+
+	public String getTextureName() {
+		return builder.textureNames.get(0);
+	}
 }

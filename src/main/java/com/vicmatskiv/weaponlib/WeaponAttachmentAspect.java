@@ -212,6 +212,19 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 		return activeAttachments;
 	}
 	
+	ItemAttachment<Weapon> getActiveAttachment(ItemStack itemStack, AttachmentCategory category) {
+			
+		PlayerItemInstance<?> itemInstance = modContext.getPlayerItemInstanceRegistry()
+				.getItemInstance(compatibility.clientPlayer(), itemStack);
+		
+
+		if(itemInstance instanceof PlayerWeaponInstance) {
+			return ((PlayerWeaponInstance) itemInstance).getAttachmentItemWithCategory(category);
+		}
+		
+		return null;
+	}
+	
 	void changeAttachment(AttachmentCategory attachmentCategory, PlayerWeaponInstance weaponInstance) {
 		if(weaponInstance != null) {
 			stateManager.changeState(this, weaponInstance, new ChangeAttachmentPermit(attachmentCategory), 
@@ -430,6 +443,10 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 		int[] activeAttachmentsIds = weaponInstance.getActiveAttachmentIds();
 		int activeAttachmentIdForThisCategory = activeAttachmentsIds[AttachmentCategory.SILENCER.ordinal()];
 		return activeAttachmentIdForThisCategory > 0;
+	}
+	
+	ItemAttachment<Weapon> getActiveAttachment(PlayerWeaponInstance weaponInstance, AttachmentCategory category) {
+		return weaponInstance.getAttachmentItemWithCategory(category);
 	}
 	
 	void changeTexture(ItemStack itemStack, EntityPlayer player) {

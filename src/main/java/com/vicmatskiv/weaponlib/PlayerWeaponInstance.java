@@ -284,12 +284,13 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 		return scopeItem instanceof ItemScope;
 	}
 
-	Item getAttachmentItemWithCategory(AttachmentCategory category) {
+	@SuppressWarnings("unchecked")
+	public ItemAttachment<Weapon> getAttachmentItemWithCategory(AttachmentCategory category) {
 		if(activeAttachmentIds == null || activeAttachmentIds.length <= category.ordinal()) {
 			return null;
 		}
 		Item scopeItem = Item.getItemById(activeAttachmentIds[category.ordinal()]);
-		return scopeItem;
+		return (ItemAttachment<Weapon>) scopeItem;
 	}
 
 	public float getZoom() {
