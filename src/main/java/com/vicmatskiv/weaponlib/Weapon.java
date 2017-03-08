@@ -896,4 +896,8 @@ public class Weapon extends CompatibleItem implements
 	public String getTextureName() {
 		return builder.textureNames.get(0);
 	}
+
+	public float getRecoil() {
+		return builder.recoil;
+	}
 }
