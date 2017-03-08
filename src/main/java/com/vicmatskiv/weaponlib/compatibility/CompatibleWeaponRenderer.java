@@ -1,7 +1,5 @@
 package com.vicmatskiv.weaponlib.compatibility;
 
-import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
-
 import java.util.List;
 
 import org.lwjgl.opengl.GL11;
@@ -9,15 +7,10 @@ import org.lwjgl.opengl.GL11;
 import com.vicmatskiv.weaponlib.AttachmentContainer;
 import com.vicmatskiv.weaponlib.ClientModContext;
 import com.vicmatskiv.weaponlib.CompatibleAttachment;
-import com.vicmatskiv.weaponlib.ItemAttachment;
-import com.vicmatskiv.weaponlib.ItemSkin;
-import com.vicmatskiv.weaponlib.ModelWithAttachments;
 import com.vicmatskiv.weaponlib.Part;
-import com.vicmatskiv.weaponlib.PlayerItemInstance;
 import com.vicmatskiv.weaponlib.PlayerWeaponInstance;
 import com.vicmatskiv.weaponlib.RenderContext;
 import com.vicmatskiv.weaponlib.RenderableState;
-import com.vicmatskiv.weaponlib.Weapon;
 import com.vicmatskiv.weaponlib.WeaponRenderer.Builder;
 import com.vicmatskiv.weaponlib.animation.MultipartPositioning;
 import com.vicmatskiv.weaponlib.animation.MultipartPositioning.Positioner;
@@ -31,7 +24,6 @@ import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.IItemRenderer;
 
 public abstract class CompatibleWeaponRenderer implements IItemRenderer {
@@ -134,55 +126,14 @@ public abstract class CompatibleWeaponRenderer implements IItemRenderer {
 		default:
 		}
 		
-		List<CompatibleAttachment<? extends AttachmentContainer>> attachments = null;
-		if(builder.getModel() instanceof ModelWithAttachments) {
-			attachments = ((Weapon) weaponItemStack.getItem()).getActiveAttachments(weaponItemStack);
-		}
-		
-		if(builder.getTextureName() != null) {
-			Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(builder.getModId() 
-					+ ":textures/models/" + builder.getTextureName()));
-		} else {
-			String textureName = null;
-			CompatibleAttachment<?> compatibleSkin = attachments.stream()
-					.filter(ca -> ca.getAttachment() instanceof ItemSkin).findAny().orElse(null);
-			if(compatibleSkin != null) {
-				PlayerItemInstance<?> itemInstance = getClientModContext().getPlayerItemInstanceRegistry()
-						.getItemInstance(compatibility.clientPlayer(), weaponItemStack);
-				if(itemInstance instanceof PlayerWeaponInstance) {
-					int textureIndex = ((PlayerWeaponInstance) itemInstance).getActiveTextureIndex();
-					if(textureIndex >= 0) {
-						textureName = ((ItemSkin) compatibleSkin.getAttachment()).getTextureVariant(textureIndex)
-								+ ".png";
-					}
-				}
-			} 
-			
-			if(textureName == null) {
-				Weapon weapon = ((Weapon) weaponItemStack.getItem());
-				textureName = weapon.getTextureName();
-			}
-			
-			Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(builder.getModId() 
-					+ ":textures/models/" + textureName));
-		}
-		
-		//limbSwing, float flimbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scale
-		builder.getModel().render(null,  
-				renderContext.getLimbSwing(), 
-				renderContext.getFlimbSwingAmount(), 
-				renderContext.getAgeInTicks(), 
-				renderContext.getNetHeadYaw(), 
-				renderContext.getHeadPitch(), 
-				renderContext.getScale());
-		
-		if(attachments != null) {
-			renderAttachments(positioner, renderContext, attachments);
-		}
+		renderItem(weaponItemStack, renderContext, positioner);
 		
 		GL11.glPopMatrix();
 	}
-	
+
+	protected abstract void renderItem(ItemStack weaponItemStack, RenderContext renderContext,
+			Positioner<Part, RenderContext> positioner);
+		
 
 	private void renderRightArm(EntityPlayer player, RenderContext renderContext,
 			Positioner<Part, RenderContext> positioner) {
