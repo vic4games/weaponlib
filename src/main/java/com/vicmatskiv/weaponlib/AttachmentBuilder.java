@@ -9,15 +9,16 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import com.vicmatskiv.weaponlib.ItemAttachment.ApplyHandler;
-import com.vicmatskiv.weaponlib.crafting.CraftingComplexity;
-import com.vicmatskiv.weaponlib.crafting.OptionsMetadata;
-
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import scala.actors.threadpool.Arrays;
+
+import com.vicmatskiv.weaponlib.ItemAttachment.ApplyHandler;
+import com.vicmatskiv.weaponlib.ItemAttachment.ApplyHandler2;
+import com.vicmatskiv.weaponlib.crafting.CraftingComplexity;
+import com.vicmatskiv.weaponlib.crafting.OptionsMetadata;
 
 public class AttachmentBuilder<T> {
 	protected String name;
@@ -37,6 +38,8 @@ public class AttachmentBuilder<T> {
 	protected AttachmentCategory attachmentCategory;
 	protected ApplyHandler<T> apply;
 	protected ApplyHandler<T> remove;
+	protected ApplyHandler2<T> apply2;
+	protected ApplyHandler2<T> remove2;
 	private String crosshair;
 	private CustomRenderer postRenderer;
 	private List<Tuple<ModelBase, String>> texturedModels = new ArrayList<>();
@@ -155,6 +158,16 @@ public class AttachmentBuilder<T> {
 		return this;
 	}
 	
+	public AttachmentBuilder<T> withApply(ApplyHandler2<T> apply) {
+		this.apply2 = apply;
+		return this;
+	}
+	
+	public AttachmentBuilder<T> withRemove(ApplyHandler2<T> remove) {
+		this.remove2 = remove;
+		return this;
+	} 
+
 	public AttachmentBuilder<T> withCrafting(CraftingComplexity craftingComplexity, Object...craftingMaterials) {
 		if(craftingComplexity == null) {
 			throw new IllegalArgumentException("Crafting complexity not set");
@@ -180,6 +193,8 @@ public class AttachmentBuilder<T> {
 		attachment.setCreativeTab(tab);
 		attachment.setPostRenderer(postRenderer);
 		attachment.setName(name);
+		attachment.apply2 = apply2;
+		attachment.remove2 = remove2;
 		if(textureName != null) {
 			attachment.setTextureName(modId + ":" + stripFileExtension(textureName, ".png"));
 		} 
