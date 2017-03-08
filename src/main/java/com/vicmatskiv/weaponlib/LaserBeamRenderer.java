@@ -1,5 +1,7 @@
 package com.vicmatskiv.weaponlib;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
 import java.util.Random;
 
 import org.lwjgl.opengl.GL11;
@@ -11,11 +13,11 @@ import net.minecraft.item.Item;
 
 public class LaserBeamRenderer implements CustomRenderer {
 	
-	private float leftOffset = 0.3f;
-	private float forwardOffset = 0.1f;
+	private float xOffset = 0.5f;
+	private float yOffset = -1.4f;
+	private float zOffset = -2f;
 	
 	public LaserBeamRenderer() {
-		
 	}
 
 	@Override
@@ -45,19 +47,21 @@ public class LaserBeamRenderer implements CustomRenderer {
 			GL11.glLineWidth(1.5F);
 			GL11.glDepthMask(false);
 
-			GL11.glRotatef(-0.1f, 0f, 1f, 0f);
+			GL11.glRotatef(0f, 0f, 1f, 0f);
 
+			compatibility.disableLightMap();
+			
 			CompatibleTessellator tessellator = CompatibleTessellator.getInstance();
 			tessellator.startDrawingLines();
 
 			long time = System.currentTimeMillis();
 			Random random = new Random(time - time % 300);
-			float start = forwardOffset;
+			float start = zOffset; //forwardOffset;
 			float length = 100;
 
 			float end = 0;
 			for(int i = 0; i < 100 && start < length && end < length; i++) {
-				tessellator.addVertex(leftOffset, 0, start);
+				tessellator.addVertex(xOffset, yOffset, start);
 				
 		        int ii = 15728880; //this.getBrightnessForRender(partialTicks); // or simply set it to 200?
 		        int j = ii >> 16 & 65535;
@@ -65,12 +69,14 @@ public class LaserBeamRenderer implements CustomRenderer {
 		        tessellator.setLightMap(j, k);
 				end = start - ( 1 + random.nextFloat() * 2);
 				if(end > length) end = length;
-				tessellator.addVertex(leftOffset, 0, end);
+				tessellator.addVertex(xOffset, yOffset, end);
 				tessellator.endVertex();
 				start = end + random.nextFloat() * 0.5f;
 			}
 
 			tessellator.draw();
+			
+			compatibility.enableLightMap();
 			
 			GL11.glDepthMask(true);// do we need this?
 			

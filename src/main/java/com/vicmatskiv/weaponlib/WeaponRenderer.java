@@ -999,7 +999,6 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		}
 	}
 	
-	@Override
 	public void renderAttachments(Positioner<Part, RenderContext> positioner, RenderContext renderContext,List<CompatibleAttachment<? extends AttachmentContainer>> attachments) {
 		
 		for(CompatibleAttachment<?> compatibleAttachment: attachments) {

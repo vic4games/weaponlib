@@ -1,12 +1,8 @@
 package com.vicmatskiv.weaponlib.compatibility;
 
-import java.util.List;
-
 import org.lwjgl.opengl.GL11;
 
-import com.vicmatskiv.weaponlib.AttachmentContainer;
 import com.vicmatskiv.weaponlib.ClientModContext;
-import com.vicmatskiv.weaponlib.CompatibleAttachment;
 import com.vicmatskiv.weaponlib.Part;
 import com.vicmatskiv.weaponlib.PlayerWeaponInstance;
 import com.vicmatskiv.weaponlib.RenderContext;
@@ -181,7 +177,4 @@ public abstract class CompatibleWeaponRenderer implements IItemRenderer {
 		
 		GL11.glPopMatrix();
 	}
-
-	public abstract void renderAttachments(Positioner<Part, RenderContext> positioner, RenderContext renderContext,
-			List<CompatibleAttachment<? extends AttachmentContainer>> attachments);
 }
