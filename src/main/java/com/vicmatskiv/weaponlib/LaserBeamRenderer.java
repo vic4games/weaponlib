@@ -14,8 +14,8 @@ import net.minecraft.item.Item;
 public class LaserBeamRenderer implements CustomRenderer {
 	
 	private float xOffset = 0.5f;
-	private float yOffset = -1.4f;
-	private float zOffset = -2f;
+	private float yOffset = -1.35f;
+	private float zOffset = -1f;
 	
 	public LaserBeamRenderer() {
 	}
