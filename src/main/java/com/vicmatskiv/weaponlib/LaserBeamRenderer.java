@@ -1,7 +1,5 @@
 package com.vicmatskiv.weaponlib;
 
-import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
-
 import java.util.Random;
 
 import org.lwjgl.opengl.GL11;
