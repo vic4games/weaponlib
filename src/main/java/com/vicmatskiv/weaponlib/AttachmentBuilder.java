@@ -9,13 +9,16 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import com.vicmatskiv.weaponlib.ItemAttachment.ApplyHandler;
-import com.vicmatskiv.weaponlib.ItemAttachment.ApplyHandler2;
-
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import scala.actors.threadpool.Arrays;
+
+import com.vicmatskiv.weaponlib.ItemAttachment.ApplyHandler;
+import com.vicmatskiv.weaponlib.ItemAttachment.ApplyHandler2;
+import com.vicmatskiv.weaponlib.crafting.CraftingComplexity;
+import com.vicmatskiv.weaponlib.crafting.OptionsMetadata;
 
 public class AttachmentBuilder<T> {
 	protected String name;
@@ -41,6 +44,10 @@ public class AttachmentBuilder<T> {
 	private CustomRenderer postRenderer;
 	private List<Tuple<ModelBase, String>> texturedModels = new ArrayList<>();
 	private boolean isRenderablePart;
+	
+	private CraftingComplexity craftingComplexity;
+
+	private Object[] craftingMaterials;
 	
 	Map<ItemAttachment<T>, CompatibleAttachment<T>> compatibleAttachments = new HashMap<>();
 
@@ -160,6 +167,18 @@ public class AttachmentBuilder<T> {
 		this.remove2 = remove;
 		return this;
 	} 
+
+	public AttachmentBuilder<T> withCrafting(CraftingComplexity craftingComplexity, Object...craftingMaterials) {
+		if(craftingComplexity == null) {
+			throw new IllegalArgumentException("Crafting complexity not set");
+		}
+		if(craftingMaterials.length < 2) {
+			throw new IllegalArgumentException("2 or more materials required for crafting");
+		}
+		this.craftingComplexity = craftingComplexity;
+		this.craftingMaterials = craftingMaterials;
+		return this;
+	}
 	
 	protected ItemAttachment<T> createAttachment(ModContext modContext) {
 		return new ItemAttachment<T>(
@@ -199,6 +218,17 @@ public class AttachmentBuilder<T> {
 		
 		if((model != null || !texturedModels.isEmpty())) {
 			modContext.registerRenderableItem(name, attachment, compatibility.isClientSide() ? registerRenderer(attachment) : null);
+		}
+		
+		if(craftingComplexity != null) {
+			OptionsMetadata optionsMetadata = new OptionsMetadata.OptionMetadataBuilder()
+				.withSlotCount(9)
+            	.build(craftingComplexity, Arrays.copyOf(craftingMaterials, craftingMaterials.length));
+			
+			List<Object> shape = modContext.getRecipeGenerator().createShapedRecipe(name, optionsMetadata);
+			
+			compatibility.addShapedRecipe(new ItemStack(attachment), shape.toArray());
+			
 		}
 		
 		return attachment;
