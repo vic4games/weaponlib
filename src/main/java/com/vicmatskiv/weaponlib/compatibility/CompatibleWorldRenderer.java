@@ -60,7 +60,6 @@ import net.minecraft.entity.monster.EntityEnderman;
 import net.minecraft.entity.monster.EntitySpider;
 import net.minecraft.entity.passive.EntityAnimal;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Blocks;
 import net.minecraft.init.MobEffects;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.inventory.IInventory;
@@ -78,8 +77,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.GameType;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldSettings.GameType;
 import net.minecraft.world.biome.Biome;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -1366,11 +1365,6 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
             GlStateManager.enableAlpha();
         }
 
-        if (this.mc.debugRenderer.shouldRender())
-        {
-            this.mc.debugRenderer.renderDebug(partialTicks, finishTimeNano);
-        }
-
         this.mc.mcProfiler.endStartSection("destroyProgress");
         GlStateManager.enableBlend();
         GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
@@ -1499,7 +1493,7 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
             for (int l = 0; l < k; ++l)
             {
                 BlockPos blockpos1 = world.getPrecipitationHeight(blockpos.add(this.random.nextInt(10) - this.random.nextInt(10), 0, this.random.nextInt(10) - this.random.nextInt(10)));
-                Biome biome = world.getBiome(blockpos1);
+                Biome biome = world.getBiomeGenForCoords(blockpos1);
                 BlockPos blockpos2 = blockpos1.down();
                 IBlockState iblockstate = world.getBlockState(blockpos2);
 
@@ -1509,7 +1503,7 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
                     double d4 = this.random.nextDouble();
                     AxisAlignedBB axisalignedbb = iblockstate.getBoundingBox(world, blockpos2);
 
-                    if (iblockstate.getMaterial() != Material.LAVA && iblockstate.getBlock() != Blocks.MAGMA)
+                    if (iblockstate.getMaterial() != Material.LAVA)
                     {
                         if (iblockstate.getMaterial() != Material.AIR)
                         {
@@ -1602,7 +1596,7 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
                     double d3 = (double)this.rainXCoords[i2] * 0.5D;
                     double d4 = (double)this.rainYCoords[i2] * 0.5D;
                     blockpos$mutableblockpos.setPos(l1, 0, k1);
-                    Biome biome = world.getBiome(blockpos$mutableblockpos);
+                    Biome biome = world.getBiomeGenForCoords(blockpos$mutableblockpos);
 
                     if (biome.canRain() || biome.getEnableSnow())
                     {

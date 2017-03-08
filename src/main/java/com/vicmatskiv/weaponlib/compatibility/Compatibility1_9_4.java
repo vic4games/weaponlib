@@ -44,7 +44,7 @@ import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class Compatibility1_10_2 implements Compatibility {
+public class Compatibility1_9_4 implements Compatibility {
 
 	private static CompatibleMathHelper mathHelper = new CompatibleMathHelper();
 
