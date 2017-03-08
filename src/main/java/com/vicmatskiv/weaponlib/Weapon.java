@@ -316,6 +316,12 @@ public class Weapon extends CompatibleItem implements
 			return this;
 		}
 		
+		public Builder withCompatibleAttachment(ItemAttachment<Weapon> attachment, ItemAttachment.ApplyHandler2<Weapon> applyHandler,
+				ItemAttachment.ApplyHandler2<Weapon> removeHandler) {
+			compatibleAttachments.put(attachment, new CompatibleAttachment<>(attachment, applyHandler, removeHandler));
+			return this;
+		}
+		
 		public Builder withCompatibleAttachment(ItemAttachment<Weapon> attachment, BiConsumer<EntityPlayer, ItemStack> positioning, Consumer<ModelBase> modelPositioning) {
 			compatibleAttachments.put(attachment, new CompatibleAttachment<>(attachment, positioning, modelPositioning, false));
 			return this;
@@ -885,5 +891,9 @@ public class Weapon extends CompatibleItem implements
 			break;
 		}
 		return handler;
+	}
+
+	public String getTextureName() {
+		return builder.textureNames.get(0);
 	}
 }

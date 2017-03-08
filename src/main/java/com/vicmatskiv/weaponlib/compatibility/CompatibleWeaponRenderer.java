@@ -8,10 +8,7 @@ import javax.vecmath.Matrix4f;
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.opengl.GL11;
 
-import com.vicmatskiv.weaponlib.AttachmentContainer;
 import com.vicmatskiv.weaponlib.ClientModContext;
-import com.vicmatskiv.weaponlib.CompatibleAttachment;
-import com.vicmatskiv.weaponlib.ModelWithAttachments;
 import com.vicmatskiv.weaponlib.Part;
 import com.vicmatskiv.weaponlib.PlayerWeaponInstance;
 import com.vicmatskiv.weaponlib.RenderContext;
@@ -50,7 +47,6 @@ import net.minecraft.item.EnumAction;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHandSide;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.client.model.IPerspectiveAwareModel;
 import net.minecraftforge.fml.relauncher.Side;
@@ -187,6 +183,8 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 	
 	protected abstract ClientModContext getClientModContext();
 	
+	protected abstract StateDescriptor getStateDescriptor(EntityPlayer player, ItemStack itemStack);
+	
 	@SideOnly(Side.CLIENT)
 	public void renderItem()
 	{
@@ -303,80 +301,13 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 		default:
 		}
 		
-		if(builder.getTextureName() != null) {
-			Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(builder.getModId() 
-					+ ":textures/models/" + builder.getTextureName()));
-		} else {
-			Weapon weapon = ((Weapon) itemStack.getItem());
-			String textureName = weapon.getActiveTextureName(itemStack);
-			if(textureName != null) {
-				Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(builder.getModId() 
-						+ ":textures/models/" + textureName));
-			}
-		}
-		
-//		builder.getModel().render(null,  0.0F, 0.0f, -0.4f, 0.0f, 0.0f, 0.08f);
-		
-		builder.getModel().render(null,  
-				renderContext.getLimbSwing(), 
-				renderContext.getFlimbSwingAmount(), 
-				renderContext.getAgeInTicks(), 
-				renderContext.getNetHeadYaw(), 
-				renderContext.getHeadPitch(), 
-				renderContext.getScale());
-		
-		if(builder.getModel() instanceof ModelWithAttachments) {
-			List<CompatibleAttachment<? extends AttachmentContainer>> attachments = ((Weapon) itemStack.getItem()).getActiveAttachments(itemStack);
-			renderAttachments(positioner, renderContext, attachments);
-		}
+		renderItem(itemStack, renderContext, positioner);
 		
 		GL11.glPopMatrix();
 	}
-	
-	public abstract void renderAttachments(Positioner<Part, RenderContext> positioner, 
-			RenderContext renderContext,
-			List<CompatibleAttachment<? extends AttachmentContainer>> attachments);
-	
-	protected abstract StateDescriptor getStateDescriptor(EntityPlayer player, ItemStack itemStack);
 
-//	private void renderAttachments(Positioner<Part, RenderContext> positioner, String modId, RenderContext renderContext,
-//			ItemStack itemStack, TransformType type, List<CompatibleAttachment<? extends AttachmentContainer>> attachments, Entity entity, float f, float f1, float f2, float f3, float f4, float f5) {
-//		for(CompatibleAttachment<?> compatibleAttachment: attachments) {
-//			if(compatibleAttachment != null) {
-//				GL11.glPushMatrix();
-//				
-//				ItemAttachment<?> itemAttachment = compatibleAttachment.getAttachment();
-//				
-//				if(positioner != null) {
-//					if(itemAttachment instanceof Part) {
-//						positioner.position((Part) itemAttachment, renderContext);
-//					} else if(itemAttachment.getRenderablePart() != null) {
-//						positioner.position(itemAttachment.getRenderablePart(), renderContext);
-//					}
-//				}
-//				
-//
-//				for(Tuple<ModelBase, String> texturedModel: compatibleAttachment.getAttachment().getTexturedModels()) {
-//					Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(modId 
-//							+ ":textures/models/" + texturedModel.getV()));
-//					GL11.glPushMatrix();
-//					GL11.glPushAttrib(GL11.GL_ENABLE_BIT);
-//					if(compatibleAttachment.getPositioning() != null) {
-//						compatibleAttachment.getPositioning().accept(texturedModel.getU());
-//					}
-//					texturedModel.getU().render(entity, f, f1, f2, f3, f4, f5);
-//					
-//					CustomRenderer postRenderer = compatibleAttachment.getAttachment().getPostRenderer();
-//					if(postRenderer != null) {
-//						postRenderer.render(CompatibleTransformType.fromItemRenderType(type), itemStack);
-//					}
-//					GL11.glPopAttrib();
-//					GL11.glPopMatrix();
-//				}
-//				GL11.glPopMatrix();
-//			}
-//		}
-//	}
+	protected abstract void renderItem(ItemStack weaponItemStack, RenderContext renderContext,
+			Positioner<Part, RenderContext> positioner);
 	
 	public void renderRightArm(RenderPlayer renderPlayer, AbstractClientPlayer clientPlayer)
     {

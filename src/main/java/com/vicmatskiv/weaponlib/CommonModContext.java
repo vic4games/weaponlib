@@ -47,12 +47,6 @@ public class CommonModContext implements ModContext {
 		this.permitManager = new NetworkPermitManager(this);
 		
 		this.recipeGenerator = new RecipeGenerator();
-		
-		channel.registerMessage(new ChangeTextureMessageHandler(weaponAttachmentAspect),
-				ChangeTextureMessage.class, 7, CompatibleSide.SERVER);
-		
-		channel.registerMessage(new ChangeTextureMessageHandler(weaponAttachmentAspect),
-				ChangeTextureMessage.class, 8, CompatibleSide.CLIENT);
 
 		channel.registerMessage(new TryFireMessageHandler(weaponFireAspect),
 				TryFireMessage.class, 11, CompatibleSide.SERVER);

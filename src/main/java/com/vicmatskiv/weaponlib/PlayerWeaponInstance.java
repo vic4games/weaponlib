@@ -17,7 +17,7 @@ import scala.actors.threadpool.Arrays;
 
 public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 	
-	private static final int SERIAL_VERSION = 5;
+	private static final int SERIAL_VERSION = 6;
 	
 	@SuppressWarnings("unused")
 	private static final Logger logger = LogManager.getLogger(PlayerWeaponInstance.class);
@@ -33,6 +33,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 	private boolean aimed;
 	private int maxShots;
 	private float zoom = 1f;
+	private byte activeTextureIndex;
 		
 	/*
 	 * Upon adding an element to the head of the queue, all existing elements with lower priority are removed 
@@ -126,6 +127,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 		recoil = buf.readFloat();
 		maxShots = buf.readShort();
 		zoom = buf.readFloat();
+		activeTextureIndex = buf.readByte();
 	}
 	
 	@Override
@@ -138,6 +140,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 		buf.writeFloat(recoil);
 		buf.writeShort(maxShots);
 		buf.writeFloat(zoom);
+		buf.writeByte(activeTextureIndex);
 	}
 	
 	private static void serializeIntArray(ByteBuf buf, int a[]) {
@@ -182,6 +185,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 		setRecoil(otherWeaponInstance.recoil);
 		setSelectedAttachmentIndexes(otherWeaponInstance.selectedAttachmentIndexes);
 		setActiveAttachmentIds(otherWeaponInstance.activeAttachmentIds);
+		setActiveTextureIndex(otherWeaponInstance.activeTextureIndex);
 	}
 
 	public Weapon getWeapon() {
@@ -284,12 +288,13 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 		return scopeItem instanceof ItemScope;
 	}
 
-	Item getAttachmentItemWithCategory(AttachmentCategory category) {
+	@SuppressWarnings("unchecked")
+	public ItemAttachment<Weapon> getAttachmentItemWithCategory(AttachmentCategory category) {
 		if(activeAttachmentIds == null || activeAttachmentIds.length <= category.ordinal()) {
 			return null;
 		}
 		Item scopeItem = Item.getItemById(activeAttachmentIds[category.ordinal()]);
-		return scopeItem;
+		return (ItemAttachment<Weapon>) scopeItem;
 	}
 
 	public float getZoom() {
@@ -301,9 +306,23 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 			this.zoom = zoom;
 			updateId++;
 		}
-		
 	}
 	
+	public int getActiveTextureIndex() {
+		return activeTextureIndex;
+	}
+
+	public void setActiveTextureIndex(int activeTextureIndex) {
+		if(this.activeTextureIndex != activeTextureIndex) {
+			if(activeTextureIndex > Byte.MAX_VALUE) {
+				throw new IllegalArgumentException("activeTextureIndex must be less than " + Byte.MAX_VALUE);
+			}
+			this.activeTextureIndex = (byte)activeTextureIndex;
+			updateId++;
+		}
+		
+	}
+
 	@Override
 	public String toString() {
 		return getWeapon().builder.name + "[" + getUuid() + "]";

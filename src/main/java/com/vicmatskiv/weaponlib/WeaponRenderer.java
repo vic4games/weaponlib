@@ -950,10 +950,58 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 	}
 	
 	@Override
-	public void renderAttachments(Positioner<Part, RenderContext> positioner, RenderContext renderContext,List<CompatibleAttachment<? extends AttachmentContainer>> attachments) {
+	public void renderItem(ItemStack weaponItemStack, RenderContext renderContext,
+			Positioner<Part, RenderContext> positioner) {
+		List<CompatibleAttachment<? extends AttachmentContainer>> attachments = null;
+		if(builder.getModel() instanceof ModelWithAttachments) {
+			attachments = ((Weapon) weaponItemStack.getItem()).getActiveAttachments(weaponItemStack);
+		}
 		
+		if(builder.getTextureName() != null) {
+			Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(builder.getModId() 
+					+ ":textures/models/" + builder.getTextureName()));
+		} else {
+			String textureName = null;
+			CompatibleAttachment<?> compatibleSkin = attachments.stream()
+					.filter(ca -> ca.getAttachment() instanceof ItemSkin).findAny().orElse(null);
+			if(compatibleSkin != null) {
+				PlayerItemInstance<?> itemInstance = getClientModContext().getPlayerItemInstanceRegistry()
+						.getItemInstance(compatibility.clientPlayer(), weaponItemStack);
+				if(itemInstance instanceof PlayerWeaponInstance) {
+					int textureIndex = ((PlayerWeaponInstance) itemInstance).getActiveTextureIndex();
+					if(textureIndex >= 0) {
+						textureName = ((ItemSkin) compatibleSkin.getAttachment()).getTextureVariant(textureIndex)
+								+ ".png";
+					}
+				}
+			} 
+			
+			if(textureName == null) {
+				Weapon weapon = ((Weapon) weaponItemStack.getItem());
+				textureName = weapon.getTextureName();
+			}
+			
+			Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(builder.getModId() 
+					+ ":textures/models/" + textureName));
+		}
+		
+		//limbSwing, float flimbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scale
+		builder.getModel().render(null,  
+				renderContext.getLimbSwing(), 
+				renderContext.getFlimbSwingAmount(), 
+				renderContext.getAgeInTicks(), 
+				renderContext.getNetHeadYaw(), 
+				renderContext.getHeadPitch(), 
+				renderContext.getScale());
+		
+		if(attachments != null) {
+			renderAttachments(positioner, renderContext, attachments);
+		}
+	}
+	
+	public void renderAttachments(Positioner<Part, RenderContext> positioner, RenderContext renderContext,List<CompatibleAttachment<? extends AttachmentContainer>> attachments) {
 		for(CompatibleAttachment<?> compatibleAttachment: attachments) {
-			if(compatibleAttachment != null) {
+			if(compatibleAttachment != null && !(compatibleAttachment.getAttachment() instanceof ItemSkin)) {
 				renderCompatibleAttachment(compatibleAttachment, positioner, renderContext);
 			}
 		}
