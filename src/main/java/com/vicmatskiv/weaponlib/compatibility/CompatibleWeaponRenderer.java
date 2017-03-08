@@ -414,4 +414,5 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 		this.transformType = cameraTransformType;
 		return pair;
 	}
+
 }
