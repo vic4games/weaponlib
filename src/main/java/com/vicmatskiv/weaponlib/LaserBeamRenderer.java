@@ -62,7 +62,7 @@ public class LaserBeamRenderer implements CustomRenderer {
 			float end = 0;
 			for(int i = 0; i < 100 && start < length && end < length; i++) {
 				tessellator.addVertex(xOffset, yOffset, start);
-				
+				tessellator.endVertex();
 		        int ii = 15728880; //this.getBrightnessForRender(partialTicks); // or simply set it to 200?
 		        int j = ii >> 16 & 65535;
 		        int k = ii & 65535;
