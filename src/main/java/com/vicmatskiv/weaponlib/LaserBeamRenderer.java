@@ -1,7 +1,5 @@
 package com.vicmatskiv.weaponlib;
 
-import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
-
 import java.util.Random;
 
 import org.lwjgl.opengl.GL11;
@@ -49,8 +47,6 @@ public class LaserBeamRenderer implements CustomRenderer {
 
 			GL11.glRotatef(0f, 0f, 1f, 0f);
 
-			compatibility.disableLightMap();
-			
 			CompatibleTessellator tessellator = CompatibleTessellator.getInstance();
 			tessellator.startDrawingLines();
 
@@ -62,7 +58,7 @@ public class LaserBeamRenderer implements CustomRenderer {
 			float end = 0;
 			for(int i = 0; i < 100 && start < length && end < length; i++) {
 				tessellator.addVertex(xOffset, yOffset, start);
-				
+				tessellator.endVertex();
 		        int ii = 15728880; //this.getBrightnessForRender(partialTicks); // or simply set it to 200?
 		        int j = ii >> 16 & 65535;
 		        int k = ii & 65535;
@@ -75,8 +71,6 @@ public class LaserBeamRenderer implements CustomRenderer {
 			}
 
 			tessellator.draw();
-			
-			compatibility.enableLightMap();
 			
 			GL11.glDepthMask(true);// do we need this?
 			
