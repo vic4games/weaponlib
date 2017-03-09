@@ -814,7 +814,7 @@ public class Weapon extends CompatibleItem implements
 		
 		modContext.getStatusMessageCenter().addMessage("Firearm mode: " + message, 1000);
 		
-		//instance.getPlayer().addChatMessage(new ChatComponentText("Fire mode changed to " + message));
+		compatibility.playSound(instance.getPlayer(),  modContext.getChangeFireModeSound(), 1F, 1F);		
 	}
 	
 	public long getTotalReloadingDuration() {
@@ -847,6 +847,7 @@ public class Weapon extends CompatibleItem implements
 			float ratio = (minZoom - zoom) / (minZoom - maxZoom);
 			
 			modContext.getStatusMessageCenter().addMessage("Zoom: " + Math.round(ratio * 100) + "%", 800);
+			compatibility.playSound(instance.getPlayer(),  modContext.getZoomSound(), 1F, 1F);
 			logger.debug("Changed optical zoom to " + instance.getZoom());
 		} else {
 			logger.debug("Cannot change non-optical zoom");
@@ -868,6 +869,7 @@ public class Weapon extends CompatibleItem implements
 			
 			float ratio = (minZoom - zoom) / (minZoom - maxZoom);
 			modContext.getStatusMessageCenter().addMessage("Zoom: " + Math.round(ratio * 100) + "%", 800);
+			compatibility.playSound(instance.getPlayer(),  modContext.getZoomSound(), 1F, 1F);
 			logger.debug("Changed optical zoom to " + zoom);
 		} else {
 			logger.debug("Cannot change non-optical zoom");

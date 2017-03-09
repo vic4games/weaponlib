@@ -34,6 +34,10 @@ public class CommonModContext implements ModContext {
 	private Map<ResourceLocation, CompatibleSound> registeredSounds = new HashMap<>();
 	
 	private RecipeGenerator recipeGenerator;
+	
+	private CompatibleSound changeZoomSound;
+	
+	private CompatibleSound changeFireModeSound;
 
 	@Override
 	public void init(Object mod, String modId, CompatibleChannel channel) {
@@ -70,9 +74,14 @@ public class CommonModContext implements ModContext {
 	}
 	
 	
+	
 	@Override
 	public CompatibleSound registerSound(String sound) {
 		ResourceLocation soundResourceLocation = new ResourceLocation(modId, sound);
+		return registerSound(soundResourceLocation);
+	}
+	
+	protected CompatibleSound registerSound(ResourceLocation soundResourceLocation) {
 		CompatibleSound result = registeredSounds.get(soundResourceLocation);
 		if(result == null) {
 			result = new CompatibleSound(soundResourceLocation);
@@ -80,7 +89,7 @@ public class CommonModContext implements ModContext {
 			compatibility.registerSound(result);
 		}
 		return result;
-	}
+	} 
 	
 	@Override
 	public void registerWeapon(String name, Weapon weapon, WeaponRenderer renderer) {
@@ -155,5 +164,25 @@ public class CommonModContext implements ModContext {
 	@Override
 	public RecipeGenerator getRecipeGenerator() {
 		return recipeGenerator;
+	}
+
+	@Override
+	public void setChangeZoomSound(String sound) {
+		this.changeZoomSound = registerSound(sound);
+	}
+	
+	@Override
+	public CompatibleSound getZoomSound() {
+		return changeZoomSound;
+	}
+
+	@Override
+	public CompatibleSound getChangeFireModeSound() {
+		return changeFireModeSound;
+	}
+
+	@Override
+	public void setChangeFireModeSound(String sound) {
+		this.changeFireModeSound = registerSound(sound);
 	}
 }

@@ -39,4 +39,12 @@ public interface ModContext {
 	
 	public RecipeGenerator getRecipeGenerator();
 
+	public CompatibleSound getZoomSound();
+
+	public void setChangeZoomSound(String sound);
+
+	public CompatibleSound getChangeFireModeSound();
+	
+	public void setChangeFireModeSound(String sound);
+
 }

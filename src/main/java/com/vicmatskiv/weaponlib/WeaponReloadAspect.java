@@ -139,7 +139,9 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 	
 	public void reloadMainHeldItem(EntityPlayer player) {
 		PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
-		stateManager.changeState(this, instance, WeaponState.LOAD, WeaponState.UNLOAD);
+		if(instance != null) {
+			stateManager.changeState(this, instance, WeaponState.LOAD, WeaponState.UNLOAD);
+		}
 	}
 
 	void updateMainHeldItem(EntityPlayer player) {
