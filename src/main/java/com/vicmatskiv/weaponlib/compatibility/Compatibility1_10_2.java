@@ -24,6 +24,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemArmor.ArmorMaterial;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -36,10 +37,12 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.Pre;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.util.EnumHelper;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
 import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.IWorldGenerator;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
@@ -441,5 +444,17 @@ public class Compatibility1_10_2 implements Compatibility {
 		GameRegistry.register(block);
 		ItemBlock itemBlock = new ItemBlock(block);
 		GameRegistry.register(itemBlock.setRegistryName(block.getRegistryName()));
+	}
+
+	@Override
+	public void registerWorldGenerator(IWorldGenerator generator, int modGenerationWeight) {
+		GameRegistry.registerWorldGenerator(generator, modGenerationWeight);
+	}
+
+	@Override
+	public ArmorMaterial addArmorMaterial(String name, String textureName, int durability, int[] reductionAmounts,
+			int enchantability, CompatibleSound soundOnEquip, float toughness) {
+		return EnumHelper.addArmorMaterial(name, textureName, durability, reductionAmounts, enchantability, 
+				soundOnEquip != null ? soundOnEquip.getSound() : null, toughness);
 	}
 }

@@ -1,16 +1,16 @@
 package com.vicmatskiv.weaponlib.compatibility;
 
-import net.minecraftforge.fml.common.event.FMLInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 
 public class CompatibleFmlInitializationEvent {
 
-	private FMLInitializationEvent event;
+	private FMLPreInitializationEvent event;
 
-	public CompatibleFmlInitializationEvent(FMLInitializationEvent event) {
+	public CompatibleFmlInitializationEvent(FMLPreInitializationEvent event) {
 		this.event = event;
 	}
 
-	public FMLInitializationEvent getEvent() {
+	public FMLPreInitializationEvent getEvent() {
 		return event;
 	}
 
