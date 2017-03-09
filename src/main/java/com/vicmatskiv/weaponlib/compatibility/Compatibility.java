@@ -149,5 +149,7 @@ public interface Compatibility {
 
 	public void enableLightMap();
 
+	public void registerBlock(Block bauxiteOre, String string);
+
 	
 }

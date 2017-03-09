@@ -404,4 +404,9 @@ public class Compatibility1_7_10 implements Compatibility {
 	public void enableLightMap() {
 		Minecraft.getMinecraft().entityRenderer.enableLightmap(0);
 	}
+
+	@Override
+	public void registerBlock(Block block, String name) {
+		GameRegistry.registerBlock(block, name);
+	}
 }
