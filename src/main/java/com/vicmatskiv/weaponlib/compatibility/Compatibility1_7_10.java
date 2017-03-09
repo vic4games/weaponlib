@@ -105,7 +105,9 @@ public class Compatibility1_7_10 implements Compatibility {
 
 	@Override
 	public void playSound(EntityPlayer player, CompatibleSound sound, float volume, float pitch) {
-		player.playSound(sound.getSound(), volume, pitch);
+		if(sound != null) {
+			player.playSound(sound.getSound(), volume, pitch);
+		}
 	}
 
 	@Override

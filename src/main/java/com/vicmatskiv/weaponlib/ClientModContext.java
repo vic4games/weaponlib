@@ -91,6 +91,7 @@ public class ClientModContext extends CommonModContext {
 		compatibility.registerModEntity(WeaponSpawnEntity.class, "Ammo" + modEntityID, modEntityID++, mod, 64, 10, true);
 		
 		rendererRegistry.registerEntityRenderingHandler(WeaponSpawnEntity.class, new SpawnEntityRenderer());
+	
 	}
 	
 	protected CompatibleWorldRenderer getSecondWorldRenderer() {
