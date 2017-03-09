@@ -3,7 +3,6 @@ package com.vicmatskiv.weaponlib.compatibility;
 import java.util.Iterator;
 import java.util.function.Predicate;
 
-import com.vicmatskiv.mw.ModernWarfareMod;
 import com.vicmatskiv.weaponlib.Weapon;
 import com.vicmatskiv.weaponlib.WeaponSpawnEntity;
 import com.vicmatskiv.weaponlib.WorldHelper;
@@ -214,10 +213,17 @@ public class Compatibility1_9_4 implements Compatibility {
 		GameRegistry.register(sound.getSound(), sound.getResourceLocation());
 	}
 
-	@SuppressWarnings("deprecation")
 	@Override
-	public void registerItem(Item item, String name) {
-		GameRegistry.registerItem(item, name);
+	public void registerItem(String modId, Item item, String name) {
+		if(item.getRegistryName() == null) {
+			String registryName = item.getUnlocalizedName();
+			int indexOfPrefix = registryName.indexOf("." + modId);
+			if(indexOfPrefix > 0) {
+				registryName = registryName.substring(indexOfPrefix + modId.length() + 2);
+			}
+			item.setRegistryName(modId, registryName);
+		}
+		GameRegistry.register(item);
 	}
 
 	@Override
