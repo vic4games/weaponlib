@@ -218,7 +218,7 @@ public class Compatibility1_7_10 implements Compatibility {
 	}
 
 	@Override
-	public void registerItem(Item item, String name) {
+	public void registerItem(String modId, Item item, String name) {
 		GameRegistry.registerItem(item, name);
 	}
 

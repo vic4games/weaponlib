@@ -84,7 +84,7 @@ public interface Compatibility {
 
 	public void registerSound(CompatibleSound sound);
 
-	public void registerItem(Item item, String name);
+	public void registerItem(String modId, Item item, String name);
 
 	public void runInMainClientThread(Runnable runnable);
 

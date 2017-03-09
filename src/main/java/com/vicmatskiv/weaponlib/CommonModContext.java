@@ -93,7 +93,7 @@ public class CommonModContext implements ModContext {
 	
 	@Override
 	public void registerWeapon(String name, Weapon weapon, WeaponRenderer renderer) {
-		compatibility.registerItem(weapon, name);
+		compatibility.registerItem(modId, weapon, name);
 	}
 	
 	private EntityPlayer getServerPlayer(CompatibleMessageContext ctx) {
@@ -121,7 +121,7 @@ public class CommonModContext implements ModContext {
 
 	@Override
 	public void registerRenderableItem(String name, Item item, Object renderer) {
-		compatibility.registerItem(item, name);
+		compatibility.registerItem(modId, item, name);
 	}
 
 	@Override
