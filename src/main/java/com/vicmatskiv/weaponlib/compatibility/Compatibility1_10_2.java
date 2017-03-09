@@ -212,6 +212,11 @@ public class Compatibility1_10_2 implements Compatibility {
 	public void registerSound(CompatibleSound sound) {
 		GameRegistry.register(sound.getSound(), sound.getResourceLocation());
 	}
+	
+	@Override
+	public void registerItem(Item item, String name) {
+		GameRegistry.registerItem(item, name);
+	}
 
 	@Override
 	public void registerItem(String modId, Item item, String name) {
