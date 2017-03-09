@@ -149,5 +149,5 @@ public interface Compatibility {
 
 	public void enableLightMap();
 
-	public void registerBlock(Block block, String name);
+	public void registerBlock(String modId, Block block, String name);
 }

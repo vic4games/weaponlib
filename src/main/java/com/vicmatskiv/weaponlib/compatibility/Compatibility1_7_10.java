@@ -406,7 +406,7 @@ public class Compatibility1_7_10 implements Compatibility {
 	}
 
 	@Override
-	public void registerBlock(Block block, String name) {
+	public void registerBlock(String modId, Block block, String name){
 		GameRegistry.registerBlock(block, name);
 	}
 }
