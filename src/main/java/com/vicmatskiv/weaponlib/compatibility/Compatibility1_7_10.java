@@ -8,6 +8,7 @@ import com.vicmatskiv.weaponlib.WeaponSpawnEntity;
 import cpw.mods.fml.client.FMLClientHandler;
 import cpw.mods.fml.client.registry.ClientRegistry;
 import cpw.mods.fml.common.FMLCommonHandler;
+import cpw.mods.fml.common.IWorldGenerator;
 import cpw.mods.fml.common.ObfuscationReflectionHelper;
 import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
@@ -29,6 +30,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemArmor.ArmorMaterial;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
@@ -39,6 +41,7 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.Pre;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.util.EnumHelper;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
 
 public class Compatibility1_7_10 implements Compatibility {
@@ -413,5 +416,16 @@ public class Compatibility1_7_10 implements Compatibility {
 	@Override
 	public void registerBlock(String modId, Block block, String name){
 		GameRegistry.registerBlock(block, name);
+	}
+
+	@Override
+	public void registerWorldGenerator(IWorldGenerator generator, int modGenerationWeight) {
+		GameRegistry.registerWorldGenerator(generator, modGenerationWeight);
+	}
+
+	@Override
+	public ArmorMaterial addArmorMaterial(String name, String textureName, int durability, int[] reductionAmounts,
+			int enchantability, CompatibleSound soundOnEquip, float toughness) {
+		return EnumHelper.addArmorMaterial(name, durability, reductionAmounts, enchantability);
 	}
 }
