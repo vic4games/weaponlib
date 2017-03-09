@@ -114,6 +114,13 @@ public class Compatibility1_10_2 implements Compatibility {
 	}
 
 	@Override
+	public void playSound(EntityPlayer player, CompatibleSound sound, float volume, float pitch) {
+		if(sound != null) {
+			player.playSound(sound.getSound(), volume, pitch);
+		}
+	}
+
+	@Override
 	public IAttribute getMovementSpeedAttribute() {
 		return SharedMonsterAttributes.MOVEMENT_SPEED;
 	}
@@ -139,11 +146,6 @@ public class Compatibility1_10_2 implements Compatibility {
 	@Override
 	public CompatibleMathHelper getMathHelper() {
 		return mathHelper;
-	}
-
-	@Override
-	public void playSound(EntityPlayer player, CompatibleSound sound, float volume, float pitch) {
-		player.playSound(sound.getSound(), volume, pitch);
 	}
 
 	@Override
@@ -212,7 +214,7 @@ public class Compatibility1_10_2 implements Compatibility {
 
 	@SuppressWarnings("deprecation")
 	@Override
-	public void registerItem(Item item, String name) {
+	public void registerItem(String modId, Item item, String name) {
 		GameRegistry.registerItem(item, name);
 	}
 
@@ -412,5 +414,8 @@ public class Compatibility1_10_2 implements Compatibility {
 		Minecraft.getMinecraft().entityRenderer.enableLightmap();
 	}
 
-	
+	@Override
+	public void registerBlock(String modId, Block block, String name){
+		GameRegistry.registerBlock(block, name);
+	}
 }
