@@ -216,6 +216,11 @@ public class Compatibility1_7_10 implements Compatibility {
 	public void registerSound(CompatibleSound sound) {
 		// TODO Auto-generated method stub
 	}
+	
+	@Override
+	public void registerItem(Item item, String name) {
+		GameRegistry.registerItem(item, name);
+	}
 
 	@Override
 	public void registerItem(String modId, Item item, String name) {
