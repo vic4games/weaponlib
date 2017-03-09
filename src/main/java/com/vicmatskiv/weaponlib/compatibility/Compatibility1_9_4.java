@@ -3,6 +3,7 @@ package com.vicmatskiv.weaponlib.compatibility;
 import java.util.Iterator;
 import java.util.function.Predicate;
 
+import com.vicmatskiv.mw.ModernWarfareMod;
 import com.vicmatskiv.weaponlib.Weapon;
 import com.vicmatskiv.weaponlib.WeaponSpawnEntity;
 import com.vicmatskiv.weaponlib.WorldHelper;
@@ -24,6 +25,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
@@ -414,5 +416,19 @@ public class Compatibility1_9_4 implements Compatibility {
 		Minecraft.getMinecraft().entityRenderer.enableLightmap();
 	}
 
-	
+	@Override
+	public void registerBlock(String modId, Block block, String name) {
+		if(block.getRegistryName() == null) {
+			if(block.getUnlocalizedName().length() < modId.length() + 2 + 5) {
+				throw new IllegalArgumentException("Unlocalize block name too short " + block.getUnlocalizedName());
+			}
+			String unlocalizedName = block.getUnlocalizedName();
+			String registryName = unlocalizedName.substring(5 + modId.length() + 1);
+			block.setRegistryName(modId, registryName);
+		}
+		
+		GameRegistry.register(block);
+		ItemBlock itemBlock = new ItemBlock(block);
+		GameRegistry.register(itemBlock.setRegistryName(block.getRegistryName()));
+	}
 }
