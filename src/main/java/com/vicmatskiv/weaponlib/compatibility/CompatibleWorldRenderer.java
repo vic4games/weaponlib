@@ -87,13 +87,9 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 @SideOnly(Side.CLIENT)
 public class CompatibleWorldRenderer extends EntityRenderer implements IResourceManagerReloadListener
 {
-	
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ResourceLocation RAIN_TEXTURES = new ResourceLocation("textures/environment/rain.png");
     private static final ResourceLocation SNOW_TEXTURES = new ResourceLocation("textures/environment/snow.png");
-
-	private static final float MAX_ZOOM = 0.01F;
-
     public static boolean anaglyphEnable;
     /** Anaglyph field (0=R, 1=GB) */
     public static int anaglyphField;
@@ -131,16 +127,13 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
     private float bossColorModifierPrev;
     /** Cloud fog mode */
     private boolean cloudFog;
-    @SuppressWarnings("unused")
-	private boolean renderHand = true;
+    private boolean renderHand = true;
     private boolean drawBlockOutline = true;
-    @SuppressWarnings("unused")
-	private long timeWorldIcon;
+    private long timeWorldIcon;
     /** Previous frame time in milliseconds */
     private long prevFrameTime = Minecraft.getSystemTime();
     /** End time of last render (ns) */
-    @SuppressWarnings("unused")
-	private long renderEndNanoTime;
+    private long renderEndNanoTime;
     /** The texture id of the blocklight/skylight texture used for lighting effects */
     private final DynamicTexture lightmapTexture;
     /** Colors computed in updateLightmap() and loaded into the lightmap emptyTexture */
@@ -391,8 +384,7 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
                 this.mc.objectMouseOver = entity.rayTrace(d0, partialTicks);
                 Vec3d vec3d = entity.getPositionEyes(partialTicks);
                 boolean flag = false;
-                @SuppressWarnings("unused")
-				int i = 3;
+                int i = 3;
                 double d1 = d0;
 
                 if (this.mc.playerController.extendedReach())
@@ -508,9 +500,9 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
             this.fovModifierHand = 1.5F;
         }
 
-        if (this.fovModifierHand < MAX_ZOOM)
+        if (this.fovModifierHand < 0.05F)
         {
-            this.fovModifierHand = MAX_ZOOM;
+            this.fovModifierHand = 0.05F;
         }
     }
 
@@ -790,8 +782,7 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
     /**
      * Render player hand
      */
-    @SuppressWarnings("unused")
-	private void renderHand(float partialTicks, int pass)
+    private void renderHand(float partialTicks, int pass)
     {
         if (!this.debugView)
         {
@@ -1010,8 +1001,7 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
                         f10 = 0.0F;
                     }
 
-                    @SuppressWarnings("unused")
-					int j = 255;
+                    int j = 255;
                     int k = (int)(f8 * 255.0F);
                     int l = (int)(f9 * 255.0F);
                     int i1 = (int)(f10 * 255.0F);
@@ -1479,8 +1469,7 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
             Entity entity = this.mc.getRenderViewEntity();
             World world = this.mc.theWorld;
             BlockPos blockpos = new BlockPos(entity);
-            @SuppressWarnings("unused")
-			int i = 10;
+            int i = 10;
             double d0 = 0.0D;
             double d1 = 0.0D;
             double d2 = 0.0D;

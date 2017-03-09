@@ -24,6 +24,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
@@ -212,10 +213,17 @@ public class Compatibility1_10_2 implements Compatibility {
 		GameRegistry.register(sound.getSound(), sound.getResourceLocation());
 	}
 
-	@SuppressWarnings("deprecation")
 	@Override
 	public void registerItem(String modId, Item item, String name) {
-		GameRegistry.registerItem(item, name);
+		if(item.getRegistryName() == null) {
+			String registryName = item.getUnlocalizedName();
+			int indexOfPrefix = registryName.indexOf("." + modId);
+			if(indexOfPrefix > 0) {
+				registryName = registryName.substring(indexOfPrefix + modId.length() + 2);
+			}
+			item.setRegistryName(modId, registryName);
+		}
+		GameRegistry.register(item);
 	}
 
 	@Override
@@ -415,7 +423,18 @@ public class Compatibility1_10_2 implements Compatibility {
 	}
 
 	@Override
-	public void registerBlock(String modId, Block block, String name){
-		GameRegistry.registerBlock(block, name);
+	public void registerBlock(String modId, Block block, String name) {
+		if(block.getRegistryName() == null) {
+			if(block.getUnlocalizedName().length() < modId.length() + 2 + 5) {
+				throw new IllegalArgumentException("Unlocalize block name too short " + block.getUnlocalizedName());
+			}
+			String unlocalizedName = block.getUnlocalizedName();
+			String registryName = unlocalizedName.substring(5 + modId.length() + 1);
+			block.setRegistryName(modId, registryName);
+		}
+		
+		GameRegistry.register(block);
+		ItemBlock itemBlock = new ItemBlock(block);
+		GameRegistry.register(itemBlock.setRegistryName(block.getRegistryName()));
 	}
 }
