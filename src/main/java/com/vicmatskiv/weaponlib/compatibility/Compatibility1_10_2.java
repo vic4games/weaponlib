@@ -414,7 +414,7 @@ public class Compatibility1_10_2 implements Compatibility {
 
 	@Override
 	public void addShapedRecipe(ItemStack itemStack, Object... materials) {
-		throw new UnsupportedOperationException("Implement me");
+		GameRegistry.addShapedRecipe(itemStack, materials);
 	}
 
 	@Override
