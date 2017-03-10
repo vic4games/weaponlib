@@ -23,6 +23,8 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
 
 	private static final float FLASH_X_OFFSET_ZOOMED = 0;
 	
+	private static final long ALERT_TIMEOUT = 500;
+	
 	private static Predicate<PlayerWeaponInstance> readyToShootAccordingToFireRate = instance -> 
 		System.currentTimeMillis() - instance.getLastFireTimestamp() >= 50f / instance.getWeapon().builder.fireRate;
     
@@ -35,7 +37,11 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
 	         
 	private static Predicate<PlayerWeaponInstance> ejectSpentRoundTimeoutExpired = instance -> 
 		System.currentTimeMillis() >= instance.getWeapon().builder.pumpTimeoutMilliseconds + instance.getStateUpdateTimestamp();
-                          
+         
+	private static Predicate<PlayerWeaponInstance> alertTimeoutExpired = instance -> 
+		System.currentTimeMillis() >= ALERT_TIMEOUT + instance.getStateUpdateTimestamp();
+
+		
 	private static Predicate<PlayerWeaponInstance> sprinting = instance -> instance.getPlayer().isSprinting();
              
 	private static final Set<WeaponState> allowedFireOrEjectFromStates = new HashSet<>(
@@ -43,7 +49,7 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
 	
 	private static final Set<WeaponState> allowedUpdateFromStates = new HashSet<>(
 			Arrays.asList(WeaponState.EJECTING, WeaponState.PAUSED, WeaponState.FIRING, 
-					WeaponState.RECOILED, WeaponState.PAUSED));
+					WeaponState.RECOILED, WeaponState.PAUSED, WeaponState.ALERT));
 	
 	private ModContext modContext;
 
@@ -62,6 +68,15 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
 		this.stateManager = stateManager;
 		
 		stateManager
+		
+		.in(this).change(WeaponState.READY).to(WeaponState.ALERT)
+		.when(hasAmmo.negate())
+		.withAction(this::cannotFire)
+		.manual() // on start fire
+		
+		.in(this).change(WeaponState.ALERT).to(WeaponState.READY)
+		.when(alertTimeoutExpired)
+		.automatic() // 
 		
 		.in(this).change(WeaponState.READY).to(WeaponState.FIRING)
 		.when(hasAmmo.and(sprinting.negate()).and(readyToShootAccordingToFireRate))
@@ -102,7 +117,7 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
 	void onFireButtonClick(EntityPlayer player) {
 		PlayerWeaponInstance weaponInstance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
 		if(weaponInstance != null) {
-			stateManager.changeStateFromAnyOf(this, weaponInstance, allowedFireOrEjectFromStates, WeaponState.FIRING, WeaponState.EJECTING);
+		   stateManager.changeStateFromAnyOf(this, weaponInstance, allowedFireOrEjectFromStates, WeaponState.FIRING, WeaponState.EJECTING, WeaponState.ALERT);
 		}
 	}
 	
@@ -117,6 +132,19 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
 		PlayerWeaponInstance weaponInstance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
 		if(weaponInstance != null) {
 			stateManager.changeStateFromAnyOf(this, weaponInstance, allowedUpdateFromStates);
+		}
+	}
+	
+	private void cannotFire(PlayerWeaponInstance weaponInstance) {
+		if(weaponInstance.getAmmo() == 0) {
+			String message;
+			if(weaponInstance.getWeapon().getAmmoCapacity() == 0) {
+				message = "No magazine";
+			} else {
+				message = "No ammo";
+			}
+			modContext.getStatusMessageCenter().addAlertMessage(message, 3, 250, 200);
+			compatibility.playSound(weaponInstance.getPlayer(), modContext.getNoAmmoSound(), 1F, 1F);
 		}
 	}
 	
