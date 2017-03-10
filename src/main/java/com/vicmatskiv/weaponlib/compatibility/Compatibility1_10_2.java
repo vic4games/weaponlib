@@ -216,6 +216,7 @@ public class Compatibility1_10_2 implements Compatibility {
 		GameRegistry.register(sound.getSound(), sound.getResourceLocation());
 	}
 	
+	@SuppressWarnings("deprecation")
 	@Override
 	public void registerItem(Item item, String name) {
 		GameRegistry.registerItem(item, name);
