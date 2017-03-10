@@ -5,12 +5,27 @@ import java.util.LinkedList;
 
 final class StatusMessageCenter {
 	
-	static class Message {
+	public static class Message {
 		long expiresAt;
 		String message;
+		boolean isAlert;
+		
 		public Message(String message, long expiresAt) {
+			this(message, expiresAt, false);
+		}
+		
+		public Message(String message, long expiresAt, boolean isAlert) {
 			this.message = message;
 			this.expiresAt = expiresAt;
+			this.isAlert = isAlert;
+		}
+
+		public String getMessage() {
+			return message;
+		}
+
+		public boolean isAlert() {
+			return isAlert;
 		}
 	}
 	
@@ -39,17 +54,28 @@ final class StatusMessageCenter {
 		messageQueue.addFirst(new Message(message, expiresAt));
 	}
 	
-	public String nextMessage() {
-		String message = null;
+	public void addAlertMessage(String message, int count, long duration, long pause) {
+		long expiresAt = System.currentTimeMillis();
+		messageQueue.clear();
+		for(int i = 0; i < count; i++) {
+			expiresAt += duration;
+			messageQueue.addLast(new Message(message, expiresAt, true));
+			expiresAt += pause;
+			messageQueue.addLast(new Message("", expiresAt));
+		}
+	}
+	
+	public Message nextMessage() {
+		Message result = null;
 		while(!messageQueue.isEmpty()) {
 			Message m = messageQueue.removeFirst();
 			if(m.expiresAt > System.currentTimeMillis()) {
-				message = m.message;
+				result = m;
 				messageQueue.addFirst(m);
 				break;
 			}
 		}
-		return message;
+		return result;
 	}
 	
 }

@@ -4,6 +4,7 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 
 import org.lwjgl.opengl.GL11;
 
+import com.vicmatskiv.weaponlib.StatusMessageCenter.Message;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleGui;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTessellator;
 
@@ -114,21 +115,27 @@ public class CustomGui extends CompatibleGui {
 					fontRender.drawStringWithShadow("Press [right] to change camo", width / 2 + 60, height / 2 - 20, color);
 					fontRender.drawStringWithShadow("Press [down] to add under-barrel rig", 10, height - 40, color);
 				} else {
-					String nextMessage = modContext.getStatusMessageCenter().nextMessage();
-					if(nextMessage == null) {
-						nextMessage = getDefaultWeaponMessage(weaponInstance);
+					Message message = modContext.getStatusMessageCenter().nextMessage();
+					String messageText;
+					if(message != null) {
+						messageText = message.getMessage();
+						if(message.isAlert()) {
+							color = 0xFF0000;
+						}
+					} else {
+						messageText = getDefaultWeaponMessage(weaponInstance);
 					}
 					
 					int x = width - 80;
 					int y = 10;
 					
 
-					int stringWidth = fontRender.getStringWidth(nextMessage);
+					int stringWidth = fontRender.getStringWidth(messageText);
 					if(stringWidth > 80 ) {
 						x = width - stringWidth - 5;
 					}
 
-					fontRender.drawStringWithShadow(nextMessage, x, y, color);
+					fontRender.drawStringWithShadow(messageText, x, y, color);
 				}
 				GL11.glPopAttrib();
 				
@@ -141,20 +148,26 @@ public class CustomGui extends CompatibleGui {
 			mc.entityRenderer.setupOverlayRendering();
 			int color = 0xFFFFFF;
 			
-			String nextMessage = modContext.getStatusMessageCenter().nextMessage();
-			if(nextMessage == null) {
-				nextMessage = getDefaultMagazineMessage(itemStack);
+			Message message = modContext.getStatusMessageCenter().nextMessage();
+			String messageText;
+			if(message != null) {
+				messageText = message.getMessage();
+				if(message.isAlert()) {
+					color = 0xFF0000;
+				}
+			} else {
+				messageText = getDefaultMagazineMessage(itemStack);
 			}
 			
 			int x = width - 80;
 			int y = 10;
 
-			int stringWidth = fontRender.getStringWidth(nextMessage);
+			int stringWidth = fontRender.getStringWidth(messageText);
 			if(stringWidth > 80 ) {
 				x = width - stringWidth - 5;
 			}
 			
-			fontRender.drawStringWithShadow(nextMessage, x, y, color);
+			fontRender.drawStringWithShadow(messageText, x, y, color);
 			event.setCanceled(true);
 		}
 	}

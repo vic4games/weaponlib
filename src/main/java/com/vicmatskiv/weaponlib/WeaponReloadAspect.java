@@ -58,6 +58,8 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 		}
 	}
 	
+	private static Predicate<PlayerWeaponInstance> sprinting = instance -> instance.getPlayer().isSprinting();
+	
 	private static Predicate<PlayerWeaponInstance> supportsDirectBulletLoad = 
 			weaponInstance -> weaponInstance.getWeapon().getAmmoCapacity() > 0;
 			
@@ -101,7 +103,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 		
 		.in(this)
 			.change(WeaponState.READY).to(WeaponState.LOAD)
-			.when(supportsDirectBulletLoad.or(magazineAttached.negate()))
+			.when(sprinting.negate().and(supportsDirectBulletLoad.or(magazineAttached.negate())))
 			.withPermit((s, es) -> new LoadPermit(s),
 					modContext.getPlayerItemInstanceRegistry()::update,
 					permitManager)
@@ -116,7 +118,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 		.in(this)
 			.prepare((c, f, t) -> { prepareUnload(c); }, unloadAnimationCompleted)
 			.change(WeaponState.READY).to(WeaponState.UNLOAD)
-			.when(magazineAttached.and(inventoryHasFreeSlots))
+			.when(sprinting.negate().and(magazineAttached.and(inventoryHasFreeSlots)))
 			.withPermit((s, c) -> new UnloadPermit(s),
 					modContext.getPlayerItemInstanceRegistry()::update,
 					permitManager)

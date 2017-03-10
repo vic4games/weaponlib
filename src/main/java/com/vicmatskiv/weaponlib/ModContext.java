@@ -47,4 +47,8 @@ public interface ModContext {
 	
 	public void setChangeFireModeSound(String sound);
 
+	public CompatibleSound getNoAmmoSound();
+
+	public void setNoAmmoSound(String sound);
+
 }

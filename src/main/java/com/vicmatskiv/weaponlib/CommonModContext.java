@@ -38,6 +38,9 @@ public class CommonModContext implements ModContext {
 	private CompatibleSound changeZoomSound;
 	
 	private CompatibleSound changeFireModeSound;
+	
+	private CompatibleSound noAmmoSound;
+
 
 	@Override
 	public void init(Object mod, String modId, CompatibleChannel channel) {
@@ -184,5 +187,15 @@ public class CommonModContext implements ModContext {
 	@Override
 	public void setChangeFireModeSound(String sound) {
 		this.changeFireModeSound = registerSound(sound);
+	}
+
+	@Override
+	public void setNoAmmoSound(String sound) {
+		this.noAmmoSound = registerSound(sound);
+	}
+
+	@Override
+	public CompatibleSound getNoAmmoSound() {
+		return noAmmoSound;
 	}
 }

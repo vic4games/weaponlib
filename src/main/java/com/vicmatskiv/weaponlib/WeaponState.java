@@ -31,7 +31,9 @@ public enum WeaponState implements ManagedState<WeaponState> {
 	
 	NEXT_ATTACHMENT_REQUESTED,
 	
-	NEXT_ATTACHMENT(2, null, NEXT_ATTACHMENT_REQUESTED, null, false);
+	NEXT_ATTACHMENT(2, null, NEXT_ATTACHMENT_REQUESTED, null, false),
+	
+	ALERT;
 	
 	private static final int DEFAULT_PRIORITY = 0;
 
