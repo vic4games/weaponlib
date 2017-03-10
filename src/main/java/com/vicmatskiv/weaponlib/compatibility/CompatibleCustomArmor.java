@@ -1,11 +1,13 @@
 package com.vicmatskiv.weaponlib.compatibility;
 
 import com.vicmatskiv.weaponlib.CustomArmor;
-import com.vicmatskiv.weaponlib.Weapon;
+import com.vicmatskiv.weaponlib.ModContext;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.model.ModelBiped;
+import net.minecraft.client.renderer.entity.RenderManager;
+import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -26,6 +28,7 @@ public class CompatibleCustomArmor extends ItemArmor {
 			ModelBiped model, String hudTextureName) {
 		super(material, renderIndex, compatibleEntityEquipmentSlot.getSlot());
 		this.modId = modId;
+		this.model = model;
 		this.iconName = iconName;
 		this.textureName = textureName;
 		this.hudTextureName = hudTextureName;
@@ -72,10 +75,11 @@ public class CompatibleCustomArmor extends ItemArmor {
 				armorModel.heldItemRight = entityLiving.getEquipmentInSlot(0) != null ? 1 : 0;
 				
 				if (entityLiving instanceof EntityPlayer) {
-					System.err.println("TODO: implement armor aiming properly");
-					boolean isAimedWeapon = false; // TODO: Weapon.isAimed(entityLiving.getEquipmentInSlot(0));
+					
+					RenderPlayer renderPlayer = (RenderPlayer) RenderManager.instance.getEntityRenderObject(entityLiving);
+					
 					armorModel.aimedBow = ((EntityPlayer) entityLiving).getItemInUseDuration() > 0 
-							|| isAimedWeapon;
+							|| renderPlayer.modelBipedMain.aimedBow;;
 				}
 				return armorModel;
 			}
