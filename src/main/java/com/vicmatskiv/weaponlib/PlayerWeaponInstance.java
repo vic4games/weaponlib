@@ -27,8 +27,8 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 	}
 	
 	private int ammo;
-	private float recoil; // TODO: serialize, initialize etc
-	private int seriesShotCount; // TODO: serialize?
+	private float recoil;
+	private int seriesShotCount;
 	private long lastFireTimestamp;
 	private boolean aimed;
 	private int maxShots;
@@ -126,7 +126,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 		ammo = buf.readInt();
 		aimed = buf.readBoolean();
 		recoil = buf.readFloat();
-		maxShots = buf.readShort();
+		maxShots = buf.readInt();
 		zoom = buf.readFloat();
 		activeTextureIndex = buf.readByte();
 		laserOn = buf.readBoolean();
@@ -140,7 +140,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 		buf.writeInt(ammo);
 		buf.writeBoolean(aimed);
 		buf.writeFloat(recoil);
-		buf.writeShort(maxShots);
+		buf.writeInt(maxShots);
 		buf.writeFloat(zoom);
 		buf.writeByte(activeTextureIndex);
 		buf.writeBoolean(laserOn);
@@ -190,6 +190,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 		setActiveAttachmentIds(otherWeaponInstance.activeAttachmentIds);
 		setActiveTextureIndex(otherWeaponInstance.activeTextureIndex);
 		setLaserOn(otherWeaponInstance.laserOn);
+		setMaxShots(otherWeaponInstance.maxShots);
 	}
 
 	public Weapon getWeapon() {

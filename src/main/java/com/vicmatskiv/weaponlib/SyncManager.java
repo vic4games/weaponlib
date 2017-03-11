@@ -43,7 +43,7 @@ public class SyncManager<S extends ManagedState<S>> {
 		watchables.put(watchableInstance, watchableInstance.getUpdateId());
 	}
 	
-	public void unwatch(PlayerItemInstance<S> watchableInstance) {
+	public void unwatch(PlayerItemInstance<?> watchableInstance) {
 		watchables.remove(watchableInstance);
 	}
 	

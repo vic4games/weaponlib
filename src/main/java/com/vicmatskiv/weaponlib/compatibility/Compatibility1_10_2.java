@@ -461,4 +461,16 @@ public class Compatibility1_10_2 implements Compatibility {
 		return EnumHelper.addArmorMaterial(name, textureName, durability, reductionAmounts, enchantability, 
 				soundOnEquip != null ? soundOnEquip.getSound() : null, toughness);
 	}
+
+	@Override
+	public boolean inventoryHasFreeSlots(EntityPlayer player) {
+		boolean result = false;
+		for(int i = 0; i < player.inventory.mainInventory.length; i++) {
+			if(player.inventory.mainInventory[i] == null) {
+				result = true;
+				break;
+			}
+		}
+		return result;
+	}
 }

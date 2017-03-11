@@ -25,6 +25,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 	
 	private static final Logger logger = LogManager.getLogger(WeaponReloadAspect.class);
 
+	private static final long ALERT_TIMEOUT = 500;
 	
 	static {
 		TypeRegistry.getInstance().register(UnloadPermit.class);
@@ -38,7 +39,8 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 					WeaponState.LOAD, 
 					WeaponState.UNLOAD_PREPARING, 
 					WeaponState.UNLOAD_REQUESTED, 
-					WeaponState.UNLOAD));
+					WeaponState.UNLOAD,
+					WeaponState.ALERT));
 	
 	public static class UnloadPermit extends Permit<WeaponState> {
 		
@@ -75,7 +77,11 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 		System.currentTimeMillis() >= weaponInstance.getStateUpdateTimestamp() 
 			+ weaponInstance.getWeapon().getTotalUnloadingDuration() * 1.1;
 	
-	private Predicate<PlayerItemInstance<?>> inventoryHasFreeSlots = c -> true; // TODO implement free slot check
+	private Predicate<PlayerWeaponInstance> inventoryHasFreeSlots = weaponInstance -> 
+		compatibility.inventoryHasFreeSlots(weaponInstance.getPlayer());
+	
+	private static Predicate<PlayerWeaponInstance> alertTimeoutExpired = instance -> 
+		System.currentTimeMillis() >= ALERT_TIMEOUT + instance.getStateUpdateTimestamp();
 	
 	private Predicate<ItemStack> magazineNotEmpty = magazineStack -> Tags.getAmmo(magazineStack) > 0;
 
@@ -124,11 +130,21 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 					permitManager)
 			.withAction((c, f, t, p) -> completeClientUnload(c, (UnloadPermit)p))
 			.manual()
-		
+			
 		.in(this)
 			.change(WeaponState.UNLOAD).to(WeaponState.READY)
 			//.when(unloadAnimationCompleted)
 			.automatic()
+			
+		.in(this)
+			.change(WeaponState.READY).to(WeaponState.ALERT)
+			.when(inventoryHasFreeSlots.negate())
+			.withAction(this::inventoryFullAlert)
+			.manual()
+			
+		.in(this).change(WeaponState.ALERT).to(WeaponState.READY)
+			.when(alertTimeoutExpired)
+			.automatic() // 
 		;
 	}
 	
@@ -142,7 +158,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 	public void reloadMainHeldItem(EntityPlayer player) {
 		PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
 		if(instance != null) {
-			stateManager.changeState(this, instance, WeaponState.LOAD, WeaponState.UNLOAD);
+			stateManager.changeState(this, instance, WeaponState.LOAD, WeaponState.UNLOAD, WeaponState.ALERT);
 		}
 	}
 
@@ -253,7 +269,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 	
 	private void completeClientLoad(PlayerWeaponInstance weaponInstance, LoadPermit permit) {
 		if(permit == null) {
-			System.err.println("Permit is null, something went wrong");
+			logger.error("Permit is null, something went wrong");
 			return;
 		}
 		if(permit.getStatus() == Status.GRANTED) {
@@ -262,5 +278,9 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 	}
 	
 	private void completeClientUnload(PlayerWeaponInstance weaponInstance, UnloadPermit p) {
+	}
+	
+	public void inventoryFullAlert(PlayerWeaponInstance weaponInstance) {
+		modContext.getStatusMessageCenter().addAlertMessage("Inventory full", 3, 250, 200);
 	}
 }

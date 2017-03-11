@@ -158,4 +158,6 @@ public interface Compatibility {
 	public void registerWorldGenerator(IWorldGenerator worldGeneratorEventHandler, int i);
 
 	public ArmorMaterial addArmorMaterial(String name, String textureName, int durability, int[] reductionAmounts, int enchantability, CompatibleSound soundOnEquip, float toughness);
+
+	public boolean inventoryHasFreeSlots(EntityPlayer player);
 }
