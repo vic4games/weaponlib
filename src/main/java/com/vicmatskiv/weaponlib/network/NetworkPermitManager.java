@@ -48,7 +48,7 @@ implements PermitManager, CompatibleMessageHandler<PermitMessage, CompatibleMess
 			Class<? extends E> esClass,
 			BiConsumer<P, E> evaluator) {
 		evaluators.put(permitClass,  (p, c) -> { 
-			logger.debug("Processing permit " + p + " for instance " + c);
+			logger.debug("Processing permit {} for instance {}", p, c);
 			evaluator.accept(permitClass.cast(p), esClass.cast(c)); 
 		});
 	}

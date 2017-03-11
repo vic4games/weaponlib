@@ -171,7 +171,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 	
 	@SuppressWarnings("unchecked")
 	private void processLoadPermit(LoadPermit p, PlayerWeaponInstance weaponInstance) {
-		logger.debug("Processing load permit on server for " + weaponInstance);
+		logger.debug("Processing load permit on server for {}", weaponInstance);
 
 		ItemStack weaponItemStack = weaponInstance.getItemStack();
 		
@@ -196,7 +196,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 					if(magazineItemStack != null) {
 						ammo = Tags.getAmmo(magazineItemStack);
 						Tags.setAmmo(weaponItemStack, ammo);
-						logger.debug("Setting server side ammo for " + weaponInstance + " to " + ammo);
+						logger.debug("Setting server side ammo for {} to {}", weaponInstance, ammo);
 						modContext.getAttachmentAspect().addAttachment((ItemAttachment<Weapon>) magazineItemStack.getItem(), weaponInstance);
 						compatibility.playSoundToNearExcept(player, weapon.getReloadSound(), 1.0F, 1.0F);
 					} else {
@@ -218,7 +218,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 				weaponInstance.setAmmo(weapon.builder.ammoCapacity);
 				compatibility.playSoundToNearExcept(player, weapon.getReloadSound(), 1.0F, 1.0F);
 			} else {
-				logger.debug("No suitable ammo found for " + weaponInstance + ". Denying permit");
+				logger.debug("No suitable ammo found for {}. Permit denied.", weaponInstance);
 //				Tags.setAmmo(weaponItemStack, 0);
 //				weaponInstance.setAmmo(0);
 				status = Status.DENIED;
@@ -236,7 +236,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 	}
 	
 	private void processUnloadPermit(UnloadPermit p, PlayerWeaponInstance weaponInstance) {
-		logger.debug("Processing unload permit on server for " + weaponInstance);
+		logger.debug("Processing unload permit on server for {}", weaponInstance);
 		ItemStack weaponItemStack = weaponInstance.getItemStack();
 		EntityPlayer player = weaponInstance.getPlayer();
 		
