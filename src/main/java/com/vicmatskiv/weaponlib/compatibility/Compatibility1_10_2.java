@@ -242,8 +242,11 @@ public class Compatibility1_10_2 implements Compatibility {
 	}
 
 	@Override
-	public void registerModEntity(Class<WeaponSpawnEntity> class1, String string, int i, Object mod, int j, int k,
-			boolean b) {
+	public void registerModEntity(Class<WeaponSpawnEntity> entityClass, String entityName, int id, Object mod, 
+			int trackingRange, int updateFrequency, boolean sendsVelocityUpdates) {
+		net.minecraftforge.fml.common.registry.EntityRegistry.registerModEntity
+			(entityClass, entityName, id, mod, trackingRange, updateFrequency, sendsVelocityUpdates);
+
 	}
 
 	@Override
