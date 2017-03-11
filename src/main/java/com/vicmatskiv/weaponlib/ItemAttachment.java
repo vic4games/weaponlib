@@ -26,6 +26,7 @@ public class ItemAttachment<T> extends CompatibleItem implements ModelSource {
 	private Part renderablePart;
 	private String name;
 	private Function<ItemStack, String> informationProvider;
+	protected int maxStackSize = 1;
 	
 	private List<CompatibleAttachment<T>> attachments = new ArrayList<>();
 	
@@ -65,7 +66,7 @@ public class ItemAttachment<T> extends CompatibleItem implements ModelSource {
 	
 	@Override
 	public int getItemStackLimit() {
-		return 1;
+		return maxStackSize;
 	}
 	
 	public Item setTextureName(String name) {

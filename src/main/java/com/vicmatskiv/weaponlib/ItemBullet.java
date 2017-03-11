@@ -11,8 +11,13 @@ public class ItemBullet extends ItemAttachment<Weapon> {
 		
 		private List<ItemMagazine> compatibleMagazines = new ArrayList<>();
 		
-		public void withCompatibleMagazine(ItemMagazine magazine) {
+		public Builder() {
+		    withMaxStackSize(64);
+		}
+		
+		public Builder withCompatibleMagazine(ItemMagazine magazine) {
 			compatibleMagazines.add(magazine);
+			return this;
 		}
 
 		@Override
@@ -30,10 +35,5 @@ public class ItemBullet extends ItemAttachment<Weapon> {
 			com.vicmatskiv.weaponlib.ItemAttachment.ApplyHandler<Weapon> apply,
 			com.vicmatskiv.weaponlib.ItemAttachment.ApplyHandler<Weapon> remove) {
 		super(modId, category, model, textureName, crosshair, apply, remove);
-	}
-	
-	@Override
-	public int getItemStackLimit() {
-		return 64;
 	}
 }
