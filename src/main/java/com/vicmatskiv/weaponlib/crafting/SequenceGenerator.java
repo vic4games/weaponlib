@@ -34,9 +34,7 @@ class SequenceGenerator {
     
     private List<Object> generateUniqueSequence(Object obj, OptionsMetadata optionMetadata) {
         List<Object> result;
-        int attempt = 0;
         do {
-        	System.out.println("Attempt " + ++attempt);
             result = generateSequence(optionMetadata.getMetadata());
         } while(uniqueSequenceMap.putIfAbsent(result, obj) != null);
         return result;

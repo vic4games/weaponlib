@@ -17,7 +17,7 @@ import scala.actors.threadpool.Arrays;
 
 public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 	
-	private static final int SERIAL_VERSION = 6;
+	private static final int SERIAL_VERSION = 7;
 	
 	@SuppressWarnings("unused")
 	private static final Logger logger = LogManager.getLogger(PlayerWeaponInstance.class);
@@ -34,6 +34,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 	private int maxShots;
 	private float zoom = 1f;
 	private byte activeTextureIndex;
+	private boolean laserOn;
 		
 	/*
 	 * Upon adding an element to the head of the queue, all existing elements with lower priority are removed 
@@ -128,6 +129,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 		maxShots = buf.readShort();
 		zoom = buf.readFloat();
 		activeTextureIndex = buf.readByte();
+		laserOn = buf.readBoolean();
 	}
 	
 	@Override
@@ -141,6 +143,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 		buf.writeShort(maxShots);
 		buf.writeFloat(zoom);
 		buf.writeByte(activeTextureIndex);
+		buf.writeBoolean(laserOn);
 	}
 	
 	private static void serializeIntArray(ByteBuf buf, int a[]) {
@@ -186,6 +189,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 		setSelectedAttachmentIndexes(otherWeaponInstance.selectedAttachmentIndexes);
 		setActiveAttachmentIds(otherWeaponInstance.activeAttachmentIds);
 		setActiveTextureIndex(otherWeaponInstance.activeTextureIndex);
+		setLaserOn(otherWeaponInstance.laserOn);
 	}
 
 	public Weapon getWeapon() {
@@ -308,6 +312,17 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 		}
 	}
 	
+	public boolean isLaserOn() {
+		return laserOn;
+	}
+
+	public void setLaserOn(boolean laserOn) {
+		if(this.laserOn != laserOn) {
+			this.laserOn = laserOn;
+			updateId++;
+		}
+	}
+
 	public int getActiveTextureIndex() {
 		return activeTextureIndex;
 	}

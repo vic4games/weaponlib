@@ -58,12 +58,6 @@ public class CommonModContext implements ModContext {
 		channel.registerMessage(new TryFireMessageHandler(weaponFireAspect),
 				TryFireMessage.class, 11, CompatibleSide.SERVER);
 		
-		channel.registerMessage(new LaserSwitchMessageHandler(),
-				LaserSwitchMessage.class, 12, CompatibleSide.SERVER);
-		
-		channel.registerMessage(new LaserSwitchMessageHandler(),
-				LaserSwitchMessage.class, 13, CompatibleSide.CLIENT);
-		
 		channel.registerMessage(permitManager,
 				PermitMessage.class, 14, CompatibleSide.SERVER);
 		
@@ -75,8 +69,6 @@ public class CommonModContext implements ModContext {
 		compatibility.registerWithFmlEventBus(new WeaponKeyInputHandler(this, (ctx) -> getPlayer(ctx), 
 				weaponAttachmentAspect, channel));
 	}
-	
-	
 	
 	@Override
 	public CompatibleSound registerSound(String sound) {

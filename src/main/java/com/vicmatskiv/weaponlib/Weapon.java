@@ -31,7 +31,6 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 import scala.actors.threadpool.Arrays;
 
@@ -579,26 +578,6 @@ public class Weapon extends CompatibleItem implements
 	@Override
 	public void onUpdate(ItemStack itemStack, World world, Entity entity, int p_77663_4_, boolean active) {
 	}
-
-	private void ensureItemStack(ItemStack itemStack) {
-		if (compatibility.getTagCompound(itemStack) == null) {
-			compatibility.setTagCompound(itemStack, new NBTTagCompound());
-			Tags.setAmmo(itemStack, 0);
-		}
-	}
-	
-	static void toggleLaser(ItemStack itemStack) {
-		Tags.setLaser(itemStack, !Tags.isLaserOn(itemStack));
-	}
-	
-//	public static boolean isAimed(ItemStack itemStack) {
-//		return Tags.isAimed(itemStack);
-//	}
-//
-//	public static boolean isZoomed(EntityPlayer player, ItemStack itemStack) {
-//		return Tags.getZoom(itemStack) != 1.0f;
-//	}
-	
 	
 	public void changeRecoil(EntityPlayer player, float factor) {
 		PlayerWeaponInstance instance = modContext.getMainHeldWeapon();
@@ -607,23 +586,6 @@ public class Weapon extends CompatibleItem implements
 			logger.debug("Changing recoil to " + recoil + " for instance " + instance);
 			instance.setRecoil(recoil);
 		}
-	}
-	
-	public void changeZoom(EntityPlayer player, float zoom, boolean attachmentOnlyMode) {
-		PlayerWeaponInstance instance = modContext.getMainHeldWeapon();
-		if(instance != null) {
-			instance.setZoom(zoom);
-		}
-//		ItemStack itemStack = compatibility.getHeldItemMainHand(player);
-//		if(itemStack != null) {
-//			ensureItemStack(itemStack);
-//			float zoom = builder.zoom * factor;
-//			Tags.setAllowedZoom(itemStack, zoom, attachmentOnlyMode);
-//		}
-	}
-	
-	public void changeZoom(EntityPlayer player, float factor) {
-		changeZoom(player, factor, false);
 	}
 	
 	Map<ItemAttachment<Weapon>, CompatibleAttachment<Weapon>> getCompatibleAttachments() {
@@ -647,22 +609,6 @@ public class Weapon extends CompatibleItem implements
 		return builder.crosshair;
 	}
 	
-//	boolean isCrosshairFullScreen(ItemStack itemStack) {
-//		if(isZoomed(null, itemStack)) {
-//			return builder.crosshairZoomedFullScreen;
-//		}
-//		return builder.crosshairFullScreen;
-//		
-//	}
-	
-	public String getActiveTextureName(ItemStack itemStack) {
-		ensureItemStack(itemStack);
-		if(builder.textureNames.isEmpty()) {
-			return null;
-		}
-		return builder.textureNames.get(Tags.getActiveTexture(itemStack));
-	}
-	
 	public static boolean isActiveAttachment(PlayerWeaponInstance weaponInstance, ItemAttachment<Weapon> attachment) {
 		return weaponInstance != null ? 
 				WeaponAttachmentAspect.isActiveAttachment(attachment, weaponInstance) : false;
@@ -676,10 +622,6 @@ public class Weapon extends CompatibleItem implements
 	int getCurrentAmmo(EntityPlayer player) {
 		PlayerWeaponInstance state = modContext.getMainHeldWeapon();
 		return state.getAmmo();
-		
-//		WeaponClientStorage storage = getWeaponClientStorage(player);
-//		if(storage == null) return 0;
-//		return storage.getCurrentAmmo().get();
 		
 	}
 

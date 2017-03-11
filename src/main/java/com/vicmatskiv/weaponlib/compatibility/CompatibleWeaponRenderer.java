@@ -61,13 +61,11 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 		private PlayerWeaponInstance instance;
 		public StateDescriptor(PlayerWeaponInstance instance, MultipartRenderStateManager<RenderableState, Part, RenderContext> stateManager,
 				float rate, float amplitude) {
+			this.instance = instance;
 			this.stateManager = stateManager;
 			this.rate = rate;
 			this.amplitude = amplitude;
 		}
-		
-		
-		
 	}
 	
 	protected EntityPlayer owner;

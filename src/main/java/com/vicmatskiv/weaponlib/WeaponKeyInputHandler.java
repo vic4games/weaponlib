@@ -14,6 +14,7 @@ import net.minecraft.item.ItemStack;
 
 public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
 	
+	@SuppressWarnings("unused")
 	private CompatibleChannel channel;
 	private Function<CompatibleMessageContext, EntityPlayer> entityPlayerSupplier;
 	private ModContext modContext;
@@ -36,7 +37,6 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
     	
         if(KeyBindings.reloadKey.isPressed()) {
     		if(itemStack != null) {
-//    			reloadManager.toggleReload(itemStack, player);
     			Item item = itemStack.getItem();
     			if(item instanceof Reloadable) {
     				((Reloadable) item).reloadMainHeldItemForPlayer(player);
@@ -45,12 +45,14 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
         }
         
         else if(KeyBindings.laserSwitchKey.isPressed()) {
-        	channel.getChannel().sendToServer(new LaserSwitchMessage()); 
+        	PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
+    		if(instance != null && instance.getState() == WeaponState.READY) {
+    			instance.setLaserOn(!instance.isLaserOn());
+    		}
         }
         
         else if(KeyBindings.attachmentKey.isPressed()) {
     		if(itemStack != null && itemStack.getItem() instanceof Weapon) {
-//    			attachmentManager.toggleClientAttachmentSelectionMode(itemStack, player);
     			Item item = itemStack.getItem();
     			if(item instanceof Modifiable) {
     				((Modifiable) item).toggleClientAttachmentSelectionMode(player);
