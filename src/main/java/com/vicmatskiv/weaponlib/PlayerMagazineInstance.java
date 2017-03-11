@@ -27,20 +27,6 @@ public class PlayerMagazineInstance extends PlayerItemInstance<MagazineState> {
 		super(itemInventoryIndex, player);
 	}
 	
-
-//	public int getAmmo() {
-//		return ammo;
-//	}
-//	
-//	protected void setAmmo(int ammo) {
-//		if(ammo != this.ammo) {
-//			System.out.println("Updating instance with ammo " + ammo);
-//			this.ammo = ammo;
-//			this.updateId++;
-//		}
-//		
-//	}
-	
 	@Override
 	public void init(ByteBuf buf) {
 		super.init(buf);

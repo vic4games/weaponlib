@@ -461,24 +461,4 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 	ItemAttachment<Weapon> getActiveAttachment(PlayerWeaponInstance weaponInstance, AttachmentCategory category) {
 		return weaponInstance.getAttachmentItemWithCategory(category);
 	}
-	
-	void changeTexture(ItemStack itemStack, EntityPlayer player) {
-		if(!(itemStack.getItem() instanceof Weapon)) {
-			return;
-		}
-		
-		Weapon weapon = (Weapon) itemStack.getItem();
-		compatibility.ensureTagCompound(itemStack);
-		int currentIndex = Tags.getActiveTexture(itemStack);
-		if(weapon.builder.textureNames.isEmpty()) {
-			return;
-		}
-		if(currentIndex >= weapon.builder.textureNames.size() - 1) {
-			currentIndex = 0;
-		} else {
-			currentIndex++;
-		}
-		Tags.setActiveTexture(itemStack, currentIndex);
-	}
-
 }

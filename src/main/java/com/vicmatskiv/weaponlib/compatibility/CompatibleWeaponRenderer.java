@@ -31,13 +31,11 @@ public abstract class CompatibleWeaponRenderer implements IItemRenderer {
 		private PlayerWeaponInstance instance;
 		public StateDescriptor(PlayerWeaponInstance instance, MultipartRenderStateManager<RenderableState, Part, RenderContext> stateManager,
 				float rate, float amplitude) {
+			this.instance = instance;
 			this.stateManager = stateManager;
 			this.rate = rate;
 			this.amplitude = amplitude;
 		}
-		
-		
-		
 	}
 	
 	private Builder builder;
