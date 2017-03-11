@@ -46,7 +46,7 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
         
         else if(KeyBindings.laserSwitchKey.isPressed()) {
         	PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
-    		if(instance != null && instance.getState() == WeaponState.READY) {
+    		if(instance != null && instance.getState() == WeaponState.READY || instance.getState() == WeaponState.MODIFYING) {
     			instance.setLaserOn(!instance.isLaserOn());
     		}
         }
