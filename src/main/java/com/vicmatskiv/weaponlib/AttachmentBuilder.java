@@ -44,12 +44,14 @@ public class AttachmentBuilder<T> {
 	private CustomRenderer postRenderer;
 	private List<Tuple<ModelBase, String>> texturedModels = new ArrayList<>();
 	private boolean isRenderablePart;
+    private int maxStackSize = 1;
 	
 	private CraftingComplexity craftingComplexity;
 
 	private Object[] craftingMaterials;
 	
 	Map<ItemAttachment<T>, CompatibleAttachment<T>> compatibleAttachments = new HashMap<>();
+
 
 	public AttachmentBuilder<T> withCategory(AttachmentCategory attachmentCategory) {
 		this.attachmentCategory = attachmentCategory;
@@ -85,6 +87,11 @@ public class AttachmentBuilder<T> {
 		this.textureName = textureName;
 		return this;
 	}
+	
+	public AttachmentBuilder<T> withMaxStackSize(int maxStackSize) {
+        this.maxStackSize = maxStackSize;
+        return this;
+    }
 	
 	public AttachmentBuilder<T> withEntityPositioning(Consumer<ItemStack> entityPositioning) {
 		this.entityPositioning = entityPositioning;
@@ -195,6 +202,7 @@ public class AttachmentBuilder<T> {
 		attachment.setName(name);
 		attachment.apply2 = apply2;
 		attachment.remove2 = remove2;
+		attachment.maxStackSize = maxStackSize;
 		if(textureName != null) {
 			attachment.setTextureName(modId + ":" + stripFileExtension(textureName, ".png"));
 		} 
