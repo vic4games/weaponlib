@@ -1,8 +1,5 @@
 package com.vicmatskiv.weaponlib.compatibility;
 
-import com.vicmatskiv.weaponlib.LaserSwitchMessage;
-import com.vicmatskiv.weaponlib.LaserSwitchMessageHandler;
-
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 
 public class CompatibleChannel {
@@ -21,9 +18,4 @@ public class CompatibleChannel {
     		Class<Request> requestMessageType, int discriminator, CompatibleSide side) {
     	channel.registerMessage(messageHandler, requestMessageType, discriminator, side.getSide());
     }
-    
-    public void registerMessage(Class<LaserSwitchMessageHandler> messageHandlerClass, Class<LaserSwitchMessage> messageType,
-			int discriminator, CompatibleSide side) {
-		channel.registerMessage(messageHandlerClass, messageType, discriminator, side.getSide());
-	}
 }
