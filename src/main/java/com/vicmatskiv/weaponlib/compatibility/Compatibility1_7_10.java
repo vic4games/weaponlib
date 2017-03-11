@@ -428,4 +428,16 @@ public class Compatibility1_7_10 implements Compatibility {
 			int enchantability, CompatibleSound soundOnEquip, float toughness) {
 		return EnumHelper.addArmorMaterial(name, durability, reductionAmounts, enchantability);
 	}
+
+	@Override
+	public boolean inventoryHasFreeSlots(EntityPlayer player) {
+		boolean result = false;
+		for(int i = 0; i < player.inventory.mainInventory.length; i++) {
+			if(player.inventory.mainInventory[i] == null) {
+				result = true;
+				break;
+			}
+		}
+		return result;
+	}
 }
