@@ -810,6 +810,9 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 	}
 	
 	private BiConsumer<Part, RenderContext> createWeaponPartPositionFunction(Transition t) {
+		if(t == null) {
+			return (part, context) -> {};
+		}
 		Consumer<RenderContext> weaponPositionFunction = t.getItemPositioning();
 		if(weaponPositionFunction != null) {
 			return (part, context) -> weaponPositionFunction.accept(context);
@@ -845,7 +848,13 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 					.withPartPositionFunction(Part.RIGHT_HAND, createWeaponPartPositionFunction(r));
 			
 			for(Entry<Part, List<Transition>> e: custom.entrySet()){
-				Transition partTransition = e.getValue().get(i);
+				List<Transition> partTransitions = e.getValue();
+				Transition partTransition = null;
+				if(partTransitions != null && partTransitions.size() > i) {
+					partTransition = partTransitions.get(i);
+				} else {
+					logger.warn("Transition not defined for part {}", custom);
+				}
 				t.withPartPositionFunction(e.getKey(), createWeaponPartPositionFunction(partTransition));
 			}
 	

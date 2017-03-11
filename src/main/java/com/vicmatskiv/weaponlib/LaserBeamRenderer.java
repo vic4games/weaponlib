@@ -11,7 +11,7 @@ public class LaserBeamRenderer implements CustomRenderer {
 	
 	private float xOffset = 0.5f;
 	private float yOffset = -1.35f;
-	private float zOffset = -1f;
+	private float zOffset = -2.1f;
 	
 	public LaserBeamRenderer() {
 	}
