@@ -10,7 +10,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.function.BiFunction;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -72,6 +71,16 @@ public class PlayerItemInstanceRegistry {
 				result.markDirty();
 			}
 		} else {
+			ItemStack slotItemStack = compatibility.getInventoryItemStack(player, slot);
+			if(slotItemStack != null && slotItemStack.getItem() != result.getItem()) {
+				syncManager.unwatch(result);
+				result = createItemInstance(player, slot);
+				if(result != null) {
+					slotInstances.put(slot, result);
+					syncManager.watch(result);
+					result.markDirty();
+				}
+			}
 			if(result.getItemInventoryIndex() != slot) {
 				logger.warn("Invalid instance slot id, correcting...");
 				result.setItemInventoryIndex(slot);
@@ -84,26 +93,6 @@ public class PlayerItemInstanceRegistry {
 			
 		}
 		return result;
-	}
-	
-//	private boolean matches(ItemStack slotStack, PlayerItemInstance<?> result) {
-//		byte instanceBytes[] = Tags.getInstanceBytes(slotStack);
-//		if(instanceBytes == null || instanceBytes.length < 36) {
-//			return false;
-//		}
-//		
-//		ByteBuf buf = Unpooled.wrappedBuffer(instanceBytes);
-//		buf.skipBytes(20); // skip serial version id (4 bytes) and type uuid (16 bytes)
-//		UUID stackUuid = new UUID(buf.readLong(), buf.readLong()); // 16 more bytes
-//		return stackUuid.equals(result);
-//	}
-
-	// if input item does not match stored item, keep the old value, otherwise replace with new value
-	BiFunction<? super PlayerItemInstance<?>, ? super PlayerItemInstance<?>, ? extends PlayerItemInstance<?>> merge = (currentState, newState) -> 
-		isSameItem(currentState, newState) && isSameUpdateId(currentState, newState) ? currentState : newState;
-
-	private boolean isSameUpdateId(PlayerItemInstance<?> currentState, PlayerItemInstance<?> newState) {
-		return currentState.getUpdateId() == newState.getUpdateId();
 	}
 
 	private boolean isSameItem(PlayerItemInstance<?> instance1, PlayerItemInstance<?> instance2) {
@@ -185,41 +174,7 @@ public class PlayerItemInstanceRegistry {
 		return result.orElse(null);
 	}
 
-//	public PlayerItemInstance<?> getItemInstance2(EntityPlayer player, ItemStack itemStack) {
-//		int slot = compatibility.getInventorySlot(player, itemStack);
-//		PlayerItemInstance<?> result = null;
-//		if(slot >= 0) {
-//			result = getItemInstance(player, slot);
-//		} else {
-//			// For everything else use cache
-//			result = getItemInstance(itemStack);
-//		}
-//		return result;
-//	}
-
-//	private PlayerItemInstance<?> getItemInstance(ItemStack itemStack) {
-//		PlayerItemInstance<?> result = null;
-//		try {
-//			result = itemStackInstanceCache.get(itemStack, () -> {
-//				logger.debug("Initializing instance from stack " + itemStack);
-//				PlayerItemInstance<?> instance = null;
-//				try {
-//					instance = Tags.getInstance(itemStack);
-//				} catch(RuntimeException e) {
-//					logger.error("Failed to initialize instance from " + itemStack, e.getCause());
-//				}
-//				if(instance == null && itemStack.getItem() instanceof PlayerItemInstanceFactory) {
-//					instance = ((PlayerItemInstanceFactory<?, ?>) itemStack.getItem()).createItemInstance(null, itemStack, -1);
-//				}
-//				return instance;
-//			});
-//		} catch (UncheckedExecutionException | ExecutionException e) {
-//			logger.error("Failed to initialize cache instance from " + itemStack, e.getCause());
-//		}
-//		return result;
-//	}
-
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@SuppressWarnings({ "rawtypes" })
 	public void update(EntityPlayer player) {
 		if(player == null) {
 			return;
