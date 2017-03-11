@@ -1,5 +1,6 @@
 package com.vicmatskiv.weaponlib;
 
+import java.util.Arrays;
 import java.util.Deque;
 import java.util.concurrent.LinkedBlockingDeque;
 
@@ -12,7 +13,6 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import scala.actors.threadpool.Arrays;
 
 
 public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {

@@ -10,8 +10,8 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleTransformType;
 public class LaserBeamRenderer implements CustomRenderer {
 	
 	private float xOffset = 0.5f;
-	private float yOffset = -1.35f;
-	private float zOffset = -2.1f;
+	private float yOffset = -1.3f;
+	private float zOffset = -1.7f;
 	
 	public LaserBeamRenderer() {
 	}
