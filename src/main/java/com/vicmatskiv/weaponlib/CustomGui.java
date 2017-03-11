@@ -120,7 +120,7 @@ public class CustomGui extends CompatibleGui {
 					if(message != null) {
 						messageText = message.getMessage();
 						if(message.isAlert()) {
-							color = 0xFF0000;
+							color = 0xFFFF00;
 						}
 					} else {
 						messageText = getDefaultWeaponMessage(weaponInstance);
