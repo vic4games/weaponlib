@@ -191,8 +191,8 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 			// This is a permit granted callback which sets state to the final toState
 			
 			S updateToState = processedPermit.getStatus() == Status.GRANTED ? toState : fromState;
-			logger.debug("Applying permit with status " + processedPermit.getStatus()
-				+ " to " + updatedState + ", changing state to " + toState);
+			logger.debug("Applying permit with status {} to {}, changing state to {}", 
+			        processedPermit.getStatus(), updatedState, toState);
 			
 			if(stateUpdater.apply(updateToState, safeCast(updatedState))) {
 				action.execute(safeCast(updatedState), fromState, toState, processedPermit);
@@ -348,7 +348,7 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 		S ts[] = targetStates;
 		while((newStateRule = findNextStateRule(aspect, extendedState, s, ts)) != null) {
 			extendedState.setState(newStateRule.toState);
-			logger.debug("Changed state of " + extendedState + " to " + newStateRule.toState);
+			logger.debug("Changed state of {} to {}", extendedState, newStateRule.toState);
 			result = new Result(true, newStateRule.toState);
 			if(newStateRule.action != null) {
 				result.actionResult = newStateRule.action.execute(extendedState, s, newStateRule.toState, permit);

@@ -339,7 +339,7 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 				currentIndex -= 37;
 			}
 			
-			logger.debug("Searching for an attachment in slot " + currentIndex);
+			logger.debug("Searching for an attachment in slot {}", currentIndex);
 			
 			if(currentIndex == -1) {
 				result.index = -1;

@@ -87,7 +87,7 @@ public class PlayerItemInstanceRegistry {
 			}
 			if(result.getPlayer() != player) {
 				logger.warn("Invalid player " + result.getPlayer()
-						+ " associated with instance in slot, changing to " + player);
+						+ " associated with instance in slot, changing to {}", player);
 				result.setPlayer(player);
 			}
 			
@@ -133,11 +133,11 @@ public class PlayerItemInstanceRegistry {
 		
 		PlayerItemInstance<?> result = null;
 		if(itemStack != null && itemStack.getItem() instanceof PlayerItemInstanceFactory) {
-			logger.debug("Creating instance for slot " + slot +  " from item stack "+ itemStack);
+			logger.debug("Creating instance for slot {} from stack {}", slot, itemStack);
 			try {
 				result = Tags.getInstance(itemStack);
 			} catch(RuntimeException e) {
-				logger.debug("Failed to deserialize instance from " + itemStack);
+				logger.debug("Failed to deserialize instance from {}", itemStack);
 			}
 			if(result == null) {
 				result = ((PlayerItemInstanceFactory<?, ?>) itemStack.getItem()).createItemInstance(player, itemStack, slot);
@@ -153,23 +153,23 @@ public class PlayerItemInstanceRegistry {
 		Optional<PlayerItemInstance<?>> result = Optional.empty();
 		try {
 			result = itemStackInstanceCache.get(itemStack, () -> {
-				logger.debug("ItemStack " + itemStack + " not found in cache, initializing...");
+				logger.debug("ItemStack {} not found in cache, initializing...", itemStack);
 				int slot = compatibility.getInventorySlot(player, itemStack);
 				PlayerItemInstance<?> instance = null;
 				if(slot >= 0) {
 					instance = getItemInstance(player, slot);
-					logger.debug("Resolved item stack instance " + instance + " from slot " + slot);
+					logger.debug("Resolved item stack instance {} in slot {}", instance, slot);
 				} else {
 					try {
 						instance = Tags.getInstance(itemStack);
 					} catch(RuntimeException e) {
-						logger.error("Failed to deserialize instance from stack " + itemStack + ". " + e);
+						logger.error("Failed to deserialize instance from stack {}: {}", itemStack, e.toString());
 					}
 				}
 				return Optional.ofNullable(instance);
 			});
 		} catch (UncheckedExecutionException | ExecutionException e) {
-			logger.error("Failed to initialize cache instance from " + itemStack, e.getCause());
+			logger.error("Failed to initialize cache instance from {}", itemStack, e.getCause());
 		}
 		return result.orElse(null);
 	}

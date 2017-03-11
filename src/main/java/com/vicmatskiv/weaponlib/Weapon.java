@@ -597,7 +597,7 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
         PlayerWeaponInstance instance = modContext.getMainHeldWeapon();
         if(instance != null) {
             float recoil = instance.getWeapon().builder.recoil * factor;
-            logger.debug("Changing recoil to " + recoil + " for instance " + instance);
+            logger.debug("Changing recoil to {} for instance {}", recoil, instance);
             instance.setRecoil(recoil);
         }
     }
@@ -766,7 +766,7 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
         } else {
             message = "Burst";
         }
-        logger.debug("Changed fire mode of " + instance + " to " + result);
+        logger.debug("Changed fire mode of {} to {}", instance, result);
 
         modContext.getStatusMessageCenter().addMessage("Firearm mode: " + message, 1000);
 
@@ -804,7 +804,7 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
 
             modContext.getStatusMessageCenter().addMessage("Zoom: " + Math.round(ratio * 100) + "%", 800);
             compatibility.playSound(instance.getPlayer(),  modContext.getZoomSound(), 1F, 1F);
-            logger.debug("Changed optical zoom to " + instance.getZoom());
+            logger.debug("Changed optical zoom to {}", instance.getZoom());
         } else {
             logger.debug("Cannot change non-optical zoom");
         }
@@ -826,7 +826,7 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
             float ratio = (minZoom - zoom) / (minZoom - maxZoom);
             modContext.getStatusMessageCenter().addMessage("Zoom: " + Math.round(ratio * 100) + "%", 800);
             compatibility.playSound(instance.getPlayer(),  modContext.getZoomSound(), 1F, 1F);
-            logger.debug("Changed optical zoom to " + zoom);
+            logger.debug("Changed optical zoom to {}", zoom);
         } else {
             logger.debug("Cannot change non-optical zoom");
         }
