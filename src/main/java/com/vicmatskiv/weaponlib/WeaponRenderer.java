@@ -961,8 +961,6 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 	@Override
 	public void renderItem(ItemStack weaponItemStack, RenderContext renderContext,
 			Positioner<Part, RenderContext> positioner) {
-//	    logger.debug("Rendering {}, update id {} for player {}", weaponItemStack,
-//	            weaponItemStack.stackTagCompound.getInteger("updateid"), renderContext.getPlayer());
 		List<CompatibleAttachment<? extends AttachmentContainer>> attachments = null;
 		if(builder.getModel() instanceof ModelWithAttachments) {
 			attachments = ((Weapon) weaponItemStack.getItem()).getActiveAttachments(renderContext.getPlayer(), weaponItemStack);
