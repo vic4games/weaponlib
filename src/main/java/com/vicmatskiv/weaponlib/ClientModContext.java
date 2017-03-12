@@ -8,17 +8,16 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
-import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
-import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderingRegistry;
-import com.vicmatskiv.weaponlib.compatibility.CompatibleWorldRenderer;
-import com.vicmatskiv.weaponlib.state.StateManager;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
+
+import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderingRegistry;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleWorldRenderer;
 
 public class ClientModContext extends CommonModContext {
 
@@ -34,9 +33,6 @@ public class ClientModContext extends CommonModContext {
 	private SafeGlobals safeGlobals = new SafeGlobals();
 	//static ReloadAspect.ReloadContext context;
 	
-	private SyncManager<?> syncManager;
-	
-	private PlayerItemInstanceRegistry playerItemInstanceRegistry;
 	
 	private StatusMessageCenter statusMessageCenter;
 	
@@ -52,25 +48,7 @@ public class ClientModContext extends CommonModContext {
 				Minecraft.class, Minecraft.getMinecraft(), "defaultResourcePacks", "field_110449_ao") ; 
         defaultResourcePacks.add(new WeaponResourcePack()) ;
    
-        this.syncManager = new SyncManager<>(permitManager);
-        
-        this.playerItemInstanceRegistry = new PlayerItemInstanceRegistry(syncManager);
                 
-		StateManager<WeaponState, PlayerWeaponInstance> weaponStateManager = new StateManager<>((s1, s2) -> s1 == s2);
-		weaponReloadAspect.setPermitManager(permitManager);
-		weaponReloadAspect.setStateManager(weaponStateManager);
-		
-		weaponFireAspect.setPermitManager(permitManager);
-		weaponFireAspect.setStateManager(weaponStateManager);
-		
-		weaponAttachmentAspect.setPermitManager(permitManager);
-		weaponAttachmentAspect.setStateManager(weaponStateManager);
-		
-		StateManager<MagazineState, PlayerMagazineInstance> magazineStateManager = new StateManager<>((s1, s2) -> s1 == s2);
-
-		magazineReloadAspect.setPermitManager(permitManager);
-		magazineReloadAspect.setStateManager(magazineStateManager);
-		
 		compatibility.registerWithEventBus(new CustomGui(Minecraft.getMinecraft(), this, weaponAttachmentAspect));
 		compatibility.registerWithEventBus(new WeaponEventHandler(this, safeGlobals));
 		

@@ -53,261 +53,260 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer implements IPerspectiveAwareModel, IBakedModel {
-	
-	protected static class StateDescriptor {
-		protected MultipartRenderStateManager<RenderableState, Part, RenderContext> stateManager;
-		protected float rate;
-		protected float amplitude = 0.04f;
-		private PlayerWeaponInstance instance;
-		public StateDescriptor(PlayerWeaponInstance instance, MultipartRenderStateManager<RenderableState, Part, RenderContext> stateManager,
-				float rate, float amplitude) {
-			this.instance = instance;
-			this.stateManager = stateManager;
-			this.rate = rate;
-			this.amplitude = amplitude;
-		}
-	}
-	
-	protected EntityPlayer owner;
+    
+    protected static class StateDescriptor {
+        protected MultipartRenderStateManager<RenderableState, Part, RenderContext> stateManager;
+        protected float rate;
+        protected float amplitude = 0.04f;
+        private PlayerWeaponInstance instance;
+        public StateDescriptor(PlayerWeaponInstance instance, MultipartRenderStateManager<RenderableState, Part, RenderContext> stateManager,
+                float rate, float amplitude) {
+            this.instance = instance;
+            this.stateManager = stateManager;
+            this.rate = rate;
+            this.amplitude = amplitude;
+        }
+    }
+    
+    protected EntityPlayer player;
 
-	protected TextureManager textureManager;
+    protected TextureManager textureManager;
 
-	private Pair<? extends IBakedModel, Matrix4f> pair;
-	protected ModelBiped playerBiped = new ModelBiped();
-	
-	protected ItemStack itemStack;
+    private Pair<? extends IBakedModel, Matrix4f> pair;
+    protected ModelBiped playerBiped = new ModelBiped();
+    
+    protected ItemStack itemStack;
 
-	protected ModelResourceLocation resourceLocation;
-	
-	private class WeaponItemOverrideList extends ItemOverrideList {
+    protected ModelResourceLocation resourceLocation;
+    
+    private class WeaponItemOverrideList extends ItemOverrideList {
 
-		public WeaponItemOverrideList(List<ItemOverride> overridesIn) {
-			super(overridesIn);
-		}
-		
-		@Override
-		public IBakedModel handleItemState(IBakedModel originalModel, ItemStack stack, World world,
-				EntityLivingBase entity) {
-			CompatibleWeaponRenderer.this.itemStack = stack;
-			CompatibleWeaponRenderer.this.owner = (EntityPlayer) entity;
-			return super.handleItemState(originalModel, stack, world, entity);
-		}
-	}
-	
-	private ItemOverrideList itemOverrideList = new WeaponItemOverrideList(Collections.emptyList());
-	
-	TransformType transformType;
+        public WeaponItemOverrideList(List<ItemOverride> overridesIn) {
+            super(overridesIn);
+        }
+        
+        @Override
+        public IBakedModel handleItemState(IBakedModel originalModel, ItemStack stack, World world,
+                EntityLivingBase entity) {
+            CompatibleWeaponRenderer.this.itemStack = stack;
+            CompatibleWeaponRenderer.this.player = (EntityPlayer) entity;
+            return super.handleItemState(originalModel, stack, world, entity);
+        }
+    }
+    
+    private ItemOverrideList itemOverrideList = new WeaponItemOverrideList(Collections.emptyList());
+    
+    TransformType transformType;
 
-	private Builder builder;
-	
-	protected CompatibleWeaponRenderer (WeaponRenderer.Builder builder) {
-		this.builder = builder;
-		
-		this.textureManager = Minecraft.getMinecraft().getTextureManager();
-		this.pair = Pair.of((IBakedModel) this, null);
-		this.playerBiped = new ModelBiped();
-		this.playerBiped.textureWidth = 64;
-		this.playerBiped.textureHeight = 64;
-		
-	}
-	
-	@Override
-	public List<BakedQuad> getQuads(IBlockState state, EnumFacing side, long rand) {
-		if(transformType == TransformType.GROUND 
-				|| transformType == TransformType.GUI
-				|| transformType == TransformType.FIRST_PERSON_RIGHT_HAND 
-				|| transformType == TransformType.THIRD_PERSON_RIGHT_HAND 
-				|| transformType == TransformType.FIRST_PERSON_LEFT_HAND 
-				|| transformType == TransformType.THIRD_PERSON_LEFT_HAND 
-				) {
-		
-			Tessellator tessellator = Tessellator.getInstance();
-			VertexBuffer worldrenderer = tessellator.getBuffer();
-			tessellator.draw();
-			GlStateManager.pushMatrix();
+    private Builder builder;
+    
+    protected CompatibleWeaponRenderer (WeaponRenderer.Builder builder) {
+        this.builder = builder;
+        
+        this.textureManager = Minecraft.getMinecraft().getTextureManager();
+        this.pair = Pair.of((IBakedModel) this, null);
+        this.playerBiped = new ModelBiped();
+        this.playerBiped.textureWidth = 64;
+        this.playerBiped.textureHeight = 64;
+        
+    }
+    
+    @Override
+    public List<BakedQuad> getQuads(IBlockState state, EnumFacing side, long rand) {
+        if(transformType == TransformType.GROUND 
+                || transformType == TransformType.GUI
+                || transformType == TransformType.FIRST_PERSON_RIGHT_HAND 
+                || transformType == TransformType.THIRD_PERSON_RIGHT_HAND 
+                || transformType == TransformType.FIRST_PERSON_LEFT_HAND 
+                || transformType == TransformType.THIRD_PERSON_LEFT_HAND 
+                ) {
+        
+            Tessellator tessellator = Tessellator.getInstance();
+            VertexBuffer worldrenderer = tessellator.getBuffer();
+            tessellator.draw();
+            GlStateManager.pushMatrix();
 
-			if (owner != null) {
-				if (transformType == TransformType.THIRD_PERSON_RIGHT_HAND) {
-					if (owner.isSneaking()) GlStateManager.translate(0.0F, -0.2F, 0.0F);
-				} else if (transformType == TransformType.FIRST_PERSON_LEFT_HAND || transformType == TransformType.FIRST_PERSON_RIGHT_HAND) {
-					//
-				}
-			}
+            if (player != null) {
+                if (transformType == TransformType.THIRD_PERSON_RIGHT_HAND) {
+                    if (player.isSneaking()) GlStateManager.translate(0.0F, -0.2F, 0.0F);
+                } else if (transformType == TransformType.FIRST_PERSON_LEFT_HAND || transformType == TransformType.FIRST_PERSON_RIGHT_HAND) {
+                    //
+                }
+            }
 
-			if (onGround()) {
-				GlStateManager.scale(-3f, -3f, -3f);
-			}
+            if (onGround()) {
+                GlStateManager.scale(-3f, -3f, -3f);
+            }
 
-			renderItem();
-			GlStateManager.popMatrix();
-			worldrenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.ITEM);
-		}
-		
-		// Reset the dynamic values.
-		this.owner = null;
-		this.itemStack = null;
-		this.transformType = null;
-		
-		return Collections.emptyList();
-	}
-	
-	protected boolean onGround() {
-		return transformType == null;
-	}
+            renderItem();
+            GlStateManager.popMatrix();
+            worldrenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.ITEM);
+        }
+        
+        // Reset the dynamic values.
+        this.player = null;
+        this.itemStack = null;
+        this.transformType = null;
+        
+        return Collections.emptyList();
+    }
+    
+    protected boolean onGround() {
+        return transformType == null;
+    }
 
-	@Override
-	public final boolean isAmbientOcclusion() {
-		return true;
-	}
+    @Override
+    public final boolean isAmbientOcclusion() {
+        return true;
+    }
 
-	@Override
-	public final boolean isGui3d() {
-		return true;
-	}
+    @Override
+    public final boolean isGui3d() {
+        return true;
+    }
 
-	@Override
-	public final boolean isBuiltInRenderer() {
-		return false;
-	}
-	
-	@Override
-	public TextureAtlasSprite getParticleTexture() {
-		return Minecraft.getMinecraft().getTextureMapBlocks().getMissingSprite();
-	}
+    @Override
+    public final boolean isBuiltInRenderer() {
+        return false;
+    }
+    
+    @Override
+    public TextureAtlasSprite getParticleTexture() {
+        return Minecraft.getMinecraft().getTextureMapBlocks().getMissingSprite();
+    }
 
-	public void setOwner(EntityPlayer player) {
-		this.owner = player;
-	}
-	
-	protected abstract ClientModContext getClientModContext();
-	
-	protected abstract StateDescriptor getStateDescriptor(EntityPlayer player, ItemStack itemStack);
-	
-	@SideOnly(Side.CLIENT)
-	public void renderItem()
-	{
-		GL11.glPushMatrix();
-		
-		AbstractClientPlayer player = Minecraft.getMinecraft().thePlayer;
-		RenderContext renderContext = new RenderContext(getClientModContext(), player, itemStack);
-		
-		renderContext.setAgeInTicks(-0.4f);
-		renderContext.setScale(0.08f);
-		renderContext.setCompatibleTransformType(CompatibleTransformType.fromItemRenderType(transformType));
-		
-		Positioner<Part, RenderContext> positioner = null;
-		switch (transformType)
-		{
-		case GROUND:
-			GL11.glScaled(-1F, -1F, 1F);
-			GL11.glScaled(0.45F, 0.45F, 0.45F);
-			GL11.glTranslatef(-1.1f, -0.9f, 0f);
-			GL11.glRotatef(0F, 1f, 0f, 0f);
-			GL11.glRotatef(0F, 0f, 1f, 0f);
-			GL11.glRotatef(0F, 0f, 0f, 1f);
-			builder.getEntityPositioning().accept(itemStack);
-			break;
-		case GUI:
-			GL11.glScaled(-1F, -1F, 1F);
-			GL11.glScaled(0.5F, 0.5F, 0.5F);
-			GL11.glTranslatef(-1.1f, -0.9f, 0f);
-			GL11.glRotatef(0F, 1f, 0f, 0f);
-			GL11.glRotatef(0F, 0f, 1f, 0f);
-			GL11.glRotatef(-10F, 0f, 0f, 1f);
-			builder.getInventoryPositioning().accept(itemStack);
-			break;
-		case THIRD_PERSON_RIGHT_HAND: case THIRD_PERSON_LEFT_HAND:
-			GL11.glScaled(-1F, -1F, 1F);
-			GL11.glScaled(0.4F, 0.4F, 0.4F);
-			GL11.glTranslatef(-1.25f, -2.1f, 0.6f);
-			GL11.glRotatef(110F, 1f, 0f, 0f);
-			GL11.glRotatef(135F, 0f, 1f, 0f);
-			GL11.glRotatef(-180F, 0f, 0f, 1f);
-			
-			builder.getThirdPersonPositioning().accept(renderContext);
-			break;
-		case FIRST_PERSON_RIGHT_HAND: case FIRST_PERSON_LEFT_HAND:
-			
-			int i = transformType == TransformType.FIRST_PERSON_RIGHT_HAND ? 1 : -1;
-			
-			GL11.glTranslatef(0.5f, 0.5f, 0.5f); // untranslate 1.9.4
-			
-			i = -i;
-			GL11.glTranslatef((float)i * 0.56F, 0.52F + /*p_187459_2_ * */ +0.6F, 0.72F); // untranslate 1.9.4
+    public void setOwner(EntityPlayer player) {
+        this.player = player;
+    }
+    
+    protected abstract ClientModContext getClientModContext();
+    
+    protected abstract StateDescriptor getStateDescriptor(EntityPlayer player, ItemStack itemStack);
+    
+    @SideOnly(Side.CLIENT)
+    public void renderItem()
+    {
+        GL11.glPushMatrix();
+        
+        RenderContext renderContext = new RenderContext(getClientModContext(), player, itemStack);
+        
+        renderContext.setAgeInTicks(-0.4f);
+        renderContext.setScale(0.08f);
+        renderContext.setCompatibleTransformType(CompatibleTransformType.fromItemRenderType(transformType));
+        
+        Positioner<Part, RenderContext> positioner = null;
+        switch (transformType)
+        {
+        case GROUND:
+            GL11.glScaled(-1F, -1F, 1F);
+            GL11.glScaled(0.45F, 0.45F, 0.45F);
+            GL11.glTranslatef(-1.1f, -0.9f, 0f);
+            GL11.glRotatef(0F, 1f, 0f, 0f);
+            GL11.glRotatef(0F, 0f, 1f, 0f);
+            GL11.glRotatef(0F, 0f, 0f, 1f);
+            builder.getEntityPositioning().accept(itemStack);
+            break;
+        case GUI:
+            GL11.glScaled(-1F, -1F, 1F);
+            GL11.glScaled(0.5F, 0.5F, 0.5F);
+            GL11.glTranslatef(-1.1f, -0.9f, 0f);
+            GL11.glRotatef(0F, 1f, 0f, 0f);
+            GL11.glRotatef(0F, 0f, 1f, 0f);
+            GL11.glRotatef(-10F, 0f, 0f, 1f);
+            builder.getInventoryPositioning().accept(itemStack);
+            break;
+        case THIRD_PERSON_RIGHT_HAND: case THIRD_PERSON_LEFT_HAND:
+            GL11.glScaled(-1F, -1F, 1F);
+            GL11.glScaled(0.4F, 0.4F, 0.4F);
+            GL11.glTranslatef(-1.25f, -2.1f, 0.6f);
+            GL11.glRotatef(110F, 1f, 0f, 0f);
+            GL11.glRotatef(135F, 0f, 1f, 0f);
+            GL11.glRotatef(-180F, 0f, 0f, 1f);
+            
+            builder.getThirdPersonPositioning().accept(renderContext);
+            break;
+        case FIRST_PERSON_RIGHT_HAND: case FIRST_PERSON_LEFT_HAND:
+            
+            int i = transformType == TransformType.FIRST_PERSON_RIGHT_HAND ? 1 : -1;
+            
+            GL11.glTranslatef(0.5f, 0.5f, 0.5f); // untranslate 1.9.4
+            
+            i = -i;
+            GL11.glTranslatef((float)i * 0.56F, 0.52F + /*p_187459_2_ * */ +0.6F, 0.72F); // untranslate 1.9.4
 
-			if(transformType == TransformType.FIRST_PERSON_LEFT_HAND) {
-				// mirror everything if left hand
-				GL11.glScalef(-1f, 1f, 1f);
-			}
-			
-			i = 1; // Draw everything as if for the right hand, assuming mirroring is already in place
-			GL11.glTranslatef((float)i * 0.56F, -0.52F + /*p_187459_2_ * */ -0.6F, -0.72F); // re-translate 1.9.4
-			
-			GL11.glTranslatef(0f, 0.6f, 0f); // -0.6 y-offset is set somewhere upstream in 1.9.4, so adjusting it
-						
-			GL11.glRotatef(45f, 0f, 1f, 0f); // rotate as per 1.8.9 transformFirstPersonItem
-			
-			GL11.glScalef(0.4F, 0.4F, 0.4F); // scale as per 1.8.9 transformFirstPersonItem
-			GL11.glTranslatef(-0.5f, -0.5f, -0.5f); 
-			
-			GL11.glScaled(-1F, -1F, 1F);
-			
-			StateDescriptor stateDescriptor = getStateDescriptor(player, itemStack);
-			renderContext.setPlayerItemInstance(stateDescriptor.instance);
-			MultipartPositioning<Part, RenderContext> multipartPositioning = stateDescriptor.stateManager.nextPositioning();
-			
-			renderContext.setTransitionProgress(multipartPositioning.getProgress());
-			
-			renderContext.setFromState(multipartPositioning.getFromState(RenderableState.class));
-			
-			renderContext.setToState(multipartPositioning.getToState(RenderableState.class));
-			
-			positioner = multipartPositioning.getPositioner();
-						
-			positioner.randomize(stateDescriptor.rate, stateDescriptor.amplitude);
-			
-			positioner.position(Part.WEAPON, renderContext);
-			
-			Render<AbstractClientPlayer> entityRenderObject = Minecraft.getMinecraft().getRenderManager().getEntityRenderObject(player);
-			RenderPlayer render = (RenderPlayer) entityRenderObject;
-			Minecraft.getMinecraft().getTextureManager().bindTexture(((AbstractClientPlayer) player).getLocationSkin());
-			
-			if(player != null && player.getHeldItemMainhand() != null && player.getHeldItemMainhand().getItem() instanceof Weapon) {
-				// Draw hands only if weapon is held in the main hand
-				GL11.glPushMatrix();
-				GL11.glTranslatef(0f, -1f, 0f);
-				GL11.glRotatef(-10F, 1f, 0f, 0f);
-				GL11.glRotatef(0F, 0f, 1f, 0f);
-				GL11.glRotatef(10F, 0f, 0f, 1f);
-				positioner.position(Part.LEFT_HAND, renderContext);
-				render.renderLeftArm(player);
-				GL11.glPopMatrix();
-				
-				GL11.glPushMatrix();
-				GL11.glScaled(1F, 1F, 1F);
-				GL11.glTranslatef(-0.25f, 0f, 0.2f);
-				GL11.glRotatef(5F, 1f, 0f, 0f);
-				GL11.glRotatef(25F, 0f, 1f, 0f);
-				GL11.glRotatef(0F, 0f, 0f, 1f);	
-				positioner.position(Part.RIGHT_HAND, renderContext);
-				renderRightArm(render, player);
-				GL11.glPopMatrix();
-			}
-			
-	        
-			break;
-		default:
-		}
-		
-		renderItem(itemStack, renderContext, positioner);
-		
-		GL11.glPopMatrix();
-	}
+            if(transformType == TransformType.FIRST_PERSON_LEFT_HAND) {
+                // mirror everything if left hand
+                GL11.glScalef(-1f, 1f, 1f);
+            }
+            
+            i = 1; // Draw everything as if for the right hand, assuming mirroring is already in place
+            GL11.glTranslatef((float)i * 0.56F, -0.52F + /*p_187459_2_ * */ -0.6F, -0.72F); // re-translate 1.9.4
+            
+            GL11.glTranslatef(0f, 0.6f, 0f); // -0.6 y-offset is set somewhere upstream in 1.9.4, so adjusting it
+                        
+            GL11.glRotatef(45f, 0f, 1f, 0f); // rotate as per 1.8.9 transformFirstPersonItem
+            
+            GL11.glScalef(0.4F, 0.4F, 0.4F); // scale as per 1.8.9 transformFirstPersonItem
+            GL11.glTranslatef(-0.5f, -0.5f, -0.5f); 
+            
+            GL11.glScaled(-1F, -1F, 1F);
+            
+            StateDescriptor stateDescriptor = getStateDescriptor(player, itemStack);
+            renderContext.setPlayerItemInstance(stateDescriptor.instance);
+            MultipartPositioning<Part, RenderContext> multipartPositioning = stateDescriptor.stateManager.nextPositioning();
+            
+            renderContext.setTransitionProgress(multipartPositioning.getProgress());
+            
+            renderContext.setFromState(multipartPositioning.getFromState(RenderableState.class));
+            
+            renderContext.setToState(multipartPositioning.getToState(RenderableState.class));
+            
+            positioner = multipartPositioning.getPositioner();
+                        
+            positioner.randomize(stateDescriptor.rate, stateDescriptor.amplitude);
+            
+            positioner.position(Part.WEAPON, renderContext);
+            
+            Render<AbstractClientPlayer> entityRenderObject = Minecraft.getMinecraft().getRenderManager().getEntityRenderObject((AbstractClientPlayer)player);
+            RenderPlayer render = (RenderPlayer) entityRenderObject;
+            Minecraft.getMinecraft().getTextureManager().bindTexture(((AbstractClientPlayer) player).getLocationSkin());
+            
+            if(player != null && player.getHeldItemMainhand() != null && player.getHeldItemMainhand().getItem() instanceof Weapon) {
+                // Draw hands only if weapon is held in the main hand
+                GL11.glPushMatrix();
+                GL11.glTranslatef(0f, -1f, 0f);
+                GL11.glRotatef(-10F, 1f, 0f, 0f);
+                GL11.glRotatef(0F, 0f, 1f, 0f);
+                GL11.glRotatef(10F, 0f, 0f, 1f);
+                positioner.position(Part.LEFT_HAND, renderContext);
+                render.renderLeftArm((AbstractClientPlayer)player);
+                GL11.glPopMatrix();
+                
+                GL11.glPushMatrix();
+                GL11.glScaled(1F, 1F, 1F);
+                GL11.glTranslatef(-0.25f, 0f, 0.2f);
+                GL11.glRotatef(5F, 1f, 0f, 0f);
+                GL11.glRotatef(25F, 0f, 1f, 0f);
+                GL11.glRotatef(0F, 0f, 0f, 1f); 
+                positioner.position(Part.RIGHT_HAND, renderContext);
+                renderRightArm(render,(AbstractClientPlayer) player);
+                GL11.glPopMatrix();
+            }
+            
+            
+            break;
+        default:
+        }
+        
+        renderItem(itemStack, renderContext, positioner);
+        
+        GL11.glPopMatrix();
+    }
 
-	protected abstract void renderItem(ItemStack weaponItemStack, RenderContext renderContext,
-			Positioner<Part, RenderContext> positioner);
-	
-	public void renderRightArm(RenderPlayer renderPlayer, AbstractClientPlayer clientPlayer)
+    protected abstract void renderItem(ItemStack weaponItemStack, RenderContext renderContext,
+            Positioner<Part, RenderContext> positioner);
+    
+    public void renderRightArm(RenderPlayer renderPlayer, AbstractClientPlayer clientPlayer)
     {
         float f = 1.0F;
         GlStateManager.color(f, f, f);
@@ -326,8 +325,8 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
         modelplayer.bipedRightArmwear.render(0.0625F);
         GlStateManager.disableBlend();
     }
-	
-	private void setModelVisibilities(RenderPlayer renderPlayer, AbstractClientPlayer clientPlayer)
+    
+    private void setModelVisibilities(RenderPlayer renderPlayer, AbstractClientPlayer clientPlayer)
     {
         ModelPlayer modelplayer = renderPlayer.getMainModel();
 
@@ -396,21 +395,21 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
         }
     }
 
-	@Override
-	public ItemCameraTransforms getItemCameraTransforms() {
-		return ItemCameraTransforms.DEFAULT;
-	}
+    @Override
+    public ItemCameraTransforms getItemCameraTransforms() {
+        return ItemCameraTransforms.DEFAULT;
+    }
 
-	@Override
-	public ItemOverrideList getOverrides() {
-		
-		return itemOverrideList;
-	}
+    @Override
+    public ItemOverrideList getOverrides() {
+        
+        return itemOverrideList;
+    }
 
-	@Override
-	public Pair<? extends IBakedModel, Matrix4f> handlePerspective(TransformType cameraTransformType) {
-		this.transformType = cameraTransformType;
-		return pair;
-	}
+    @Override
+    public Pair<? extends IBakedModel, Matrix4f> handlePerspective(TransformType cameraTransformType) {
+        this.transformType = cameraTransformType;
+        return pair;
+    }
 
 }

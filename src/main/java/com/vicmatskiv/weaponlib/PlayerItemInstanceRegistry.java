@@ -81,11 +81,11 @@ public class PlayerItemInstanceRegistry {
 					result.markDirty();
 				}
 			}
-			if(result.getItemInventoryIndex() != slot) {
+			if(result != null && result.getItemInventoryIndex() != slot) {
 				logger.warn("Invalid instance slot id, correcting...");
 				result.setItemInventoryIndex(slot);
 			}
-			if(result.getPlayer() != player) {
+			if(result != null && result.getPlayer() != player) {
 				logger.warn("Invalid player " + result.getPlayer()
 						+ " associated with instance in slot, changing to {}", player);
 				result.setPlayer(player);
@@ -154,8 +154,12 @@ public class PlayerItemInstanceRegistry {
 		try {
 			result = itemStackInstanceCache.get(itemStack, () -> {
 				logger.debug("ItemStack {} not found in cache, initializing...", itemStack);
-				int slot = compatibility.getInventorySlot(player, itemStack);
 				PlayerItemInstance<?> instance = null;
+				int slot = -1;
+				if(compatibility.clientPlayer() == player) {
+				    // For current player, the latest instance is available locally
+				    slot = compatibility.getInventorySlot(player, itemStack);
+				}
 				if(slot >= 0) {
 					instance = getItemInstance(player, slot);
 					logger.debug("Resolved item stack instance {} in slot {}", instance, slot);

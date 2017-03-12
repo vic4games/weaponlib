@@ -59,7 +59,7 @@ public class SyncManager<S extends ManagedState<S>> {
 	
 	@SuppressWarnings("unchecked")
 	private void sync(PlayerItemInstance<?> watchable) {
-		logger.debug("Syncing {} with update id {}", watchable, watchable.getUpdateId());
+		logger.debug("Syncing {} in state {} with update id {} to server", watchable, watchable.getState(), watchable.getUpdateId());
 		long updateId = watchable.getUpdateId(); // capturing update id
 		watchable.setSyncStartTimestamp(System.currentTimeMillis());
 		permitManager.request(new Permit<S>((S) watchable.getState()), (PlayerItemInstance<S>)watchable, (p, e) -> {

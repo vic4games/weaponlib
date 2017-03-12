@@ -256,7 +256,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 
 			Tags.setAmmo(weaponItemStack, 0);
 			weaponInstance.setAmmo(0);
-			compatibility.playSoundToNearExcept(player, weapon.getReloadSound(), 1.0F, 1.0F);
+			compatibility.playSoundToNearExcept(player, weapon.getUnloadSound(), 1.0F, 1.0F);
 			
 			p.setStatus(Status.GRANTED);
 		} else {
