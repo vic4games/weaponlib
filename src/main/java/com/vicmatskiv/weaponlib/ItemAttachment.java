@@ -42,20 +42,20 @@ public class ItemAttachment<T> extends CompatibleItem implements ModelSource {
 		public void apply(ItemAttachment<T> itemAttachment, PlayerWeaponInstance instance);
 	}
 
-	public ItemAttachment(String modId, AttachmentCategory category, ModelBase model, String textureName, String crosshair, 
+	protected ItemAttachment(String modId, AttachmentCategory category, ModelBase model, String textureName, String crosshair, 
 			ApplyHandler<T> apply, ApplyHandler<T> remove) {
 		//this.modId = modId;
 		this.category = category;
-		if(model != null) {
-			this.texturedModels.add(new Tuple<ModelBase, String>(model, textureName));
-		}
+//		if(model != null) {
+//			this.texturedModels.add(new Tuple<ModelBase, String>(model, textureName));
+//		}
 		this.textureName = textureName;
 		this.crosshair = crosshair != null ? modId + ":" + "textures/crosshairs/" + crosshair + ".png" : null;
 		this.apply = apply;
 		this.remove = remove;
 	}
 	
-	public ItemAttachment(String modId, AttachmentCategory category, String crosshair, 
+	protected ItemAttachment(String modId, AttachmentCategory category, String crosshair, 
 			ApplyHandler<T> apply, ApplyHandler<T> remove) {
 		//this.modId = modId;
 		this.category = category;
