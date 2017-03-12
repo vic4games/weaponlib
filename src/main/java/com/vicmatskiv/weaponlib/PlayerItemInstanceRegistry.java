@@ -81,11 +81,11 @@ public class PlayerItemInstanceRegistry {
 					result.markDirty();
 				}
 			}
-			if(result.getItemInventoryIndex() != slot) {
+			if(result != null && result.getItemInventoryIndex() != slot) {
 				logger.warn("Invalid instance slot id, correcting...");
 				result.setItemInventoryIndex(slot);
 			}
-			if(result.getPlayer() != player) {
+			if(result != null && result.getPlayer() != player) {
 				logger.warn("Invalid player " + result.getPlayer()
 						+ " associated with instance in slot, changing to {}", player);
 				result.setPlayer(player);
