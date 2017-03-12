@@ -5,6 +5,15 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 import java.util.HashMap;
 import java.util.Map;
 
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
+import net.minecraft.util.ResourceLocation;
+
+import com.vicmatskiv.weaponlib.MagazineReloadAspect.LoadPermit;
+import com.vicmatskiv.weaponlib.WeaponAttachmentAspect.ChangeAttachmentPermit;
+import com.vicmatskiv.weaponlib.WeaponAttachmentAspect.EnterAttachmentModePermit;
+import com.vicmatskiv.weaponlib.WeaponAttachmentAspect.ExitAttachmentModePermit;
+import com.vicmatskiv.weaponlib.WeaponReloadAspect.UnloadPermit;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSide;
@@ -12,12 +21,29 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 import com.vicmatskiv.weaponlib.crafting.RecipeGenerator;
 import com.vicmatskiv.weaponlib.network.NetworkPermitManager;
 import com.vicmatskiv.weaponlib.network.PermitMessage;
-
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.Item;
-import net.minecraft.util.ResourceLocation;
+import com.vicmatskiv.weaponlib.network.TypeRegistry;
+import com.vicmatskiv.weaponlib.state.Permit;
+import com.vicmatskiv.weaponlib.state.StateManager;
 
 public class CommonModContext implements ModContext {
+    
+    static {
+        TypeRegistry.getInstance().register(LoadPermit.class);      
+        TypeRegistry.getInstance().register(MagazineState.class);
+        TypeRegistry.getInstance().register(PlayerItemInstance.class);
+        TypeRegistry.getInstance().register(PlayerWeaponInstance.class);
+        TypeRegistry.getInstance().register(PlayerMagazineInstance.class);
+        TypeRegistry.getInstance().register(PlayerWeaponInstance.class);
+        TypeRegistry.getInstance().register(Permit.class);
+        TypeRegistry.getInstance().register(EnterAttachmentModePermit.class);
+        TypeRegistry.getInstance().register(ExitAttachmentModePermit.class);
+        TypeRegistry.getInstance().register(ChangeAttachmentPermit.class);
+        TypeRegistry.getInstance().register(UnloadPermit.class);
+        TypeRegistry.getInstance().register(LoadPermit.class);      
+        TypeRegistry.getInstance().register(PlayerWeaponInstance.class);
+        TypeRegistry.getInstance().register(WeaponState.class);
+
+    }
 
 	private String modId;
 	
@@ -26,10 +52,15 @@ public class CommonModContext implements ModContext {
 	protected WeaponReloadAspect weaponReloadAspect;
 	protected WeaponAttachmentAspect weaponAttachmentAspect;
 	protected WeaponFireAspect weaponFireAspect;
+
+    protected SyncManager<?> syncManager;
 	
 	protected MagazineReloadAspect magazineReloadAspect;
 	
 	protected NetworkPermitManager permitManager;
+	
+	protected PlayerItemInstanceRegistry playerItemInstanceRegistry;
+
 	
 	private Map<ResourceLocation, CompatibleSound> registeredSounds = new HashMap<>();
 	
@@ -52,6 +83,26 @@ public class CommonModContext implements ModContext {
 		this.weaponFireAspect = new WeaponFireAspect(this);
 		this.weaponAttachmentAspect = new WeaponAttachmentAspect(this);
 		this.permitManager = new NetworkPermitManager(this);
+		
+		this.syncManager = new SyncManager<>(permitManager);
+		
+        this.playerItemInstanceRegistry = new PlayerItemInstanceRegistry(syncManager);
+
+		
+		StateManager<WeaponState, PlayerWeaponInstance> weaponStateManager = new StateManager<>((s1, s2) -> s1 == s2);
+        weaponReloadAspect.setPermitManager(permitManager);
+        weaponReloadAspect.setStateManager(weaponStateManager);
+        
+        weaponFireAspect.setPermitManager(permitManager);
+        weaponFireAspect.setStateManager(weaponStateManager);
+        
+        weaponAttachmentAspect.setPermitManager(permitManager);
+        weaponAttachmentAspect.setStateManager(weaponStateManager);
+        
+        StateManager<MagazineState, PlayerMagazineInstance> magazineStateManager = new StateManager<>((s1, s2) -> s1 == s2);
+
+        magazineReloadAspect.setPermitManager(permitManager);
+        magazineReloadAspect.setStateManager(magazineStateManager);
 		
 		this.recipeGenerator = new RecipeGenerator();
 
@@ -121,8 +172,8 @@ public class CommonModContext implements ModContext {
 
 	@Override
 	public PlayerItemInstanceRegistry getPlayerItemInstanceRegistry() {
-		throw new UnsupportedOperationException();
-	}
+        return playerItemInstanceRegistry;
+    }
 
 	@Override
 	public WeaponReloadAspect getWeaponReloadAspect() {
