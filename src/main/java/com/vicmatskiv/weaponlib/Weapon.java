@@ -662,8 +662,8 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
     }
 
     @Override
-    public List<CompatibleAttachment<? extends AttachmentContainer>> getActiveAttachments(ItemStack itemStack) {
-        return modContext.getAttachmentAspect().getActiveAttachments(itemStack);
+    public List<CompatibleAttachment<? extends AttachmentContainer>> getActiveAttachments(EntityPlayer player, ItemStack itemStack) {
+        return modContext.getAttachmentAspect().getActiveAttachments(player, itemStack);
     }
 
     long getUnloadTimeoutTicks() {

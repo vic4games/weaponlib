@@ -179,14 +179,14 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 		permit.setStatus(Status.GRANTED);
 	}
 
-	List<CompatibleAttachment<? extends AttachmentContainer>> getActiveAttachments(ItemStack itemStack) {
+	List<CompatibleAttachment<? extends AttachmentContainer>> getActiveAttachments(EntityPlayer player, ItemStack itemStack) {
 
 		compatibility.ensureTagCompound(itemStack);
 		
 		List<CompatibleAttachment<? extends AttachmentContainer>> activeAttachments = new ArrayList<>();
 		
 		PlayerItemInstance<?> itemInstance = modContext.getPlayerItemInstanceRegistry()
-				.getItemInstance(compatibility.clientPlayer(), itemStack);
+				.getItemInstance(player, itemStack);
 		
 
 		int[] activeAttachmentsIds;
@@ -215,19 +215,6 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 			
 		}
 		return activeAttachments;
-	}
-	
-	ItemAttachment<Weapon> getActiveAttachment(ItemStack itemStack, AttachmentCategory category) {
-			
-		PlayerItemInstance<?> itemInstance = modContext.getPlayerItemInstanceRegistry()
-				.getItemInstance(compatibility.clientPlayer(), itemStack);
-		
-
-		if(itemInstance instanceof PlayerWeaponInstance) {
-			return ((PlayerWeaponInstance) itemInstance).getAttachmentItemWithCategory(category);
-		}
-		
-		return null;
 	}
 	
 	void changeAttachment(AttachmentCategory attachmentCategory, PlayerWeaponInstance weaponInstance) {

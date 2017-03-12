@@ -67,7 +67,13 @@ public abstract class CompatibleWeaponRenderer implements IItemRenderer {
 		GL11.glPushMatrix();
 		
 		GL11.glScaled(-1F, -1F, 1F);
-		EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+		EntityPlayer player;
+		
+		if(data.length > 1 && data[1] instanceof EntityPlayer) {
+		    player = (EntityPlayer) data[1];
+		} else {
+		    player = Minecraft.getMinecraft().thePlayer;
+		}
 		
 		RenderContext renderContext = new RenderContext(getClientModContext(), player, weaponItemStack);
 		

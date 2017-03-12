@@ -154,8 +154,12 @@ public class PlayerItemInstanceRegistry {
 		try {
 			result = itemStackInstanceCache.get(itemStack, () -> {
 				logger.debug("ItemStack {} not found in cache, initializing...", itemStack);
-				int slot = compatibility.getInventorySlot(player, itemStack);
 				PlayerItemInstance<?> instance = null;
+				int slot = -1;
+				if(compatibility.clientPlayer() == player) {
+				    // For current player, the latest instance is available locally
+				    slot = compatibility.getInventorySlot(player, itemStack);
+				}
 				if(slot >= 0) {
 					instance = getItemInstance(player, slot);
 					logger.debug("Resolved item stack instance {} in slot {}", instance, slot);

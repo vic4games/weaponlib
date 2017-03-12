@@ -961,9 +961,11 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 	@Override
 	public void renderItem(ItemStack weaponItemStack, RenderContext renderContext,
 			Positioner<Part, RenderContext> positioner) {
+//	    logger.debug("Rendering {}, update id {} for player {}", weaponItemStack,
+//	            weaponItemStack.stackTagCompound.getInteger("updateid"), renderContext.getPlayer());
 		List<CompatibleAttachment<? extends AttachmentContainer>> attachments = null;
 		if(builder.getModel() instanceof ModelWithAttachments) {
-			attachments = ((Weapon) weaponItemStack.getItem()).getActiveAttachments(weaponItemStack);
+			attachments = ((Weapon) weaponItemStack.getItem()).getActiveAttachments(renderContext.getPlayer(), weaponItemStack);
 		}
 		
 		if(builder.getTextureName() != null) {
@@ -975,7 +977,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 					.filter(ca -> ca.getAttachment() instanceof ItemSkin).findAny().orElse(null);
 			if(compatibleSkin != null) {
 				PlayerItemInstance<?> itemInstance = getClientModContext().getPlayerItemInstanceRegistry()
-						.getItemInstance(compatibility.clientPlayer(), weaponItemStack);
+						.getItemInstance(renderContext.getPlayer(), weaponItemStack);
 				if(itemInstance instanceof PlayerWeaponInstance) {
 					int textureIndex = ((PlayerWeaponInstance) itemInstance).getActiveTextureIndex();
 					if(textureIndex >= 0) {
