@@ -47,6 +47,7 @@ import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.oredict.ShapedOreRecipe;
 
 public class Compatibility1_10_2 implements Compatibility {
 
@@ -417,12 +418,18 @@ public class Compatibility1_10_2 implements Compatibility {
 		if (--player.inventory.mainInventory[slot].stackSize <= 0) {
 			player.inventory.mainInventory[slot] = null;
         }
-		return true;	}
+		return true;	
+	}
 
 	@Override
 	public void addShapedRecipe(ItemStack itemStack, Object... materials) {
 		GameRegistry.addShapedRecipe(itemStack, materials);
 	}
+	
+	@Override
+    public void addShapedOreRecipe(ItemStack itemStack, Object... materials) {
+        GameRegistry.addRecipe(new ShapedOreRecipe(itemStack, materials));
+    }
 
 	@Override
 	public void disableLightMap() {

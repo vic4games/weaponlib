@@ -13,7 +13,7 @@ import net.minecraft.world.World;
 
 public abstract class CompatibleItem extends Item {
         
-    public static final CompatibleItem GUNPOWDER = new CompatibleItem(Items.gunpowder) {};
+    public static final CompatibleItem GUNPOWDER = new CompatibleItem(Items.GUNPOWDER) {};
     
     private Item item;
     public CompatibleItem() {}
