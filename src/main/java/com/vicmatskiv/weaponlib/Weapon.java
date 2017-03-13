@@ -728,6 +728,13 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
         instance.setState(WeaponState.READY);
         instance.setRecoil(builder.recoil);
         instance.setMaxShots(builder.maxShots.get(0));
+        
+        for(CompatibleAttachment<Weapon> compatibleAttachment: ((Weapon) itemStack.getItem()).getCompatibleAttachments().values()) {
+            ItemAttachment<Weapon> attachment = compatibleAttachment.getAttachment();
+            if(compatibleAttachment.isDefault() && attachment.getApply2() != null) {
+                attachment.apply2.apply(attachment, instance);
+            }
+        }
         return instance;
     }
 

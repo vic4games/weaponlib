@@ -56,6 +56,7 @@ Reloadable, Updatable, Part {
 				magazine.reloadSound = modContext.registerSound(reloadSound);
 			}
 			magazine.modContext = modContext;
+			withInformationProvider((stack) -> "Ammo: " + Tags.getAmmo(stack) + "/" + ammo);
 			return magazine;
 		}
 	}

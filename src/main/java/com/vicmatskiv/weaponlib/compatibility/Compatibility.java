@@ -149,6 +149,8 @@ public interface Compatibility {
 
 	public void addShapedRecipe(ItemStack itemStack, Object... materials);
 
+    public void addShapedOreRecipe(ItemStack itemStack, Object... materials);
+    
 	public void disableLightMap();
 
 	public void enableLightMap();
@@ -160,4 +162,5 @@ public interface Compatibility {
 	public ArmorMaterial addArmorMaterial(String name, String textureName, int durability, int[] reductionAmounts, int enchantability, CompatibleSound soundOnEquip, float toughness);
 
 	public boolean inventoryHasFreeSlots(EntityPlayer player);
+
 }
