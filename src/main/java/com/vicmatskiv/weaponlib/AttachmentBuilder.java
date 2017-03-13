@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.creativetab.CreativeTabs;
@@ -45,13 +46,14 @@ public class AttachmentBuilder<T> {
 	private List<Tuple<ModelBase, String>> texturedModels = new ArrayList<>();
 	private boolean isRenderablePart;
     private int maxStackSize = 1;
+    private Function<ItemStack, String> informationProvider;
 	
 	private CraftingComplexity craftingComplexity;
 
 	private Object[] craftingMaterials;
 	
 	Map<ItemAttachment<T>, CompatibleAttachment<T>> compatibleAttachments = new HashMap<>();
-
+    private int craftingCount = 1;
 
 	public AttachmentBuilder<T> withCategory(AttachmentCategory attachmentCategory) {
 		this.attachmentCategory = attachmentCategory;
@@ -173,17 +175,30 @@ public class AttachmentBuilder<T> {
 	public AttachmentBuilder<T> withRemove(ApplyHandler2<T> remove) {
 		this.remove2 = remove;
 		return this;
-	} 
+	}
 
 	public AttachmentBuilder<T> withCrafting(CraftingComplexity craftingComplexity, Object...craftingMaterials) {
+	    return withCrafting(1, craftingComplexity, craftingMaterials);
+	}
+	
+	public AttachmentBuilder<T> withInformationProvider(Function<ItemStack, String> informationProvider) {
+        this.informationProvider = informationProvider;
+        return this;
+    } 
+	
+	public AttachmentBuilder<T> withCrafting(int craftingCount, CraftingComplexity craftingComplexity, Object...craftingMaterials) {
 		if(craftingComplexity == null) {
 			throw new IllegalArgumentException("Crafting complexity not set");
 		}
 		if(craftingMaterials.length < 2) {
 			throw new IllegalArgumentException("2 or more materials required for crafting");
 		}
+		if(craftingCount == 0) {
+		    throw new IllegalArgumentException("Invalid item count");
+		}
 		this.craftingComplexity = craftingComplexity;
 		this.craftingMaterials = craftingMaterials;
+		this.craftingCount = craftingCount;
 		return this;
 	}
 	
@@ -203,6 +218,9 @@ public class AttachmentBuilder<T> {
 		attachment.apply2 = apply2;
 		attachment.remove2 = remove2;
 		attachment.maxStackSize = maxStackSize;
+		if(attachment.getInformationProvider() == null) {
+		    attachment.setInformationProvider(informationProvider);
+		}
 		if(textureName != null) {
 			attachment.setTextureName(modId + ":" + stripFileExtension(textureName, ".png"));
 		} 
@@ -235,8 +253,13 @@ public class AttachmentBuilder<T> {
 			
 			List<Object> shape = modContext.getRecipeGenerator().createShapedRecipe(name, optionsMetadata);
 			
-			compatibility.addShapedRecipe(new ItemStack(attachment), shape.toArray());
-			
+			ItemStack itemStack = new ItemStack(attachment);
+			itemStack.stackSize = craftingCount;
+            if(optionsMetadata.hasOres()) {
+			    compatibility.addShapedOreRecipe(itemStack, shape.toArray());
+			} else {
+			    compatibility.addShapedRecipe(itemStack, shape.toArray());
+			}
 		}
 		
 		return attachment;

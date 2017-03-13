@@ -81,9 +81,13 @@ public class OptionsMetadata {
             }
             int totalMaxOccurs = 0;
             int totalMinOccurs = 0;
+            boolean hasOres = false;
             for(OptionMetadata m: optionMetadata.values()) {
                 totalMaxOccurs += m.maxOccurs;
                 totalMinOccurs += m.minOccurs;
+                if(m.getOption() instanceof String) {
+                    hasOres = true;
+                }
             }
             if(totalMaxOccurs < slotCount) {
                 throw new IllegalStateException("Total slot count is less than total max occurs");
@@ -95,19 +99,25 @@ public class OptionsMetadata {
 			OptionMetadata[] metadata = (OptionMetadata[]) optionMetadata.entrySet().stream().map(e -> new OptionMetadata(e.getKey(), 
             		e.getValue().minOccurs, e.getValue().maxOccurs)).toArray(size -> new OptionMetadata[size]);
 			
-            return new OptionsMetadata(metadata);
+            return new OptionsMetadata(metadata, hasOres);
         }
     }
     
     private OptionMetadata[] metadata;
+    private boolean hasOres;
 
-    private OptionsMetadata(OptionMetadata[] metadata) {
+    private OptionsMetadata(OptionMetadata[] metadata, boolean hasOres) {
         this.metadata = metadata;
+        this.hasOres = hasOres;
     }
     
 	public OptionMetadata[] getMetadata() {
         return metadata;
     }
+	
+	public boolean hasOres() {
+	    return hasOres;
+	}
 	
 	
 }

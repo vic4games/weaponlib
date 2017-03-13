@@ -43,6 +43,7 @@ import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.EnumHelper;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
+import net.minecraftforge.oredict.ShapedOreRecipe;
 
 public class Compatibility1_7_10 implements Compatibility {
 	
@@ -401,6 +402,11 @@ public class Compatibility1_7_10 implements Compatibility {
 	@Override
 	public void addShapedRecipe(ItemStack itemStack,  Object... materials) {
 		GameRegistry.addShapedRecipe(itemStack, materials);
+	}
+	
+	@Override
+	public void addShapedOreRecipe(ItemStack itemStack, Object... materials) {
+	    GameRegistry.addRecipe(new ShapedOreRecipe(itemStack, materials));
 	}
 
 	@Override
