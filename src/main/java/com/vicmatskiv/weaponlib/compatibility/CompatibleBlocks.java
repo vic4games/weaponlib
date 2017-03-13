@@ -3,13 +3,13 @@ package com.vicmatskiv.weaponlib.compatibility;
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 
-public class CompatibleBlock {
+public class CompatibleBlocks {
 
-    public static final CompatibleBlock PLANK = new CompatibleBlock(Blocks.planks);
+    public static final CompatibleBlocks PLANK = new CompatibleBlocks(Blocks.planks);
     
     private Block block;
     
-    private CompatibleBlock(Block block) {
+    private CompatibleBlocks(Block block) {
         this.block = block;
     }
 

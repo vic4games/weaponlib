@@ -8,19 +8,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
 public abstract class CompatibleItem extends Item {
-        
-    public static final CompatibleItem GUNPOWDER = new CompatibleItem(Items.gunpowder) {};
-    
-    private Item item;
-    public CompatibleItem() {}
-    
-    private CompatibleItem(Item item) {
-        this.item = item;
-    }
-    
-    public Item getItem() {
-        return item;
-    }
 	
 	@Override
 	public final ItemStack onItemRightClick(ItemStack itemStack, World world, EntityPlayer player) {
