@@ -1,6 +1,10 @@
 package com.vicmatskiv.weaponlib;
 
 import java.util.Random;
+import java.util.function.BiConsumer;
+
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 
 import org.lwjgl.opengl.GL11;
 
@@ -13,7 +17,10 @@ public class LaserBeamRenderer implements CustomRenderer {
 	private float yOffset = -1.3f;
 	private float zOffset = -1.7f;
 	
-	public LaserBeamRenderer() {
+	private BiConsumer<EntityPlayer, ItemStack> positioning;
+	
+	public LaserBeamRenderer(BiConsumer<EntityPlayer, ItemStack> positioning) {
+	    this.positioning = positioning;
 	}
 
 	@Override
@@ -40,7 +47,9 @@ public class LaserBeamRenderer implements CustomRenderer {
 			GL11.glLineWidth(1.5F);
 			GL11.glDepthMask(false);
 
-			GL11.glRotatef(0f, 0f, 1f, 0f);
+			if(positioning != null) {
+			    positioning.accept(renderContext.getPlayer(), renderContext.getWeapon());
+			}
 
 			CompatibleTessellator tessellator = CompatibleTessellator.getInstance();
 			tessellator.startDrawingLines();
