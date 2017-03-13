@@ -5,7 +5,7 @@ import net.minecraft.init.Blocks;
 
 public class CompatibleBlock {
 
-    public static final CompatibleBlock PLANK = new CompatibleBlock(Blocks.planks);
+    public static final CompatibleBlock PLANK = new CompatibleBlock(Blocks.PLANKS);
     
     private Block block;
     
