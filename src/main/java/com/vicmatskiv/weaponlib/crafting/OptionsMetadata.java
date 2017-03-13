@@ -2,8 +2,8 @@ package com.vicmatskiv.weaponlib.crafting;
 
 import java.util.LinkedHashMap;
 
-import com.vicmatskiv.weaponlib.compatibility.CompatibleBlock;
-import com.vicmatskiv.weaponlib.compatibility.CompatibleItem;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleBlocks;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleItems;
 
 public class OptionsMetadata {
 	
@@ -56,10 +56,10 @@ public class OptionsMetadata {
         	if(minOccurs > maxOccurs) {
         		throw new IllegalArgumentException("Min occurs must be less or equals maxOccurs");
         	}
-        	if(option instanceof CompatibleBlock) {
-        	    option = ((CompatibleBlock) option).getBlock();
-        	} else if(option instanceof CompatibleItem) {
-        	    option = ((CompatibleItem) option).getItem();
+        	if(option instanceof CompatibleBlocks) {
+        	    option = ((CompatibleBlocks) option).getBlock();
+        	} else if(option instanceof CompatibleItems) {
+        	    option = ((CompatibleItems) option).getItem();
         	}
         	OptionMetadata metadata = new OptionMetadata(option, minOccurs, maxOccurs);
             metadata.minOccurs = minOccurs;
