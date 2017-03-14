@@ -688,8 +688,16 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		float rate = builder.normalRandomizingRate;
 		RenderableState currentState = null;
 		
-		PlayerWeaponInstance playerWeaponInstance = clientModContext.getPlayerItemInstanceRegistry()
-				.getMainHandItemInstance(player, PlayerWeaponInstance.class); // TODO: cannot be always main hand, need to which hand from context
+		PlayerItemInstance<?> playerItemInstance = clientModContext.getPlayerItemInstanceRegistry().getItemInstance(player, itemStack);
+				//.getMainHandItemInstance(player, PlayerWeaponInstance.class); // TODO: cannot be always main hand, need to which hand from context
+		
+		PlayerWeaponInstance playerWeaponInstance = null;
+		if(playerItemInstance == null || !(playerItemInstance instanceof PlayerWeaponInstance) 
+		        || playerItemInstance.getItem() != itemStack.getItem()) {
+		    logger.error("Invalid or mismatching item. Player item instance: {}. Item stack: {}", playerItemInstance, itemStack);
+		} else {
+		    playerWeaponInstance = (PlayerWeaponInstance) playerItemInstance;
+		}
 		
 		if(playerWeaponInstance != null) {
 			AsyncWeaponState asyncWeaponState = getNextNonExpiredState(playerWeaponInstance);
