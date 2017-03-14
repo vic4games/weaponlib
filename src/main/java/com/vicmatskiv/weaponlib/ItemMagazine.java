@@ -83,32 +83,32 @@ Reloadable, Updatable, Part {
 	
 	ItemStack createItemStack() {
 		ItemStack attachmentItemStack = new ItemStack(this);
-		ensureItemStack(attachmentItemStack);
+		ensureItemStack(attachmentItemStack, ammo);
 		return attachmentItemStack;
 	}
 	
-	private void ensureItemStack(ItemStack itemStack) {
+	private void ensureItemStack(ItemStack itemStack, int initialAmmo) {
 		if (compatibility.getTagCompound(itemStack) == null) {
 			compatibility.setTagCompound(itemStack, new NBTTagCompound());
-			Tags.setAmmo(itemStack, ammo);
+			Tags.setAmmo(itemStack, initialAmmo);
 		}
 	}
 	
 	@Override
 	public void onCreated(ItemStack stack, World p_77622_2_, EntityPlayer p_77622_3_) {
-		ensureItemStack(stack);
+		ensureItemStack(stack, 0);
 		super.onCreated(stack, p_77622_2_, p_77622_3_);
 	}
 
 	@Override
 	public boolean onItemUseFirst(ItemStack stack, EntityPlayer player, World world) {
-		ensureItemStack(stack);
+//		ensureItemStack(stack);
 		return super.onItemUseFirst(stack, player, world);
 	}
 	
 	@Override
 	public void onUpdate(ItemStack stack, World world, Entity entity, int p_77663_4_, boolean p_77663_5_) {
-		ensureItemStack(stack);
+		ensureItemStack(stack, ammo);
 		super.onUpdate(stack, world, entity, p_77663_4_, p_77663_5_);
 	}
 
