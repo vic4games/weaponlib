@@ -76,8 +76,7 @@ public class Compatibility1_10_2 implements Compatibility {
 
 	@Override
 	public int getStackSize(ItemStack consumedStack) {
-		// TODO Auto-generated method stub
-		return 0;
+	    return consumedStack.stackSize;
 	}
 
 	@Override
