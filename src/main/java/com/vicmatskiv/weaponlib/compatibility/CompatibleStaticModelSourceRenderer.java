@@ -180,11 +180,9 @@ public class CompatibleStaticModelSourceRenderer extends ModelSourceRenderer imp
 			builder.getThirdPersonPositioning().accept(player, itemStack);
 			break;
 		case FIRST_PERSON_RIGHT_HAND: case FIRST_PERSON_LEFT_HAND:
-			GL11.glScaled(0.4F, 0.4F, 0.4F);
-			GL11.glTranslatef(-0.8f, -0.6f, 1f);
-			//GL11.glRotatef(-30F, 1f, 0f, 0f);
-			GL11.glRotatef(-50F, 0f, 1f, 0f);
-			GL11.glRotatef(0F, 0f, 0f, 1f);
+			GL11.glScaled(0.6F, 0.6F, 0.6F);
+			GL11.glRotatef(-45F, 0f, 1f, 0f);
+			GL11.glTranslatef(-0.3f, -0.855f, 0.5f);
 			builder.getFirstPersonPositioning().accept(player, itemStack);
 	        
 			break;
