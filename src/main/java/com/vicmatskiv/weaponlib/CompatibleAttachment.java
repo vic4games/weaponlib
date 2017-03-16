@@ -62,4 +62,12 @@ public class CompatibleAttachment<T> {
 	public ItemAttachment.ApplyHandler2<T> getRemoveHandler() {
 		return removeHandler;
 	}
+	
+	public ItemAttachment.MeleeWeaponApplyHandler<T> getMeleeApplyHandler() {
+        throw new UnsupportedOperationException("Implement me");
+    }
+
+    public ItemAttachment.MeleeWeaponApplyHandler<T> getMeleeRemoveHandler() {
+        throw new UnsupportedOperationException("Implement me");
+    }
 }

@@ -5,7 +5,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleTransformType;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 
-public class RenderContext {
+public class RenderContext<RS> {
 
 	private EntityPlayer player;
 	private ItemStack itemStack;
@@ -17,8 +17,8 @@ public class RenderContext {
 	private float scale;
 	private float transitionProgress;
 	private CompatibleTransformType compatibleTransformType;
-	private RenderableState fromState;
-	private RenderableState toState;
+	private RS fromState;
+	private RS toState;
 	private ClientModContext clientModContext;
 	private PlayerItemInstance<?> playerItemInstance;
 
@@ -104,19 +104,19 @@ public class RenderContext {
 		this.compatibleTransformType = compatibleTransformType;
 	}
 
-	public RenderableState getFromState() {
+	public RS getFromState() {
 		return fromState;
 	}
 
-	public void setFromState(RenderableState fromState) {
+	public void setFromState(RS fromState) {
 		this.fromState = fromState;
 	}
 
-	public RenderableState getToState() {
+	public RS getToState() {
 		return toState;
 	}
 
-	public void setToState(RenderableState toState) {
+	public void setToState(RS toState) {
 		this.toState = toState;
 	}
 

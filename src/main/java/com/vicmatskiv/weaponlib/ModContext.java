@@ -3,6 +3,8 @@ package com.vicmatskiv.weaponlib;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 import com.vicmatskiv.weaponlib.crafting.RecipeGenerator;
+import com.vicmatskiv.weaponlib.melee.ItemMelee;
+import com.vicmatskiv.weaponlib.melee.MeleeRenderer;
 
 import net.minecraft.item.Item;
 
@@ -50,5 +52,7 @@ public interface ModContext {
 	public CompatibleSound getNoAmmoSound();
 
 	public void setNoAmmoSound(String sound);
+
+    public void registerMeleeWeapon(String name, ItemMelee itemMelee, MeleeRenderer renderer);
 
 }

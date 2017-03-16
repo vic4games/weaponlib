@@ -4,13 +4,13 @@ import org.lwjgl.opengl.GL11;
 
 import com.vicmatskiv.weaponlib.ClientModContext;
 import com.vicmatskiv.weaponlib.Part;
-import com.vicmatskiv.weaponlib.PlayerWeaponInstance;
 import com.vicmatskiv.weaponlib.RenderContext;
-import com.vicmatskiv.weaponlib.RenderableState;
-import com.vicmatskiv.weaponlib.WeaponRenderer.Builder;
+import com.vicmatskiv.weaponlib.melee.RenderableState;
 import com.vicmatskiv.weaponlib.animation.MultipartPositioning;
 import com.vicmatskiv.weaponlib.animation.MultipartPositioning.Positioner;
 import com.vicmatskiv.weaponlib.animation.MultipartRenderStateManager;
+import com.vicmatskiv.weaponlib.melee.MeleeRenderer.Builder;
+import com.vicmatskiv.weaponlib.melee.PlayerMeleeInstance;
 
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -22,14 +22,14 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.client.IItemRenderer;
 
-public abstract class CompatibleWeaponRenderer implements IItemRenderer {
+public abstract class CompatibleMeleeRenderer implements IItemRenderer {
 	
 	protected static class StateDescriptor {
 		protected MultipartRenderStateManager<RenderableState, Part, RenderContext<RenderableState>> stateManager;
 		protected float rate;
 		protected float amplitude = 0.04f;
-		private PlayerWeaponInstance instance;
-		public StateDescriptor(PlayerWeaponInstance instance, MultipartRenderStateManager<RenderableState, Part, RenderContext<RenderableState>> stateManager,
+		private PlayerMeleeInstance instance;
+		public StateDescriptor(PlayerMeleeInstance instance, MultipartRenderStateManager<RenderableState, Part, RenderContext<RenderableState>> stateManager,
 				float rate, float amplitude) {
 			this.instance = instance;
 			this.stateManager = stateManager;
@@ -40,7 +40,7 @@ public abstract class CompatibleWeaponRenderer implements IItemRenderer {
 	
 	private Builder builder;
 	
-	protected CompatibleWeaponRenderer(Builder builder){
+	protected CompatibleMeleeRenderer(Builder builder){
 		this.builder = builder;
 	}
 	

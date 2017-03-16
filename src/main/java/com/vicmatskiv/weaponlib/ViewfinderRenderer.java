@@ -11,7 +11,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleTransformType;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 
-public class ViewfinderRenderer implements CustomRenderer {
+public class ViewfinderRenderer implements CustomRenderer<RenderableState> {
 	
 	private ViewfinderModel model = new ViewfinderModel();
 	private BiConsumer<EntityPlayer, ItemStack> positioning;
@@ -23,7 +23,7 @@ public class ViewfinderRenderer implements CustomRenderer {
 	}
 
 	@Override
-	public void render(RenderContext renderContext) {
+	public void render(RenderContext<RenderableState> renderContext) {
 		
 		if(renderContext.getCompatibleTransformType() != CompatibleTransformType.FIRST_PERSON_RIGHT_HAND
 				&& renderContext.getCompatibleTransformType() != CompatibleTransformType.FIRST_PERSON_LEFT_HAND) {

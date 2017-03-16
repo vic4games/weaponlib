@@ -18,6 +18,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderingRegistry;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleWorldRenderer;
+import com.vicmatskiv.weaponlib.melee.PlayerMeleeInstance;
 
 public class ClientModContext extends CommonModContext {
 
@@ -145,4 +146,8 @@ public class ClientModContext extends CommonModContext {
 	public StatusMessageCenter getStatusMessageCenter() {
 		return statusMessageCenter;
 	}
+
+    public PlayerMeleeInstance getMainHeldMeleeWeapon() {
+        throw new UnsupportedOperationException("Implement me");
+    }
 }

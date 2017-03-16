@@ -1,4 +1,4 @@
-package com.vicmatskiv.weaponlib;
+package com.vicmatskiv.weaponlib.melee;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
@@ -18,12 +18,25 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL11;
 
+import com.vicmatskiv.weaponlib.AttachmentContainer;
+import com.vicmatskiv.weaponlib.ClientModContext;
+import com.vicmatskiv.weaponlib.CompatibleAttachment;
+import com.vicmatskiv.weaponlib.CustomRenderer;
+import com.vicmatskiv.weaponlib.DefaultPart;
+import com.vicmatskiv.weaponlib.ItemAttachment;
+import com.vicmatskiv.weaponlib.ItemSkin;
+import com.vicmatskiv.weaponlib.ModelWithAttachments;
+import com.vicmatskiv.weaponlib.Part;
+import com.vicmatskiv.weaponlib.PlayerItemInstance;
+import com.vicmatskiv.weaponlib.RenderContext;
+import com.vicmatskiv.weaponlib.Tuple;
+import com.vicmatskiv.weaponlib.Weapon;
 import com.vicmatskiv.weaponlib.animation.MultipartPositioning.Positioner;
 import com.vicmatskiv.weaponlib.animation.MultipartRenderStateManager;
 import com.vicmatskiv.weaponlib.animation.MultipartTransition;
 import com.vicmatskiv.weaponlib.animation.MultipartTransitionProvider;
 import com.vicmatskiv.weaponlib.animation.Transition;
-import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponRenderer;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleMeleeRenderer;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
@@ -31,31 +44,22 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 
-public class WeaponRenderer extends CompatibleWeaponRenderer {
+public class MeleeRenderer extends CompatibleMeleeRenderer {
 	
-	private static final Logger logger = LogManager.getLogger(WeaponRenderer.class);
+	private static final Logger logger = LogManager.getLogger(MeleeRenderer.class);
 
 	
 	private static final float DEFAULT_RANDOMIZING_RATE = 0.33f;
-	private static final float DEFAULT_RANDOMIZING_FIRING_RATE = 20;
-	private static final float DEFAULT_RANDOMIZING_ZOOM_RATE = 0.25f;
 	
 	private static final float DEFAULT_NORMAL_RANDOMIZING_AMPLITUDE = 0.06f;
-	private static final float DEFAULT_ZOOM_RANDOMIZING_AMPLITUDE = 0.005f;
-	private static final float DEFAULT_FIRING_RANDOMIZING_AMPLITUDE = 0.03f;
 	
 	private static final int DEFAULT_ANIMATION_DURATION = 250;
-	private static final int DEFAULT_RECOIL_ANIMATION_DURATION = 100;
-	private static final int DEFAULT_SHOOTING_ANIMATION_DURATION = 100;
 
 
 	public static class Builder {
 		
 		private ModelBase model;
 		private String textureName;
-		private float weaponProximity;
-		private float yOffsetZoom;
-		private float xOffsetZoom = 0.69F;
 		
 		private Consumer<ItemStack> entityPositioning;
 		private Consumer<ItemStack> inventoryPositioning;
@@ -97,16 +101,9 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		
 		private String modId;
 		
-		private int recoilAnimationDuration = DEFAULT_RECOIL_ANIMATION_DURATION;
-		private int shootingAnimationDuration = DEFAULT_SHOOTING_ANIMATION_DURATION;
-		
 		private float normalRandomizingRate = DEFAULT_RANDOMIZING_RATE; // movements per second, e.g. 0.25 = 0.25 movements per second = 1 movement in 3 minutes
-		private float firingRandomizingRate = DEFAULT_RANDOMIZING_FIRING_RATE; // movements per second, e.g. 20 = 20 movements per second = 1 movement in 50 ms
-		private float zoomRandomizingRate = DEFAULT_RANDOMIZING_ZOOM_RATE;
 		
 		private float normalRandomizingAmplitude = DEFAULT_NORMAL_RANDOMIZING_AMPLITUDE;
-		private float zoomRandomizingAmplitude = DEFAULT_ZOOM_RANDOMIZING_AMPLITUDE;
-		private float firingRandomizingAmplitude = DEFAULT_FIRING_RANDOMIZING_AMPLITUDE;
 		
 		private LinkedHashMap<Part, Consumer<RenderContext<RenderableState>>> firstPersonCustomPositioning = new LinkedHashMap<>();
 		private LinkedHashMap<Part, List<Transition<RenderContext<RenderableState>>>> firstPersonCustomPositioningUnloading = new LinkedHashMap<>();
@@ -115,9 +112,6 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		private LinkedHashMap<Part, Consumer<RenderContext<RenderableState>>> firstPersonCustomPositioningZoomingRecoiled = new LinkedHashMap<>();
 		private LinkedHashMap<Part, Consumer<RenderContext<RenderableState>>> firstPersonCustomPositioningZoomingShooting = new LinkedHashMap<>();
 		
-		private List<Transition<RenderContext<RenderableState>>> firstPersonPositioningEjectSpentRound;
-		private List<Transition<RenderContext<RenderableState>>> firstPersonLeftHandPositioningEjectSpentRound;
-		private List<Transition<RenderContext<RenderableState>>> firstPersonRightHandPositioningEjectSpentRound;
 		private LinkedHashMap<Part, List<Transition<RenderContext<RenderableState>>>> firstPersonCustomPositioningEjectSpentRound = new LinkedHashMap<>();
 		private boolean hasRecoilPositioningDefined;
 
@@ -131,63 +125,13 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			return this;
 		}
 		
-		public Builder withShootingAnimationDuration(int shootingAnimationDuration) {
-			this.shootingAnimationDuration = shootingAnimationDuration;
-			return this;
-		}
-		
-		public Builder withRecoilAnimationDuration(int recoilAnimationDuration) {
-			this.recoilAnimationDuration = recoilAnimationDuration;
-			return this;
-		}
-		
 		public Builder withNormalRandomizingRate(float normalRandomizingRate) {
 			this.normalRandomizingRate = normalRandomizingRate;
 			return this;
 		}
 		
-		public Builder withZoomRandomizingRate(float zoomRandomizingRate) {
-			this.zoomRandomizingRate = zoomRandomizingRate;
-			return this;
-		}
-		
-		public Builder withFiringRandomizingRate(float firingRandomizingRate) {
-			this.firingRandomizingRate = firingRandomizingRate;
-			return this;
-		}
-		
-		public Builder withFiringRandomizingAmplitude(float firingRandomizingAmplitude) {
-			this.firingRandomizingAmplitude = firingRandomizingAmplitude;
-			return this;
-		}
-		
-		public Builder withNormalRandomizingAmplitude(float firingRandomizingRate) {
-			this.firingRandomizingRate = firingRandomizingRate;
-			return this;
-		}
-		
-		public Builder withZoomRandomizingAmplitude(float zoomRandomizingAmplitude) {
-			this.zoomRandomizingAmplitude = zoomRandomizingAmplitude;
-			return this;
-		}
-		
 		public Builder withTextureName(String textureName) {
 			this.textureName = textureName + ".png";
-			return this;
-		}
-		
-		public Builder withWeaponProximity(float weaponProximity) {
-			this.weaponProximity = weaponProximity;
-			return this;
-		}
-		
-		public Builder withYOffsetZoom(float yOffsetZoom) {
-			this.yOffsetZoom = yOffsetZoom;
-			return this;
-		}
-		
-		public Builder withXOffsetZoom(float xOffsetZoom) {
-			this.xOffsetZoom = xOffsetZoom;
 			return this;
 		}
 		
@@ -254,12 +198,6 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			return this;
 		}
 		
-		@SafeVarargs
-		public final Builder withFirstPersonPositioningEjectSpentRound(Transition<RenderContext<RenderableState>> ...transitions) {
-			this.firstPersonPositioningEjectSpentRound = Arrays.asList(transitions);
-			return this;
-		}
-		
 		public Builder withFirstPersonPositioningModifying(Consumer<RenderContext<RenderableState>> firstPersonPositioningModifying) {
 			this.firstPersonPositioningModifying = firstPersonPositioningModifying;
 			return this;
@@ -318,12 +256,6 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		}
 		
 		@SafeVarargs
-		public final Builder withFirstPersonLeftHandPositioningEjectSpentRound(Transition<RenderContext<RenderableState>> ...transitions) {
-			this.firstPersonLeftHandPositioningEjectSpentRound = Arrays.asList(transitions);
-			return this;
-		}
-		
-		@SafeVarargs
 		public final Builder withFirstPersonLeftHandPositioningUnloading(Transition<RenderContext<RenderableState>> ...transitions) {
 			this.firstPersonLeftHandPositioningUnloading = Arrays.asList(transitions);
 			return this;
@@ -341,12 +273,6 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			return this;
 		}
 		
-		@SafeVarargs
-		public final Builder withFirstPersonRightHandPositioningEjectSpentRound(Transition<RenderContext<RenderableState>> ...transitions) {
-			this.firstPersonRightHandPositioningEjectSpentRound = Arrays.asList(transitions);
-			return this;
-		}
-		
 		public Builder withFirstPersonHandPositioningModifying(
 				Consumer<RenderContext<RenderableState>> leftHand,
 				Consumer<RenderContext<RenderableState>> rightHand)
@@ -361,26 +287,6 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				throw new IllegalArgumentException("Part " + part + " is not custom");
 			}
 			if(this.firstPersonCustomPositioning.put(part, positioning) != null) {
-				throw new IllegalArgumentException("Part " + part + " already added");
-			}
-			return this;
-		}
-		
-		public Builder withFirstPersonPositioningCustomRecoiled(Part part, Consumer<RenderContext<RenderableState>> positioning) {
-			if(part instanceof DefaultPart) {
-				throw new IllegalArgumentException("Part " + part + " is not custom");
-			}
-			if(this.firstPersonCustomPositioningRecoiled.put(part, positioning) != null) {
-				throw new IllegalArgumentException("Part " + part + " already added");
-			}
-			return this;
-		}
-		
-		public Builder withFirstPersonPositioningCustomZoomingShooting(Part part, Consumer<RenderContext<RenderableState>> positioning) {
-			if(part instanceof DefaultPart) {
-				throw new IllegalArgumentException("Part " + part + " is not custom");
-			}
-			if(this.firstPersonCustomPositioningZoomingShooting.put(part, positioning) != null) {
 				throw new IllegalArgumentException("Part " + part + " already added");
 			}
 			return this;
@@ -425,7 +331,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			return this;
 		}
 		
-		public WeaponRenderer build() {
+		public MeleeRenderer build() {
 			if(!compatibility.isClientSide()) {
 				return null;
 			}
@@ -443,21 +349,15 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				};
 			}
 			
-			WeaponRenderer renderer = new WeaponRenderer(this);
+			MeleeRenderer renderer = new MeleeRenderer(this);
 			
 			if(firstPersonPositioning == null) {
 				firstPersonPositioning = (renderContext) -> {
 					GL11.glRotatef(45F, 0f, 1f, 0f);
 
 					if(renderer.getClientModContext() != null) {
-						PlayerWeaponInstance instance = renderer.getClientModContext().getMainHeldWeapon();
-						if(instance != null && instance.isAimed()) {
-							GL11.glTranslatef(xOffsetZoom, yOffsetZoom, weaponProximity);
-						} else {
-							GL11.glTranslatef(0F, -1.2F, 0F);
-						}
+						PlayerMeleeInstance instance = renderer.getClientModContext().getMainHeldMeleeWeapon();
 					}
-					
 				};
 			}
 			
@@ -658,7 +558,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 	
 	protected ClientModContext clientModContext;
 			
-	private WeaponRenderer(Builder builder) {
+	private MeleeRenderer(Builder builder) {
 		super(builder);
 		this.builder = builder;
 		this.firstPersonStateManagers = new HashMap<>();
@@ -690,79 +590,22 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		PlayerItemInstance<?> playerItemInstance = clientModContext.getPlayerItemInstanceRegistry().getItemInstance(player, itemStack);
 				//.getMainHandItemInstance(player, PlayerWeaponInstance.class); // TODO: cannot be always main hand, need to which hand from context
 		
-		PlayerWeaponInstance playerWeaponInstance = null;
-		if(playerItemInstance == null || !(playerItemInstance instanceof PlayerWeaponInstance) 
+		PlayerMeleeInstance playerMeleeInstance = null;
+		if(playerItemInstance == null || !(playerItemInstance instanceof PlayerMeleeInstance) 
 		        || playerItemInstance.getItem() != itemStack.getItem()) {
 		    logger.error("Invalid or mismatching item. Player item instance: {}. Item stack: {}", playerItemInstance, itemStack);
 		} else {
-		    playerWeaponInstance = (PlayerWeaponInstance) playerItemInstance;
+		    playerMeleeInstance = (PlayerMeleeInstance) playerItemInstance;
 		}
 		
-		if(playerWeaponInstance != null) {
-			AsyncWeaponState asyncWeaponState = getNextNonExpiredState(playerWeaponInstance);
+		if(playerMeleeInstance != null) {
+			AsyncMeleeState asyncWeaponState = getNextNonExpiredState(playerMeleeInstance);
 			
 			switch(asyncWeaponState.getState()) {
 				
-			case RECOILED: 
-				if(playerWeaponInstance.isAutomaticModeEnabled() && !hasRecoilPositioning()) {
-					if(playerWeaponInstance.isAimed()) {
-						currentState = RenderableState.ZOOMING;
-						rate = builder.firingRandomizingRate;
-						amplitude = builder.zoomRandomizingAmplitude;
-					} else {
-						currentState = RenderableState.NORMAL; 
-						rate = builder.firingRandomizingRate;
-						amplitude = builder.firingRandomizingAmplitude;
-					}
-				} else if(playerWeaponInstance.isAimed()) {
-					currentState = RenderableState.ZOOMING_RECOILED;
-					amplitude = builder.zoomRandomizingAmplitude;
-				} else {
-					currentState = RenderableState.RECOILED; 
-				}
-				
-				break;
-				
-			case PAUSED: 
-				if(playerWeaponInstance.isAutomaticModeEnabled() && !hasRecoilPositioning()) {
-					
-					boolean isLongPaused = System.currentTimeMillis() - asyncWeaponState.getTimestamp() > (50f / playerWeaponInstance.getFireRate())
-							&& asyncWeaponState.isInfinite();
-					
-					if(playerWeaponInstance.isAimed()) {
-						currentState = RenderableState.ZOOMING;
-						if(!isLongPaused) {
-							rate = builder.firingRandomizingRate;
-						}
-						amplitude = builder.zoomRandomizingAmplitude;
-					} else {
-						currentState = RenderableState.NORMAL; 
-						if(!isLongPaused) {
-							rate = builder.firingRandomizingRate;
-							amplitude = builder.firingRandomizingAmplitude;
-						}
-					}
-				} else if(playerWeaponInstance.isAimed()) {
-					currentState = RenderableState.ZOOMING_SHOOTING;
-					//rate = builder.firingRandomizingRate;
-					amplitude = builder.zoomRandomizingAmplitude;
-				} else {
-					currentState = RenderableState.SHOOTING;
-				}
-				
-				break;
-				
-			case UNLOAD_PREPARING: case UNLOAD_REQUESTED: case UNLOAD:
-				currentState = RenderableState.UNLOADING;
-				break;
-				
-			case LOAD:
-				currentState = RenderableState.RELOADING;
-				break;
-				
-			case EJECTING:
-				currentState = RenderableState.EJECT_SPENT_ROUND;
-				break;
+			case FIRING:
+			    currentState = RenderableState.ATTACKING;
+			    break;
 				
 			case MODIFYING: case MODIFYING_REQUESTED: case NEXT_ATTACHMENT: case NEXT_ATTACHMENT_REQUESTED:
 				currentState = RenderableState.MODIFYING;
@@ -771,13 +614,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			default:
 				if(player.isSprinting() && builder.firstPersonPositioningRunning != null) {
 					currentState = RenderableState.RUNNING;
-				} else if(playerWeaponInstance.isAimed()) {
-					currentState = RenderableState.ZOOMING;
-					rate = builder.zoomRandomizingRate;
-					amplitude = builder.zoomRandomizingAmplitude;
 				}
 			}
-			
 
 			logger.trace("Rendering state {} created from {}", currentState, asyncWeaponState.getState());
 		}
@@ -791,25 +629,18 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			stateManager = new MultipartRenderStateManager<>(currentState, weaponTransitionProvider, Part.WEAPON);
 			firstPersonStateManagers.put(player, stateManager);
 		} else {
-			stateManager.setState(currentState, true, currentState == RenderableState.SHOOTING
-					|| currentState == RenderableState.ZOOMING_SHOOTING);
+			stateManager.setState(currentState, true, currentState == RenderableState.ATTACKING);
 		}
 		
 		
-		return new StateDescriptor(playerWeaponInstance, stateManager, rate, amplitude);
+		return new StateDescriptor(playerMeleeInstance, stateManager, rate, amplitude);
 	}
 
-	private AsyncWeaponState getNextNonExpiredState(PlayerWeaponInstance playerWeaponState) {
-		AsyncWeaponState asyncWeaponState = null;
+	private AsyncMeleeState getNextNonExpiredState(PlayerMeleeInstance playerWeaponState) {
+	    AsyncMeleeState asyncWeaponState = null;
 		while((asyncWeaponState = playerWeaponState.nextHistoryState()) != null) {
-			
 			if(System.currentTimeMillis() < asyncWeaponState.getTimestamp() + asyncWeaponState.getDuration()) {
-				if(asyncWeaponState.getState() == WeaponState.FIRING 
-						&& (hasRecoilPositioning() || !playerWeaponState.isAutomaticModeEnabled())) { // allow recoil for non-automatic weapons
-					continue;
-				} else {
-					break; // found non-expired-state
-				}
+			    continue;
 			}
 		}	
 		
@@ -904,35 +735,11 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 						builder.firstPersonRightHandPositioningRunning,
 						builder.firstPersonCustomPositioning,
 						DEFAULT_ANIMATION_DURATION);
-			case UNLOADING:
+			case ATTACKING:
 				return getComplexTransition(builder.firstPersonPositioningUnloading, 
 						builder.firstPersonLeftHandPositioningUnloading,
 						builder.firstPersonRightHandPositioningUnloading,
 						builder.firstPersonCustomPositioningUnloading
-						);
-			case RELOADING:
-				return getComplexTransition(builder.firstPersonPositioningReloading, 
-						builder.firstPersonLeftHandPositioningReloading,
-						builder.firstPersonRightHandPositioningReloading,
-						builder.firstPersonCustomPositioningReloading
-						);
-			case RECOILED:
-				return getSimpleTransition(builder.firstPersonPositioningRecoiled, 
-						builder.firstPersonLeftHandPositioningRecoiled,
-						builder.firstPersonRightHandPositioningRecoiled,
-						builder.firstPersonCustomPositioningRecoiled,
-						builder.recoilAnimationDuration);
-			case SHOOTING:
-				return getSimpleTransition(builder.firstPersonPositioningShooting, 
-						builder.firstPersonLeftHandPositioningShooting,
-						builder.firstPersonRightHandPositioningShooting,
-						builder.firstPersonCustomPositioning,
-						builder.shootingAnimationDuration);
-			case EJECT_SPENT_ROUND:
-				return getComplexTransition(builder.firstPersonPositioningEjectSpentRound, 
-						builder.firstPersonLeftHandPositioningEjectSpentRound,
-						builder.firstPersonRightHandPositioningEjectSpentRound,
-						builder.firstPersonCustomPositioningEjectSpentRound
 						);
 			case NORMAL:
 				return getSimpleTransition(builder.firstPersonPositioning, 
@@ -940,24 +747,6 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 						builder.firstPersonRightHandPositioning,
 						builder.firstPersonCustomPositioning,
 						DEFAULT_ANIMATION_DURATION);
-			case ZOOMING:
-				return getSimpleTransition(builder.firstPersonPositioningZooming, 
-						builder.firstPersonLeftHandPositioningZooming,
-						builder.firstPersonRightHandPositioningZooming,
-						builder.firstPersonCustomPositioning,
-						DEFAULT_ANIMATION_DURATION);
-			case ZOOMING_SHOOTING:
-				return getSimpleTransition(builder.firstPersonPositioningZoomingShooting, 
-						builder.firstPersonLeftHandPositioningZooming,
-						builder.firstPersonRightHandPositioningZooming,
-						builder.firstPersonCustomPositioningZoomingShooting,
-						60);
-			case ZOOMING_RECOILED:
-				return getSimpleTransition(builder.firstPersonPositioningZoomingRecoiled, 
-						builder.firstPersonLeftHandPositioningZooming,
-						builder.firstPersonRightHandPositioningZooming,
-						builder.firstPersonCustomPositioningZoomingRecoiled,
-						60);
 			default:
 				break;
 			}
@@ -970,7 +759,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			Positioner<Part, RenderContext<RenderableState>> positioner) {
 		List<CompatibleAttachment<? extends AttachmentContainer>> attachments = null;
 		if(builder.getModel() instanceof ModelWithAttachments) {
-			attachments = ((Weapon) weaponItemStack.getItem()).getActiveAttachments(renderContext.getPlayer(), weaponItemStack);
+			attachments = ((ItemMelee) weaponItemStack.getItem()).getActiveAttachments(renderContext.getPlayer(), weaponItemStack);
 		}
 		
 		if(builder.getTextureName() != null) {
@@ -983,8 +772,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			if(compatibleSkin != null) {
 				PlayerItemInstance<?> itemInstance = getClientModContext().getPlayerItemInstanceRegistry()
 						.getItemInstance(renderContext.getPlayer(), weaponItemStack);
-				if(itemInstance instanceof PlayerWeaponInstance) {
-					int textureIndex = ((PlayerWeaponInstance) itemInstance).getActiveTextureIndex();
+				if(itemInstance instanceof PlayerMeleeInstance) {
+					int textureIndex = ((PlayerMeleeInstance) itemInstance).getActiveTextureIndex();
 					if(textureIndex >= 0) {
 						textureName = ((ItemSkin) compatibleSkin.getAttachment()).getTextureVariant(textureIndex)
 								+ ".png";
