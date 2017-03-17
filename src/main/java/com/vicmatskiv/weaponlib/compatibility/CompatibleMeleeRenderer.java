@@ -116,7 +116,7 @@ public abstract class CompatibleMeleeRenderer implements IItemRenderer {
 						
 			positioner.randomize(stateDescriptor.rate, stateDescriptor.amplitude);
 			
-			positioner.position(Part.WEAPON, renderContext);
+			positioner.position(Part.MAIN_ITEM, renderContext);
 			
 			renderLeftArm(player, renderContext, positioner);
 			

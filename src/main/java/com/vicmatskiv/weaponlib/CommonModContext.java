@@ -246,6 +246,6 @@ public class CommonModContext implements ModContext {
 
     @Override
     public void registerMeleeWeapon(String name, ItemMelee itemMelee, MeleeRenderer renderer) {
-        throw new UnsupportedOperationException("Implement me");
+        compatibility.registerItem(itemMelee, name);
     }
 }

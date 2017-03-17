@@ -18,6 +18,8 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderingRegistry;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleWorldRenderer;
+import com.vicmatskiv.weaponlib.melee.ItemMelee;
+import com.vicmatskiv.weaponlib.melee.MeleeRenderer;
 import com.vicmatskiv.weaponlib.melee.PlayerMeleeInstance;
 
 public class ClientModContext extends CommonModContext {
@@ -148,6 +150,14 @@ public class ClientModContext extends CommonModContext {
 	}
 
     public PlayerMeleeInstance getMainHeldMeleeWeapon() {
-        throw new UnsupportedOperationException("Implement me");
+        return getPlayerItemInstanceRegistry().getMainHandItemInstance(compatibility.clientPlayer(), 
+                PlayerMeleeInstance.class);
+    }
+    
+    @Override
+    public void registerMeleeWeapon(String name, ItemMelee itemMelee, MeleeRenderer renderer) {
+        super.registerMeleeWeapon(name, itemMelee, renderer);
+        rendererRegistry.register(itemMelee, itemMelee.getName(), itemMelee.getRenderer());
+        renderer.setClientModContext(this);
     }
 }

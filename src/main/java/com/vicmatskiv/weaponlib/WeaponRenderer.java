@@ -788,7 +788,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		
 		MultipartRenderStateManager<RenderableState, Part, RenderContext<RenderableState>> stateManager = firstPersonStateManagers.get(player);
 		if(stateManager == null) {
-			stateManager = new MultipartRenderStateManager<>(currentState, weaponTransitionProvider, Part.WEAPON);
+			stateManager = new MultipartRenderStateManager<>(currentState, weaponTransitionProvider, Part.MAIN_ITEM);
 			firstPersonStateManagers.put(player, stateManager);
 		} else {
 			stateManager.setState(currentState, true, currentState == RenderableState.SHOOTING
@@ -850,7 +850,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			Transition<RenderContext<RenderableState>> r = rht.get(i);
 			
 			MultipartTransition<Part, RenderContext<RenderableState>> t = new MultipartTransition<Part, RenderContext<RenderableState>>(p.getDuration(), p.getPause())
-					.withPartPositionFunction(Part.WEAPON, createWeaponPartPositionFunction(p))
+					.withPartPositionFunction(Part.MAIN_ITEM, createWeaponPartPositionFunction(p))
 					.withPartPositionFunction(Part.LEFT_HAND, createWeaponPartPositionFunction(l))
 					.withPartPositionFunction(Part.RIGHT_HAND, createWeaponPartPositionFunction(r));
 			
@@ -878,7 +878,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			LinkedHashMap<Part, Consumer<RenderContext<RenderableState>>> custom,
 			int duration) {
 		MultipartTransition<Part, RenderContext<RenderableState>> mt = new MultipartTransition<Part, RenderContext<RenderableState>>(duration, 0)
-				.withPartPositionFunction(Part.WEAPON, createWeaponPartPositionFunction(w))
+				.withPartPositionFunction(Part.MAIN_ITEM, createWeaponPartPositionFunction(w))
 				.withPartPositionFunction(Part.LEFT_HAND, createWeaponPartPositionFunction(lh))
 				.withPartPositionFunction(Part.RIGHT_HAND, createWeaponPartPositionFunction(rh));
 		custom.forEach((part, position) -> {

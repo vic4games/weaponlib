@@ -4,6 +4,7 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -282,7 +283,7 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
 
     @Override
     public List<CompatibleAttachment<? extends AttachmentContainer>> getActiveAttachments(EntityPlayer player, ItemStack itemStack) {
-        return meleeAttachmentAspect.getActiveAttachments(player, itemStack);
+        return Collections.emptyList(); //meleeAttachmentAspect.getActiveAttachments(player, itemStack);
     }
 
     public MeleeRenderer getRenderer() {
