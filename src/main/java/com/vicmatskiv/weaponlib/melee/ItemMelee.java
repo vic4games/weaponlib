@@ -308,7 +308,7 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
 
     @Override
     public void update(EntityPlayer player) {
-//        modContext.getWeaponReloadAspect().updateMainHeldItem(player);
+        modContext.getMeleeAttackAspect().onUpdate(player);
 //        modContext.getWeaponFireAspect().onUpdate(player);
 //        modContext.getAttachmentAspect().updateMainHeldItem(player);
     }
@@ -355,6 +355,10 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
     public ApplyHandler2<ItemMelee> getEquivalentHandler(AttachmentCategory attachmentCategory) {
         // TODO Auto-generated method stub
         return null;
+    }
+
+    public void attack(EntityPlayer player) {
+        modContext.getMeleeAttackAspect().onAttackButtonClick(player);
     }
 
 }

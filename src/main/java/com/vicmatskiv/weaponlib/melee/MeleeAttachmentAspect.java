@@ -98,7 +98,7 @@ public final class MeleeAttachmentAspect implements Aspect<MeleeState, PlayerMel
 		
 	private Collection<MeleeState> allowedUpdateFromStates = Arrays.asList(MeleeState.MODIFYING_REQUESTED);
 
-	MeleeAttachmentAspect(ModContext modContext) {
+	public MeleeAttachmentAspect(ModContext modContext) {
 		this.modContext = modContext;
 	}
 	

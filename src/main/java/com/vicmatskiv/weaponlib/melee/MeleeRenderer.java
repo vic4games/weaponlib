@@ -442,7 +442,7 @@ public class MeleeRenderer extends CompatibleMeleeRenderer {
 			
 			switch(asyncWeaponState.getState()) {
 				
-			case FIRING:
+			case ATTACKING:
 			    currentState = RenderableState.ATTACKING;
 			    break;
 				

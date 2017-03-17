@@ -8,22 +8,8 @@ import io.netty.buffer.ByteBuf;
 public enum MeleeState implements ManagedState<MeleeState> {
 
 	READY(false), 
-	LOAD_REQUESTED, 
-	LOAD(null, LOAD_REQUESTED, null, true), 
 	
-	UNLOAD_PREPARING, 
-	UNLOAD_REQUESTED, 
-	UNLOAD(UNLOAD_PREPARING, UNLOAD_REQUESTED, READY, true),
-	
-	FIRING(9),
-	RECOILED(10),
-	PAUSED(10),
-	EJECT_REQUIRED,
-	EJECTING,
-	
-//	STOPPED, 
-//	EJECT_SPENT_ROUND_REQUIRED, 
-//	EJECTED_SPENT_ROUND,
+	ATTACKING(9),
 	
 	MODIFYING_REQUESTED(1),
 	

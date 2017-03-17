@@ -16,7 +16,11 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleSide;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 import com.vicmatskiv.weaponlib.crafting.RecipeGenerator;
 import com.vicmatskiv.weaponlib.melee.ItemMelee;
+import com.vicmatskiv.weaponlib.melee.MeleeAttachmentAspect;
+import com.vicmatskiv.weaponlib.melee.MeleeAttackAspect;
 import com.vicmatskiv.weaponlib.melee.MeleeRenderer;
+import com.vicmatskiv.weaponlib.melee.MeleeState;
+import com.vicmatskiv.weaponlib.melee.PlayerMeleeInstance;
 import com.vicmatskiv.weaponlib.network.NetworkPermitManager;
 import com.vicmatskiv.weaponlib.network.PermitMessage;
 import com.vicmatskiv.weaponlib.network.TypeRegistry;
@@ -54,6 +58,9 @@ public class CommonModContext implements ModContext {
 	protected WeaponReloadAspect weaponReloadAspect;
 	protected WeaponAttachmentAspect weaponAttachmentAspect;
 	protected WeaponFireAspect weaponFireAspect;
+	
+	protected MeleeAttachmentAspect meleeAttachmentAspect;
+    protected MeleeAttackAspect meleeAttackAspect;
 
     protected SyncManager<?> syncManager;
 	
@@ -84,6 +91,10 @@ public class CommonModContext implements ModContext {
 		this.magazineReloadAspect = new MagazineReloadAspect(this);
 		this.weaponFireAspect = new WeaponFireAspect(this);
 		this.weaponAttachmentAspect = new WeaponAttachmentAspect(this);
+		
+		this.meleeAttackAspect = new MeleeAttackAspect(this);
+        this.meleeAttachmentAspect = new MeleeAttachmentAspect(this);
+        
 		this.permitManager = new NetworkPermitManager(this);
 		
 		this.syncManager = new SyncManager<>(permitManager);
@@ -100,6 +111,9 @@ public class CommonModContext implements ModContext {
         
         weaponAttachmentAspect.setPermitManager(permitManager);
         weaponAttachmentAspect.setStateManager(weaponStateManager);
+        
+        StateManager<MeleeState, PlayerMeleeInstance> meleeStateManager = new StateManager<>((s1, s2) -> s1 == s2);
+        meleeAttackAspect.setStateManager(meleeStateManager);
         
         StateManager<MagazineState, PlayerMagazineInstance> magazineStateManager = new StateManager<>((s1, s2) -> s1 == s2);
 
@@ -196,7 +210,11 @@ public class CommonModContext implements ModContext {
 	public MagazineReloadAspect getMagazineReloadAspect() {
 		return magazineReloadAspect;
 	}
-
+	
+	@Override
+	public MeleeAttackAspect getMeleeAttackAspect() {
+	    return meleeAttackAspect;
+	}
 
 	@Override
 	public PlayerWeaponInstance getMainHeldWeapon() {
