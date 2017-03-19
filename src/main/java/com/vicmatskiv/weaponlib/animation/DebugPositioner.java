@@ -1,8 +1,19 @@
 package com.vicmatskiv.weaponlib.animation;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL11;
+
+import com.vicmatskiv.weaponlib.KeyBindings;
+import com.vicmatskiv.weaponlib.Part;
+import com.vicmatskiv.weaponlib.RenderContext;
+import com.vicmatskiv.weaponlib.melee.RenderableState;
+
+import net.minecraft.client.Minecraft;
+import net.minecraft.util.ChatComponentText;
 
 public class DebugPositioner {
     
@@ -10,44 +21,118 @@ public class DebugPositioner {
 
     private static final String WEAPONLIB_DEBUG_PROPERTY = "weaponlib.debug";
     
-    private static float xRotation;
-    private static float yRotation;
-    private static float zRotation;
-    
-    public static float x;
-    public static float y;
-    public static float z;
-    
     private static Boolean debugModeEnabled;
     
+    private static Part currentPart;
+    
+    public static final class TransitionConfiguration {
+        private long pause;
+
+        public long getPause() {
+            return pause;
+        }
+
+        public void setPause(long pause) {
+            this.pause = pause;
+        }
+    }
+    
+    private static class Position {
+        private float xRotation;
+        private float yRotation;
+        private float zRotation;
+        
+        private float x;
+        private float y;
+        private float z;
+        
+        private float scale = 1f;
+    }
+    
+    private static Map<Part, Position> partPositions = new HashMap<>();
+    
+    private static Map<Integer, TransitionConfiguration> transitionConfigurations = new HashMap<>();
+    
+    private static Position getCurrentPartPosition() {
+        return partPositions.get(currentPart);
+    }
+    
     public static void incrementXRotation(float increment) {
-        xRotation += increment;
-        logger.debug("Debug rotations: ({}, {}, {}) ", xRotation, yRotation, zRotation);
+        Position partPosition = getCurrentPartPosition();
+        if(partPosition == null) {
+            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Debug part not selected"));
+            return;
+        }
+        
+        partPosition.xRotation += increment;
+        logger.debug("Debug rotations: ({}, {}, {}) ", partPosition.xRotation, partPosition.yRotation, partPosition.zRotation);
     }
     
     public static void incrementYRotation(float increment) {
-        yRotation += increment;
-        logger.debug("Debug rotations: ({}, {}, {}) ", xRotation, yRotation, zRotation);
+        Position partPosition = getCurrentPartPosition();
+        if(partPosition == null) {
+            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Debug part not selected"));
+            return;
+        }
+        partPosition.yRotation += increment;
+        logger.debug("Debug rotations: ({}, {}, {}) ", partPosition.xRotation, partPosition.yRotation, partPosition.zRotation);
     }
     
     public static void incrementZRotation(float increment) {
-        zRotation += increment;
-        logger.debug("Debug rotations: ({}, {}, {}) ", xRotation, yRotation, zRotation);
+        Position partPosition = getCurrentPartPosition();
+        if(partPosition == null) {
+            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Debug part not selected"));
+            return;
+        }
+        partPosition.zRotation += increment;
+        logger.debug("Debug rotations: ({}, {}, {}) ", partPosition.xRotation, partPosition.yRotation, partPosition.zRotation);
     }
     
     public static void incrementXPosition(float increment) {
-        x += increment;
-        logger.debug("Debug position: ({}, {}, {}) ", x, y, z);
+        Position partPosition = getCurrentPartPosition();
+        if(partPosition == null) {
+            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Debug part not selected"));
+            return;
+        }
+        partPosition.x += increment;
+        logger.debug("Debug position: ({}, {}, {}) ", partPosition.x, partPosition.y, partPosition.z);
     }
     
     public static void incrementYPosition(float increment) {
-        y += increment;
-        logger.debug("Debug position: ({}, {}, {}) ", x, y, z);
+        Position partPosition = getCurrentPartPosition();
+        if(partPosition == null) {
+            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Debug part not selected"));
+            return;
+        }
+        partPosition.y += increment;
+        logger.debug("Debug position: ({}, {}, {}) ", partPosition.x, partPosition.y, partPosition.z);
     }
     
     public static void incrementZPosition(float increment) {
-        z += increment;
-        logger.debug("Debug position: ({}, {}, {}) ", x, y, z);
+        Position partPosition = getCurrentPartPosition();
+        if(partPosition == null) {
+            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Debug part not selected"));
+            return;
+        }
+        partPosition.z += increment;
+        logger.debug("Debug position: ({}, {}, {}) ", partPosition.x, partPosition.y, partPosition.z);
+    }
+    
+    public static void setScale(float scale) {
+        Position partPosition = getCurrentPartPosition();
+        if(partPosition == null) {
+            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Debug part not selected"));
+            return;
+        }
+        partPosition.scale = scale;
+        logger.debug("Scale set to {}", scale);
+    }
+    
+    public static void setDebugMode(boolean enabled) {
+        debugModeEnabled = enabled;
+        if(debugModeEnabled) {
+            KeyBindings.bindDebugKeys();
+        }
     }
     
     public static boolean isDebugModeEnabled() {
@@ -57,14 +142,58 @@ public class DebugPositioner {
         return debugModeEnabled;
     }
 
-    public static void position() {
-        GL11.glRotatef(xRotation, 1f, 0f, 0f);
-        GL11.glRotatef(yRotation, 0f, 1f, 0f);
-        GL11.glRotatef(zRotation, 0f, 0f, 1f);
-        GL11.glTranslatef(x, y, z);
+    public static void reset() {
+        Position partPosition = getCurrentPartPosition();
+        if(partPosition == null) {
+            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Debug part not selected"));
+            return;
+        }
+        partPosition.x = partPosition.y = partPosition.z 
+                = partPosition.xRotation = partPosition.yRotation = partPosition.zRotation = 0f;
+        //partPosition.scale = 1f;
+    }
+    
+    public static void setDebugPart(Part part) {
+        currentPart = part;
+        partPositions.computeIfAbsent(part, p -> new Position());
+    }
+    
+    public static Part getDebugPart() {
+        return currentPart;
     }
 
-    public static void reset() {
-        x = y = z = xRotation = yRotation = zRotation = 0f;
+    public static void configureTransitionPause(int transitionNumber, long pause) {
+        TransitionConfiguration transitionConfiguration = getTransitionConfiguration(transitionNumber, true);
+        transitionConfiguration.pause = pause;
+    }
+    
+    public static TransitionConfiguration getTransitionConfiguration(int transitionNumber, boolean init) {
+        return transitionConfigurations.computeIfAbsent(transitionNumber, k -> init ? new TransitionConfiguration() : null);
+    }
+
+    public static void position(Part part, RenderContext<RenderableState> renderContext) {
+        Position partPosition = getCurrentPartPosition();
+        if(partPosition == null) {
+            return;
+        }
+        GL11.glScalef(partPosition.scale, partPosition.scale, partPosition.scale);
+        GL11.glRotatef(partPosition.xRotation, 1f, 0f, 0f);
+        GL11.glRotatef(partPosition.yRotation, 0f, 1f, 0f);
+        GL11.glRotatef(partPosition.zRotation, 0f, 0f, 1f);
+        GL11.glTranslatef(partPosition.x, partPosition.y, partPosition.z);
+    }
+
+    public static void showCode() {
+        Position partPosition = getCurrentPartPosition();
+        if(partPosition == null) {
+            return;
+        }
+        StringBuilder result = new StringBuilder();
+        result.append(String.format("GL11.glScalef(%f, %f, %f);\n", partPosition.scale, partPosition.scale, partPosition.scale));
+        result.append(String.format("GL11.glRotatef(%f, 1f, 0f, 0f);\n", partPosition.xRotation));
+        result.append(String.format("GL11.glRotatef(%f, 0f, 1f, 0f);\n", partPosition.yRotation));
+        result.append(String.format("GL11.glRotatef(%f, 0f, 0f, 1f);\n", partPosition.zRotation));
+        result.append(String.format("GL11.glTranslatef(%f, %f, %f);", partPosition.x, partPosition.y, partPosition.z));
+        logger.debug("Generated positioning code: \n" + result);
     }
 }

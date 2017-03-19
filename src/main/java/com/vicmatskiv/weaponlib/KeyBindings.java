@@ -84,50 +84,53 @@ public class KeyBindings {
 		compatibility.registerKeyBinding(fireModeKey);
 		
 		
-
 		if(DebugPositioner.isDebugModeEnabled()) {
-
-		    jDebugKey = new KeyBinding("key.jDebugKey", Keyboard.KEY_J,
-		            "key.categories.weaponlib");
-
-		    kDebugKey = new KeyBinding("key.klDebugKey", Keyboard.KEY_K,
-		            "key.categories.weaponlib");
-		    
-		    minusDebugKey = new KeyBinding("key.minusDebugKey", Keyboard.KEY_MINUS,
-                    "key.categories.weaponlib");
-
-            equalsDebugKey = new KeyBinding("key.equalsDebugKey", Keyboard.KEY_EQUALS,
-                    "key.categories.weaponlib");
-
-		    lBracketDebugKey = new KeyBinding("key.lBracketDebugKey", Keyboard.KEY_LBRACKET,
-		            "key.categories.weaponlib");
-
-		    rBracketDebugKey = new KeyBinding("key.rBracketDebugKey", Keyboard.KEY_RBRACKET,
-		            "key.categories.weaponlib");
-
-		    semicolonDebugKey = new KeyBinding("key.semicolonDebugKey", Keyboard.KEY_SEMICOLON,
-		            "key.categories.weaponlib");
-
-		    apostropheDebugKey = new KeyBinding("key.apostropheDebugKey", Keyboard.KEY_APOSTROPHE,
-		            "key.categories.weaponlib");
-		    
-            
-            deleteDebugKey = new KeyBinding("key.deleteDebugKey", Keyboard.KEY_BACK,
-                    "key.categories.weaponlib");
-
-		    compatibility.registerKeyBinding(jDebugKey);
-		    compatibility.registerKeyBinding(kDebugKey);
-		    
-		    compatibility.registerKeyBinding(lBracketDebugKey);
-            compatibility.registerKeyBinding(rBracketDebugKey);
-            
-            compatibility.registerKeyBinding(semicolonDebugKey);
-            compatibility.registerKeyBinding(apostropheDebugKey);
-            
-            compatibility.registerKeyBinding(minusDebugKey);
-            compatibility.registerKeyBinding(equalsDebugKey);
-            
-            compatibility.registerKeyBinding(deleteDebugKey);
+		    bindDebugKeys();
 		}
+		
 	}
+
+    public static void bindDebugKeys() {
+
+        jDebugKey = new KeyBinding("key.jDebugKey", Keyboard.KEY_J,
+                "key.categories.weaponlib");
+
+        kDebugKey = new KeyBinding("key.klDebugKey", Keyboard.KEY_K,
+                "key.categories.weaponlib");
+
+        minusDebugKey = new KeyBinding("key.minusDebugKey", Keyboard.KEY_MINUS,
+                "key.categories.weaponlib");
+
+        equalsDebugKey = new KeyBinding("key.equalsDebugKey", Keyboard.KEY_EQUALS,
+                "key.categories.weaponlib");
+
+        lBracketDebugKey = new KeyBinding("key.lBracketDebugKey", Keyboard.KEY_LBRACKET,
+                "key.categories.weaponlib");
+
+        rBracketDebugKey = new KeyBinding("key.rBracketDebugKey", Keyboard.KEY_RBRACKET,
+                "key.categories.weaponlib");
+
+        semicolonDebugKey = new KeyBinding("key.semicolonDebugKey", Keyboard.KEY_SEMICOLON,
+                "key.categories.weaponlib");
+
+        apostropheDebugKey = new KeyBinding("key.apostropheDebugKey", Keyboard.KEY_APOSTROPHE,
+                "key.categories.weaponlib");
+
+        deleteDebugKey = new KeyBinding("key.deleteDebugKey", Keyboard.KEY_BACK,
+                "key.categories.weaponlib");
+
+        compatibility.registerKeyBinding(jDebugKey);
+        compatibility.registerKeyBinding(kDebugKey);
+
+        compatibility.registerKeyBinding(lBracketDebugKey);
+        compatibility.registerKeyBinding(rBracketDebugKey);
+
+        compatibility.registerKeyBinding(semicolonDebugKey);
+        compatibility.registerKeyBinding(apostropheDebugKey);
+
+        compatibility.registerKeyBinding(minusDebugKey);
+        compatibility.registerKeyBinding(equalsDebugKey);
+
+        compatibility.registerKeyBinding(deleteDebugKey);
+    }
 }

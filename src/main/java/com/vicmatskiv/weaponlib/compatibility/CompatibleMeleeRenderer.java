@@ -115,21 +115,18 @@ public abstract class CompatibleMeleeRenderer implements IItemRenderer {
 			
 			renderContext.setToState(multipartPositioning.getToState(RenderableState.class));
 			
+			renderLeftArm(player, renderContext, positioner);
+			
+			renderRightArm(player, renderContext, positioner);
+			
 			positioner = multipartPositioning.getPositioner();
 		
 			positioner.position(Part.MAIN_ITEM, renderContext);
 			
-//			BiConsumer<Part, RenderContext<RenderableState>> partDebugPositioning = getPartDebugPositioning();
-//            if(partDebugPositioning != null) {
-//                partDebugPositioning.accept(Part.MAIN_ITEM, renderContext);
-//                if(DebugPositioner.isDebugModeEnabled()) {
-//                    DebugPositioner.position();
-//                }
-//            }
+			if(DebugPositioner.isDebugModeEnabled()) {
+	            DebugPositioner.position(Part.MAIN_ITEM, renderContext);
+	        }
 
-			renderLeftArm(player, renderContext, positioner);
-			renderRightArm(player, renderContext, positioner);
-	        
 			break;
 		default:
 		}
@@ -160,11 +157,9 @@ public abstract class CompatibleMeleeRenderer implements IItemRenderer {
 		GL11.glRotatef(0F, 0f, 0f, 1f);
 		
 		positioner.position(Part.RIGHT_HAND, renderContext);
-		
-		BiConsumer<Part, RenderContext<RenderableState>> partDebugPositioning = getPartDebugPositioning();
-		if(partDebugPositioning != null) {
-		    partDebugPositioning.accept(Part.RIGHT_HAND, renderContext);
-		}
+		if(DebugPositioner.isDebugModeEnabled()) {
+            DebugPositioner.position(Part.RIGHT_HAND, renderContext);
+        }
 		GL11.glColor3f(1F, 1F, 1F);
 		render.modelBipedMain.onGround = 0.0F;
 		render.modelBipedMain.setRotationAngles(0.0F, 0.3F, 0.0F, 0.0F, 0.0F, 0.0625F, player);
@@ -188,10 +183,9 @@ public abstract class CompatibleMeleeRenderer implements IItemRenderer {
 		GL11.glRotatef(10F, 0f, 0f, 1f);
 		
 		positioner.position(Part.LEFT_HAND, renderContext);
-		BiConsumer<Part, RenderContext<RenderableState>> partDebugPositioning = getPartDebugPositioning();
-        if(partDebugPositioning != null) {
-            partDebugPositioning.accept(Part.LEFT_HAND, renderContext);
-        }
+		if(DebugPositioner.isDebugModeEnabled()) {
+		    DebugPositioner.position(Part.LEFT_HAND, renderContext);
+		}
 		GL11.glColor3f(1F, 1F, 1F);
 		render.modelBipedMain.onGround = 0.0F;
 		render.modelBipedMain.setRotationAngles(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0625F, player);

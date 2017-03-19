@@ -13,7 +13,9 @@ import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
+import net.minecraftforge.client.ClientCommandHandler;
 
+import com.vicmatskiv.weaponlib.command.DebugCommand;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderingRegistry;
@@ -42,6 +44,8 @@ public class ClientModContext extends CommonModContext {
 	@Override
 	public void init(Object mod, String modId, CompatibleChannel channel) {
 		super.init(mod, modId, channel);
+		
+		ClientCommandHandler.instance.registerCommand(new DebugCommand());
 		
 		this.statusMessageCenter = new StatusMessageCenter();
 		
