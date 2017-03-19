@@ -7,6 +7,8 @@ import java.util.function.Function;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponKeyInputHandler;
+import com.vicmatskiv.weaponlib.melee.MeleeState;
+import com.vicmatskiv.weaponlib.melee.PlayerMeleeInstance;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -52,11 +54,8 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
         }
         
         else if(KeyBindings.attachmentKey.isPressed()) {
-    		if(itemStack != null && itemStack.getItem() instanceof Weapon) {
-    			Item item = itemStack.getItem();
-    			if(item instanceof Modifiable) {
-    				((Modifiable) item).toggleClientAttachmentSelectionMode(player);
-    			}
+    		if(itemStack != null && itemStack.getItem() instanceof Modifiable /* && itemStack.getItem() instanceof Weapon*/) {
+    		    ((Modifiable) itemStack.getItem()).toggleClientAttachmentSelectionMode(player);
     		}
         } 
         
@@ -68,10 +67,12 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
         } 
         
         else if(KeyBindings.rightArrowKey.isPressed()) {
-    		PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
-    		if(instance != null && instance.getState() == WeaponState.MODIFYING) {
-    			modContext.getAttachmentAspect().changeAttachment(AttachmentCategory.SKIN, instance);
-    		}
+    		PlayerItemInstance<?> instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player);
+    		if(instance instanceof PlayerWeaponInstance && instance.getState() == WeaponState.MODIFYING) {
+    			modContext.getAttachmentAspect().changeAttachment(AttachmentCategory.SKIN, (PlayerWeaponInstance) instance);
+    		} else if(instance instanceof PlayerMeleeInstance && instance.getState() == MeleeState.MODIFYING) {
+                modContext.getMeleeAttachmentAspect().changeAttachment(AttachmentCategory.SKIN, (PlayerMeleeInstance) instance);
+            }
         } 
         
         else if(KeyBindings.downArrowKey.isPressed()) {

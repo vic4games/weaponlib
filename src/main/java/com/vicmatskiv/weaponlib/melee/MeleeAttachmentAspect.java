@@ -160,11 +160,11 @@ public final class MeleeAttachmentAspect implements Aspect<MeleeState, PlayerMel
 		}
 	}
 	
-	void updateMainHeldItem(EntityPlayer player) {
-		PlayerMeleeInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerMeleeInstance.class);
-		if(instance != null) {
-			stateManager.changeStateFromAnyOf(this, instance, allowedUpdateFromStates); // no target state specified, will trigger auto-transitions
-		}
+	public void onUpdate(EntityPlayer player) {
+	    PlayerMeleeInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerMeleeInstance.class);
+	    if(instance != null) {
+	        stateManager.changeStateFromAnyOf(this, instance, allowedUpdateFromStates); // no target state specified, will trigger auto-transitions
+	    }  
 	}
 	
 	
@@ -222,7 +222,7 @@ public final class MeleeAttachmentAspect implements Aspect<MeleeState, PlayerMel
 		return activeAttachments;
 	}
 	
-	void changeAttachment(AttachmentCategory attachmentCategory, PlayerMeleeInstance weaponInstance) {
+	public void changeAttachment(AttachmentCategory attachmentCategory, PlayerMeleeInstance weaponInstance) {
 		if(weaponInstance != null) {
 			stateManager.changeState(this, weaponInstance, new ChangeAttachmentPermit(attachmentCategory), 
 					MeleeState.NEXT_ATTACHMENT);
@@ -260,7 +260,7 @@ public final class MeleeAttachmentAspect implements Aspect<MeleeState, PlayerMel
 				nextAttachment.getApply().apply(nextAttachment, weaponInstance.getWeapon(), weaponInstance.getPlayer());
 			} else if(nextAttachment.getApply3() != null) {
 				nextAttachment.getApply3().apply(nextAttachment, weaponInstance);
-			} else if(lookupResult.compatibleAttachment.getApplyHandler() != null) {
+			} else if(lookupResult.compatibleAttachment.getMeleeApplyHandler() != null) {
 				lookupResult.compatibleAttachment.getMeleeApplyHandler().apply(nextAttachment, weaponInstance);
 			} 
 //			else {
@@ -449,4 +449,6 @@ public final class MeleeAttachmentAspect implements Aspect<MeleeState, PlayerMel
 	ItemAttachment<ItemMelee> getActiveAttachment(PlayerMeleeInstance weaponInstance, AttachmentCategory category) {
 		return weaponInstance.getAttachmentItemWithCategory(category);
 	}
+
+   
 }

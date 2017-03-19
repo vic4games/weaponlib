@@ -48,7 +48,8 @@ public class CommonModContext implements ModContext {
         TypeRegistry.getInstance().register(LoadPermit.class);      
         TypeRegistry.getInstance().register(PlayerWeaponInstance.class);
         TypeRegistry.getInstance().register(WeaponState.class);
-
+        
+        TypeRegistry.getInstance().register(PlayerMeleeInstance.class);
     }
 
 	private String modId;
@@ -114,6 +115,8 @@ public class CommonModContext implements ModContext {
         
         StateManager<MeleeState, PlayerMeleeInstance> meleeStateManager = new StateManager<>((s1, s2) -> s1 == s2);
         meleeAttackAspect.setStateManager(meleeStateManager);
+        meleeAttachmentAspect.setPermitManager(permitManager);
+        meleeAttachmentAspect.setStateManager(meleeStateManager);
         
         StateManager<MagazineState, PlayerMagazineInstance> magazineStateManager = new StateManager<>((s1, s2) -> s1 == s2);
 
@@ -215,7 +218,12 @@ public class CommonModContext implements ModContext {
 	public MeleeAttackAspect getMeleeAttackAspect() {
 	    return meleeAttackAspect;
 	}
-
+	
+	@Override
+	public MeleeAttachmentAspect getMeleeAttachmentAspect() {
+	    return meleeAttachmentAspect;
+	}
+	
 	@Override
 	public PlayerWeaponInstance getMainHeldWeapon() {
 		throw new IllegalStateException();

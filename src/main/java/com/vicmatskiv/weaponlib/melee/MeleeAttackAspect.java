@@ -1,10 +1,7 @@
 package com.vicmatskiv.weaponlib.melee;
 
-import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
-
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Random;
 import java.util.Set;
 import java.util.function.Predicate;
 
@@ -15,7 +12,6 @@ import com.vicmatskiv.weaponlib.state.PermitManager;
 import com.vicmatskiv.weaponlib.state.StateManager;
 
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
 
 
 /*
@@ -23,10 +19,10 @@ import net.minecraft.item.ItemStack;
  */
 public class MeleeAttackAspect implements Aspect<MeleeState, PlayerMeleeInstance> {
 
-    private static final long ALERT_TIMEOUT = 500;
+    private static final long ATTACK_TIMEOUT = 120;
     
     private static Predicate<PlayerMeleeInstance> attackTimeoutExpired = 
-            instance -> System.currentTimeMillis()>  instance.getStateUpdateTimestamp() + ALERT_TIMEOUT;
+            instance -> System.currentTimeMillis()>  instance.getStateUpdateTimestamp() + ATTACK_TIMEOUT;
         
     private static Predicate<PlayerMeleeInstance> sprinting = instance -> instance.getPlayer().isSprinting();
              
@@ -80,7 +76,7 @@ public class MeleeAttackAspect implements Aspect<MeleeState, PlayerMeleeInstance
     }
     
     private void attack(PlayerMeleeInstance meleeInstance) {
-        EntityPlayer player = meleeInstance.getPlayer();
-        ItemMelee weapon = meleeInstance.getWeapon();
+//        EntityPlayer player = meleeInstance.getPlayer();
+//        ItemMelee weapon = meleeInstance.getWeapon();
     }
 }

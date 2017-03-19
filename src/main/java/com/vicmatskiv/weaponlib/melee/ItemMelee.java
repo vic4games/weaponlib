@@ -4,7 +4,6 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -129,7 +128,23 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
             this.renderer = renderer;
             return this;
         }
+        
+        public Builder withCompatibleSkin(MeleeSkin skin, String activeTextureName) {
+            withCompatibleAttachment(skin, 
+                    (a, i) -> {
+                        i.setActiveTextureIndex(skin.getTextureVariantIndex(activeTextureName));
+                    },
+                    (a, i) -> {}
+            );
+            return this;
+        }
 
+        public Builder withCompatibleAttachment(ItemAttachment<ItemMelee> attachment, ItemAttachment.MeleeWeaponApplyHandler<ItemMelee> applyHandler,
+                ItemAttachment.MeleeWeaponApplyHandler<ItemMelee> removeHandler) {
+            compatibleAttachments.put(attachment, new CompatibleAttachment<>(attachment, applyHandler, removeHandler));
+            return this;
+        }
+        
         public Builder withCompatibleAttachment(ItemAttachment<ItemMelee> attachment, BiConsumer<EntityPlayer, ItemStack> positioning) {
             compatibleAttachments.put(attachment, new CompatibleAttachment<>(attachment, positioning, null, false));
             return this;
@@ -222,7 +237,6 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
     private CompatibleSound reloadSound;
     private CompatibleSound unloadSound;
     private CompatibleSound ejectSpentRoundSound;
-    private AttachmentContainer meleeAttachmentAspect;
 
     public static enum State { READY, SHOOTING, RELOAD_REQUESTED, RELOAD_CONFIRMED, UNLOAD_STARTED, UNLOAD_REQUESTED_FROM_SERVER, UNLOAD_CONFIRMED, PAUSED, MODIFYING, EJECT_SPENT_ROUND};
 
@@ -283,7 +297,7 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
 
     @Override
     public List<CompatibleAttachment<? extends AttachmentContainer>> getActiveAttachments(EntityPlayer player, ItemStack itemStack) {
-        return Collections.emptyList(); //meleeAttachmentAspect.getActiveAttachments(player, itemStack);
+        return modContext.getMeleeAttachmentAspect().getActiveAttachments(player, itemStack);
     }
 
     public MeleeRenderer getRenderer() {
@@ -309,7 +323,7 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
     @Override
     public void update(EntityPlayer player) {
         modContext.getMeleeAttackAspect().onUpdate(player);
-//        modContext.getWeaponFireAspect().onUpdate(player);
+        modContext.getMeleeAttachmentAspect().onUpdate(player);
 //        modContext.getAttachmentAspect().updateMainHeldItem(player);
     }
 
@@ -329,7 +343,7 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
         
         for(CompatibleAttachment<ItemMelee> compatibleAttachment: ((ItemMelee) itemStack.getItem()).getCompatibleAttachments().values()) {
             ItemAttachment<ItemMelee> attachment = compatibleAttachment.getAttachment();
-            if(compatibleAttachment.isDefault() && attachment.getApply2() != null) {
+            if(compatibleAttachment.isDefault() && attachment.getApply3() != null) {
                 attachment.getApply3().apply(attachment, instance);
             }
         }
@@ -338,7 +352,7 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
 
     @Override
     public void toggleClientAttachmentSelectionMode(EntityPlayer player) {
-        modContext.getAttachmentAspect().toggleClientAttachmentSelectionMode(player);
+        modContext.getMeleeAttachmentAspect().toggleClientAttachmentSelectionMode(player);
     }
 
 //    @Override

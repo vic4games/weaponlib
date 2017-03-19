@@ -30,7 +30,6 @@ import com.vicmatskiv.weaponlib.Part;
 import com.vicmatskiv.weaponlib.PlayerItemInstance;
 import com.vicmatskiv.weaponlib.RenderContext;
 import com.vicmatskiv.weaponlib.Tuple;
-import com.vicmatskiv.weaponlib.Weapon;
 import com.vicmatskiv.weaponlib.animation.MultipartPositioning.Positioner;
 import com.vicmatskiv.weaponlib.animation.MultipartRenderStateManager;
 import com.vicmatskiv.weaponlib.animation.MultipartTransition;
@@ -52,7 +51,7 @@ public class MeleeRenderer extends CompatibleMeleeRenderer {
 	
 	private static final float DEFAULT_NORMAL_RANDOMIZING_AMPLITUDE = 0.06f;
 	
-	private static final int DEFAULT_ANIMATION_DURATION = 250;
+	private static final int DEFAULT_ANIMATION_DURATION = 70;
 
 
 	public static class Builder {
@@ -97,6 +96,7 @@ public class MeleeRenderer extends CompatibleMeleeRenderer {
 		
 		private LinkedHashMap<Part, List<Transition<RenderContext<RenderableState>>>> firstPersonCustomPositioningEjectSpentRound = new LinkedHashMap<>();
 		private boolean hasRecoilPositioningDefined;
+        public int animationDuration = DEFAULT_ANIMATION_DURATION;
 
 		public Builder withModId(String modId) {
 			this.modId = modId;
@@ -106,6 +106,11 @@ public class MeleeRenderer extends CompatibleMeleeRenderer {
 		public Builder withModel(ModelBase model) {
 			this.model = model;
 			return this;
+		}
+		
+		public Builder withAnimationDuration(int animationDuration) {
+		    this.animationDuration = animationDuration;
+		    return this;
 		}
 		
 		public Builder withNormalRandomizingRate(float normalRandomizingRate) {
@@ -264,17 +269,11 @@ public class MeleeRenderer extends CompatibleMeleeRenderer {
 			MeleeRenderer renderer = new MeleeRenderer(this);
 			
 			if(firstPersonPositioning == null) {
-				firstPersonPositioning = (renderContext) -> {
-					GL11.glRotatef(45F, 0f, 1f, 0f);
-
-					if(renderer.getClientModContext() != null) {
-						PlayerMeleeInstance instance = renderer.getClientModContext().getMainHeldMeleeWeapon();
-					}
-				};
+				firstPersonPositioning = (renderContext) -> {};
 			}
 			
 			if(firstPersonPositioningAttacking == null) {
-				firstPersonPositioningAttacking = Collections.singletonList(new Transition<>(firstPersonPositioning, DEFAULT_ANIMATION_DURATION));
+				firstPersonPositioningAttacking = Collections.singletonList(new Transition<>(firstPersonPositioning, animationDuration));
 			}
 			
 			for(Transition<RenderContext<RenderableState>> t: firstPersonPositioningAttacking) {
@@ -569,13 +568,13 @@ public class MeleeRenderer extends CompatibleMeleeRenderer {
 						builder.firstPersonLeftHandPositioningModifying,
 						builder.firstPersonRightHandPositioningModifying,
 						builder.firstPersonCustomPositioning,
-						DEFAULT_ANIMATION_DURATION);
+						builder.animationDuration);
 			case RUNNING:
 				return getSimpleTransition(builder.firstPersonPositioningRunning,
 						builder.firstPersonLeftHandPositioningRunning,
 						builder.firstPersonRightHandPositioningRunning,
 						builder.firstPersonCustomPositioning,
-						DEFAULT_ANIMATION_DURATION);
+						builder.animationDuration);
 			case ATTACKING:
 				return getComplexTransition(builder.firstPersonPositioningAttacking, 
 						builder.firstPersonLeftHandPositioningAttacking,
@@ -587,7 +586,7 @@ public class MeleeRenderer extends CompatibleMeleeRenderer {
 						builder.firstPersonLeftHandPositioning,
 						builder.firstPersonRightHandPositioning,
 						builder.firstPersonCustomPositioning,
-						DEFAULT_ANIMATION_DURATION);
+						builder.animationDuration);
 			default:
 				break;
 			}
@@ -609,21 +608,21 @@ public class MeleeRenderer extends CompatibleMeleeRenderer {
 		} else {
 			String textureName = null;
 			CompatibleAttachment<?> compatibleSkin = attachments.stream()
-					.filter(ca -> ca.getAttachment() instanceof ItemSkin).findAny().orElse(null);
+					.filter(ca -> ca.getAttachment() instanceof MeleeSkin).findAny().orElse(null);
 			if(compatibleSkin != null) {
 				PlayerItemInstance<?> itemInstance = getClientModContext().getPlayerItemInstanceRegistry()
 						.getItemInstance(renderContext.getPlayer(), weaponItemStack);
 				if(itemInstance instanceof PlayerMeleeInstance) {
 					int textureIndex = ((PlayerMeleeInstance) itemInstance).getActiveTextureIndex();
 					if(textureIndex >= 0) {
-						textureName = ((ItemSkin) compatibleSkin.getAttachment()).getTextureVariant(textureIndex)
+						textureName = ((MeleeSkin) compatibleSkin.getAttachment()).getTextureVariant(textureIndex)
 								+ ".png";
 					}
 				}
 			} 
 			
 			if(textureName == null) {
-				Weapon weapon = ((Weapon) weaponItemStack.getItem());
+				ItemMelee weapon = ((ItemMelee) weaponItemStack.getItem());
 				textureName = weapon.getTextureName();
 			}
 			

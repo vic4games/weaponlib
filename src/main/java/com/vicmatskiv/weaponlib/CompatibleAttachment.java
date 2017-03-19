@@ -3,6 +3,8 @@ package com.vicmatskiv.weaponlib;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import com.vicmatskiv.weaponlib.melee.ItemMelee;
+
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -15,6 +17,8 @@ public class CompatibleAttachment<T> {
 	private boolean isDefault;
 	private ItemAttachment.ApplyHandler2<T> applyHandler;
 	private ItemAttachment.ApplyHandler2<T> removeHandler;
+	ItemAttachment.MeleeWeaponApplyHandler<ItemMelee> meleeApplyHandler;
+    ItemAttachment.MeleeWeaponApplyHandler<ItemMelee> meleeRemoveHandler;
 	
 	public CompatibleAttachment(ItemAttachment<T> attachment, BiConsumer<EntityPlayer, ItemStack> positioning, Consumer<ModelBase> modelPositioning, boolean isDefault) {
 		this.attachment = attachment;
@@ -28,6 +32,14 @@ public class CompatibleAttachment<T> {
 		this.applyHandler = applyHandler;
 		this.removeHandler = removeHandler;
 	}
+	
+	public CompatibleAttachment(ItemAttachment<T> attachment, 
+	        ItemAttachment.MeleeWeaponApplyHandler<ItemMelee> meleeApplyHandler, 
+	        ItemAttachment.MeleeWeaponApplyHandler<ItemMelee> meleeRemoveHandler) {
+        this.attachment = attachment;
+        this.meleeApplyHandler = meleeApplyHandler;
+        this.meleeRemoveHandler = meleeRemoveHandler;
+    }
 
 	public CompatibleAttachment(ItemAttachment<T> attachment, Consumer<ModelBase> positioning) {
 		this(attachment, null, positioning, false);
@@ -63,11 +75,11 @@ public class CompatibleAttachment<T> {
 		return removeHandler;
 	}
 	
-	public ItemAttachment.MeleeWeaponApplyHandler<T> getMeleeApplyHandler() {
-        throw new UnsupportedOperationException("Implement me");
+	public ItemAttachment.MeleeWeaponApplyHandler<ItemMelee> getMeleeApplyHandler() {
+        return meleeApplyHandler;
     }
 
-    public ItemAttachment.MeleeWeaponApplyHandler<T> getMeleeRemoveHandler() {
-        throw new UnsupportedOperationException("Implement me");
+    public ItemAttachment.MeleeWeaponApplyHandler<ItemMelee> getMeleeRemoveHandler() {
+        return meleeRemoveHandler;
     }
 }

@@ -285,7 +285,7 @@ public class AttachmentBuilder<T> {
 		return s != null && !s.endsWith(ext) ? s + ext : s;
 	}
 
-	static String stripFileExtension(String str, String extension) {
+	protected static String stripFileExtension(String str, String extension) {
 		return str.endsWith(extension) ? str.substring(0, str.length() - extension.length()) : str;
 	}
 	
