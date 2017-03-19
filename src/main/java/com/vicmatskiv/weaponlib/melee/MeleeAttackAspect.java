@@ -19,7 +19,7 @@ import net.minecraft.entity.player.EntityPlayer;
  */
 public class MeleeAttackAspect implements Aspect<MeleeState, PlayerMeleeInstance> {
 
-    private static final long ATTACK_TIMEOUT = 120;
+    private static final long ATTACK_TIMEOUT = 250;
     
     private static Predicate<PlayerMeleeInstance> attackTimeoutExpired = 
             instance -> System.currentTimeMillis()>  instance.getStateUpdateTimestamp() + ATTACK_TIMEOUT;

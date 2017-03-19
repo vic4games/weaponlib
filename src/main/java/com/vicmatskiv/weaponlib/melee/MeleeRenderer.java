@@ -59,6 +59,8 @@ public class MeleeRenderer extends CompatibleMeleeRenderer {
 		private ModelBase model;
 		private String textureName;
 		
+		private BiConsumer<Part, RenderContext<RenderableState>> partDebugPositioning;
+		
 		private Consumer<ItemStack> entityPositioning;
 		private Consumer<ItemStack> inventoryPositioning;
 		private Consumer<RenderContext<RenderableState>> thirdPersonPositioning;
@@ -141,6 +143,11 @@ public class MeleeRenderer extends CompatibleMeleeRenderer {
 			this.inventoryPositioning = inventoryPositioning;
 			return this;
 		}
+		
+		public Builder withPartDebugPositioning(BiConsumer<Part, RenderContext<RenderableState>> partDebugPositioning) {
+            this.partDebugPositioning = partDebugPositioning;
+            return this;
+        }
 
 		public Builder withThirdPersonPositioning(Consumer<RenderContext<RenderableState>> thirdPersonPositioning) {
 			this.thirdPersonPositioning = thirdPersonPositioning;
@@ -488,6 +495,8 @@ public class MeleeRenderer extends CompatibleMeleeRenderer {
 	public void setClientModContext(ClientModContext clientModContext) {
 		this.clientModContext = clientModContext;
 	}
+	
+	
 
 	@Override
 	protected StateDescriptor getStateDescriptor(EntityPlayer player, ItemStack itemStack) {
@@ -793,5 +802,10 @@ public class MeleeRenderer extends CompatibleMeleeRenderer {
 
 	public boolean hasRecoilPositioning() {
 		return builder.hasRecoilPositioningDefined;
+	}
+	
+	@Override
+	protected BiConsumer<Part, RenderContext<RenderableState>> getPartDebugPositioning() {
+	    return builder.partDebugPositioning;
 	}
 }

@@ -1,11 +1,14 @@
 package com.vicmatskiv.weaponlib.compatibility;
 
+import java.util.function.BiConsumer;
+
 import org.lwjgl.opengl.GL11;
 
 import com.vicmatskiv.weaponlib.ClientModContext;
 import com.vicmatskiv.weaponlib.Part;
 import com.vicmatskiv.weaponlib.RenderContext;
 import com.vicmatskiv.weaponlib.melee.RenderableState;
+import com.vicmatskiv.weaponlib.animation.DebugPositioner;
 import com.vicmatskiv.weaponlib.animation.MultipartPositioning;
 import com.vicmatskiv.weaponlib.animation.MultipartPositioning.Positioner;
 import com.vicmatskiv.weaponlib.animation.MultipartRenderStateManager;
@@ -113,13 +116,18 @@ public abstract class CompatibleMeleeRenderer implements IItemRenderer {
 			renderContext.setToState(multipartPositioning.getToState(RenderableState.class));
 			
 			positioner = multipartPositioning.getPositioner();
-						
-			positioner.randomize(stateDescriptor.rate, stateDescriptor.amplitude);
-			
+		
 			positioner.position(Part.MAIN_ITEM, renderContext);
 			
+//			BiConsumer<Part, RenderContext<RenderableState>> partDebugPositioning = getPartDebugPositioning();
+//            if(partDebugPositioning != null) {
+//                partDebugPositioning.accept(Part.MAIN_ITEM, renderContext);
+//                if(DebugPositioner.isDebugModeEnabled()) {
+//                    DebugPositioner.position();
+//                }
+//            }
+
 			renderLeftArm(player, renderContext, positioner);
-			
 			renderRightArm(player, renderContext, positioner);
 	        
 			break;
@@ -130,6 +138,8 @@ public abstract class CompatibleMeleeRenderer implements IItemRenderer {
 		
 		GL11.glPopMatrix();
 	}
+	
+	protected abstract BiConsumer<Part, RenderContext<RenderableState>> getPartDebugPositioning();
 
 	protected abstract void renderItem(ItemStack weaponItemStack, RenderContext<RenderableState> renderContext,
 			Positioner<Part, RenderContext<RenderableState>> positioner);
@@ -150,6 +160,11 @@ public abstract class CompatibleMeleeRenderer implements IItemRenderer {
 		GL11.glRotatef(0F, 0f, 0f, 1f);
 		
 		positioner.position(Part.RIGHT_HAND, renderContext);
+		
+		BiConsumer<Part, RenderContext<RenderableState>> partDebugPositioning = getPartDebugPositioning();
+		if(partDebugPositioning != null) {
+		    partDebugPositioning.accept(Part.RIGHT_HAND, renderContext);
+		}
 		GL11.glColor3f(1F, 1F, 1F);
 		render.modelBipedMain.onGround = 0.0F;
 		render.modelBipedMain.setRotationAngles(0.0F, 0.3F, 0.0F, 0.0F, 0.0F, 0.0625F, player);
@@ -173,7 +188,10 @@ public abstract class CompatibleMeleeRenderer implements IItemRenderer {
 		GL11.glRotatef(10F, 0f, 0f, 1f);
 		
 		positioner.position(Part.LEFT_HAND, renderContext);
-		
+		BiConsumer<Part, RenderContext<RenderableState>> partDebugPositioning = getPartDebugPositioning();
+        if(partDebugPositioning != null) {
+            partDebugPositioning.accept(Part.LEFT_HAND, renderContext);
+        }
 		GL11.glColor3f(1F, 1F, 1F);
 		render.modelBipedMain.onGround = 0.0F;
 		render.modelBipedMain.setRotationAngles(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0625F, player);

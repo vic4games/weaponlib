@@ -373,9 +373,9 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
 
     public void attack(EntityPlayer player, boolean heavy) {
         if(heavy) {
-            modContext.getMeleeAttackAspect().onHeavyAttackButtonClick(player);
-        } else {
             modContext.getMeleeAttackAspect().onAttackButtonClick(player);
+        } else {
+            modContext.getMeleeAttackAspect().onHeavyAttackButtonClick(player);
         }
        
     }

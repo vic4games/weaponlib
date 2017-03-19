@@ -4,6 +4,7 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 
 import java.util.function.Function;
 
+import com.vicmatskiv.weaponlib.animation.DebugPositioner;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponKeyInputHandler;
@@ -37,7 +38,35 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
 		EntityPlayer player = entityPlayerSupplier.apply(null);
     	ItemStack itemStack = compatibility.getHeldItemMainHand(player);
     	
-        if(KeyBindings.reloadKey.isPressed()) {
+    	if(DebugPositioner.isDebugModeEnabled() && KeyBindings.upArrowKey.isPressed()) {
+    	    DebugPositioner.incrementXRotation(5);
+    	} else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.downArrowKey.isPressed()) {
+    	    DebugPositioner.incrementXRotation(-5);
+        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.leftArrowKey.isPressed()) {
+            DebugPositioner.incrementYRotation(5);
+        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.rightArrowKey.isPressed()) {
+            DebugPositioner.incrementYRotation(-5);
+        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.jDebugKey.isPressed()) {
+            DebugPositioner.incrementZRotation(5);
+        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.kDebugKey.isPressed()) {
+            DebugPositioner.incrementZRotation(-5);
+        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.minusDebugKey.isPressed()) {
+            DebugPositioner.incrementXPosition(-0.05f);
+        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.equalsDebugKey.isPressed()) {
+            DebugPositioner.incrementXPosition(0.05f);
+        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.lBracketDebugKey.isPressed()) {
+            DebugPositioner.incrementYPosition(-0.05f);
+        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.rBracketDebugKey.isPressed()) {
+            DebugPositioner.incrementYPosition(0.05f);
+        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.semicolonDebugKey.isPressed()) {
+            DebugPositioner.incrementZPosition(-0.05f);
+        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.apostropheDebugKey.isPressed()) {
+            DebugPositioner.incrementZPosition(0.05f);
+        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.deleteDebugKey.isPressed()) {
+            DebugPositioner.reset();
+        }
+        
+        else if(KeyBindings.reloadKey.isPressed()) {
     		if(itemStack != null) {
     			Item item = itemStack.getItem();
     			if(item instanceof Reloadable) {
@@ -48,7 +77,7 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
         
         else if(KeyBindings.laserSwitchKey.isPressed()) {
         	PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
-    		if(instance != null && instance.getState() == WeaponState.READY || instance.getState() == WeaponState.MODIFYING) {
+    		if(instance != null && (instance.getState() == WeaponState.READY || instance.getState() == WeaponState.MODIFYING)) {
     			instance.setLaserOn(!instance.isLaserOn());
     		}
         }
