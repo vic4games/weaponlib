@@ -51,17 +51,17 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
         } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.kDebugKey.isPressed()) {
             DebugPositioner.incrementZRotation(-5);
         } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.minusDebugKey.isPressed()) {
-            DebugPositioner.incrementXPosition(-0.05f);
+            DebugPositioner.incrementXPosition(-0.025f);
         } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.equalsDebugKey.isPressed()) {
-            DebugPositioner.incrementXPosition(0.05f);
+            DebugPositioner.incrementXPosition(0.025f);
         } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.lBracketDebugKey.isPressed()) {
-            DebugPositioner.incrementYPosition(-0.05f);
+            DebugPositioner.incrementYPosition(-0.025f);
         } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.rBracketDebugKey.isPressed()) {
-            DebugPositioner.incrementYPosition(0.05f);
+            DebugPositioner.incrementYPosition(0.025f);
         } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.semicolonDebugKey.isPressed()) {
-            DebugPositioner.incrementZPosition(-0.05f);
+            DebugPositioner.incrementZPosition(-0.025f);
         } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.apostropheDebugKey.isPressed()) {
-            DebugPositioner.incrementZPosition(0.05f);
+            DebugPositioner.incrementZPosition(0.025f);
         } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.deleteDebugKey.isPressed()) {
             DebugPositioner.reset();
         }

@@ -90,7 +90,7 @@ public class DebugCommand extends CommandBase {
             break;
         }
         if(debugMode != null) {
-            DebugPositioner.setDebugMode(true);
+            DebugPositioner.setDebugMode(debugMode);
             Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Debug mode " + args[0].toLowerCase()));
         } else {
             Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(getSubCommandDebugUsage()));

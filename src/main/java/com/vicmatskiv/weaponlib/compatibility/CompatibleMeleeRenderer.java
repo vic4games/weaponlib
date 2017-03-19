@@ -115,11 +115,11 @@ public abstract class CompatibleMeleeRenderer implements IItemRenderer {
 			
 			renderContext.setToState(multipartPositioning.getToState(RenderableState.class));
 			
-			renderLeftArm(player, renderContext, positioner);
-			
-			renderRightArm(player, renderContext, positioner);
-			
 			positioner = multipartPositioning.getPositioner();
+			
+			renderLeftArm(player, renderContext, positioner);
+            
+            renderRightArm(player, renderContext, positioner);
 		
 			positioner.position(Part.MAIN_ITEM, renderContext);
 			

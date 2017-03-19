@@ -150,7 +150,7 @@ public class DebugPositioner {
         }
         partPosition.x = partPosition.y = partPosition.z 
                 = partPosition.xRotation = partPosition.yRotation = partPosition.zRotation = 0f;
-        //partPosition.scale = 1f;
+        partPosition.scale = 1f;
     }
     
     public static void setDebugPart(Part part) {
@@ -172,6 +172,9 @@ public class DebugPositioner {
     }
 
     public static void position(Part part, RenderContext<RenderableState> renderContext) {
+        if(part != currentPart) {
+            return;
+        }
         Position partPosition = getCurrentPartPosition();
         if(partPosition == null) {
             return;
@@ -189,11 +192,11 @@ public class DebugPositioner {
             return;
         }
         StringBuilder result = new StringBuilder();
-        result.append(String.format("GL11.glScalef(%f, %f, %f);\n", partPosition.scale, partPosition.scale, partPosition.scale));
-        result.append(String.format("GL11.glRotatef(%f, 1f, 0f, 0f);\n", partPosition.xRotation));
-        result.append(String.format("GL11.glRotatef(%f, 0f, 1f, 0f);\n", partPosition.yRotation));
-        result.append(String.format("GL11.glRotatef(%f, 0f, 0f, 1f);\n", partPosition.zRotation));
-        result.append(String.format("GL11.glTranslatef(%f, %f, %f);", partPosition.x, partPosition.y, partPosition.z));
+        result.append(String.format("GL11.glScalef(%ff, %ff, %ff);\n", partPosition.scale, partPosition.scale, partPosition.scale));
+        result.append(String.format("GL11.glRotatef(%ff, 1f, 0f, 0f);\n", partPosition.xRotation));
+        result.append(String.format("GL11.glRotatef(%ff, 0f, 1f, 0f);\n", partPosition.yRotation));
+        result.append(String.format("GL11.glRotatef(%ff, 0f, 0f, 1f);\n", partPosition.zRotation));
+        result.append(String.format("GL11.glTranslatef(%ff, %ff, %ff);", partPosition.x, partPosition.y, partPosition.z));
         logger.debug("Generated positioning code: \n" + result);
     }
 }
