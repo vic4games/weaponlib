@@ -79,7 +79,13 @@ public class MeleeRenderer extends CompatibleMeleeRenderer {
 		private List<Transition<RenderContext<RenderableState>>> firstPersonLeftHandPositioningAttacking;
 		private List<Transition<RenderContext<RenderableState>>> firstPersonRightHandPositioningAttacking;
 		
+		private List<Transition<RenderContext<RenderableState>>> firstPersonPositioningHeavyAttacking;
+        private List<Transition<RenderContext<RenderableState>>> firstPersonLeftHandPositioningHeavyAttacking;
+        private List<Transition<RenderContext<RenderableState>>> firstPersonRightHandPositioningHeavyAttacking;
+		
 		private long totalAttackingDuration;
+		
+		private long totalHeavyAttackingDuration;
 		
 		private String modId;
 		
@@ -88,11 +94,14 @@ public class MeleeRenderer extends CompatibleMeleeRenderer {
 		private float normalRandomizingAmplitude = DEFAULT_NORMAL_RANDOMIZING_AMPLITUDE;
 		
 		private LinkedHashMap<Part, Consumer<RenderContext<RenderableState>>> firstPersonCustomPositioning = new LinkedHashMap<>();
-		private LinkedHashMap<Part, List<Transition<RenderContext<RenderableState>>>> firstPersonCustomPositioningUnloading = new LinkedHashMap<>();
+		//private LinkedHashMap<Part, List<Transition<RenderContext<RenderableState>>>> firstPersonCustomPositioningUnloading = new LinkedHashMap<>();
 		private LinkedHashMap<Part, List<Transition<RenderContext<RenderableState>>>> firstPersonCustomPositioningAttacking = new LinkedHashMap<>();
-		private LinkedHashMap<Part, Consumer<RenderContext<RenderableState>>> firstPersonCustomPositioningRecoiled = new LinkedHashMap<>();
-		private LinkedHashMap<Part, Consumer<RenderContext<RenderableState>>> firstPersonCustomPositioningZoomingRecoiled = new LinkedHashMap<>();
-		private LinkedHashMap<Part, Consumer<RenderContext<RenderableState>>> firstPersonCustomPositioningZoomingShooting = new LinkedHashMap<>();
+	    private LinkedHashMap<Part, List<Transition<RenderContext<RenderableState>>>> firstPersonCustomPositioningHeavyAttacking = new LinkedHashMap<>();
+
+		
+//		private LinkedHashMap<Part, Consumer<RenderContext<RenderableState>>> firstPersonCustomPositioningRecoiled = new LinkedHashMap<>();
+//		private LinkedHashMap<Part, Consumer<RenderContext<RenderableState>>> firstPersonCustomPositioningZoomingRecoiled = new LinkedHashMap<>();
+//		private LinkedHashMap<Part, Consumer<RenderContext<RenderableState>>> firstPersonCustomPositioningZoomingShooting = new LinkedHashMap<>();
 		
 		private LinkedHashMap<Part, List<Transition<RenderContext<RenderableState>>>> firstPersonCustomPositioningEjectSpentRound = new LinkedHashMap<>();
 		private boolean hasRecoilPositioningDefined;
@@ -154,6 +163,12 @@ public class MeleeRenderer extends CompatibleMeleeRenderer {
 			return this;
 		}
 		
+		@SafeVarargs
+        public final Builder withFirstPersonPositioningHeavyAttacking(Transition<RenderContext<RenderableState>> ...transitions) {
+            this.firstPersonPositioningHeavyAttacking = Arrays.asList(transitions);
+            return this;
+        }
+		
 		public Builder withFirstPersonPositioningModifying(Consumer<RenderContext<RenderableState>> firstPersonPositioningModifying) {
 			this.firstPersonPositioningModifying = firstPersonPositioningModifying;
 			return this;
@@ -185,6 +200,18 @@ public class MeleeRenderer extends CompatibleMeleeRenderer {
 		}
 		
 		@SafeVarargs
+        public final Builder withFirstPersonLeftHandPositioningHeavyAttacking(Transition<RenderContext<RenderableState>> ...transitions) {
+            this.firstPersonLeftHandPositioningHeavyAttacking = Arrays.asList(transitions);
+            return this;
+        }
+		
+		@SafeVarargs
+        public final Builder withFirstPersonRightHandPositioningHeavyAttacking(Transition<RenderContext<RenderableState>> ...transitions) {
+            this.firstPersonRightHandPositioningHeavyAttacking = Arrays.asList(transitions);
+            return this;
+        }
+		
+		@SafeVarargs
 		public final Builder withFirstPersonRightHandPositioningAttacking(Transition<RenderContext<RenderableState>> ...transitions) {
 			this.firstPersonRightHandPositioningAttacking = Arrays.asList(transitions);
 			return this;
@@ -209,15 +236,15 @@ public class MeleeRenderer extends CompatibleMeleeRenderer {
 			return this;
 		}
 		
-		public Builder withFirstPersonPositioningCustomZoomingRecoiled(Part part, Consumer<RenderContext<RenderableState>> positioning) {
-			if(part instanceof DefaultPart) {
-				throw new IllegalArgumentException("Part " + part + " is not custom");
-			}
-			if(this.firstPersonCustomPositioningZoomingRecoiled.put(part, positioning) != null) {
-				throw new IllegalArgumentException("Part " + part + " already added");
-			}
-			return this;
-		}
+//		public Builder withFirstPersonPositioningCustomZoomingRecoiled(Part part, Consumer<RenderContext<RenderableState>> positioning) {
+//			if(part instanceof DefaultPart) {
+//				throw new IllegalArgumentException("Part " + part + " is not custom");
+//			}
+//			if(this.firstPersonCustomPositioningZoomingRecoiled.put(part, positioning) != null) {
+//				throw new IllegalArgumentException("Part " + part + " already added");
+//			}
+//			return this;
+//		}
 		
 		@SafeVarargs
 		public final Builder withFirstPersonCustomPositioningAttacking(Part part, Transition<RenderContext<RenderableState>> ...transitions) {
@@ -230,13 +257,23 @@ public class MeleeRenderer extends CompatibleMeleeRenderer {
 		}
 		
 		@SafeVarargs
-		public final Builder withFirstPersonCustomPositioningUnloading(Part part, Transition<RenderContext<RenderableState>> ...transitions) {
-			if(part instanceof DefaultPart) {
-				throw new IllegalArgumentException("Part " + part + " is not custom");
-			}
-			this.firstPersonCustomPositioningUnloading.put(part, Arrays.asList(transitions));
-			return this;
-		}
+        public final Builder withFirstPersonCustomPositioningHeavyAttacking(Part part, Transition<RenderContext<RenderableState>> ...transitions) {
+            if(part instanceof DefaultPart) {
+                throw new IllegalArgumentException("Part " + part + " is not custom");
+            }
+            
+            this.firstPersonCustomPositioningHeavyAttacking.put(part, Arrays.asList(transitions));
+            return this;
+        }
+		
+//		@SafeVarargs
+//		public final Builder withFirstPersonCustomPositioningUnloading(Part part, Transition<RenderContext<RenderableState>> ...transitions) {
+//			if(part instanceof DefaultPart) {
+//				throw new IllegalArgumentException("Part " + part + " is not custom");
+//			}
+//			this.firstPersonCustomPositioningUnloading.put(part, Arrays.asList(transitions));
+//			return this;
+//		}
 		
 		@SafeVarargs
 		public final Builder withFirstPersonCustomPositioningEjectSpentRound(Part part, Transition<RenderContext<RenderableState>> ...transitions) {
@@ -276,10 +313,19 @@ public class MeleeRenderer extends CompatibleMeleeRenderer {
 				firstPersonPositioningAttacking = Collections.singletonList(new Transition<>(firstPersonPositioning, animationDuration));
 			}
 			
+			if(firstPersonPositioningHeavyAttacking == null) {
+                firstPersonPositioningHeavyAttacking = Collections.singletonList(new Transition<>(firstPersonPositioning, animationDuration));
+            }
+			
 			for(Transition<RenderContext<RenderableState>> t: firstPersonPositioningAttacking) {
 				totalAttackingDuration += t.getDuration();
 				totalAttackingDuration += t.getPause();
 			}
+			
+			for(Transition<RenderContext<RenderableState>> t: firstPersonPositioningHeavyAttacking) {
+                totalHeavyAttackingDuration += t.getDuration();
+                totalHeavyAttackingDuration += t.getPause();
+            }
 			
 			if(firstPersonPositioningRunning == null) {
 				firstPersonPositioningRunning = firstPersonPositioning;
@@ -307,6 +353,14 @@ public class MeleeRenderer extends CompatibleMeleeRenderer {
 				firstPersonLeftHandPositioningAttacking = firstPersonPositioningAttacking.stream().map(t -> new Transition<RenderContext<RenderableState>>((p, i) -> {}, 0)).collect(Collectors.toList());
 			}
 			
+			if(firstPersonLeftHandPositioningHeavyAttacking == null) {
+                firstPersonLeftHandPositioningHeavyAttacking = firstPersonPositioningHeavyAttacking.stream().map(t -> new Transition<RenderContext<RenderableState>>((p, i) -> {}, 0)).collect(Collectors.toList());
+            }
+			
+			if(firstPersonRightHandPositioningHeavyAttacking == null) {
+                firstPersonRightHandPositioningHeavyAttacking = firstPersonPositioningHeavyAttacking.stream().map(t -> new Transition<RenderContext<RenderableState>>((p, i) -> {}, 0)).collect(Collectors.toList());
+            }
+			
 			if(firstPersonLeftHandPositioningRunning == null) {
 				firstPersonLeftHandPositioningRunning = firstPersonLeftHandPositioning;
 			}
@@ -326,6 +380,11 @@ public class MeleeRenderer extends CompatibleMeleeRenderer {
 				firstPersonRightHandPositioningAttacking = firstPersonPositioningAttacking.stream().map(t -> new Transition<RenderContext<RenderableState>>((p, i) -> {}, 0)).collect(Collectors.toList());
 			}
 			
+			if(firstPersonRightHandPositioningHeavyAttacking == null) {
+                //firstPersonRightHandPositioningAttacking = Collections.singletonList(new Transition(firstPersonRightHandPositioning, DEFAULT_ANIMATION_DURATION));
+                firstPersonRightHandPositioningHeavyAttacking = firstPersonPositioningHeavyAttacking.stream().map(t -> new Transition<RenderContext<RenderableState>>((p, i) -> {}, 0)).collect(Collectors.toList());
+            }
+			
 			if(firstPersonRightHandPositioningRunning == null) {
 				firstPersonRightHandPositioningRunning = firstPersonRightHandPositioning;
 			}
@@ -334,26 +393,26 @@ public class MeleeRenderer extends CompatibleMeleeRenderer {
 				firstPersonRightHandPositioningModifying = firstPersonRightHandPositioning;
 			}
 			
-			/*
-			 * If custom positioning for recoil is not set, default it to normal custom positioning
-			 */
-			if(!firstPersonCustomPositioning.isEmpty() && firstPersonCustomPositioningRecoiled.isEmpty()) {
-				firstPersonCustomPositioning.forEach((part, pos) -> {
-					firstPersonCustomPositioningRecoiled.put(part, pos);
-				});
-			}
-			
-			if(!firstPersonCustomPositioning.isEmpty() && firstPersonCustomPositioningZoomingRecoiled.isEmpty()) {
-				firstPersonCustomPositioning.forEach((part, pos) -> {
-					firstPersonCustomPositioningZoomingRecoiled.put(part, pos);
-				});
-			}
-			
-			if(!firstPersonCustomPositioning.isEmpty() && firstPersonCustomPositioningZoomingShooting.isEmpty()) {
-				firstPersonCustomPositioning.forEach((part, pos) -> {
-					firstPersonCustomPositioningZoomingShooting.put(part, pos);
-				});
-			}
+//			/*
+//			 * If custom positioning for recoil is not set, default it to normal custom positioning
+//			 */
+//			if(!firstPersonCustomPositioning.isEmpty() && firstPersonCustomPositioningRecoiled.isEmpty()) {
+//				firstPersonCustomPositioning.forEach((part, pos) -> {
+//					firstPersonCustomPositioningRecoiled.put(part, pos);
+//				});
+//			}
+//			
+//			if(!firstPersonCustomPositioning.isEmpty() && firstPersonCustomPositioningZoomingRecoiled.isEmpty()) {
+//				firstPersonCustomPositioning.forEach((part, pos) -> {
+//					firstPersonCustomPositioningZoomingRecoiled.put(part, pos);
+//				});
+//			}
+//			
+//			if(!firstPersonCustomPositioning.isEmpty() && firstPersonCustomPositioningZoomingShooting.isEmpty()) {
+//				firstPersonCustomPositioning.forEach((part, pos) -> {
+//					firstPersonCustomPositioningZoomingShooting.put(part, pos);
+//				});
+//			}
 						
 			firstPersonCustomPositioningAttacking.forEach((p, t) -> {
 				if(t.size() != firstPersonPositioningAttacking.size()) {
@@ -361,6 +420,13 @@ public class MeleeRenderer extends CompatibleMeleeRenderer {
 					+ ", actual: " + t.size());
 				}
 			});
+			
+			firstPersonCustomPositioningHeavyAttacking.forEach((p, t) -> {
+                if(t.size() != firstPersonPositioningHeavyAttacking.size()) {
+                    throw new IllegalStateException("Custom reloading transition number mismatch. Expected " + firstPersonPositioningAttacking.size()
+                    + ", actual: " + t.size());
+                }
+            });
 			
 			return renderer;
 		}
@@ -410,6 +476,10 @@ public class MeleeRenderer extends CompatibleMeleeRenderer {
 	protected long getTotalAttackDuration() {
 		return builder.totalAttackingDuration;
 	}
+	
+	protected long getTotalHeavyAttackDuration() {
+        return builder.totalHeavyAttackingDuration;
+    }
 
 	protected ClientModContext getClientModContext() {
 		return clientModContext;
@@ -444,6 +514,10 @@ public class MeleeRenderer extends CompatibleMeleeRenderer {
 			case ATTACKING:
 			    currentState = RenderableState.ATTACKING;
 			    break;
+			    
+			case HEAVY_ATTACKING:
+                currentState = RenderableState.HEAVY_ATTACKING;
+                break;
 				
 			case MODIFYING: case MODIFYING_REQUESTED: case NEXT_ATTACHMENT: case NEXT_ATTACHMENT_REQUESTED:
 				currentState = RenderableState.MODIFYING;
@@ -579,8 +653,14 @@ public class MeleeRenderer extends CompatibleMeleeRenderer {
 				return getComplexTransition(builder.firstPersonPositioningAttacking, 
 						builder.firstPersonLeftHandPositioningAttacking,
 						builder.firstPersonRightHandPositioningAttacking,
-						builder.firstPersonCustomPositioningUnloading
+						builder.firstPersonCustomPositioningAttacking
 						);
+			case HEAVY_ATTACKING:
+                return getComplexTransition(builder.firstPersonPositioningHeavyAttacking, 
+                        builder.firstPersonLeftHandPositioningHeavyAttacking,
+                        builder.firstPersonRightHandPositioningHeavyAttacking,
+                        builder.firstPersonCustomPositioningHeavyAttacking
+                        );
 			case NORMAL:
 				return getSimpleTransition(builder.firstPersonPositioning, 
 						builder.firstPersonLeftHandPositioning,

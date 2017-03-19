@@ -91,7 +91,7 @@ class ClientWeaponTicker extends Thread {
         if(item instanceof Weapon) {
             ((Weapon) item).tryFire(player);
         } else if(item instanceof ItemMelee) {
-            ((ItemMelee) item).attack(player);
+            ((ItemMelee) item).attack(player, false);
         }
     }
 
@@ -100,6 +100,8 @@ class ClientWeaponTicker extends Thread {
         Item item = getHeldItemMainHand(player);
         if(item instanceof Weapon) {
             ((Weapon) item).toggleAiming();
+        } else if(item instanceof ItemMelee) {
+            ((ItemMelee) item).attack(player, true);
         }
     }
 	

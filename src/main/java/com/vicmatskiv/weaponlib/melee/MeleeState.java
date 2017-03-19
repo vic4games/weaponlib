@@ -11,6 +11,8 @@ public enum MeleeState implements ManagedState<MeleeState> {
 	
 	ATTACKING(9),
 	
+	HEAVY_ATTACKING(9),
+	
 	MODIFYING_REQUESTED(1),
 	
 	MODIFYING(2, null, MODIFYING_REQUESTED, null, false),
