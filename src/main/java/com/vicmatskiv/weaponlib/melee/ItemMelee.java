@@ -23,7 +23,9 @@ import com.vicmatskiv.weaponlib.ItemAttachment;
 import com.vicmatskiv.weaponlib.ItemAttachment.ApplyHandler2;
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.Modifiable;
+import com.vicmatskiv.weaponlib.PlayerItemInstance;
 import com.vicmatskiv.weaponlib.PlayerItemInstanceFactory;
+import com.vicmatskiv.weaponlib.Tags;
 import com.vicmatskiv.weaponlib.Updatable;
 import com.vicmatskiv.weaponlib.WeaponSpawnEntity;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleItem;
@@ -42,7 +44,6 @@ import net.minecraft.world.World;
 public class ItemMelee extends CompatibleItem implements 
 PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer, Modifiable, Updatable {
 
-    @SuppressWarnings("unused")
     private static final Logger logger = LogManager.getLogger(ItemMelee.class);
 
     public static class Builder {
@@ -69,6 +70,8 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
         private CraftingComplexity craftingComplexity;
 
         private Object[] craftingMaterials;
+        public float attackDamage = 1f;
+        public float heavyAttackDamage = 2f;
 
         public Builder withModId(String modId) {
             this.modId = modId;
@@ -82,6 +85,16 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
 
         public Builder withName(String name) {
             this.name = name;
+            return this;
+        }
+        
+        public Builder withAttackDamage(float attackDamage) {
+            this.attackDamage = attackDamage;
+            return this;
+        }
+        
+        public Builder withHeavyAttackDamage(float heavyAttackDamage) {
+            this.heavyAttackDamage = heavyAttackDamage;
             return this;
         }
 
@@ -377,7 +390,28 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
         } else {
             modContext.getMeleeAttackAspect().onHeavyAttackButtonClick(player);
         }
-       
+    }
+    
+//    @SuppressWarnings({ "rawtypes", "unchecked", "deprecation" })
+//    public Multimap getItemAttributeModifiers() {
+//        Multimap multimap = super.getItemAttributeModifiers();
+//        multimap.put(SharedMonsterAttributes.attackDamage.getAttributeUnlocalizedName(), 
+//                new AttributeModifier(field_111210_e, "Weapon modifier", (double)builder.damage, 0));
+//        return multimap;
+//    }
+    
+    @Override
+    public boolean hitEntity(ItemStack stack, EntityLivingBase target, EntityLivingBase player) {
+        //target.attackEntityFrom(DamageSource.fall, builder.damage);
+        PlayerItemInstance<?> instance = Tags.getInstance(stack);
+        if(instance instanceof PlayerMeleeInstance) {
+            logger.debug("Player {} hits {} with {} in state {}", player, target, instance, instance.getState());
+        }
+        return true;
+    }
+
+    public float getDamage(boolean isHeavyAttack) {
+        return isHeavyAttack ? builder.heavyAttackDamage : builder.attackDamage;
     }
 
 }

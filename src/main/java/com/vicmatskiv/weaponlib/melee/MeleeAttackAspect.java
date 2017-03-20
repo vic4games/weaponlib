@@ -1,23 +1,38 @@
 package com.vicmatskiv.weaponlib.melee;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Predicate;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.vicmatskiv.weaponlib.CommonModContext;
 import com.vicmatskiv.weaponlib.ModContext;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult;
 import com.vicmatskiv.weaponlib.state.Aspect;
 import com.vicmatskiv.weaponlib.state.PermitManager;
 import com.vicmatskiv.weaponlib.state.StateManager;
 
+import net.minecraft.block.Block;
+import net.minecraft.block.material.Material;
+import net.minecraft.client.Minecraft;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.DamageSource;
+import net.minecraft.world.World;
 
 
 /*
  * On a client side this class is used from within a separate client "ticker" thread
  */
 public class MeleeAttackAspect implements Aspect<MeleeState, PlayerMeleeInstance> {
+    
+    private static final Logger logger = LogManager.getLogger(MeleeAttackAspect.class);
+
 
     private static final long ATTACK_TIMEOUT = 250;
     
@@ -52,12 +67,12 @@ public class MeleeAttackAspect implements Aspect<MeleeState, PlayerMeleeInstance
         
         .in(this).change(MeleeState.READY).to(MeleeState.ATTACKING)
         .when(sprinting.negate())
-        .withAction(this::attack)
+        .withAction(i -> attack(i, false))
         .manual() // on start fire
         
         .in(this).change(MeleeState.READY).to(MeleeState.HEAVY_ATTACKING)
         .when(sprinting.negate())
-        .withAction(this::heavyAttack)
+        .withAction(i -> attack(i, true))
         .manual() // on start fire
         
         .in(this).change(MeleeState.ATTACKING).to(MeleeState.READY)
@@ -91,13 +106,44 @@ public class MeleeAttackAspect implements Aspect<MeleeState, PlayerMeleeInstance
         }
     }
     
-    private void attack(PlayerMeleeInstance meleeInstance) {
-//        EntityPlayer player = meleeInstance.getPlayer();
-//        ItemMelee weapon = meleeInstance.getWeapon();
-    }
+    private void attack(PlayerMeleeInstance meleeInstance, boolean isHeavyAttack) {
+        Minecraft mc = Minecraft.getMinecraft();
+
+        CompatibleRayTraceResult objectMouseOver = compatibility.getObjectMouseOver();
+        if (objectMouseOver != null) {
+            EntityPlayer player = compatibility.clientPlayer();
+            World world = compatibility.world(player);
+            switch (objectMouseOver.getTypeOfHit())
+            {
+                case ENTITY:
+                    attackEntity(objectMouseOver.getEntityHit(), player, meleeInstance, isHeavyAttack);
+                    break;
+                case BLOCK:
+                    //TODO: implement compatibility for material and click block
+                    int i = mc.objectMouseOver.blockX;
+                    int j = mc.objectMouseOver.blockY;
+                    int k = mc.objectMouseOver.blockZ;
+
+                    Block blockHit = compatibility.getBlockAtPosition(world, objectMouseOver);
+                    
+                    if (blockHit.getMaterial() != Material.air) {
+                        mc.playerController.clickBlock(i, j, k, mc.objectMouseOver.sideHit);
+                    }
+                default:
+                    break;
+            }
+        }
     
-    private void heavyAttack(PlayerMeleeInstance meleeInstance) {
-//      EntityPlayer player = meleeInstance.getPlayer();
-//      ItemMelee weapon = meleeInstance.getWeapon();
-  }
+    }
+
+    private void attackEntity(Entity entity, EntityPlayer player, PlayerMeleeInstance instance, boolean isHeavyAttack) {
+        modContext.getChannel().getChannel().sendToServer(new TryAttackMessage(instance, entity, isHeavyAttack));
+        entity.attackEntityFrom(DamageSource.causePlayerDamage(player), 
+                instance.getWeapon().getDamage(isHeavyAttack));
+    }
+
+    public void serverAttack(EntityPlayer player, PlayerMeleeInstance instance, Entity entity, boolean isHeavyAttack) {
+        logger.debug("Player {} hits {} with {} in state {}", player, entity, instance, instance.getState());
+        entity.attackEntityFrom(DamageSource.causePlayerDamage(player), instance.getWeapon().getDamage(isHeavyAttack));
+    }
 }

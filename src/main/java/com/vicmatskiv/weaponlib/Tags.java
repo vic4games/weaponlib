@@ -36,7 +36,7 @@ public final class Tags {
 		compatibility.getTagCompound(itemStack).setLong(DEFAULT_TIMER_TAG, ammo);
 	}
 		
-	static PlayerItemInstance<?> getInstance(ItemStack itemStack) {
+	public static PlayerItemInstance<?> getInstance(ItemStack itemStack) {
 		if(itemStack == null || compatibility.getTagCompound(itemStack) == null) return null;
 		
 		byte[] bytes = compatibility.getTagCompound(itemStack).getByteArray(INSTANCE_TAG);
@@ -46,7 +46,7 @@ public final class Tags {
 		return null;
 	}
 	
-	static <T extends PlayerItemInstance<?>> T getInstance(ItemStack itemStack, Class<T> targetClass) {
+	public static <T extends PlayerItemInstance<?>> T getInstance(ItemStack itemStack, Class<T> targetClass) {
 		if(itemStack == null || compatibility.getTagCompound(itemStack) == null) return null;
 		
 		byte[] bytes = compatibility.getTagCompound(itemStack).getByteArray(INSTANCE_TAG);

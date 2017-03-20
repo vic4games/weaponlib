@@ -21,6 +21,8 @@ import com.vicmatskiv.weaponlib.melee.MeleeAttackAspect;
 import com.vicmatskiv.weaponlib.melee.MeleeRenderer;
 import com.vicmatskiv.weaponlib.melee.MeleeState;
 import com.vicmatskiv.weaponlib.melee.PlayerMeleeInstance;
+import com.vicmatskiv.weaponlib.melee.TryAttackMessage;
+import com.vicmatskiv.weaponlib.melee.TryAttackMessageHandler;
 import com.vicmatskiv.weaponlib.network.NetworkPermitManager;
 import com.vicmatskiv.weaponlib.network.PermitMessage;
 import com.vicmatskiv.weaponlib.network.TypeRegistry;
@@ -133,6 +135,9 @@ public class CommonModContext implements ModContext {
 		
 		channel.registerMessage(permitManager,
 				PermitMessage.class, 15, CompatibleSide.CLIENT);
+		
+		channel.registerMessage(new TryAttackMessageHandler(meleeAttackAspect),
+                TryAttackMessage.class, 16, CompatibleSide.SERVER);
 		
 		compatibility.registerWithEventBus(new ServerEventHandler(this));
 		
