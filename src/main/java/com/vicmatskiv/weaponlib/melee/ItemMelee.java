@@ -50,6 +50,9 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
     public static class Builder {
         
         private static final int DEFAULT_PREPARE_STUB_TIMEOUT = 100;
+        
+        private static final int DEFAULT_ATTACK_COOLDOWN_TIMEOUT = 500;
+        private static final int DEFAULT_HEAVY_ATTACK_COOLDOWN_TIMEOUT = 1000;
 
         String name;
         List<String> textureNames = new ArrayList<>();
@@ -77,6 +80,9 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
         public float heavyAttackDamage = 2f;
         public Supplier<Integer> prepareStubTimeout = () -> DEFAULT_PREPARE_STUB_TIMEOUT;
         public Supplier<Integer> prepareHeavyStubTimeout = () -> DEFAULT_PREPARE_STUB_TIMEOUT;
+        
+        public Supplier<Integer> attackCooldownTimeout = () -> DEFAULT_ATTACK_COOLDOWN_TIMEOUT;
+        public Supplier<Integer> heavyAttackCooldownTimeout = () -> DEFAULT_HEAVY_ATTACK_COOLDOWN_TIMEOUT;
 
         public Builder withModId(String modId) {
             this.modId = modId;
@@ -95,6 +101,16 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
         
         public Builder withPrepareHeavyStubTimeout(Supplier<Integer> prepareHeavyStubTimeout) {
             this.prepareHeavyStubTimeout = prepareHeavyStubTimeout;
+            return this;
+        }
+        
+        public Builder withAttackCooldownTimeout(Supplier<Integer> attackCooldownTimeout) {
+            this.attackCooldownTimeout = attackCooldownTimeout;
+            return this;
+        }
+        
+        public Builder withHeavyAttackCooldownTimeout(Supplier<Integer> heavyAttackCooldownTimeout) {
+            this.heavyAttackCooldownTimeout = heavyAttackCooldownTimeout;
             return this;
         }
 
@@ -435,6 +451,14 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
     
     public long getPrepareHeavyStubTimeout() {
         return builder.prepareHeavyStubTimeout.get();
+    }
+
+    public long getAttackCooldownTimeout() {
+        return builder.attackCooldownTimeout.get();
+    }
+    
+    public long getHeavyAttackCooldownTimeout() {
+        return builder.heavyAttackCooldownTimeout.get();
     }
 
 }

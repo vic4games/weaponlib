@@ -180,11 +180,11 @@ public class PlayerMeleeInstance extends PlayerItemInstance<MeleeState> {
 
 	
 
-	public long getLastFireTimestamp() {
+	public long getLastAttackTimestamp() {
 		return lastFireTimestamp;
 	}
 
-	public void setLastFireTimestamp(long lastFireTimestamp) {
+	void setLastAttackTimestamp(long lastFireTimestamp) {
 		this.lastFireTimestamp = lastFireTimestamp;
 	}
 
