@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
@@ -47,6 +48,8 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
     private static final Logger logger = LogManager.getLogger(ItemMelee.class);
 
     public static class Builder {
+        
+        private static final int DEFAULT_PREPARE_STUB_TIMEOUT = 100;
 
         String name;
         List<String> textureNames = new ArrayList<>();
@@ -72,6 +75,8 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
         private Object[] craftingMaterials;
         public float attackDamage = 1f;
         public float heavyAttackDamage = 2f;
+        public Supplier<Integer> prepareStubTimeout = () -> DEFAULT_PREPARE_STUB_TIMEOUT;
+        public Supplier<Integer> prepareHeavyStubTimeout = () -> DEFAULT_PREPARE_STUB_TIMEOUT;
 
         public Builder withModId(String modId) {
             this.modId = modId;
@@ -80,6 +85,16 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
 
         public Builder withInformationProvider(Function<ItemStack, List<String>> informationProvider) {
             this.informationProvider = informationProvider;
+            return this;
+        }
+        
+        public Builder withPrepareStubTimeout(Supplier<Integer> prepareStubTimeout) {
+            this.prepareStubTimeout = prepareStubTimeout;
+            return this;
+        }
+        
+        public Builder withPrepareHeavyStubTimeout(Supplier<Integer> prepareHeavyStubTimeout) {
+            this.prepareHeavyStubTimeout = prepareHeavyStubTimeout;
             return this;
         }
 
@@ -412,6 +427,14 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
 
     public float getDamage(boolean isHeavyAttack) {
         return isHeavyAttack ? builder.heavyAttackDamage : builder.attackDamage;
+    }
+
+    public long getPrepareStubTimeout() {
+        return builder.prepareStubTimeout.get();
+    }
+    
+    public long getPrepareHeavyStubTimeout() {
+        return builder.prepareHeavyStubTimeout.get();
     }
 
 }

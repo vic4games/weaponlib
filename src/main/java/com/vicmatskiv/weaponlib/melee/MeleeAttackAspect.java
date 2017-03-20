@@ -33,19 +33,32 @@ public class MeleeAttackAspect implements Aspect<MeleeState, PlayerMeleeInstance
     
     private static final Logger logger = LogManager.getLogger(MeleeAttackAspect.class);
 
-
-    private static final long ATTACK_TIMEOUT = 250;
+    private static final long STUB_DURATION = 250;
+    
+    private static final long HEAVY_STUB_DURATION = 250;
     
     private static Predicate<PlayerMeleeInstance> attackTimeoutExpired = 
-            instance -> System.currentTimeMillis()>  instance.getStateUpdateTimestamp() + ATTACK_TIMEOUT;
-        
+            instance -> System.currentTimeMillis() >  instance.getStateUpdateTimestamp() 
+                + instance.getWeapon().getPrepareStubTimeout() + STUB_DURATION;
+            
+    private static Predicate<PlayerMeleeInstance> heavyAttackTimeoutExpired = 
+            instance -> System.currentTimeMillis() >  instance.getStateUpdateTimestamp() 
+                + instance.getWeapon().getPrepareHeavyStubTimeout() + HEAVY_STUB_DURATION;
+
+    private static Predicate<PlayerMeleeInstance> readyToStab = 
+            instance -> System.currentTimeMillis()>  instance.getStateUpdateTimestamp() + instance.getWeapon().getPrepareStubTimeout();
+
+    private static Predicate<PlayerMeleeInstance> readyToHeavyStab = 
+            instance -> System.currentTimeMillis()>  instance.getStateUpdateTimestamp() + instance.getWeapon().getPrepareHeavyStubTimeout();
+
     private static Predicate<PlayerMeleeInstance> sprinting = instance -> instance.getPlayer().isSprinting();
              
     private static final Set<MeleeState> allowedAttackFromStates = new HashSet<>(
             Arrays.asList(MeleeState.READY));
     
     private static final Set<MeleeState> allowedUpdateFromStates = new HashSet<>(
-            Arrays.asList(MeleeState.ATTACKING, MeleeState.HEAVY_ATTACKING));
+            Arrays.asList(MeleeState.ATTACKING, MeleeState.HEAVY_ATTACKING, 
+                    MeleeState.ATTACKING_STABBING, MeleeState.HEAVY_ATTACKING_STABBING));
     
     private ModContext modContext;
 
@@ -55,7 +68,6 @@ public class MeleeAttackAspect implements Aspect<MeleeState, PlayerMeleeInstance
         this.modContext = modContext;
     }
     
-
     @Override
     public void setPermitManager(PermitManager permitManager) {}
 
@@ -67,20 +79,28 @@ public class MeleeAttackAspect implements Aspect<MeleeState, PlayerMeleeInstance
         
         .in(this).change(MeleeState.READY).to(MeleeState.ATTACKING)
         .when(sprinting.negate())
+        .manual() // on start fire
+        
+        .in(this).change(MeleeState.ATTACKING).to(MeleeState.ATTACKING_STABBING)
         .withAction(i -> attack(i, false))
-        .manual() // on start fire
+        .when(readyToStab)
+        .automatic()
         
-        .in(this).change(MeleeState.READY).to(MeleeState.HEAVY_ATTACKING)
-        .when(sprinting.negate())
-        .withAction(i -> attack(i, true))
-        .manual() // on start fire
-        
-        .in(this).change(MeleeState.ATTACKING).to(MeleeState.READY)
+        .in(this).change(MeleeState.ATTACKING_STABBING).to(MeleeState.READY)
         .when(attackTimeoutExpired)
         .automatic()
         
-        .in(this).change(MeleeState.HEAVY_ATTACKING).to(MeleeState.READY)
-        .when(attackTimeoutExpired)
+        .in(this).change(MeleeState.READY).to(MeleeState.HEAVY_ATTACKING)
+        .when(sprinting.negate())
+        .manual()
+        
+        .in(this).change(MeleeState.HEAVY_ATTACKING).to(MeleeState.HEAVY_ATTACKING_STABBING)
+        .withAction(i -> attack(i, false))
+        .when(readyToHeavyStab)
+        .automatic()
+        
+        .in(this).change(MeleeState.HEAVY_ATTACKING_STABBING).to(MeleeState.READY)
+        .when(heavyAttackTimeoutExpired)
         .automatic()
         ;
     }

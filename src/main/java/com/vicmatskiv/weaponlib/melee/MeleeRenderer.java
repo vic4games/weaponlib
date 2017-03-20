@@ -522,11 +522,11 @@ public class MeleeRenderer extends CompatibleMeleeRenderer {
 			
 			switch(asyncWeaponState.getState()) {
 				
-			case ATTACKING:
+			case ATTACKING: case ATTACKING_STABBING:
 			    currentState = RenderableState.ATTACKING;
 			    break;
 			    
-			case HEAVY_ATTACKING:
+			case HEAVY_ATTACKING: case HEAVY_ATTACKING_STABBING:
                 currentState = RenderableState.HEAVY_ATTACKING;
                 break;
 				
