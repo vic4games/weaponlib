@@ -1,4 +1,4 @@
-package com.vicmatskiv.weaponlib;
+package com.vicmatskiv.weaponlib.perspective;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
@@ -6,19 +6,22 @@ import java.util.function.BiConsumer;
 
 import org.lwjgl.opengl.GL11;
 
+import com.vicmatskiv.weaponlib.ClientModContext;
+import com.vicmatskiv.weaponlib.CustomRenderer;
+import com.vicmatskiv.weaponlib.RenderContext;
+import com.vicmatskiv.weaponlib.RenderableState;
+import com.vicmatskiv.weaponlib.ViewfinderModel;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTransformType;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 
-public class ViewfinderRenderer implements CustomRenderer<RenderableState> {
+public class PerspectiveRenderer implements CustomRenderer<RenderableState> {
 	
 	private ViewfinderModel model = new ViewfinderModel();
 	private BiConsumer<EntityPlayer, ItemStack> positioning;
-	private ModContext modContext;
 
-	public ViewfinderRenderer(ModContext modContext, BiConsumer<EntityPlayer, ItemStack> positioning) {
-		this.modContext = modContext;
+	public PerspectiveRenderer(BiConsumer<EntityPlayer, ItemStack> positioning) {
 		this.positioning = positioning;
 	}
 
@@ -30,24 +33,29 @@ public class ViewfinderRenderer implements CustomRenderer<RenderableState> {
 			return;
 		}
 		
-		float brightness = 0f;
-		PlayerWeaponInstance instance = modContext.getMainHeldWeapon();
-		boolean aimed = instance != null && instance.isAimed();
-		float progress = Math.min(1f, renderContext.getTransitionProgress());
+		if(renderContext.getModContext() == null) {
+		    return;
+		}
 		
-		if(isAimingState(renderContext.getFromState()) && isAimingState(renderContext.getToState())) {
-			brightness = 1f;
-		} else if(progress > 0f && aimed) {
-			brightness = progress;
-		} else if(isAimingState(renderContext.getFromState()) && progress > 0f && !aimed) {
-			brightness = Math.max(1 - progress, 0f);
-		} 
-				
+//		Framebuffer framebuffer = ((ClientModContext) renderContext.getModContext()).getFramebuffer();
+//		if(framebuffer == null) {
+//		    return;
+//		}
+		
+		ClientModContext clientModContext = (ClientModContext) renderContext.getModContext();
+		@SuppressWarnings("unchecked")
+        Perspective<RenderableState> view = (Perspective<RenderableState>) clientModContext.getViewManager().getPerspective(renderContext.getPlayerItemInstance(), false);
+		if(view == null) {
+		    return;
+		}
+		
+		float brightness = view.getBrightness(renderContext);
 		GL11.glPushMatrix();
 		GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_CURRENT_BIT);
 
 		positioning.accept(renderContext.getPlayer(), renderContext.getWeapon());
-		GL11.glBindTexture(GL11.GL_TEXTURE_2D, renderContext.getClientModContext().getFramebuffer().framebufferTexture);
+		//GL11.glBindTexture(GL11.GL_TEXTURE_2D, framebuffer.framebufferTexture);
+		GL11.glBindTexture(GL11.GL_TEXTURE_2D, view.getTexture(renderContext));
 		compatibility.disableLightMap();
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
 		//GL11.glDepthMask(true);
@@ -67,11 +75,5 @@ public class ViewfinderRenderer implements CustomRenderer<RenderableState> {
 		compatibility.enableLightMap();
 		GL11.glPopAttrib();
 		GL11.glPopMatrix();
-	}
-	
-	private static boolean isAimingState(RenderableState renderableState) {
-		return renderableState == RenderableState.ZOOMING
-				|| renderableState ==RenderableState.ZOOMING_RECOILED
-				|| renderableState ==RenderableState.ZOOMING_SHOOTING;
 	}
 }

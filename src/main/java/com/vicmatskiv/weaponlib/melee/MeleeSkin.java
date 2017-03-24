@@ -27,18 +27,18 @@ public class MeleeSkin extends ItemAttachment<ItemMelee> {
 
 		@Override
 		protected ItemAttachment<ItemMelee> createAttachment(ModContext modContext) {
-		    MeleeSkin skin = new MeleeSkin(modId, AttachmentCategory.SKIN, model, textureName, null, null, null);
+		    MeleeSkin skin = new MeleeSkin(getModId(), AttachmentCategory.SKIN, getModel(), getTextureName(), null, null, null);
 			skin.textureVariants = this.textureVariants;
 			return skin;
 		}
 		
 		@Override
 		public <V extends ItemAttachment<ItemMelee>> V build(ModContext modContext, Class<V> target) {
-			model = new FlatModel();
+			this.model = new FlatModel();
 			if(textureVariants.isEmpty()) {
-				textureVariants.add(textureName);
-			} else if(textureName == null) {
-				textureName = textureVariants.get(0);
+				textureVariants.add(getTextureName());
+			} else if(getTextureName() == null) {
+				this.textureName = textureVariants.get(0);
 			}
 			if(inventoryPositioning == null) {
 				withInventoryPositioning((itemStack) -> {

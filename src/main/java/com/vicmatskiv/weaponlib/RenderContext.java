@@ -19,17 +19,17 @@ public class RenderContext<RS> {
 	private CompatibleTransformType compatibleTransformType;
 	private RS fromState;
 	private RS toState;
-	private ClientModContext clientModContext;
+	private ModContext modContext;
 	private PlayerItemInstance<?> playerItemInstance;
 
-	public RenderContext(ClientModContext clientModContext, EntityPlayer player, ItemStack itemStack) {
-		this.clientModContext = clientModContext;
+	public RenderContext(ModContext modContext, EntityPlayer player, ItemStack itemStack) {
+		this.modContext = modContext;
 		this.player = player;
 		this.itemStack = itemStack;
 	}
 
-	public ClientModContext getClientModContext() {
-		return clientModContext;
+	public ModContext getModContext() {
+		return modContext;
 	}
 
 	public float getLimbSwing() {
@@ -140,7 +140,7 @@ public class RenderContext<RS> {
 		if(playerItemInstance instanceof PlayerWeaponInstance) {
 			return (PlayerWeaponInstance) playerItemInstance;
 		}
-		PlayerWeaponInstance itemInstance = (PlayerWeaponInstance) clientModContext.getPlayerItemInstanceRegistry()
+		PlayerWeaponInstance itemInstance = (PlayerWeaponInstance) modContext.getPlayerItemInstanceRegistry()
 				.getItemInstance(player, itemStack);
 		if(itemInstance instanceof PlayerWeaponInstance) {
 			return (PlayerWeaponInstance) itemInstance;

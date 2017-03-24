@@ -25,12 +25,17 @@ public class StaticModelSourceRenderer extends CompatibleStaticModelSourceRender
 		private BiConsumer<ModelBase, ItemStack> entityModelPositioning;
 		
 		private String modId;
+		private ModContext modContext;
 		
 		public Builder withModId(String modId) {
 			this.modId = modId;
 			return this;
 		}
 		
+		public Builder withModContext(ModContext modContext) {
+		    this.modContext = modContext;
+		    return this;
+		}
 
 		public Builder withFirstPersonPositioning(BiConsumer<EntityPlayer, ItemStack> firstPersonPositioning) {
 			this.firstPersonPositioning = firstPersonPositioning;
@@ -158,4 +163,9 @@ public class StaticModelSourceRenderer extends CompatibleStaticModelSourceRender
 	private StaticModelSourceRenderer(Builder builder) {
 		super(builder);
 	}
+
+    @Override
+    protected ModContext getModContext() {
+        return builder.modContext;
+    }
 }

@@ -2,7 +2,11 @@ package com.vicmatskiv.weaponlib.compatibility;
 
 import org.lwjgl.opengl.GL11;
 
+import com.vicmatskiv.weaponlib.CustomRenderer;
+import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.ModelSource;
+import com.vicmatskiv.weaponlib.RenderContext;
+import com.vicmatskiv.weaponlib.RenderableState;
 import com.vicmatskiv.weaponlib.StaticModelSourceRenderer.Builder;
 import com.vicmatskiv.weaponlib.Tuple;
 
@@ -16,9 +20,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.IItemRenderer;
 
-public class CompatibleStaticModelSourceRenderer implements IItemRenderer {
+public abstract class CompatibleStaticModelSourceRenderer implements IItemRenderer {
 	
-	private Builder builder;
+	protected Builder builder;
 
 	protected CompatibleStaticModelSourceRenderer(Builder builder)
 	{
@@ -76,7 +80,8 @@ public class CompatibleStaticModelSourceRenderer implements IItemRenderer {
 		
 		GL11.glPushMatrix();
 
-		for(Tuple<ModelBase, String> texturedModel: ((ModelSource)itemStack.getItem()).getTexturedModels()) {
+		ModelSource modelSource = (ModelSource)itemStack.getItem();
+        for(Tuple<ModelBase, String> texturedModel: modelSource.getTexturedModels()) {
 			Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(builder.getModId() 
 					+ ":textures/models/" + texturedModel.getV()));
 			GL11.glPushMatrix();
@@ -103,7 +108,30 @@ public class CompatibleStaticModelSourceRenderer implements IItemRenderer {
 			GL11.glPopAttrib();
 			GL11.glPopMatrix();
 		}
+		
+        @SuppressWarnings("unchecked")
+        CustomRenderer<RenderableState> postRenderer = (CustomRenderer<RenderableState>) modelSource.getPostRenderer();
+
+		if(postRenderer != null) {
+	        EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+	        RenderContext<RenderableState> renderContext = new RenderContext<>(getModContext(), player, itemStack);
+	        renderContext.setAgeInTicks(-0.4f);
+	        renderContext.setScale(0.08f);
+	        renderContext.setCompatibleTransformType(CompatibleTransformType.fromItemRenderType(type));
+
+	        renderContext.setPlayerItemInstance(getModContext().getPlayerItemInstanceRegistry()
+	                .getItemInstance(player, itemStack));
+
+            GL11.glPushMatrix();
+            GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_CURRENT_BIT);
+
+            postRenderer.render(renderContext);
+            GL11.glPopAttrib();
+            GL11.glPopMatrix();
+        }
 		GL11.glPopMatrix();
 	}
+
+    protected abstract ModContext getModContext();
 
 }

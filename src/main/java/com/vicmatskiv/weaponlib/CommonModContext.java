@@ -29,6 +29,8 @@ import com.vicmatskiv.weaponlib.network.TypeRegistry;
 import com.vicmatskiv.weaponlib.state.Permit;
 import com.vicmatskiv.weaponlib.state.StateManager;
 
+import cpw.mods.fml.common.ObfuscationReflectionHelper;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
@@ -139,10 +141,15 @@ public class CommonModContext implements ModContext {
 		channel.registerMessage(new TryAttackMessageHandler(meleeAttackAspect),
                 TryAttackMessage.class, 16, CompatibleSide.SERVER);
 		
-		compatibility.registerWithEventBus(new ServerEventHandler(this));
+		compatibility.registerWithFmlEventBus(new ServerEventHandler(this));
 		
 		compatibility.registerWithFmlEventBus(new WeaponKeyInputHandler(this, (ctx) -> getPlayer(ctx), 
 				weaponAttachmentAspect, channel));
+	}
+	
+	public void resetViewDistance() {
+	    ObfuscationReflectionHelper.getPrivateValue(
+                Minecraft.class, Minecraft.getMinecraft(), "defaultResourcePacks", "field_110449_ao") ; 
 	}
 	
 	@Override

@@ -1,5 +1,7 @@
 package com.vicmatskiv.weaponlib.animation;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,9 +12,14 @@ import org.lwjgl.opengl.GL11;
 import com.vicmatskiv.weaponlib.KeyBindings;
 import com.vicmatskiv.weaponlib.Part;
 import com.vicmatskiv.weaponlib.RenderContext;
+import com.vicmatskiv.weaponlib.compatibility.CompatiblePlayerCreatureWrapper;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult.Type;
 import com.vicmatskiv.weaponlib.melee.RenderableState;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.ChatComponentText;
 
 public class DebugPositioner {
@@ -24,6 +31,8 @@ public class DebugPositioner {
     private static Boolean debugModeEnabled;
     
     private static Part currentPart;
+    
+    private static Entity watchableEntity;
     
     public static final class TransitionConfiguration {
         private long pause;
@@ -60,7 +69,7 @@ public class DebugPositioner {
     public static void incrementXRotation(float increment) {
         Position partPosition = getCurrentPartPosition();
         if(partPosition == null) {
-            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Debug part not selected"));
+            compatibility.clientPlayer().addChatMessage(new ChatComponentText("Debug part not selected"));
             return;
         }
         
@@ -71,7 +80,7 @@ public class DebugPositioner {
     public static void incrementYRotation(float increment) {
         Position partPosition = getCurrentPartPosition();
         if(partPosition == null) {
-            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Debug part not selected"));
+            compatibility.clientPlayer().addChatMessage(new ChatComponentText("Debug part not selected"));
             return;
         }
         partPosition.yRotation += increment;
@@ -81,7 +90,7 @@ public class DebugPositioner {
     public static void incrementZRotation(float increment) {
         Position partPosition = getCurrentPartPosition();
         if(partPosition == null) {
-            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Debug part not selected"));
+            compatibility.clientPlayer().addChatMessage(new ChatComponentText("Debug part not selected"));
             return;
         }
         partPosition.zRotation += increment;
@@ -91,7 +100,7 @@ public class DebugPositioner {
     public static void incrementXPosition(float increment) {
         Position partPosition = getCurrentPartPosition();
         if(partPosition == null) {
-            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Debug part not selected"));
+            compatibility.clientPlayer().addChatMessage(new ChatComponentText("Debug part not selected"));
             return;
         }
         partPosition.x += increment;
@@ -101,7 +110,7 @@ public class DebugPositioner {
     public static void incrementYPosition(float increment) {
         Position partPosition = getCurrentPartPosition();
         if(partPosition == null) {
-            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Debug part not selected"));
+            compatibility.clientPlayer().addChatMessage(new ChatComponentText("Debug part not selected"));
             return;
         }
         partPosition.y += increment;
@@ -111,7 +120,7 @@ public class DebugPositioner {
     public static void incrementZPosition(float increment) {
         Position partPosition = getCurrentPartPosition();
         if(partPosition == null) {
-            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Debug part not selected"));
+            compatibility.clientPlayer().addChatMessage(new ChatComponentText("Debug part not selected"));
             return;
         }
         partPosition.z += increment;
@@ -121,7 +130,7 @@ public class DebugPositioner {
     public static void setScale(float scale) {
         Position partPosition = getCurrentPartPosition();
         if(partPosition == null) {
-            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Debug part not selected"));
+            compatibility.clientPlayer().addChatMessage(new ChatComponentText("Debug part not selected"));
             return;
         }
         partPosition.scale = scale;
@@ -145,7 +154,7 @@ public class DebugPositioner {
     public static void reset() {
         Position partPosition = getCurrentPartPosition();
         if(partPosition == null) {
-            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Debug part not selected"));
+            compatibility.clientPlayer().addChatMessage(new ChatComponentText("Debug part not selected"));
             return;
         }
         partPosition.x = partPosition.y = partPosition.z 
@@ -198,5 +207,19 @@ public class DebugPositioner {
         result.append(String.format("GL11.glRotatef(%ff, 0f, 0f, 1f);\n", partPosition.zRotation));
         result.append(String.format("GL11.glTranslatef(%ff, %ff, %ff);", partPosition.x, partPosition.y, partPosition.z));
         logger.debug("Generated positioning code: \n" + result);
+    }
+    
+    public static void watch() {
+        CompatibleRayTraceResult objectMouseOver = compatibility.getObjectMouseOver();
+        if (objectMouseOver != null && objectMouseOver.getTypeOfHit() == Type.ENTITY
+                && objectMouseOver.getEntityHit() instanceof EntityLivingBase) {
+            //watchableEntity = objectMouseOver.getEntityHit();
+            watchableEntity = (EntityLivingBase) objectMouseOver.getEntityHit();
+            logger.debug("Now watching", watchableEntity);
+        }
+    }
+    
+    public static Entity getWatchableEntity() {
+        return watchableEntity;
     }
 }

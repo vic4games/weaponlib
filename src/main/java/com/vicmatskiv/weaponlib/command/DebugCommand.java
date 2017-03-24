@@ -18,6 +18,7 @@ public class DebugCommand extends CommandBase {
     private static final String DEBUG_ARG_PART = "part";
     private static final String DEBUG_ARG_SCALE = "scale";
     private static final String DEBUG_ARG_SHOW = "show";
+    private static final String DEBUG_ARG_WATCH = "watch";
 
     @Override
     public String getCommandName() {
@@ -48,6 +49,10 @@ public class DebugCommand extends CommandBase {
     private String getSubCommandScaleUsage() {
         return String.format("/%s %s <scale>", COMMAND_DEBUG, DEBUG_ARG_SCALE);
     }
+    
+    private String getSubCommandWatchUsage() {
+        return String.format("/%s %s [entity-id]", COMMAND_DEBUG, DEBUG_ARG_WATCH);
+    }
 
     @Override
     public void processCommand(ICommandSender sender, String[] args) {
@@ -70,6 +75,9 @@ public class DebugCommand extends CommandBase {
                 break;
             case DEBUG_ARG_SCALE:
                 processScaleSubCommand(args);
+                break;
+            case DEBUG_ARG_WATCH:
+                processWatchSubCommand(args);
                 break;
             default:
                 Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(getCommandUsage(sender)));
@@ -112,6 +120,23 @@ public class DebugCommand extends CommandBase {
         } catch(NumberFormatException e) {
             Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(getSubCommandPauseUsage()));
         }
+    }
+    
+    private void processWatchSubCommand(String[] args) {
+        if(args.length < 1) {
+            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(getSubCommandWatchUsage()));
+            return;
+        }
+        
+//        try {
+//            float scale = Float.parseFloat(args[1]);
+//            DebugPositioner.setScale(scale);
+//            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Set scale to " + scale));
+//        } catch(NumberFormatException e) {
+//            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(getSubCommandScaleUsage()));
+//        }
+        
+        DebugPositioner.watch();
     }
     
     private void processScaleSubCommand(String[] args) {

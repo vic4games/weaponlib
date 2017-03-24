@@ -17,5 +17,6 @@ public class ServerEventHandler extends CompatibleServerEventHandler {
 	protected void onCompatibleItemToss(ItemTossEvent itemTossEvent) {
 		//
 	}
+	
 
 }

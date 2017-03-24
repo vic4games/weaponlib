@@ -8,13 +8,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.resources.IResourcePack;
-import net.minecraft.client.shader.Framebuffer;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.Item;
-import net.minecraftforge.client.ClientCommandHandler;
-
 import com.vicmatskiv.weaponlib.command.DebugCommand;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
@@ -23,6 +16,14 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleWorldRenderer;
 import com.vicmatskiv.weaponlib.melee.ItemMelee;
 import com.vicmatskiv.weaponlib.melee.MeleeRenderer;
 import com.vicmatskiv.weaponlib.melee.PlayerMeleeInstance;
+import com.vicmatskiv.weaponlib.perspective.PerspectiveManager;
+
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.IResourcePack;
+import net.minecraft.client.shader.Framebuffer;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
+import net.minecraftforge.client.ClientCommandHandler;
 
 public class ClientModContext extends CommonModContext {
 
@@ -40,6 +41,8 @@ public class ClientModContext extends CommonModContext {
 	
 	
 	private StatusMessageCenter statusMessageCenter;
+	
+	private PerspectiveManager viewManager;
 	
 	@Override
 	public void init(Object mod, String modId, CompatibleChannel channel) {
@@ -77,9 +80,14 @@ public class ClientModContext extends CommonModContext {
 		
 		rendererRegistry.registerEntityRenderingHandler(WeaponSpawnEntity.class, new SpawnEntityRenderer());
 	
+		this.viewManager = new PerspectiveManager(this);
 	}
 	
-	protected CompatibleWorldRenderer getSecondWorldRenderer() {
+	public PerspectiveManager getViewManager() {
+        return viewManager;
+    }
+	
+	public CompatibleWorldRenderer getSecondWorldRenderer() {
 		if(this.entityRenderer == null) {
 			this.entityRenderer = new CompatibleWorldRenderer(Minecraft.getMinecraft(), 
 	        		Minecraft.getMinecraft().getResourceManager());
