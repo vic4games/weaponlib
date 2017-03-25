@@ -8,6 +8,7 @@ import com.vicmatskiv.weaponlib.animation.DebugPositioner;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponKeyInputHandler;
+import com.vicmatskiv.weaponlib.electronics.PlayerTabletInstance;
 import com.vicmatskiv.weaponlib.melee.MeleeState;
 import com.vicmatskiv.weaponlib.melee.PlayerMeleeInstance;
 
@@ -101,6 +102,9 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
     			modContext.getAttachmentAspect().changeAttachment(AttachmentCategory.SKIN, (PlayerWeaponInstance) instance);
     		} else if(instance instanceof PlayerMeleeInstance && instance.getState() == MeleeState.MODIFYING) {
                 modContext.getMeleeAttachmentAspect().changeAttachment(AttachmentCategory.SKIN, (PlayerMeleeInstance) instance);
+            } else if(instance instanceof PlayerTabletInstance) {
+                PlayerTabletInstance playerTabletInstance = (PlayerTabletInstance) instance;
+                playerTabletInstance.nextActiveWatchIndex();
             }
         } 
         

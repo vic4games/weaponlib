@@ -1,9 +1,18 @@
 package com.vicmatskiv.weaponlib.compatibility;
 
+import com.vicmatskiv.weaponlib.ExtendedPlayerProperties;
+import com.vicmatskiv.weaponlib.SyncExtendedPlayerPropertiesMessage;
+
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 import cpw.mods.fml.common.gameevent.TickEvent.Phase;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraftforge.event.entity.EntityEvent.EntityConstructing;
+import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent.StartTracking;
 
 public abstract class CompatibleServerEventHandler {
 
@@ -31,4 +40,26 @@ public abstract class CompatibleServerEventHandler {
         
         //return ObfuscationReflectionHelper.setPrivateValue(EntityTracker.class, entityTracker, 10, "entityViewDistance", "field_72792_");
     }
+	
+	@SubscribeEvent
+    public void onEntityConstructing(EntityConstructing event) {
+        if (event.entity instanceof EntityPlayer) {
+            ExtendedPlayerProperties.register((EntityPlayer) event.entity);
+        }
+    }
+    
+    @SubscribeEvent
+    //@SideOnly(Side.SERVER)
+    public void onEntityJoinWorld(EntityJoinWorldEvent e) {
+        onCompatibleEntityJoinWorld(e);
+    }
+
+    protected abstract void onCompatibleEntityJoinWorld(EntityJoinWorldEvent e);
+
+    @SubscribeEvent
+    public void playerStartedTracking(PlayerEvent.StartTracking e) {
+        onCompatiblePlayerStartedTracking(e);
+    }
+
+    protected abstract void onCompatiblePlayerStartedTracking(StartTracking e);
 }

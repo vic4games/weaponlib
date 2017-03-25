@@ -237,7 +237,7 @@ public class Compatibility1_7_10 implements Compatibility {
 	}
 
 	@Override
-	public void registerModEntity(Class<WeaponSpawnEntity> entityClass, String entityName, int id, Object mod, 
+	public void registerModEntity(Class<? extends Entity> entityClass, String entityName, int id, Object mod, 
 			int trackingRange, int updateFrequency, boolean sendsVelocityUpdates) {
 		EntityRegistry.registerModEntity(entityClass, entityName, id, mod, trackingRange, updateFrequency, sendsVelocityUpdates);
 	}

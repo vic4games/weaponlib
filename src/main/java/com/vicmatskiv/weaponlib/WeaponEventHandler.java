@@ -46,7 +46,7 @@ public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 
 			final float fov;
 			if(instance.isAttachmentZoomEnabled()) {
-				if(safeGlobals.renderingPhase.get() == RenderingPhase.RENDER_VIEWFINDER) {
+				if(safeGlobals.renderingPhase.get() == RenderingPhase.RENDER_PERSPECTIVE) {
 					fov = instance.getZoom();
 				} else {
 					fov = 1f;

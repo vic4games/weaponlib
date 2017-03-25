@@ -6,13 +6,13 @@ import net.minecraft.entity.projectile.EntityThrowable;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
 
-public abstract class CompatibleWeaponSpawnEntity extends EntityThrowable implements IEntityAdditionalSpawnData {
+public abstract class CompatibleThrowableEntity extends EntityThrowable implements IEntityAdditionalSpawnData {
 	
-	public CompatibleWeaponSpawnEntity(World world) {
+	public CompatibleThrowableEntity(World world) {
 		super(world);
 	}
 
-	public CompatibleWeaponSpawnEntity(World par1World, EntityLivingBase player) {
+	public CompatibleThrowableEntity(World par1World, EntityLivingBase player) {
 		super(par1World, player);
 	}
 

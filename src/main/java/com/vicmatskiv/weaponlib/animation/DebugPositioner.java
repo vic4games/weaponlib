@@ -9,9 +9,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL11;
 
+import com.vicmatskiv.weaponlib.ExtendedPlayerProperties;
 import com.vicmatskiv.weaponlib.KeyBindings;
 import com.vicmatskiv.weaponlib.Part;
 import com.vicmatskiv.weaponlib.RenderContext;
+import com.vicmatskiv.weaponlib.TrackableEntity;
 import com.vicmatskiv.weaponlib.compatibility.CompatiblePlayerCreatureWrapper;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult.Type;
@@ -216,6 +218,11 @@ public class DebugPositioner {
             //watchableEntity = objectMouseOver.getEntityHit();
             watchableEntity = (EntityLivingBase) objectMouseOver.getEntityHit();
             logger.debug("Now watching", watchableEntity);
+            ExtendedPlayerProperties properties = ExtendedPlayerProperties.getProperties(compatibility.clientPlayer());
+            properties.addTrackableEntity(new TrackableEntity(watchableEntity, System.currentTimeMillis()));
+        } else {
+            ExtendedPlayerProperties properties = ExtendedPlayerProperties.getProperties(compatibility.clientPlayer());
+            System.out.println("Trackable entities: " + properties.getTrackableEntitites());
         }
     }
     

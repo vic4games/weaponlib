@@ -3,7 +3,7 @@ package com.vicmatskiv.weaponlib;
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult;
-import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponSpawnEntity;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleThrowableEntity;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.block.material.Material;
@@ -13,7 +13,7 @@ import net.minecraft.item.Item;
 import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 
-public class WeaponSpawnEntity extends CompatibleWeaponSpawnEntity {
+public class WeaponSpawnEntity extends CompatibleThrowableEntity {
 	
 	static final float DEFAULT_INACCURACY = 1f;
 	private float explosionRadius = 0.1F;

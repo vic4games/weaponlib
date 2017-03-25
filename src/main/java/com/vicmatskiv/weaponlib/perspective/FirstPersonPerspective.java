@@ -37,7 +37,7 @@ public class FirstPersonPerspective<S> implements Perspective<S> {
 
     @Override
     public void update(CompatibleRenderTickEvent event) {
-        modContext.getSafeGlobals().renderingPhase.set(RenderingPhase.RENDER_VIEWFINDER);
+        modContext.getSafeGlobals().renderingPhase.set(RenderingPhase.RENDER_PERSPECTIVE);
         long p_78471_2_ = this.renderEndNanoTime + (long)(1000000000 / 60);
         modContext.getFramebuffer().bindFramebuffer(true);
         modContext.getSecondWorldRenderer().updateRenderer();

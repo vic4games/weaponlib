@@ -13,6 +13,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderingRegistry;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleWorldRenderer;
+import com.vicmatskiv.weaponlib.electronics.EntityWirelessCamera;
 import com.vicmatskiv.weaponlib.melee.ItemMelee;
 import com.vicmatskiv.weaponlib.melee.MeleeRenderer;
 import com.vicmatskiv.weaponlib.melee.PlayerMeleeInstance;
@@ -77,11 +78,15 @@ public class ClientModContext extends CommonModContext {
 		compatibility.registerRenderingRegistry(rendererRegistry);
 		
 		compatibility.registerModEntity(WeaponSpawnEntity.class, "Ammo" + modEntityID, modEntityID++, mod, 64, 10, true);
-		
+	    compatibility.registerModEntity(EntityWirelessCamera.class, "wcam" + modEntityID, modEntityID++, mod, 200, 10, true);
+
 		rendererRegistry.registerEntityRenderingHandler(WeaponSpawnEntity.class, new SpawnEntityRenderer());
 	
 		this.viewManager = new PerspectiveManager(this);
 	}
+	
+	@Override
+	public void registerServerSideOnly() {}
 	
 	public PerspectiveManager getViewManager() {
         return viewManager;

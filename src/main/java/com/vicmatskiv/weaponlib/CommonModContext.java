@@ -29,8 +29,6 @@ import com.vicmatskiv.weaponlib.network.TypeRegistry;
 import com.vicmatskiv.weaponlib.state.Permit;
 import com.vicmatskiv.weaponlib.state.StateManager;
 
-import cpw.mods.fml.common.ObfuscationReflectionHelper;
-import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
@@ -105,7 +103,6 @@ public class CommonModContext implements ModContext {
 		this.syncManager = new SyncManager<>(permitManager);
 		
         this.playerItemInstanceRegistry = new PlayerItemInstanceRegistry(syncManager);
-
 		
 		StateManager<WeaponState, PlayerWeaponInstance> weaponStateManager = new StateManager<>((s1, s2) -> s1 == s2);
         weaponReloadAspect.setPermitManager(permitManager);
@@ -141,15 +138,19 @@ public class CommonModContext implements ModContext {
 		channel.registerMessage(new TryAttackMessageHandler(meleeAttackAspect),
                 TryAttackMessage.class, 16, CompatibleSide.SERVER);
 		
-		compatibility.registerWithFmlEventBus(new ServerEventHandler(this));
+		channel.registerMessage(new SyncExtendedPlayerPropertiesMessageHandler(),
+		        SyncExtendedPlayerPropertiesMessage.class, 17, CompatibleSide.CLIENT);
+		
+		ServerEventHandler serverHandler = new ServerEventHandler(this);
+        compatibility.registerWithFmlEventBus(serverHandler);
+        compatibility.registerWithEventBus(serverHandler);
 		
 		compatibility.registerWithFmlEventBus(new WeaponKeyInputHandler(this, (ctx) -> getPlayer(ctx), 
 				weaponAttachmentAspect, channel));
 	}
 	
-	public void resetViewDistance() {
-	    ObfuscationReflectionHelper.getPrivateValue(
-                Minecraft.class, Minecraft.getMinecraft(), "defaultResourcePacks", "field_110449_ao") ; 
+	public void registerServerSideOnly() {
+	    
 	}
 	
 	@Override

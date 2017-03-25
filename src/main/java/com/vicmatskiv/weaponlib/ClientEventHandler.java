@@ -10,26 +10,19 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.vicmatskiv.weaponlib.animation.DebugPositioner;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientTickEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientTickEvent.Phase;
-import com.vicmatskiv.weaponlib.perspective.Perspective;
 import com.vicmatskiv.weaponlib.compatibility.CompatiblePlayerCreatureWrapper;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderTickEvent;
-import com.vicmatskiv.weaponlib.compatibility.CompatibleWorldWrapper;
+import com.vicmatskiv.weaponlib.perspective.Perspective;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.EntityClientPlayerMP;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.particle.EffectRenderer;
 import net.minecraft.client.renderer.RenderGlobal;
-import net.minecraft.client.renderer.entity.RenderManager;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.world.World;
 import net.minecraftforge.common.util.FakePlayer;
 
 public class ClientEventHandler extends CompatibleClientEventHandler {
