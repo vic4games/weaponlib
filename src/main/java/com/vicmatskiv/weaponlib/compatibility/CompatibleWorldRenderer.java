@@ -683,8 +683,10 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
             GL11.glScaled(this.cameraZoom, this.cameraZoom, 1.0D);
         }
 
+        //Project.gluPerspective(this.getFOVModifier(p_78479_1_, true), (float)this.mc.displayWidth / (float)this.mc.displayHeight, 0.05F, this.farPlaneDistance * 2.0F);
+
         Project.gluPerspective(this.getFOVModifier(p_78479_1_, true), 
-        		1, //(float)this.mc.displayWidth / (float)this.mc.displayHeight, 
+        		(float)this.mc.displayWidth / (float)this.mc.displayHeight,  //
         		0.05F, 
         		this.farPlaneDistance * 2.0F);
         float f2;
@@ -1244,7 +1246,10 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
             this.mc.mcProfiler.endStartSection("clear");
             int width = 150;
             int height = 100 * this.mc.displayHeight / this.mc.displayWidth;
-            GL11.glViewport(0, 0, 200, 200);
+            //                GL11.glViewport(0, 0, this.mc.displayWidth, this.mc.displayHeight);
+
+            //GL11.glViewport(0, 0, 200, 200);
+            GL11.glViewport(0, 0, this.mc.displayWidth, this.mc.displayHeight);
             this.updateFogColor(p_78471_1_);
             GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
             GL11.glEnable(GL11.GL_CULL_FACE);

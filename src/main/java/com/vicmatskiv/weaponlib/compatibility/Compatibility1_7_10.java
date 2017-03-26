@@ -17,6 +17,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityClientPlayerMP;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
@@ -58,6 +59,12 @@ public class Compatibility1_7_10 implements Compatibility {
 	@SideOnly(Side.CLIENT)
 	public EntityPlayer clientPlayer() {
 		return Minecraft.getMinecraft().thePlayer;
+	}
+	
+	@Override
+	@SideOnly(Side.CLIENT)
+	public void setClientPlayer(EntityPlayer player) {
+	    Minecraft.getMinecraft().thePlayer = (EntityClientPlayerMP) player;
 	}
 
 	@Override

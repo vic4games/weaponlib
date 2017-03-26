@@ -28,6 +28,8 @@ import com.vicmatskiv.weaponlib.network.PermitMessage;
 import com.vicmatskiv.weaponlib.network.TypeRegistry;
 import com.vicmatskiv.weaponlib.state.Permit;
 import com.vicmatskiv.weaponlib.state.StateManager;
+import com.vicmatskiv.weaponlib.tracking.SyncPlayerEntityTrackerMessage;
+import com.vicmatskiv.weaponlib.tracking.SyncPlayerEntityTrackerMessageMessageHandler;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -138,8 +140,8 @@ public class CommonModContext implements ModContext {
 		channel.registerMessage(new TryAttackMessageHandler(meleeAttackAspect),
                 TryAttackMessage.class, 16, CompatibleSide.SERVER);
 		
-		channel.registerMessage(new SyncExtendedPlayerPropertiesMessageHandler(),
-		        SyncExtendedPlayerPropertiesMessage.class, 17, CompatibleSide.CLIENT);
+		channel.registerMessage(new SyncPlayerEntityTrackerMessageMessageHandler(),
+		        SyncPlayerEntityTrackerMessage.class, 17, CompatibleSide.CLIENT);
 		
 		ServerEventHandler serverHandler = new ServerEventHandler(this);
         compatibility.registerWithFmlEventBus(serverHandler);

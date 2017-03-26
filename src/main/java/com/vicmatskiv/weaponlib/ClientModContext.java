@@ -14,6 +14,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderingRegistry;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleWorldRenderer;
 import com.vicmatskiv.weaponlib.electronics.EntityWirelessCamera;
+import com.vicmatskiv.weaponlib.electronics.WirelessCameraRenderer;
 import com.vicmatskiv.weaponlib.melee.ItemMelee;
 import com.vicmatskiv.weaponlib.melee.MeleeRenderer;
 import com.vicmatskiv.weaponlib.melee.PlayerMeleeInstance;
@@ -23,6 +24,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraftforge.client.ClientCommandHandler;
 
@@ -81,7 +83,7 @@ public class ClientModContext extends CommonModContext {
 	    compatibility.registerModEntity(EntityWirelessCamera.class, "wcam" + modEntityID, modEntityID++, mod, 200, 10, true);
 
 		rendererRegistry.registerEntityRenderingHandler(WeaponSpawnEntity.class, new SpawnEntityRenderer());
-	
+		rendererRegistry.registerEntityRenderingHandler(EntityWirelessCamera.class, new WirelessCameraRenderer(Items.snowball)); //new RenderSnowball(Items.snowball));
 		this.viewManager = new PerspectiveManager(this);
 	}
 	
@@ -92,26 +94,26 @@ public class ClientModContext extends CommonModContext {
         return viewManager;
     }
 	
-	public CompatibleWorldRenderer getSecondWorldRenderer() {
-		if(this.entityRenderer == null) {
-			this.entityRenderer = new CompatibleWorldRenderer(Minecraft.getMinecraft(), 
-	        		Minecraft.getMinecraft().getResourceManager());
-		}
-		return this.entityRenderer;
-	}
+//	public CompatibleWorldRenderer getSecondWorldRenderer() {
+//		if(this.entityRenderer == null) {
+//			this.entityRenderer = new CompatibleWorldRenderer(Minecraft.getMinecraft(), 
+//	        		Minecraft.getMinecraft().getResourceManager());
+//		}
+//		return this.entityRenderer;
+//	}
 	
 	public SafeGlobals getSafeGlobals() {
 		return safeGlobals;
 	}
 
-	public Framebuffer getFramebuffer() {
-		if(framebuffer == null) {
-			framebuffer = new Framebuffer(200, 200, true);
-	        framebuffer.setFramebufferColor(0.0F, 0.0F, 0.0F, 0.0F);
-		}
-		
-		return framebuffer;
-	}
+//	public Framebuffer getFramebuffer() {
+//		if(framebuffer == null) {
+//			framebuffer = new Framebuffer(200, 200, true);
+//	        framebuffer.setFramebufferColor(0.0F, 0.0F, 0.0F, 0.0F);
+//		}
+//		
+//		return framebuffer;
+//	}
 
 	@Override
 	public void registerWeapon(String name, Weapon weapon, WeaponRenderer renderer) {

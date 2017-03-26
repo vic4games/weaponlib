@@ -2,12 +2,12 @@ package com.vicmatskiv.weaponlib.electronics;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
-import com.vicmatskiv.weaponlib.ExtendedPlayerProperties;
 import com.vicmatskiv.weaponlib.ModContext;
-import com.vicmatskiv.weaponlib.SyncExtendedPlayerPropertiesMessage;
-import com.vicmatskiv.weaponlib.TrackableEntity;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleThrowableEntity;
+import com.vicmatskiv.weaponlib.tracking.PlayerEntityTracker;
+import com.vicmatskiv.weaponlib.tracking.SyncPlayerEntityTrackerMessage;
+import com.vicmatskiv.weaponlib.tracking.TrackableEntity;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
@@ -18,6 +18,7 @@ import net.minecraft.world.World;
 
 public class EntityWirelessCamera extends CompatibleThrowableEntity {
     private ModContext modContext;
+    private long trackingDuration = 10 * 1000 * 60;
     
     public EntityWirelessCamera(ModContext modContext, World world, EntityPlayer player) {
         super(world, player);
@@ -51,17 +52,17 @@ public class EntityWirelessCamera extends CompatibleThrowableEntity {
         if (entityHit != null && getThrower() instanceof EntityPlayer) {
             if (!this.worldObj.isRemote) {
                 System.out.println("Server hit entity uuid " + rayTraceResult.getEntityHit().getPersistentID());
-                ExtendedPlayerProperties properties = ExtendedPlayerProperties.getProperties((EntityPlayer) getThrower());
-                if(properties != null) {
-                    properties.addTrackableEntity(new TrackableEntity(entityHit, System.currentTimeMillis()));
-                    modContext.getChannel().getChannel().sendTo(new SyncExtendedPlayerPropertiesMessage(properties), (EntityPlayerMP) getThrower()); 
+                PlayerEntityTracker tracker = PlayerEntityTracker.getTracker((EntityPlayer) getThrower());
+                if(tracker != null) {
+                    tracker.addTrackableEntity(new TrackableEntity(entityHit, System.currentTimeMillis(),
+                            trackingDuration));
+                    modContext.getChannel().getChannel().sendTo(new SyncPlayerEntityTrackerMessage(tracker),
+                            (EntityPlayerMP)getThrower());
                 }
-            } else {
-                System.out.println("Client entity uuid " + rayTraceResult.getEntityHit().getPersistentID());
             }
         } else if (getThrower() instanceof EntityPlayer) {
-            ExtendedPlayerProperties properties = ExtendedPlayerProperties.getProperties((EntityPlayer) getThrower());
-            System.out.println("Currently tracking " + properties.getTrackableEntitites());
+//            ExtendedPlayerProperties properties = ExtendedPlayerProperties.getProperties((EntityPlayer) getThrower());
+//            System.out.println("Currently tracking " + properties.getTrackableEntitites());
         }
 
         if (!this.worldObj.isRemote) {
@@ -111,6 +112,6 @@ public class EntityWirelessCamera extends CompatibleThrowableEntity {
 
     @Override
     protected float getVelocity() {
-        return 1.5f;
+        return 0.5f;
     }
 }

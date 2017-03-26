@@ -1,14 +1,13 @@
 package com.vicmatskiv.weaponlib.electronics;
 
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.vicmatskiv.weaponlib.ExtendedPlayerProperties;
 import com.vicmatskiv.weaponlib.PlayerItemInstance;
 import com.vicmatskiv.weaponlib.network.TypeRegistry;
 import com.vicmatskiv.weaponlib.perspective.Perspective;
-import com.vicmatskiv.weaponlib.perspective.RemoteFirstPersonPerspective;
+import com.vicmatskiv.weaponlib.perspective.WirelessCameraPerspective;
+import com.vicmatskiv.weaponlib.tracking.PlayerEntityTracker;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayer;
@@ -18,7 +17,6 @@ public class PlayerTabletInstance extends PlayerItemInstance<TabletState> {
 	
 	private static final int SERIAL_VERSION = 1;
 	
-	@SuppressWarnings("unused")
 	private static final Logger logger = LogManager.getLogger(PlayerTabletInstance.class);
 
 	static {
@@ -41,7 +39,7 @@ public class PlayerTabletInstance extends PlayerItemInstance<TabletState> {
 	
 	@Override
 	public Class<? extends Perspective<?>> getRequiredPerspectiveType() {
-	    return RemoteFirstPersonPerspective.class;
+	    return WirelessCameraPerspective.class;
 	}
 	
 	@Override
@@ -52,6 +50,7 @@ public class PlayerTabletInstance extends PlayerItemInstance<TabletState> {
 	
 	public void setActiveWatchIndex(int activeWatchIndex) {
 	    if(this.activeWatchIndex != activeWatchIndex) {
+	        logger.debug("Changing active watch index to {}", activeWatchIndex);
 	        this.activeWatchIndex = activeWatchIndex;
 	        updateId++;
 	    }
@@ -72,20 +71,20 @@ public class PlayerTabletInstance extends PlayerItemInstance<TabletState> {
 		return SERIAL_VERSION;
 	}
 
-	@Override
-	public String toString() {
-		return "Tablet [" + getUuid() + "]";
-	}
-
     public void nextActiveWatchIndex() {
-        ExtendedPlayerProperties properties = ExtendedPlayerProperties.getProperties(player);
-        if(properties != null) {
-            if(activeWatchIndex >= properties.getTrackableEntitites().size() - 1) {
+        PlayerEntityTracker tracker = PlayerEntityTracker.getTracker(player);
+        if(tracker != null) {
+            if(activeWatchIndex >= tracker.getTrackableEntitites().size() - 1) {
                 setActiveWatchIndex(0);
             } else {
                 setActiveWatchIndex(activeWatchIndex + 1);
             }
         }
+    }
+    
+    @Override
+    public String toString() {
+        return "Tablet [" + getUuid() + "]";
     }
 
 }

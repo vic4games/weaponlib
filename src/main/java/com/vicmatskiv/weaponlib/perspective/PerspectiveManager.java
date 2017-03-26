@@ -33,7 +33,10 @@ public class PerspectiveManager {
                 currentPerspective = createActivePerspective(perspectiveClass);
             }
         } else if (currentPerspective != null) {
-            currentPerspective.deactivate(clientModContext);
+            if(init) {
+                currentPerspective.deactivate(clientModContext);
+            }
+            currentPerspective = null;
         }
 
         return currentPerspective;

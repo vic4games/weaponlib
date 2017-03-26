@@ -44,7 +44,8 @@ public class PerspectiveRenderer implements CustomRenderer<RenderableState> {
 		
 		ClientModContext clientModContext = (ClientModContext) renderContext.getModContext();
 		@SuppressWarnings("unchecked")
-        Perspective<RenderableState> view = (Perspective<RenderableState>) clientModContext.getViewManager().getPerspective(renderContext.getPlayerItemInstance(), false);
+        Perspective<RenderableState> view = (Perspective<RenderableState>) clientModContext.getViewManager()
+            .getPerspective(renderContext.getPlayerItemInstance(), false);
 		if(view == null) {
 		    return;
 		}

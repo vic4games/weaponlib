@@ -9,19 +9,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL11;
 
-import com.vicmatskiv.weaponlib.ExtendedPlayerProperties;
 import com.vicmatskiv.weaponlib.KeyBindings;
 import com.vicmatskiv.weaponlib.Part;
 import com.vicmatskiv.weaponlib.RenderContext;
-import com.vicmatskiv.weaponlib.TrackableEntity;
-import com.vicmatskiv.weaponlib.compatibility.CompatiblePlayerCreatureWrapper;
-import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult;
-import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult.Type;
 import com.vicmatskiv.weaponlib.melee.RenderableState;
+import com.vicmatskiv.weaponlib.tracking.PlayerEntityTracker;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.ChatComponentText;
 
 public class DebugPositioner {
@@ -212,18 +206,20 @@ public class DebugPositioner {
     }
     
     public static void watch() {
-        CompatibleRayTraceResult objectMouseOver = compatibility.getObjectMouseOver();
-        if (objectMouseOver != null && objectMouseOver.getTypeOfHit() == Type.ENTITY
-                && objectMouseOver.getEntityHit() instanceof EntityLivingBase) {
-            //watchableEntity = objectMouseOver.getEntityHit();
-            watchableEntity = (EntityLivingBase) objectMouseOver.getEntityHit();
-            logger.debug("Now watching", watchableEntity);
-            ExtendedPlayerProperties properties = ExtendedPlayerProperties.getProperties(compatibility.clientPlayer());
-            properties.addTrackableEntity(new TrackableEntity(watchableEntity, System.currentTimeMillis()));
-        } else {
-            ExtendedPlayerProperties properties = ExtendedPlayerProperties.getProperties(compatibility.clientPlayer());
-            System.out.println("Trackable entities: " + properties.getTrackableEntitites());
-        }
+//        CompatibleRayTraceResult objectMouseOver = compatibility.getObjectMouseOver();
+//        if (objectMouseOver != null && objectMouseOver.getTypeOfHit() == Type.ENTITY
+//                && objectMouseOver.getEntityHit() instanceof EntityLivingBase) {
+//            //watchableEntity = objectMouseOver.getEntityHit();
+//            watchableEntity = (EntityLivingBase) objectMouseOver.getEntityHit();
+//            logger.debug("Now watching", watchableEntity);
+//            ExtendedPlayerProperties properties = ExtendedPlayerProperties.getProperties(compatibility.clientPlayer());
+//            properties.addTrackableEntity(new TrackableEntity(watchableEntity, System.currentTimeMillis()));
+//        } else {
+//            PlayerEntityTracker tracker = PlayerEntityTracker.getTracker(compatibility.clientPlayer());
+//            System.out.println("Trackable entities: " + tracker.getTrackableEntitites());
+//        }
+        PlayerEntityTracker tracker = PlayerEntityTracker.getTracker(compatibility.clientPlayer());
+        System.out.println("Trackable entities: " + tracker.getTrackableEntitites());
     }
     
     public static Entity getWatchableEntity() {

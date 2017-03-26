@@ -1,9 +1,7 @@
 package com.vicmatskiv.weaponlib.compatibility;
 
-import com.vicmatskiv.weaponlib.SpawnEntityRenderer;
-import com.vicmatskiv.weaponlib.WeaponSpawnEntity;
-
 import cpw.mods.fml.client.registry.RenderingRegistry;
+import net.minecraft.entity.Entity;
 import net.minecraft.item.Item;
 import net.minecraftforge.client.IItemRenderer;
 import net.minecraftforge.client.MinecraftForgeClient;
@@ -19,9 +17,9 @@ public class CompatibleRenderingRegistry {
 
 	}
 
-	public void registerEntityRenderingHandler(Class<WeaponSpawnEntity> class1,
-			SpawnEntityRenderer spawnEntityRenderer) {
-		RenderingRegistry.registerEntityRenderingHandler(WeaponSpawnEntity.class, new SpawnEntityRenderer());
+	public void registerEntityRenderingHandler(Class<? extends Entity> class1,
+	        CompatibleEntityRenderer renderer) {
+		RenderingRegistry.registerEntityRenderingHandler(class1, renderer);
 	}
 
 }

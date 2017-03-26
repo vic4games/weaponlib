@@ -6,6 +6,14 @@ import com.vicmatskiv.weaponlib.RenderableState;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderTickEvent;
 
 public class OpticalScopePerspective extends FirstPersonPerspective<RenderableState> {
+    
+    private static final int DEFAULT_WIDTH = 200;
+    private static final int DEFAULT_HEIGHT = 200;
+    
+    public OpticalScopePerspective() {
+        this.width = DEFAULT_WIDTH;
+        this.height = DEFAULT_HEIGHT;
+    }
 
     @Override
     public float getBrightness(RenderContext<RenderableState> renderContext) {

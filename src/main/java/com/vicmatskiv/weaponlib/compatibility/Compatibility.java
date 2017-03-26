@@ -36,6 +36,8 @@ public interface Compatibility {
 	public World world(Entity entity);
 	
 	public EntityPlayer clientPlayer();
+
+    public void setClientPlayer(EntityPlayer player);
 	
 	public WeaponSpawnEntity getSpawnEntity(Weapon weapon, World world, EntityPlayer player, float speed, 
 			float gravityVelocity, float inaccuracy, float damage, float explosionRadius, Material...damageableBlockMaterials);
@@ -162,5 +164,6 @@ public interface Compatibility {
 	public ArmorMaterial addArmorMaterial(String name, String textureName, int durability, int[] reductionAmounts, int enchantability, CompatibleSound soundOnEquip, float toughness);
 
 	public boolean inventoryHasFreeSlots(EntityPlayer player);
+
 
 }

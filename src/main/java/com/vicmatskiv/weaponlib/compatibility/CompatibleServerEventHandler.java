@@ -1,13 +1,12 @@
 package com.vicmatskiv.weaponlib.compatibility;
 
 import com.vicmatskiv.weaponlib.ExtendedPlayerProperties;
-import com.vicmatskiv.weaponlib.SyncExtendedPlayerPropertiesMessage;
 
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 import cpw.mods.fml.common.gameevent.TickEvent.Phase;
+import cpw.mods.fml.common.gameevent.TickEvent.ServerTickEvent;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.event.entity.EntityEvent.EntityConstructing;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
@@ -26,6 +25,7 @@ public abstract class CompatibleServerEventHandler {
 	@SubscribeEvent
     public void onTick(TickEvent.ServerTickEvent event) {
         if(event.phase == Phase.START) {
+            onCompatibleTick(event);
 //            WorldServer worldServer = MinecraftServer.getServer().worldServerForDimension(0);
 //            EntityTracker entityTracker = worldServer.getEntityTracker();
             /*
@@ -41,10 +41,12 @@ public abstract class CompatibleServerEventHandler {
         //return ObfuscationReflectionHelper.setPrivateValue(EntityTracker.class, entityTracker, 10, "entityViewDistance", "field_72792_");
     }
 	
-	@SubscribeEvent
+	protected abstract void onCompatibleTick(ServerTickEvent event);
+
+    @SubscribeEvent
     public void onEntityConstructing(EntityConstructing event) {
         if (event.entity instanceof EntityPlayer) {
-            ExtendedPlayerProperties.register((EntityPlayer) event.entity);
+            ExtendedPlayerProperties.init((EntityPlayer) event.entity);
         }
     }
     
