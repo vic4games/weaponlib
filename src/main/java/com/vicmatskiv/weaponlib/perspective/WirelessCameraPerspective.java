@@ -28,7 +28,7 @@ public class WirelessCameraPerspective extends RemoteFirstPersonPerspective {
     
     private static final String STATIC_TEXTURE = "weaponlib:/com/vicmatskiv/weaponlib/resources/static.png";
 
-    private static final int STATIC_IMAGES_PER_ROW = 4;
+    private static final int STATIC_IMAGES_PER_ROW = 8;
 
     private int tickCounter;
     private int activeWatchIndex;
@@ -36,6 +36,10 @@ public class WirelessCameraPerspective extends RemoteFirstPersonPerspective {
     private int imageIndex;
     
     private Random random = new Random();
+
+    private int totalTrackableEntities;
+
+    private String displayName;
 
     @Override
     protected void updateWatchablePlayer() {
@@ -57,10 +61,14 @@ public class WirelessCameraPerspective extends RemoteFirstPersonPerspective {
         }
 
         activeWatchIndex = tabletInstance.getActiveWatchIndex();
+        totalTrackableEntities = playerEntityTracker.getTrackableEntitites().size();
         TrackableEntity te = playerEntityTracker.getTrackableEntity(activeWatchIndex);
 
         if(te == null) {
+            displayName = "";
             return;
+        } else {
+            displayName = te.getDisplayName();
         }
 
         Entity watchableEntity = te.getEntity();
@@ -79,7 +87,7 @@ public class WirelessCameraPerspective extends RemoteFirstPersonPerspective {
                     );
         }
         
-        if(watchableEntity instanceof EntityLivingBase) {
+        if(watchableEntity == null || watchableEntity instanceof EntityLivingBase) {
             this.watchablePlayer.setEntityLiving((EntityLivingBase)watchableEntity);
         }
     }
@@ -90,10 +98,11 @@ public class WirelessCameraPerspective extends RemoteFirstPersonPerspective {
         
         int maxDistance = 120;
         int displayCameraIndex = activeWatchIndex + 1;
-        String message = "Cam " + displayCameraIndex;
+        String message = "Cam " + displayCameraIndex + ": " + displayName;
         EntityLivingBase watchableEntity = watchablePlayer.getEntityLiving();
         if(watchableEntity != null) {
             EntityPlayer origPlayer = compatibility.clientPlayer();
+            //origPlayer.getDistanceToEntity(watchableEntity);
             double distance = Math.pow(watchableEntity.posX - origPlayer.posX, 2)
                     + Math.pow(watchableEntity.posY - origPlayer.posY, 2)
                     + Math.pow(watchableEntity.posZ - origPlayer.posZ, 2);
@@ -108,8 +117,10 @@ public class WirelessCameraPerspective extends RemoteFirstPersonPerspective {
             if(badSignalTickCounter == 5) {
                 badSignalTickCounter = 0;
             }
+        } else if(totalTrackableEntities == 0) {
+            message = "Disconnected";
         } else {
-            message = "Cam " + displayCameraIndex + ": no signal";
+            message = "Cam " + displayCameraIndex + ": " + displayName;
             drawStatic();
         }
         
@@ -125,7 +136,7 @@ public class WirelessCameraPerspective extends RemoteFirstPersonPerspective {
 
         Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation(STATIC_TEXTURE));
         
-        imageIndex = random.nextInt(4);
+        imageIndex = random.nextInt(STATIC_IMAGES_PER_ROW);
 
         /*
          *  (cU, cV)   (bU, bV)
@@ -150,8 +161,8 @@ public class WirelessCameraPerspective extends RemoteFirstPersonPerspective {
         
         double x = 0;
         double y = 0;
-        double width = 500;
-        double height = 500;
+        double width = this.width;
+        double height = this.height;
         double zLevel = 0;
 
         CompatibleTessellator tessellator = CompatibleTessellator.getInstance();

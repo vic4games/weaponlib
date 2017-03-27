@@ -6,6 +6,9 @@ import java.util.function.Supplier;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityList;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
 
 public class TrackableEntity {
@@ -16,6 +19,7 @@ public class TrackableEntity {
     private int entityId;
     private long trackingDuration;
     private WeakReference<Entity> entityRef;
+    private String displayName = "";
     
     private TrackableEntity() {}
 
@@ -43,6 +47,11 @@ public class TrackableEntity {
         if(entityRef == null || entityRef.get() == null) {
             Entity entity = entitySupplier.get();
             if(entity != null) {
+                if(entity instanceof EntityPlayer) {
+                    displayName = ((EntityPlayer) entity).getDisplayName();
+                } else if(entity instanceof EntityLivingBase) {
+                    displayName = EntityList.getEntityString(entity);
+                }
                 entityId = entity.getEntityId();
             }
             entityRef = new WeakReference<Entity>(entity);
@@ -98,5 +107,9 @@ public class TrackableEntity {
 
     public boolean isExpired() {
         return startTimestamp + trackingDuration < System.currentTimeMillis();
+    }
+    
+    public String getDisplayName() {
+        return displayName;
     }
 }

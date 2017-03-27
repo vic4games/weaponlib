@@ -19,7 +19,9 @@ public class CompatiblePlayerCreatureWrapper extends EntityClientPlayerMP {
     
     public void setEntityLiving(EntityLivingBase entityLiving) {
         this.entityLiving = entityLiving;
-        updateCoordinates();
+        if(entityLiving != null) {
+            updateCoordinates();
+        }
     }
     
     public EntityLivingBase getEntityLiving() {
