@@ -135,7 +135,7 @@ public abstract class CompatibleWeaponRenderer implements IItemRenderer {
 			Positioner<Part, RenderContext<RenderableState>> positioner);
 		
 
-	private void renderRightArm(EntityPlayer player, RenderContext<RenderableState> renderContext,
+	static void renderRightArm(EntityPlayer player, RenderContext<RenderableState> renderContext,
 			Positioner<Part, RenderContext<RenderableState>> positioner) {
 		RenderPlayer render = (RenderPlayer) RenderManager.instance.getEntityRenderObject(player);
 		Minecraft.getMinecraft().getTextureManager().bindTexture(((AbstractClientPlayer) player).getLocationSkin());
@@ -157,7 +157,7 @@ public abstract class CompatibleWeaponRenderer implements IItemRenderer {
 		GL11.glPopMatrix();
 	}
 
-	private void renderLeftArm(EntityPlayer player, RenderContext<RenderableState> renderContext,
+	static void renderLeftArm(EntityPlayer player, RenderContext<RenderableState> renderContext,
 			Positioner<Part, RenderContext<RenderableState>> positioner) {
 		RenderPlayer render = (RenderPlayer) RenderManager.instance.getEntityRenderObject(player);
 		Minecraft.getMinecraft().getTextureManager().bindTexture(((AbstractClientPlayer) player).getLocationSkin());

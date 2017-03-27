@@ -48,6 +48,8 @@ public abstract class CompatibleStaticModelSourceRenderer implements IItemRender
 		
 		GL11.glScaled(-1F, -1F, 1F);
 		EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+        RenderContext<RenderableState> renderContext = new RenderContext<>(getModContext(), player, itemStack);
+
 		switch (type)
 		{
 		case ENTITY:
@@ -61,16 +63,22 @@ public abstract class CompatibleStaticModelSourceRenderer implements IItemRender
 			break;
 		case EQUIPPED_FIRST_PERSON:
 			builder.getFirstPersonPositioning().accept(player, itemStack);
+	        CompatibleWeaponRenderer.renderLeftArm(player, renderContext, (p, c) -> {
+	            builder.getFirstPersonLeftHandPositioning().accept(c);
+	        });
+	        CompatibleWeaponRenderer.renderRightArm(player, renderContext, (p, c) -> {
+	            builder.getFirstPersonRightHandPositioning().accept(c);
+	        });
 			break;
 		default:
 		}
-		
-		renderModelSource(itemStack, type, null,  0.0F, 0.0f, -0.4f, 0.0f, 0.0f, 0.08f);
+
+		renderModelSource(renderContext, itemStack, type, null,  0.0F, 0.0f, -0.4f, 0.0f, 0.0f, 0.08f);
 		
 		GL11.glPopMatrix();
 	}
 	
-	private void renderModelSource(
+	private void renderModelSource(RenderContext<RenderableState> renderContext,
 			ItemStack itemStack, ItemRenderType type, Entity entity, 
 			float f, float f1, float f2, float f3, float f4, float f5) {
 		
@@ -113,14 +121,12 @@ public abstract class CompatibleStaticModelSourceRenderer implements IItemRender
         CustomRenderer<RenderableState> postRenderer = (CustomRenderer<RenderableState>) modelSource.getPostRenderer();
 
 		if(postRenderer != null) {
-	        EntityPlayer player = Minecraft.getMinecraft().thePlayer;
-	        RenderContext<RenderableState> renderContext = new RenderContext<>(getModContext(), player, itemStack);
 	        renderContext.setAgeInTicks(-0.4f);
 	        renderContext.setScale(0.08f);
 	        renderContext.setCompatibleTransformType(CompatibleTransformType.fromItemRenderType(type));
 
 	        renderContext.setPlayerItemInstance(getModContext().getPlayerItemInstanceRegistry()
-	                .getItemInstance(player, itemStack));
+	                .getItemInstance(renderContext.getPlayer(), itemStack));
 
             GL11.glPushMatrix();
             GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_CURRENT_BIT);

@@ -11,15 +11,15 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import net.minecraft.client.model.ModelBase;
-import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
-
 import com.vicmatskiv.weaponlib.ItemAttachment.ApplyHandler;
 import com.vicmatskiv.weaponlib.ItemAttachment.ApplyHandler2;
 import com.vicmatskiv.weaponlib.crafting.CraftingComplexity;
 import com.vicmatskiv.weaponlib.crafting.OptionsMetadata;
+
+import net.minecraft.client.model.ModelBase;
+import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 
 public class AttachmentBuilder<T> {
 	protected String name;
@@ -34,6 +34,9 @@ public class AttachmentBuilder<T> {
 	protected BiConsumer<ModelBase, ItemStack> thirdPersonModelPositioning;
 	protected BiConsumer<ModelBase, ItemStack> inventoryModelPositioning;
 	protected BiConsumer<ModelBase, ItemStack> entityModelPositioning;
+
+	protected Consumer<RenderContext<RenderableState>> firstPersonLeftHandPositioning;
+	protected Consumer<RenderContext<RenderableState>> firstPersonRightHandPositioning;
 	
 	protected CreativeTabs tab;
 	protected AttachmentCategory attachmentCategory;
@@ -134,6 +137,15 @@ public class AttachmentBuilder<T> {
 		this.thirdPersonModelPositioning = thirdPersonModelPositioning;
 		return this;
 	}
+	
+	public AttachmentBuilder<T> withFirstPersonHandPositioning(
+            Consumer<RenderContext<RenderableState>> leftHand,
+            Consumer<RenderContext<RenderableState>> rightHand) 
+    {
+        this.firstPersonLeftHandPositioning = leftHand;
+        this.firstPersonRightHandPositioning = rightHand;
+        return this;
+    }
 	
 	public AttachmentBuilder<T> withCrosshair(String crosshair) {
 		this.crosshair = crosshair;
@@ -276,6 +288,7 @@ public class AttachmentBuilder<T> {
 		.withFirstPersonModelPositioning(firstPersonModelPositioning)
 		.withThirdPersonModelPositioning(thirdPersonModelPositioning)
 		.withInventoryModelPositioning(inventoryModelPositioning)
+		.withFirstPersonHandPositioning(firstPersonLeftHandPositioning, firstPersonRightHandPositioning)
 		.withModContext(modContext)
 		.withModId(getModId())
 		.build();
