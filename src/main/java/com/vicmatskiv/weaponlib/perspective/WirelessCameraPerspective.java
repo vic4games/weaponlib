@@ -27,6 +27,8 @@ public class WirelessCameraPerspective extends RemoteFirstPersonPerspective {
     private static final Logger logger = LogManager.getLogger(WirelessCameraPerspective.class);
     
     private static final String STATIC_TEXTURE = "weaponlib:/com/vicmatskiv/weaponlib/resources/static.png";
+    private static final String DARK_SCREEN_TEXTURE = "weaponlib:/com/vicmatskiv/weaponlib/resources/dark-screen.png";
+
 
     private static final int STATIC_IMAGES_PER_ROW = 8;
 
@@ -62,21 +64,24 @@ public class WirelessCameraPerspective extends RemoteFirstPersonPerspective {
 
         activeWatchIndex = tabletInstance.getActiveWatchIndex();
         totalTrackableEntities = playerEntityTracker.getTrackableEntitites().size();
-        TrackableEntity te = playerEntityTracker.getTrackableEntity(activeWatchIndex);
+        TrackableEntity te = totalTrackableEntities > 0 ? playerEntityTracker.getTrackableEntity(activeWatchIndex) : null;
 
+        Entity watchableEntity = null;
         if(te == null) {
             displayName = "";
-            return;
         } else {
             displayName = te.getDisplayName();
+            watchableEntity = te.getEntity();
         }
-
-        Entity watchableEntity = te.getEntity();
 
         Entity realEntity = watchableEntity == null ? null : compatibility.world(watchableEntity)
                 .getEntityByID(watchableEntity.getEntityId());
         if (realEntity != null && realEntity != watchableEntity) {
             watchableEntity = (EntityLivingBase) realEntity;
+        }
+        
+        if(watchableEntity != null && watchableEntity.isDead) {
+            watchableEntity = null;
         }
         
         if(watchableEntity != null && tickCounter++ %50 == 0) {
@@ -100,6 +105,7 @@ public class WirelessCameraPerspective extends RemoteFirstPersonPerspective {
         int displayCameraIndex = activeWatchIndex + 1;
         String message = "Cam " + displayCameraIndex + ": " + displayName;
         EntityLivingBase watchableEntity = watchablePlayer.getEntityLiving();
+        int color =  0xFFFF00;
         if(watchableEntity != null) {
             EntityPlayer origPlayer = compatibility.clientPlayer();
             //origPlayer.getDistanceToEntity(watchableEntity);
@@ -110,6 +116,7 @@ public class WirelessCameraPerspective extends RemoteFirstPersonPerspective {
             if(quality.isInterrupted() || (badSignalTickCounter > 0 && badSignalTickCounter < 5)) {
                 framebuffer.framebufferClear();
                 framebuffer.bindFramebuffer(true);
+                color =  0xFFFF00;
                 message = "Cam " + displayCameraIndex + ": no signal";
                 drawStatic();
                 badSignalTickCounter++;
@@ -118,18 +125,22 @@ public class WirelessCameraPerspective extends RemoteFirstPersonPerspective {
                 badSignalTickCounter = 0;
             }
         } else if(totalTrackableEntities == 0) {
-            message = "Disconnected";
+            Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation(DARK_SCREEN_TEXTURE));
+            drawTexturedQuadFit(0, 0, width, height, 0);
+            color =  0xFF0000;
+            message = "No Cameras Available";
         } else {
             message = "Cam " + displayCameraIndex + ": " + displayName;
             drawStatic();
         }
         
         FontRenderer fontRender = compatibility.getFontRenderer();
-        int color =  0xFFFF00;
-
-        GL11.glScalef(3f, 3f, 3f);
         
-        fontRender.drawString(message, 40, 60, color, false);
+
+        float scale = 2f;
+        GL11.glScalef(scale, scale, scale);
+        
+        fontRender.drawString(message, (int)(40f/ scale), (int)((this.height - 30) / scale), color, false);
     }
     
     public void drawStatic() {
@@ -171,6 +182,16 @@ public class WirelessCameraPerspective extends RemoteFirstPersonPerspective {
         tessellator.addVertexWithUV(x + width, y + height, zLevel, bU, bV);
         tessellator.addVertexWithUV(x + width, y + 0, zLevel, cU, cV);
         tessellator.addVertexWithUV(x + 0, y + 0, zLevel, dU, dV);
+        tessellator.draw();
+    }
+    
+    private static void drawTexturedQuadFit(double x, double y, double width, double height, double zLevel){
+        CompatibleTessellator tessellator = CompatibleTessellator.getInstance();
+        tessellator.startDrawingQuads();
+        tessellator.addVertexWithUV(x + 0, y + height, zLevel, 0,1);
+        tessellator.addVertexWithUV(x + width, y + height, zLevel, 1, 1);
+        tessellator.addVertexWithUV(x + width, y + 0, zLevel, 1,0);
+        tessellator.addVertexWithUV(x + 0, y + 0, zLevel, 0, 0);
         tessellator.draw();
     }
 }
