@@ -30,8 +30,8 @@ public abstract class RemoteFirstPersonPerspective extends Perspective<Renderabl
 
     public RemoteFirstPersonPerspective() {
         this.renderEndNanoTime = System.nanoTime();
-        this.width = Minecraft.getMinecraft().displayWidth >> 1;
-        this.height = Minecraft.getMinecraft().displayHeight >> 1;
+        this.width = 427; //Minecraft.getMinecraft().displayWidth >> 1;
+        this.height = 240; //Minecraft.getMinecraft().displayHeight >> 1;
         WorldClient world = (WorldClient) compatibility.world(compatibility.clientPlayer());
         this.watchablePlayer = new CompatiblePlayerCreatureWrapper(Minecraft.getMinecraft(), world);
         this.renderGlobal = new RenderGlobal(Minecraft.getMinecraft());
