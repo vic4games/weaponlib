@@ -453,4 +453,13 @@ public class Compatibility1_7_10 implements Compatibility {
 		}
 		return result;
 	}
+
+    @Override
+    public void addBlockHitEffect(CompatibleRayTraceResult position) {
+        for(int i = 0; i < 6; i++) {
+            Minecraft.getMinecraft().effectRenderer.addBlockHitEffects(
+                    position.getBlockPosX(), position.getBlockPosY(), position.getBlockPosZ(), position.getSideHit());
+        }
+        
+    }
 }

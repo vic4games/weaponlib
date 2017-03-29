@@ -165,5 +165,7 @@ public interface Compatibility {
 
 	public boolean inventoryHasFreeSlots(EntityPlayer player);
 
+    public void addBlockHitEffect(CompatibleRayTraceResult position);
+
 
 }

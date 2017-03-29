@@ -26,6 +26,8 @@ import com.vicmatskiv.weaponlib.melee.TryAttackMessageHandler;
 import com.vicmatskiv.weaponlib.network.NetworkPermitManager;
 import com.vicmatskiv.weaponlib.network.PermitMessage;
 import com.vicmatskiv.weaponlib.network.TypeRegistry;
+import com.vicmatskiv.weaponlib.particle.SpawnParticleMessage;
+import com.vicmatskiv.weaponlib.particle.SpawnParticleMessageHandler;
 import com.vicmatskiv.weaponlib.state.Permit;
 import com.vicmatskiv.weaponlib.state.StateManager;
 import com.vicmatskiv.weaponlib.tracking.SyncPlayerEntityTrackerMessage;
@@ -142,6 +144,9 @@ public class CommonModContext implements ModContext {
 		
 		channel.registerMessage(new SyncPlayerEntityTrackerMessageMessageHandler(),
 		        SyncPlayerEntityTrackerMessage.class, 17, CompatibleSide.CLIENT);
+		
+		channel.registerMessage(new SpawnParticleMessageHandler(),
+		        SpawnParticleMessage.class, 18, CompatibleSide.CLIENT);
 		
 		ServerEventHandler serverHandler = new ServerEventHandler(this);
         compatibility.registerWithFmlEventBus(serverHandler);

@@ -46,4 +46,8 @@ public class CompatibleRayTraceResult {
 	public int getBlockPosZ() {
 		return position.blockZ;
 	}
+	
+	public int getSideHit() {
+	    return position.sideHit;
+	}
 }
