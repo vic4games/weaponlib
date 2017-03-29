@@ -6,7 +6,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.vicmatskiv.weaponlib.SpawnEntityRenderer;
 import com.vicmatskiv.weaponlib.WeaponSpawnEntity;
 
 import net.minecraft.client.Minecraft;
@@ -74,8 +73,7 @@ public class CompatibleRenderingRegistry implements ICustomModelLoader {
 
 	@SuppressWarnings("deprecation")
 	public void registerEntityRenderingHandler(Class<WeaponSpawnEntity> class1,
-			SpawnEntityRenderer spawnEntityRenderer) {
+	        CompatibleEntityRenderer spawnEntityRenderer) {
 		RenderingRegistry.registerEntityRenderingHandler(WeaponSpawnEntity.class, spawnEntityRenderer);
-
 	}
 }

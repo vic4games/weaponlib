@@ -36,4 +36,6 @@ public abstract class CompatibleWeaponEventHandler {
 	}
 
 	protected abstract void onCompatibleHandleRenderLivingEvent(Pre event);
+	
+	
 }

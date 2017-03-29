@@ -5,10 +5,6 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 import java.util.HashMap;
 import java.util.Map;
 
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.Item;
-import net.minecraft.util.ResourceLocation;
-
 import com.vicmatskiv.weaponlib.MagazineReloadAspect.LoadPermit;
 import com.vicmatskiv.weaponlib.WeaponAttachmentAspect.ChangeAttachmentPermit;
 import com.vicmatskiv.weaponlib.WeaponAttachmentAspect.EnterAttachmentModePermit;
@@ -19,11 +15,27 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSide;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 import com.vicmatskiv.weaponlib.crafting.RecipeGenerator;
+import com.vicmatskiv.weaponlib.melee.ItemMelee;
+import com.vicmatskiv.weaponlib.melee.MeleeAttachmentAspect;
+import com.vicmatskiv.weaponlib.melee.MeleeAttackAspect;
+import com.vicmatskiv.weaponlib.melee.MeleeRenderer;
+import com.vicmatskiv.weaponlib.melee.MeleeState;
+import com.vicmatskiv.weaponlib.melee.PlayerMeleeInstance;
+import com.vicmatskiv.weaponlib.melee.TryAttackMessage;
+import com.vicmatskiv.weaponlib.melee.TryAttackMessageHandler;
 import com.vicmatskiv.weaponlib.network.NetworkPermitManager;
 import com.vicmatskiv.weaponlib.network.PermitMessage;
 import com.vicmatskiv.weaponlib.network.TypeRegistry;
+import com.vicmatskiv.weaponlib.particle.SpawnParticleMessage;
+import com.vicmatskiv.weaponlib.particle.SpawnParticleMessageHandler;
 import com.vicmatskiv.weaponlib.state.Permit;
 import com.vicmatskiv.weaponlib.state.StateManager;
+import com.vicmatskiv.weaponlib.tracking.SyncPlayerEntityTrackerMessage;
+import com.vicmatskiv.weaponlib.tracking.SyncPlayerEntityTrackerMessageMessageHandler;
+
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
+import net.minecraft.util.ResourceLocation;
 
 public class CommonModContext implements ModContext {
     
@@ -42,7 +54,8 @@ public class CommonModContext implements ModContext {
         TypeRegistry.getInstance().register(LoadPermit.class);      
         TypeRegistry.getInstance().register(PlayerWeaponInstance.class);
         TypeRegistry.getInstance().register(WeaponState.class);
-
+        
+        TypeRegistry.getInstance().register(PlayerMeleeInstance.class);
     }
 
 	private String modId;
@@ -52,6 +65,9 @@ public class CommonModContext implements ModContext {
 	protected WeaponReloadAspect weaponReloadAspect;
 	protected WeaponAttachmentAspect weaponAttachmentAspect;
 	protected WeaponFireAspect weaponFireAspect;
+	
+	protected MeleeAttachmentAspect meleeAttachmentAspect;
+    protected MeleeAttackAspect meleeAttackAspect;
 
     protected SyncManager<?> syncManager;
 	
@@ -82,12 +98,15 @@ public class CommonModContext implements ModContext {
 		this.magazineReloadAspect = new MagazineReloadAspect(this);
 		this.weaponFireAspect = new WeaponFireAspect(this);
 		this.weaponAttachmentAspect = new WeaponAttachmentAspect(this);
+		
+		this.meleeAttackAspect = new MeleeAttackAspect(this);
+        this.meleeAttachmentAspect = new MeleeAttachmentAspect(this);
+        
 		this.permitManager = new NetworkPermitManager(this);
 		
 		this.syncManager = new SyncManager<>(permitManager);
 		
         this.playerItemInstanceRegistry = new PlayerItemInstanceRegistry(syncManager);
-
 		
 		StateManager<WeaponState, PlayerWeaponInstance> weaponStateManager = new StateManager<>((s1, s2) -> s1 == s2);
         weaponReloadAspect.setPermitManager(permitManager);
@@ -98,6 +117,11 @@ public class CommonModContext implements ModContext {
         
         weaponAttachmentAspect.setPermitManager(permitManager);
         weaponAttachmentAspect.setStateManager(weaponStateManager);
+        
+        StateManager<MeleeState, PlayerMeleeInstance> meleeStateManager = new StateManager<>((s1, s2) -> s1 == s2);
+        meleeAttackAspect.setStateManager(meleeStateManager);
+        meleeAttachmentAspect.setPermitManager(permitManager);
+        meleeAttachmentAspect.setStateManager(meleeStateManager);
         
         StateManager<MagazineState, PlayerMagazineInstance> magazineStateManager = new StateManager<>((s1, s2) -> s1 == s2);
 
@@ -115,10 +139,25 @@ public class CommonModContext implements ModContext {
 		channel.registerMessage(permitManager,
 				PermitMessage.class, 15, CompatibleSide.CLIENT);
 		
-		compatibility.registerWithEventBus(new ServerEventHandler(this));
+		channel.registerMessage(new TryAttackMessageHandler(meleeAttackAspect),
+                TryAttackMessage.class, 16, CompatibleSide.SERVER);
+		
+		channel.registerMessage(new SyncPlayerEntityTrackerMessageMessageHandler(),
+		        SyncPlayerEntityTrackerMessage.class, 17, CompatibleSide.CLIENT);
+		
+		channel.registerMessage(new SpawnParticleMessageHandler(),
+		        SpawnParticleMessage.class, 18, CompatibleSide.CLIENT);
+		
+		ServerEventHandler serverHandler = new ServerEventHandler(this);
+        compatibility.registerWithFmlEventBus(serverHandler);
+        compatibility.registerWithEventBus(serverHandler);
 		
 		compatibility.registerWithFmlEventBus(new WeaponKeyInputHandler(this, (ctx) -> getPlayer(ctx), 
 				weaponAttachmentAspect, channel));
+	}
+	
+	public void registerServerSideOnly() {
+	    
 	}
 	
 	@Override
@@ -194,8 +233,17 @@ public class CommonModContext implements ModContext {
 	public MagazineReloadAspect getMagazineReloadAspect() {
 		return magazineReloadAspect;
 	}
-
-
+	
+	@Override
+	public MeleeAttackAspect getMeleeAttackAspect() {
+	    return meleeAttackAspect;
+	}
+	
+	@Override
+	public MeleeAttachmentAspect getMeleeAttachmentAspect() {
+	    return meleeAttachmentAspect;
+	}
+	
 	@Override
 	public PlayerWeaponInstance getMainHeldWeapon() {
 		throw new IllegalStateException();
@@ -241,4 +289,9 @@ public class CommonModContext implements ModContext {
 	public CompatibleSound getNoAmmoSound() {
 		return noAmmoSound;
 	}
+
+    @Override
+    public void registerMeleeWeapon(String name, ItemMelee itemMelee, MeleeRenderer renderer) {
+        compatibility.registerItem(itemMelee, name);
+    }
 }

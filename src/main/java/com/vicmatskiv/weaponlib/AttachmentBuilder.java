@@ -11,15 +11,15 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import net.minecraft.client.model.ModelBase;
-import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
-
 import com.vicmatskiv.weaponlib.ItemAttachment.ApplyHandler;
 import com.vicmatskiv.weaponlib.ItemAttachment.ApplyHandler2;
 import com.vicmatskiv.weaponlib.crafting.CraftingComplexity;
 import com.vicmatskiv.weaponlib.crafting.OptionsMetadata;
+
+import net.minecraft.client.model.ModelBase;
+import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 
 public class AttachmentBuilder<T> {
 	protected String name;
@@ -34,6 +34,9 @@ public class AttachmentBuilder<T> {
 	protected BiConsumer<ModelBase, ItemStack> thirdPersonModelPositioning;
 	protected BiConsumer<ModelBase, ItemStack> inventoryModelPositioning;
 	protected BiConsumer<ModelBase, ItemStack> entityModelPositioning;
+
+	protected Consumer<RenderContext<RenderableState>> firstPersonLeftHandPositioning;
+	protected Consumer<RenderContext<RenderableState>> firstPersonRightHandPositioning;
 	
 	protected CreativeTabs tab;
 	protected AttachmentCategory attachmentCategory;
@@ -42,7 +45,7 @@ public class AttachmentBuilder<T> {
 	protected ApplyHandler2<T> apply2;
 	protected ApplyHandler2<T> remove2;
 	private String crosshair;
-	private CustomRenderer postRenderer;
+	private CustomRenderer<?> postRenderer;
 	private List<Tuple<ModelBase, String>> texturedModels = new ArrayList<>();
 	private boolean isRenderablePart;
     private int maxStackSize = 1;
@@ -135,13 +138,22 @@ public class AttachmentBuilder<T> {
 		return this;
 	}
 	
+	public AttachmentBuilder<T> withFirstPersonHandPositioning(
+            Consumer<RenderContext<RenderableState>> leftHand,
+            Consumer<RenderContext<RenderableState>> rightHand) 
+    {
+        this.firstPersonLeftHandPositioning = leftHand;
+        this.firstPersonRightHandPositioning = rightHand;
+        return this;
+    }
+	
 	public AttachmentBuilder<T> withCrosshair(String crosshair) {
 		this.crosshair = crosshair;
 		return this;
 	}
 	
 
-	public AttachmentBuilder<T> withPostRender(CustomRenderer postRenderer) {
+	public AttachmentBuilder<T> withPostRender(CustomRenderer<?> postRenderer) {
 		this.postRenderer = postRenderer;
 		return this;
 	}
@@ -204,14 +216,14 @@ public class AttachmentBuilder<T> {
 	
 	protected ItemAttachment<T> createAttachment(ModContext modContext) {
 		return new ItemAttachment<T>(
-				modId, attachmentCategory, crosshair, 
+				getModId(), attachmentCategory, crosshair, 
 				apply, remove);
 	}
 	
 	@SuppressWarnings("deprecation")
 	public ItemAttachment<T> build(ModContext modContext) {
 		ItemAttachment<T> attachment = createAttachment(modContext);
-		attachment.setUnlocalizedName(modId + "_" + name); 
+		attachment.setUnlocalizedName(getModId() + "_" + name); 
 		attachment.setCreativeTab(tab);
 		attachment.setPostRenderer(postRenderer);
 		attachment.setName(name);
@@ -221,8 +233,8 @@ public class AttachmentBuilder<T> {
 		if(attachment.getInformationProvider() == null) {
 		    attachment.setInformationProvider(informationProvider);
 		}
-		if(textureName != null) {
-			attachment.setTextureName(modId + ":" + stripFileExtension(textureName, ".png"));
+		if(getTextureName() != null) {
+			attachment.setTextureName(getModId() + ":" + stripFileExtension(getTextureName(), ".png"));
 		} 
 		
 		if(isRenderablePart) {
@@ -234,16 +246,16 @@ public class AttachmentBuilder<T> {
 			});
 		}
 		
-		if(model != null) {
-			attachment.addModel(model, addFileExtension(textureName, ".png"));
+		if(getModel() != null) {
+			attachment.addModel(getModel(), addFileExtension(getTextureName(), ".png"));
 		}
 		
 		texturedModels.forEach(tm -> attachment.addModel(tm.getU(), addFileExtension(tm.getV(), ".png") ));
 		
 		compatibleAttachments.values().forEach(a -> attachment.addCompatibleAttachment(a));
 		
-		if((model != null || !texturedModels.isEmpty())) {
-			modContext.registerRenderableItem(name, attachment, compatibility.isClientSide() ? registerRenderer(attachment) : null);
+		if((getModel() != null || !texturedModels.isEmpty())) {
+			modContext.registerRenderableItem(name, attachment, compatibility.isClientSide() ? registerRenderer(attachment, modContext) : null);
 		}
 		
 		if(craftingComplexity != null) {
@@ -266,7 +278,7 @@ public class AttachmentBuilder<T> {
 	}
 
 	
-	private Object registerRenderer(ItemAttachment<T> attachment) {
+	private Object registerRenderer(ItemAttachment<T> attachment, ModContext modContext) {
 		return new StaticModelSourceRenderer.Builder()
 		.withEntityPositioning(entityPositioning)
 		.withFirstPersonPositioning(firstPersonPositioning)
@@ -276,7 +288,9 @@ public class AttachmentBuilder<T> {
 		.withFirstPersonModelPositioning(firstPersonModelPositioning)
 		.withThirdPersonModelPositioning(thirdPersonModelPositioning)
 		.withInventoryModelPositioning(inventoryModelPositioning)
-		.withModId(modId)
+		.withFirstPersonHandPositioning(firstPersonLeftHandPositioning, firstPersonRightHandPositioning)
+		.withModContext(modContext)
+		.withModId(getModId())
 		.build();
 	}
 	
@@ -285,7 +299,7 @@ public class AttachmentBuilder<T> {
 		return s != null && !s.endsWith(ext) ? s + ext : s;
 	}
 
-	static String stripFileExtension(String str, String extension) {
+	protected static String stripFileExtension(String str, String extension) {
 		return str.endsWith(extension) ? str.substring(0, str.length() - extension.length()) : str;
 	}
 	
@@ -293,4 +307,15 @@ public class AttachmentBuilder<T> {
 		return target.cast(build(modContext));
 	}
 
+    public String getModId() {
+        return modId;
+    }
+
+    public ModelBase getModel() {
+        return model;
+    }
+
+    public String getTextureName() {
+        return textureName;
+    }
 }

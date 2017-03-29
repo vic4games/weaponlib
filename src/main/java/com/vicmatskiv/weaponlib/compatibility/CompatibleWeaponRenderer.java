@@ -55,11 +55,11 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer implements IPerspectiveAwareModel, IBakedModel {
     
     protected static class StateDescriptor {
-        protected MultipartRenderStateManager<RenderableState, Part, RenderContext> stateManager;
+		protected MultipartRenderStateManager<RenderableState, Part, RenderContext<RenderableState>> stateManager;
         protected float rate;
         protected float amplitude = 0.04f;
         private PlayerWeaponInstance instance;
-        public StateDescriptor(PlayerWeaponInstance instance, MultipartRenderStateManager<RenderableState, Part, RenderContext> stateManager,
+		public StateDescriptor(PlayerWeaponInstance instance, MultipartRenderStateManager<RenderableState, Part, RenderContext<RenderableState>> stateManager,
                 float rate, float amplitude) {
             this.instance = instance;
             this.stateManager = stateManager;
@@ -188,13 +188,13 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
     {
         GL11.glPushMatrix();
         
-        RenderContext renderContext = new RenderContext(getClientModContext(), player, itemStack);
+		RenderContext<RenderableState> renderContext = new RenderContext<>(getClientModContext(), player, itemStack);
         
         renderContext.setAgeInTicks(-0.4f);
         renderContext.setScale(0.08f);
         renderContext.setCompatibleTransformType(CompatibleTransformType.fromItemRenderType(transformType));
         
-        Positioner<Part, RenderContext> positioner = null;
+        Positioner<Part, RenderContext<RenderableState>> positioner = null;
         switch (transformType)
         {
         case GROUND:
@@ -253,7 +253,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
             
             StateDescriptor stateDescriptor = getStateDescriptor(player, itemStack);
             renderContext.setPlayerItemInstance(stateDescriptor.instance);
-            MultipartPositioning<Part, RenderContext> multipartPositioning = stateDescriptor.stateManager.nextPositioning();
+            MultipartPositioning<Part, RenderContext<RenderableState>> multipartPositioning = stateDescriptor.stateManager.nextPositioning();
             
             renderContext.setTransitionProgress(multipartPositioning.getProgress());
             
@@ -265,34 +265,13 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
                         
             positioner.randomize(stateDescriptor.rate, stateDescriptor.amplitude);
             
-            positioner.position(Part.WEAPON, renderContext);
-            
-            Render<AbstractClientPlayer> entityRenderObject = Minecraft.getMinecraft().getRenderManager().getEntityRenderObject((AbstractClientPlayer)player);
-            RenderPlayer render = (RenderPlayer) entityRenderObject;
-            Minecraft.getMinecraft().getTextureManager().bindTexture(((AbstractClientPlayer) player).getLocationSkin());
+            positioner.position(Part.MAIN_ITEM, renderContext);
             
             if(player != null && player.getHeldItemMainhand() != null && player.getHeldItemMainhand().getItem() instanceof Weapon) {
                 // Draw hands only if weapon is held in the main hand
-                GL11.glPushMatrix();
-                GL11.glTranslatef(0f, -1f, 0f);
-                GL11.glRotatef(-10F, 1f, 0f, 0f);
-                GL11.glRotatef(0F, 0f, 1f, 0f);
-                GL11.glRotatef(10F, 0f, 0f, 1f);
-                positioner.position(Part.LEFT_HAND, renderContext);
-                render.renderLeftArm((AbstractClientPlayer)player);
-                GL11.glPopMatrix();
-                
-                GL11.glPushMatrix();
-                GL11.glScaled(1F, 1F, 1F);
-                GL11.glTranslatef(-0.25f, 0f, 0.2f);
-                GL11.glRotatef(5F, 1f, 0f, 0f);
-                GL11.glRotatef(25F, 0f, 1f, 0f);
-                GL11.glRotatef(0F, 0f, 0f, 1f); 
-                positioner.position(Part.RIGHT_HAND, renderContext);
-                renderRightArm(render,(AbstractClientPlayer) player);
-                GL11.glPopMatrix();
+                renderLeftArm(player, renderContext, positioner);
+                renderRightArm(player, renderContext, positioner);
             }
-            
             
             break;
         default:
@@ -303,11 +282,43 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
         GL11.glPopMatrix();
     }
 
-    protected abstract void renderItem(ItemStack weaponItemStack, RenderContext renderContext,
-            Positioner<Part, RenderContext> positioner);
+    static <T> void renderRightArm(EntityPlayer player, RenderContext<T> renderContext,
+            Positioner<Part, RenderContext<T>> positioner) {
+        Render<AbstractClientPlayer> entityRenderObject = Minecraft.getMinecraft().getRenderManager().getEntityRenderObject((AbstractClientPlayer)player);
+        RenderPlayer render = (RenderPlayer) entityRenderObject;
+        Minecraft.getMinecraft().getTextureManager().bindTexture(((AbstractClientPlayer) player).getLocationSkin());
+
+        GL11.glPushMatrix();
+        GL11.glScaled(1F, 1F, 1F);
+        GL11.glTranslatef(-0.25f, 0f, 0.2f);
+        GL11.glRotatef(5F, 1f, 0f, 0f);
+        GL11.glRotatef(25F, 0f, 1f, 0f);
+        GL11.glRotatef(0F, 0f, 0f, 1f); 
+        positioner.position(Part.RIGHT_HAND, renderContext);
+        renderRightArm(render,(AbstractClientPlayer) player);
+        GL11.glPopMatrix();
+    }
+
+    static <T> void renderLeftArm(EntityPlayer player, RenderContext<T> renderContext,
+            Positioner<Part, RenderContext<T>> positioner) {
+        Render<AbstractClientPlayer> entityRenderObject = Minecraft.getMinecraft().getRenderManager().getEntityRenderObject((AbstractClientPlayer)player);
+        RenderPlayer render = (RenderPlayer) entityRenderObject;
+        Minecraft.getMinecraft().getTextureManager().bindTexture(((AbstractClientPlayer) player).getLocationSkin());
+
+        GL11.glPushMatrix();
+        GL11.glTranslatef(0f, -1f, 0f);
+        GL11.glRotatef(-10F, 1f, 0f, 0f);
+        GL11.glRotatef(0F, 0f, 1f, 0f);
+        GL11.glRotatef(10F, 0f, 0f, 1f);
+        positioner.position(Part.LEFT_HAND, renderContext);
+        render.renderLeftArm((AbstractClientPlayer)player);
+        GL11.glPopMatrix();
+    }
+
+    protected abstract void renderItem(ItemStack weaponItemStack, RenderContext<RenderableState> renderContext,
+            Positioner<Part, RenderContext<RenderableState>> positioner);
     
-    public void renderRightArm(RenderPlayer renderPlayer, AbstractClientPlayer clientPlayer)
-    {
+    private static void renderRightArm(RenderPlayer renderPlayer, AbstractClientPlayer clientPlayer) {
         float f = 1.0F;
         GlStateManager.color(f, f, f);
         ModelPlayer modelplayer = renderPlayer.getMainModel();
@@ -326,7 +337,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
         GlStateManager.disableBlend();
     }
     
-    private void setModelVisibilities(RenderPlayer renderPlayer, AbstractClientPlayer clientPlayer)
+    private static void setModelVisibilities(RenderPlayer renderPlayer, AbstractClientPlayer clientPlayer)
     {
         ModelPlayer modelplayer = renderPlayer.getMainModel();
 

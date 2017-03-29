@@ -3,6 +3,7 @@ package com.vicmatskiv.weaponlib;
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponEventHandler;
+import com.vicmatskiv.weaponlib.melee.PlayerMeleeInstance;
 
 import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.entity.player.EntityPlayer;
@@ -45,7 +46,7 @@ public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 
 			final float fov;
 			if(instance.isAttachmentZoomEnabled()) {
-				if(safeGlobals.renderingPhase.get() == RenderingPhase.RENDER_VIEWFINDER) {
+				if(safeGlobals.renderingPhase.get() == RenderingPhase.RENDER_PERSPECTIVE) {
 					fov = instance.getZoom();
 				} else {
 					fov = 1f;
@@ -63,8 +64,9 @@ public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 	public void onCompatibleMouse(MouseEvent event) {
 		if(compatibility.getButton(event) == 0 || compatibility.getButton(event) == 1) {
 			// If the current player holds the weapon in their main hand, cancel default minecraft mouse processing
-			PlayerWeaponInstance mainHandHeldWeaponInstance = modContext.getMainHeldWeapon();
-			if(mainHandHeldWeaponInstance != null) {
+		    PlayerItemInstance<?> instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(compatibility.clientPlayer());
+		    //PlayerWeaponInstance mainHandHeldWeaponInstance = modContext.getMainHeldWeapon();
+			if(instance instanceof PlayerWeaponInstance || instance instanceof PlayerMeleeInstance) {
 				event.setCanceled(true);
 			}
 		}

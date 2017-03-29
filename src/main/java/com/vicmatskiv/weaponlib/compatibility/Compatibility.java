@@ -21,6 +21,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemArmor.ArmorMaterial;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.FOVUpdateEvent;
 import net.minecraftforge.client.event.GuiOpenEvent;
@@ -36,6 +37,8 @@ public interface Compatibility {
 	public World world(Entity entity);
 	
 	public EntityPlayer clientPlayer();
+
+    public void setClientPlayer(EntityPlayer player);
 	
 	public WeaponSpawnEntity getSpawnEntity(Weapon weapon, World world, EntityPlayer player, float speed, 
 			float gravityVelocity, float inaccuracy, float damage, float explosionRadius, Material...damageableBlockMaterials);
@@ -92,7 +95,7 @@ public interface Compatibility {
 
 	public void runInMainClientThread(Runnable runnable);
 
-	public void registerModEntity(Class<WeaponSpawnEntity> class1, String string, int i, Object mod, int j, int k,
+	public void registerModEntity(Class<? extends Entity> class1, String string, int i, Object mod, int j, int k,
 			boolean b);
 
 	public void registerRenderingRegistry(CompatibleRenderingRegistry rendererRegistry);
@@ -162,5 +165,16 @@ public interface Compatibility {
 	public ArmorMaterial addArmorMaterial(String name, String textureName, int durability, int[] reductionAmounts, int enchantability, CompatibleSound soundOnEquip, float toughness);
 
 	public boolean inventoryHasFreeSlots(EntityPlayer player);
+
+    public void addBlockHitEffect(CompatibleRayTraceResult position);
+
+    public String getDisplayName(EntityPlayer player);
+
+    public void clickBlock(CompatibleBlockPos blockPos, CompatibleEnumFacing sideHit);
+
+    public boolean isAirBlock(World world, CompatibleBlockPos blockPos);
+
+    public void addChatMessage(Entity entity, String message);
+
 
 }

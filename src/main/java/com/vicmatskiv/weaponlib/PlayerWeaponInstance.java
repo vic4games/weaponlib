@@ -8,6 +8,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.vicmatskiv.weaponlib.network.TypeRegistry;
+import com.vicmatskiv.weaponlib.perspective.OpticalScopePerspective;
+import com.vicmatskiv.weaponlib.perspective.Perspective;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayer;
@@ -298,8 +300,8 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 		if(activeAttachmentIds == null || activeAttachmentIds.length <= category.ordinal()) {
 			return null;
 		}
-		Item scopeItem = Item.getItemById(activeAttachmentIds[category.ordinal()]);
-		return (ItemAttachment<Weapon>) scopeItem;
+		Item activeAttachment = Item.getItemById(activeAttachmentIds[category.ordinal()]);
+		return (ItemAttachment<Weapon>) activeAttachment;
 	}
 
 	public float getZoom() {
@@ -336,8 +338,24 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 			this.activeTextureIndex = (byte)activeTextureIndex;
 			updateId++;
 		}
-		
 	}
+	
+	@Override
+	public Class<? extends Perspective<?>> getRequiredPerspectiveType() {
+	    Class<? extends Perspective<?>> result = null;
+	    if(isAimed()) {
+	        ItemAttachment<Weapon> scope = getAttachmentItemWithCategory(AttachmentCategory.SCOPE);
+	        if(scope instanceof ItemScope && ((ItemScope) scope).isOptical()) {
+	            result = OpticalScopePerspective.class;
+	        }
+	    }
+	    return result;
+	}
+	
+//	@Override
+//	public View<?> createView() {
+//	    return super.createView();
+//	}
 
 	@Override
 	public String toString() {

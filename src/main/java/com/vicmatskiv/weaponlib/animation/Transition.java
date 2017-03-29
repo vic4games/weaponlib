@@ -3,15 +3,13 @@ package com.vicmatskiv.weaponlib.animation;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import com.vicmatskiv.weaponlib.RenderContext;
-
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 
-public class Transition {
+public class Transition<Context> {
 
 	private BiConsumer<EntityPlayer, ItemStack> positioning;
-	private Consumer<RenderContext> itemPositioning;
+	private Consumer<Context> itemPositioning;
 	private long duration;
 	private long pause;
 	
@@ -21,7 +19,7 @@ public class Transition {
 		this.pause = pause;
 	}
 	
-	public Transition(Consumer<RenderContext> itemPositioning, long duration, long pause) {
+	public Transition(Consumer<Context> itemPositioning, long duration, long pause) {
 		this.itemPositioning = itemPositioning;
 		this.duration = duration;
 		this.pause = pause;
@@ -31,7 +29,7 @@ public class Transition {
 		this(positioning, duration, 0);
 	}
 	
-	public Transition(Consumer<RenderContext> itemPositioning, long duration) {
+	public Transition(Consumer<Context> itemPositioning, long duration) {
 		this(itemPositioning, duration, 0);
 	}
 
@@ -39,7 +37,7 @@ public class Transition {
 		return positioning;
 	}
 	
-	public Consumer<RenderContext> getItemPositioning() {
+	public Consumer<Context> getItemPositioning() {
 		return itemPositioning;
 	}
 

@@ -7,6 +7,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.vicmatskiv.weaponlib.network.TypeRegistry;
 import com.vicmatskiv.weaponlib.network.UniversalObject;
+import com.vicmatskiv.weaponlib.perspective.Perspective;
 import com.vicmatskiv.weaponlib.state.ExtendedState;
 import com.vicmatskiv.weaponlib.state.ManagedState;
 
@@ -166,6 +167,14 @@ public class PlayerItemInstance<S extends ManagedState<S>> extends UniversalObje
 	public void setSyncStartTimestamp(long syncStartTimestamp) {
 		this.syncStartTimestamp = syncStartTimestamp;
 	}
+
+    public Class<? extends Perspective<?>> getRequiredPerspectiveType() {
+        return null;
+    }
+
+//    public View<?> createView() {
+//        return null;
+//    }
 	
 //	public void addListener(PlayerItemStateListener<S> listener) {
 //		listeners.add(listener);

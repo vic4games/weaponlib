@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
 import org.apache.logging.log4j.LogManager;
@@ -26,7 +27,7 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 		private S toState;
 		private VoidAction<S, EE> prepareAction;
 		private PostAction<S, EE> action;
-		private Predicate<EE> predicate;
+		private BiPredicate<S, EE> predicate;
 		private BiFunction<S, EE, Permit<S>> permitProvider;
 		private BiFunction<S, EE, Boolean> stateUpdater;
 		private PermitManager permitManager;
@@ -55,9 +56,14 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 		}
 		
 		public RuleBuilder<EE> when(Predicate<EE> predicate) {
-			this.predicate = predicate;
+			this.predicate = (s, e) -> predicate.test(e);
 			return this;
 		}
+		
+		public RuleBuilder<EE> when(BiPredicate<S, EE> predicate) {
+            this.predicate = predicate;
+            return this;
+        }
 		
 		public RuleBuilder<EE> withPermit(
 				BiFunction<S, EE, Permit<S>> permitProvider,
@@ -104,7 +110,7 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 					aspect, c -> new LinkedHashSet<>());
 			
 			if(predicate == null) {
-				predicate = c -> true;
+				predicate = (s, c) -> true;
 			}
 			
 			if(action == null) {
@@ -126,7 +132,7 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 			 */
 			
 			final S effectiveFromState;
-			final Predicate<E> effectivePredicate;
+			final BiPredicate<S, E> effectivePredicate;
 			final boolean isRequestRuleAutoTransitioned;
 			
 			if(prepareAction != null || preparePredicate != null) {
@@ -136,7 +142,7 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 				}
 				
 				TransitionRule<S, E> prepareRule = new TransitionRule<>(fromState, toState.preparingPhase(), 
-						(e) -> predicate.test(safeCast(e)), 
+						(s, e) -> predicate.test(s, safeCast(e)), 
 						(c, f, t, p) -> {
 							if(prepareAction != null) {
 								prepareAction.execute(safeCast(c), f, t); 
@@ -148,11 +154,11 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 				aspectRules.add(prepareRule);
 				
 				effectiveFromState = toState.preparingPhase();
-				effectivePredicate = e -> preparePredicate != null ? preparePredicate.test(safeCast(e)) : true; //e -> System.currentTimeMillis() > e.getStateUpdateTimestamp() + prepareDuration;
+				effectivePredicate = (s, e) -> preparePredicate != null ? preparePredicate.test(safeCast(e)) : true; //e -> System.currentTimeMillis() > e.getStateUpdateTimestamp() + prepareDuration;
 				isRequestRuleAutoTransitioned = true; // prepare -> request transition must be automatic
 			} else {
 				effectiveFromState = fromState;
-				effectivePredicate = e -> predicate.test(safeCast(e));
+				effectivePredicate = (s, e) -> predicate.test(s, safeCast(e));
 				isRequestRuleAutoTransitioned = false; // from -> request transtion must be manual
 			}
 			
@@ -172,7 +178,7 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 				aspectRules.add(requestPermitRule);
 
 				TransitionRule<S, E> rollbackRule = new TransitionRule<>(toState.permitRequestedPhase(), fromState, 
-						c -> System.currentTimeMillis() > c.getStateUpdateTimestamp() + requestTimeout,
+						(s, c) -> System.currentTimeMillis() > c.getStateUpdateTimestamp() + requestTimeout,
 						(c, f, t, p) -> action.execute(safeCast(c), f, t, p), 
 						true);
 				
@@ -254,14 +260,14 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 	private static class TransitionRule<S extends ManagedState<S>, E extends ExtendedState<S>> {
 		S fromState;
 		S toState;
-		Predicate<E> predicate;
+		BiPredicate<S, E> predicate;
 		PostAction<S, E> action;
 		boolean auto;
 		
 		TransitionRule(
 				S fromState, 
 				S toState, 
-				Predicate<E> predicate, 
+				BiPredicate<S, E> predicate, 
 				PostAction<S, E> action,
 				boolean auto) {
 			if(fromState == null) {
@@ -293,7 +299,7 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 									
 								));
 			
-			result = result && predicate.test(context);
+			result = result && predicate.test(toState, context);
 			return result;
 		}
 	}

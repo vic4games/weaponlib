@@ -49,7 +49,7 @@ Reloadable, Updatable, Part {
 		
 		@Override
 		protected ItemAttachment<Weapon> createAttachment(ModContext modContext) {
-			ItemMagazine magazine = new ItemMagazine(modId, model, textureName, ammo);
+			ItemMagazine magazine = new ItemMagazine(getModId(), getModel(), getTextureName(), ammo);
 			magazine.reloadingTimeout = reloadingTimeout;
 			magazine.compatibleBullets = new ArrayList<>(compatibleBullets);
 			if(reloadSound != null) {

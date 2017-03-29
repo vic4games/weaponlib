@@ -721,9 +721,11 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
             GlStateManager.scale(this.cameraZoom, this.cameraZoom, 1.0D);
         }
 
-        Project.gluPerspective(this.getFOVModifier(partialTicks, true), 1f, 0.05F, this.farPlaneDistance * MathHelper.SQRT_2);
+        Project.gluPerspective(this.getFOVModifier(partialTicks, true), 
+                (float)this.mc.displayWidth / (float)this.mc.displayHeight, 0.05F, this.farPlaneDistance * MathHelper.SQRT_2);
         GlStateManager.matrixMode(5888);
         GlStateManager.loadIdentity();
+
 
         if (this.mc.gameSettings.anaglyph)
         {
@@ -1203,6 +1205,7 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
         {
             Entity entity = this.mc.getRenderViewEntity();
             boolean flag = entity instanceof EntityPlayer && !this.mc.gameSettings.hideGUI;
+
 
             if (flag && !((EntityPlayer)entity).capabilities.allowEdit)
             {

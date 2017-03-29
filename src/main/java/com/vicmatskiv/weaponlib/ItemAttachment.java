@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.function.Function;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleItem;
+import com.vicmatskiv.weaponlib.melee.PlayerMeleeInstance;
 
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.entity.player.EntityPlayer;
@@ -20,9 +21,11 @@ public class ItemAttachment<T> extends CompatibleItem implements ModelSource {
 	private ApplyHandler<T> remove;
 	protected ApplyHandler2<T> apply2;
 	protected ApplyHandler2<T> remove2;
+	protected MeleeWeaponApplyHandler<T> apply3;
+	protected MeleeWeaponApplyHandler<T> remove3;
 	private List<Tuple<ModelBase, String>> texturedModels = new ArrayList<>();
-	private CustomRenderer postRenderer;
-	private CustomRenderer preRenderer;
+	private CustomRenderer<?> postRenderer;
+	private CustomRenderer<?> preRenderer;
 	private Part renderablePart;
 	private String name;
 	private Function<ItemStack, String> informationProvider;
@@ -41,6 +44,10 @@ public class ItemAttachment<T> extends CompatibleItem implements ModelSource {
 	public static interface ApplyHandler2<T> {
 		public void apply(ItemAttachment<T> itemAttachment, PlayerWeaponInstance instance);
 	}
+	
+	public static interface MeleeWeaponApplyHandler<T> {
+        public void apply(ItemAttachment<T> itemAttachment, PlayerMeleeInstance instance);
+    }
 
 	protected ItemAttachment(String modId, AttachmentCategory category, ModelBase model, String textureName, String crosshair, 
 			ApplyHandler<T> apply, ApplyHandler<T> remove) {
@@ -148,19 +155,19 @@ public class ItemAttachment<T> extends CompatibleItem implements ModelSource {
 		this.name = name;
 	}
 
-	public void setPostRenderer(CustomRenderer postRenderer) {
+	public void setPostRenderer(CustomRenderer<?> postRenderer) {
 		this.postRenderer = postRenderer;
 	}
 
-	public CustomRenderer getPostRenderer() {
+	public CustomRenderer<?> getPostRenderer() {
 		return postRenderer;
 	}
 
-	public CustomRenderer getPreRenderer() {
+	public CustomRenderer<?> getPreRenderer() {
 		return preRenderer;
 	}
 
-	public void setPreRenderer(CustomRenderer preRenderer) {
+	public void setPreRenderer(CustomRenderer<?> preRenderer) {
 		this.preRenderer = preRenderer;
 	}
 	
@@ -177,11 +184,20 @@ public class ItemAttachment<T> extends CompatibleItem implements ModelSource {
 		return name != null ? "Attachment [" + name + "]" : super.toString();
 	}
 
-	protected ApplyHandler2<T> getApply2() {
+	public ApplyHandler2<T> getApply2() {
 		return apply2;
 	}
 
 	protected ApplyHandler2<T> getRemove2() {
 		return remove2;
 	}
+
+    public MeleeWeaponApplyHandler<T> getApply3() {
+        return apply3;
+    }
+
+    public MeleeWeaponApplyHandler<T> getRemove3() {
+        return remove3;
+    }
+
 }

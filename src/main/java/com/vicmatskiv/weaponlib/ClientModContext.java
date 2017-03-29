@@ -8,16 +8,25 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.resources.IResourcePack;
-import net.minecraft.client.shader.Framebuffer;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.Item;
-
+import com.vicmatskiv.weaponlib.command.DebugCommand;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderingRegistry;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleWorldRenderer;
+import com.vicmatskiv.weaponlib.electronics.EntityWirelessCamera;
+import com.vicmatskiv.weaponlib.electronics.WirelessCameraRenderer;
+import com.vicmatskiv.weaponlib.melee.ItemMelee;
+import com.vicmatskiv.weaponlib.melee.MeleeRenderer;
+import com.vicmatskiv.weaponlib.melee.PlayerMeleeInstance;
+import com.vicmatskiv.weaponlib.perspective.PerspectiveManager;
+
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.IResourcePack;
+import net.minecraft.client.shader.Framebuffer;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Items;
+import net.minecraft.item.Item;
+import net.minecraftforge.client.ClientCommandHandler;
 
 public class ClientModContext extends CommonModContext {
 
@@ -36,9 +45,13 @@ public class ClientModContext extends CommonModContext {
 	
 	private StatusMessageCenter statusMessageCenter;
 	
+	private PerspectiveManager viewManager;
+	
 	@Override
 	public void init(Object mod, String modId, CompatibleChannel channel) {
 		super.init(mod, modId, channel);
+		
+		ClientCommandHandler.instance.registerCommand(new DebugCommand());
 		
 		this.statusMessageCenter = new StatusMessageCenter();
 		
@@ -67,31 +80,40 @@ public class ClientModContext extends CommonModContext {
 		compatibility.registerRenderingRegistry(rendererRegistry);
 		
 		compatibility.registerModEntity(WeaponSpawnEntity.class, "Ammo" + modEntityID, modEntityID++, mod, 64, 10, true);
-		
+	    compatibility.registerModEntity(EntityWirelessCamera.class, "wcam" + modEntityID, modEntityID++, mod, 200, 10, true);
+
 		rendererRegistry.registerEntityRenderingHandler(WeaponSpawnEntity.class, new SpawnEntityRenderer());
-	
+		rendererRegistry.registerEntityRenderingHandler(EntityWirelessCamera.class, new WirelessCameraRenderer(Items.snowball)); //new RenderSnowball(Items.snowball));
+		this.viewManager = new PerspectiveManager(this);
 	}
 	
-	protected CompatibleWorldRenderer getSecondWorldRenderer() {
-		if(this.entityRenderer == null) {
-			this.entityRenderer = new CompatibleWorldRenderer(Minecraft.getMinecraft(), 
-	        		Minecraft.getMinecraft().getResourceManager());
-		}
-		return this.entityRenderer;
-	}
+	@Override
+	public void registerServerSideOnly() {}
+	
+	public PerspectiveManager getViewManager() {
+        return viewManager;
+    }
+	
+//	public CompatibleWorldRenderer getSecondWorldRenderer() {
+//		if(this.entityRenderer == null) {
+//			this.entityRenderer = new CompatibleWorldRenderer(Minecraft.getMinecraft(), 
+//	        		Minecraft.getMinecraft().getResourceManager());
+//		}
+//		return this.entityRenderer;
+//	}
 	
 	public SafeGlobals getSafeGlobals() {
 		return safeGlobals;
 	}
 
-	public Framebuffer getFramebuffer() {
-		if(framebuffer == null) {
-			framebuffer = new Framebuffer(200, 200, true);
-	        framebuffer.setFramebufferColor(0.0F, 0.0F, 0.0F, 0.0F);
-		}
-		
-		return framebuffer;
-	}
+//	public Framebuffer getFramebuffer() {
+//		if(framebuffer == null) {
+//			framebuffer = new Framebuffer(200, 200, true);
+//	        framebuffer.setFramebufferColor(0.0F, 0.0F, 0.0F, 0.0F);
+//		}
+//		
+//		return framebuffer;
+//	}
 
 	@Override
 	public void registerWeapon(String name, Weapon weapon, WeaponRenderer renderer) {
@@ -145,4 +167,16 @@ public class ClientModContext extends CommonModContext {
 	public StatusMessageCenter getStatusMessageCenter() {
 		return statusMessageCenter;
 	}
+
+    public PlayerMeleeInstance getMainHeldMeleeWeapon() {
+        return getPlayerItemInstanceRegistry().getMainHandItemInstance(compatibility.clientPlayer(), 
+                PlayerMeleeInstance.class);
+    }
+    
+    @Override
+    public void registerMeleeWeapon(String name, ItemMelee itemMelee, MeleeRenderer renderer) {
+        super.registerMeleeWeapon(name, itemMelee, renderer);
+        rendererRegistry.register(itemMelee, itemMelee.getName(), itemMelee.getRenderer());
+        renderer.setClientModContext(this);
+    }
 }

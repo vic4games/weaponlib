@@ -14,17 +14,18 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientTickEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientTickEvent.Phase;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderTickEvent;
+import com.vicmatskiv.weaponlib.perspective.Perspective;
+import com.vicmatskiv.weaponlib.tracking.PlayerEntityTracker;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraftforge.common.util.FakePlayer;
 
 public class ClientEventHandler extends CompatibleClientEventHandler {
 	
 	private static final UUID SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER_UUID = UUID.fromString("8efa8469-0256-4f8e-bdd9-3e7b23970663");
 	private static final AttributeModifier SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER = (new AttributeModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER_UUID, "Slow Down While Zooming", -0.5, 2)).setSaved(false);
 
-	@SuppressWarnings("unused")
 	private static final Logger logger = LogManager.getLogger(ClientEventHandler.class);
 
 	private Lock mainLoopLock = new ReentrantLock();
@@ -34,6 +35,8 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 	
 	
 	private ClientModContext modContext;
+	
+	private FakePlayer fakePlayer;
 	
 	//private ReloadAspect reloadAspect;
 
@@ -53,12 +56,16 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 		} else if(event.getPhase() == Phase.END) {
 			update();
 			modContext.getSyncManager().run();
+			
+			PlayerEntityTracker tracker = PlayerEntityTracker.getTracker(compatibility.clientPlayer());
+			if(tracker != null) {
+			    tracker.update();
+			}
 			mainLoopLock.unlock();
 			processRunInClientThreadQueue();
 			safeGlobals.objectMouseOver.set(compatibility.getObjectMouseOver());
 			if(compatibility.clientPlayer() != null) {
 				safeGlobals.currentItemIndex.set(compatibility.clientPlayer().inventory.currentItem);
-				
 				//reloadAspect.updateMainHeldItem(compatibility.clientPlayer());
 			}
 		}
@@ -106,28 +113,22 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 			r.run();
 		}
 	}
-
+	
 	@Override
-	protected void onCompatibleRenerTickEvent(CompatibleRenderTickEvent event) {
-		if(event.getPhase() ==  CompatibleRenderTickEvent.Phase.START && compatibility.clientPlayer() != null) {
-			safeGlobals.renderingPhase.set(RenderingPhase.RENDER_VIEWFINDER);
-			long p_78471_2_ = this.renderEndNanoTime + (long)(1000000000 / 60);
-			
-			PlayerWeaponInstance instance = modContext.getMainHeldWeapon();
-			if(instance != null && instance.isAimed()) {
-				modContext.getFramebuffer().bindFramebuffer(true);
-				modContext.getSecondWorldRenderer().updateRenderer();
-				modContext.getSecondWorldRenderer().renderWorld(event.getRenderTickTime(), p_78471_2_);
-				Minecraft.getMinecraft().getFramebuffer().bindFramebuffer(true);
-			} else {
-				//logger.debug("Either instance is null or not aimed");
-			}
-				
-			this.renderEndNanoTime = System.nanoTime();
-			
-			safeGlobals.renderingPhase.set(RenderingPhase.NORMAL);
-		} else if(event.getPhase() ==  CompatibleRenderTickEvent.Phase.END) {
-			safeGlobals.renderingPhase.set(null);
-		}
-	}
+    protected void onCompatibleRenderTickEvent(CompatibleRenderTickEvent event) {
+        if(event.getPhase() ==  CompatibleRenderTickEvent.Phase.START && compatibility.clientPlayer() != null) {
+            
+            PlayerItemInstance<?> instance = modContext.getPlayerItemInstanceRegistry()
+                    .getMainHandItemInstance(compatibility.clientPlayer());
+            if(instance != null) {
+                Perspective<?> view = modContext.getViewManager().getPerspective(instance, true);
+                if(view != null) {
+                    view.update(event);
+                }
+            }
+ 
+        } else if(event.getPhase() ==  CompatibleRenderTickEvent.Phase.END) {
+            safeGlobals.renderingPhase.set(null);
+        }
+    }
 }

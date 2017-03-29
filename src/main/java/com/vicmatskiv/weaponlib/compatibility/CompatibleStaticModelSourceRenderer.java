@@ -10,7 +10,11 @@ import javax.vecmath.Matrix4f;
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.opengl.GL11;
 
+import com.vicmatskiv.weaponlib.CustomRenderer;
+import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.ModelSource;
+import com.vicmatskiv.weaponlib.RenderContext;
+import com.vicmatskiv.weaponlib.RenderableState;
 import com.vicmatskiv.weaponlib.StaticModelSourceRenderer.Builder;
 import com.vicmatskiv.weaponlib.Tuple;
 
@@ -42,7 +46,7 @@ import net.minecraftforge.client.model.IPerspectiveAwareModel;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class CompatibleStaticModelSourceRenderer extends ModelSourceRenderer implements IPerspectiveAwareModel, IBakedModel {
+public abstract class CompatibleStaticModelSourceRenderer extends ModelSourceRenderer implements IPerspectiveAwareModel, IBakedModel {
 
 	private Builder builder;
 	
@@ -151,7 +155,10 @@ public class CompatibleStaticModelSourceRenderer extends ModelSourceRenderer imp
 		GL11.glPushMatrix();
 		
 		GL11.glScaled(-1F, -1F, 1F);
+
 		EntityPlayer player = compatibility.clientPlayer();
+        RenderContext<RenderableState> renderContext = new RenderContext<>(getModContext(), player, itemStack);
+
 		switch (transformType)
 		{
 		case GROUND:
@@ -183,17 +190,23 @@ public class CompatibleStaticModelSourceRenderer extends ModelSourceRenderer imp
 			GL11.glRotatef(-45F, 0f, 1f, 0f);
 			GL11.glTranslatef(-0.3f, -0.855f, 0.5f);
 			builder.getFirstPersonPositioning().accept(player, itemStack);
-	        
+			CompatibleWeaponRenderer.renderLeftArm(player, renderContext, (p, c) -> {
+			    builder.getFirstPersonLeftHandPositioning().accept(c);
+			});
+			CompatibleWeaponRenderer.renderRightArm(player, renderContext, (p, c) -> {
+			    builder.getFirstPersonRightHandPositioning().accept(c);
+			});
 			break;
 		default:
 		}
 		
-		renderModelSource(itemStack, transformType, null,  0.0F, 0.0f, -0.4f, 0.0f, 0.0f, 0.08f);
+		renderModelSource(renderContext, itemStack, transformType, null,  0.0F, 0.0f, -0.4f, 0.0f, 0.0f, 0.08f);
 		
 		GL11.glPopMatrix();
 	}
 	
-	private void renderModelSource(
+
+	private void renderModelSource(RenderContext<RenderableState> renderContext,
 			ItemStack itemStack, TransformType type, Entity entity, 
 			float f, float f1, float f2, float f3, float f4, float f5) {
 		
@@ -203,7 +216,8 @@ public class CompatibleStaticModelSourceRenderer extends ModelSourceRenderer imp
 		
 		GL11.glPushMatrix();
 
-		for(Tuple<ModelBase, String> texturedModel: ((ModelSource)itemStack.getItem()).getTexturedModels()) {
+		ModelSource modelSource = (ModelSource)itemStack.getItem();
+        for(Tuple<ModelBase, String> texturedModel: modelSource.getTexturedModels()) {
 			Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(builder.getModId() 
 					+ ":textures/models/" + texturedModel.getV()));
 			GL11.glPushMatrix();
@@ -230,6 +244,25 @@ public class CompatibleStaticModelSourceRenderer extends ModelSourceRenderer imp
 			GL11.glPopAttrib();
 			GL11.glPopMatrix();
 		}
+		
+        @SuppressWarnings("unchecked")
+        CustomRenderer<RenderableState> postRenderer = (CustomRenderer<RenderableState>) modelSource.getPostRenderer();
+
+		if(postRenderer != null) {
+	        renderContext.setAgeInTicks(-0.4f);
+	        renderContext.setScale(0.08f);
+	        renderContext.setCompatibleTransformType(CompatibleTransformType.fromItemRenderType(type));
+
+	        renderContext.setPlayerItemInstance(getModContext().getPlayerItemInstanceRegistry()
+	                .getItemInstance(renderContext.getPlayer(), itemStack));
+
+            GL11.glPushMatrix();
+            GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_CURRENT_BIT);
+
+            postRenderer.render(renderContext);
+            GL11.glPopAttrib();
+            GL11.glPopMatrix();
+        }
 		GL11.glPopMatrix();
 	}
 
@@ -249,4 +282,7 @@ public class CompatibleStaticModelSourceRenderer extends ModelSourceRenderer imp
 		this.transformType = cameraTransformType;
 		return pair;
 	}
+	
+    protected abstract ModContext getModContext();
+
 }

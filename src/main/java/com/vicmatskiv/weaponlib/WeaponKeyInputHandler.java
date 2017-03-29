@@ -4,9 +4,13 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 
 import java.util.function.Function;
 
+import com.vicmatskiv.weaponlib.animation.DebugPositioner;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponKeyInputHandler;
+import com.vicmatskiv.weaponlib.electronics.PlayerTabletInstance;
+import com.vicmatskiv.weaponlib.melee.MeleeState;
+import com.vicmatskiv.weaponlib.melee.PlayerMeleeInstance;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -35,7 +39,35 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
 		EntityPlayer player = entityPlayerSupplier.apply(null);
     	ItemStack itemStack = compatibility.getHeldItemMainHand(player);
     	
-        if(KeyBindings.reloadKey.isPressed()) {
+    	if(DebugPositioner.isDebugModeEnabled() && KeyBindings.upArrowKey.isPressed()) {
+    	    DebugPositioner.incrementXRotation(5);
+    	} else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.downArrowKey.isPressed()) {
+    	    DebugPositioner.incrementXRotation(-5);
+        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.leftArrowKey.isPressed()) {
+            DebugPositioner.incrementYRotation(5);
+        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.rightArrowKey.isPressed()) {
+            DebugPositioner.incrementYRotation(-5);
+        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.jDebugKey.isPressed()) {
+            DebugPositioner.incrementZRotation(5);
+        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.kDebugKey.isPressed()) {
+            DebugPositioner.incrementZRotation(-5);
+        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.minusDebugKey.isPressed()) {
+            DebugPositioner.incrementXPosition(-0.025f);
+        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.equalsDebugKey.isPressed()) {
+            DebugPositioner.incrementXPosition(0.025f);
+        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.lBracketDebugKey.isPressed()) {
+            DebugPositioner.incrementYPosition(-0.025f);
+        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.rBracketDebugKey.isPressed()) {
+            DebugPositioner.incrementYPosition(0.025f);
+        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.semicolonDebugKey.isPressed()) {
+            DebugPositioner.incrementZPosition(-0.025f);
+        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.apostropheDebugKey.isPressed()) {
+            DebugPositioner.incrementZPosition(0.025f);
+        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.deleteDebugKey.isPressed()) {
+            DebugPositioner.reset();
+        }
+        
+        else if(KeyBindings.reloadKey.isPressed()) {
     		if(itemStack != null) {
     			Item item = itemStack.getItem();
     			if(item instanceof Reloadable) {
@@ -46,17 +78,14 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
         
         else if(KeyBindings.laserSwitchKey.isPressed()) {
         	PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
-    		if(instance != null && instance.getState() == WeaponState.READY || instance.getState() == WeaponState.MODIFYING) {
+    		if(instance != null && (instance.getState() == WeaponState.READY || instance.getState() == WeaponState.MODIFYING)) {
     			instance.setLaserOn(!instance.isLaserOn());
     		}
         }
         
         else if(KeyBindings.attachmentKey.isPressed()) {
-    		if(itemStack != null && itemStack.getItem() instanceof Weapon) {
-    			Item item = itemStack.getItem();
-    			if(item instanceof Modifiable) {
-    				((Modifiable) item).toggleClientAttachmentSelectionMode(player);
-    			}
+    		if(itemStack != null && itemStack.getItem() instanceof Modifiable /* && itemStack.getItem() instanceof Weapon*/) {
+    		    ((Modifiable) itemStack.getItem()).toggleClientAttachmentSelectionMode(player);
     		}
         } 
         
@@ -68,10 +97,15 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
         } 
         
         else if(KeyBindings.rightArrowKey.isPressed()) {
-    		PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
-    		if(instance != null && instance.getState() == WeaponState.MODIFYING) {
-    			modContext.getAttachmentAspect().changeAttachment(AttachmentCategory.SKIN, instance);
-    		}
+    		PlayerItemInstance<?> instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player);
+    		if(instance instanceof PlayerWeaponInstance && instance.getState() == WeaponState.MODIFYING) {
+    			modContext.getAttachmentAspect().changeAttachment(AttachmentCategory.SKIN, (PlayerWeaponInstance) instance);
+    		} else if(instance instanceof PlayerMeleeInstance && instance.getState() == MeleeState.MODIFYING) {
+                modContext.getMeleeAttachmentAspect().changeAttachment(AttachmentCategory.SKIN, (PlayerMeleeInstance) instance);
+            } else if(instance instanceof PlayerTabletInstance) {
+                PlayerTabletInstance playerTabletInstance = (PlayerTabletInstance) instance;
+                playerTabletInstance.nextActiveWatchIndex();
+            }
         } 
         
         else if(KeyBindings.downArrowKey.isPressed()) {

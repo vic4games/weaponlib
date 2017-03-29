@@ -60,6 +60,10 @@ public class PlayerItemInstanceRegistry {
 		return targetClass.isInstance(instance) ? targetClass.cast(instance) : null;
 	}
 	
+	public PlayerItemInstance<?> getMainHandItemInstance(EntityPlayer player) {
+	    return getItemInstance(player, compatibility.getCurrentInventoryItemIndex(player));
+	}
+	
 	public PlayerItemInstance<?> getItemInstance(EntityPlayer player, int slot) {
 		Map<Integer, PlayerItemInstance<?>> slotInstances = registry.computeIfAbsent(player.getPersistentID(), p -> new HashMap<>());
 		PlayerItemInstance<?> result = slotInstances.get(slot);

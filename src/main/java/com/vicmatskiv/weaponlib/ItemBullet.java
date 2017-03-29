@@ -22,7 +22,7 @@ public class ItemBullet extends ItemAttachment<Weapon> {
 
 		@Override
 		protected ItemAttachment<Weapon> createAttachment(ModContext modContext) {
-			ItemBullet bullet = new ItemBullet(modId, AttachmentCategory.BULLET, model, textureName, null, null, null);
+			ItemBullet bullet = new ItemBullet(getModId(), AttachmentCategory.BULLET, getModel(), getTextureName(), null, null, null);
 			bullet.compatibleMagazines = compatibleMagazines;
 			return bullet;
 		}

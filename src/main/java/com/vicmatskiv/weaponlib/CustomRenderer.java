@@ -1,6 +1,6 @@
 package com.vicmatskiv.weaponlib;
 
-public interface CustomRenderer {
+public interface CustomRenderer<RS> {
 
-	public void render(RenderContext renderContext);
+	public void render(RenderContext<RS> renderContext);
 }

@@ -23,18 +23,18 @@ public class ItemSkin extends ItemAttachment<Weapon> {
 
 		@Override
 		protected ItemAttachment<Weapon> createAttachment(ModContext modContext) {
-			ItemSkin skin = new ItemSkin(modId, AttachmentCategory.SKIN, model, textureName, null, null, null);
+			ItemSkin skin = new ItemSkin(getModId(), AttachmentCategory.SKIN, getModel(), getTextureName(), null, null, null);
 			skin.textureVariants = this.textureVariants;
 			return skin;
 		}
 		
 		@Override
 		public <V extends ItemAttachment<Weapon>> V build(ModContext modContext, Class<V> target) {
-			model = new FlatModel();
+			this.model = new FlatModel();
 			if(textureVariants.isEmpty()) {
-				textureVariants.add(textureName);
-			} else if(textureName == null) {
-				textureName = textureVariants.get(0);
+				textureVariants.add(getTextureName());
+			} else if(getTextureName() == null) {
+				this.textureName = textureVariants.get(0);
 			}
 			if(inventoryPositioning == null) {
 				withInventoryPositioning((itemStack) -> {

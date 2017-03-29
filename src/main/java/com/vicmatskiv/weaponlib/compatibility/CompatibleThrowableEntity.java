@@ -13,17 +13,18 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
 
-public abstract class CompatibleWeaponSpawnEntity extends EntityThrowable implements IEntityAdditionalSpawnData {
+public abstract class CompatibleThrowableEntity extends EntityThrowable implements IEntityAdditionalSpawnData {
 	
 	static final float DEFAULT_INACCURACY = 1f;
     private int ticksInAir;
 
-	public CompatibleWeaponSpawnEntity(World world) {
+	
+	public CompatibleThrowableEntity(World world) {
 		super(world);
 	}
 
-	public CompatibleWeaponSpawnEntity(World par1World, EntityLivingBase arg1EntityLivingBase) {
-		super(par1World, arg1EntityLivingBase);
+	public CompatibleThrowableEntity(World par1World, EntityLivingBase player) {
+		super(par1World, player);
 	}
 	
 	/**

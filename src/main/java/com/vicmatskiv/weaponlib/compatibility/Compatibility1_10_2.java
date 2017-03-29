@@ -10,6 +10,7 @@ import com.vicmatskiv.weaponlib.WorldHelper;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
@@ -29,6 +30,7 @@ import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.FOVUpdateEvent;
 import net.minecraftforge.client.event.GuiOpenEvent;
@@ -62,6 +64,12 @@ public class Compatibility1_10_2 implements Compatibility {
 	@SideOnly(Side.CLIENT)
 	public EntityPlayer clientPlayer() {
 		return Minecraft.getMinecraft().thePlayer;
+	}
+	
+	@Override
+	@SideOnly(Side.CLIENT)
+	public void setClientPlayer(EntityPlayer player) {
+	    Minecraft.getMinecraft().thePlayer = (EntityPlayerSP) player;
 	}
 
 	@Override
@@ -242,7 +250,7 @@ public class Compatibility1_10_2 implements Compatibility {
 	}
 
 	@Override
-	public void registerModEntity(Class<WeaponSpawnEntity> entityClass, String entityName, int id, Object mod, 
+	public void registerModEntity(Class<? extends Entity> entityClass, String entityName, int id, Object mod, 
 			int trackingRange, int updateFrequency, boolean sendsVelocityUpdates) {
 		net.minecraftforge.fml.common.registry.EntityRegistry.registerModEntity
 			(entityClass, entityName, id, mod, trackingRange, updateFrequency, sendsVelocityUpdates);
@@ -479,4 +487,33 @@ public class Compatibility1_10_2 implements Compatibility {
 		}
 		return result;
 	}
+
+    @Override
+    public void addBlockHitEffect(CompatibleRayTraceResult position) {
+        for(int i = 0; i < 6; i++) {
+            Minecraft.getMinecraft().effectRenderer.addBlockHitEffects(
+                    position.getBlockPos().getBlockPos(), position.getSideHit().getEnumFacing());
+        }
+    }
+
+    @Override
+    public String getDisplayName(EntityPlayer player) {
+        return player.getDisplayNameString();
+    }
+
+    @Override
+    public void clickBlock(CompatibleBlockPos blockPos, CompatibleEnumFacing sideHit) {
+        Minecraft.getMinecraft().playerController.clickBlock(blockPos.getBlockPos(), sideHit.getEnumFacing());
+    }
+
+    @Override
+    public boolean isAirBlock(World world, CompatibleBlockPos blockPos) {
+        return world.isAirBlock(blockPos.getBlockPos());
+    }
+
+    @Override
+    public void addChatMessage(Entity entity, String message) {
+        entity.addChatMessage(new TextComponentString(message));
+
+    }
 }
