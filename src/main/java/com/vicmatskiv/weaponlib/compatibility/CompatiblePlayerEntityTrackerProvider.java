@@ -2,6 +2,7 @@ package com.vicmatskiv.weaponlib.compatibility;
 
 import java.util.function.Function;
 
+import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.tracking.PlayerEntityTracker;
 
 import net.minecraft.entity.player.EntityPlayer;
@@ -12,17 +13,42 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.Capability.IStorage;
 import net.minecraftforge.common.capabilities.CapabilityInject;
+import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 
 public class CompatiblePlayerEntityTrackerProvider implements ICapabilitySerializable<NBTBase> {
+    
+    public static void register(ModContext modContext) {
+        CapabilityManager.INSTANCE.register(PlayerEntityTrackerContainer.class, new PlayerEntityTrackerStorage(), 
+                PlayerEntityTrackerContainerImpl.class);
+    }
 
-    public interface PlayerEntityTrackerContainer {
+    public static interface PlayerEntityTrackerContainer {
         
         public byte[] toByteArray();
         
         public void setInitializer(Function<World, PlayerEntityTracker> initializer);
         
         public PlayerEntityTracker getTracker(World world);
+    }
+    
+    public static class PlayerEntityTrackerContainerImpl implements PlayerEntityTrackerContainer {
+
+        @Override
+        public byte[] toByteArray() {
+            return null;
+        }
+
+        @Override
+        public void setInitializer(Function<World, PlayerEntityTracker> initializer) {
+           
+        }
+
+        @Override
+        public PlayerEntityTracker getTracker(World world) {
+            return null;
+        }
+        
     }
     
     public static class PlayerEntityTrackerStorage implements IStorage<PlayerEntityTrackerContainer> {
@@ -51,6 +77,7 @@ public class CompatiblePlayerEntityTrackerProvider implements ICapabilitySeriali
 
     
     public static PlayerEntityTracker getTracker(EntityPlayer player) {
+        if(player == null) return null;
         PlayerEntityTrackerContainer container = player.getCapability(playerEntityTrackerContainer, null);
         PlayerEntityTracker result;
         if(container != null) {

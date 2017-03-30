@@ -12,6 +12,7 @@ import com.vicmatskiv.weaponlib.WeaponAttachmentAspect.ExitAttachmentModePermit;
 import com.vicmatskiv.weaponlib.WeaponReloadAspect.UnloadPermit;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
+import com.vicmatskiv.weaponlib.compatibility.CompatiblePlayerEntityTrackerProvider;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSide;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 import com.vicmatskiv.weaponlib.crafting.RecipeGenerator;
@@ -154,6 +155,8 @@ public class CommonModContext implements ModContext {
 		
 		compatibility.registerWithFmlEventBus(new WeaponKeyInputHandler(this, (ctx) -> getPlayer(ctx), 
 				weaponAttachmentAspect, channel));
+		
+		CompatiblePlayerEntityTrackerProvider.register(this);
 	}
 	
 	public void registerServerSideOnly() {

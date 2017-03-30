@@ -6,6 +6,9 @@ import java.util.function.Predicate;
 import com.vicmatskiv.weaponlib.Weapon;
 import com.vicmatskiv.weaponlib.WeaponSpawnEntity;
 import com.vicmatskiv.weaponlib.WorldHelper;
+import com.vicmatskiv.weaponlib.compatibility.CompatiblePlayerEntityTrackerProvider.PlayerEntityTrackerContainer;
+import com.vicmatskiv.weaponlib.compatibility.CompatiblePlayerEntityTrackerProvider.PlayerEntityTrackerContainerImpl;
+import com.vicmatskiv.weaponlib.compatibility.CompatiblePlayerEntityTrackerProvider.PlayerEntityTrackerStorage;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -39,6 +42,7 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.Pre;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.util.EnumHelper;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
 import net.minecraftforge.fml.client.FMLClientHandler;
