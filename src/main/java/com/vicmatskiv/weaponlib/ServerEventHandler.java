@@ -14,9 +14,11 @@ import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
 public class ServerEventHandler extends CompatibleServerEventHandler {
 
     private ModContext modContext;
+    private String modId;
 
-    public ServerEventHandler(ModContext modContext) {
+    public ServerEventHandler(ModContext modContext, String modId) {
         this.modContext = modContext;
+        this.modId = modId;
     }
 
     @Override
@@ -47,4 +49,9 @@ public class ServerEventHandler extends CompatibleServerEventHandler {
 
     @Override
     protected void onCompatibleTick(ServerTickEvent event) {}
+    
+    @Override
+    public String getModId() {
+        return modId;
+    }
 }

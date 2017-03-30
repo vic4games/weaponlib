@@ -48,7 +48,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 public abstract class CompatibleStaticModelSourceRenderer extends ModelSourceRenderer implements IPerspectiveAwareModel, IBakedModel {
 
-	private Builder builder;
+	protected Builder builder;
 	
 	protected EntityPlayer owner;
 

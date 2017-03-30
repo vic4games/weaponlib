@@ -99,7 +99,6 @@ public class TrackableEntity {
         buf.writeLong(trackingDuration);
     }
     
-    @SuppressWarnings("unchecked")
     private Entity getEntityByUuid(UUID uuid, World world) {
         return (Entity)world.getLoadedEntityList()
                 .stream()

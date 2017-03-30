@@ -1,8 +1,10 @@
 package com.vicmatskiv.weaponlib.compatibility;
 
-import com.vicmatskiv.weaponlib.ExtendedPlayerProperties;
 
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.EntityEvent.EntityConstructing;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
@@ -13,6 +15,8 @@ import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
 
 public abstract class CompatibleServerEventHandler {
+    
+    public abstract String getModId();
 
 	@SubscribeEvent
 	public void onItemToss(ItemTossEvent itemTossEvent) {
@@ -41,25 +45,28 @@ public abstract class CompatibleServerEventHandler {
     }
 	
 	protected abstract void onCompatibleTick(ServerTickEvent event);
-
+	
+	@SubscribeEvent
+	public void attachCapability(AttachCapabilitiesEvent<Entity> event)
+	{
+	    if(event.getObject() instanceof EntityPlayer) {
+	        ResourceLocation PLAYER_ENTITY_TRACKER = new ResourceLocation(getModId(), "PLAYER_ENTITY_TRACKER");
+	        event.addCapability(PLAYER_ENTITY_TRACKER, new CompatiblePlayerEntityTrackerProvider());
+	    }
+	}
+	 
     @SubscribeEvent
     public void onEntityConstructing(EntityConstructing event) {
-        if (event.getEntity() instanceof EntityPlayer) {
-            ExtendedPlayerProperties.init((EntityPlayer) event.getEntity());
-        }
     }
     
     @SubscribeEvent
-    //@SideOnly(Side.SERVER)
     public void onEntityJoinWorld(EntityJoinWorldEvent e) {
-        onCompatibleEntityJoinWorld(new CompatibleEntityJoinWorldEvent(e));
     }
 
     protected abstract void onCompatibleEntityJoinWorld(CompatibleEntityJoinWorldEvent e);
 
     @SubscribeEvent
     public void playerStartedTracking(PlayerEvent.StartTracking e) {
-        onCompatiblePlayerStartedTracking(new CompatibleStartTrackingEvent(e));
     }
 
     protected abstract void onCompatiblePlayerStartedTracking(CompatibleStartTrackingEvent e);

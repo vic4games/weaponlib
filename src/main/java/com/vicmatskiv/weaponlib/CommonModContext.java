@@ -148,7 +148,7 @@ public class CommonModContext implements ModContext {
 		channel.registerMessage(new SpawnParticleMessageHandler(),
 		        SpawnParticleMessage.class, 18, CompatibleSide.CLIENT);
 		
-		ServerEventHandler serverHandler = new ServerEventHandler(this);
+		ServerEventHandler serverHandler = new ServerEventHandler(this, modId);
         compatibility.registerWithFmlEventBus(serverHandler);
         compatibility.registerWithEventBus(serverHandler);
 		

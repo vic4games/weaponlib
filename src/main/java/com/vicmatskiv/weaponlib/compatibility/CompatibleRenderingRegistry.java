@@ -6,13 +6,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.vicmatskiv.weaponlib.WeaponSpawnEntity;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ItemModelMesher;
 import net.minecraft.client.renderer.RenderItem;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.resources.IResourceManager;
+import net.minecraft.entity.Entity;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.ModelBakeEvent;
@@ -72,8 +71,8 @@ public class CompatibleRenderingRegistry implements ICustomModelLoader {
 	}
 
 	@SuppressWarnings("deprecation")
-	public void registerEntityRenderingHandler(Class<WeaponSpawnEntity> class1,
+	public void registerEntityRenderingHandler(Class<? extends Entity> class1,
 	        CompatibleEntityRenderer spawnEntityRenderer) {
-		RenderingRegistry.registerEntityRenderingHandler(WeaponSpawnEntity.class, spawnEntityRenderer);
+		RenderingRegistry.registerEntityRenderingHandler(class1, spawnEntityRenderer);
 	}
 }

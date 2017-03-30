@@ -3,18 +3,15 @@ package com.vicmatskiv.weaponlib;
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleTargetPoint;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleThrowableEntity;
 import com.vicmatskiv.weaponlib.particle.SpawnParticleMessage;
-import com.vicmatskiv.weaponlib.tracking.SyncPlayerEntityTrackerMessage;
 
-import cpw.mods.fml.common.network.NetworkRegistry.TargetPoint;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
-import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 
 public class WeaponSpawnEntity extends CompatibleThrowableEntity {
@@ -106,7 +103,7 @@ public class WeaponSpawnEntity extends CompatibleThrowableEntity {
 				
 				System.out.println("Hit entity: " + position.getEntityHit());
 				
-	            TargetPoint point = new TargetPoint(position.getEntityHit().dimension, 
+	            CompatibleTargetPoint point = new CompatibleTargetPoint(position.getEntityHit().dimension, 
 	                    this.posX, this.posY, this.posZ, 100);
 
 	            System.out.printf("Last tick pos at %.2f %.2f %.2f\n", 
@@ -114,7 +111,7 @@ public class WeaponSpawnEntity extends CompatibleThrowableEntity {
 	            
 	            double magnitude = Math.sqrt(motionX * motionX + motionY * motionY + motionZ * motionZ) + 2;
 	            
-				weapon.getModContext().getChannel().getChannel().sendToAllAround(new SpawnParticleMessage(
+				weapon.getModContext().getChannel().sendToAllAround(new SpawnParticleMessage(
 				        position.getEntityHit().posX - motionX / magnitude, 
 				        position.getEntityHit().posY - motionY / magnitude, 
 				        position.getEntityHit().posZ - motionZ / magnitude),

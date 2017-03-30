@@ -5,9 +5,10 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessage;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageHandler;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleParticle;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleParticle.CompatibleParticleBreaking;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.init.Items;
 import net.minecraft.world.World;
 
 public class SpawnParticleMessageHandler implements CompatibleMessageHandler<SpawnParticleMessage, CompatibleMessage>  {
@@ -21,8 +22,8 @@ public class SpawnParticleMessageHandler implements CompatibleMessageHandler<Spa
                 for (int i = 0; i < 15; ++i) {
                     System.out.printf("Spawning at %.2f %.2f %.2f\n", 
                             message.getPosX(), message.getPosY(), message.getPosZ());
-                    EntityBreakingFX particle = new EntityBreakingFX(world, message.getPosX(), message.getPosY() + 1, message.getPosZ(), 
-                            Items.redstone);
+                    CompatibleParticleBreaking particle = CompatibleParticle.createParticleBreaking(
+                            world, message.getPosX(), message.getPosY() + 1, message.getPosZ(), null);
                     Minecraft.getMinecraft().effectRenderer.addEffect(particle);
 //                    world.spawnParticle("snowballpoof", message.getPosX(), 
 //                            message.getPosY() + 1, message.getPosZ(), 0.0D, 0.0D, 0.0D);
