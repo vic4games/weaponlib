@@ -12,7 +12,7 @@ public class SyncPlayerEntityTrackerMessageMessageHandler implements CompatibleM
 	@Override
 	public <T extends CompatibleMessage> T onCompatibleMessage(SyncPlayerEntityTrackerMessage message, CompatibleMessageContext ctx) {
 		if(!ctx.isServerSide()) {
-		    ctx.runInMainThread(() -> {
+		    compatibility.runInMainClientThread(() -> {
 		        CompatiblePlayerEntityTrackerProvider.setTracker(compatibility.clientPlayer(), message.getTracker().apply(compatibility.world(compatibility.clientPlayer())));
 		    });
 		}

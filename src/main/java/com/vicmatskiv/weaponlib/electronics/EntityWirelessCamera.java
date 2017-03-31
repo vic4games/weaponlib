@@ -20,6 +20,10 @@ public class EntityWirelessCamera extends CompatibleThrowableEntity {
     private ModContext modContext;
     private long trackingDuration = 10 * 1000 * 60;
     
+    static final float DEFAULT_INACCURACY = 1f;
+    private float speed;
+    private float gravityVelocity;
+    
     public EntityWirelessCamera(ModContext modContext, World world, EntityPlayer player) {
         super(world, player);
         this.modContext = modContext;
@@ -31,6 +35,32 @@ public class EntityWirelessCamera extends CompatibleThrowableEntity {
     
     public EntityWirelessCamera(World world) {
         super(world);
+    }
+    
+    public EntityWirelessCamera(ModContext modContext, 
+            World world, 
+            EntityLivingBase player, 
+            float speed,
+            float gravityVelocity) 
+    {
+        super(world, player);
+        this.modContext = modContext;
+        this.speed = speed;
+        this.gravityVelocity = gravityVelocity;
+
+        // TODO: validate for 1.7.10 the code below
+        this.setSize(0.25F, 0.25F);
+        this.setLocationAndAngles(player.posX, player.posY + (double)player.getEyeHeight(), player.posZ, player.rotationYaw, player.rotationPitch);
+        this.posX -= (double)(compatibility.getMathHelper().cos(this.rotationYaw / 180.0F * (float)Math.PI) * 0.16F);
+        this.posY -= 0.10000000149011612D;
+        this.posZ -= (double)(compatibility.getMathHelper().sin(this.rotationYaw / 180.0F * (float)Math.PI) * 0.16F);
+        this.setPosition(this.posX, this.posY, this.posZ);
+        float f = 0.4F;
+        this.motionX = (double)(-compatibility.getMathHelper().sin(this.rotationYaw / 180.0F * (float)Math.PI) * compatibility.getMathHelper().cos(this.rotationPitch / 180.0F * (float)Math.PI) * f);
+        this.motionZ = (double)(compatibility.getMathHelper().cos(this.rotationYaw / 180.0F * (float)Math.PI) * compatibility.getMathHelper().cos(this.rotationPitch / 180.0F * (float)Math.PI) * f);
+        float pitchOffset = 0f;
+        this.motionY = (double)(-compatibility.getMathHelper().sin((this.rotationPitch + pitchOffset) / 180.0F * (float)Math.PI) * f);
+        this.setThrowableHeading(this.motionX, this.motionY, this.motionZ, speed, DEFAULT_INACCURACY);
     }
 
     protected void onImpact(CompatibleRayTraceResult rayTraceResult) {
@@ -105,13 +135,17 @@ public class EntityWirelessCamera extends CompatibleThrowableEntity {
     }
 
     @Override
-    protected float getInaccuracy() {
-        // TODO Auto-generated method stub
-        return 0;
+    protected float getGravityVelocity() {
+        return gravityVelocity;
+    };
+    
+    @Override 
+    protected float getVelocity() {
+        return speed;
     }
 
     @Override
-    protected float getVelocity() {
-        return 0.5f;
+    protected float getInaccuracy() {
+        return DEFAULT_INACCURACY;
     }
 }

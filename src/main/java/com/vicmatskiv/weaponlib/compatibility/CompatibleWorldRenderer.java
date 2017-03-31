@@ -168,6 +168,7 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
     private int shaderIndex;
     private boolean useShader;
     private int frameCount;
+    private boolean prepareTerrain;
 
     public CompatibleWorldRenderer(Minecraft mcIn, IResourceManager resourceManagerIn)
     {
@@ -193,6 +194,10 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
                 this.rainYCoords[i << 5 | j] = f / f2;
             }
         }
+    }
+    
+    public void setPrepareTerrain(boolean prepareTerrain) {
+        this.prepareTerrain = prepareTerrain;
     }
 
     public boolean isShaderActive()
@@ -221,29 +226,29 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
      */
     public void loadEntityShader(Entity entityIn)
     {
-        if (OpenGlHelper.shadersSupported)
-        {
-            if (this.theShaderGroup != null)
-            {
-                this.theShaderGroup.deleteShaderGroup();
-            }
-
-            this.theShaderGroup = null;
-
-            if (entityIn instanceof EntityCreeper)
-            {
-                this.loadShader(new ResourceLocation("shaders/post/creeper.json"));
-            }
-            else if (entityIn instanceof EntitySpider)
-            {
-                this.loadShader(new ResourceLocation("shaders/post/spider.json"));
-            }
-            else if (entityIn instanceof EntityEnderman)
-            {
-                this.loadShader(new ResourceLocation("shaders/post/invert.json"));
-            }
-            else net.minecraftforge.client.ForgeHooksClient.loadEntityShader(entityIn, this);
-        }
+//        if (OpenGlHelper.shadersSupported)
+//        {
+//            if (this.theShaderGroup != null)
+//            {
+//                this.theShaderGroup.deleteShaderGroup();
+//            }
+//
+//            this.theShaderGroup = null;
+//
+//            if (entityIn instanceof EntityCreeper)
+//            {
+//                this.loadShader(new ResourceLocation("shaders/post/creeper.json"));
+//            }
+//            else if (entityIn instanceof EntitySpider)
+//            {
+//                this.loadShader(new ResourceLocation("shaders/post/spider.json"));
+//            }
+//            else if (entityIn instanceof EntityEnderman)
+//            {
+//                this.loadShader(new ResourceLocation("shaders/post/invert.json"));
+//            }
+//            else net.minecraftforge.client.ForgeHooksClient.loadEntityShader(entityIn, this);
+//        }
     }
 
     public void loadShader(ResourceLocation resourceLocationIn)
@@ -330,23 +335,23 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
         float f2 = f3 * (1.0F - f4) + f4;
         this.fogColor1 += (f2 - this.fogColor1) * 0.1F;
         ++this.rendererUpdateCount;
-        this.itemRenderer.updateEquippedItem();
+//        this.itemRenderer.updateEquippedItem();
         this.addRainParticles();
         this.bossColorModifierPrev = this.bossColorModifier;
 
-        if (this.mc.ingameGUI.getBossOverlay().shouldDarkenSky())
-        {
-            this.bossColorModifier += 0.05F;
-
-            if (this.bossColorModifier > 1.0F)
-            {
-                this.bossColorModifier = 1.0F;
-            }
-        }
-        else if (this.bossColorModifier > 0.0F)
-        {
-            this.bossColorModifier -= 0.0125F;
-        }
+//        if (this.mc.ingameGUI.getBossOverlay().shouldDarkenSky())
+//        {
+//            this.bossColorModifier += 0.05F;
+//
+//            if (this.bossColorModifier > 1.0F)
+//            {
+//                this.bossColorModifier = 1.0F;
+//            }
+//        }
+//        else if (this.bossColorModifier > 0.0F)
+//        {
+//            this.bossColorModifier -= 0.0125F;
+//        }
     }
 
     public ShaderGroup getShaderGroup()
@@ -1258,7 +1263,7 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
         boolean flag = this.isDrawBlockOutline();
         GlStateManager.enableCull();
         this.mc.mcProfiler.endStartSection("clear");
-        GlStateManager.viewport(0, 0, 200, 200);
+        GlStateManager.viewport(0, 0, this.mc.displayWidth, this.mc.displayHeight);
         this.updateFogColor(partialTicks);
         GlStateManager.clear(16640);
         this.mc.mcProfiler.endStartSection("camera");
@@ -1281,12 +1286,14 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
             this.mc.mcProfiler.endStartSection("sky");
             GlStateManager.matrixMode(5889);
             GlStateManager.loadIdentity();
-            Project.gluPerspective(this.getFOVModifier(partialTicks, true), 1f, 0.05F, this.farPlaneDistance * 2.0F);
+            Project.gluPerspective(this.getFOVModifier(partialTicks, true), 
+                    (float)this.mc.displayWidth / (float)this.mc.displayHeight, 0.05F, this.farPlaneDistance * 2.0F);
             GlStateManager.matrixMode(5888);
             renderglobal.renderSky(partialTicks, pass);
             GlStateManager.matrixMode(5889);
             GlStateManager.loadIdentity();
-            Project.gluPerspective(this.getFOVModifier(partialTicks, true), 1f, 0.05F, this.farPlaneDistance * MathHelper.SQRT_2);
+            Project.gluPerspective(this.getFOVModifier(partialTicks, true), 
+                    (float)this.mc.displayWidth / (float)this.mc.displayHeight, 0.05F, this.farPlaneDistance * MathHelper.SQRT_2);
             GlStateManager.matrixMode(5888);
         }
 
@@ -1299,7 +1306,6 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
         }
 
 
-        
         this.mc.mcProfiler.endStartSection("prepareterrain");
         this.setupFog(0, partialTicks);
         
@@ -1309,9 +1315,11 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
         this.mc.mcProfiler.endStartSection("terrain_setup");
         
         
-        //renderglobal.setupTerrain(entity, (double)partialTicks, icamera, this.frameCount++, this.mc.thePlayer.isSpectator());
+        if(prepareTerrain) {
+            renderglobal.setupTerrain(entity, (double)partialTicks, icamera, this.frameCount++, this.mc.thePlayer.isSpectator());
 
-        
+        }
+
         if (pass == 0 || pass == 2)
         {
             this.mc.mcProfiler.endStartSection("updatechunks");
@@ -1443,7 +1451,8 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
             this.mc.mcProfiler.endStartSection("clouds");
             GlStateManager.matrixMode(5889);
             GlStateManager.loadIdentity();
-            Project.gluPerspective(this.getFOVModifier(partialTicks, true), 1f, 0.05F, this.farPlaneDistance * 4.0F);
+            Project.gluPerspective(this.getFOVModifier(partialTicks, true), 
+                    (float)this.mc.displayWidth / (float)this.mc.displayHeight, 0.05F, this.farPlaneDistance * 4.0F);
             GlStateManager.matrixMode(5888);
             GlStateManager.pushMatrix();
             this.setupFog(0, partialTicks);
@@ -1452,7 +1461,8 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
             GlStateManager.popMatrix();
             GlStateManager.matrixMode(5889);
             GlStateManager.loadIdentity();
-            Project.gluPerspective(this.getFOVModifier(partialTicks, true), 1f, 0.05F, this.farPlaneDistance * MathHelper.SQRT_2);
+            Project.gluPerspective(this.getFOVModifier(partialTicks, true), 
+                    (float)this.mc.displayWidth / (float)this.mc.displayHeight, 0.05F, this.farPlaneDistance * MathHelper.SQRT_2);
             GlStateManager.matrixMode(5888);
         }
     }

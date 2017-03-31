@@ -67,6 +67,7 @@ public abstract class CompatibleServerEventHandler {
 
     @SubscribeEvent
     public void playerStartedTracking(PlayerEvent.StartTracking e) {
+        onCompatiblePlayerStartedTracking(new CompatibleStartTrackingEvent(e));
     }
 
     protected abstract void onCompatiblePlayerStartedTracking(CompatibleStartTrackingEvent e);

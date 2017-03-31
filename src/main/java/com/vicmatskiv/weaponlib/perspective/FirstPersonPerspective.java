@@ -4,15 +4,25 @@ import com.vicmatskiv.weaponlib.RenderingPhase;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderTickEvent;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.particle.ParticleManager;
+import net.minecraft.client.renderer.EntityRenderer;
+import net.minecraft.client.renderer.RenderGlobal;
 
 public class FirstPersonPerspective<S> extends Perspective<S> {
     
     private long renderEndNanoTime;
     
+//    private RenderGlobal renderGlobal;
+//    private ParticleManager effectRenderer;
+    
     public FirstPersonPerspective() {
         this.renderEndNanoTime = System.nanoTime();
         this.width = Minecraft.getMinecraft().displayWidth;
         this.height = Minecraft.getMinecraft().displayHeight;
+//        this.renderGlobal = new CompatibleRenderGlobal(Minecraft.getMinecraft());
+//        WorldClient world = (WorldClient) compatibility.world(compatibility.clientPlayer());
+//        this.effectRenderer = new ParticleManager(world, Minecraft.getMinecraft().getTextureManager());
+//        this.renderGlobal.setWorldAndLoadRenderers(world);
     }
     
     @Override
@@ -21,11 +31,28 @@ public class FirstPersonPerspective<S> extends Perspective<S> {
         long p_78471_2_ = this.renderEndNanoTime + (long)(1000000000 / 60);
         int origDisplayWidth = Minecraft.getMinecraft().displayWidth;
         int origDisplayHeight = Minecraft.getMinecraft().displayHeight;
+        
+        RenderGlobal origRenderGlobal = Minecraft.getMinecraft().renderGlobal;
+        ParticleManager origEffectRenderer = Minecraft.getMinecraft().effectRenderer;
+        EntityRenderer origEntityRenderer = Minecraft.getMinecraft().entityRenderer;
+        
         framebuffer.bindFramebuffer(true);
+        
         Minecraft.getMinecraft().displayWidth = width;
         Minecraft.getMinecraft().displayHeight = height;
+        
+        Minecraft.getMinecraft().entityRenderer = this.entityRenderer;
+        //Minecraft.getMinecraft().renderGlobal = this.renderGlobal;
+        //Minecraft.getMinecraft().effectRenderer = this.effectRenderer;
+        
+        this.entityRenderer.setPrepareTerrain(false);
         this.entityRenderer.updateRenderer();
         this.entityRenderer.renderWorld(event.getRenderTickTime(), p_78471_2_);
+        
+        //Minecraft.getMinecraft().renderGlobal = origRenderGlobal;
+        //Minecraft.getMinecraft().effectRenderer = origEffectRenderer;
+        Minecraft.getMinecraft().entityRenderer = origEntityRenderer;
+        
         Minecraft.getMinecraft().getFramebuffer().bindFramebuffer(true);
         Minecraft.getMinecraft().displayWidth = origDisplayWidth;
         Minecraft.getMinecraft().displayHeight = origDisplayHeight;

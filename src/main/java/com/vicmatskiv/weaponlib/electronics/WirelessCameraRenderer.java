@@ -29,7 +29,7 @@ public class WirelessCameraRenderer extends CompatibleEntityRenderer {
 //            }
 //        }
         
-        throw new UnsupportedOperationException("Implement me");
+        //throw new UnsupportedOperationException("Implement me");
     }
 
     @Override

@@ -70,4 +70,8 @@ public class CompatiblePlayerCreatureWrapper extends EntityPlayerSP {
     public float getFovModifier() {
         return 0.5f;
     }
+    
+    public boolean isUser() {
+        return false; // Ugly huck to allow user self rendering in remote perspective
+    }
 }

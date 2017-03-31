@@ -29,24 +29,39 @@ public class CompatiblePlayerEntityTrackerProvider implements ICapabilitySeriali
         
         public void setInitializer(Function<World, PlayerEntityTracker> initializer);
         
+        public void setBytes(byte[] bytes);
+        
         public PlayerEntityTracker getTracker(World world);
     }
     
     public static class PlayerEntityTrackerContainerImpl implements PlayerEntityTrackerContainer {
+        
+        private Function<World, PlayerEntityTracker> initializer; // = w -> new PlayerEntityTracker(w);
+        private PlayerEntityTracker resolved;
+        private byte[] bytes;
 
         @Override
         public byte[] toByteArray() {
-            return null;
+            return resolved == null ? bytes : resolved.toByteArray();
+        }
+        
+        @Override
+        public void setBytes(byte[] bytes) {
+            this.bytes = bytes;
         }
 
         @Override
         public void setInitializer(Function<World, PlayerEntityTracker> initializer) {
-           
+           this.initializer = initializer;
+           this.resolved = null;
         }
 
         @Override
         public PlayerEntityTracker getTracker(World world) {
-            return null;
+            if(resolved == null) {
+                resolved = initializer != null ? initializer.apply(world) : null;
+            }
+            return resolved;
         }
         
     }
@@ -65,6 +80,7 @@ public class CompatiblePlayerEntityTrackerProvider implements ICapabilitySeriali
             NBTTagByteArray content = (NBTTagByteArray) nbt;
             byte[] bytes = content.getByteArray();
             if(bytes != null) {
+                instance.setBytes(bytes);
                 instance.setInitializer(w -> PlayerEntityTracker.fromByteArray(bytes, w));
             }
         }

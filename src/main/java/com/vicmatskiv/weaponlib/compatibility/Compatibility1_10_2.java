@@ -6,9 +6,6 @@ import java.util.function.Predicate;
 import com.vicmatskiv.weaponlib.Weapon;
 import com.vicmatskiv.weaponlib.WeaponSpawnEntity;
 import com.vicmatskiv.weaponlib.WorldHelper;
-import com.vicmatskiv.weaponlib.compatibility.CompatiblePlayerEntityTrackerProvider.PlayerEntityTrackerContainer;
-import com.vicmatskiv.weaponlib.compatibility.CompatiblePlayerEntityTrackerProvider.PlayerEntityTrackerContainerImpl;
-import com.vicmatskiv.weaponlib.compatibility.CompatiblePlayerEntityTrackerProvider.PlayerEntityTrackerStorage;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -18,6 +15,7 @@ import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.model.ModelBiped.ArmPose;
+import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.Entity;
@@ -42,7 +40,6 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.Pre;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.util.EnumHelper;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
 import net.minecraftforge.fml.client.FMLClientHandler;
@@ -519,5 +516,10 @@ public class Compatibility1_10_2 implements Compatibility {
     public void addChatMessage(Entity entity, String message) {
         entity.addChatMessage(new TextComponentString(message));
 
+    }
+
+    @Override
+    public RenderGlobal createCompatibleRenderGlobal() {
+        return Minecraft.getMinecraft().renderGlobal; //new CompatibleRenderGlobal(Minecraft.getMinecraft());
     }
 }
