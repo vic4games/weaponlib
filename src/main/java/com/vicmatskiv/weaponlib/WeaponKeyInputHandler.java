@@ -131,14 +131,14 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
         
         else if(KeyBindings.addKey.isPressed()) {
         	PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
-    		if(instance != null && instance.getState() == WeaponState.READY) {
+    		if(instance != null && (instance.getState() == WeaponState.READY || instance.getState() == WeaponState.EJECT_REQUIRED)) {
     			instance.getWeapon().incrementZoom(instance);
     		}
         }
         
         else if(KeyBindings.subtractKey.isPressed()) {
         	PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
-    		if(instance != null && instance.getState() == WeaponState.READY) {
+            if(instance != null && (instance.getState() == WeaponState.READY || instance.getState() == WeaponState.EJECT_REQUIRED)) {
     			instance.getWeapon().decrementZoom(instance);
     		}
         }

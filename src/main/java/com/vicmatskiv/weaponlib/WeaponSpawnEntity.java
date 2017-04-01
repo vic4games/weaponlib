@@ -107,8 +107,8 @@ public class WeaponSpawnEntity extends CompatibleThrowableEntity {
 	            CompatibleTargetPoint point = new CompatibleTargetPoint(position.getEntityHit().dimension, 
 	                    this.posX, this.posY, this.posZ, 100);
 
-	            System.out.printf("Last tick pos at %.2f %.2f %.2f\n", 
-                        lastTickPosX, lastTickPosY, lastTickPosZ);
+//	            System.out.printf("Last tick pos at %.2f %.2f %.2f\n", 
+//                        lastTickPosX, lastTickPosY, lastTickPosZ);
 	            
 	            double magnitude = Math.sqrt(motionX * motionX + motionY * motionY + motionZ * motionZ) + 2;
 	            
@@ -136,8 +136,6 @@ public class WeaponSpawnEntity extends CompatibleThrowableEntity {
 				weapon.onSpawnEntityBlockImpact(compatibility.world(this), null, this, position);
 			}
 			
-			
-        
 			if (!compatibility.world(this).isRemote) {
 			    this.setDead();
 			}

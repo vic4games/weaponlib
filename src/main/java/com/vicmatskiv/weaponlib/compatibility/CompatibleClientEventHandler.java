@@ -4,10 +4,10 @@ import com.vicmatskiv.weaponlib.ClientModContext;
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.RenderingPhase;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.Entity;
 import net.minecraftforge.client.event.RenderPlayerEvent;
+import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
@@ -61,6 +61,12 @@ public abstract class CompatibleClientEventHandler {
              */
             event.getRenderer().getRenderManager().renderViewEntity = origRenderVeiwEntity;
         }
+    }
+    
+    @SubscribeEvent
+    public void onTextureStitchEvent(TextureStitchEvent.Pre event) {
+        event.getMap().registerSprite(getModContext().getNamedResource(
+                CompatibleParticle.CompatibleParticleBreaking.TEXTURE_BLOOD_PARTICLES));
     }
 
 	protected abstract void onCompatibleRenderTickEvent(CompatibleRenderTickEvent compatibleRenderTickEvent);
