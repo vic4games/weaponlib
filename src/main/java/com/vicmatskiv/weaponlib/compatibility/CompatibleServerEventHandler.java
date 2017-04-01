@@ -28,23 +28,9 @@ public abstract class CompatibleServerEventHandler {
 	@SubscribeEvent
     public void onTick(TickEvent.ServerTickEvent event) {
         if(event.phase == Phase.START) {
-            onCompatibleTick(event);
-//            WorldServer worldServer = MinecraftServer.getServer().worldServerForDimension(0);
-//            EntityTracker entityTracker = worldServer.getEntityTracker();
-            /*
-             * Private obfuscated field names can be found here:
-             * ~/.gradle/caches/minecraft/net/minecraftforge/<version>/unpacked/conf/
-             */
-//            int entityViewDistance = ObfuscationReflectionHelper.getPrivateValue(EntityTracker.class, entityTracker, "entityViewDistance", "field_72792_");
-//            System.out.println("Entity view distance: " + entityViewDistance);
-//            ObfuscationReflectionHelper.setPrivateValue(EntityTracker.class, entityTracker, 300, "entityViewDistance", "field_72792_");
-
         }
-        
         //return ObfuscationReflectionHelper.setPrivateValue(EntityTracker.class, entityTracker, 10, "entityViewDistance", "field_72792_");
     }
-	
-	protected abstract void onCompatibleTick(ServerTickEvent event);
 	
 	@SubscribeEvent
 	public void attachCapability(AttachCapabilitiesEvent<Entity> event)

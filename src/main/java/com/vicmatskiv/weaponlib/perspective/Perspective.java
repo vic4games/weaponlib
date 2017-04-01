@@ -2,10 +2,10 @@ package com.vicmatskiv.weaponlib.perspective;
 
 import com.vicmatskiv.weaponlib.ClientModContext;
 import com.vicmatskiv.weaponlib.RenderContext;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleParticleManager;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderTickEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleWorldRenderer;
 
-import net.minecraft.client.particle.ParticleManager;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.shader.Framebuffer;
 
@@ -19,7 +19,7 @@ public abstract class Perspective<S> {
     
     protected CompatibleWorldRenderer entityRenderer;
     protected RenderGlobal renderGlobal;
-    protected ParticleManager effectRenderer;
+    protected CompatibleParticleManager effectRenderer;
 
     public void activate(ClientModContext modContext, PerspectiveManager manager) {
         this.modContext = modContext;

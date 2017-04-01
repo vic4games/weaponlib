@@ -9,7 +9,6 @@ import com.vicmatskiv.weaponlib.tracking.SyncPlayerEntityTrackerMessage;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
 
 public class ServerEventHandler extends CompatibleServerEventHandler {
 
@@ -46,9 +45,6 @@ public class ServerEventHandler extends CompatibleServerEventHandler {
             
         }
     }
-
-    @Override
-    protected void onCompatibleTick(ServerTickEvent event) {}
     
     @Override
     public String getModId() {

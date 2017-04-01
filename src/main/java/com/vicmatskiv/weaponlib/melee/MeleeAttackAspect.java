@@ -13,7 +13,6 @@ import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemSword;
 import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 
@@ -168,7 +167,6 @@ public class MeleeAttackAspect implements Aspect<MeleeState, PlayerMeleeInstance
                     attackEntity(objectMouseOver.getEntityHit(), player, meleeInstance, isHeavyAttack);
                     break;
                 case BLOCK:
-                    //Block blockHit = compatibility.getBlockAtPosition(world, objectMouseOver);
                     if (!compatibility.isAirBlock(world, objectMouseOver.getBlockPos())) {
                         compatibility.clickBlock(objectMouseOver.getBlockPos(), objectMouseOver.getSideHit());
                     }

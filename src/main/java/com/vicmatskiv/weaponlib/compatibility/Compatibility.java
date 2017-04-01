@@ -10,6 +10,7 @@ import net.minecraft.block.material.Material;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.client.settings.KeyBinding;
@@ -177,6 +178,14 @@ public interface Compatibility {
     public void addChatMessage(Entity entity, String message);
 
     public RenderGlobal createCompatibleRenderGlobal();
+
+    public CompatibleParticleManager createCompatibleParticleManager(WorldClient world);
+
+    public Entity getRenderViewEntity();
+
+    public void setRenderViewEntity(Entity entity);
+
+    public CompatibleParticleManager getCompatibleParticleManager();
 
 
 }

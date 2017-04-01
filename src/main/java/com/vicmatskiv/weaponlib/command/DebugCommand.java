@@ -55,7 +55,7 @@ public class DebugCommand extends CompatibleCommand {
     }
     
     @Override
-    public void processCommand(ICommandSender sender, String[] args) {
+    public void execCommand(ICommandSender sender, String[] args) {
         if (args.length > 0) {
             switch(args[0].toLowerCase()) {
             case DEBUG_ARG_ON:

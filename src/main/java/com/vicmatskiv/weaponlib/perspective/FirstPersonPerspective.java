@@ -4,7 +4,6 @@ import com.vicmatskiv.weaponlib.RenderingPhase;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderTickEvent;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.particle.ParticleManager;
 import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.renderer.RenderGlobal;
 
@@ -12,17 +11,10 @@ public class FirstPersonPerspective<S> extends Perspective<S> {
     
     private long renderEndNanoTime;
     
-//    private RenderGlobal renderGlobal;
-//    private ParticleManager effectRenderer;
-    
     public FirstPersonPerspective() {
         this.renderEndNanoTime = System.nanoTime();
         this.width = Minecraft.getMinecraft().displayWidth;
         this.height = Minecraft.getMinecraft().displayHeight;
-//        this.renderGlobal = new CompatibleRenderGlobal(Minecraft.getMinecraft());
-//        WorldClient world = (WorldClient) compatibility.world(compatibility.clientPlayer());
-//        this.effectRenderer = new ParticleManager(world, Minecraft.getMinecraft().getTextureManager());
-//        this.renderGlobal.setWorldAndLoadRenderers(world);
     }
     
     @Override
@@ -33,7 +25,6 @@ public class FirstPersonPerspective<S> extends Perspective<S> {
         int origDisplayHeight = Minecraft.getMinecraft().displayHeight;
         
         RenderGlobal origRenderGlobal = Minecraft.getMinecraft().renderGlobal;
-        ParticleManager origEffectRenderer = Minecraft.getMinecraft().effectRenderer;
         EntityRenderer origEntityRenderer = Minecraft.getMinecraft().entityRenderer;
         
         framebuffer.bindFramebuffer(true);

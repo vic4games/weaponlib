@@ -15,6 +15,7 @@ import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.model.ModelBiped.ArmPose;
+import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.client.settings.KeyBinding;
@@ -521,5 +522,25 @@ public class Compatibility1_10_2 implements Compatibility {
     @Override
     public RenderGlobal createCompatibleRenderGlobal() {
         return Minecraft.getMinecraft().renderGlobal; //new CompatibleRenderGlobal(Minecraft.getMinecraft());
+    }
+
+    @Override
+    public CompatibleParticleManager createCompatibleParticleManager(WorldClient world) {
+        return new CompatibleParticleManager(world);
+    }
+
+    @Override
+    public Entity getRenderViewEntity() {
+        return Minecraft.getMinecraft().getRenderViewEntity();
+    }
+
+    @Override
+    public void setRenderViewEntity(Entity entity) {
+        Minecraft.getMinecraft().setRenderViewEntity(entity);
+    }
+
+    @Override
+    public CompatibleParticleManager getCompatibleParticleManager() {
+        return new CompatibleParticleManager(Minecraft.getMinecraft().effectRenderer);
     }
 }

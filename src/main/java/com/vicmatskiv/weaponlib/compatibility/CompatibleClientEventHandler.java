@@ -35,7 +35,11 @@ public abstract class CompatibleClientEventHandler {
 	    ClientModContext modContext = (ClientModContext) getModContext();
 	    if(modContext.getSafeGlobals().renderingPhase.get() == RenderingPhase.RENDER_PERSPECTIVE
 	            && event.getEntityPlayer() instanceof EntityPlayerSP) {
-	        // This is a hack to allow player to view him/herself in remote perspective
+	        /*
+	         *  This is a hack to allow player to view him/herself in remote perspective.
+	         *  By default EntityPlayerSP ("user" playing the game) cannot see himself unless player == renderViewEntity.
+	         *  So, before rendering EntityPlayerSP, setting renderViewEntity to player temporarily.
+	         */
 	        origRenderVeiwEntity = event.getRenderer().getRenderManager().renderViewEntity;
 	        event.getRenderer().getRenderManager().renderViewEntity = event.getEntityPlayer();
 	    }
@@ -49,6 +53,12 @@ public abstract class CompatibleClientEventHandler {
         ClientModContext modContext = (ClientModContext) getModContext();
         if(modContext.getSafeGlobals().renderingPhase.get() == RenderingPhase.RENDER_PERSPECTIVE
                 && event.getEntityPlayer() instanceof EntityPlayerSP) {
+            /*
+             *  This is a hack to allow player to view him/herself in remote perspective.
+             *  By default EntityPlayerSP ("user" playing the game) cannot see himself unless player == renderViewEntity.
+             *  So, before rendering EntityPlayerSP, setting renderViewEntity to player temporarily.
+             *  After rendering EntityPlayerSP, restoring the original renderViewEntity.
+             */
             event.getRenderer().getRenderManager().renderViewEntity = origRenderVeiwEntity;
         }
     }

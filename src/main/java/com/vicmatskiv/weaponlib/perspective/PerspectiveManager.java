@@ -7,11 +7,11 @@ import org.apache.logging.log4j.Logger;
 
 import com.vicmatskiv.weaponlib.ClientModContext;
 import com.vicmatskiv.weaponlib.PlayerItemInstance;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleParticleManager;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleWorldRenderer;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
-import net.minecraft.client.particle.ParticleManager;
 import net.minecraft.client.renderer.RenderGlobal;
 
 public class PerspectiveManager {
@@ -22,7 +22,7 @@ public class PerspectiveManager {
     private ClientModContext clientModContext;
     private CompatibleWorldRenderer entityRenderer;
     private RenderGlobal renderGlobal;
-    private ParticleManager effectRenderer;
+    private CompatibleParticleManager effectRenderer;
 
     public PerspectiveManager(ClientModContext clientModContext) {
         this.clientModContext = clientModContext;
@@ -82,10 +82,10 @@ public class PerspectiveManager {
         return renderGlobal;
     }
 
-    ParticleManager getEffectRenderer() {        
+    CompatibleParticleManager getEffectRenderer() {        
         if(effectRenderer == null) {
             WorldClient world = (WorldClient) compatibility.world(compatibility.clientPlayer());
-            effectRenderer = new ParticleManager(world, Minecraft.getMinecraft().getTextureManager());
+            effectRenderer = compatibility.createCompatibleParticleManager(world);
         }
         return effectRenderer;
     }

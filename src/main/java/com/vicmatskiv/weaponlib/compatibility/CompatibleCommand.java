@@ -9,8 +9,8 @@ public abstract class CompatibleCommand extends CommandBase {
     
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
-        processCommand(sender, args);
+        execCommand(sender, args);
     }
 
-    protected abstract void processCommand(ICommandSender sender, String[] args);
+    protected abstract void execCommand(ICommandSender sender, String[] args);
 }
