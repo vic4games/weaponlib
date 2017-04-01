@@ -12,6 +12,7 @@ import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.Item;
+import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 
 public class WeaponSpawnEntity extends CompatibleThrowableEntity {
@@ -97,9 +98,9 @@ public class WeaponSpawnEntity extends CompatibleThrowableEntity {
 					compatibility.world(this).createExplosion(this, this.posX, this.posY, this.posZ, explosionRadius, true);
 				}
 
-//				position.getEntityHit().attackEntityFrom(DamageSource.causeThrownDamage(this, this.getThrower()), damage);
-//				position.getEntityHit().hurtResistantTime = 0;
-//				position.getEntityHit().prevRotationYaw -= 0.3D;
+				position.getEntityHit().attackEntityFrom(DamageSource.causeThrownDamage(this, this.getThrower()), damage);
+				position.getEntityHit().hurtResistantTime = 0;
+				position.getEntityHit().prevRotationYaw -= 0.3D;
 				
 				System.out.println("Hit entity: " + position.getEntityHit());
 				
