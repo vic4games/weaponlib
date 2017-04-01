@@ -227,27 +227,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
             break;
         case FIRST_PERSON_RIGHT_HAND: case FIRST_PERSON_LEFT_HAND:
             
-            int i = transformType == TransformType.FIRST_PERSON_RIGHT_HAND ? 1 : -1;
-            
-            GL11.glTranslatef(0.5f, 0.5f, 0.5f); // untranslate 1.9.4
-            
-            i = -i;
-            GL11.glTranslatef((float)i * 0.56F, 0.52F + /*p_187459_2_ * */ +0.6F, 0.72F); // untranslate 1.9.4
-
-            if(transformType == TransformType.FIRST_PERSON_LEFT_HAND) {
-                // mirror everything if left hand
-                GL11.glScalef(-1f, 1f, 1f);
-            }
-            
-            i = 1; // Draw everything as if for the right hand, assuming mirroring is already in place
-            GL11.glTranslatef((float)i * 0.56F, -0.52F + /*p_187459_2_ * */ -0.6F, -0.72F); // re-translate 1.9.4
-            
-            GL11.glTranslatef(0f, 0.6f, 0f); // -0.6 y-offset is set somewhere upstream in 1.9.4, so adjusting it
-                        
-            GL11.glRotatef(45f, 0f, 1f, 0f); // rotate as per 1.8.9 transformFirstPersonItem
-            
-            GL11.glScalef(0.4F, 0.4F, 0.4F); // scale as per 1.8.9 transformFirstPersonItem
-            GL11.glTranslatef(-0.5f, -0.5f, -0.5f); 
+            fixVersionSpecificFirstPersonPositioning(transformType); 
             
             GL11.glScaled(-1F, -1F, 1F);
             
@@ -280,6 +260,30 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
         renderItem(itemStack, renderContext, positioner);
         
         GL11.glPopMatrix();
+    }
+
+    static void fixVersionSpecificFirstPersonPositioning(TransformType transformType) {
+        int i = transformType == TransformType.FIRST_PERSON_RIGHT_HAND ? 1 : -1;
+        
+        GL11.glTranslatef(0.5f, 0.5f, 0.5f); // untranslate 1.9.4
+        
+        i = -i;
+        GL11.glTranslatef((float)i * 0.56F, 0.52F + /*p_187459_2_ * */ +0.6F, 0.72F); // untranslate 1.9.4
+
+        if(transformType == TransformType.FIRST_PERSON_LEFT_HAND) {
+            // mirror everything if left hand
+            GL11.glScalef(-1f, 1f, 1f);
+        }
+        
+        i = 1; // Draw everything as if for the right hand, assuming mirroring is already in place
+        GL11.glTranslatef((float)i * 0.56F, -0.52F + /*p_187459_2_ * */ -0.6F, -0.72F); // re-translate 1.9.4
+        
+        GL11.glTranslatef(0f, 0.6f, 0f); // -0.6 y-offset is set somewhere upstream in 1.9.4, so adjusting it
+                    
+        GL11.glRotatef(45f, 0f, 1f, 0f); // rotate as per 1.8.9 transformFirstPersonItem
+        
+        GL11.glScalef(0.4F, 0.4F, 0.4F); // scale as per 1.8.9 transformFirstPersonItem
+        GL11.glTranslatef(-0.5f, -0.5f, -0.5f);
     }
 
     static <T> void renderRightArm(EntityPlayer player, RenderContext<T> renderContext,

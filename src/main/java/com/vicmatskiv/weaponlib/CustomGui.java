@@ -7,6 +7,7 @@ import org.lwjgl.opengl.GL11;
 import com.vicmatskiv.weaponlib.StatusMessageCenter.Message;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleGui;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTessellator;
+import com.vicmatskiv.weaponlib.electronics.ItemWirelessCamera;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
@@ -169,6 +170,32 @@ public class CustomGui extends CompatibleGui {
 			
 			fontRender.drawStringWithShadow(messageText, x, y, color);
 			event.setCanceled(true);
+		} else if(itemStack.getItem() instanceof ItemWirelessCamera) {
+		    ScaledResolution scaledResolution = compatibility.getResolution(event);
+            int width = scaledResolution.getScaledWidth();
+            FontRenderer fontRender = compatibility.getFontRenderer();
+            mc.entityRenderer.setupOverlayRendering();
+            int color = 0xFFFFFF;
+            
+            Message message = modContext.getStatusMessageCenter().nextMessage();
+            String messageText;
+            if(message != null) {
+                messageText = message.getMessage();
+                if(message.isAlert()) {
+                    color = 0xFF0000;
+                }
+                
+                int x = width - 80;
+                int y = 10;
+
+                int stringWidth = fontRender.getStringWidth(messageText);
+                if(stringWidth > 80 ) {
+                    x = width - stringWidth - 5;
+                }
+                
+                fontRender.drawStringWithShadow(messageText, x, y, color);
+                event.setCanceled(true);
+            }
 		}
 	}
 

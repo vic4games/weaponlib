@@ -22,7 +22,6 @@ import com.vicmatskiv.weaponlib.melee.RenderableState;
 
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.VertexBuffer;
@@ -63,6 +62,11 @@ public abstract class CompatibleMeleeRenderer extends ModelSourceRenderer implem
 	
 	protected CompatibleMeleeRenderer(Builder builder){
 		this.builder = builder;
+		this.textureManager = Minecraft.getMinecraft().getTextureManager();
+        this.pair = Pair.of((IBakedModel) this, null);
+//        this.playerBiped = new ModelBiped();
+//        this.playerBiped.textureWidth = 64;
+//        this.playerBiped.textureHeight = 64;
 	}
 	
 	protected abstract ClientModContext getClientModContext();
@@ -74,7 +78,7 @@ public abstract class CompatibleMeleeRenderer extends ModelSourceRenderer implem
     protected TextureManager textureManager;
 
     private Pair<? extends IBakedModel, Matrix4f> pair;
-    protected ModelBiped playerBiped = new ModelBiped();
+    //protected ModelBiped playerBiped = new ModelBiped();
     
     protected ItemStack itemStack;
 
@@ -184,7 +188,7 @@ public abstract class CompatibleMeleeRenderer extends ModelSourceRenderer implem
 		
 		GL11.glPushMatrix();
 		
-		GL11.glScaled(-1F, -1F, 1F);
+		
 		
 		RenderContext<RenderableState> renderContext = new RenderContext<>(getClientModContext(), player, itemStack);
 		
@@ -198,6 +202,7 @@ public abstract class CompatibleMeleeRenderer extends ModelSourceRenderer implem
 		switch (transformType)
 		{
 		case GROUND:
+		    GL11.glScaled(-1F, -1F, 1F);
 		    GL11.glScaled(0.35F, 0.35F, 0.35F);
             GL11.glTranslatef(-0.7f, -1f, -0.1f);
             GL11.glRotatef(0F, 1f, 0f, 0f);
@@ -207,6 +212,7 @@ public abstract class CompatibleMeleeRenderer extends ModelSourceRenderer implem
 			break;
 			
 		case GUI:
+		    GL11.glScaled(-1F, -1F, 1F);
             GL11.glScaled(0.6F, 0.6F, 0.6F);
             GL11.glTranslatef(-0.7f, -0.8f, -0.1f);
             GL11.glRotatef(-30F, 1f, 0f, 0f);
@@ -216,6 +222,7 @@ public abstract class CompatibleMeleeRenderer extends ModelSourceRenderer implem
 			break;
 			
         case THIRD_PERSON_RIGHT_HAND: case THIRD_PERSON_LEFT_HAND:
+            GL11.glScaled(-1F, -1F, 1F);
             GL11.glScaled(0.4F, 0.4F, 0.4F);
             GL11.glTranslatef(-1.5f, -2.4f, 1.3f);
             GL11.glRotatef(-100F, 1f, 0f, 0f);
@@ -225,6 +232,10 @@ public abstract class CompatibleMeleeRenderer extends ModelSourceRenderer implem
             break;
 			
         case FIRST_PERSON_RIGHT_HAND: case FIRST_PERSON_LEFT_HAND:
+            
+            CompatibleWeaponRenderer.fixVersionSpecificFirstPersonPositioning(transformType); 
+            
+            GL11.glScaled(-1F, -1F, 1F);
 			
 			StateDescriptor stateDescriptor = getStateDescriptor(player, itemStack);
 			

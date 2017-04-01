@@ -2,6 +2,9 @@ package com.vicmatskiv.weaponlib.electronics;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleThrowableEntity;
@@ -11,44 +14,26 @@ import com.vicmatskiv.weaponlib.tracking.TrackableEntity;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.item.Item;
 import net.minecraft.world.World;
 
 public class EntityWirelessCamera extends CompatibleThrowableEntity {
+    
+    private static final Logger logger = LogManager.getLogger(EntityWirelessCamera.class);
+
     private ModContext modContext;
     private long trackingDuration = 10 * 1000 * 60;
+    private ItemWirelessCamera itemWirelessCamera;
     
-    static final float DEFAULT_INACCURACY = 1f;
-    private float speed;
-    private float gravityVelocity;
-    
-    public EntityWirelessCamera(ModContext modContext, World world, EntityPlayer player) {
+    public EntityWirelessCamera(ModContext modContext, World world, EntityPlayer player, ItemWirelessCamera itemWirelessCamera) {
         super(world, player);
         this.modContext = modContext;
-    }
-
-    public EntityWirelessCamera(World world, EntityLivingBase player) {
-        super(world, player);
-    }
-    
-    public EntityWirelessCamera(World world) {
-        super(world);
-    }
-    
-    public EntityWirelessCamera(ModContext modContext, 
-            World world, 
-            EntityLivingBase player, 
-            float speed,
-            float gravityVelocity) 
-    {
-        super(world, player);
-        this.modContext = modContext;
-        this.speed = speed;
-        this.gravityVelocity = gravityVelocity;
-
-        // TODO: validate for 1.7.10 the code below
+        this.itemWirelessCamera = itemWirelessCamera;
+        
         this.setSize(0.25F, 0.25F);
         this.setLocationAndAngles(player.posX, player.posY + (double)player.getEyeHeight(), player.posZ, player.rotationYaw, player.rotationPitch);
         this.posX -= (double)(compatibility.getMathHelper().cos(this.rotationYaw / 180.0F * (float)Math.PI) * 0.16F);
@@ -60,39 +45,40 @@ public class EntityWirelessCamera extends CompatibleThrowableEntity {
         this.motionZ = (double)(compatibility.getMathHelper().cos(this.rotationYaw / 180.0F * (float)Math.PI) * compatibility.getMathHelper().cos(this.rotationPitch / 180.0F * (float)Math.PI) * f);
         float pitchOffset = 0f;
         this.motionY = (double)(-compatibility.getMathHelper().sin((this.rotationPitch + pitchOffset) / 180.0F * (float)Math.PI) * f);
-        this.setThrowableHeading(this.motionX, this.motionY, this.motionZ, speed, DEFAULT_INACCURACY);
+        this.setThrowableHeading(this.motionX, this.motionY, this.motionZ, 1.5f, 0);
+
+    }
+
+    public EntityWirelessCamera(World world, EntityLivingBase player) {
+        super(world, player);
+    }
+    
+    public EntityWirelessCamera(World world) {
+        super(world);
     }
 
     protected void onImpact(CompatibleRayTraceResult rayTraceResult) {
-        // if (rayTraceResult.getEntityHit() != null) {
-        // byte b0 = 0;
-        //
-        // if (rayTraceResult.getEntityHit() instanceof EntityBlaze)
-        // {
-        // b0 = 3;
-        // }
-        //
-        // rayTraceResult.getEntityHit().attackEntityFrom(DamageSource.causeThrownDamage(this,
-        // this.getThrower()), (float)b0);
-        // }
-
         Entity entityHit = rayTraceResult.getEntityHit();
-        System.out.println("Player " + getThrower() + " hit entity: " + rayTraceResult.getEntityHit());
+        logger.debug("Player {} hit entity {}", getThrower(), rayTraceResult.getEntityHit());
 
         if (entityHit != null && getThrower() instanceof EntityPlayer) {
             if (!this.worldObj.isRemote) {
-                System.out.println("Server hit entity uuid " + rayTraceResult.getEntityHit().getPersistentID());
+                logger.debug("Server hit entity uuid {}", rayTraceResult.getEntityHit().getPersistentID());
                 PlayerEntityTracker tracker = PlayerEntityTracker.getTracker((EntityPlayer) getThrower());
                 if(tracker != null) {
                     tracker.addTrackableEntity(new TrackableEntity(entityHit, System.currentTimeMillis(),
                             trackingDuration));
                     modContext.getChannel().getChannel().sendTo(new SyncPlayerEntityTrackerMessage(tracker),
                             (EntityPlayerMP)getThrower());
+                    String displayName = "";
+                    if(entityHit instanceof EntityPlayer) {
+                        displayName = compatibility.getDisplayName((EntityPlayer)entityHit);
+                    } else if(entityHit instanceof EntityLivingBase) {
+                        displayName = EntityList.getEntityString(entityHit);
+                    }
+                    modContext.getStatusMessageCenter().addMessage("Tracking " + displayName, 1000);
                 }
             }
-        } else if (getThrower() instanceof EntityPlayer) {
-//            ExtendedPlayerProperties properties = ExtendedPlayerProperties.getProperties((EntityPlayer) getThrower());
-//            System.out.println("Currently tracking " + properties.getTrackableEntitites());
         }
 
         if (!this.worldObj.isRemote) {
@@ -102,14 +88,12 @@ public class EntityWirelessCamera extends CompatibleThrowableEntity {
 
     @Override
     public void writeSpawnData(ByteBuf buffer) {
-        // TODO Auto-generated method stub
-
+        buffer.writeInt(Item.getIdFromItem(itemWirelessCamera));
     }
 
     @Override
-    public void readSpawnData(ByteBuf additionalData) {
-        // TODO Auto-generated method stub
-
+    public void readSpawnData(ByteBuf buffer) {
+        itemWirelessCamera = (ItemWirelessCamera) Item.getItemById(buffer.readInt());
     }
 
     @Override
@@ -135,17 +119,16 @@ public class EntityWirelessCamera extends CompatibleThrowableEntity {
     }
 
     @Override
-    protected float getGravityVelocity() {
-        return gravityVelocity;
-    };
-    
-    @Override 
-    protected float getVelocity() {
-        return speed;
+    protected float getInaccuracy() {
+        return 0;
     }
 
     @Override
-    protected float getInaccuracy() {
-        return DEFAULT_INACCURACY;
+    protected float getVelocity() {
+        return 0.5f;
+    }
+
+    public ItemWirelessCamera getItem() {
+        return itemWirelessCamera;
     }
 }

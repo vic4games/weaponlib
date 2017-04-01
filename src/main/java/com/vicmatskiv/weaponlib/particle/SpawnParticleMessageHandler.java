@@ -16,15 +16,15 @@ public class SpawnParticleMessageHandler implements CompatibleMessageHandler<Spa
     @Override
     public <T extends CompatibleMessage> T onCompatibleMessage(SpawnParticleMessage message, CompatibleMessageContext ctx) {
         if(!ctx.isServerSide()) {
-            ctx.runInMainThread(() -> {
+            compatibility.runInMainClientThread(() -> {
                 World world = compatibility.world(compatibility.clientPlayer());
                 System.out.println("Player: " + compatibility.clientPlayer());
                 for (int i = 0; i < 15; ++i) {
                     System.out.printf("Spawning at %.2f %.2f %.2f\n", 
                             message.getPosX(), message.getPosY(), message.getPosZ());
-                    CompatibleParticleBreaking particle = CompatibleParticle.createParticleBreaking(
-                            world, message.getPosX(), message.getPosY() + 1, message.getPosZ(), null);
-                    Minecraft.getMinecraft().effectRenderer.addEffect(particle);
+//                    CompatibleParticleBreaking particle = CompatibleParticle.createParticleBreaking(
+//                            world, message.getPosX(), message.getPosY() + 1, message.getPosZ(), null);
+//                    Minecraft.getMinecraft().effectRenderer.addEffect(particle);
 //                    world.spawnParticle("snowballpoof", message.getPosX(), 
 //                            message.getPosY() + 1, message.getPosZ(), 0.0D, 0.0D, 0.0D);
                 }

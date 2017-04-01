@@ -27,7 +27,7 @@ public class OpticalScopePerspective extends FirstPersonPerspective<RenderableSt
 
         if(isAimingState(renderContext.getFromState()) && isAimingState(renderContext.getToState())) {
             brightness = 1f;
-        } else if(progress > 0f && aimed) {
+        } else if(progress > 0f && aimed && isAimingState(renderContext.getToState())) {
             brightness = progress;
         } else if(isAimingState(renderContext.getFromState()) && progress > 0f && !aimed) {
             brightness = Math.max(1 - progress, 0f);
@@ -38,7 +38,8 @@ public class OpticalScopePerspective extends FirstPersonPerspective<RenderableSt
     private static boolean isAimingState(RenderableState renderableState) {
         return renderableState == RenderableState.ZOOMING
                 || renderableState == RenderableState.ZOOMING_RECOILED
-                || renderableState == RenderableState.ZOOMING_SHOOTING;
+                || renderableState == RenderableState.ZOOMING_SHOOTING
+                ;
     }
     
     @Override
