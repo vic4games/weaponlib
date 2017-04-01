@@ -10,7 +10,7 @@ import java.util.UUID;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.vicmatskiv.weaponlib.ExtendedPlayerProperties;
+import com.vicmatskiv.weaponlib.compatibility.CompatiblePlayerEntityTrackerProvider;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -23,12 +23,7 @@ public class PlayerEntityTracker {
     private static final Logger logger = LogManager.getLogger(PlayerEntityTracker.class);
         
     public static final PlayerEntityTracker getTracker(EntityPlayer player) {
-        ExtendedPlayerProperties extendedProperties = ExtendedPlayerProperties.getProperties(player);
-        PlayerEntityTracker tracker = null;
-        if(extendedProperties != null) {
-            tracker = extendedProperties.getTracker();
-        }
-        return tracker;
+        return CompatiblePlayerEntityTrackerProvider.getTracker(player);
     }
 
     private World world;

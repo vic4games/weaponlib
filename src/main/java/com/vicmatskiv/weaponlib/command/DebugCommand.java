@@ -1,14 +1,14 @@
 package com.vicmatskiv.weaponlib.command;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
 import com.vicmatskiv.weaponlib.Part;
 import com.vicmatskiv.weaponlib.animation.DebugPositioner;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleCommand;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
-import net.minecraft.util.ChatComponentText;
 
-public class DebugCommand extends CommandBase {
+public class DebugCommand extends CompatibleCommand {
 
     private static final String SHOW_OPTION_CODE = "code";
     private static final String COMMAND_DEBUG = "wdb";
@@ -53,9 +53,9 @@ public class DebugCommand extends CommandBase {
     private String getSubCommandWatchUsage() {
         return String.format("/%s %s [entity-id]", COMMAND_DEBUG, DEBUG_ARG_WATCH);
     }
-
+    
     @Override
-    public void processCommand(ICommandSender sender, String[] args) {
+    public void execCommand(ICommandSender sender, String[] args) {
         if (args.length > 0) {
             switch(args[0].toLowerCase()) {
             case DEBUG_ARG_ON:
@@ -80,10 +80,10 @@ public class DebugCommand extends CommandBase {
                 processWatchSubCommand(args);
                 break;
             default:
-                Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(getCommandUsage(sender)));
+                compatibility.addChatMessage(compatibility.clientPlayer(), getCommandUsage(sender));
             }
         } else {
-            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(getCommandUsage(sender)));
+            compatibility.addChatMessage(compatibility.clientPlayer(), getCommandUsage(sender));
         }
     }
     
@@ -99,15 +99,15 @@ public class DebugCommand extends CommandBase {
         }
         if(debugMode != null) {
             DebugPositioner.setDebugMode(debugMode);
-            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Debug mode " + args[0].toLowerCase()));
+            compatibility.addChatMessage(compatibility.clientPlayer(), "Debug mode " + args[0].toLowerCase());
         } else {
-            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(getSubCommandDebugUsage()));
+            compatibility.addChatMessage(compatibility.clientPlayer(), getSubCommandDebugUsage());
         }
     }
     
     private void processPauseSubCommand(String[] args) {
         if(args.length != 3) {
-            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(getSubCommandPauseUsage()));
+            compatibility.addChatMessage(compatibility.clientPlayer(), getSubCommandPauseUsage());
             return;
         }
         
@@ -115,58 +115,50 @@ public class DebugCommand extends CommandBase {
             int transitionNumber = Integer.parseInt(args[1]);
             long pauseDuration = Long.parseLong(args[2]);
             DebugPositioner.configureTransitionPause(transitionNumber, pauseDuration);
-            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Set transition "
-                    + transitionNumber + " pause to " + pauseDuration + "ms"));
+            compatibility.addChatMessage(compatibility.clientPlayer(), "Set transition "
+                    + transitionNumber + " pause to " + pauseDuration + "ms");
         } catch(NumberFormatException e) {
-            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(getSubCommandPauseUsage()));
+            compatibility.addChatMessage(compatibility.clientPlayer(), getSubCommandPauseUsage());
         }
     }
     
     private void processWatchSubCommand(String[] args) {
         if(args.length < 1) {
-            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(getSubCommandWatchUsage()));
+            compatibility.addChatMessage(compatibility.clientPlayer(), getSubCommandWatchUsage());
             return;
         }
-        
-//        try {
-//            float scale = Float.parseFloat(args[1]);
-//            DebugPositioner.setScale(scale);
-//            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Set scale to " + scale));
-//        } catch(NumberFormatException e) {
-//            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(getSubCommandScaleUsage()));
-//        }
         
         DebugPositioner.watch();
     }
     
     private void processScaleSubCommand(String[] args) {
         if(args.length != 2) {
-            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(getSubCommandScaleUsage()));
+            compatibility.addChatMessage(compatibility.clientPlayer(), getSubCommandScaleUsage());
             return;
         }
         
         if(DebugPositioner.getDebugPart() == null) {
-            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Debug part not selected"));
+            compatibility.addChatMessage(compatibility.clientPlayer(), "Debug part not selected");
             return;
         }
         
         try {
             float scale = Float.parseFloat(args[1]);
             DebugPositioner.setScale(scale);
-            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Set scale to " + scale));
+            compatibility.addChatMessage(compatibility.clientPlayer(), "Set scale to " + scale);
         } catch(NumberFormatException e) {
-            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(getSubCommandScaleUsage()));
+            compatibility.addChatMessage(compatibility.clientPlayer(), getSubCommandScaleUsage());
         }
     }
     
     private void processShowSubCommand(String[] args) {
         if(args.length != 2) {
-            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(getSubCommandPauseUsage()));
+            compatibility.addChatMessage(compatibility.clientPlayer(), getSubCommandPauseUsage());
             return;
         }
         
         if(DebugPositioner.getDebugPart() == null) {
-            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Debug part not selected"));
+            compatibility.addChatMessage(compatibility.clientPlayer(), "Debug part not selected");
             return;
         }
 
@@ -175,13 +167,13 @@ public class DebugCommand extends CommandBase {
             DebugPositioner.showCode();
             break;
         default:
-            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(getSubCommandShowUsage()));
+            compatibility.addChatMessage(compatibility.clientPlayer(), getSubCommandShowUsage());
         }
     }
     
     private void processPartSubCommand(String[] args) {
         if(args.length != 2) {
-            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(getSubCommandPartUsage()));
+            compatibility.addChatMessage(compatibility.clientPlayer(), getSubCommandPartUsage());
             return;
         }
         
@@ -198,10 +190,10 @@ public class DebugCommand extends CommandBase {
                 break;
             }
             
-            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("Debugging part "
-                    + args[1]));
+            compatibility.addChatMessage(compatibility.clientPlayer(), "Debugging part "
+                    + args[1]);
         } catch(NumberFormatException e) {
-            Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(getSubCommandPartUsage()));
+            compatibility.addChatMessage(compatibility.clientPlayer(), getSubCommandPartUsage());
         }
     }
     
@@ -209,4 +201,6 @@ public class DebugCommand extends CommandBase {
     public int getRequiredPermissionLevel() {
         return 0;
     }
+
+    
 }

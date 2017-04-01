@@ -156,7 +156,6 @@ public class MeleeAttackAspect implements Aspect<MeleeState, PlayerMeleeInstance
     }
     
     private void attack(PlayerMeleeInstance meleeInstance, boolean isHeavyAttack) {
-        Minecraft mc = Minecraft.getMinecraft();
 
         CompatibleRayTraceResult objectMouseOver = compatibility.getObjectMouseOver();
         if (objectMouseOver != null) {
@@ -168,15 +167,8 @@ public class MeleeAttackAspect implements Aspect<MeleeState, PlayerMeleeInstance
                     attackEntity(objectMouseOver.getEntityHit(), player, meleeInstance, isHeavyAttack);
                     break;
                 case BLOCK:
-                    //TODO: implement compatibility for material and click block
-                    int i = mc.objectMouseOver.blockX;
-                    int j = mc.objectMouseOver.blockY;
-                    int k = mc.objectMouseOver.blockZ;
-
-                    Block blockHit = compatibility.getBlockAtPosition(world, objectMouseOver);
-                    
-                    if (blockHit.getMaterial() != Material.air) {
-                        mc.playerController.clickBlock(i, j, k, mc.objectMouseOver.sideHit);
+                    if (!compatibility.isAirBlock(world, objectMouseOver.getBlockPos())) {
+                        compatibility.clickBlock(objectMouseOver.getBlockPos(), objectMouseOver.getSideHit());
                     }
                 default:
                     break;

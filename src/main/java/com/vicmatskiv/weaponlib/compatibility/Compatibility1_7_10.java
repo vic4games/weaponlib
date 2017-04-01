@@ -21,6 +21,8 @@ import net.minecraft.client.entity.EntityClientPlayerMP;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.Entity;
@@ -34,6 +36,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemArmor.ArmorMaterial;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ChatComponentText;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.FOVUpdateEvent;
 import net.minecraftforge.client.event.GuiOpenEvent;
@@ -461,5 +464,58 @@ public class Compatibility1_7_10 implements Compatibility {
                     position.getBlockPosX(), position.getBlockPosY(), position.getBlockPosZ(), position.getSideHit());
         }
         
+    }
+
+    @Override
+    public String getDisplayName(EntityPlayer entity) {
+        return entity.getDisplayName();
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public RenderGlobal createCompatibleRenderGlobal() {
+        return new RenderGlobal(Minecraft.getMinecraft());
+    }
+
+    @Override
+    public CompatibleParticleManager createCompatibleParticleManager(WorldClient world) {
+        return new CompatibleParticleManager(world);
+    }
+
+    @Override
+    public void setRenderViewEntity(Entity entity) {
+        if(entity instanceof EntityLivingBase) {
+            Minecraft.getMinecraft().renderViewEntity = (EntityLivingBase) entity;
+        } else {
+            // TODO: log error
+        }
+        
+    }
+
+    @Override
+    public Entity getRenderViewEntity() {
+        return Minecraft.getMinecraft().renderViewEntity;
+    }
+
+    @Override
+    public CompatibleParticleManager getCompatibleParticleManager() {
+        return new CompatibleParticleManager(Minecraft.getMinecraft().effectRenderer);
+    }
+
+    @Override
+    public void addChatMessage(EntityPlayer clientPlayer, String message) {
+        clientPlayer.addChatMessage(new ChatComponentText(message));
+    }
+
+    @Override
+    public boolean isAirBlock(World world, CompatibleBlockPos blockPos) {
+        Block blockHit = world.getBlock(blockPos.getBlockPosX(), blockPos.getBlockPosY(), blockPos.getBlockPosZ());
+        return blockHit.getMaterial() == Material.air;
+    }
+
+    @Override
+    public void clickBlock(CompatibleBlockPos blockPos, int sideHit) {
+        Minecraft.getMinecraft().playerController.clickBlock(blockPos.getBlockPosX(), blockPos.getBlockPosY(), blockPos.getBlockPosZ(), sideHit);
+
     }
 }

@@ -1,10 +1,18 @@
 package com.vicmatskiv.weaponlib.perspective;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.vicmatskiv.weaponlib.ClientModContext;
 import com.vicmatskiv.weaponlib.PlayerItemInstance;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleParticleManager;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleWorldRenderer;
+
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraft.client.renderer.RenderGlobal;
 
 public class PerspectiveManager {
 
@@ -12,6 +20,9 @@ public class PerspectiveManager {
 
     private Perspective<?> currentPerspective;
     private ClientModContext clientModContext;
+    private CompatibleWorldRenderer entityRenderer;
+    private RenderGlobal renderGlobal;
+    private CompatibleParticleManager effectRenderer;
 
     public PerspectiveManager(ClientModContext clientModContext) {
         this.clientModContext = clientModContext;
@@ -44,13 +55,39 @@ public class PerspectiveManager {
 
     private Perspective<?> createActivePerspective(Class<? extends Perspective<?>> perspectiveClass) {
         Perspective<?> result = null;
+        
         try {
             result = perspectiveClass.newInstance();
-            result.activate(clientModContext);
+            result.activate(clientModContext, this);
         } catch (InstantiationException | IllegalAccessException e) {
             logger.error("Failed to create view of {} - {}", perspectiveClass, e, e);
         }
         return result;
+    }
+
+    CompatibleWorldRenderer getEntityRenderer() {
+        if(entityRenderer == null) {
+            entityRenderer = new CompatibleWorldRenderer(Minecraft.getMinecraft(), 
+                    Minecraft.getMinecraft().getResourceManager());
+        }
+        return entityRenderer;
+    }
+
+    RenderGlobal getRenderGlobal() {
+        if(renderGlobal == null) {
+            renderGlobal = compatibility.createCompatibleRenderGlobal();
+            WorldClient world = (WorldClient) compatibility.world(compatibility.clientPlayer());
+            renderGlobal.setWorldAndLoadRenderers(world);
+        }
+        return renderGlobal;
+    }
+
+    CompatibleParticleManager getEffectRenderer() {        
+        if(effectRenderer == null) {
+            WorldClient world = (WorldClient) compatibility.world(compatibility.clientPlayer());
+            effectRenderer = compatibility.createCompatibleParticleManager(world);
+        }
+        return effectRenderer;
     }
 
 }

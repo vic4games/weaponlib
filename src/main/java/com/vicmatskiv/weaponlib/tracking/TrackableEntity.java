@@ -1,5 +1,8 @@
 package com.vicmatskiv.weaponlib.tracking;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
+
 import java.lang.ref.WeakReference;
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -48,7 +51,7 @@ public class TrackableEntity {
             Entity entity = entitySupplier.get();
             if(entity != null) {
                 if(entity instanceof EntityPlayer) {
-                    displayName = ((EntityPlayer) entity).getDisplayName();
+                    displayName = compatibility.getDisplayName((EntityPlayer)entity);
                 } else if(entity instanceof EntityLivingBase) {
                     displayName = EntityList.getEntityString(entity);
                 }

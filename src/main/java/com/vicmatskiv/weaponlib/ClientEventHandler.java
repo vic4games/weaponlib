@@ -131,4 +131,9 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
             safeGlobals.renderingPhase.set(null);
         }
     }
+
+    @Override
+    protected ModContext getModContext() {
+        return modContext;
+    }
 }

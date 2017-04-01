@@ -1,50 +1,53 @@
 package com.vicmatskiv.weaponlib;
 
+import com.vicmatskiv.weaponlib.compatibility.CompatibleEntityJoinWorldEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleServerEventHandler;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleStartTrackingEvent;
 import com.vicmatskiv.weaponlib.tracking.PlayerEntityTracker;
 import com.vicmatskiv.weaponlib.tracking.SyncPlayerEntityTrackerMessage;
 
-import cpw.mods.fml.common.gameevent.TickEvent.ServerTickEvent;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent.StartTracking;
 
 public class ServerEventHandler extends CompatibleServerEventHandler {
 
     private ModContext modContext;
+    private String modId;
 
-    public ServerEventHandler(ModContext modContext) {
+    public ServerEventHandler(ModContext modContext, String modId) {
         this.modContext = modContext;
+        this.modId = modId;
     }
 
     @Override
     protected void onCompatibleItemToss(ItemTossEvent itemTossEvent) {}
 
     @Override
-    protected void onCompatibleEntityJoinWorld(EntityJoinWorldEvent e) {
-        if(e.entity instanceof EntityPlayerMP && !e.world.isRemote) {
-            System.out.println("Player " + e.entity + " joined the world");
-            PlayerEntityTracker tracker = PlayerEntityTracker.getTracker((EntityPlayer) e.entity);
+    protected void onCompatibleEntityJoinWorld(CompatibleEntityJoinWorldEvent e) {
+        if(e.getEntity() instanceof EntityPlayerMP && !e.getWorld().isRemote) {
+            System.out.println("Player " + e.getEntity() + " joined the world");
+            PlayerEntityTracker tracker = PlayerEntityTracker.getTracker((EntityPlayer) e.getEntity());
             if(tracker != null) {
                 modContext.getChannel().getChannel().sendTo(new SyncPlayerEntityTrackerMessage(tracker),
-                        (EntityPlayerMP)e.entity);
+                        (EntityPlayerMP)e.getEntity());
             }
         }
     }
 
     @Override
-    protected void onCompatiblePlayerStartedTracking(StartTracking e) {
-        PlayerEntityTracker tracker = PlayerEntityTracker.getTracker((EntityPlayer) e.entity);
-        if (tracker != null && tracker.updateTrackableEntity(e.target)) {
-            System.out.println("Player " + e.entityPlayer + " started tracking " + e.target);
+    protected void onCompatiblePlayerStartedTracking(CompatibleStartTrackingEvent e) {
+        PlayerEntityTracker tracker = PlayerEntityTracker.getTracker((EntityPlayer) e.getEntity());
+        if (tracker != null && tracker.updateTrackableEntity(e.getTarget())) {
+            System.out.println("Player " + e.getPlayer() + " started tracking " + e.getTarget());
             modContext.getChannel().getChannel().sendTo(new SyncPlayerEntityTrackerMessage(tracker),
-                    (EntityPlayerMP)e.entityPlayer);
+                    (EntityPlayerMP)e.getPlayer());
             
         }
     }
-
+    
     @Override
-    protected void onCompatibleTick(ServerTickEvent event) {}
+    public String getModId() {
+        return modId;
+    }
 }

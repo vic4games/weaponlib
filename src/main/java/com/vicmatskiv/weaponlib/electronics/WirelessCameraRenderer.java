@@ -9,6 +9,7 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.projectile.EntityPotion;
+import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemPotion;
 import net.minecraft.potion.PotionHelper;
@@ -26,6 +27,8 @@ public class WirelessCameraRenderer extends CompatibleEntityRenderer {
         this.field_94150_f = p_i1259_2_;
     }
 
+    public WirelessCameraRenderer() {this(Items.snowball);}
+    
     public WirelessCameraRenderer(Item p_i1260_1_)
     {
         this(p_i1260_1_, 0);

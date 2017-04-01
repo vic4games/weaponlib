@@ -50,4 +50,8 @@ public class CompatibleRayTraceResult {
 	public int getSideHit() {
 	    return position.sideHit;
 	}
+
+    public CompatibleBlockPos getBlockPos() {
+        return new CompatibleBlockPos(position.blockX, position.blockY, position.blockZ);
+    }
 }
