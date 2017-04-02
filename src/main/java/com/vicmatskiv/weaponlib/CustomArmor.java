@@ -104,19 +104,19 @@ public class CustomArmor extends CompatibleCustomArmor {
 			CustomArmor armorHelmet = new CustomArmor(modId, material, 4, CompatibleEntityEquipmentSlot.HEAD, 
 					unlocalizedHelmetName, textureName, chestModel, hudTextureName);
 			armorHelmet.setUnlocalizedName(unlocalizedHelmetName);
-			compatibility.registerItem(modId, armorHelmet, unlocalizedHelmetName);
+			compatibility.registerItem(armorHelmet, unlocalizedHelmetName);
 			
 			String unlocalizedChestName = unlocalizedName + "_chest";
 			CustomArmor armorChest = new CustomArmor(modId, material, 4, CompatibleEntityEquipmentSlot.CHEST, 
 					unlocalizedChestName, textureName, chestModel, hudTextureName);
 			armorChest.setUnlocalizedName(unlocalizedChestName);
-			compatibility.registerItem(modId, armorChest, unlocalizedChestName);
+			compatibility.registerItem(armorChest, unlocalizedChestName);
 			
 			String unlocalizedBootsName = unlocalizedName + "_boots";
 			CustomArmor armorBoots = new CustomArmor(modId, material, 4, CompatibleEntityEquipmentSlot.FEET, 
 					unlocalizedBootsName, textureName, bootsModel, hudTextureName);
 			armorBoots.setUnlocalizedName(unlocalizedBootsName);
-			compatibility.registerItem(modId, armorBoots, unlocalizedBootsName);
+			compatibility.registerItem(armorBoots, unlocalizedBootsName);
 		}
 		
 		
@@ -148,7 +148,7 @@ public class CustomArmor extends CompatibleCustomArmor {
 			CustomArmor armorHelmet = new CustomArmor(modId, material, 4, CompatibleEntityEquipmentSlot.HEAD, 
 					unlocalizedHelmetName, textureName, chestModel, hudTextureName);
 			armorHelmet.setUnlocalizedName(unlocalizedHelmetName);
-			compatibility.registerItem(modId, armorHelmet, unlocalizedHelmetName);
+			compatibility.registerItem(armorHelmet, unlocalizedHelmetName);
 			
 			return armorHelmet;
 		}
@@ -173,7 +173,7 @@ public class CustomArmor extends CompatibleCustomArmor {
 			CustomArmor armorChest = new CustomArmor(modId, material, 4, CompatibleEntityEquipmentSlot.CHEST, 
 					unlocalizedChestName, textureName, chestModel, hudTextureName);
 			armorChest.setUnlocalizedName(unlocalizedChestName);
-			compatibility.registerItem(modId, armorChest, unlocalizedChestName);
+			compatibility.registerItem(armorChest, unlocalizedChestName);
 
 			return armorChest;
 		}
@@ -200,7 +200,7 @@ public class CustomArmor extends CompatibleCustomArmor {
 			CustomArmor armorBoots = new CustomArmor(modId, material, 4, CompatibleEntityEquipmentSlot.FEET, 
 					unlocalizedBootsName, textureName, bootsModel, hudTextureName);
 			armorBoots.setUnlocalizedName(unlocalizedBootsName);
-			compatibility.registerItem(modId, armorBoots, unlocalizedBootsName);
+			compatibility.registerItem(armorBoots, unlocalizedBootsName);
 			
 			return armorBoots;
 		}

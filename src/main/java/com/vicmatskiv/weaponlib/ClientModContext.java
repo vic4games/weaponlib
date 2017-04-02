@@ -36,11 +36,7 @@ public class ClientModContext extends CommonModContext {
 	
 	private CompatibleRenderingRegistry rendererRegistry;
 	
-	private Framebuffer framebuffer;
-	private CompatibleWorldRenderer entityRenderer;
 	private SafeGlobals safeGlobals = new SafeGlobals();
-	//static ReloadAspect.ReloadContext context;
-	
 	
 	private StatusMessageCenter statusMessageCenter;
 	
@@ -60,7 +56,6 @@ public class ClientModContext extends CommonModContext {
 				Minecraft.class, Minecraft.getMinecraft(), "defaultResourcePacks", "field_110449_ao") ; 
         defaultResourcePacks.add(new WeaponResourcePack()) ;
    
-                
 		compatibility.registerWithEventBus(new CustomGui(Minecraft.getMinecraft(), this, weaponAttachmentAspect));
 		compatibility.registerWithEventBus(new WeaponEventHandler(this, safeGlobals));
 		
@@ -93,26 +88,9 @@ public class ClientModContext extends CommonModContext {
         return viewManager;
     }
 	
-//	public CompatibleWorldRenderer getSecondWorldRenderer() {
-//		if(this.entityRenderer == null) {
-//			this.entityRenderer = new CompatibleWorldRenderer(Minecraft.getMinecraft(), 
-//	        		Minecraft.getMinecraft().getResourceManager());
-//		}
-//		return this.entityRenderer;
-//	}
-	
 	public SafeGlobals getSafeGlobals() {
 		return safeGlobals;
 	}
-
-//	public Framebuffer getFramebuffer() {
-//		if(framebuffer == null) {
-//			framebuffer = new Framebuffer(200, 200, true);
-//	        framebuffer.setFramebufferColor(0.0F, 0.0F, 0.0F, 0.0F);
-//		}
-//		
-//		return framebuffer;
-//	}
 
 	@Override
 	public void registerWeapon(String name, Weapon weapon, WeaponRenderer renderer) {

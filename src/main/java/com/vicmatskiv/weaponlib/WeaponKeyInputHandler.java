@@ -116,10 +116,13 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
         } 
         
         else if(KeyBindings.leftArrowKey.isPressed()) {
-        	PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
-    		if(instance != null && instance.getState() == WeaponState.MODIFYING) {
-    			modContext.getAttachmentAspect().changeAttachment(AttachmentCategory.SILENCER, instance);
-    		}
+            PlayerItemInstance<?> instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player);
+    		if(instance instanceof PlayerWeaponInstance && instance.getState() == WeaponState.MODIFYING) {
+    			modContext.getAttachmentAspect().changeAttachment(AttachmentCategory.SILENCER, (PlayerWeaponInstance) instance);
+    		} else if(instance instanceof PlayerTabletInstance) {
+                PlayerTabletInstance playerTabletInstance = (PlayerTabletInstance) instance;
+                playerTabletInstance.previousActiveWatchIndex();
+            }
         }
         
         else if(KeyBindings.fireModeKey.isPressed()) {
@@ -131,14 +134,14 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
         
         else if(KeyBindings.addKey.isPressed()) {
         	PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
-    		if(instance != null && instance.getState() == WeaponState.READY) {
+    		if(instance != null && (instance.getState() == WeaponState.READY || instance.getState() == WeaponState.EJECT_REQUIRED)) {
     			instance.getWeapon().incrementZoom(instance);
     		}
         }
         
         else if(KeyBindings.subtractKey.isPressed()) {
         	PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
-    		if(instance != null && instance.getState() == WeaponState.READY) {
+            if(instance != null && (instance.getState() == WeaponState.READY || instance.getState() == WeaponState.EJECT_REQUIRED)) {
     			instance.getWeapon().decrementZoom(instance);
     		}
         }

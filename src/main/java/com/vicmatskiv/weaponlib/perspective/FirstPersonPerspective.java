@@ -5,7 +5,6 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderTickEvent;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.EntityRenderer;
-import net.minecraft.client.renderer.RenderGlobal;
 
 public class FirstPersonPerspective<S> extends Perspective<S> {
     
@@ -24,7 +23,7 @@ public class FirstPersonPerspective<S> extends Perspective<S> {
         int origDisplayWidth = Minecraft.getMinecraft().displayWidth;
         int origDisplayHeight = Minecraft.getMinecraft().displayHeight;
         
-        RenderGlobal origRenderGlobal = Minecraft.getMinecraft().renderGlobal;
+        //RenderGlobal origRenderGlobal = Minecraft.getMinecraft().renderGlobal;
         EntityRenderer origEntityRenderer = Minecraft.getMinecraft().entityRenderer;
         
         framebuffer.bindFramebuffer(true);

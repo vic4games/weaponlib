@@ -26,4 +26,5 @@ public abstract class CompatibleClientEventHandler {
 	protected abstract void onCompatibleClientTick(CompatibleClientTickEvent compatibleClientTickEvent);
 
     protected abstract ModContext getModContext();
+    
 }

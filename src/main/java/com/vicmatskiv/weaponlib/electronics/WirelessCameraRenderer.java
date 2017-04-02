@@ -27,9 +27,11 @@ public class WirelessCameraRenderer extends CompatibleEntityRenderer {
         if(model != null) {
             String textureName = camera.getTextureName();
             ResourceLocation textureLocation = textureName != null ? 
-                    new ResourceLocation(modId + ":textures/models/" + textureName + ".png") : null;
+                    new ResourceLocation(modId + ":textures/models/" + textureName) : null;
+            //System.out.println("Rendering entity at " + x + ", " + y + ", " + z);
             if(model != null) {
                 GL11.glPushMatrix();
+                GL11.glTranslatef(0f, 0f, 0f);
                 if(textureLocation != null) {
                     bindTexture(textureLocation);
                 }
@@ -43,6 +45,6 @@ public class WirelessCameraRenderer extends CompatibleEntityRenderer {
     @Override
     protected ResourceLocation getEntityTexture(Entity entity) {
         EntityWirelessCamera camera = (EntityWirelessCamera) entity;
-        return new ResourceLocation(modId + ":textures/models/" + camera.getItem().getTextureName() + ".png");
+        return new ResourceLocation(modId + ":textures/models/" + camera.getItem().getTextureName());
     }
 }

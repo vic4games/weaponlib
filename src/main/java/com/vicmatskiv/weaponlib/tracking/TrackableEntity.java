@@ -62,9 +62,6 @@ public class TrackableEntity {
         return entityRef.get();
     }
 
-    public long getStartTimestamp() {
-        return startTimestamp;
-    }
     
     public static TrackableEntity fromBuf(ByteBuf buf, World world) {
         TrackableEntity te = new TrackableEntity();
@@ -99,7 +96,6 @@ public class TrackableEntity {
         buf.writeLong(trackingDuration);
     }
     
-    @SuppressWarnings("unchecked")
     private Entity getEntityByUuid(UUID uuid, World world) {
         return (Entity)world.getLoadedEntityList()
                 .stream()
@@ -114,5 +110,13 @@ public class TrackableEntity {
     
     public String getDisplayName() {
         return displayName;
+    }
+    
+    public long getTrackingDuration() {
+        return trackingDuration;
+    }
+    
+    public long getStartTimestamp() {
+        return startTimestamp;
     }
 }

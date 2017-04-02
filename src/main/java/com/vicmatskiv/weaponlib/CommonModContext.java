@@ -146,7 +146,7 @@ public class CommonModContext implements ModContext {
 		channel.registerMessage(new SyncPlayerEntityTrackerMessageMessageHandler(),
 		        SyncPlayerEntityTrackerMessage.class, 17, CompatibleSide.CLIENT);
 		
-		channel.registerMessage(new SpawnParticleMessageHandler(),
+		channel.registerMessage(new SpawnParticleMessageHandler(this),
 		        SpawnParticleMessage.class, 18, CompatibleSide.CLIENT);
 		
 		ServerEventHandler serverHandler = new ServerEventHandler(this, modId);
@@ -296,5 +296,10 @@ public class CommonModContext implements ModContext {
     @Override
     public void registerMeleeWeapon(String name, ItemMelee itemMelee, MeleeRenderer renderer) {
         compatibility.registerItem(itemMelee, name);
+    }
+
+    @Override
+    public ResourceLocation getNamedResource(String name) {
+        return new ResourceLocation("weaponlib", name);
     }
 }
