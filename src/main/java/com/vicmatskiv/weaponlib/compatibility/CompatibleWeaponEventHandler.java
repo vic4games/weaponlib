@@ -5,6 +5,7 @@ import net.minecraftforge.client.event.FOVUpdateEvent;
 import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderLivingEvent;
+import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.client.event.RenderLivingEvent.Pre;
 
 public abstract class CompatibleWeaponEventHandler {
@@ -36,6 +37,10 @@ public abstract class CompatibleWeaponEventHandler {
 	}
 
 	protected abstract void onCompatibleHandleRenderLivingEvent(Pre event);
-	
-	
+
+	@SubscribeEvent
+	public void onTextureStitchEvent(TextureStitchEvent.Pre event) {
+	    event.map.registerIcon(
+	            CompatibleParticle.CompatibleParticleBreaking.TEXTURE_BLOOD_PARTICLES);
+	}
 }

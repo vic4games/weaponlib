@@ -1,4 +1,4 @@
-package com.vicmatskiv.weaponlib;
+package com.vicmatskiv.weaponlib.particle;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
@@ -11,20 +11,17 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
-public class FlashFX extends CompatibleParticle {
+public class SmokeFX extends CompatibleParticle {
 	
-	private static final float FLASH_ALPHA_FACTOR = 0.8f;
-
-	private static final double FLASH_SCALE_FACTOR = 1.1;
+	private static final double SMOKE_SCALE_FACTOR = 1.0005988079071D;
 	
-	private static final String FLASH_TEXTURE = "weaponlib:/com/vicmatskiv/weaponlib/resources/flashes.png";
-		
+	private static final String SMOKE_TEXTURE = "weaponlib:/com/vicmatskiv/weaponlib/resources/smokes.png";
+	
 	private int imageIndex;
 	
     private static final int imagesPerRow = 4;
-    
-	public FlashFX(World par1World, double positionX, double positionY, double positionZ, 
-			float scale, float alpha,
+		
+	public SmokeFX(World par1World, double positionX, double positionY, double positionZ, float scale, 
 			float motionX, float motionY, float motionZ)
 	{
 		super(par1World, positionX, positionY, positionZ, 0.0D, 0.0D, 0.0D);
@@ -33,15 +30,7 @@ public class FlashFX extends CompatibleParticle {
 		this.motionZ = motionZ;
 		
 		if (motionX == 0.0F) {
-			motionX = 0.01F;
-		}
-		
-		if (motionZ == 0.0F) {
-			motionZ = 0.01F;
-		}
-		
-		if (motionY == 0.0F) {
-			motionY = 0.01F;
+			motionX = 1.0F;
 		}
 		
 		this.particleTextureIndexX = 0; 
@@ -49,12 +38,11 @@ public class FlashFX extends CompatibleParticle {
 		this.particleRed = 1.0F;
 		this.particleGreen = 1.0F;
 		this.particleBlue = 1.0F;
-		this.particleAlpha = alpha;
-		this.particleScale *= 1.4F;
+		this.particleAlpha = 0.0F;
 		this.particleScale *= scale;
-		this.particleMaxAge = 3;
+		this.particleMaxAge = 50 + (int)(this.rand.nextFloat() * 30);
 		
-		this.imageIndex = this.rand.nextInt() % imagesPerRow;
+        this.imageIndex = this.rand.nextInt() % imagesPerRow;
 	}
 	
 	@Override
@@ -63,31 +51,34 @@ public class FlashFX extends CompatibleParticle {
         this.prevPosY = this.posY;
         this.prevPosZ = this.posZ;
 
-        if (this.particleAge++ >= this.particleMaxAge) {
+        if (this.particleAge++ >= this.particleMaxAge)
+        {
             this.setExpired();
         }
 
+        this.motionY += 0.0005D;
         compatibility.moveParticle(this, this.motionX, this.motionY, this.motionZ);
         
-        this.motionX *= 0.9999999785423279D;
+        this.motionX *= 0.599999785423279D;
         this.motionY *= 0.9999999785423279D;
-        this.motionZ *= 0.9999999785423279D;
+        this.motionZ *= 0.599999785423279D;
+        
+        double alphaRadians = Math.PI / 4f + Math.PI * (float)this.particleAge / (float)this.particleMaxAge;
+        this.particleAlpha = 0.2f * (float) Math.sin(alphaRadians > Math.PI ? Math.PI : alphaRadians);
 
-        this.particleAlpha *= FLASH_ALPHA_FACTOR;
+        this.particleScale *= SMOKE_SCALE_FACTOR;
         
-        this.particleScale *= FLASH_SCALE_FACTOR;
-        
-        if (isCollided()) {
+        if (this.isCollided())
+        {
             this.motionX *= 0.699999988079071D;
             this.motionZ *= 0.699999988079071D;
         }
 	}
     
     @Override
-    public void renderParticle(CompatibleTessellator tessellator, float partialTicks, float par3, float par4, float par5, float par6, float par7)
-    {
-    	
-		Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation(FLASH_TEXTURE));
+    public void renderParticle(CompatibleTessellator tessellator, float partialTicks, float par3, float par4, float par5, float par6, float par7) {
+
+    	Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation(SMOKE_TEXTURE));
 
 		GL11.glPushMatrix();
 		GL11.glPushAttrib(GL11.GL_ENABLE_BIT);
@@ -99,11 +90,6 @@ public class FlashFX extends CompatibleParticle {
         GL11.glAlphaFunc(GL11.GL_GREATER, 0.003921569F);
 
         tessellator.startDrawingParticles();
-
-        int i = this.getBrightnessForRender(partialTicks); // or simply set it to 200?
-        int j = i >> 16 & 65535;
-        int k = i & 65535;
-        tessellator.setLightMap(j, k);
     	
         float f10 = 0.1F * this.particleScale;
 
@@ -113,6 +99,14 @@ public class FlashFX extends CompatibleParticle {
         
         tessellator.setColorRgba(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha);
         
+        int i = this.getBrightnessForRender(partialTicks); // or simply set it to 200?
+        int j = i >> 16 & 65535;
+        int k = i & 65535;
+        tessellator.setLightMap(j, k);
+        
+        // Single row setup
+
+
         /*
          *  (cU, cV)   (bU, bV)
          * 
@@ -134,17 +128,17 @@ public class FlashFX extends CompatibleParticle {
         float dU = imageIndex * uWidth;
         float dV = 1f;
         
-        tessellator.addVertexWithUV((double)(f11 - par3 * f10 - par6 * f10), (double)(f12 - par4 * f10), (double)(f13 - par5 * f10 - par7 * f10), aU, aV); //1, 1); //(double)f7, (double)f9); // a
-        tessellator.addVertexWithUV((double)(f11 - par3 * f10 + par6 * f10), (double)(f12 + par4 * f10), (double)(f13 - par5 * f10 + par7 * f10), bU, bV); //1, 0); //(double)f7, (double)f8); // b
-        tessellator.addVertexWithUV((double)(f11 + par3 * f10 + par6 * f10), (double)(f12 + par4 * f10), (double)(f13 + par5 * f10 + par7 * f10), cU, cV); //0, 0); //(double)f6, (double)f8); // c
-        tessellator.addVertexWithUV((double)(f11 + par3 * f10 - par6 * f10), (double)(f12 - par4 * f10), (double)(f13 + par5 * f10 - par7 * f10), dU, dV); //0, 1); //(double)f6, (double)f9); // d
+        tessellator.addVertexWithUV((double)(f11 - par3 * f10 - par6 * f10), (double)(f12 - par4 * f10), (double)(f13 - par5 * f10 - par7 * f10), aU, aV); //1, 1);
+        tessellator.addVertexWithUV((double)(f11 - par3 * f10 + par6 * f10), (double)(f12 + par4 * f10), (double)(f13 - par5 * f10 + par7 * f10), bU, bV); //1, 0);
+        tessellator.addVertexWithUV((double)(f11 + par3 * f10 + par6 * f10), (double)(f12 + par4 * f10), (double)(f13 + par5 * f10 + par7 * f10), cU, cV); //0, 0);
+        tessellator.addVertexWithUV((double)(f11 + par3 * f10 - par6 * f10), (double)(f12 - par4 * f10), (double)(f13 + par5 * f10 - par7 * f10), dU, dV); //0, 1);
     	
         tessellator.draw();
 
         GL11.glPopAttrib();
         GL11.glPopMatrix();
     }
-
+    
     @Override
     public int getFXLayer() {
     	return 3;

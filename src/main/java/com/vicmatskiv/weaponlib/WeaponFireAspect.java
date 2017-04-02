@@ -58,7 +58,6 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
     public WeaponFireAspect(CommonModContext modContext) {
         this.modContext = modContext;
     }
-    
 
     @Override
     public void setPermitManager(PermitManager permitManager) {}

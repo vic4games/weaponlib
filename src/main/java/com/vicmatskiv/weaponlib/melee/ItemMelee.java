@@ -58,8 +58,7 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
         List<String> textureNames = new ArrayList<>();
 
         private String attackSound;
-        private String reloadSound;
-        private String unloadSound;
+        private String heavyAttackSound;
 
         private CreativeTabs creativeTab;
         private MeleeRenderer renderer;
@@ -147,19 +146,11 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
             return this;
         }
 
-        public Builder withReloadSound(String reloadSound) {
+        public Builder withHeavyAttackSound(String heavyAttackSound) {
             if (modId == null) {
                 throw new IllegalStateException("ModId is not set");
             }
-            this.reloadSound = reloadSound; //modId + ":" + reloadSound;
-            return this;
-        }
-
-        public Builder withUnloadSound(String unloadSound) {
-            if (modId == null) {
-                throw new IllegalStateException("ModId is not set");
-            }
-            this.unloadSound = unloadSound;
+            this.heavyAttackSound = heavyAttackSound; //modId + ":" + reloadSound;
             return this;
         }
 
@@ -227,16 +218,8 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
                 throw new IllegalStateException("Item name not provided");
             }
 
-            if (attackSound == null) {
-                attackSound = name;
-            }
-
-            if (reloadSound == null) {
-                reloadSound = "reload";
-            }
-
-            if (unloadSound == null) {
-                unloadSound = "unload";
+            if (heavyAttackSound == null) {
+                heavyAttackSound = attackSound;
             }
 
             if (spawnEntityClass == null) {
@@ -246,9 +229,10 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
 
             ItemMelee itemMelee = new ItemMelee(this, modContext);
 
-            itemMelee.attackSound = modContext.registerSound(this.attackSound);
-            itemMelee.reloadSound = modContext.registerSound(this.reloadSound);
-            itemMelee.unloadSound = modContext.registerSound(this.unloadSound);
+            itemMelee.attackSound = this.attackSound != null ? 
+                    modContext.registerSound(this.attackSound) : CompatibleSound.SNOWBALL_THROW;
+            itemMelee.heavyAttackSound = this.heavyAttackSound != null ?
+                    modContext.registerSound(this.heavyAttackSound) : CompatibleSound.SNOWBALL_THROW;
 
             itemMelee.setCreativeTab(creativeTab);
             itemMelee.setUnlocalizedName(name);
@@ -278,7 +262,7 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
 
     private CompatibleSound attackSound;
     private CompatibleSound silencedShootSound;
-    private CompatibleSound reloadSound;
+    private CompatibleSound heavyAttackSound;
     private CompatibleSound unloadSound;
     private CompatibleSound ejectSpentRoundSound;
 
@@ -303,7 +287,7 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
     }
 
     public CompatibleSound getReloadSound() {
-        return reloadSound;
+        return heavyAttackSound;
     }
 
     public CompatibleSound getUnloadSound() {
@@ -459,6 +443,14 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
     
     public long getHeavyAttackCooldownTimeout() {
         return builder.heavyAttackCooldownTimeout.get();
+    }
+
+    public CompatibleSound getHeavyAtackSound() {
+        return heavyAttackSound;
+    }
+
+    public CompatibleSound getLightAtackSound() {
+        return attackSound;
     }
 
 }

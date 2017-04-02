@@ -1,5 +1,8 @@
 package com.vicmatskiv.weaponlib.tracking;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
+
 import java.lang.ref.WeakReference;
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -48,7 +51,7 @@ public class TrackableEntity {
             Entity entity = entitySupplier.get();
             if(entity != null) {
                 if(entity instanceof EntityPlayer) {
-                    displayName = ((EntityPlayer) entity).getDisplayName();
+                    displayName = compatibility.getDisplayName((EntityPlayer)entity);
                 } else if(entity instanceof EntityLivingBase) {
                     displayName = EntityList.getEntityString(entity);
                 }
@@ -59,9 +62,6 @@ public class TrackableEntity {
         return entityRef.get();
     }
 
-    public long getStartTimestamp() {
-        return startTimestamp;
-    }
     
     public static TrackableEntity fromBuf(ByteBuf buf, World world) {
         TrackableEntity te = new TrackableEntity();
@@ -96,7 +96,6 @@ public class TrackableEntity {
         buf.writeLong(trackingDuration);
     }
     
-    @SuppressWarnings("unchecked")
     private Entity getEntityByUuid(UUID uuid, World world) {
         return (Entity)world.getLoadedEntityList()
                 .stream()
@@ -111,5 +110,13 @@ public class TrackableEntity {
     
     public String getDisplayName() {
         return displayName;
+    }
+    
+    public long getTrackingDuration() {
+        return trackingDuration;
+    }
+    
+    public long getStartTimestamp() {
+        return startTimestamp;
     }
 }

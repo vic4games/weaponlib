@@ -11,7 +11,6 @@ public class ViewfinderModel extends ModelBase {
 	private ModelRenderer surfaceRenderer;
 	private FlatSurfaceModelBox box;
 
-	@SuppressWarnings("unchecked")
 	public ViewfinderModel() {
 		textureWidth = 128;
 		textureHeight = 64;

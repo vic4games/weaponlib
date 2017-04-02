@@ -2118,4 +2118,8 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
     {
         return this.theMapItemRenderer;
     }
+
+    public void setPrepareTerrain(boolean b) {
+        // Do nothing, this method is actually turning off terrain setup in higher versions
+    }
 }

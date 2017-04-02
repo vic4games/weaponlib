@@ -11,6 +11,8 @@ import net.minecraft.block.material.Material;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.Entity;
@@ -164,6 +166,26 @@ public interface Compatibility {
 	public ArmorMaterial addArmorMaterial(String name, String textureName, int durability, int[] reductionAmounts, int enchantability, CompatibleSound soundOnEquip, float toughness);
 
 	public boolean inventoryHasFreeSlots(EntityPlayer player);
+
+    public void addBlockHitEffect(CompatibleRayTraceResult position);
+
+    public String getDisplayName(EntityPlayer entity);
+
+    public RenderGlobal createCompatibleRenderGlobal();
+
+    public CompatibleParticleManager createCompatibleParticleManager(WorldClient world);
+
+    public void setRenderViewEntity(Entity entity);
+
+    public Entity getRenderViewEntity();
+
+    public CompatibleParticleManager getCompatibleParticleManager();
+
+    public void addChatMessage(EntityPlayer clientPlayer, String message);
+
+    public boolean isAirBlock(World world, CompatibleBlockPos blockPos);
+
+    public void clickBlock(CompatibleBlockPos blockPos, int sideHit);
 
 
 }

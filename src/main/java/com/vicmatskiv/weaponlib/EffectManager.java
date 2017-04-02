@@ -3,6 +3,8 @@ package com.vicmatskiv.weaponlib;
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleVec3;
+import com.vicmatskiv.weaponlib.particle.FlashFX;
+import com.vicmatskiv.weaponlib.particle.SmokeFX;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;

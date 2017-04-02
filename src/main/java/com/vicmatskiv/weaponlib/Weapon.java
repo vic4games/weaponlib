@@ -865,4 +865,8 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
     public float getRecoil() {
         return builder.recoil;
     }
+    
+    public ModContext getModContext() {
+        return modContext;
+    }
 }

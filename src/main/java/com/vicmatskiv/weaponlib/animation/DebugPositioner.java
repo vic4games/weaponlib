@@ -16,7 +16,6 @@ import com.vicmatskiv.weaponlib.melee.RenderableState;
 import com.vicmatskiv.weaponlib.tracking.PlayerEntityTracker;
 
 import net.minecraft.entity.Entity;
-import net.minecraft.util.ChatComponentText;
 
 public class DebugPositioner {
     
@@ -65,7 +64,7 @@ public class DebugPositioner {
     public static void incrementXRotation(float increment) {
         Position partPosition = getCurrentPartPosition();
         if(partPosition == null) {
-            compatibility.clientPlayer().addChatMessage(new ChatComponentText("Debug part not selected"));
+            compatibility.addChatMessage(compatibility.clientPlayer(), "Debug part not selected");
             return;
         }
         
@@ -76,7 +75,7 @@ public class DebugPositioner {
     public static void incrementYRotation(float increment) {
         Position partPosition = getCurrentPartPosition();
         if(partPosition == null) {
-            compatibility.clientPlayer().addChatMessage(new ChatComponentText("Debug part not selected"));
+            compatibility.addChatMessage(compatibility.clientPlayer(), "Debug part not selected");
             return;
         }
         partPosition.yRotation += increment;
@@ -86,7 +85,7 @@ public class DebugPositioner {
     public static void incrementZRotation(float increment) {
         Position partPosition = getCurrentPartPosition();
         if(partPosition == null) {
-            compatibility.clientPlayer().addChatMessage(new ChatComponentText("Debug part not selected"));
+            compatibility.addChatMessage(compatibility.clientPlayer(), "Debug part not selected");
             return;
         }
         partPosition.zRotation += increment;
@@ -96,7 +95,7 @@ public class DebugPositioner {
     public static void incrementXPosition(float increment) {
         Position partPosition = getCurrentPartPosition();
         if(partPosition == null) {
-            compatibility.clientPlayer().addChatMessage(new ChatComponentText("Debug part not selected"));
+            compatibility.addChatMessage(compatibility.clientPlayer(), "Debug part not selected");
             return;
         }
         partPosition.x += increment;
@@ -106,7 +105,7 @@ public class DebugPositioner {
     public static void incrementYPosition(float increment) {
         Position partPosition = getCurrentPartPosition();
         if(partPosition == null) {
-            compatibility.clientPlayer().addChatMessage(new ChatComponentText("Debug part not selected"));
+            compatibility.addChatMessage(compatibility.clientPlayer(), "Debug part not selected");
             return;
         }
         partPosition.y += increment;
@@ -116,7 +115,7 @@ public class DebugPositioner {
     public static void incrementZPosition(float increment) {
         Position partPosition = getCurrentPartPosition();
         if(partPosition == null) {
-            compatibility.clientPlayer().addChatMessage(new ChatComponentText("Debug part not selected"));
+            compatibility.addChatMessage(compatibility.clientPlayer(), "Debug part not selected");
             return;
         }
         partPosition.z += increment;
@@ -126,7 +125,7 @@ public class DebugPositioner {
     public static void setScale(float scale) {
         Position partPosition = getCurrentPartPosition();
         if(partPosition == null) {
-            compatibility.clientPlayer().addChatMessage(new ChatComponentText("Debug part not selected"));
+            compatibility.addChatMessage(compatibility.clientPlayer(), "Debug part not selected");
             return;
         }
         partPosition.scale = scale;
@@ -150,7 +149,7 @@ public class DebugPositioner {
     public static void reset() {
         Position partPosition = getCurrentPartPosition();
         if(partPosition == null) {
-            compatibility.clientPlayer().addChatMessage(new ChatComponentText("Debug part not selected"));
+            compatibility.addChatMessage(compatibility.clientPlayer(), "Debug part not selected");
             return;
         }
         partPosition.x = partPosition.y = partPosition.z 

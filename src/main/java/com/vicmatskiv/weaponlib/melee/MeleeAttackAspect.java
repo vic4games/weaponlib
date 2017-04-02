@@ -5,16 +5,7 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.function.BiPredicate;
 import java.util.function.Predicate;
-
-import net.minecraft.block.Block;
-import net.minecraft.block.material.Material;
-import net.minecraft.client.Minecraft;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.DamageSource;
-import net.minecraft.world.World;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,9 +13,16 @@ import org.apache.logging.log4j.Logger;
 import com.vicmatskiv.weaponlib.CommonModContext;
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleTargetPoint;
+import com.vicmatskiv.weaponlib.particle.SpawnParticleMessage;
 import com.vicmatskiv.weaponlib.state.Aspect;
 import com.vicmatskiv.weaponlib.state.PermitManager;
 import com.vicmatskiv.weaponlib.state.StateManager;
+
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.DamageSource;
+import net.minecraft.world.World;
 
 
 /*
@@ -38,6 +36,7 @@ public class MeleeAttackAspect implements Aspect<MeleeState, PlayerMeleeInstance
     
     private static final long HEAVY_STUB_DURATION = 250;
     
+    @SuppressWarnings("unused")
     private static final long ALERT_TIMEOUT = 300;
 
     private static Predicate<PlayerMeleeInstance> attackTimeoutExpired = 
@@ -150,33 +149,28 @@ public class MeleeAttackAspect implements Aspect<MeleeState, PlayerMeleeInstance
         }
     }
     
+    @SuppressWarnings("unused")
     private void cannotAttack(PlayerMeleeInstance meleeInstance) {
         modContext.getStatusMessageCenter().addAlertMessage("Cooling down...", 2, 200, 100);
         compatibility.playSound(meleeInstance.getPlayer(), modContext.getNoAmmoSound(), 1F, 1F);
     }
     
     private void attack(PlayerMeleeInstance meleeInstance, boolean isHeavyAttack) {
-        Minecraft mc = Minecraft.getMinecraft();
 
         CompatibleRayTraceResult objectMouseOver = compatibility.getObjectMouseOver();
         if (objectMouseOver != null) {
             EntityPlayer player = compatibility.clientPlayer();
             World world = compatibility.world(player);
+            compatibility.playSound(player, isHeavyAttack ? meleeInstance.getWeapon().getHeavyAtackSound() : meleeInstance.getWeapon().getLightAtackSound(), 1F, 1F);
+
             switch (objectMouseOver.getTypeOfHit())
             {
                 case ENTITY:
                     attackEntity(objectMouseOver.getEntityHit(), player, meleeInstance, isHeavyAttack);
                     break;
                 case BLOCK:
-                    //TODO: implement compatibility for material and click block
-                    int i = mc.objectMouseOver.blockX;
-                    int j = mc.objectMouseOver.blockY;
-                    int k = mc.objectMouseOver.blockZ;
-
-                    Block blockHit = compatibility.getBlockAtPosition(world, objectMouseOver);
-                    
-                    if (blockHit.getMaterial() != Material.air) {
-                        mc.playerController.clickBlock(i, j, k, mc.objectMouseOver.sideHit);
+                    if (!compatibility.isAirBlock(world, objectMouseOver.getBlockPos())) {
+                        compatibility.clickBlock(objectMouseOver.getBlockPos(), objectMouseOver.getSideHit());
                     }
                 default:
                     break;
@@ -194,6 +188,28 @@ public class MeleeAttackAspect implements Aspect<MeleeState, PlayerMeleeInstance
     public void serverAttack(EntityPlayer player, PlayerMeleeInstance instance, Entity entity, boolean isHeavyAttack) {
         logger.debug("Player {} hits {} with {} in state {} with damage {}", player, entity, instance, instance.getState(),
                 instance.getWeapon().getDamage(isHeavyAttack));
-        entity.attackEntityFrom(DamageSource.causePlayerDamage(player), instance.getWeapon().getDamage(isHeavyAttack));
+        float damage = instance.getWeapon().getDamage(isHeavyAttack);
+        entity.attackEntityFrom(DamageSource.causePlayerDamage(player), damage);
+        
+        CompatibleTargetPoint point = new CompatibleTargetPoint(entity.dimension, 
+                entity.posX, entity.posY, entity.posZ, 100);
+
+        double motionX = entity.posX - player.posX;
+        double motionY = entity.posY - player.posY;
+        double motionZ = entity.posZ - player.posZ;
+
+        int count = getParticleCount (damage);
+        logger.debug("Generating {} particle(s) per damage {}", count, damage);
+
+        modContext.getChannel().sendToAllAround(new SpawnParticleMessage(
+                count,
+                entity.posX - motionX / 2, 
+                entity.posY - motionY / 2, 
+                entity.posZ - motionZ / 2),
+                point);
+    }
+    
+    int getParticleCount(float damage) {
+        return (int) (-0.11 * (damage - 30) * (damage - 30) + 100);
     }
 }

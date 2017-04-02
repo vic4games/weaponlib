@@ -12,6 +12,7 @@ import com.vicmatskiv.weaponlib.WeaponAttachmentAspect.ExitAttachmentModePermit;
 import com.vicmatskiv.weaponlib.WeaponReloadAspect.UnloadPermit;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
+import com.vicmatskiv.weaponlib.compatibility.CompatiblePlayerEntityTrackerProvider;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSide;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 import com.vicmatskiv.weaponlib.crafting.RecipeGenerator;
@@ -26,6 +27,8 @@ import com.vicmatskiv.weaponlib.melee.TryAttackMessageHandler;
 import com.vicmatskiv.weaponlib.network.NetworkPermitManager;
 import com.vicmatskiv.weaponlib.network.PermitMessage;
 import com.vicmatskiv.weaponlib.network.TypeRegistry;
+import com.vicmatskiv.weaponlib.particle.SpawnParticleMessage;
+import com.vicmatskiv.weaponlib.particle.SpawnParticleMessageHandler;
 import com.vicmatskiv.weaponlib.state.Permit;
 import com.vicmatskiv.weaponlib.state.StateManager;
 import com.vicmatskiv.weaponlib.tracking.SyncPlayerEntityTrackerMessage;
@@ -143,12 +146,17 @@ public class CommonModContext implements ModContext {
 		channel.registerMessage(new SyncPlayerEntityTrackerMessageMessageHandler(),
 		        SyncPlayerEntityTrackerMessage.class, 17, CompatibleSide.CLIENT);
 		
-		ServerEventHandler serverHandler = new ServerEventHandler(this);
+		channel.registerMessage(new SpawnParticleMessageHandler(this),
+		        SpawnParticleMessage.class, 18, CompatibleSide.CLIENT);
+		
+		ServerEventHandler serverHandler = new ServerEventHandler(this, modId);
         compatibility.registerWithFmlEventBus(serverHandler);
         compatibility.registerWithEventBus(serverHandler);
 		
 		compatibility.registerWithFmlEventBus(new WeaponKeyInputHandler(this, (ctx) -> getPlayer(ctx), 
 				weaponAttachmentAspect, channel));
+		
+		CompatiblePlayerEntityTrackerProvider.register(this);
 	}
 	
 	public void registerServerSideOnly() {
@@ -288,5 +296,10 @@ public class CommonModContext implements ModContext {
     @Override
     public void registerMeleeWeapon(String name, ItemMelee itemMelee, MeleeRenderer renderer) {
         compatibility.registerItem(itemMelee, name);
+    }
+
+    @Override
+    public ResourceLocation getNamedResource(String name) {
+        return new ResourceLocation("weaponlib", name);
     }
 }

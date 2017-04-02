@@ -42,6 +42,8 @@ public class WirelessCameraPerspective extends RemoteFirstPersonPerspective {
     private int totalTrackableEntities;
 
     private String displayName;
+    
+    private Float batteryLevel;
 
     @Override
     protected void updateWatchablePlayer() {
@@ -69,9 +71,16 @@ public class WirelessCameraPerspective extends RemoteFirstPersonPerspective {
         Entity watchableEntity = null;
         if(te == null) {
             displayName = "";
+            batteryLevel = null;
         } else {
             displayName = te.getDisplayName();
             watchableEntity = te.getEntity();
+            batteryLevel = 1f - ((float)(System.currentTimeMillis() - te.getStartTimestamp()) / te.getTrackingDuration());
+            if(batteryLevel > 1f) {
+                batteryLevel = 1f;
+            } else if(batteryLevel < 0f) {
+                batteryLevel = 0f;
+            }
         }
 
         Entity realEntity = watchableEntity == null ? null : compatibility.world(watchableEntity)
@@ -103,7 +112,7 @@ public class WirelessCameraPerspective extends RemoteFirstPersonPerspective {
         
         int maxDistance = 120;
         int displayCameraIndex = activeWatchIndex + 1;
-        String message = "Cam " + displayCameraIndex + ": " + displayName;
+        String message = "Cam " + displayCameraIndex + "/" + totalTrackableEntities + ": " + displayName;
         EntityLivingBase watchableEntity = watchablePlayer.getEntityLiving();
         int color =  0xFFFF00;
         if(watchableEntity != null) {
@@ -117,7 +126,7 @@ public class WirelessCameraPerspective extends RemoteFirstPersonPerspective {
                 framebuffer.framebufferClear();
                 framebuffer.bindFramebuffer(true);
                 color =  0xFFFF00;
-                message = "Cam " + displayCameraIndex + ": no signal";
+                message = "Cam " + displayCameraIndex  + "/" + totalTrackableEntities + ": no signal";
                 drawStatic();
                 badSignalTickCounter++;
             }
@@ -130,17 +139,20 @@ public class WirelessCameraPerspective extends RemoteFirstPersonPerspective {
             color =  0xFF0000;
             message = "No Cameras Available";
         } else {
-            message = "Cam " + displayCameraIndex + ": " + displayName;
+            message = "Cam " + displayCameraIndex + "/" + totalTrackableEntities + ": " + displayName;
             drawStatic();
         }
         
         FontRenderer fontRender = compatibility.getFontRenderer();
         
-
         float scale = 2f;
         GL11.glScalef(scale, scale, scale);
         
         fontRender.drawString(message, (int)(40f/ scale), (int)((this.height - 30) / scale), color, false);
+        
+        if(totalTrackableEntities > 0 && batteryLevel != null) {
+            fontRender.drawString("Battery: " + (int)(batteryLevel * 100) + "%", (int)((this.width - 150f)/ scale), (int)((this.height - 30) / scale), color, false);
+        }
     }
     
     public void drawStatic() {

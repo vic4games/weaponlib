@@ -20,13 +20,27 @@ public class WeaponResourcePack extends CompatibleResourcePack {
 
 	@Override
 	public InputStream getInputStream(ResourceLocation resourceLocation) throws IOException {
-		return getClass().getResourceAsStream(resourceLocation.getResourcePath());
+	    String resourcePath = modifyResourcePath(resourceLocation);
+		return getClass().getResourceAsStream(resourcePath);
 	}
+
+    private String modifyResourcePath(ResourceLocation resourceLocation) {
+        String resourcePath = resourceLocation.getResourcePath();
+        if(resourcePath.startsWith("textures")) {
+            int lastIndexOfSlash = resourcePath.lastIndexOf('/');
+            if(lastIndexOfSlash >= 0) {
+                String fileName = resourcePath.substring(lastIndexOfSlash + 1);
+                resourcePath = '/' + getClass().getPackage().getName().replace('.', '/') + "/resources/" + fileName;
+            }
+        }
+        return resourcePath;
+    }
 
 	@Override
 	public boolean resourceExists(ResourceLocation resourceLocation) {
-		boolean value = WEAPONLIB_RESOURCE_DOMAIN.equals(resourceLocation.getResourceDomain())
-				&& getClass().getResource(resourceLocation.getResourcePath()) != null;
+	    String resourcePath = modifyResourcePath(resourceLocation);
+        boolean value = WEAPONLIB_RESOURCE_DOMAIN.equals(resourceLocation.getResourceDomain())
+				&& getClass().getResource(resourcePath) != null;
 		return value;
 	}
 

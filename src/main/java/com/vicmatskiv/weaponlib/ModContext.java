@@ -9,6 +9,7 @@ import com.vicmatskiv.weaponlib.melee.MeleeAttackAspect;
 import com.vicmatskiv.weaponlib.melee.MeleeRenderer;
 
 import net.minecraft.item.Item;
+import net.minecraft.util.ResourceLocation;
 
 public interface ModContext {
 	
@@ -60,5 +61,7 @@ public interface ModContext {
     public MeleeAttackAspect getMeleeAttackAspect();
 
     public MeleeAttachmentAspect getMeleeAttachmentAspect();
+
+    public ResourceLocation getNamedResource(String name);
 
 }
