@@ -2,6 +2,9 @@ package com.vicmatskiv.weaponlib;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTargetPoint;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleThrowableEntity;
@@ -16,6 +19,9 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 
 public class WeaponSpawnEntity extends CompatibleThrowableEntity {
+    
+    private static final Logger logger = LogManager.getLogger(WeaponSpawnEntity.class);
+
 	
 	static final float DEFAULT_INACCURACY = 1f;
 	private float explosionRadius = 0.1F;
@@ -68,7 +74,6 @@ public class WeaponSpawnEntity extends CompatibleThrowableEntity {
 	
 	@Override
 	public void onUpdate() {
-	    System.out.println("Entity updated to " + this);
 	    super.onUpdate();
 	}
 
@@ -93,60 +98,40 @@ public class WeaponSpawnEntity extends CompatibleThrowableEntity {
 	@Override
 	protected void onImpact(CompatibleRayTraceResult position) {
 		//if(!compatibility.world(this).isRemote) {
-			if (position.getEntityHit() != null && position.getEntityHit() != this.getThrower()) {
-				if(explosionRadius > 0) {
-					compatibility.world(this).createExplosion(this, this.posX, this.posY, this.posZ, explosionRadius, true);
-				}
+	    if (position.getEntityHit() != null && position.getEntityHit() != this.getThrower()) {
+	        if(explosionRadius > 0) {
+	            compatibility.world(this).createExplosion(this, this.posX, this.posY, this.posZ, explosionRadius, true);
+	        }
 
-				position.getEntityHit().attackEntityFrom(DamageSource.causeThrownDamage(this, this.getThrower()), damage);
-				position.getEntityHit().hurtResistantTime = 0;
-				position.getEntityHit().prevRotationYaw -= 0.3D;
-				
-				System.out.println("Hit entity: " + position.getEntityHit());
-				
-	            CompatibleTargetPoint point = new CompatibleTargetPoint(position.getEntityHit().dimension, 
-	                    this.posX, this.posY, this.posZ, 100);
+	        position.getEntityHit().attackEntityFrom(DamageSource.causeThrownDamage(this, this.getThrower()), damage);
+	        position.getEntityHit().hurtResistantTime = 0;
+	        position.getEntityHit().prevRotationYaw -= 0.3D;
 
-//	            System.out.printf("Last tick pos at %.2f %.2f %.2f\n", 
-//                        lastTickPosX, lastTickPosY, lastTickPosZ);
-	            
-	            double magnitude = Math.sqrt(motionX * motionX + motionY * motionY + motionZ * motionZ) + 2;
-	            
-				weapon.getModContext().getChannel().sendToAllAround(new SpawnParticleMessage(
-				        position.getEntityHit().posX - motionX / magnitude, 
-				        position.getEntityHit().posY - motionY / magnitude, 
-				        position.getEntityHit().posZ - motionZ / magnitude),
-				        point);
-				
-//				this.worldObj.spawnParticle("snowballpoof", position.getEntityHit().posX - motionX / magnitude, 
-//                        position.getEntityHit().posY - motionY / magnitude, 
-//                        position.getEntityHit().posZ - motionZ / magnitude, 0.0D, 0.0D, 0.0D);
-//				
-//				for (int i = 0; i < 10; ++i) {
-//                    this.worldObj.spawnParticle("snowballpoof", this.posX, this.posY, this.posZ, 0.0D, 0.0D, 0.0D);
-//                }
-				
-//				for (int i = 0; i < 20; ++i) {
-//	                this.worldObj.spawnParticle("snowballpoof", this.posX, this.posY - 1, this.posZ + 1, 0.0D, 0.0D, 0.0D);
-//	            }
-				
-			} else if(explosionRadius > 0) {
-				compatibility.world(this).createExplosion(this, position.getBlockPosX(), position.getBlockPosY(), position.getBlockPosZ(), explosionRadius, true);
-			} else if(position.getTypeOfHit() == CompatibleRayTraceResult.Type.BLOCK) {
-				weapon.onSpawnEntityBlockImpact(compatibility.world(this), null, this, position);
-			}
-			
-			if (!compatibility.world(this).isRemote) {
-			    this.setDead();
-			}
-			
-		//}
-//		if(position.getEntityHit() != null) {
-//		    for (int i = 0; i < 20; ++i) {
-//		        this.worldObj.spawnParticle("snowballpoof", this.posX, this.posY, this.posZ, 0.0D, 0.0D, 0.0D);
-//		    }
-//		}
-       
+	        logger.debug("Hit entity {}", position.getEntityHit());
+
+	        CompatibleTargetPoint point = new CompatibleTargetPoint(position.getEntityHit().dimension, 
+	                this.posX, this.posY, this.posZ, 100);
+
+	        double magnitude = Math.sqrt(motionX * motionX + motionY * motionY + motionZ * motionZ) + 2;
+
+	        int count = getParticleCount (damage);
+	        logger.debug("Generating {} particle(s) per damage {}", count, damage);
+	        weapon.getModContext().getChannel().sendToAllAround(new SpawnParticleMessage(
+	                count,
+	                position.getEntityHit().posX - motionX / magnitude, 
+	                position.getEntityHit().posY - motionY / magnitude, 
+	                position.getEntityHit().posZ - motionZ / magnitude),
+	                point);
+
+	    } else if(explosionRadius > 0) {
+	        compatibility.world(this).createExplosion(this, position.getBlockPosX(), position.getBlockPosY(), position.getBlockPosZ(), explosionRadius, true);
+	    } else if(position.getTypeOfHit() == CompatibleRayTraceResult.Type.BLOCK) {
+	        weapon.onSpawnEntityBlockImpact(compatibility.world(this), null, this, position);
+	    }
+
+	    if (!compatibility.world(this).isRemote) {
+	        this.setDead();
+	    }
 	}
 	
 	@Override
@@ -197,4 +182,9 @@ public class WeaponSpawnEntity extends CompatibleThrowableEntity {
 	boolean isDamageableEntity(Entity entity) {
 		return false;
 	}
+	
+	int getParticleCount(float damage) {
+        return (int) (-0.11 * (damage - 30) * (damage - 30) + 100);
+    }
+	
 }

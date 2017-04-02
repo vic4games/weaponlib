@@ -38,7 +38,7 @@ public class CompatiblePlayerEntityTrackerProvider implements ICapabilitySeriali
         
         private Function<World, PlayerEntityTracker> initializer; // = w -> new PlayerEntityTracker(w);
         private PlayerEntityTracker resolved;
-        private byte[] bytes;
+        private byte[] bytes = new byte[0];
 
         @Override
         public byte[] toByteArray() {
@@ -59,7 +59,7 @@ public class CompatiblePlayerEntityTrackerProvider implements ICapabilitySeriali
         @Override
         public PlayerEntityTracker getTracker(World world) {
             if(resolved == null) {
-                resolved = initializer != null ? initializer.apply(world) : null;
+                resolved = initializer != null ? initializer.apply(world) : new PlayerEntityTracker(world);
             }
             return resolved;
         }

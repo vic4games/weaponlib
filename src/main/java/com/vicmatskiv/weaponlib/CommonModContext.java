@@ -300,6 +300,6 @@ public class CommonModContext implements ModContext {
 
     @Override
     public ResourceLocation getNamedResource(String name) {
-        return new ResourceLocation(modId, name);
+        return new ResourceLocation("weaponlib", name);
     }
 }

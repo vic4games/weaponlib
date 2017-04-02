@@ -82,6 +82,19 @@ public class PlayerTabletInstance extends PlayerItemInstance<TabletState> {
         }
     }
     
+
+    public void previousActiveWatchIndex() {
+        PlayerEntityTracker tracker = PlayerEntityTracker.getTracker(player);
+        if(tracker != null) {
+            if(activeWatchIndex == 0) {
+                setActiveWatchIndex(tracker.getTrackableEntitites().size() - 1);
+            } else {
+                setActiveWatchIndex(activeWatchIndex - 1);
+            }
+        }
+    }
+
+    
     @Override
     public String toString() {
         return "Tablet [" + getUuid() + "]";

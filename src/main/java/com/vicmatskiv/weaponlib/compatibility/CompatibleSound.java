@@ -1,9 +1,12 @@
 package com.vicmatskiv.weaponlib.compatibility;
 
+import net.minecraft.init.SoundEvents;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
 
 public class CompatibleSound {
+    
+    public static final CompatibleSound SNOWBALL_THROW = new CompatibleSound(SoundEvents.ENTITY_SNOWBALL_THROW);
 	
 	private SoundEvent soundEvent;
 	private ResourceLocation soundResourceLocation;
@@ -13,7 +16,11 @@ public class CompatibleSound {
 		this.soundEvent = new SoundEvent(soundResourceLocation);
 	}
 
-	public SoundEvent getSound() {
+	private CompatibleSound(SoundEvent soundEvent) {
+        this.soundEvent = soundEvent;
+    }
+
+    public SoundEvent getSound() {
 		return soundEvent;
 	}
 

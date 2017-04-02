@@ -26,11 +26,15 @@ public class EntityWirelessCamera extends CompatibleThrowableEntity {
     private static final Logger logger = LogManager.getLogger(EntityWirelessCamera.class);
 
     private ModContext modContext;
-    private long trackingDuration = 10 * 1000 * 60;
     private ItemWirelessCamera itemWirelessCamera;
+    private long timestamp;
+    private long duration;
     
-    public EntityWirelessCamera(ModContext modContext, World world, EntityPlayer player, ItemWirelessCamera itemWirelessCamera) {
+    public EntityWirelessCamera(ModContext modContext, World world, EntityPlayer player, 
+            ItemWirelessCamera itemWirelessCamera, long duration) {
         super(world, player);
+        this.timestamp = System.currentTimeMillis();
+        this.duration = duration;
         this.modContext = modContext;
         this.itemWirelessCamera = itemWirelessCamera;
         
@@ -61,13 +65,15 @@ public class EntityWirelessCamera extends CompatibleThrowableEntity {
         Entity entityHit = rayTraceResult.getEntityHit();
         logger.debug("Player {} hit entity {}", getThrower(), rayTraceResult.getEntityHit());
 
+        boolean hit = false;
         if (entityHit != null && getThrower() instanceof EntityPlayer) {
             if (!this.worldObj.isRemote) {
                 logger.debug("Server hit entity uuid {}", rayTraceResult.getEntityHit().getPersistentID());
                 PlayerEntityTracker tracker = PlayerEntityTracker.getTracker((EntityPlayer) getThrower());
                 if(tracker != null) {
-                    tracker.addTrackableEntity(new TrackableEntity(entityHit, System.currentTimeMillis(),
-                            trackingDuration));
+                    hit = true;
+                    tracker.addTrackableEntity(new TrackableEntity(entityHit, timestamp,
+                            duration));
                     modContext.getChannel().getChannel().sendTo(new SyncPlayerEntityTrackerMessage(tracker),
                             (EntityPlayerMP)getThrower());
                     String displayName = "";
@@ -82,18 +88,33 @@ public class EntityWirelessCamera extends CompatibleThrowableEntity {
         }
 
         if (!this.worldObj.isRemote) {
+            if(!hit) {
+                dropItem(itemWirelessCamera, 1);
+            }
             this.setDead();
         }
+    }
+    
+    @Override
+    public void onUpdate() {
+        super.onUpdate();
+//        if(timestamp + duration < System.currentTimeMillis()) {
+//            this.setDead();
+//        }
     }
 
     @Override
     public void writeSpawnData(ByteBuf buffer) {
         buffer.writeInt(Item.getIdFromItem(itemWirelessCamera));
+        buffer.writeLong(timestamp);
+        buffer.writeLong(duration);
     }
 
     @Override
     public void readSpawnData(ByteBuf buffer) {
         itemWirelessCamera = (ItemWirelessCamera) Item.getItemById(buffer.readInt());
+        timestamp = buffer.readLong();
+        duration = buffer.readLong();
     }
 
     @Override

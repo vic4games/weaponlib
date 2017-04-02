@@ -15,6 +15,8 @@ import net.minecraft.world.World;
 public class SpawnParticleMessageHandler implements CompatibleMessageHandler<SpawnParticleMessage, CompatibleMessage>  {
     
     private ModContext modContext;
+    
+    private double yOffset = 1;
 
     public SpawnParticleMessageHandler(ModContext modContext) {
         this.modContext = modContext;
@@ -25,18 +27,11 @@ public class SpawnParticleMessageHandler implements CompatibleMessageHandler<Spa
         if(!ctx.isServerSide()) {
             compatibility.runInMainClientThread(() -> {
                 World world = compatibility.world(compatibility.clientPlayer());
-                System.out.println("Player: " + compatibility.clientPlayer());
-                for (int i = 0; i < 50; ++i) {
-                    System.out.printf("Spawning at %.2f %.2f %.2f\n", 
-                            message.getPosX(), message.getPosY(), message.getPosZ());
+                for (int i = 0; i < message.getCount(); ++i) {
                     CompatibleParticleBreaking particle = CompatibleParticle.createParticleBreaking(
-                            modContext, world, message.getPosX(), message.getPosY() + 1, message.getPosZ());
+                            modContext, world, message.getPosX(), message.getPosY() + yOffset, message.getPosZ());
                     Minecraft.getMinecraft().effectRenderer.addEffect(particle);
-//                    world.spawnParticle("snowballpoof", message.getPosX(), 
-//                            message.getPosY() + 1, message.getPosZ(), 0.0D, 0.0D, 0.0D);
                 }
-                
-                //FMLClientHandler.instance().getClient().theWorld.spawnParticle("hugeexplosion", message.posX, message.posY+1, message.posZ, 0.0D, 0.0D, 0.0D);
             });
         }
         return null;

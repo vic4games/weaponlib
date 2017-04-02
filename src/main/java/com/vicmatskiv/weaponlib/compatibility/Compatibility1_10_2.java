@@ -400,7 +400,8 @@ public class Compatibility1_10_2 implements Compatibility {
 		} else if(player.inventory.mainInventory[slot] == null) {
         	player.inventory.mainInventory[slot] = new ItemStack(item);
         }
-        return result;	}
+        return result;	
+    }
 
 	@Override
 	public ItemStack getInventoryItemStack(EntityPlayer player, int inventoryItemIndex) {
