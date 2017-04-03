@@ -98,4 +98,9 @@ public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 			}
 		}
 	}
+
+    @Override
+    protected ModContext getModContext() {
+        return modContext;
+    }
 }

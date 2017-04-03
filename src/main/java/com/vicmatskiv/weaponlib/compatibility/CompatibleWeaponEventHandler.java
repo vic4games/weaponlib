@@ -1,5 +1,7 @@
 package com.vicmatskiv.weaponlib.compatibility;
 
+import com.vicmatskiv.weaponlib.ModContext;
+
 import net.minecraftforge.client.event.FOVUpdateEvent;
 import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.client.event.MouseEvent;
@@ -36,6 +38,6 @@ public abstract class CompatibleWeaponEventHandler {
 	}
 
 	protected abstract void onCompatibleHandleRenderLivingEvent(Pre event);
-	
-	
+
+    protected abstract ModContext getModContext();
 }

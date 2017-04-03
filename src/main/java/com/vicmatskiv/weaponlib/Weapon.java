@@ -475,6 +475,8 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
                     Block block = WorldHelper.getBlockAtPosition(world, position);
                     if (WorldHelper.isGlassBlock(block)) {
                         WorldHelper.destroyBlock(world, position);
+                    } else  {
+                        compatibility.addBlockHitEffect(position);
                     }
                 };
             }
