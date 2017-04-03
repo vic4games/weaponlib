@@ -16,12 +16,14 @@ public abstract class CompatibleParticle extends EntityFX {
     
     public static class CompatibleParticleBreaking extends EntityBreakingFX {
         
-        public static final String TEXTURE_BLOOD_PARTICLES = "weaponlib:particle/blood";
+        public static final String TEXTURE_BLOOD_PARTICLES = "particle/blood";
         
         protected CompatibleParticleBreaking(ModContext modContext, World worldIn, double posXIn, double posYIn, double posZIn) {
             super(worldIn, posXIn, posYIn, posZIn, Items.snowball);
             
-            TextureAtlasSprite sprite = Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(TEXTURE_BLOOD_PARTICLES);
+            TextureAtlasSprite sprite = Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(
+                    modContext.getNamedResource(TEXTURE_BLOOD_PARTICLES).toString());
+                    //TEXTURE_BLOOD_PARTICLES);
             
             this.setParticleIcon(sprite);
         }

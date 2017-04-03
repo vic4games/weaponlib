@@ -474,7 +474,7 @@ public class Compatibility1_7_10 implements Compatibility {
     @Override
     @SideOnly(Side.CLIENT)
     public RenderGlobal createCompatibleRenderGlobal() {
-        return new RenderGlobal(Minecraft.getMinecraft());
+        return Minecraft.getMinecraft().renderGlobal; //new RenderGlobal(Minecraft.getMinecraft());
     }
 
     @Override

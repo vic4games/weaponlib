@@ -90,6 +90,7 @@ public class ExtendedPlayerProperties implements IExtendedEntityProperties {
     public void init(Entity entity, World world) {
         this.world = world;
         this.initialized = true;
+        this.entityTrackerContainer.initializer = w -> new PlayerEntityTracker(world);
     }
 
     @Override
