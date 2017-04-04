@@ -89,7 +89,7 @@ public class AttachmentBuilder<T> {
 	}
 	
 	public AttachmentBuilder<T> withTextureName(String textureName) {
-		this.textureName = textureName;
+		this.textureName = textureName.toLowerCase();
 		return this;
 	}
 	
@@ -159,7 +159,7 @@ public class AttachmentBuilder<T> {
 	}
 	
 	public AttachmentBuilder<T> withModel(ModelBase model, String textureName) {
-		this.texturedModels.add(new Tuple<>(model, textureName));
+		this.texturedModels.add(new Tuple<>(model, textureName.toLowerCase()));
 		return this;
 	}
 	
