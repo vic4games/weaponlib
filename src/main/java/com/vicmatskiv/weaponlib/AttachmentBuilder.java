@@ -148,7 +148,7 @@ public class AttachmentBuilder<T> {
     }
 	
 	public AttachmentBuilder<T> withCrosshair(String crosshair) {
-		this.crosshair = crosshair;
+		this.crosshair = crosshair.toLowerCase();
 		return this;
 	}
 	

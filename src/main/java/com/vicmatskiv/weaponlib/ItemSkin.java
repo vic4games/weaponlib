@@ -16,7 +16,7 @@ public class ItemSkin extends ItemAttachment<Weapon> {
 		
 		public Builder withTextureVariant(String... textureVariantNames) {
 			for(String s: textureVariantNames) {
-				this.textureVariants.add(stripFileExtension(s, ".png"));
+				this.textureVariants.add(stripFileExtension(s.toLowerCase(), ".png"));
 			}
 			return this;
 		}

@@ -126,7 +126,9 @@ public class WeaponSpawnEntity extends CompatibleThrowableEntity {
 	    } else if(explosionRadius > 0) {
 	        compatibility.world(this).createExplosion(this, position.getBlockPosX(), position.getBlockPosY(), position.getBlockPosZ(), explosionRadius, true);
 	    } else if(position.getTypeOfHit() == CompatibleRayTraceResult.Type.BLOCK) {
-	        weapon.onSpawnEntityBlockImpact(compatibility.world(this), null, this, position);
+	        if(!compatibility.world(this).isRemote) {
+	            weapon.onSpawnEntityBlockImpact(compatibility.world(this), null, this, position);
+	        }
 	    }
 
 	    if (!compatibility.world(this).isRemote) {
