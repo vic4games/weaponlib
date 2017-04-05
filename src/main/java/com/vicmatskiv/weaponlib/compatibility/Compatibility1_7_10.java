@@ -2,18 +2,6 @@ package com.vicmatskiv.weaponlib.compatibility;
 
 import java.util.function.Predicate;
 
-import com.vicmatskiv.weaponlib.Weapon;
-import com.vicmatskiv.weaponlib.WeaponSpawnEntity;
-
-import cpw.mods.fml.client.FMLClientHandler;
-import cpw.mods.fml.client.registry.ClientRegistry;
-import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.common.IWorldGenerator;
-import cpw.mods.fml.common.ObfuscationReflectionHelper;
-import cpw.mods.fml.common.registry.EntityRegistry;
-import cpw.mods.fml.common.registry.GameRegistry;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
@@ -48,6 +36,21 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.EnumHelper;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
 import net.minecraftforge.oredict.ShapedOreRecipe;
+
+import com.vicmatskiv.weaponlib.ModContext;
+import com.vicmatskiv.weaponlib.Weapon;
+import com.vicmatskiv.weaponlib.WeaponSpawnEntity;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleParticle.CompatibleParticleBreaking;
+
+import cpw.mods.fml.client.FMLClientHandler;
+import cpw.mods.fml.client.registry.ClientRegistry;
+import cpw.mods.fml.common.FMLCommonHandler;
+import cpw.mods.fml.common.IWorldGenerator;
+import cpw.mods.fml.common.ObfuscationReflectionHelper;
+import cpw.mods.fml.common.registry.EntityRegistry;
+import cpw.mods.fml.common.registry.GameRegistry;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 
 public class Compatibility1_7_10 implements Compatibility {
 	
@@ -457,13 +460,13 @@ public class Compatibility1_7_10 implements Compatibility {
 		return result;
 	}
 
+    
     @Override
-    public void addBlockHitEffect(CompatibleRayTraceResult position) {
+    public void addBlockHitEffect(int x, int y, int z, int sideHit) {
         for(int i = 0; i < 6; i++) {
             Minecraft.getMinecraft().effectRenderer.addBlockHitEffects(
-                    position.getBlockPosX(), position.getBlockPosY(), position.getBlockPosZ(), position.getSideHit());
+                    x, y, z, sideHit);
         }
-        
     }
 
     @Override
@@ -516,6 +519,20 @@ public class Compatibility1_7_10 implements Compatibility {
     @Override
     public void clickBlock(CompatibleBlockPos blockPos, int sideHit) {
         Minecraft.getMinecraft().playerController.clickBlock(blockPos.getBlockPosX(), blockPos.getBlockPosY(), blockPos.getBlockPosZ(), sideHit);
+    }
 
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void addBreakingParticle(ModContext modContext, double x, double y, double z) {
+        double yOffset = 1;
+        CompatibleParticleBreaking particle = CompatibleParticle.createParticleBreaking(
+                modContext, world(clientPlayer()), x, y + yOffset, z);
+        Minecraft.getMinecraft().effectRenderer.addEffect(particle);
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public float getAspectRatio(ModContext modContext) {
+        return modContext.getAspectRatio();
     }
 }

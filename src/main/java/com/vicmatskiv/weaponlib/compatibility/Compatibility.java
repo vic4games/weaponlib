@@ -2,6 +2,7 @@ package com.vicmatskiv.weaponlib.compatibility;
 
 import java.util.function.Predicate;
 
+import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.Weapon;
 import com.vicmatskiv.weaponlib.WeaponSpawnEntity;
 
@@ -167,7 +168,7 @@ public interface Compatibility {
 
 	public boolean inventoryHasFreeSlots(EntityPlayer player);
 
-    public void addBlockHitEffect(CompatibleRayTraceResult position);
+    public void addBlockHitEffect(int x, int y, int z, int sideHit);
 
     public String getDisplayName(EntityPlayer entity);
 
@@ -186,6 +187,10 @@ public interface Compatibility {
     public boolean isAirBlock(World world, CompatibleBlockPos blockPos);
 
     public void clickBlock(CompatibleBlockPos blockPos, int sideHit);
+
+    public void addBreakingParticle(ModContext modContext, double x, double y, double z);
+
+    public float getAspectRatio(ModContext modContext);
 
 
 }

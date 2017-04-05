@@ -81,7 +81,7 @@ public class ItemWirelessCamera extends CompatibleItem implements ModelSource {
         }
         
         public Builder withTextureName(String textureName) {
-            this.textureName = textureName;
+            this.textureName = textureName.toLowerCase();
             return this;
         }
         
@@ -140,7 +140,7 @@ public class ItemWirelessCamera extends CompatibleItem implements ModelSource {
         }
    
         public Builder withModel(ModelBase model, String textureName) {
-            this.texturedModels.add(new Tuple<>(model, textureName));
+            this.texturedModels.add(new Tuple<>(model, textureName.toLowerCase()));
             return this;
         }
 

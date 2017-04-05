@@ -16,6 +16,8 @@ import com.vicmatskiv.weaponlib.compatibility.CompatiblePlayerEntityTrackerProvi
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSide;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 import com.vicmatskiv.weaponlib.crafting.RecipeGenerator;
+import com.vicmatskiv.weaponlib.electronics.PlayerTabletInstance;
+import com.vicmatskiv.weaponlib.electronics.TabletState;
 import com.vicmatskiv.weaponlib.melee.ItemMelee;
 import com.vicmatskiv.weaponlib.melee.MeleeAttachmentAspect;
 import com.vicmatskiv.weaponlib.melee.MeleeAttackAspect;
@@ -57,6 +59,10 @@ public class CommonModContext implements ModContext {
         TypeRegistry.getInstance().register(WeaponState.class);
         
         TypeRegistry.getInstance().register(PlayerMeleeInstance.class);
+        
+        TypeRegistry.getInstance().register(PlayerTabletInstance.class);
+        TypeRegistry.getInstance().register(MeleeState.class);
+        TypeRegistry.getInstance().register(TabletState.class);
     }
 
 	private String modId;
@@ -148,6 +154,9 @@ public class CommonModContext implements ModContext {
 		
 		channel.registerMessage(new SpawnParticleMessageHandler(this),
 		        SpawnParticleMessage.class, 18, CompatibleSide.CLIENT);
+		
+		channel.registerMessage(new BlockHitMessageHandler(this),
+		        BlockHitMessage.class, 19, CompatibleSide.CLIENT);
 		
 		ServerEventHandler serverHandler = new ServerEventHandler(this, modId);
         compatibility.registerWithFmlEventBus(serverHandler);
@@ -301,5 +310,10 @@ public class CommonModContext implements ModContext {
     @Override
     public ResourceLocation getNamedResource(String name) {
         return new ResourceLocation(modId, name);
+    }
+
+    @Override
+    public float getAspectRatio() {
+        return 1f;
     }
 }

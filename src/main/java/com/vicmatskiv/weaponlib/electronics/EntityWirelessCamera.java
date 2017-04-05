@@ -67,6 +67,13 @@ public class EntityWirelessCamera extends CompatibleThrowableEntity {
 
         boolean hit = false;
         if (entityHit != null && getThrower() instanceof EntityPlayer) {
+            String displayName = "";
+            if(entityHit instanceof EntityPlayer) {
+                displayName = compatibility.getDisplayName((EntityPlayer)entityHit);
+            } else if(entityHit instanceof EntityLivingBase) {
+                displayName = EntityList.getEntityString(entityHit);
+            }
+            
             if (!this.worldObj.isRemote) {
                 logger.debug("Server hit entity uuid {}", rayTraceResult.getEntityHit().getPersistentID());
                 PlayerEntityTracker tracker = PlayerEntityTracker.getTracker((EntityPlayer) getThrower());
@@ -76,14 +83,9 @@ public class EntityWirelessCamera extends CompatibleThrowableEntity {
                             duration));
                     modContext.getChannel().getChannel().sendTo(new SyncPlayerEntityTrackerMessage(tracker),
                             (EntityPlayerMP)getThrower());
-                    String displayName = "";
-                    if(entityHit instanceof EntityPlayer) {
-                        displayName = compatibility.getDisplayName((EntityPlayer)entityHit);
-                    } else if(entityHit instanceof EntityLivingBase) {
-                        displayName = EntityList.getEntityString(entityHit);
-                    }
-                    modContext.getStatusMessageCenter().addMessage("Tracking " + displayName, 1000);
                 }
+            } else {
+                modContext.getStatusMessageCenter().addMessage("Tracking " + displayName, 1000);
             }
         }
 

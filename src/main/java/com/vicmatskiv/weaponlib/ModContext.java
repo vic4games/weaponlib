@@ -64,4 +64,6 @@ public interface ModContext {
 
     public ResourceLocation getNamedResource(String name);
 
+    public float getAspectRatio();
+
 }

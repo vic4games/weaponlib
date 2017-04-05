@@ -21,8 +21,10 @@ import org.apache.logging.log4j.Logger;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleItem;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleTargetPoint;
 import com.vicmatskiv.weaponlib.crafting.CraftingComplexity;
 import com.vicmatskiv.weaponlib.crafting.OptionsMetadata;
+import com.vicmatskiv.weaponlib.particle.SpawnParticleMessage;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.model.ModelBase;
@@ -476,7 +478,11 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
                     if (WorldHelper.isGlassBlock(block)) {
                         WorldHelper.destroyBlock(world, position);
                     } else  {
-                        compatibility.addBlockHitEffect(position);
+                        //compatibility.addBlockHitEffect(position);
+                        CompatibleTargetPoint point = new CompatibleTargetPoint(entity.dimension, 
+                                position.getBlockPosX(), position.getBlockPosY(), position.getBlockPosZ(), 100);
+                        modContext.getChannel().sendToAllAround(
+                                new BlockHitMessage(position.getBlockPosX(), position.getBlockPosY(), position.getBlockPosZ(), position.getSideHit()), point);
                     }
                 };
             }

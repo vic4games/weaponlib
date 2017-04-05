@@ -43,7 +43,7 @@ public class CustomArmor extends CompatibleCustomArmor {
 		}
 		
 		public Builder withTextureName(String textureName) {
-			this.textureName = textureName;
+			this.textureName = textureName.toLowerCase();
 			return this;
 		}
 
@@ -63,7 +63,7 @@ public class CustomArmor extends CompatibleCustomArmor {
 		}
 		
 		public Builder withHudTextureName(String hudTextureName) {
-			this.hudTextureName = hudTextureName;
+			this.hudTextureName = hudTextureName.toLowerCase();
 			return this;
 		}
 		
@@ -209,7 +209,7 @@ public class CustomArmor extends CompatibleCustomArmor {
 	private Map<ItemAttachment<CustomArmor>, CompatibleAttachment<CustomArmor>> compatibleAttachments = new HashMap<>();
 	
 	private CustomArmor(String modId, ArmorMaterial material, int renderIndex, CompatibleEntityEquipmentSlot armorType, String iconName, String textureName, ModelBiped model, String hudTextureName) {
-		super(modId, material, renderIndex, armorType, iconName, textureName, model, hudTextureName);
+		super(modId, material, renderIndex, armorType, iconName.toLowerCase(), textureName, model, hudTextureName);
 	}
 	
 	public String getHudTexture() {
