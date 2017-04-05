@@ -60,6 +60,11 @@ public class EntityWirelessCamera extends CompatibleThrowableEntity {
     public EntityWirelessCamera(World world) {
         super(world);
     }
+    
+    public EntityWirelessCamera(World world, double x, double y, double z)
+    {
+        super(world, x, y, z);
+    }
 
     protected void onImpact(CompatibleRayTraceResult rayTraceResult) {
         Entity entityHit = rayTraceResult.getEntityHit();
@@ -89,12 +94,12 @@ public class EntityWirelessCamera extends CompatibleThrowableEntity {
             }
         }
 
-        if (!this.worldObj.isRemote) {
-            if(!hit) {
-                dropItem(itemWirelessCamera, 1);
-            }
-            this.setDead();
-        }
+//        if (!this.worldObj.isRemote) {
+//            if(!hit) {
+//                dropItem(itemWirelessCamera, 1);
+//            }
+//            this.setDead();
+//        }
     }
     
     @Override

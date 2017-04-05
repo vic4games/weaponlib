@@ -16,6 +16,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatiblePlayerEntityTrackerProvi
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSide;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 import com.vicmatskiv.weaponlib.crafting.RecipeGenerator;
+import com.vicmatskiv.weaponlib.electronics.EntityWirelessCamera;
 import com.vicmatskiv.weaponlib.electronics.PlayerTabletInstance;
 import com.vicmatskiv.weaponlib.electronics.TabletState;
 import com.vicmatskiv.weaponlib.melee.ItemMelee;
@@ -94,7 +95,8 @@ public class CommonModContext implements ModContext {
 	private CompatibleSound changeFireModeSound;
 	
 	private CompatibleSound noAmmoSound;
-
+	
+	private int modEntityID = 256;
 
 	@Override
 	public void init(Object mod, String modId, CompatibleChannel channel) {
@@ -166,6 +168,9 @@ public class CommonModContext implements ModContext {
 				weaponAttachmentAspect, channel));
 		
 		CompatiblePlayerEntityTrackerProvider.register(this);
+
+        compatibility.registerModEntity(WeaponSpawnEntity.class, "Ammo" + modEntityID, modEntityID++, mod, 64, 3, true);
+        compatibility.registerModEntity(EntityWirelessCamera.class, "wcam" + modEntityID, modEntityID++, mod, 200, 3, true);
 	}
 	
 	public void registerServerSideOnly() {

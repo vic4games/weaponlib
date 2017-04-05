@@ -16,7 +16,11 @@ public abstract class CompatibleThrowableEntity extends EntityThrowable implemen
 		super(par1World, player);
 	}
 
-	@Override
+	public CompatibleThrowableEntity(World world, double x, double y, double z) {
+        super(world, x, y, z);
+    }
+
+    @Override
 	protected final float func_70182_d() {
 		return getVelocity();
 	};

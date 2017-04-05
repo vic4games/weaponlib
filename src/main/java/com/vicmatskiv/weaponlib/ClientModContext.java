@@ -29,7 +29,6 @@ public class ClientModContext extends CommonModContext {
 
 	private ClientEventHandler clientEventHandler;
 	private Lock mainLoopLock = new ReentrantLock();
-	private int modEntityID;
 	private Queue<Runnable> runInClientThreadQueue = new LinkedBlockingQueue<>();
 	
 	private CompatibleRenderingRegistry rendererRegistry;
@@ -74,9 +73,6 @@ public class ClientModContext extends CommonModContext {
 		compatibility.registerWithFmlEventBus(clientEventHandler);
 		
 		compatibility.registerRenderingRegistry(rendererRegistry);
-		
-		compatibility.registerModEntity(WeaponSpawnEntity.class, "Ammo" + modEntityID, modEntityID++, mod, 64, 10, true);
-	    compatibility.registerModEntity(EntityWirelessCamera.class, "wcam" + modEntityID, modEntityID++, mod, 200, 10, true);
 
 		rendererRegistry.registerEntityRenderingHandler(WeaponSpawnEntity.class, new SpawnEntityRenderer());
 		rendererRegistry.registerEntityRenderingHandler(EntityWirelessCamera.class, new WirelessCameraRenderer(modId)); //new RenderSnowball(Items.snowball));
