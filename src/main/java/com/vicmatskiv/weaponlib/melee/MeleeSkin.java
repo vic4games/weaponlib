@@ -20,7 +20,7 @@ public class MeleeSkin extends ItemAttachment<ItemMelee> {
 		
 		public Builder withTextureVariant(String... textureVariantNames) {
 			for(String s: textureVariantNames) {
-				this.textureVariants.add(stripFileExtension(s, ".png"));
+				this.textureVariants.add(stripFileExtension(s.toLowerCase(), ".png"));
 			}
 			return this;
 		}
@@ -66,7 +66,7 @@ public class MeleeSkin extends ItemAttachment<ItemMelee> {
 	}
 	
 	public int getTextureVariantIndex(String name) {
-		return textureVariants.indexOf(name);
+		return textureVariants.indexOf(name.toLowerCase());
 	}
 	
 	public String getTextureVariant(int textureIndex) {

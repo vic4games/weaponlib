@@ -3,9 +3,11 @@ package com.vicmatskiv.weaponlib.compatibility;
 import java.util.Iterator;
 import java.util.function.Predicate;
 
+import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.Weapon;
 import com.vicmatskiv.weaponlib.WeaponSpawnEntity;
 import com.vicmatskiv.weaponlib.WorldHelper;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleParticle.CompatibleParticleBreaking;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -491,13 +493,13 @@ public class Compatibility1_10_2 implements Compatibility {
 		return result;
 	}
 
-    @Override
-    public void addBlockHitEffect(CompatibleRayTraceResult position) {
-        for(int i = 0; i < 6; i++) {
-            Minecraft.getMinecraft().effectRenderer.addBlockHitEffects(
-                    position.getBlockPos().getBlockPos(), position.getSideHit().getEnumFacing());
-        }
-    }
+//    @Override
+//    public void addBlockHitEffect(CompatibleRayTraceResult position) {
+//        for(int i = 0; i < 6; i++) {
+//            Minecraft.getMinecraft().effectRenderer.addBlockHitEffects(
+//                    position.getBlockPos().getBlockPos(), position.getSideHit().getEnumFacing());
+//        }
+//    }
 
     @Override
     public String getDisplayName(EntityPlayer player) {
@@ -543,5 +545,24 @@ public class Compatibility1_10_2 implements Compatibility {
     @Override
     public CompatibleParticleManager getCompatibleParticleManager() {
         return new CompatibleParticleManager(Minecraft.getMinecraft().effectRenderer);
+    }
+
+    @Override
+    public void addBlockHitEffect(int x, int y, int z, CompatibleEnumFacing sideHit) {
+        Minecraft.getMinecraft().effectRenderer.addBlockHitEffects(
+                new BlockPos(x, y, z), sideHit.getEnumFacing());
+    }
+
+    @Override
+    public void addBreakingParticle(ModContext modContext, double x, double y, double z) {
+        double yOffset = 1;
+        CompatibleParticleBreaking particle = CompatibleParticle.createParticleBreaking(
+                modContext, world(clientPlayer()), x, y + yOffset, z);
+        Minecraft.getMinecraft().effectRenderer.addEffect(particle);
+    }
+
+    @Override
+    public float getAspectRatio(ModContext modContext) {
+        return modContext.getAspectRatio();
     }
 }

@@ -1,7 +1,5 @@
 package com.vicmatskiv.weaponlib.compatibility;
 
-import com.vicmatskiv.weaponlib.particle.SpawnParticleMessage;
-
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 
 public class CompatibleChannel {
@@ -21,7 +19,7 @@ public class CompatibleChannel {
     	channel.registerMessage(messageHandler, requestMessageType, discriminator, side.getSide());
     }
     
-    public void sendToAllAround(SpawnParticleMessage spawnParticleMessage, CompatibleTargetPoint point) {
+    public void sendToAllAround(CompatibleMessage spawnParticleMessage, CompatibleTargetPoint point) {
         channel.sendToAllAround(spawnParticleMessage, point.getTargetPoint());
     }
 }

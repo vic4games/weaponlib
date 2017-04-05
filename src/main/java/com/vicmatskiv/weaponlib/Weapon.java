@@ -21,8 +21,10 @@ import org.apache.logging.log4j.Logger;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleItem;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleTargetPoint;
 import com.vicmatskiv.weaponlib.crafting.CraftingComplexity;
 import com.vicmatskiv.weaponlib.crafting.OptionsMetadata;
+import com.vicmatskiv.weaponlib.particle.SpawnParticleMessage;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.model.ModelBase;
@@ -188,7 +190,7 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
                 throw new IllegalStateException("ModId is not set");
             }
             for (String textureName : textureNames) {
-                this.textureNames.add(textureName + ".png");
+                this.textureNames.add(textureName.toLowerCase() + ".png");
             }
             return this;
         }
@@ -197,7 +199,7 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
             if (modId == null) {
                 throw new IllegalStateException("ModId is not set");
             }
-            this.crosshair = modId + ":" + "textures/crosshairs/" + crosshair + ".png";
+            this.crosshair = modId + ":" + "textures/crosshairs/" + crosshair.toLowerCase() + ".png";
             return this;
         }
 
@@ -205,7 +207,7 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
             if (modId == null) {
                 throw new IllegalStateException("ModId is not set");
             }
-            this.crosshair = modId + ":" + "textures/crosshairs/" + crosshair + ".png";
+            this.crosshair = modId + ":" + "textures/crosshairs/" + crosshair.toLowerCase() + ".png";
             this.crosshairFullScreen = fullScreen;
             return this;
         }
@@ -214,7 +216,7 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
             if (modId == null) {
                 throw new IllegalStateException("ModId is not set");
             }
-            this.crosshairRunning = modId + ":" + "textures/crosshairs/" + crosshairRunning + ".png";
+            this.crosshairRunning = modId + ":" + "textures/crosshairs/" + crosshairRunning.toLowerCase() + ".png";
             return this;
         }
 
@@ -226,7 +228,7 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
             if (modId == null) {
                 throw new IllegalStateException("ModId is not set");
             }
-            this.crosshairZoomed = modId + ":" + "textures/crosshairs/" + crosshairZoomed + ".png";
+            this.crosshairZoomed = modId + ":" + "textures/crosshairs/" + crosshairZoomed.toLowerCase() + ".png";
             this.crosshairZoomedFullScreen = fullScreen;
             return this;
         }
@@ -235,7 +237,7 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
             if (modId == null) {
                 throw new IllegalStateException("ModId is not set");
             }
-            this.shootSound = shootSound; //modId + ":" + shootSound;
+            this.shootSound = shootSound.toLowerCase(); //modId + ":" + shootSound;
             return this;
         }
 
@@ -243,7 +245,7 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
             if (modId == null) {
                 throw new IllegalStateException("ModId is not set");
             }
-            this.ejectSpentRoundSound = ejectSpentRoundSound;
+            this.ejectSpentRoundSound = ejectSpentRoundSound.toLowerCase();
             return this;
         }
 
@@ -251,7 +253,7 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
             if (modId == null) {
                 throw new IllegalStateException("ModId is not set");
             }
-            this.silencedShootSound = silencedShootSound;
+            this.silencedShootSound = silencedShootSound.toLowerCase();
             return this;
         }
 
@@ -259,7 +261,7 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
             if (modId == null) {
                 throw new IllegalStateException("ModId is not set");
             }
-            this.reloadSound = reloadSound; //modId + ":" + reloadSound;
+            this.reloadSound = reloadSound.toLowerCase(); //modId + ":" + reloadSound;
             return this;
         }
 
@@ -267,7 +269,7 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
             if (modId == null) {
                 throw new IllegalStateException("ModId is not set");
             }
-            this.unloadSound = unloadSound;
+            this.unloadSound = unloadSound.toLowerCase();
             return this;
         }
 
@@ -275,7 +277,7 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
             if (modId == null) {
                 throw new IllegalStateException("ModId is not set");
             }
-            this.exceededMaxShotsSound = shootSound; //modId + ":" + shootSound;
+            this.exceededMaxShotsSound = shootSound.toLowerCase(); //modId + ":" + shootSound;
             return this;
         }
 
@@ -358,7 +360,7 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
         }
 
         public Builder withSpawnEntityModelTexture(String ammoModelTextureName) {
-            this.ammoModelTextureName = modId + ":" + "textures/models/" + ammoModelTextureName + ".png";
+            this.ammoModelTextureName = modId + ":" + "textures/models/" + ammoModelTextureName.toLowerCase() + ".png";
             return this;
         }
 
@@ -476,7 +478,11 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
                     if (WorldHelper.isGlassBlock(block)) {
                         WorldHelper.destroyBlock(world, position);
                     } else  {
-                        compatibility.addBlockHitEffect(position);
+                        //compatibility.addBlockHitEffect(position);
+                        CompatibleTargetPoint point = new CompatibleTargetPoint(entity.dimension, 
+                                position.getBlockPosX(), position.getBlockPosY(), position.getBlockPosZ(), 100);
+                        modContext.getChannel().sendToAllAround(
+                                new BlockHitMessage(position.getBlockPosX(), position.getBlockPosY(), position.getBlockPosZ(), position.getSideHit()), point);
                     }
                 };
             }

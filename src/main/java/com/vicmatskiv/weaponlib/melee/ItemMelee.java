@@ -133,7 +133,7 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
                 throw new IllegalStateException("ModId is not set");
             }
             for (String textureName : textureNames) {
-                this.textureNames.add(textureName + ".png");
+                this.textureNames.add(textureName.toLowerCase() + ".png");
             }
             return this;
         }
@@ -142,7 +142,7 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
             if (modId == null) {
                 throw new IllegalStateException("ModId is not set");
             }
-            this.attackSound = attackSound; //modId + ":" + shootSound;
+            this.attackSound = attackSound.toLowerCase(); //modId + ":" + shootSound;
             return this;
         }
 
@@ -150,7 +150,7 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
             if (modId == null) {
                 throw new IllegalStateException("ModId is not set");
             }
-            this.heavyAttackSound = heavyAttackSound; //modId + ":" + reloadSound;
+            this.heavyAttackSound = heavyAttackSound.toLowerCase(); //modId + ":" + reloadSound;
             return this;
         }
 
@@ -167,7 +167,7 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
         public Builder withCompatibleSkin(MeleeSkin skin, String activeTextureName) {
             withCompatibleAttachment(skin, 
                     (a, i) -> {
-                        i.setActiveTextureIndex(skin.getTextureVariantIndex(activeTextureName));
+                        i.setActiveTextureIndex(skin.getTextureVariantIndex(activeTextureName.toLowerCase()));
                     },
                     (a, i) -> {}
             );
