@@ -168,25 +168,25 @@ public interface Compatibility {
 
 	public boolean inventoryHasFreeSlots(EntityPlayer player);
 
-    public void addBlockHitEffect(int x, int y, int z, int sideHit);
+    public void addBlockHitEffect(int x, int y, int z, CompatibleEnumFacing enumFacing);
 
-    public String getDisplayName(EntityPlayer entity);
+    public String getDisplayName(EntityPlayer player);
+
+    public void clickBlock(CompatibleBlockPos blockPos, CompatibleEnumFacing sideHit);
+
+    public boolean isAirBlock(World world, CompatibleBlockPos blockPos);
+
+    public void addChatMessage(Entity entity, String message);
 
     public RenderGlobal createCompatibleRenderGlobal();
 
     public CompatibleParticleManager createCompatibleParticleManager(WorldClient world);
 
-    public void setRenderViewEntity(Entity entity);
-
     public Entity getRenderViewEntity();
 
+    public void setRenderViewEntity(Entity entity);
+
     public CompatibleParticleManager getCompatibleParticleManager();
-
-    public void addChatMessage(EntityPlayer clientPlayer, String message);
-
-    public boolean isAirBlock(World world, CompatibleBlockPos blockPos);
-
-    public void clickBlock(CompatibleBlockPos blockPos, int sideHit);
 
     public void addBreakingParticle(ModContext modContext, double x, double y, double z);
 

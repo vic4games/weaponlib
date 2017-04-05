@@ -9,6 +9,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageHandler;
 
 public class BlockHitMessageHandler implements CompatibleMessageHandler<BlockHitMessage, CompatibleMessage>  {
     
+    @SuppressWarnings("unused")
     private ModContext modContext;
     
     //private double yOffset = 1;

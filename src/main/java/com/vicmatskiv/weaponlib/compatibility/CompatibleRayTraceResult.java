@@ -47,8 +47,8 @@ public class CompatibleRayTraceResult {
 		return position.blockZ;
 	}
 	
-	public int getSideHit() {
-	    return position.sideHit;
+	public CompatibleEnumFacing getSideHit() {
+	    return CompatibleEnumFacing.values()[position.sideHit];
 	}
 
     public CompatibleBlockPos getBlockPos() {

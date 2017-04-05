@@ -60,11 +60,6 @@ public class EntityWirelessCamera extends CompatibleThrowableEntity {
     public EntityWirelessCamera(World world) {
         super(world);
     }
-    
-    public EntityWirelessCamera(World world, double x, double y, double z)
-    {
-        super(world, x, y, z);
-    }
 
     protected void onImpact(CompatibleRayTraceResult rayTraceResult) {
         Entity entityHit = rayTraceResult.getEntityHit();

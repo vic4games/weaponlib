@@ -6,6 +6,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityClientPlayerMP;
+import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
@@ -462,10 +463,10 @@ public class Compatibility1_7_10 implements Compatibility {
 
     
     @Override
-    public void addBlockHitEffect(int x, int y, int z, int sideHit) {
+    public void addBlockHitEffect(int x, int y, int z, CompatibleEnumFacing enumFacing) {
         for(int i = 0; i < 6; i++) {
             Minecraft.getMinecraft().effectRenderer.addBlockHitEffects(
-                    x, y, z, sideHit);
+                    x, y, z, enumFacing.ordinal());
         }
     }
 
@@ -506,8 +507,10 @@ public class Compatibility1_7_10 implements Compatibility {
     }
 
     @Override
-    public void addChatMessage(EntityPlayer clientPlayer, String message) {
-        clientPlayer.addChatMessage(new ChatComponentText(message));
+    public void addChatMessage(Entity clientPlayer, String message) {
+        if(clientPlayer instanceof EntityPlayer) {
+            ((EntityPlayerSP) clientPlayer).addChatMessage(new ChatComponentText(message));
+        }
     }
 
     @Override
@@ -517,8 +520,9 @@ public class Compatibility1_7_10 implements Compatibility {
     }
 
     @Override
-    public void clickBlock(CompatibleBlockPos blockPos, int sideHit) {
-        Minecraft.getMinecraft().playerController.clickBlock(blockPos.getBlockPosX(), blockPos.getBlockPosY(), blockPos.getBlockPosZ(), sideHit);
+    public void clickBlock(CompatibleBlockPos blockPos, CompatibleEnumFacing sideHit) {
+        Minecraft.getMinecraft().playerController.clickBlock(blockPos.getBlockPosX(), blockPos.getBlockPosY(), blockPos.getBlockPosZ(), 
+                sideHit.ordinal());
     }
 
     @Override
