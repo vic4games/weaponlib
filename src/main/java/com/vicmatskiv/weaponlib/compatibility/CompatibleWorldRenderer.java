@@ -172,6 +172,7 @@ public class CompatibleWorldRenderer extends EntityRenderer
     private ShaderGroup theShaderGroup;
     private static final ResourceLocation[] SHADERS_TEXTURES = new ResourceLocation[] {new ResourceLocation("shaders/post/notch.json"), new ResourceLocation("shaders/post/fxaa.json"), new ResourceLocation("shaders/post/art.json"), new ResourceLocation("shaders/post/bumpy.json"), new ResourceLocation("shaders/post/blobs2.json"), new ResourceLocation("shaders/post/pencil.json"), new ResourceLocation("shaders/post/color_convolve.json"), new ResourceLocation("shaders/post/deconverge.json"), new ResourceLocation("shaders/post/flip.json"), new ResourceLocation("shaders/post/invert.json"), new ResourceLocation("shaders/post/ntsc.json"), new ResourceLocation("shaders/post/outline.json"), new ResourceLocation("shaders/post/phosphor.json"), new ResourceLocation("shaders/post/scan_pincushion.json"), new ResourceLocation("shaders/post/sobel.json"), new ResourceLocation("shaders/post/bits.json"), new ResourceLocation("shaders/post/desaturate.json"), new ResourceLocation("shaders/post/green.json"), new ResourceLocation("shaders/post/blur.json"), new ResourceLocation("shaders/post/wobble.json"), new ResourceLocation("shaders/post/blobs.json"), new ResourceLocation("shaders/post/antialias.json"), new ResourceLocation("shaders/post/creeper.json"), new ResourceLocation("shaders/post/spider.json")};
     public static final int SHADER_COUNT = SHADERS_TEXTURES.length;
+    private static final float MAX_ZOOM = 0.01F;
     private int shaderIndex;
     private boolean useShader;
     private int frameCount;
@@ -338,7 +339,7 @@ public class CompatibleWorldRenderer extends EntityRenderer
         float f2 = f3 * (1.0F - f4) + f4;
         this.fogColor1 += (f2 - this.fogColor1) * 0.1F;
         ++this.rendererUpdateCount;
-        this.itemRenderer.updateEquippedItem();
+        //this.itemRenderer.updateEquippedItem();
         this.addRainParticles();
         this.bossColorModifierPrev = this.bossColorModifier;
 
@@ -518,9 +519,9 @@ public class CompatibleWorldRenderer extends EntityRenderer
             this.fovModifierHand = 1.5F;
         }
 
-        if (this.fovModifierHand < 0.1F)
+        if (this.fovModifierHand < MAX_ZOOM)
         {
-            this.fovModifierHand = 0.1F;
+            this.fovModifierHand = MAX_ZOOM;
         }
     }
 
@@ -1450,11 +1451,11 @@ public class CompatibleWorldRenderer extends EntityRenderer
 
         this.mc.mcProfiler.endStartSection("hand");
 
-        if (this.renderHand)
-        {
-            GlStateManager.clear(256);
-            this.renderHand(partialTicks, pass);
-        }
+//        if (this.renderHand)
+//        {
+//            GlStateManager.clear(256);
+//            this.renderHand(partialTicks, pass);
+//        }
     }
 
     private void renderCloudsCheck(RenderGlobal renderGlobalIn, float partialTicks, int pass, double p_180437_4_, double p_180437_6_, double p_180437_8_)

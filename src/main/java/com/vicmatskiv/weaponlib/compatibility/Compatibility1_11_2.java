@@ -229,10 +229,9 @@ public class Compatibility1_11_2 implements Compatibility {
         GameRegistry.register(sound.getSound(), sound.getResourceLocation());
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     public void registerItem(Item item, String name) {
-        GameRegistry.register(item);
+        GameRegistry.register(item, new ResourceLocation("mw", name)); // temporary hack
     }
 
     @Override
