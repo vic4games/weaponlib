@@ -3,11 +3,18 @@ package com.vicmatskiv.weaponlib;
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import com.vicmatskiv.weaponlib.ItemAttachment.ApplyHandler;
+import com.vicmatskiv.weaponlib.ItemAttachment.ApplyHandler2;
+import com.vicmatskiv.weaponlib.crafting.CraftingComplexity;
+import com.vicmatskiv.weaponlib.crafting.OptionsMetadata;
 
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.creativetab.CreativeTabs;
@@ -27,27 +34,40 @@ public class AttachmentBuilder<T> {
 	protected BiConsumer<ModelBase, ItemStack> thirdPersonModelPositioning;
 	protected BiConsumer<ModelBase, ItemStack> inventoryModelPositioning;
 	protected BiConsumer<ModelBase, ItemStack> entityModelPositioning;
-	
+
+	protected Consumer<RenderContext<RenderableState>> firstPersonLeftHandPositioning;
+	protected Consumer<RenderContext<RenderableState>> firstPersonRightHandPositioning;
+
 	protected CreativeTabs tab;
 	protected AttachmentCategory attachmentCategory;
 	protected ApplyHandler<T> apply;
 	protected ApplyHandler<T> remove;
+	protected ApplyHandler2<T> apply2;
+	protected ApplyHandler2<T> remove2;
 	private String crosshair;
-	private CustomRenderer postRenderer;
+	private CustomRenderer<?> postRenderer;
 	private List<Tuple<ModelBase, String>> texturedModels = new ArrayList<>();
 	private boolean isRenderablePart;
-	
+    private int maxStackSize = 1;
+    private Function<ItemStack, String> informationProvider;
+
+	private CraftingComplexity craftingComplexity;
+
+	private Object[] craftingMaterials;
+
+	Map<ItemAttachment<T>, CompatibleAttachment<T>> compatibleAttachments = new HashMap<>();
+    private int craftingCount = 1;
 
 	public AttachmentBuilder<T> withCategory(AttachmentCategory attachmentCategory) {
 		this.attachmentCategory = attachmentCategory;
 		return this;
 	}
-	
+
 	public AttachmentBuilder<T> withName(String name) {
 		this.name = name;
 		return this;
 	}
-	
+
 	public AttachmentBuilder<T> withCreativeTab(CreativeTabs tab) {
 		this.tab = tab;
 		return this;
@@ -57,22 +77,32 @@ public class AttachmentBuilder<T> {
 		this.modId = modId;
 		return this;
 	}
-	
+
+	public AttachmentBuilder<T> withCompatibleAttachment(ItemAttachment<T> attachment, Consumer<ModelBase> positioner) {
+		compatibleAttachments.put(attachment, new CompatibleAttachment<>(attachment, positioner));
+		return this;
+	}
+
 	public AttachmentBuilder<T> withModel(ModelBase model) {
 		this.model = model;
 		return this;
 	}
-	
+
 	public AttachmentBuilder<T> withTextureName(String textureName) {
-		this.textureName = textureName;
+		this.textureName = textureName.toLowerCase();
 		return this;
 	}
-	
+
+	public AttachmentBuilder<T> withMaxStackSize(int maxStackSize) {
+        this.maxStackSize = maxStackSize;
+        return this;
+    }
+
 	public AttachmentBuilder<T> withEntityPositioning(Consumer<ItemStack> entityPositioning) {
 		this.entityPositioning = entityPositioning;
 		return this;
 	}
-	
+
 	public AttachmentBuilder<T> withInventoryPositioning(Consumer<ItemStack> inventoryPositioning) {
 		this.inventoryPositioning = inventoryPositioning;
 		return this;
@@ -87,17 +117,17 @@ public class AttachmentBuilder<T> {
 		this.firstPersonPositioning = firstPersonPositioning;
 		return this;
 	}
-	
+
 	public AttachmentBuilder<T> withFirstPersonModelPositioning(BiConsumer<ModelBase, ItemStack> firstPersonModelPositioning) {
 		this.firstPersonModelPositioning = firstPersonModelPositioning;
 		return this;
 	}
-	
+
 	public AttachmentBuilder<T> withEntityModelPositioning(BiConsumer<ModelBase, ItemStack> entityModelPositioning) {
 		this.entityModelPositioning = entityModelPositioning;
 		return this;
 	}
-	
+
 	public AttachmentBuilder<T> withInventoryModelPositioning(BiConsumer<ModelBase, ItemStack> inventoryModelPositioning) {
 		this.inventoryModelPositioning = inventoryModelPositioning;
 		return this;
@@ -107,56 +137,106 @@ public class AttachmentBuilder<T> {
 		this.thirdPersonModelPositioning = thirdPersonModelPositioning;
 		return this;
 	}
-	
+
+	public AttachmentBuilder<T> withFirstPersonHandPositioning(
+            Consumer<RenderContext<RenderableState>> leftHand,
+            Consumer<RenderContext<RenderableState>> rightHand)
+    {
+        this.firstPersonLeftHandPositioning = leftHand;
+        this.firstPersonRightHandPositioning = rightHand;
+        return this;
+    }
+
 	public AttachmentBuilder<T> withCrosshair(String crosshair) {
-		this.crosshair = crosshair;
+		this.crosshair = crosshair.toLowerCase();
 		return this;
 	}
-	
 
-	public AttachmentBuilder<T> withPostRender(CustomRenderer postRenderer) {
+
+	public AttachmentBuilder<T> withPostRender(CustomRenderer<?> postRenderer) {
 		this.postRenderer = postRenderer;
 		return this;
 	}
-	
+
 	public AttachmentBuilder<T> withModel(ModelBase model, String textureName) {
-		this.texturedModels.add(new Tuple<>(model, textureName));
+		this.texturedModels.add(new Tuple<>(model, textureName.toLowerCase()));
 		return this;
 	}
-	
+
 	public AttachmentBuilder<T> withRenderablePart() {
 		this.isRenderablePart = true;
 		return this;
 	}
-	
+
 
 	public AttachmentBuilder<T> withApply(ApplyHandler<T> apply) {
 		this.apply = apply;
 		return this;
 	}
-	
+
 	public AttachmentBuilder<T> withRemove(ApplyHandler<T> remove) {
 		this.remove = remove;
 		return this;
-	} 
-	
+	}
+
+	public AttachmentBuilder<T> withApply(ApplyHandler2<T> apply) {
+		this.apply2 = apply;
+		return this;
+	}
+
+	public AttachmentBuilder<T> withRemove(ApplyHandler2<T> remove) {
+		this.remove2 = remove;
+		return this;
+	}
+
+	public AttachmentBuilder<T> withCrafting(CraftingComplexity craftingComplexity, Object...craftingMaterials) {
+	    return withCrafting(1, craftingComplexity, craftingMaterials);
+	}
+
+	public AttachmentBuilder<T> withInformationProvider(Function<ItemStack, String> informationProvider) {
+        this.informationProvider = informationProvider;
+        return this;
+    }
+
+	public AttachmentBuilder<T> withCrafting(int craftingCount, CraftingComplexity craftingComplexity, Object...craftingMaterials) {
+		if(craftingComplexity == null) {
+			throw new IllegalArgumentException("Crafting complexity not set");
+		}
+		if(craftingMaterials.length < 2) {
+			throw new IllegalArgumentException("2 or more materials required for crafting");
+		}
+		if(craftingCount == 0) {
+		    throw new IllegalArgumentException("Invalid item count");
+		}
+		this.craftingComplexity = craftingComplexity;
+		this.craftingMaterials = craftingMaterials;
+		this.craftingCount = craftingCount;
+		return this;
+	}
+
 	protected ItemAttachment<T> createAttachment(ModContext modContext) {
 		return new ItemAttachment<T>(
-				modId, attachmentCategory, crosshair, 
+				getModId(), attachmentCategory, crosshair,
 				apply, remove);
 	}
-	
+
 	@SuppressWarnings("deprecation")
 	public ItemAttachment<T> build(ModContext modContext) {
 		ItemAttachment<T> attachment = createAttachment(modContext);
-		attachment.setUnlocalizedName(modId + "_" + name); 
+		attachment.setUnlocalizedName(getModId() + "_" + name);
 		attachment.setCreativeTab(tab);
 		attachment.setPostRenderer(postRenderer);
 		attachment.setName(name);
-		if(textureName != null) {
-			attachment.setTextureName(modId + ":" + stripFileExtension(textureName, ".png"));
-		} 
-		
+		attachment.apply2 = apply2;
+		attachment.remove2 = remove2;
+		attachment.maxStackSize = maxStackSize;
+		if(attachment.getInformationProvider() == null) {
+		    attachment.setInformationProvider(informationProvider);
+		}
+		if(getTextureName() != null) {
+			attachment.setTextureName(getModId() + ":" + stripFileExtension(getTextureName(), ".png"));
+		}
+
 		if(isRenderablePart) {
 			attachment.setRenderablePart(new Part() {
 				@Override
@@ -165,21 +245,40 @@ public class AttachmentBuilder<T> {
 				}
 			});
 		}
-		
-		if(model != null) {
-			attachment.addModel(model, textureName);
+
+		if(getModel() != null) {
+			attachment.addModel(getModel(), addFileExtension(getTextureName(), ".png"));
 		}
-		
-		texturedModels.forEach(tm -> attachment.addModel(tm.getU(), tm.getV()));
-		
-		if((model != null || !texturedModels.isEmpty())) {
-			modContext.registerRenderableItem(name, attachment, compatibility.isClientSide() ? registerRenderer(attachment) : null);
+
+		texturedModels.forEach(tm -> attachment.addModel(tm.getU(), addFileExtension(tm.getV(), ".png") ));
+
+		compatibleAttachments.values().forEach(a -> attachment.addCompatibleAttachment(a));
+
+		if((getModel() != null || !texturedModels.isEmpty())) {
+			modContext.registerRenderableItem(name, attachment, compatibility.isClientSide() ? registerRenderer(attachment, modContext) : null);
 		}
-		
+
+		if(craftingComplexity != null) {
+			OptionsMetadata optionsMetadata = new OptionsMetadata.OptionMetadataBuilder()
+				.withSlotCount(9)
+            	.build(craftingComplexity, Arrays.copyOf(craftingMaterials, craftingMaterials.length));
+
+			List<Object> shape = modContext.getRecipeGenerator().createShapedRecipe(name, optionsMetadata);
+
+			ItemStack itemStack = new ItemStack(attachment);
+			compatibility.setStackSize(itemStack, craftingCount);
+            if(optionsMetadata.hasOres()) {
+			    compatibility.addShapedOreRecipe(itemStack, shape.toArray());
+			} else {
+			    compatibility.addShapedRecipe(itemStack, shape.toArray());
+			}
+		}
+
 		return attachment;
 	}
-	
-	private Object registerRenderer(ItemAttachment<T> attachment) {
+
+
+	private Object registerRenderer(ItemAttachment<T> attachment, ModContext modContext) {
 		return new StaticModelSourceRenderer.Builder()
 		.withEntityPositioning(entityPositioning)
 		.withFirstPersonPositioning(firstPersonPositioning)
@@ -189,17 +288,34 @@ public class AttachmentBuilder<T> {
 		.withFirstPersonModelPositioning(firstPersonModelPositioning)
 		.withThirdPersonModelPositioning(thirdPersonModelPositioning)
 		.withInventoryModelPositioning(inventoryModelPositioning)
-		.withModId(modId)
+		.withFirstPersonHandPositioning(firstPersonLeftHandPositioning, firstPersonRightHandPositioning)
+		.withModContext(modContext)
+		.withModId(getModId())
 		.build();
 	}
 
 
-	private static String stripFileExtension(String str, String extension) {
-		return str.endsWith(extension) ? str.substring(0, str.length() - 4) : str;
+	static String addFileExtension(String s, String ext) {
+		return s != null && !s.endsWith(ext) ? s + ext : s;
 	}
-	
+
+	protected static String stripFileExtension(String str, String extension) {
+		return str.endsWith(extension) ? str.substring(0, str.length() - extension.length()) : str;
+	}
+
 	public <V extends ItemAttachment<T>> V build(ModContext modContext, Class<V> target) {
 		return target.cast(build(modContext));
 	}
 
+    public String getModId() {
+        return modId;
+    }
+
+    public ModelBase getModel() {
+        return model;
+    }
+
+    public String getTextureName() {
+        return textureName;
+    }
 }

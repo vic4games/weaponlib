@@ -24,18 +24,35 @@ public class StaticModelSourceRenderer extends CompatibleStaticModelSourceRender
 		private BiConsumer<ModelBase, ItemStack> inventoryModelPositioning;
 		private BiConsumer<ModelBase, ItemStack> entityModelPositioning;
 		
+		private Consumer<RenderContext<RenderableState>> firstPersonLeftHandPositioning;
+		private Consumer<RenderContext<RenderableState>> firstPersonRightHandPositioning;
+		
 		private String modId;
+		private ModContext modContext;
 		
 		public Builder withModId(String modId) {
 			this.modId = modId;
 			return this;
 		}
 		
+		public Builder withModContext(ModContext modContext) {
+		    this.modContext = modContext;
+		    return this;
+		}
 
 		public Builder withFirstPersonPositioning(BiConsumer<EntityPlayer, ItemStack> firstPersonPositioning) {
 			this.firstPersonPositioning = firstPersonPositioning;
 			return this;
 		}
+		
+		public Builder withFirstPersonHandPositioning(
+                Consumer<RenderContext<RenderableState>> leftHand,
+                Consumer<RenderContext<RenderableState>> rightHand) 
+        {
+            this.firstPersonLeftHandPositioning = leftHand;
+            this.firstPersonRightHandPositioning = rightHand;
+            return this;
+        }
 		
 		public Builder withEntityPositioning(Consumer<ItemStack> entityPositioning) {
 			this.entityPositioning = entityPositioning;
@@ -115,6 +132,14 @@ public class StaticModelSourceRenderer extends CompatibleStaticModelSourceRender
 				thirdPersonModelPositioning = (m, i) -> {};
 			}
 			
+			if(firstPersonLeftHandPositioning == null) {
+			    firstPersonLeftHandPositioning = c -> {GL11.glScalef(0f, 0f, 0f);};
+			}
+			
+			if(firstPersonRightHandPositioning == null) {
+			    firstPersonRightHandPositioning = c -> {GL11.glScalef(0f, 0f, 0f);};
+            }
+			
 			return new StaticModelSourceRenderer(this);
 		}
 
@@ -149,6 +174,14 @@ public class StaticModelSourceRenderer extends CompatibleStaticModelSourceRender
 		public BiConsumer<ModelBase, ItemStack> getEntityModelPositioning() {
 			return entityModelPositioning;
 		}
+		
+		public Consumer<RenderContext<RenderableState>> getFirstPersonLeftHandPositioning() {
+            return firstPersonLeftHandPositioning;
+        }
+		
+		public Consumer<RenderContext<RenderableState>> getFirstPersonRightHandPositioning() {
+            return firstPersonRightHandPositioning;
+        }
 
 		public String getModId() {
 			return modId;
@@ -158,4 +191,9 @@ public class StaticModelSourceRenderer extends CompatibleStaticModelSourceRender
 	private StaticModelSourceRenderer(Builder builder) {
 		super(builder);
 	}
+
+    @Override
+    protected ModContext getModContext() {
+        return builder.modContext;
+    }
 }

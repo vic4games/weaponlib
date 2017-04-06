@@ -1,34 +1,36 @@
 package com.vicmatskiv.weaponlib;
 
 import java.util.Random;
+import java.util.function.BiConsumer;
+
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 
 import org.lwjgl.opengl.GL11;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTessellator;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTransformType;
 
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-
 public class LaserBeamRenderer implements CustomRenderer {
 	
-	private float leftOffset = 0.3f;
-	private float forwardOffset = 0.1f;
+	private float xOffset = 0.5f;
+	private float yOffset = -1.3f;
+	private float zOffset = -1.7f;
 	
-	public LaserBeamRenderer() {
-		
+	private BiConsumer<EntityPlayer, ItemStack> positioning;
+	
+	public LaserBeamRenderer(BiConsumer<EntityPlayer, ItemStack> positioning) {
+	    this.positioning = positioning;
 	}
 
 	@Override
-	public void render(CompatibleTransformType type, ItemStack itemStack) {
+	public void render(RenderContext renderContext) {
 		
-		Item item = itemStack.getItem();
-		if(!(item instanceof Weapon)) {
-			throw new IllegalStateException("Item is not weapon");
-		}
+		PlayerItemInstance<?> instance = renderContext.getPlayerItemInstance();
 
-		if(Tags.isLaserOn(itemStack) && (
-				type == CompatibleTransformType.THIRD_PERSON_LEFT_HAND 
+		CompatibleTransformType type = renderContext.getCompatibleTransformType();
+		if(instance instanceof PlayerWeaponInstance && ((PlayerWeaponInstance) instance).isLaserOn() && (
+				   type == CompatibleTransformType.THIRD_PERSON_LEFT_HAND 
 				|| type == CompatibleTransformType.THIRD_PERSON_RIGHT_HAND 
 				|| type == CompatibleTransformType.FIRST_PERSON_LEFT_HAND
 				|| type == CompatibleTransformType.FIRST_PERSON_RIGHT_HAND
@@ -45,27 +47,29 @@ public class LaserBeamRenderer implements CustomRenderer {
 			GL11.glLineWidth(1.5F);
 			GL11.glDepthMask(false);
 
-			GL11.glRotatef(-0.1f, 0f, 1f, 0f);
+			if(positioning != null) {
+			    positioning.accept(renderContext.getPlayer(), renderContext.getWeapon());
+			}
 
 			CompatibleTessellator tessellator = CompatibleTessellator.getInstance();
 			tessellator.startDrawingLines();
 
 			long time = System.currentTimeMillis();
 			Random random = new Random(time - time % 300);
-			float start = forwardOffset;
+			float start = zOffset; //forwardOffset;
 			float length = 100;
 
 			float end = 0;
 			for(int i = 0; i < 100 && start < length && end < length; i++) {
-				tessellator.addVertex(leftOffset, 0, start);
-				
+				tessellator.addVertex(xOffset, yOffset, start);
+				tessellator.endVertex();
 		        int ii = 15728880; //this.getBrightnessForRender(partialTicks); // or simply set it to 200?
 		        int j = ii >> 16 & 65535;
 		        int k = ii & 65535;
 		        tessellator.setLightMap(j, k);
 				end = start - ( 1 + random.nextFloat() * 2);
 				if(end > length) end = length;
-				tessellator.addVertex(leftOffset, 0, end);
+				tessellator.addVertex(xOffset, yOffset, end);
 				tessellator.endVertex();
 				start = end + random.nextFloat() * 0.5f;
 			}

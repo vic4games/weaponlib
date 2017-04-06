@@ -1,22 +1,53 @@
 package com.vicmatskiv.weaponlib;
 
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import com.vicmatskiv.weaponlib.melee.ItemMelee;
+
 import net.minecraft.client.model.ModelBase;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 
 public class CompatibleAttachment<T> {
 
 	private ItemAttachment<T> attachment;
-	private Consumer<ModelBase> positioning;
+	private Consumer<ModelBase> modelPositioning;
+	private BiConsumer<EntityPlayer, ItemStack> positioning;
 	private boolean isDefault;
+	private ItemAttachment.ApplyHandler2<T> applyHandler;
+	private ItemAttachment.ApplyHandler2<T> removeHandler;
+	ItemAttachment.MeleeWeaponApplyHandler<ItemMelee> meleeApplyHandler;
+    ItemAttachment.MeleeWeaponApplyHandler<ItemMelee> meleeRemoveHandler;
+	
+	public CompatibleAttachment(ItemAttachment<T> attachment, BiConsumer<EntityPlayer, ItemStack> positioning, Consumer<ModelBase> modelPositioning, boolean isDefault) {
+		this.attachment = attachment;
+		this.positioning = positioning;
+		this.modelPositioning = modelPositioning;
+		this.isDefault = isDefault;
+	}
+	
+	public CompatibleAttachment(ItemAttachment<T> attachment, ItemAttachment.ApplyHandler2<T> applyHandler, ItemAttachment.ApplyHandler2<T> removeHandler) {
+		this.attachment = attachment;
+		this.applyHandler = applyHandler;
+		this.removeHandler = removeHandler;
+	}
+	
+	public CompatibleAttachment(ItemAttachment<T> attachment, 
+	        ItemAttachment.MeleeWeaponApplyHandler<ItemMelee> meleeApplyHandler, 
+	        ItemAttachment.MeleeWeaponApplyHandler<ItemMelee> meleeRemoveHandler) {
+        this.attachment = attachment;
+        this.meleeApplyHandler = meleeApplyHandler;
+        this.meleeRemoveHandler = meleeRemoveHandler;
+    }
 
 	public CompatibleAttachment(ItemAttachment<T> attachment, Consumer<ModelBase> positioning) {
-		this(attachment, positioning, false);
+		this(attachment, null, positioning, false);
 	}
 	
 	public CompatibleAttachment(ItemAttachment<T> attachment, Consumer<ModelBase> positioning, boolean isDefault) {
 		this.attachment = attachment;
-		this.positioning = positioning;
+		this.modelPositioning = positioning;
 		this.isDefault = isDefault;
 	}
 
@@ -24,11 +55,31 @@ public class CompatibleAttachment<T> {
 		return attachment;
 	}
 
-	public Consumer<ModelBase> getPositioning() {
-		return positioning;
+	public Consumer<ModelBase> getModelPositioning() {
+		return modelPositioning;
 	}
 	
+	public BiConsumer<EntityPlayer, ItemStack> getPositioning() {
+		return positioning;
+	}
+
 	public boolean isDefault() {
 		return isDefault;
 	}
+
+	public ItemAttachment.ApplyHandler2<T> getApplyHandler() {
+		return applyHandler;
+	}
+
+	public ItemAttachment.ApplyHandler2<T> getRemoveHandler() {
+		return removeHandler;
+	}
+	
+	public ItemAttachment.MeleeWeaponApplyHandler<ItemMelee> getMeleeApplyHandler() {
+        return meleeApplyHandler;
+    }
+
+    public ItemAttachment.MeleeWeaponApplyHandler<ItemMelee> getMeleeRemoveHandler() {
+        return meleeRemoveHandler;
+    }
 }

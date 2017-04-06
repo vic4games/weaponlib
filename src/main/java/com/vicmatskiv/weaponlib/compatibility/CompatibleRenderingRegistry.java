@@ -14,6 +14,7 @@ import net.minecraft.client.renderer.ItemModelMesher;
 import net.minecraft.client.renderer.RenderItem;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.resources.IResourceManager;
+import net.minecraft.entity.Entity;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.ModelBakeEvent;
@@ -29,9 +30,9 @@ public class CompatibleRenderingRegistry implements ICustomModelLoader {
 
 	private List<ModelSourceRenderer> renderers = new ArrayList<>();
 	private Set<String> modelSourceLocations = new HashSet<>();
-	
+
 	private String modId;
-	
+
 	public CompatibleRenderingRegistry(String modId) {
 		this.modId = modId;
 		ModelLoaderRegistry.registerLoader(this);
@@ -54,11 +55,11 @@ public class CompatibleRenderingRegistry implements ICustomModelLoader {
 		ItemModelMesher itemModelMesher = renderItem.getItemModelMesher();
 		itemModelMesher.register(item, 0, modelID);
 	}
-	
+
 	@Override
 	public void onResourceManagerReload(IResourceManager resourceManager) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -73,9 +74,8 @@ public class CompatibleRenderingRegistry implements ICustomModelLoader {
 	}
 
 	@SuppressWarnings("deprecation")
-	public void registerEntityRenderingHandler(Class<WeaponSpawnEntity> class1,
-			SpawnEntityRenderer spawnEntityRenderer) {
-		RenderingRegistry.registerEntityRenderingHandler(WeaponSpawnEntity.class, spawnEntityRenderer);
-
+	public void registerEntityRenderingHandler(Class<? extends Entity> class1,
+	        CompatibleEntityRenderer spawnEntityRenderer) {
+		RenderingRegistry.registerEntityRenderingHandler(class1, spawnEntityRenderer);
 	}
 }

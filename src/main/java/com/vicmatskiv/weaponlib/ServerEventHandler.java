@@ -1,32 +1,76 @@
 package com.vicmatskiv.weaponlib;
 
-import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
+import com.vicmatskiv.weaponlib.compatibility.CompatibleEntityJoinWorldEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleServerEventHandler;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleStartTrackingEvent;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleStopTrackingEvent;
+import com.vicmatskiv.weaponlib.tracking.PlayerEntityTracker;
+import com.vicmatskiv.weaponlib.tracking.SyncPlayerEntityTrackerMessage;
 
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
 
 public class ServerEventHandler extends CompatibleServerEventHandler {
-	
-	private AttachmentManager attachmentManager;
 
-	public ServerEventHandler(AttachmentManager attachmentManager) {
-		this.attachmentManager = attachmentManager;
-	}
+    private static final Logger logger = LogManager.getLogger(ServerEventHandler.class);
 
-	@Override
-	protected void onCompatibleItemToss(ItemTossEvent itemTossEvent) {
-		ItemStack itemStack = compatibility.getItemStack(itemTossEvent);
-		Item item = itemStack.getItem();
-		if(!(item instanceof Weapon)) {
-			return; 
-		}
-		
-		if(Weapon.isModifying(itemStack)) {
-			attachmentManager.exitAttachmentSelectionMode(itemStack, compatibility.getPlayer(itemTossEvent));
-		}
-	}
+    private ModContext modContext;
+    private String modId;
+
+    public ServerEventHandler(ModContext modContext, String modId) {
+        this.modContext = modContext;
+        this.modId = modId;
+    }
+
+    @Override
+    protected void onCompatibleItemToss(ItemTossEvent itemTossEvent) {}
+
+    @Override
+    protected void onCompatibleEntityJoinWorld(CompatibleEntityJoinWorldEvent e) {
+        if(e.getEntity() instanceof EntityPlayerMP && !e.getWorld().isRemote) {
+            logger.debug("Player {} joined the world", e.getEntity());
+            PlayerEntityTracker tracker = PlayerEntityTracker.getTracker((EntityPlayer) e.getEntity());
+            if(tracker != null) {
+                modContext.getChannel().getChannel().sendTo(new SyncPlayerEntityTrackerMessage(tracker),
+                        (EntityPlayerMP)e.getEntity());
+            }
+        }
+    }
+
+    @Override
+    protected void onCompatiblePlayerStartedTracking(CompatibleStartTrackingEvent e) {
+        PlayerEntityTracker tracker = PlayerEntityTracker.getTracker((EntityPlayer) e.getEntity());
+        if (tracker != null && tracker.updateTrackableEntity(e.getTarget())) {
+            logger.debug("Player {} started tracking {}", e.getPlayer(), e.getTarget());
+            modContext.getChannel().getChannel().sendTo(new SyncPlayerEntityTrackerMessage(tracker),
+                    (EntityPlayerMP)e.getPlayer());
+        }
+    }
+
+    @Override
+    protected void onCompatiblePlayerStoppedTracking(CompatibleStopTrackingEvent e) {
+        PlayerEntityTracker tracker = PlayerEntityTracker.getTracker((EntityPlayer) e.getEntity());
+        if (tracker != null && tracker.updateTrackableEntity(e.getTarget())) {
+            logger.debug("Player {} stopped tracking {}", e.getPlayer(), e.getTarget());
+            modContext.getChannel().getChannel().sendTo(new SyncPlayerEntityTrackerMessage(tracker),
+                    (EntityPlayerMP)e.getPlayer());
+        }
+    }
+
+    @Override
+    protected void onCompatibleLivingDeathEvent(LivingDeathEvent e) {
+
+    }
+
+    @Override
+    public String getModId() {
+        return modId;
+    }
+
 
 }

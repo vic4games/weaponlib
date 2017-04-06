@@ -6,22 +6,23 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.lwjgl.input.Mouse;
 
+import com.vicmatskiv.weaponlib.melee.ItemMelee;
+
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
 class ClientWeaponTicker extends Thread {
 	
-	private boolean mouseWasPressed;
+	boolean buttonsPressed[] = new boolean[2];
+	long buttonsPressedTimestamps[] = new long[2];
 	
 	private AtomicBoolean running = new AtomicBoolean(true);
-	private SafeGlobals safeGlobals;
-	private FireManager fireManager;
-	private ReloadManager reloadManager;
 
-	public ClientWeaponTicker(SafeGlobals safeGlobals, FireManager fireManager, ReloadManager reloadManager) {
-		this.safeGlobals = safeGlobals;
-		this.fireManager = fireManager;
-		this.reloadManager = reloadManager;
+	private ClientModContext clientModContext;
+
+	public ClientWeaponTicker(ClientModContext clientModContext) {
+		this.clientModContext = clientModContext;
 	}
 
 	void shutdown() {
@@ -29,53 +30,96 @@ class ClientWeaponTicker extends Thread {
 	}
 	
 	public void run() {
-		
+		SafeGlobals safeGlobals = clientModContext.getSafeGlobals();
 		int currentItemIndex = safeGlobals.currentItemIndex.get();
+
 		while(running.get()) {
 			try {
-				Weapon currentWeapon = getCurrentWeapon();
-				EntityPlayer player = compatibility.getClientPlayer();
-
-				if(Mouse.isCreated() && Mouse.isButtonDown(0)) {
-					// Capture the current item index
-					currentItemIndex = safeGlobals.currentItemIndex.get();
-					if(!mouseWasPressed) {
-						mouseWasPressed = true;
-					}
-					if(currentWeapon != null && !safeGlobals.guiOpen.get() && !isInteracting()) {
-						fireManager.clientTryFire(player);
-					}
-				} else if(mouseWasPressed || currentItemIndex != safeGlobals.currentItemIndex.get()) { // if switched item while pressing mouse down and then released
-					mouseWasPressed = false;
-					currentItemIndex = safeGlobals.currentItemIndex.get();
-					if(currentWeapon != null) {
-						fireManager.clientTryStopFire(player);
-					}
+				
+				
+				if(!Mouse.isCreated()) {
+					continue;
 				}
 				
-				if(currentWeapon != null) {
-					update(player);
+				if(Mouse.isButtonDown(1)) {
+					if(!buttonsPressed[1]) {
+						buttonsPressed[1] = true;
+						buttonsPressedTimestamps[1] = System.currentTimeMillis();
+						
+						if(!safeGlobals.guiOpen.get() && !isInteracting()) {
+							clientModContext.runSyncTick(this::onRightButtonDown);
+						}
+					}
+				} else if(buttonsPressed[1]) {
+					buttonsPressed[1] = false;
 				}
+
+				if(Mouse.isButtonDown(0)) {
+					// Capture the current item index
+					currentItemIndex = safeGlobals.currentItemIndex.get();
+					if(!buttonsPressed[0]) {
+						buttonsPressed[0] = true;
+					}
+					if(!safeGlobals.guiOpen.get() && !isInteracting()) {
+						clientModContext.runSyncTick(this::onLeftButtonDown);
+					}
+				} else if(buttonsPressed[0] || currentItemIndex != safeGlobals.currentItemIndex.get()) { // if switched item while pressing mouse down and then released
+					buttonsPressed[0] = false;
+					currentItemIndex = safeGlobals.currentItemIndex.get();
+					clientModContext.runSyncTick(this::onLeftButtonUp);
+				}
+
+				clientModContext.runSyncTick(this::onTick);
 				Thread.sleep(10);
 			} catch(InterruptedException e) {
 				break;
 			}
 		}
 	}
+
+    private void onLeftButtonUp() {
+        EntityPlayer player = compatibility.getClientPlayer();
+        Item item = getHeldItemMainHand(player);
+        if(item instanceof Weapon) {
+            ((Weapon) item).tryStopFire(player);
+        }
+    }
+
+    private void onLeftButtonDown() {
+        EntityPlayer player = compatibility.getClientPlayer();
+        Item item = getHeldItemMainHand(player);
+        if(item instanceof Weapon) {
+            ((Weapon) item).tryFire(player);
+        } else if(item instanceof ItemMelee) {
+            ((ItemMelee) item).attack(player, false);
+        }
+    }
+
+    private void onRightButtonDown() {
+        EntityPlayer player = compatibility.getClientPlayer();
+        Item item = getHeldItemMainHand(player);
+        if(item instanceof Weapon) {
+            ((Weapon) item).toggleAiming();
+        } else if(item instanceof ItemMelee) {
+            ((ItemMelee) item).attack(player, true);
+        }
+    }
 	
-	private void update(EntityPlayer player) {
-		reloadManager.update(compatibility.getHeldItemMainHand(player), player);
-		fireManager.update(compatibility.getHeldItemMainHand(player), player);
+	private void onTick() {
+	    EntityPlayer player = compatibility.getClientPlayer();
+	    Item item = getHeldItemMainHand(player);
+        if(item instanceof Updatable) {
+            ((Updatable) item).update(player);
+        }
 	}
 
 	private boolean isInteracting() {
 		return false;
 	}
 	
-	private Weapon getCurrentWeapon() {
-		EntityPlayer player = compatibility.getClientPlayer();
+	private Item getHeldItemMainHand(EntityPlayer player) {
 		if(player == null) return null;
-		ItemStack heldItem = compatibility.getHeldItemMainHand(player);
-		return heldItem != null && heldItem.getItem() instanceof Weapon ? (Weapon) heldItem.getItem() : null;
+		ItemStack itemStack = compatibility.getHeldItemMainHand(player);
+		return itemStack != null ? itemStack.getItem() : null;
 	}
 }

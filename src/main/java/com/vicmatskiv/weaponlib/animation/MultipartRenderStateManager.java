@@ -9,11 +9,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Matrix4f;
 
 public class MultipartRenderStateManager<State, Part, Context> {
+	
+	private static final Logger logger = LogManager.getLogger(MultipartRenderStateManager.class);
 
 	private Randomizer randomizer;
 	
@@ -23,6 +27,12 @@ public class MultipartRenderStateManager<State, Part, Context> {
 
 		public StaticPositioning(State state) {
 			this.state = state;
+		}
+		
+		
+		@Override
+		public float getProgress() {
+			return 1f;
 		}
 		
 		@Override
@@ -37,7 +47,12 @@ public class MultipartRenderStateManager<State, Part, Context> {
 
 				@Override
 				public void position(Part part, Context context) {
-					transitions.get(transitions.size() - 1).position(part, context);
+					try {
+						transitions.get(transitions.size() - 1).position(part, context);
+					} catch(Exception e) {
+						System.err.println("Failed to find static position for " + part + " in " + state);
+						throw e;
+					}
 				}
 				
 				@Override
@@ -45,6 +60,16 @@ public class MultipartRenderStateManager<State, Part, Context> {
 					randomizer.update(rate, amplitude);
 				}
 			};
+		}
+
+		@Override
+		public <T> T getFromState(Class<T> stateClass) {
+			return stateClass.cast(state);
+		}
+		
+		@Override
+		public <T> T getToState(Class<T> stateClass) {
+			return stateClass.cast(state);
 		}
 	}
 	
@@ -55,6 +80,9 @@ public class MultipartRenderStateManager<State, Part, Context> {
 		}
 		private Map<Part, PartData> partDataMap = new HashMap<>();
 //		private Map<Part, List<Matrix4f>> partMatrices = new HashMap<>();
+		
+		private Long startTime;
+		private long totalDuration;
 		
 		private int currentIndex;
 		private long currentStartTime;
@@ -67,43 +95,97 @@ public class MultipartRenderStateManager<State, Part, Context> {
 		private List<MultipartTransition<Part, Context>> fromPositioning;
 		private List<MultipartTransition<Part, Context>> toPositioning;
 		
+		private State fromState;
+		private State toState;
+		
+		
+		
 		TransitionedPositioning(State fromState, State toState) {
+			this.fromState = fromState;
+			this.toState = toState;
 			fromPositioning = transitionProvider.getPositioning(fromState);
 			toPositioning = transitionProvider.getPositioning(toState);
 			segmentCount = toPositioning.size();
+			
+			for(MultipartTransition<Part, Context> t : toPositioning) {
+				totalDuration += t.getDuration() + t.getPause();
+			}
+		}
+		
+		@Override
+		public float getProgress() {
+			return startTime != null ? (float)(System.currentTimeMillis() - startTime) / totalDuration : 0f;
 		}
 		
 		@Override
 		public boolean isExpired(Queue<MultipartPositioning<Part, Context>> positioningQueue) {
 			return expired;
 		}
+
+		@Override
+		public <T> T getFromState(Class<T> stateClass) {
+			return stateClass.cast(fromState);
+		}
 		
+		@Override
+		public <T> T getToState(Class<T> stateClass) {
+			return stateClass.cast(toState);
+		}
+
 		private PartData getPartData(Part part, Context context) {
-			return partDataMap.computeIfAbsent(part, p -> { 
-				PartData pd = new PartData();
-				pd.matrices.add(getMatrixForPositioning(fromPositioning.get(fromPositioning.size() - 1), p, context));
-				for(MultipartTransition<Part, Context> t: toPositioning) {
-					pd.matrices.add(getMatrixForPositioning(t, p, context));
-				}
-				return pd;
-			});
+			try {
+				return partDataMap.computeIfAbsent(part, p -> { 
+					PartData pd = new PartData();
+					pd.matrices.add(getMatrixForPositioning(fromPositioning.get(fromPositioning.size() - 1), p, context));
+					for(MultipartTransition<Part, Context> t: toPositioning) {
+						pd.matrices.add(getMatrixForPositioning(t, p, context));
+					}
+					return pd;
+				});
+			} catch(Exception e) {
+				System.err.println("Failed to get data for part " + part + " for transition from [" + fromState + "] to [" + toState + "]");
+				throw e;
+			}
 		}
 		
 		@Override
 		public Positioner<Part, Context> getPositioner() {
 			
 			long currentTime = System.currentTimeMillis();
-			long currentDuration = toPositioning.get(currentIndex).getDuration();
-			long currentPause = toPositioning.get(currentIndex).getPause();
+			MultipartTransition<Part, Context> targetState = toPositioning.get(currentIndex);
 			
+			long currentDuration = targetState.getDuration();
+			long currentPause = targetState.getPause();
+			
+			if(currentIndex == 0 && startTime == null) {
+				logger.debug("Starting transition {}, duration {}ms, pause {}ms", currentIndex, currentDuration, currentPause);
+				startTime = currentTime;
+			}
+			
+			//boolean uglyFlag = false;
 			if(currentStartTime == 0) {
 				currentStartTime = currentTime;
 			} else if(currentTime > currentStartTime + currentDuration + currentPause) {
+				logger.debug("Completed transition {}, duration {}ms, pause {}ms", currentIndex, currentDuration, currentPause);
 				currentIndex++;
+				if(logger.isDebugEnabled() && currentIndex < toPositioning.size()) {
+					MultipartTransition<Part, Context> multipartTransition = toPositioning.get(currentIndex);
+					logger.debug("Starting transition {}, duration {}ms, pause {}ms", currentIndex, 
+							multipartTransition.getDuration(), multipartTransition.getPause());
+				}
 				currentStartTime = currentTime;
+				//uglyFlag = true;
 			}
 			
 			long currentOffset = currentTime - currentStartTime;
+			
+			float currentProgress = (float)currentOffset / currentDuration;
+			
+			if(currentProgress > 1f) {
+				currentProgress = 1f;
+			}
+			
+			float finalCurrentProgress = /*uglyFlag ? 1f : */ currentProgress;
 			
 			if(currentIndex >= segmentCount) {
 				expired = true;
@@ -122,13 +204,6 @@ public class MultipartRenderStateManager<State, Part, Context> {
 				};
 			}
 
-			float currentProgress = (float)currentOffset / currentDuration;
-						
-			if(currentProgress > 1f) {
-				currentProgress = 1f;
-			}
-
-			float finalCurrentProgress = currentProgress;
 			
 			return new Positioner<Part, Context> () {
 				@Override
@@ -164,7 +239,7 @@ public class MultipartRenderStateManager<State, Part, Context> {
 				currentMatrix = new Matrix4f();
 				currentMatrix.load(buf); 
 			}
-						
+
 			Matrix4f m1 = scale(beforeMatrix, 1 - progress); //start * (1 - progress)
 			Matrix4f m2 = scale(afterMatrix, progress);
 			
@@ -211,9 +286,7 @@ public class MultipartRenderStateManager<State, Part, Context> {
 		private Matrix4f getMatrixForPositioning(MultipartTransition<Part, Context> transition, Part part, Context context) {
 			GL11.glPushMatrix();
 			GL11.glMatrixMode(GL11.GL_MODELVIEW);
-			//if(part != mainPart) {
-				GL11.glLoadIdentity();
-			//}
+			GL11.glLoadIdentity();
 			FloatBuffer buf = BufferUtils.createFloatBuffer(16);
 			transition.position(part, context);
 			GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, buf);
@@ -223,7 +296,7 @@ public class MultipartRenderStateManager<State, Part, Context> {
 			GL11.glPopMatrix();
 			return matrix;
 		}
-		
+
 	}
 	
 	private State currentState;
@@ -231,12 +304,9 @@ public class MultipartRenderStateManager<State, Part, Context> {
 	private MultipartTransitionProvider<State, Part, Context> transitionProvider;
 	
 	private Deque<MultipartPositioning<Part, Context>> positioningQueue;
-	
-	private Part mainPart;
 
 	public MultipartRenderStateManager(State initialState, MultipartTransitionProvider<State, Part, Context> transitionProvider, Part mainPart) {
 		this.transitionProvider = transitionProvider;
-		this.mainPart = mainPart;
 		this.positioningQueue = new LinkedList<>();
 		this.randomizer = new Randomizer();
 		setState(initialState, false, true);

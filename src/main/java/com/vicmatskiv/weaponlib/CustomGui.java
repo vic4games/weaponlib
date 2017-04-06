@@ -4,8 +4,10 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 
 import org.lwjgl.opengl.GL11;
 
+import com.vicmatskiv.weaponlib.StatusMessageCenter.Message;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleGui;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTessellator;
+import com.vicmatskiv.weaponlib.electronics.ItemWirelessCamera;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
@@ -16,11 +18,13 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent;
 
 public class CustomGui extends CompatibleGui {
 	private Minecraft mc;
-	private AttachmentManager attachmentManager;
+	private WeaponAttachmentAspect attachmentAspect;
+	private ModContext modContext;
 
-	public CustomGui(Minecraft mc, AttachmentManager attachmentManager) {
+	public CustomGui(Minecraft mc, ModContext modContext, WeaponAttachmentAspect attachmentAspect) {
 		this.mc = mc;
-		this.attachmentManager = attachmentManager;
+		this.modContext = modContext;
+		this.attachmentAspect = attachmentAspect;
 	}
 	private static final int BUFF_ICON_SIZE = 256;
 	
@@ -67,13 +71,17 @@ public class CustomGui extends CompatibleGui {
 		}
 		
 		ItemStack itemStack = compatibility.getHeldItemMainHand(compatibility.clientPlayer());
+
 		if(itemStack == null) {
 			return;
 		}
 		
-		if(itemStack.getItem() instanceof Weapon) {
+		PlayerWeaponInstance weaponInstance = modContext.getMainHeldWeapon();
+		
+		if(weaponInstance != null) {
 			Weapon weaponItem = (Weapon) itemStack.getItem();
-			String crosshair = weaponItem != null ? weaponItem.getCrosshair(itemStack, compatibility.clientPlayer()) : null;
+			
+			String crosshair = weaponItem != null ? weaponItem.getCrosshair(weaponInstance) : null;
 			if(crosshair != null) {
 				ScaledResolution scaledResolution = compatibility.getResolution(event);
 				int width = scaledResolution.getScaledWidth();
@@ -96,38 +104,39 @@ public class CustomGui extends CompatibleGui {
 		        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 				GL11.glEnable(GL11.GL_BLEND);
 				
-				if(weaponItem.isCrosshairFullScreen(itemStack))	 {
-					drawTexturedQuadFit(0, 0, width, height, 0);
-				} else {
-					drawTexturedModalRect(xPos, yPos, 0, 0, BUFF_ICON_SIZE, BUFF_ICON_SIZE);
-				}
+//				if(weaponItem.isCrosshairFullScreen(itemStack))	 {
+//					drawTexturedQuadFit(0, 0, width, height, 0);
+//				} else {
+//					drawTexturedModalRect(xPos, yPos, 0, 0, BUFF_ICON_SIZE, BUFF_ICON_SIZE);
+//				}
 				
-				if(Weapon.isModifying(itemStack) /*weaponItem.getState(weapon) == Weapon.STATE_MODIFYING*/) {
-					fontRender.drawStringWithShadow("Attachment selection mode. Press [f] to exit.", 10, 10, color);
+				if(isInModifyingState(weaponInstance) /*Weapon.isModifying(itemStack)*/ /*weaponItem.getState(weapon) == Weapon.STATE_MODIFYING*/) {
 					fontRender.drawStringWithShadow("Press [up] to add optic", width / 2 - 40, 60, color);
 					fontRender.drawStringWithShadow("Press [left] to add barrel rig", 10, height / 2 - 10, color);
 					fontRender.drawStringWithShadow("Press [right] to change camo", width / 2 + 60, height / 2 - 20, color);
 					fontRender.drawStringWithShadow("Press [down] to add under-barrel rig", 10, height - 40, color);
 				} else {
-					ItemMagazine magazine = (ItemMagazine) attachmentManager.getActiveAttachment(itemStack, AttachmentCategory.MAGAZINE);
-					int totalCapacity;
-					if(magazine != null) {
-						totalCapacity = magazine.getAmmo();
+					Message message = modContext.getStatusMessageCenter().nextMessage();
+					String messageText;
+					if(message != null) {
+						messageText = message.getMessage();
+						if(message.isAlert()) {
+							color = 0xFFFF00;
+						}
 					} else {
-						totalCapacity = weaponItem.getAmmoCapacity();
-					}
-					
-					String text;
-					if(weaponItem.getAmmoCapacity() == 0 && totalCapacity == 0) {
-						text = "No magazine";
-					} else {
-						text = "Ammo: " + weaponItem.getCurrentAmmo(compatibility.clientPlayer()) + "/" + totalCapacity;
+						messageText = getDefaultWeaponMessage(weaponInstance);
 					}
 					
 					int x = width - 80;
 					int y = 10;
+					
 
-					fontRender.drawStringWithShadow(text, x, y, color);
+					int stringWidth = fontRender.getStringWidth(messageText);
+					if(stringWidth > 80 ) {
+						x = width - stringWidth - 5;
+					}
+
+					fontRender.drawStringWithShadow(messageText, x, y, color);
 				}
 				GL11.glPopAttrib();
 				
@@ -140,15 +149,90 @@ public class CustomGui extends CompatibleGui {
 			mc.entityRenderer.setupOverlayRendering();
 			int color = 0xFFFFFF;
 			
-			ItemMagazine magazine = (ItemMagazine) itemStack.getItem();
+			Message message = modContext.getStatusMessageCenter().nextMessage();
+			String messageText;
+			if(message != null) {
+				messageText = message.getMessage();
+				if(message.isAlert()) {
+					color = 0xFF0000;
+				}
+			} else {
+				messageText = getDefaultMagazineMessage(itemStack);
+			}
 			
-			String text = "Ammo: " + Tags.getAmmo(itemStack) + "/" + magazine.getAmmo();
 			int x = width - 80;
 			int y = 10;
 
-			fontRender.drawStringWithShadow(text, x, y, color);
+			int stringWidth = fontRender.getStringWidth(messageText);
+			if(stringWidth > 80 ) {
+				x = width - stringWidth - 5;
+			}
+			
+			fontRender.drawStringWithShadow(messageText, x, y, color);
 			event.setCanceled(true);
+		} else if(itemStack.getItem() instanceof ItemWirelessCamera) {
+		    ScaledResolution scaledResolution = compatibility.getResolution(event);
+            int width = scaledResolution.getScaledWidth();
+            FontRenderer fontRender = compatibility.getFontRenderer();
+            mc.entityRenderer.setupOverlayRendering();
+            int color = 0xFFFFFF;
+            
+            Message message = modContext.getStatusMessageCenter().nextMessage();
+            String messageText;
+            if(message != null) {
+                messageText = message.getMessage();
+                if(message.isAlert()) {
+                    color = 0xFF0000;
+                }
+                
+                int x = width - 80;
+                int y = 10;
+
+                int stringWidth = fontRender.getStringWidth(messageText);
+                if(stringWidth > 80 ) {
+                    x = width - stringWidth - 5;
+                }
+                
+                fontRender.drawStringWithShadow(messageText, x, y, color);
+                event.setCanceled(true);
+            }
 		}
+	}
+
+
+	private String getDefaultMagazineMessage(ItemStack itemStack) {
+		ItemMagazine magazine = (ItemMagazine) itemStack.getItem();
+		
+		String text = "Ammo: " + Tags.getAmmo(itemStack) + "/" + magazine.getAmmo();
+		return text;
+	}
+
+
+	private String getDefaultWeaponMessage(PlayerWeaponInstance weaponInstance) {
+		@SuppressWarnings("static-access")
+		ItemMagazine magazine = (ItemMagazine) attachmentAspect.getActiveAttachment(AttachmentCategory.MAGAZINE, weaponInstance);
+		int totalCapacity;
+		if(magazine != null) {
+			totalCapacity = magazine.getAmmo();
+		} else {
+			totalCapacity = weaponInstance.getWeapon().getAmmoCapacity();
+		}
+		
+		String text;
+		if(weaponInstance.getWeapon().getAmmoCapacity() == 0 && totalCapacity == 0) {
+			text = "No magazine";
+		} else {
+			text = "Ammo: " + weaponInstance.getWeapon().getCurrentAmmo(compatibility.clientPlayer()) + "/" + totalCapacity;
+		}
+		return text;
+	}
+
+
+	private boolean isInModifyingState(PlayerWeaponInstance weaponInstance) {
+		return weaponInstance.getState() == WeaponState.MODIFYING
+				|| weaponInstance.getState() == WeaponState.MODIFYING_REQUESTED
+				|| weaponInstance.getState() == WeaponState.NEXT_ATTACHMENT
+				|| weaponInstance.getState() == WeaponState.NEXT_ATTACHMENT_REQUESTED;
 	}
 	
 	private static void drawTexturedQuadFit(double x, double y, double width, double height, double zLevel){

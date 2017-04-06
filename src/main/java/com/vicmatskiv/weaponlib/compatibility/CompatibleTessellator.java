@@ -44,7 +44,7 @@ public class CompatibleTessellator {
 	
 	public void startDrawingLines() {
 		VertexBuffer renderer = tessellator.getBuffer();
-		renderer.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_TEX_NORMAL);
+		renderer.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION);
 	}
 
 	public void addVertexWithUV(double d, double e, double zLevel, double u, double v) {

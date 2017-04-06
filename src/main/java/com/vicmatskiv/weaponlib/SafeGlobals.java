@@ -13,4 +13,6 @@ public class SafeGlobals {
 	public final AtomicInteger currentItemIndex = new AtomicInteger(-1);
 	
 	public final AtomicReference<CompatibleRayTraceResult> objectMouseOver = new AtomicReference<>();
+	
+	public final AtomicReference<RenderingPhase> renderingPhase = new AtomicReference<>();
 }

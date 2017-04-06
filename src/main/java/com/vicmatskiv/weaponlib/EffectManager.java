@@ -3,6 +3,8 @@ package com.vicmatskiv.weaponlib;
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleVec3;
+import com.vicmatskiv.weaponlib.particle.FlashFX;
+import com.vicmatskiv.weaponlib.particle.SmokeFX;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
@@ -45,18 +47,19 @@ final class EffectManager {
 		Minecraft.getMinecraft().effectRenderer.addEffect(smokeParticle);
 	}
 	
-	void spawnFlashParticle(EntityPlayer player, float flashIntensity, float xOffset, float yOffset) {
+	void spawnFlashParticle(EntityPlayer player, float flashIntensity, float flashScale, 
+			float xOffset, float yOffset) {
 		
 		float distance = 0.5f;
 		
-		float scale = 0.8f * compatibility.getEffectScaleFactor();
+		float scale = 0.8f * compatibility.getEffectScaleFactor() * flashScale;
 		float positionRandomizationFactor = 0.01f;
 		
 		CompatibleVec3 look = compatibility.getLookVec(player);
 		
-		float motionX = (float)compatibility.world(player).rand.nextGaussian() * 0.01f;
-		float motionY = (float)compatibility.world(player).rand.nextGaussian() * 0.01f;
-		float motionZ = (float)compatibility.world(player).rand.nextGaussian() * 0.01f;
+		float motionX = (float)compatibility.world(player).rand.nextGaussian() * 0.005f;
+		float motionY = (float)compatibility.world(player).rand.nextGaussian() * 0.005f;
+		float motionZ = (float)compatibility.world(player).rand.nextGaussian() * 0.005f;
 		
 		double posX = player.posX + (look.getVec().xCoord * distance) + (compatibility.world(player).rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor + (-look.getVec().zCoord * xOffset);
 		double posY = player.posY + (look.getVec().yCoord * distance) + (compatibility.world(player).rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor - yOffset;

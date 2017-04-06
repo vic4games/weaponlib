@@ -9,10 +9,14 @@ public interface MultipartPositioning<Part, Context> {
 		public default void randomize(float rate, float amplitude) {};
 	}
 	
-	//, float randomizationRate, float randomizationAmplitude
-
+	public <T> T getFromState(Class<T> stateClass);
+	
+	public <T> T getToState(Class<T> stateClass);
+	
 	public boolean isExpired(Queue<MultipartPositioning<Part, Context>> positioningQueue);
 	
 	public Positioner<Part, Context> getPositioner();
+	
+	public float getProgress();
 
 }

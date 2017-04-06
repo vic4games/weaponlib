@@ -11,13 +11,18 @@ public class ItemBullet extends ItemAttachment<Weapon> {
 		
 		private List<ItemMagazine> compatibleMagazines = new ArrayList<>();
 		
-		public void withCompatibleMagazine(ItemMagazine magazine) {
+		public Builder() {
+		    withMaxStackSize(64);
+		}
+		
+		public Builder withCompatibleMagazine(ItemMagazine magazine) {
 			compatibleMagazines.add(magazine);
+			return this;
 		}
 
 		@Override
 		protected ItemAttachment<Weapon> createAttachment(ModContext modContext) {
-			ItemBullet bullet = new ItemBullet(modId, AttachmentCategory.BULLET, model, textureName, null, null, null);
+			ItemBullet bullet = new ItemBullet(getModId(), AttachmentCategory.BULLET, getModel(), getTextureName(), null, null, null);
 			bullet.compatibleMagazines = compatibleMagazines;
 			return bullet;
 		}
@@ -31,12 +36,4 @@ public class ItemBullet extends ItemAttachment<Weapon> {
 			com.vicmatskiv.weaponlib.ItemAttachment.ApplyHandler<Weapon> remove) {
 		super(modId, category, model, textureName, crosshair, apply, remove);
 	}
-	
-//	@SuppressWarnings({ "rawtypes"})
-//	@Override
-//	public void addInformation(ItemStack itemStack, EntityPlayer entityPlayer, List info, boolean p_77624_4_) {
-//		//info.add("Compatible guns:");
-//
-//		//compatibleMagazines.forEach((m) -> info.add(GameRegistry.));
-//	}
 }

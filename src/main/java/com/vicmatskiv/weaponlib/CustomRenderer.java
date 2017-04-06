@@ -1,10 +1,6 @@
 package com.vicmatskiv.weaponlib;
 
-import com.vicmatskiv.weaponlib.compatibility.CompatibleTransformType;
+public interface CustomRenderer<RS> {
 
-import net.minecraft.item.ItemStack;
-
-public interface CustomRenderer {
-
-	public void render(CompatibleTransformType type, ItemStack itemStack);
+	public void render(RenderContext<RS> renderContext);
 }

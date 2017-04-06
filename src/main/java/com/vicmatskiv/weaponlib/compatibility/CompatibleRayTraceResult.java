@@ -33,18 +33,45 @@ public class CompatibleRayTraceResult {
 		}
 		return result;
 	}
-	
+
 	public int getBlockPosX() {
 		return position.getBlockPos().getX();
 	}
-	
+
 	public int getBlockPosY() {
 		return position.getBlockPos().getY();
 	}
-	
+
 	public int getBlockPosZ() {
 		return position.getBlockPos().getZ();
 	}
-	
-	
+
+	public CompatibleBlockPos getBlockPos() {
+	    return new CompatibleBlockPos(position.getBlockPos());
+	}
+
+	public CompatibleEnumFacing getSideHit() {
+	    CompatibleEnumFacing result = null;
+	    switch(position.sideHit) {
+	    case UP:
+	        result = CompatibleEnumFacing.UP;
+	        break;
+	    case DOWN:
+            result = CompatibleEnumFacing.DOWN;
+            break;
+	    case EAST:
+            result = CompatibleEnumFacing.EAST;
+            break;
+	    case WEST:
+            result = CompatibleEnumFacing.WEST;
+            break;
+	    case NORTH:
+	        result = CompatibleEnumFacing.NORTH;
+            break;
+	    case SOUTH:
+	        result = CompatibleEnumFacing.SOUTH;
+            break;
+	    }
+	    return result;
+	}
 }
