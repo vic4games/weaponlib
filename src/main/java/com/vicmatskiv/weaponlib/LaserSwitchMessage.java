@@ -2,10 +2,11 @@ package com.vicmatskiv.weaponlib;
 
 import java.util.Random;
 
-import io.netty.buffer.ByteBuf;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleMessage;
 
-public class LaserSwitchMessage implements IMessage {
+import io.netty.buffer.ByteBuf;
+
+public class LaserSwitchMessage implements CompatibleMessage {
 
 	private int value;
 

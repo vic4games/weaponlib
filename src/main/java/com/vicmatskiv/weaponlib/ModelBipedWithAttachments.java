@@ -5,6 +5,8 @@ import java.util.Random;
 
 import org.lwjgl.opengl.GL11;
 
+import com.vicmatskiv.weaponlib.compatibility.CompatibleModelBiped;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelBiped;
@@ -14,12 +16,10 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.ResourceLocation;
 
-public class ModelBipedWithAttachments extends ModelBiped {
+public class ModelBipedWithAttachments extends CompatibleModelBiped {
 	
-	private ModelBiped delegate;
-
 	public ModelBipedWithAttachments(ModelBiped delegate) {
-		this.delegate = delegate;
+		super(delegate);
 	}
 
 	public int hashCode() {
@@ -58,14 +58,6 @@ public class ModelBipedWithAttachments extends ModelBiped {
 	public String toString() {
 		return delegate.toString();
 	}
-//
-//	public void renderEars(float p_78110_1_) {
-//		delegate.renderEars(p_78110_1_);
-//	}
-//
-//	public void renderCloak(float p_78111_1_) {
-//		delegate.renderCloak(p_78111_1_);
-//	}
 
 	public void renderAttachments(String modId, List<CompatibleAttachment<?>> attachments, Entity entity, float f, float f1, float f2, float f3, float f4, float f5) {
 		for(CompatibleAttachment<?> compatibleAttachment: attachments) {

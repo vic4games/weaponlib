@@ -1,41 +1,34 @@
 package com.vicmatskiv.weaponlib;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import com.vicmatskiv.weaponlib.compatibility.CompatibleItem;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.init.Blocks;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.EnumActionResult;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundEvent;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 
-public class Weapon extends Item implements AttachmentContainer {
+public class Weapon extends CompatibleItem implements AttachmentContainer {
 	
 	public static class Builder {
 
@@ -89,12 +82,13 @@ public class Weapon extends Item implements AttachmentContainer {
 		float flashIntensity = 0.7f;
 
 		long unloadingTimeout = Weapon.DEFAULT_UNLOADING_TIMEOUT_TICKS;
-
-		private int maxBullets;
 		
 		private boolean ejectSpentRoundRequired;
 
-		
+		public int maxBulletsPerReload;
+
+		private Function<ItemStack, List<String>> informationProvider;
+
 
 		public Builder withModId(String modId) {
 			this.modId = modId;
@@ -106,9 +100,18 @@ public class Weapon extends Item implements AttachmentContainer {
 			return this;
 		}
 		
+		public Builder withInformationProvider(Function<ItemStack, List<String>> informationProvider) {
+			this.informationProvider = informationProvider;
+			return this;
+		}
 
 		public Builder withReloadingTime(long reloadingTime) {
 			this.reloadingTimeout = reloadingTime;
+			return this;
+		}
+
+		public Builder withUnloadingTime(long unloadingTime) {
+			this.unloadingTimeout = unloadingTime;
 			return this;
 		}
 
@@ -119,6 +122,11 @@ public class Weapon extends Item implements AttachmentContainer {
 
 		public Builder withAmmoCapacity(int ammoCapacity) {
 			this.ammoCapacity = ammoCapacity;
+			return this;
+		}
+		
+		public Builder withMaxBulletsPerReload(int maxBulletsPerReload) {
+			this.maxBulletsPerReload = maxBulletsPerReload;
 			return this;
 		}
 
@@ -218,7 +226,7 @@ public class Weapon extends Item implements AttachmentContainer {
 			if (modId == null) {
 				throw new IllegalStateException("ModId is not set");
 			}
-			this.silencedShootSound = silencedShootSound; //modId + ":" + silencedShootSound;
+			this.silencedShootSound = silencedShootSound;
 			return this;
 		}
 
@@ -251,12 +259,6 @@ public class Weapon extends Item implements AttachmentContainer {
 			return this;
 		}
 
-		// public Builder withSpawnEntity(Function<EntityPlayer, WeaponSpawnEntity>
-		// spawnEntityWith) {
-		// this.spawnEntityWith = spawnEntityWith;
-		// return this;
-		// }
-
 		public Builder withSpawnEntityDamage(float spawnEntityDamage) {
 			this.spawnEntityDamage = spawnEntityDamage;
 			return this;
@@ -286,6 +288,11 @@ public class Weapon extends Item implements AttachmentContainer {
 			this.renderer = renderer;
 			return this;
 		}
+		
+		public Builder withCompatibleBullet(ItemBullet bullet, Consumer<ModelBase> positioner) {
+			compatibleAttachments.put(bullet, new CompatibleAttachment<>(bullet, positioner));
+			return this;
+		}
 
 		public Builder withCompatibleAttachment(ItemAttachment<Weapon> attachment, Consumer<ModelBase> positioner) {
 			compatibleAttachments.put(attachment, new CompatibleAttachment<>(attachment, positioner));
@@ -295,11 +302,6 @@ public class Weapon extends Item implements AttachmentContainer {
 		public Builder withCompatibleAttachment(ItemAttachment<Weapon> attachment, boolean isDefault,
 				Consumer<ModelBase> positioner) {
 			compatibleAttachments.put(attachment, new CompatibleAttachment<>(attachment, positioner, isDefault));
-			return this;
-		}
-		
-		public Builder withMaxBullets(int maxBullets) {
-			this.maxBullets = maxBullets;
 			return this;
 		}
 
@@ -348,12 +350,8 @@ public class Weapon extends Item implements AttachmentContainer {
 				throw new IllegalStateException("Weapon name not provided");
 			}
 
-			// if(textureName == null) {
-			// textureName = modId + ":" + name;
-			// }
-
 			if (shootSound == null) {
-				shootSound = /*modId + ":" + */name;
+				shootSound = name;
 			}
 
 			if (silencedShootSound == null) {
@@ -361,7 +359,7 @@ public class Weapon extends Item implements AttachmentContainer {
 			}
 
 			if (reloadSound == null) {
-				reloadSound = /*modId + ":" +*/ "reload";
+				reloadSound = "reload";
 			}
 
 			if (unloadSound == null) {
@@ -375,27 +373,8 @@ public class Weapon extends Item implements AttachmentContainer {
 			if (spawnEntityWith == null) {
 
 				spawnEntityWith = (weapon, player) -> {
-					WeaponSpawnEntity spawnEntity = new WeaponSpawnEntity(weapon, player.world, player, spawnEntitySpeed,
-							spawnEntityGravityVelocity, spawnEntityDamage, spawnEntityExplosionRadius) {
-
-						@Override
-						protected float getGravityVelocity() {
-							return spawnEntityGravityVelocity;
-						}
-
-//						@Override
-//						protected float getVelocity() {
-//							return spawnEntitySpeed;
-//						}
-
-						@Override
-						protected float getInaccuracy() {
-							return inaccuracy;
-						}
-
-					};
-
-					return spawnEntity;
+					return compatibility.getSpawnEntity(weapon, compatibility.world(player), player, spawnEntitySpeed,
+							spawnEntityGravityVelocity, inaccuracy, spawnEntityDamage, spawnEntityExplosionRadius);
 				};
 			}
 
@@ -409,43 +388,30 @@ public class Weapon extends Item implements AttachmentContainer {
 
 			if (blockImpactHandler == null) {
 				blockImpactHandler = (world, player, entity, position) -> {
-			
-					Block block = world.getBlockState(position.getBlockPos()).getBlock();
-					if (block == Blocks.GLASS || block == Blocks.GLASS_PANE || block == Blocks.STAINED_GLASS
-							|| block == Blocks.STAINED_GLASS_PANE) {
-						//world.func_147480_a(position.getBlockPos().getX(), position.getBlockPos().getY(), position.getBlockPos().getZ(), true);
-						world.destroyBlock(position.getBlockPos(), true);
+					Block block = WorldHelper.getBlockAtPosition(world, position);
+					if (WorldHelper.isGlassBlock(block)) {
+						WorldHelper.destroyBlock(world, position);
 					}
 				};
+			}
+			
+			if(maxBulletsPerReload == 0) {
+				maxBulletsPerReload = ammoCapacity;
 			}
 
 			Weapon weapon = new Weapon(this, modContext);
 			
-			ResourceLocation shootSoundLocation = new ResourceLocation(this.modId, this.shootSound);
-			weapon.shootSound = new SoundEvent(shootSoundLocation);
-			registerSound(weapon.shootSound, shootSoundLocation);
-			
-			ResourceLocation reloadSoundLocation = new ResourceLocation(this.modId, this.reloadSound);
-			weapon.reloadSound = new SoundEvent(reloadSoundLocation);
-			registerSound(weapon.reloadSound, reloadSoundLocation);
-			
-			ResourceLocation unloadSoundLocation = new ResourceLocation(this.modId, this.unloadSound);
-			weapon.unloadSound = new SoundEvent(unloadSoundLocation);
-			registerSound(weapon.unloadSound, unloadSoundLocation);
-			
-			ResourceLocation silencedShootSoundLocation = new ResourceLocation(this.modId, this.silencedShootSound);
-			weapon.silencedShootSound = new SoundEvent(silencedShootSoundLocation);
-			registerSound(weapon.silencedShootSound, silencedShootSoundLocation);
+			weapon.shootSound = modContext.registerSound(this.shootSound);
+			weapon.reloadSound = modContext.registerSound(this.reloadSound);
+			weapon.unloadSound = modContext.registerSound(this.unloadSound);
+			weapon.silencedShootSound = modContext.registerSound(this.silencedShootSound);
 			
 			if(ejectSpentRoundSound != null) {
-				ResourceLocation ejectSpentRoundSoundLocation = new ResourceLocation(this.modId, this.ejectSpentRoundSound);
-				weapon.ejectSpentRoundSound = new SoundEvent(ejectSpentRoundSoundLocation);
-				registerSound(weapon.ejectSpentRoundSound, ejectSpentRoundSoundLocation);
+				weapon.ejectSpentRoundSound = modContext.registerSound(this.ejectSpentRoundSound);
 			}
 			
 			weapon.setCreativeTab(creativeTab);
 			weapon.setUnlocalizedName(name);
-			weapon.setRegistryName(modContext.getModId(), name);
 			if (ammo != null) {
 				ammo.addCompatibleWeapon(weapon);
 			}
@@ -453,17 +419,8 @@ public class Weapon extends Item implements AttachmentContainer {
 			for (ItemAttachment<Weapon> attachment : this.compatibleAttachments.keySet()) {
 				attachment.addCompatibleWeapon(weapon);
 			}
-			
-			modContext.registerWeapon(name, weapon);
+			modContext.registerWeapon(name, weapon, renderer);
 			return weapon;
-		}
-
-		private static Set<ResourceLocation> registeredSounds = new HashSet<>();
-		
-		private void registerSound(SoundEvent soundEvent, ResourceLocation shootSoundLocation) {
-			if(registeredSounds.add(shootSoundLocation)) {
-				GameRegistry.register(soundEvent, shootSoundLocation);
-			}
 		}
 	}
 
@@ -473,6 +430,7 @@ public class Weapon extends Item implements AttachmentContainer {
 	private static final long DEFAULT_RELOADING_TIMEOUT_TICKS = 10;
 	private static final long DEFAULT_UNLOADING_TIMEOUT_TICKS = 10;
 	static final long MAX_RELOAD_TIMEOUT_TICKS = 60;
+	static final long MAX_UNLOAD_TIMEOUT_TICKS = 60;
 	
 	private static final float DEFAULT_ZOOM = 0.75f;
 	
@@ -482,11 +440,11 @@ public class Weapon extends Item implements AttachmentContainer {
 	
 	private ModContext modContext;
 	
-	private SoundEvent shootSound;
-	private SoundEvent silencedShootSound;
-	private SoundEvent reloadSound;
-	private SoundEvent unloadSound;
-	private SoundEvent ejectSpentRoundSound;
+	private CompatibleSound shootSound;
+	private CompatibleSound silencedShootSound;
+	private CompatibleSound reloadSound;
+	private CompatibleSound unloadSound;
+	private CompatibleSound ejectSpentRoundSound;
 
 	public static enum State { READY, SHOOTING, RELOAD_REQUESTED, RELOAD_CONFIRMED, UNLOAD_STARTED, UNLOAD_REQUESTED_FROM_SERVER, UNLOAD_CONFIRMED, PAUSED, MODIFYING, EJECT_SPENT_ROUND};
 	
@@ -500,23 +458,23 @@ public class Weapon extends Item implements AttachmentContainer {
 		return builder.name;
 	}
 
-	public SoundEvent getShootSound() {
+	public CompatibleSound getShootSound() {
 		return shootSound;
 	}
 
-	public SoundEvent getSilencedShootSound() {
+	public CompatibleSound getSilencedShootSound() {
 		return silencedShootSound;
 	}
 
-	public SoundEvent getReloadSound() {
+	public CompatibleSound getReloadSound() {
 		return reloadSound;
 	}
 	
-	public SoundEvent getUnloadSound() {
+	public CompatibleSound getUnloadSound() {
 		return unloadSound;
 	}
 	
-	public SoundEvent getEjectSpentRoundSound() {
+	public CompatibleSound getEjectSpentRoundSound() {
 		return ejectSpentRoundSound;
 	}
 
@@ -526,25 +484,21 @@ public class Weapon extends Item implements AttachmentContainer {
 	}
 	
 	@Override
-	public ActionResult<ItemStack> onItemRightClick(World worldIn, EntityPlayer playerIn, EnumHand handIn) {
-		toggleAiming(playerIn.getHeldItem(handIn), playerIn);
-		return super.onItemRightClick(worldIn, playerIn, handIn);
+	protected ItemStack onCompatibleItemRightClick(ItemStack itemStack, World world, EntityPlayer player, boolean mainHand) {
+		if(mainHand) {
+			toggleAiming(itemStack, player);
+		}
+		return itemStack;
 	}
-
-	
-	@Override
-	public EnumActionResult onItemUse(EntityPlayer player, World worldIn, BlockPos pos, EnumHand hand,
-			EnumFacing facing, float hitX, float hitY, float hitZ) {
-		return EnumActionResult.SUCCESS;
-	}
-
 
 	void toggleAiming(ItemStack itemStack, EntityPlayer entityPlayer) {
 		
-		ensureItemStack(itemStack);
+		compatibility.ensureTagCompound(itemStack);
+		
 		if(Weapon.isModifying(itemStack)) {
 			return;
 		}
+		
 		float currentZoom = Tags.getZoom(itemStack);
 		
 		if (currentZoom != 1.0f || entityPlayer.isSprinting()) {
@@ -565,60 +519,41 @@ public class Weapon extends Item implements AttachmentContainer {
 		}
 	}
 
-	private static void restoreNormalSpeed(EntityPlayer entityPlayer) {
-		if(entityPlayer.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED)
+	private void restoreNormalSpeed(EntityPlayer entityPlayer) {
+		if(entityPlayer.getEntityAttribute(compatibility.getMovementSpeedAttribute())
 				.getModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER.getID()) != null) {
-			entityPlayer.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED)
+			entityPlayer.getEntityAttribute(compatibility.getMovementSpeedAttribute())
 				.removeModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER);
 		} else {
 			System.err.println("Attempted to remove modifier that was not applied: " + SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER);
 		}
 	}
 
-	private static void slowDown(EntityPlayer entityPlayer) {
-		if(entityPlayer.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED)
+	private void slowDown(EntityPlayer entityPlayer) {
+		if(entityPlayer.getEntityAttribute(compatibility.getMovementSpeedAttribute())
 				.getModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER.getID()) == null) {
-			entityPlayer.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED)
+			entityPlayer.getEntityAttribute(compatibility.getMovementSpeedAttribute())
 				.applyModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER);
 		}  else {
 			System.err.println("Attempted to add duplicate modifier: " + SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER);
 		}
-	}
-	
-	@Override
-	public boolean shouldCauseReequipAnimation(ItemStack oldStack, ItemStack newStack, boolean slotChanged) {
-		if(slotChanged) {
-			return true;
-		}
-		return true;
-//		if(oldStack == newStack) {
-//			return false;
-//		}
-//		if(oldStack == null || newStack == null) {
-//			return oldStack != newStack;
-//		}
-//		if(!ItemStack.areItemsEqual(oldStack, newStack)) {
-//			System.out.println("Items " + oldStack + " and " + newStack + " not equal");
-//			return true;
-//		}
-//		//System.out.println("Items are equal, stacks are not, triggering reequip animation");
-//		return true;
 	}
 
 	@Override
 	public void onUpdate(ItemStack itemStack, World world, Entity entity, int p_77663_4_, boolean active) {
 		ensureItemStack(itemStack);
 		float currentZoom = Tags.getZoom(itemStack);
-		if (currentZoom != 1.0f && entity.isSprinting()) {
+		EntityPlayer player = (EntityPlayer) entity;
+		if (currentZoom != 1.0f && (entity.isSprinting() || compatibility.getHeldItemMainHand(player) != itemStack)) {
 			Tags.setZoom(itemStack, 1.0f);
 			Tags.setAimed(itemStack, false);
-			restoreNormalSpeed((EntityPlayer) entity);
+			restoreNormalSpeed(player);
 		}
 	}
 
 	private void ensureItemStack(ItemStack itemStack) {
-		if (itemStack.getTagCompound() == null) {
-			itemStack.setTagCompound(new NBTTagCompound());
+		if (compatibility.getTagCompound(itemStack) == null) {
+			compatibility.setTagCompound(itemStack, new NBTTagCompound());
 			Tags.setAmmo(itemStack, 0);
 			Tags.setZoom(itemStack, 1.0f);
 			Tags.setRecoil(itemStack, builder.recoil);
@@ -634,7 +569,7 @@ public class Weapon extends Item implements AttachmentContainer {
 		return Tags.isAimed(itemStack);
 	}
 
-	public static boolean isZoomed(ItemStack itemStack) {
+	public static boolean isZoomed(EntityPlayer player, ItemStack itemStack) {
 		return Tags.getZoom(itemStack) != 1.0f;
 	}
 	
@@ -651,11 +586,11 @@ public class Weapon extends Item implements AttachmentContainer {
 	}
 	
 	public void changeRecoil(EntityPlayer player, float factor) {
-		ItemStack itemStack = player.getHeldItem(EnumHand.MAIN_HAND);
+		ItemStack itemStack = compatibility.getHeldItemMainHand(player);
 		ensureItemStack(itemStack);
 		float recoil = builder.recoil * factor;
 		Tags.setRecoil(itemStack, recoil);
-		modContext.getChannel().sendTo(new ChangeSettingsMessage(this, recoil), (EntityPlayerMP) player);
+		modContext.getChannel().getChannel().sendTo(new ChangeSettingsMessage(this, recoil), (EntityPlayerMP) player);
 	}
 	
 	void clientChangeRecoil(EntityPlayer player, float recoil) {
@@ -666,10 +601,12 @@ public class Weapon extends Item implements AttachmentContainer {
 	}
 	
 	public void changeZoom(EntityPlayer player, float factor) {
-		ItemStack itemStack = player.getHeldItem(EnumHand.MAIN_HAND);
-		ensureItemStack(itemStack);
-		float zoom = builder.zoom * factor;
-		Tags.setAllowedZoom(itemStack, zoom);
+		ItemStack itemStack = compatibility.getHeldItemMainHand(player);
+		if(itemStack != null) {
+			ensureItemStack(itemStack);
+			float zoom = builder.zoom * factor;
+			Tags.setAllowedZoom(itemStack, zoom);
+		}
 	}
 	
 	Map<ItemAttachment<Weapon>, CompatibleAttachment<Weapon>> getCompatibleAttachments() {
@@ -677,7 +614,7 @@ public class Weapon extends Item implements AttachmentContainer {
 	}
 
 	String getCrosshair(ItemStack itemStack, EntityPlayer thePlayer) {
-		if(isZoomed(itemStack)) {
+		if(isZoomed(thePlayer, itemStack)) {
 			String crosshair = null;
 			ItemAttachment<Weapon> scopeAttachment = modContext.getAttachmentManager().getActiveAttachment(itemStack, AttachmentCategory.SCOPE);
 			if(scopeAttachment != null) {
@@ -694,14 +631,14 @@ public class Weapon extends Item implements AttachmentContainer {
 	}
 	
 	boolean isCrosshairFullScreen(ItemStack itemStack) {
-		if(isZoomed(itemStack)) {
+		if(isZoomed(null, itemStack)) {
 			return builder.crosshairZoomedFullScreen;
 		}
 		return builder.crosshairFullScreen;
 		
 	}
 	
-	String getActiveTextureName(ItemStack itemStack) {
+	public String getActiveTextureName(ItemStack itemStack) {
 		ensureItemStack(itemStack);
 		if(builder.textureNames.isEmpty()) {
 			return null;
@@ -751,6 +688,10 @@ public class Weapon extends Item implements AttachmentContainer {
 		return builder.ammoCapacity;
 	}
 	
+	int getMaxBulletsPerReload() {
+		return builder.maxBulletsPerReload;
+	}
+	
 	ModelBase getAmmoModel() {
 		return builder.ammoModel;
 	}
@@ -759,7 +700,7 @@ public class Weapon extends Item implements AttachmentContainer {
 		return builder.ammoModelTextureName;
 	}
 	
-	void onSpawnEntityBlockImpact(World world, EntityPlayer player, WeaponSpawnEntity entity, RayTraceResult position) {
+	void onSpawnEntityBlockImpact(World world, EntityPlayer player, WeaponSpawnEntity entity, CompatibleRayTraceResult position) {
 		if(builder.blockImpactHandler != null) {
 			builder.blockImpactHandler.onImpact(world, player, entity, position);
 		}
@@ -772,10 +713,6 @@ public class Weapon extends Item implements AttachmentContainer {
 	
 	long getUnloadTimeoutTicks() {
 		return builder.unloadingTimeout;
-	}
-	
-	int maxBullets() {
-		return builder.maxBullets;
 	}
 	
 	boolean ejectSpentRoundRequired() {
@@ -799,5 +736,13 @@ public class Weapon extends Item implements AttachmentContainer {
 				.map(e -> e.getKey())
 				.collect(Collectors.toList());
 	}
-
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public void addInformation(ItemStack itemStack, EntityPlayer entityPlayer,
+			@SuppressWarnings("rawtypes") List list, boolean p_77624_4_) {
+		if(list != null && builder.informationProvider != null) {
+			list.addAll(builder.informationProvider.apply(itemStack));
+		}
+	}
 }

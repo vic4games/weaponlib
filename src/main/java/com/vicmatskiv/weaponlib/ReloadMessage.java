@@ -1,16 +1,17 @@
 package com.vicmatskiv.weaponlib;
 
+import com.vicmatskiv.weaponlib.compatibility.CompatibleMessage;
+
 import io.netty.buffer.ByteBuf;
 import net.minecraft.item.Item;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 
-public class ReloadMessage implements IMessage {
+public class ReloadMessage implements CompatibleMessage {
 	
 	public static enum Type { LOAD, UNLOAD, CANCEL };
 	
 	private int ammo;
 	private int weaponItemId;
-	private int magazineItemId;
+	private int magazineItemId = -1; // TODO: Verify if it works in 1.7.10
 	private Type type = Type.LOAD;
 
 	public ReloadMessage() {
@@ -26,7 +27,7 @@ public class ReloadMessage implements IMessage {
 	
 	public ReloadMessage(Weapon weapon, Type type, ItemMagazine magazine, int ammo) {
 		this.weaponItemId = Item.getIdFromItem(weapon);
-		this.magazineItemId = magazine != null ? Item.getIdFromItem(magazine) : 0;
+		this.magazineItemId = magazine != null ? Item.getIdFromItem(magazine) : -1; // TODO: verify if -1 works for 1.7.10
 		this.type = type;
 		this.ammo = ammo;
 	}

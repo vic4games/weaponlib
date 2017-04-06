@@ -1,14 +1,14 @@
 package com.vicmatskiv.weaponlib;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
 import org.lwjgl.input.Keyboard;
 
 import net.minecraft.client.settings.KeyBinding;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
 
 public class KeyBindings {
 
 	public static KeyBinding reloadKey;
-	//public static KeyBinding unloadKey;
 	public static KeyBinding attachmentKey;
 	public static KeyBinding upArrowKey;
 	public static KeyBinding downArrowKey;
@@ -21,13 +21,10 @@ public class KeyBindings {
 		reloadKey = new KeyBinding("key.reload", Keyboard.KEY_R,
 				"key.categories.weaponlib");
 		
-//		unloadKey = new KeyBinding("key.unload", Keyboard.KEY_U,
-//				"key.categories.weaponlib");
-		
 		laserSwitchKey = new KeyBinding("key.laser", Keyboard.KEY_L,
 				"key.categories.weaponlib");
 		
-		attachmentKey = new KeyBinding("key.attachment", Keyboard.KEY_F,
+		attachmentKey = new KeyBinding("key.attachment", Keyboard.KEY_M,
 				"key.categories.weaponlib");
 		
 		upArrowKey = new KeyBinding("key.scope", Keyboard.KEY_UP,
@@ -42,13 +39,12 @@ public class KeyBindings {
 		rightArrowKey = new KeyBinding("key.texture_change", Keyboard.KEY_RIGHT,
 				"key.categories.weaponlib");
 		
-		ClientRegistry.registerKeyBinding(reloadKey);
-//		ClientRegistry.registerKeyBinding(unloadKey);
-		ClientRegistry.registerKeyBinding(attachmentKey);
-		ClientRegistry.registerKeyBinding(upArrowKey);
-		ClientRegistry.registerKeyBinding(downArrowKey);
-		ClientRegistry.registerKeyBinding(leftArrowKey);
-		ClientRegistry.registerKeyBinding(rightArrowKey);
-		ClientRegistry.registerKeyBinding(laserSwitchKey);
+		compatibility.registerKeyBinding(reloadKey);
+		compatibility.registerKeyBinding(attachmentKey);
+		compatibility.registerKeyBinding(upArrowKey);
+		compatibility.registerKeyBinding(downArrowKey);
+		compatibility.registerKeyBinding(leftArrowKey);
+		compatibility.registerKeyBinding(rightArrowKey);
+		compatibility.registerKeyBinding(laserSwitchKey);
 	}
 }

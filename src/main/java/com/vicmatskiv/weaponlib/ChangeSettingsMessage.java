@@ -1,24 +1,33 @@
 package com.vicmatskiv.weaponlib;
 
-import net.minecraft.item.Item;
-import io.netty.buffer.ByteBuf;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleMessage;
 
-public class ChangeSettingsMessage implements IMessage {
+import io.netty.buffer.ByteBuf;
+import net.minecraft.item.Item;
+
+public class ChangeSettingsMessage implements CompatibleMessage {
 
 	private float recoil;
 	private float zoom;
 	private int weaponItemId;
 	private int flags;
 	
-	public static int RECOIL_FLAG = 0x01;
-	public static int ZOOM_FLAG = 0x02;
+	private static int RECOIL_FLAG = 0x01;
+	private static int ZOOM_FLAG = 0x02;
+	private static int TOGGLE_AIMING_FLAG = 0x04;
 
 	public ChangeSettingsMessage() {
 	}
 	
 	public ChangeSettingsMessage(Weapon weapon) {
 		this.weaponItemId = Item.getIdFromItem(weapon);
+	}
+	
+	public static ChangeSettingsMessage createToggleAimingMessage(Weapon weapon) {
+		ChangeSettingsMessage message = new ChangeSettingsMessage();
+		message.weaponItemId = Item.getIdFromItem(weapon);
+		message.flags = TOGGLE_AIMING_FLAG;
+		return message;
 	}
 	
 	public static ChangeSettingsMessage createChangeRecoilMessage(Weapon weapon, float recoil) {
@@ -60,6 +69,10 @@ public class ChangeSettingsMessage implements IMessage {
 		buf.writeInt(this.flags);
 		buf.writeFloat(this.recoil);
 		buf.writeFloat(this.zoom);
+	}
+	
+	public boolean aimingChanged() {
+		return (flags & TOGGLE_AIMING_FLAG) == TOGGLE_AIMING_FLAG;
 	}
 
 	public boolean zoomChanged() {

@@ -1,10 +1,17 @@
 package com.vicmatskiv.weaponlib;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
+import com.vicmatskiv.weaponlib.Weapon.State;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -12,23 +19,52 @@ import net.minecraft.world.World;
 
 public class ItemMagazine extends ItemAttachment<Weapon> implements Part {
 	
+	private static final long DEFAULT_RELOADING_TIMEOUT_TICKS = 25;
+	
 	public static final class Builder extends AttachmentBuilder<Weapon> {
 		private int ammo;
+		private long reloadingTimeout = DEFAULT_RELOADING_TIMEOUT_TICKS;
+		private Set<ItemBullet> compatibleBullets = new HashSet<>();
+		private String reloadSound;
 		
 		public Builder withAmmo(int ammo) {
 			this.ammo = ammo;
 			return this;
 		}
 		
+		public Builder withReloadingTimeout(int reloadingTimeout) {
+			this.reloadingTimeout = reloadingTimeout;
+			return this;
+		}
+		
+		public Builder withReloadSound(String reloadSound) {
+			this.reloadSound = reloadSound;
+			return this;
+		}
+		
+		public Builder withCompatibleBullet(ItemBullet compatibleBullet) {
+			this.compatibleBullets.add(compatibleBullet);
+			return this;
+		}
+		
 		@Override
-		protected ItemAttachment<Weapon> createAttachment() {
-			return new ItemMagazine(modId, model, textureName, ammo);
+		protected ItemAttachment<Weapon> createAttachment(ModContext modContext) {
+			ItemMagazine magazine = new ItemMagazine(modId, model, textureName, ammo);
+			magazine.reloadingTimeout = reloadingTimeout;
+			magazine.compatibleBullets = new ArrayList<>(compatibleBullets);
+			if(reloadSound != null) {
+				magazine.reloadSound = modContext.registerSound(reloadSound);
+			}
+			return magazine;
 		}
 	}
 	
 	private final int DEFAULT_MAX_STACK_SIZE = 1;
 	
 	private int ammo;
+	private long reloadingTimeout;
+	private List<ItemBullet> compatibleBullets;
+	private CompatibleSound reloadSound;
 
 	public ItemMagazine(String modId, ModelBase model, String textureName, int ammo) {
 		this(modId, model, textureName, ammo, null, null);
@@ -49,8 +85,8 @@ public class ItemMagazine extends ItemAttachment<Weapon> implements Part {
 	}
 	
 	private void ensureItemStack(ItemStack itemStack) {
-		if (itemStack.getTagCompound() == null) {
-			itemStack.setTagCompound(new NBTTagCompound());
+		if (compatibility.getTagCompound(itemStack) == null) {
+			compatibility.setTagCompound(itemStack, new NBTTagCompound());
 			Tags.setAmmo(itemStack, ammo);
 		}
 	}
@@ -62,42 +98,42 @@ public class ItemMagazine extends ItemAttachment<Weapon> implements Part {
 	}
 
 	@Override
-	public ItemStack onItemUseFinish(ItemStack stack, World worldIn, EntityLivingBase entityLiving) {
+	public boolean onItemUseFirst(ItemStack stack, EntityPlayer player, World world) {
 		ensureItemStack(stack);
-		return super.onItemUseFinish(stack, worldIn, entityLiving);
+		return super.onItemUseFirst(stack, player, world);
 	}
 	
 	@Override
-	public void onUpdate(ItemStack stack, World p_77663_2_, Entity p_77663_3_, int p_77663_4_,
-			boolean p_77663_5_) {
+	public void onUpdate(ItemStack stack, World world, Entity entity, int p_77663_4_, boolean p_77663_5_) {
 		ensureItemStack(stack);
-		super.onUpdate(stack, p_77663_2_, p_77663_3_, p_77663_4_, p_77663_5_);
-	}
-	
-	public void load(ItemStack itemStack, EntityPlayer player) {
-		int currentAmmo = Tags.getAmmo(itemStack);
-		ItemMagazine magazine = (ItemMagazine) itemStack.getItem();
-		if(currentAmmo < ammo) {
-			List<ItemBullet> compatibleBullets = magazine.getCompatibleBullets();
-			ItemStack bulletStack = tryConsumingBullet(magazine, compatibleBullets, player);
-			if(bulletStack != null) {
-				Tags.setAmmo(itemStack, currentAmmo + 1);
-			}
+		State state = Tags.getState(stack);
+		// TODO: this needs to be moved to reload manager
+		if(state == Weapon.State.RELOAD_CONFIRMED && Tags.getDefaultTimer(stack) <= world.getTotalWorldTime()) {
+			Tags.setState(stack, Weapon.State.READY);
 		}
+		
+		super.onUpdate(stack, world, entity, p_77663_4_, p_77663_5_);
 	}
 
-	private ItemStack tryConsumingBullet(ItemMagazine magazine, List<ItemBullet> compatibleBullets,
-			EntityPlayer player) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private List<ItemBullet> getCompatibleBullets() {
-		// TODO Auto-generated method stub
-		return null;
+	List<ItemBullet> getCompatibleBullets() {
+		return compatibleBullets;
 	}
 
 	int getAmmo() {
 		return ammo;
 	}
+
+	public CompatibleSound getReloadSound() {
+		return reloadSound;
+	}
+
+	public long getReloadTimeout() {
+		return reloadingTimeout;
+	}
+	
+	@Override
+	public Part getRenderablePart() {
+		return this;
+	}
+	
 }

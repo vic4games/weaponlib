@@ -1,5 +1,7 @@
 package com.vicmatskiv.weaponlib;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -7,21 +9,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import com.vicmatskiv.weaponlib.compatibility.CompatibleCustomArmor;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleEntityEquipmentSlot;
+
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelBiped;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemArmor;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraftforge.fml.common.registry.GameRegistry;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class CustomArmor extends ItemArmor {
+public class CustomArmor extends CompatibleCustomArmor {
 	
 	private static final String ACTIVE_ATTACHMENT_TAG = "ActiveAttachments";
 	
@@ -104,22 +101,22 @@ public class CustomArmor extends ItemArmor {
 			}
 			
 			String unlocalizedHelmetName = unlocalizedName + "_helmet";
-			CustomArmor armorHelmet = new CustomArmor(modId, material, 4, EntityEquipmentSlot.HEAD, 
+			CustomArmor armorHelmet = new CustomArmor(modId, material, 4, CompatibleEntityEquipmentSlot.HEAD, 
 					unlocalizedHelmetName, textureName, chestModel, hudTextureName);
 			armorHelmet.setUnlocalizedName(unlocalizedHelmetName);
-			GameRegistry.register(armorHelmet); //, unlocalizedHelmetName);
+			compatibility.registerItem(armorHelmet, unlocalizedHelmetName);
 			
 			String unlocalizedChestName = unlocalizedName + "_chest";
-			CustomArmor armorChest = new CustomArmor(modId, material, 4, EntityEquipmentSlot.CHEST, 
+			CustomArmor armorChest = new CustomArmor(modId, material, 4, CompatibleEntityEquipmentSlot.CHEST, 
 					unlocalizedChestName, textureName, chestModel, hudTextureName);
 			armorChest.setUnlocalizedName(unlocalizedChestName);
-			GameRegistry.register(armorChest); //, unlocalizedChestName);
+			compatibility.registerItem(armorChest, unlocalizedChestName);
 			
 			String unlocalizedBootsName = unlocalizedName + "_boots";
-			CustomArmor armorBoots = new CustomArmor(modId, material, 4, EntityEquipmentSlot.LEGS, 
+			CustomArmor armorBoots = new CustomArmor(modId, material, 4, CompatibleEntityEquipmentSlot.FEET, 
 					unlocalizedBootsName, textureName, bootsModel, hudTextureName);
 			armorBoots.setUnlocalizedName(unlocalizedBootsName);
-			GameRegistry.register(armorBoots); //, unlocalizedBootsName);
+			compatibility.registerItem(armorBoots, unlocalizedBootsName);
 		}
 		
 		
@@ -148,11 +145,10 @@ public class CustomArmor extends ItemArmor {
 			}
 			
 			String unlocalizedHelmetName = unlocalizedName + "_helmet";
-			CustomArmor armorHelmet = new CustomArmor(modId, material, 4, EntityEquipmentSlot.HEAD, 
+			CustomArmor armorHelmet = new CustomArmor(modId, material, 4, CompatibleEntityEquipmentSlot.HEAD, 
 					unlocalizedHelmetName, textureName, chestModel, hudTextureName);
-			armorHelmet.setRegistryName(modId, unlocalizedHelmetName);
 			armorHelmet.setUnlocalizedName(unlocalizedHelmetName);
-			GameRegistry.register(armorHelmet); //, unlocalizedHelmetName);
+			compatibility.registerItem(armorHelmet, unlocalizedHelmetName);
 			
 			return armorHelmet;
 		}
@@ -174,11 +170,10 @@ public class CustomArmor extends ItemArmor {
 			}
 			
 			String unlocalizedChestName = unlocalizedName + "_chest";
-			CustomArmor armorChest = new CustomArmor(modId, material, 4, EntityEquipmentSlot.CHEST, 
+			CustomArmor armorChest = new CustomArmor(modId, material, 4, CompatibleEntityEquipmentSlot.CHEST, 
 					unlocalizedChestName, textureName, chestModel, hudTextureName);
-			armorChest.setRegistryName(modId, unlocalizedChestName);
 			armorChest.setUnlocalizedName(unlocalizedChestName);
-			GameRegistry.register(armorChest); //, unlocalizedChestName);
+			compatibility.registerItem(armorChest, unlocalizedChestName);
 
 			return armorChest;
 		}
@@ -202,115 +197,28 @@ public class CustomArmor extends ItemArmor {
 			
 			
 			String unlocalizedBootsName = unlocalizedName + "_boots";
-			CustomArmor armorBoots = new CustomArmor(modId, material, 4, EntityEquipmentSlot.LEGS, 
+			CustomArmor armorBoots = new CustomArmor(modId, material, 4, CompatibleEntityEquipmentSlot.FEET, 
 					unlocalizedBootsName, textureName, bootsModel, hudTextureName);
-			armorBoots.setRegistryName(modId, unlocalizedBootsName);
 			armorBoots.setUnlocalizedName(unlocalizedBootsName);
-			GameRegistry.register(armorBoots); //, unlocalizedBootsName);
+			compatibility.registerItem(armorBoots, unlocalizedBootsName);
 			
 			return armorBoots;
 		}
 	}
 
-	//private Builder builder;
-	
-	private String iconName;
-	private String textureName;
-	private ModelBiped model;
-	private String hudTextureName;
-	private String modId;
 	private Map<ItemAttachment<CustomArmor>, CompatibleAttachment<CustomArmor>> compatibleAttachments = new HashMap<>();
 	
-	private CustomArmor(String modId, ArmorMaterial material, int renderIndex, EntityEquipmentSlot armorType, String iconName, String textureName,
-			ModelBiped model, String hudTextureName) {
-		super(material, renderIndex, armorType);
-		this.modId = modId;
-		this.iconName = iconName;
-		this.textureName = textureName;
-		this.model = model;
-		this.hudTextureName = hudTextureName;
-		/*setCreativeTab(ProjectXureosWarfareMod.faattachmentsTab);*/
+	private CustomArmor(String modId, ArmorMaterial material, int renderIndex, CompatibleEntityEquipmentSlot armorType, String iconName, String textureName, ModelBiped model, String hudTextureName) {
+		super(modId, material, renderIndex, armorType, iconName, textureName, model, hudTextureName);
 	}
 	
 	public String getHudTexture() {
 		return modId + ":" + "textures/hud/" + hudTextureName + ".png";
 	}
 	
-
-//	TODO: @Override
-//	@SideOnly(Side.CLIENT)
-//	public void registerIcons(IIconRegister par1IconRegister) {
-//		//String itemName = getUnlocalizedName().substring(getUnlocalizedName().lastIndexOf(".") + 1);
-//		this.itemIcon = par1IconRegister.registerIcon(modId + ":" + iconName);
-//	}
-
-//	@Override
-//	public String getArmorTexture(ItemStack stack, Entity entity, int slot, String type) {
-//		return modId + ":textures/models/" + textureName + ".png";
-//	}
-	
-	@Override
-	public String getArmorTexture(ItemStack stack, Entity entity, EntityEquipmentSlot slot, String type) {
-		return modId + ":textures/models/" + textureName + ".png";
-	}
-	
-	@Override
-	@SideOnly(Side.CLIENT)
-	public ModelBiped getArmorModel(EntityLivingBase entityLiving, ItemStack itemStack, EntityEquipmentSlot armorSlot,
-			ModelBiped _default) {
-		
-		ModelBiped armorModel = null;
-		
-		if (itemStack != null) {
-			
-			if (itemStack.getItem() instanceof CustomArmor) {
-				/*
-				int type = ((ItemArmor) itemStack.getItem()).armorType;
-				if (type == 1 || type == 3) {
-					armorModel = ProjectXureosWarfareMod.proxy.getArmorModel(0);
-				} else {
-					armorModel = ProjectXureosWarfareMod.proxy.getArmorModel(1);
-				}*/
-				armorModel = model;
-			}
-			
-			if (armorModel != null) {
-				throw new UnsupportedOperationException("Fixme below");
-//				armorModel.bipedHead.showModel = armorSlot == 0;
-//				armorModel.bipedHeadwear.showModel = armorSlot == 0;
-//				armorModel.bipedBody.showModel = armorSlot == 1
-//						|| armorSlot == 2;
-//				armorModel.bipedRightArm.showModel = armorSlot == 1;
-//				armorModel.bipedLeftArm.showModel = armorSlot == 1;
-//				
-//				armorModel.bipedRightLeg.showModel = false;
-//				armorModel.bipedLeftLeg.showModel = false;
-//				
-//				armorModel.bipedRightLeg.showModel = armorSlot == 2
-//						|| armorSlot == 3;
-//				armorModel.bipedLeftLeg.showModel = armorSlot == 2
-//						|| armorSlot == 3;
-//				
-//				armorModel.isSneak = entityLiving.isSneaking();
-//				armorModel.isRiding = entityLiving.isRiding();
-//				armorModel.isChild = entityLiving.isChild();
-//				armorModel.heldItemRight = entityLiving.getEquipmentInSlot(0) != null ? 1 : 0;
-//				
-//				if (entityLiving instanceof EntityPlayer) {
-//					boolean isAimedWeapon = Weapon.isAimed(entityLiving.getEquipmentInSlot(0));
-//					armorModel.aimedBow = ((EntityPlayer) entityLiving).getItemInUseDuration() > 0 
-//							|| isAimedWeapon;
-//				}
-//				return armorModel;
-			}
-		}
-		return null;
-	}
-	
-	
 	@SuppressWarnings("unchecked")
 	public void changeAttachment(AttachmentCategory attachmentCategory, ItemStack itemStack, EntityPlayer player) {
-		ensureItemStack(itemStack);
+		compatibility.ensureTagCompound(itemStack);
 		
 		int[] activeAttachmentsIds = ensureActiveAttachments(itemStack);
 		int activeAttachmentIdForThisCategory = activeAttachmentsIds[attachmentCategory.ordinal()];
@@ -330,12 +238,11 @@ public class CustomArmor extends ItemArmor {
 		
 		activeAttachmentsIds[attachmentCategory.ordinal()] = Item.getIdFromItem(nextAttachment);;
 		
-		itemStack.getTagCompound().setIntArray(ACTIVE_ATTACHMENT_TAG, activeAttachmentsIds);
+		compatibility.getTagCompound(itemStack).setIntArray(ACTIVE_ATTACHMENT_TAG, activeAttachmentsIds);
 	}
 	
 	private ItemAttachment<CustomArmor> nextCompatibleAttachment(AttachmentCategory category, Item currentAttachment, EntityPlayer player) {
 		
-		//EntityClientPlayerMP player = Minecraft.getMinecraft().thePlayer;
 		ItemAttachment<CustomArmor> nextAttachment = null;
 		boolean foundCurrent = false;
 		for (int i = 0; i < 36; i++) {
@@ -363,14 +270,8 @@ public class CustomArmor extends ItemArmor {
 		return nextAttachment;
 	}
 	
-	private void ensureItemStack(ItemStack itemStack) {
-		if (itemStack.getTagCompound() == null) {
-			itemStack.setTagCompound(new NBTTagCompound());
-		}
-	}
-	
 	public ItemAttachment<CustomArmor> getActiveAttachment (ItemStack itemStack, AttachmentCategory category) {
-		ensureItemStack(itemStack);
+		compatibility.ensureTagCompound(itemStack);
 		
 		ItemAttachment<CustomArmor> itemAttachment = null;
 		
@@ -392,7 +293,7 @@ public class CustomArmor extends ItemArmor {
 	}
 	
 	public List<CompatibleAttachment<CustomArmor>> getActiveAttachments (ItemStack itemStack) {
-		ensureItemStack(itemStack);
+		compatibility.ensureTagCompound(itemStack);
 		
 		List<CompatibleAttachment<CustomArmor>> activeAttachments = new ArrayList<>();
 		
@@ -414,11 +315,11 @@ public class CustomArmor extends ItemArmor {
 	}
 
 	private int[] ensureActiveAttachments(ItemStack itemStack) {
-		int activeAttachmentsIds[] = itemStack.getTagCompound().getIntArray(ACTIVE_ATTACHMENT_TAG);
+		int activeAttachmentsIds[] = compatibility.getTagCompound(itemStack).getIntArray(ACTIVE_ATTACHMENT_TAG);
 		
 		if(activeAttachmentsIds == null || activeAttachmentsIds.length != AttachmentCategory.values.length) {
 			activeAttachmentsIds = new int[AttachmentCategory.values.length];
-			itemStack.getTagCompound().setIntArray(ACTIVE_ATTACHMENT_TAG, activeAttachmentsIds);
+			compatibility.getTagCompound(itemStack).setIntArray(ACTIVE_ATTACHMENT_TAG, activeAttachmentsIds);
 			for(CompatibleAttachment<CustomArmor> attachment: compatibleAttachments.values()) {
 				if(attachment.isDefault()) {
 					activeAttachmentsIds[attachment.getAttachment().getCategory().ordinal()] = Item.getIdFromItem(attachment.getAttachment());

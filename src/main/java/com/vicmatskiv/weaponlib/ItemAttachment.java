@@ -2,13 +2,16 @@ package com.vicmatskiv.weaponlib;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
+
+import com.vicmatskiv.weaponlib.compatibility.CompatibleItem;
 
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
-public class ItemAttachment<T> extends Item implements ModelSource {
+public class ItemAttachment<T> extends CompatibleItem implements ModelSource {
 
 	private AttachmentCategory category;
 	private String crosshair;
@@ -18,6 +21,8 @@ public class ItemAttachment<T> extends Item implements ModelSource {
 	private CustomRenderer postRenderer;
 	private CustomRenderer preRenderer;
 	private Part renderablePart;
+	private String name;
+	private Function<ItemStack, String> informationProvider;
 	
 	private List<Weapon> compatibleWeapons = new ArrayList<>();
 	
@@ -47,10 +52,9 @@ public class ItemAttachment<T> extends Item implements ModelSource {
 		this.remove = remove;
 	}
 	
-	public void setTextureName(String name) {
-		//throw new UnsupportedOperationException();
+	public Item setTextureName(String name) {
+		return this;
 	}
-	
 	
 	public Part getRenderablePart() {
 		return renderablePart;
@@ -58,6 +62,15 @@ public class ItemAttachment<T> extends Item implements ModelSource {
 
 	protected void setRenderablePart(Part renderablePart) {
 		this.renderablePart = renderablePart;
+	}
+	
+	protected Function<ItemStack, String> getInformationProvider() {
+		return informationProvider;
+	}
+
+	protected void setInformationProvider(
+			Function<ItemStack, String> informationProvider) {
+		this.informationProvider = informationProvider;
 	}
 
 	@Deprecated
@@ -98,13 +111,26 @@ public class ItemAttachment<T> extends Item implements ModelSource {
 		compatibleWeapons.add(weapon);
 	}
 	
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+//	@SuppressWarnings({ "rawtypes", "unchecked" })
+//	@Override
+//	public void addInformation(ItemStack itemStack, EntityPlayer entityPlayer, List info, boolean p_77624_4_) {
+//		info.add("Compatible guns:");
+//		compatibleWeapons.forEach((weapon) -> info.add(weapon.getName()));
+//	}
+	
+	@SuppressWarnings("unchecked")
 	@Override
-	public void addInformation(ItemStack itemStack, EntityPlayer entityPlayer, List info, boolean p_77624_4_) {
-		info.add("Compatible guns:");
-		compatibleWeapons.forEach((weapon) -> info.add(weapon.getName()));
+	public void addInformation(ItemStack itemStack, EntityPlayer entityPlayer,
+			@SuppressWarnings("rawtypes") List list, boolean p_77624_4_) {
+		if(list != null && informationProvider != null) {
+			list.add(informationProvider.apply(itemStack));
+		}
 	}
 	
+	public void setName(String name) {
+		this.name = name;
+	}
+
 	public void setPostRenderer(CustomRenderer postRenderer) {
 		this.postRenderer = postRenderer;
 	}
@@ -119,5 +145,10 @@ public class ItemAttachment<T> extends Item implements ModelSource {
 
 	public void setPreRenderer(CustomRenderer preRenderer) {
 		this.preRenderer = preRenderer;
+	}
+	
+	@Override
+	public String toString() {
+		return name != null ? "Attachment [" + name + "]" : super.toString();
 	}
 }

@@ -1,15 +1,15 @@
 package com.vicmatskiv.weaponlib;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
+import com.vicmatskiv.weaponlib.compatibility.CompatibleMessage;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageHandler;
+
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.IThreadListener;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
-import net.minecraftforge.fml.relauncher.Side;
 
-public class TryFireMessageHandler implements IMessageHandler<TryFireMessage, IMessage> {
+public class TryFireMessageHandler implements CompatibleMessageHandler<TryFireMessage, CompatibleMessage> {
 	
 	private FireManager fireManager;
 
@@ -18,18 +18,17 @@ public class TryFireMessageHandler implements IMessageHandler<TryFireMessage, IM
 	}
 
 	@Override
-	public IMessage onMessage(TryFireMessage message, MessageContext ctx) {
-		if(ctx.side == Side.SERVER) {
-			EntityPlayer player = ctx.getServerHandler().playerEntity;
-			IThreadListener mainThread = (IThreadListener) ctx.getServerHandler().playerEntity.world; 
-			ItemStack itemStack = player.getHeldItem(EnumHand.MAIN_HAND);
+	public <T extends CompatibleMessage> T onCompatibleMessage(TryFireMessage message, CompatibleMessageContext ctx) {
+		if(ctx.isServerSide()) {
+			EntityPlayer player = ctx.getPlayer();
+			ItemStack itemStack = compatibility.getHeldItemMainHand(player);
 			if(itemStack != null && itemStack.getItem() instanceof Weapon) {
 				if(message.isOn()) {
-					mainThread.addScheduledTask(() -> {
+					ctx.runInMainThread(() -> {
 						fireManager.tryFire(player, itemStack);
 					});
 				} else {
-					mainThread.addScheduledTask(() -> {
+					ctx.runInMainThread(() -> {
 						fireManager.tryStopFire(player, itemStack);
 					});
 				}

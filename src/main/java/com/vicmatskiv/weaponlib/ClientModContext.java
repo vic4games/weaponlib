@@ -1,23 +1,21 @@
 package com.vicmatskiv.weaponlib;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderingRegistry;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.IResourcePack;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.client.model.ModelLoaderRegistry;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
-import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
-import net.minecraftforge.fml.common.registry.EntityRegistry;
 
 public class ClientModContext extends CommonModContext {
 
@@ -27,26 +25,23 @@ public class ClientModContext extends CommonModContext {
 	private WeaponClientStorageManager weaponClientStorageManager;
 	private Queue<Runnable> runInClientThreadQueue = new LinkedBlockingQueue<>();
 	
-	private RenderingRegistry rendererRegistry;
+	private CompatibleRenderingRegistry rendererRegistry;
 	
-	@SuppressWarnings("deprecation")
 	@Override
-	public void init(Object mod, String modId, SimpleNetworkWrapper channel) {
+	public void init(Object mod, String modId, CompatibleChannel channel) {
 		super.init(mod, modId, channel);
 		
-		rendererRegistry = new RenderingRegistry(modId);
-		
-		ModelLoaderRegistry.registerLoader(rendererRegistry);
-		
-		List<IResourcePack> defaultResourcePacks = ObfuscationReflectionHelper.getPrivateValue(
+		rendererRegistry = new CompatibleRenderingRegistry(modId);
+
+		List<IResourcePack> defaultResourcePacks = compatibility.getPrivateValue(
 				Minecraft.class, Minecraft.getMinecraft(), "defaultResourcePacks", "field_110449_ao") ; 
         defaultResourcePacks.add(new WeaponResourcePack()) ;
    
         this.weaponClientStorageManager = new WeaponClientStorageManager();
 		SafeGlobals safeGlobals = new SafeGlobals();
 		
-		MinecraftForge.EVENT_BUS.register(new CustomGui(Minecraft.getMinecraft(), attachmentManager));
-		MinecraftForge.EVENT_BUS.register(new WeaponEventHandler(safeGlobals));
+		compatibility.registerWithEventBus(new CustomGui(Minecraft.getMinecraft(), attachmentManager));
+		compatibility.registerWithEventBus(new WeaponEventHandler(safeGlobals));
 		
 		KeyBindings.init();	
 
@@ -57,35 +52,31 @@ public class ClientModContext extends CommonModContext {
 		}));
 		
 		clientWeaponTicker.start();
-		clientEventHandler = new ClientEventHandler(mainLoopLock, safeGlobals, runInClientThreadQueue);
-		MinecraftForge.EVENT_BUS.register(clientEventHandler);
+		clientEventHandler = new ClientEventHandler(this, mainLoopLock, safeGlobals, runInClientThreadQueue);
+		compatibility.registerWithFmlEventBus(clientEventHandler);
 		
-		MinecraftForge.EVENT_BUS.register(rendererRegistry);
-				
-		ResourceLocation entityResourceLocation = new ResourceLocation(modId, "changeme");
-		EntityRegistry.registerModEntity(entityResourceLocation, WeaponSpawnEntity.class, "Ammo" + modEntityID, modEntityID++, mod, 64, 10, true);
+		compatibility.registerRenderingRegistry(rendererRegistry);
 		
-		// TODO: do something about it
-		net.minecraftforge.fml.client.registry.RenderingRegistry.registerEntityRenderingHandler(WeaponSpawnEntity.class, 
-				new SpawnEntityRenderer(Minecraft.getMinecraft().getRenderManager()));
+		compatibility.registerModEntity(WeaponSpawnEntity.class, "Ammo" + modEntityID, modEntityID++, mod, 64, 10, true);
+		
+		rendererRegistry.registerEntityRenderingHandler(WeaponSpawnEntity.class, new SpawnEntityRenderer());
 	}
 	
-	
 	@Override
-	public void registerWeapon(String name, Weapon weapon) {
-		super.registerWeapon(name, weapon);
+	public void registerWeapon(String name, Weapon weapon, WeaponRenderer renderer) {
+		super.registerWeapon(name, weapon, renderer);
 		rendererRegistry.register(weapon, weapon.getName(), weapon.getRenderer());
 	}
 	
 	@Override
-	public void registerRenderableItem(String name, Item item, ModelSourceRenderer renderer) {
+	public void registerRenderableItem(String name, Item item, Object renderer) {
 		super.registerRenderableItem(name, item, renderer);
 		rendererRegistry.register(item, name, renderer);
 	}
 	
 	@Override
-	protected EntityPlayer getPlayer(MessageContext ctx) {
-		return Minecraft.getMinecraft().player;
+	protected EntityPlayer getPlayer(CompatibleMessageContext ctx) {
+		return compatibility.clientPlayer();
 	}
 	
 	@Override

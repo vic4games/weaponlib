@@ -14,9 +14,9 @@ public class ItemBullet extends ItemAttachment<Weapon> {
 		public void withCompatibleMagazine(ItemMagazine magazine) {
 			compatibleMagazines.add(magazine);
 		}
-		
+
 		@Override
-		protected ItemAttachment<Weapon> createAttachment() {
+		protected ItemAttachment<Weapon> createAttachment(ModContext modContext) {
 			ItemBullet bullet = new ItemBullet(modId, AttachmentCategory.BULLET, model, textureName, null, null, null);
 			bullet.compatibleMagazines = compatibleMagazines;
 			return bullet;

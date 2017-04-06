@@ -4,7 +4,6 @@ import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.entity.Entity;
 
-
 public class ModelWithAttachments extends ModelBase {
 
 	public void setRotation(ModelRenderer model, float x, float y, float z) {

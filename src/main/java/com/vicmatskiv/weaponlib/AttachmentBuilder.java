@@ -1,16 +1,18 @@
 package com.vicmatskiv.weaponlib;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import com.vicmatskiv.weaponlib.ItemAttachment.ApplyHandler;
+
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-
-import com.vicmatskiv.weaponlib.ItemAttachment.ApplyHandler;
 
 public class AttachmentBuilder<T> {
 	protected String name;
@@ -21,6 +23,11 @@ public class AttachmentBuilder<T> {
 	protected Consumer<ItemStack> inventoryPositioning;
 	protected BiConsumer<EntityPlayer, ItemStack> thirdPersonPositioning;
 	protected BiConsumer<EntityPlayer, ItemStack> firstPersonPositioning;
+	protected BiConsumer<ModelBase, ItemStack> firstPersonModelPositioning;
+	protected BiConsumer<ModelBase, ItemStack> thirdPersonModelPositioning;
+	protected BiConsumer<ModelBase, ItemStack> inventoryModelPositioning;
+	protected BiConsumer<ModelBase, ItemStack> entityModelPositioning;
+	
 	protected CreativeTabs tab;
 	protected AttachmentCategory attachmentCategory;
 	protected ApplyHandler<T> apply;
@@ -30,6 +37,7 @@ public class AttachmentBuilder<T> {
 	private List<Tuple<ModelBase, String>> texturedModels = new ArrayList<>();
 	private boolean isRenderablePart;
 	
+
 	public AttachmentBuilder<T> withCategory(AttachmentCategory attachmentCategory) {
 		this.attachmentCategory = attachmentCategory;
 		return this;
@@ -80,6 +88,26 @@ public class AttachmentBuilder<T> {
 		return this;
 	}
 	
+	public AttachmentBuilder<T> withFirstPersonModelPositioning(BiConsumer<ModelBase, ItemStack> firstPersonModelPositioning) {
+		this.firstPersonModelPositioning = firstPersonModelPositioning;
+		return this;
+	}
+	
+	public AttachmentBuilder<T> withEntityModelPositioning(BiConsumer<ModelBase, ItemStack> entityModelPositioning) {
+		this.entityModelPositioning = entityModelPositioning;
+		return this;
+	}
+	
+	public AttachmentBuilder<T> withInventoryModelPositioning(BiConsumer<ModelBase, ItemStack> inventoryModelPositioning) {
+		this.inventoryModelPositioning = inventoryModelPositioning;
+		return this;
+	}
+
+	public AttachmentBuilder<T> withThirdPersonModelPositioning(BiConsumer<ModelBase, ItemStack> thirdPersonModelPositioning) {
+		this.thirdPersonModelPositioning = thirdPersonModelPositioning;
+		return this;
+	}
+	
 	public AttachmentBuilder<T> withCrosshair(String crosshair) {
 		this.crosshair = crosshair;
 		return this;
@@ -101,37 +129,73 @@ public class AttachmentBuilder<T> {
 		return this;
 	}
 	
-	protected ItemAttachment<T> createAttachment() {
+
+	public AttachmentBuilder<T> withApply(ApplyHandler<T> apply) {
+		this.apply = apply;
+		return this;
+	}
+	
+	public AttachmentBuilder<T> withRemove(ApplyHandler<T> remove) {
+		this.remove = remove;
+		return this;
+	} 
+	
+	protected ItemAttachment<T> createAttachment(ModContext modContext) {
 		return new ItemAttachment<T>(
-				modId, attachmentCategory, /*model, textureName, */ crosshair, 
+				modId, attachmentCategory, crosshair, 
 				apply, remove);
 	}
 	
 	@SuppressWarnings("deprecation")
 	public ItemAttachment<T> build(ModContext modContext) {
-		ItemAttachment<T> attachment = createAttachment();
+		ItemAttachment<T> attachment = createAttachment(modContext);
 		attachment.setUnlocalizedName(modId + "_" + name); 
-		attachment.setRegistryName(modId, name);
 		attachment.setCreativeTab(tab);
 		attachment.setPostRenderer(postRenderer);
+		attachment.setName(name);
+		if(textureName != null) {
+			attachment.setTextureName(modId + ":" + stripFileExtension(textureName, ".png"));
+		} 
+		
 		if(isRenderablePart) {
-			attachment.setRenderablePart(new Part() {});
+			attachment.setRenderablePart(new Part() {
+				@Override
+				public String toString() {
+					return name != null ? "Part [" + name + "]" : super.toString();
+				}
+			});
 		}
 		
 		if(model != null) {
 			attachment.addModel(model, textureName);
 		}
-		texturedModels.forEach(tm -> attachment.addModel(tm.getU(), tm.getV()));
-		StaticModelSourceRenderer renderer = new StaticModelSourceRenderer.Builder()
-				.withEntityPositioning(entityPositioning)
-				.withFirstPersonPositioning(firstPersonPositioning)
-				.withThirdPersonPositioning(thirdPersonPositioning)
-				.withInventoryPositioning(inventoryPositioning)
-				.withModId(modId)
-				.build();
 		
-		modContext.registerRenderableItem(name, attachment, renderer);
+		texturedModels.forEach(tm -> attachment.addModel(tm.getU(), tm.getV()));
+		
+		if((model != null || !texturedModels.isEmpty())) {
+			modContext.registerRenderableItem(name, attachment, compatibility.isClientSide() ? registerRenderer(attachment) : null);
+		}
+		
 		return attachment;
+	}
+	
+	private Object registerRenderer(ItemAttachment<T> attachment) {
+		return new StaticModelSourceRenderer.Builder()
+		.withEntityPositioning(entityPositioning)
+		.withFirstPersonPositioning(firstPersonPositioning)
+		.withThirdPersonPositioning(thirdPersonPositioning)
+		.withInventoryPositioning(inventoryPositioning)
+		.withEntityModelPositioning(entityModelPositioning)
+		.withFirstPersonModelPositioning(firstPersonModelPositioning)
+		.withThirdPersonModelPositioning(thirdPersonModelPositioning)
+		.withInventoryModelPositioning(inventoryModelPositioning)
+		.withModId(modId)
+		.build();
+	}
+
+
+	private static String stripFileExtension(String str, String extension) {
+		return str.endsWith(extension) ? str.substring(0, str.length() - 4) : str;
 	}
 	
 	public <V extends ItemAttachment<T>> V build(ModContext modContext, Class<V> target) {

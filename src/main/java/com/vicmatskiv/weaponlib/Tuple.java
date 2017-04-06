@@ -1,6 +1,6 @@
 package com.vicmatskiv.weaponlib;
 
-final class Tuple<U, V> {
+public final class Tuple<U, V> {
 
 	private U u;
 	private V v;

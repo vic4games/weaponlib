@@ -1,55 +1,67 @@
 package com.vicmatskiv.weaponlib;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
+import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponSpawnEntity;
+
 import io.netty.buffer.ByteBuf;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.projectile.EntityThrowable;
 import net.minecraft.item.Item;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
 
-public class WeaponSpawnEntity extends EntityThrowable implements IEntityAdditionalSpawnData {
+public class WeaponSpawnEntity extends CompatibleWeaponSpawnEntity {
 	
 	static final float DEFAULT_INACCURACY = 1f;
 	private float explosionRadius = 0.1F;
 	private float damage = 6f;
 	private float speed;
 	private float gravityVelocity;
+	private float inaccuracy;
 	private Weapon weapon;
 
 	public WeaponSpawnEntity(World world) {
 		super(world);
 	}
 
-
-	/**
-	 * @param par1World
-	 * @param arg1EntityLivingBase
-	 */
 	public WeaponSpawnEntity(World par1World, EntityLivingBase arg1EntityLivingBase) {
 		super(par1World, arg1EntityLivingBase);
 	}
 	
 	public WeaponSpawnEntity(Weapon weapon, 
-			World par1World, 
-			EntityLivingBase arg1EntityLivingBase, 
-			float speed, 
+			World world, 
+			EntityLivingBase player, 
+			float speed,
 			float gravityVelocity,
+			float inaccuracy,
 			float damage, 
 			float explosionRadius,
 			Material...damageableBlockMaterials) 
 	{
-		super(par1World, arg1EntityLivingBase);
+		super(world, player);
 		this.weapon = weapon;
 		this.damage = damage;
-		this.explosionRadius = explosionRadius;
 		this.speed = speed;
+		this.explosionRadius = explosionRadius;
+		this.inaccuracy = inaccuracy;
 		this.gravityVelocity = gravityVelocity;
-	
+
+		// TODO: validate for 1.7.10 the code below
+		this.setSize(0.25F, 0.25F);
+		this.setLocationAndAngles(player.posX, player.posY + (double)player.getEyeHeight(), player.posZ, player.rotationYaw, player.rotationPitch);
+		this.posX -= (double)(compatibility.getMathHelper().cos(this.rotationYaw / 180.0F * (float)Math.PI) * 0.16F);
+		this.posY -= 0.10000000149011612D;
+		this.posZ -= (double)(compatibility.getMathHelper().sin(this.rotationYaw / 180.0F * (float)Math.PI) * 0.16F);
+		this.setPosition(this.posX, this.posY, this.posZ);
+		float f = 0.4F;
+		this.motionX = (double)(-compatibility.getMathHelper().sin(this.rotationYaw / 180.0F * (float)Math.PI) * compatibility.getMathHelper().cos(this.rotationPitch / 180.0F * (float)Math.PI) * f);
+		this.motionZ = (double)(compatibility.getMathHelper().cos(this.rotationYaw / 180.0F * (float)Math.PI) * compatibility.getMathHelper().cos(this.rotationPitch / 180.0F * (float)Math.PI) * f);
+		float pitchOffset = 0f;
+		this.motionY = (double)(-compatibility.getMathHelper().sin((this.rotationPitch + pitchOffset) / 180.0F * (float)Math.PI) * f);
+		this.setThrowableHeading(this.motionX, this.motionY, this.motionZ, speed, inaccuracy);
 	}
 
 	@Override
@@ -57,48 +69,45 @@ public class WeaponSpawnEntity extends EntityThrowable implements IEntityAdditio
 		return gravityVelocity;
 	};
 	
-	
-//	@Override
-	
-//  TODO: FIXME!!!!!!!!!
-	
+	@Override 
 	protected float getVelocity() {
 		return speed;
+	}
+
+	@Override
+	protected float getInaccuracy() {
+		return DEFAULT_INACCURACY;
 	}
 
 	/**
 	 * @see net.minecraft.entity.projectile.EntityThrowable#onImpact(net.minecraft.util.MovingObjectPosition)
 	 */
 	@Override
-	protected void onImpact(RayTraceResult position) {
-		//this.world.createExplosion(this, this.posX, this.posY, this.posZ, (float)this.explosionRadius, true);
-		if(!this.world.isRemote) {
-			if (position.entityHit != null) {
+	protected void onImpact(CompatibleRayTraceResult position) {
+		if(!compatibility.world(this).isRemote) {
+			if (position.getEntityHit() != null) {
 				if(explosionRadius > 0) {
-					this.world.createExplosion(this, this.posX, this.posY, this.posZ, explosionRadius, true);
+					compatibility.world(this).createExplosion(this, this.posX, this.posY, this.posZ, explosionRadius, true);
 				}
-				//System.out.println(">>>>>>   Damaging entity " + position.entityHit + " >>>>>> !!!");
-				position.entityHit.attackEntityFrom(DamageSource.causeThrownDamage(this, this.getThrower()), damage);
-				position.entityHit.hurtResistantTime = 0;
-				position.entityHit.prevRotationYaw -= 0.3D;
+				position.getEntityHit().attackEntityFrom(DamageSource.causeThrownDamage(this, this.getThrower()), damage);
+				position.getEntityHit().hurtResistantTime = 0;
+				position.getEntityHit().prevRotationYaw -= 0.3D;
 			} else if(explosionRadius > 0) {
-				this.world.createExplosion(this, position.getBlockPos().getX(), 
-						position.getBlockPos().getY(), position.getBlockPos().getZ(), explosionRadius, true);
-			} else if(position.typeOfHit == RayTraceResult.Type.BLOCK) {
-				weapon.onSpawnEntityBlockImpact(world, null, this, position);
+				compatibility.world(this).createExplosion(this, position.getBlockPosX(), position.getBlockPosY(), position.getBlockPosZ(), explosionRadius, true);
+			} else if(position.getTypeOfHit() == CompatibleRayTraceResult.Type.BLOCK) {
+				weapon.onSpawnEntityBlockImpact(compatibility.world(this), null, this, position);
 			}
 			this.setDead();
 		}
 	}
 	
 	@Override
-	public void setThrowableHeading(double motionX, double motionY, double motionZ, float velocity, float ignoredInaccuracy)
+	public void setCompatibleThrowableHeading(double motionX, double motionY, double motionZ, float velocity, float inaccuracy)
     {
-        float f2 = MathHelper.sqrt(motionX * motionX + motionY * motionY + motionZ * motionZ);
+        float f2 = compatibility.getMathHelper().sqrt_double(motionX * motionX + motionY * motionY + motionZ * motionZ);
         motionX /= (double)f2;
         motionY /= (double)f2;
         motionZ /= (double)f2;
-        float inaccuracy = getInaccuracy();
         motionX += this.rand.nextGaussian() * 0.007499999832361937D * (double)inaccuracy;
         motionY += this.rand.nextGaussian() * 0.007499999832361937D * (double)inaccuracy;
         motionZ += this.rand.nextGaussian() * 0.007499999832361937D * (double)inaccuracy;
@@ -108,7 +117,7 @@ public class WeaponSpawnEntity extends EntityThrowable implements IEntityAdditio
         this.motionX = motionX;
         this.motionY = motionY;
         this.motionZ = motionZ;
-        float f3 = MathHelper.sqrt(motionX * motionX + motionZ * motionZ);
+        float f3 = compatibility.getMathHelper().sqrt_double(motionX * motionX + motionZ * motionZ);
         this.prevRotationYaw = this.rotationYaw = (float)(Math.atan2(motionX, motionZ) * 180.0D / Math.PI);
         this.prevRotationPitch = this.rotationPitch = (float)(Math.atan2(motionY, (double)f3) * 180.0D / Math.PI);
     }
@@ -118,6 +127,7 @@ public class WeaponSpawnEntity extends EntityThrowable implements IEntityAdditio
 		buffer.writeInt(Item.getIdFromItem(weapon));
 		buffer.writeFloat(speed);
 		buffer.writeFloat(gravityVelocity);
+		buffer.writeFloat(inaccuracy);
 		buffer.writeFloat(damage);
 		buffer.writeFloat(explosionRadius);
 	}
@@ -127,14 +137,11 @@ public class WeaponSpawnEntity extends EntityThrowable implements IEntityAdditio
 		weapon = (Weapon) Item.getItemById(buffer.readInt());
 		speed = buffer.readFloat();
 		gravityVelocity = buffer.readFloat();
+		inaccuracy = buffer.readFloat();
 		damage = buffer.readFloat();
 		explosionRadius = buffer.readFloat();
 	}
-	
-	protected float getInaccuracy() {
-		return DEFAULT_INACCURACY;
-	}
-	
+
 	Weapon getWeapon() {
 		return weapon;
 	}
