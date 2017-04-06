@@ -69,7 +69,7 @@ public class Compatibility1_10_2 implements Compatibility {
 	public EntityPlayer clientPlayer() {
 		return Minecraft.getMinecraft().thePlayer;
 	}
-	
+
 	@Override
 	@SideOnly(Side.CLIENT)
 	public void setClientPlayer(EntityPlayer player) {
@@ -96,7 +96,7 @@ public class Compatibility1_10_2 implements Compatibility {
 		// TODO Auto-generated method stub
 		return null;
 	}
-	
+
 	@Override
 	public NBTTagCompound getTagCompound(ItemStack itemStack) {
 		return itemStack.getTagCompound();
@@ -227,7 +227,7 @@ public class Compatibility1_10_2 implements Compatibility {
 	public void registerSound(CompatibleSound sound) {
 		GameRegistry.register(sound.getSound(), sound.getResourceLocation());
 	}
-	
+
 	@SuppressWarnings("deprecation")
 	@Override
 	public void registerItem(Item item, String name) {
@@ -254,7 +254,7 @@ public class Compatibility1_10_2 implements Compatibility {
 	}
 
 	@Override
-	public void registerModEntity(Class<? extends Entity> entityClass, String entityName, int id, Object mod, 
+	public void registerModEntity(Class<? extends Entity> entityClass, String entityName, int id, Object mod,
 			int trackingRange, int updateFrequency, boolean sendsVelocityUpdates) {
 		net.minecraftforge.fml.common.registry.EntityRegistry.registerModEntity
 			(entityClass, entityName, id, mod, trackingRange, updateFrequency, sendsVelocityUpdates);
@@ -402,7 +402,7 @@ public class Compatibility1_10_2 implements Compatibility {
 		} else if(player.inventory.mainInventory[slot] == null) {
         	player.inventory.mainInventory[slot] = new ItemStack(item);
         }
-        return result;	
+        return result;
     }
 
 	@Override
@@ -426,18 +426,18 @@ public class Compatibility1_10_2 implements Compatibility {
 		if(player.inventory.mainInventory[slot] == null) {
 			return false;
 		}
-		
+
 		if (--player.inventory.mainInventory[slot].stackSize <= 0) {
 			player.inventory.mainInventory[slot] = null;
         }
-		return true;	
+		return true;
 	}
 
 	@Override
 	public void addShapedRecipe(ItemStack itemStack, Object... materials) {
 		GameRegistry.addShapedRecipe(itemStack, materials);
 	}
-	
+
 	@Override
     public void addShapedOreRecipe(ItemStack itemStack, Object... materials) {
         GameRegistry.addRecipe(new ShapedOreRecipe(itemStack, materials));
@@ -463,7 +463,7 @@ public class Compatibility1_10_2 implements Compatibility {
 			String registryName = unlocalizedName.substring(5 + modId.length() + 1);
 			block.setRegistryName(modId, registryName);
 		}
-		
+
 		GameRegistry.register(block);
 		ItemBlock itemBlock = new ItemBlock(block);
 		GameRegistry.register(itemBlock.setRegistryName(block.getRegistryName()));
@@ -477,7 +477,7 @@ public class Compatibility1_10_2 implements Compatibility {
 	@Override
 	public ArmorMaterial addArmorMaterial(String name, String textureName, int durability, int[] reductionAmounts,
 			int enchantability, CompatibleSound soundOnEquip, float toughness) {
-		return EnumHelper.addArmorMaterial(name, textureName, durability, reductionAmounts, enchantability, 
+		return EnumHelper.addArmorMaterial(name, textureName, durability, reductionAmounts, enchantability,
 				soundOnEquip != null ? soundOnEquip.getSound() : null, toughness);
 	}
 
@@ -524,7 +524,7 @@ public class Compatibility1_10_2 implements Compatibility {
 
     @Override
     public RenderGlobal createCompatibleRenderGlobal() {
-        return Minecraft.getMinecraft().renderGlobal; //new CompatibleRenderGlobal(Minecraft.getMinecraft());
+        return /*Minecraft.getMinecraft().renderGlobal; //*/ new CompatibleRenderGlobal(Minecraft.getMinecraft());
     }
 
     @Override
