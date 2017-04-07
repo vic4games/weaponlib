@@ -237,7 +237,7 @@ public class Compatibility1_10_2 implements Compatibility {
 	@Override
 	public void registerItem(String modId, Item item, String name) {
 		if(item.getRegistryName() == null) {
-			String registryName = item.getUnlocalizedName();
+			String registryName = item.getUnlocalizedName().toLowerCase();
 			int indexOfPrefix = registryName.indexOf("." + modId);
 			if(indexOfPrefix > 0) {
 				registryName = registryName.substring(indexOfPrefix + modId.length() + 2);
@@ -459,7 +459,7 @@ public class Compatibility1_10_2 implements Compatibility {
 			if(block.getUnlocalizedName().length() < modId.length() + 2 + 5) {
 				throw new IllegalArgumentException("Unlocalize block name too short " + block.getUnlocalizedName());
 			}
-			String unlocalizedName = block.getUnlocalizedName();
+			String unlocalizedName = block.getUnlocalizedName().toLowerCase();
 			String registryName = unlocalizedName.substring(5 + modId.length() + 1);
 			block.setRegistryName(modId, registryName);
 		}

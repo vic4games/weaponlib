@@ -165,6 +165,7 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
     private ShaderGroup theShaderGroup;
     private static final ResourceLocation[] SHADERS_TEXTURES = new ResourceLocation[] {new ResourceLocation("shaders/post/notch.json"), new ResourceLocation("shaders/post/fxaa.json"), new ResourceLocation("shaders/post/art.json"), new ResourceLocation("shaders/post/bumpy.json"), new ResourceLocation("shaders/post/blobs2.json"), new ResourceLocation("shaders/post/pencil.json"), new ResourceLocation("shaders/post/color_convolve.json"), new ResourceLocation("shaders/post/deconverge.json"), new ResourceLocation("shaders/post/flip.json"), new ResourceLocation("shaders/post/invert.json"), new ResourceLocation("shaders/post/ntsc.json"), new ResourceLocation("shaders/post/outline.json"), new ResourceLocation("shaders/post/phosphor.json"), new ResourceLocation("shaders/post/scan_pincushion.json"), new ResourceLocation("shaders/post/sobel.json"), new ResourceLocation("shaders/post/bits.json"), new ResourceLocation("shaders/post/desaturate.json"), new ResourceLocation("shaders/post/green.json"), new ResourceLocation("shaders/post/blur.json"), new ResourceLocation("shaders/post/wobble.json"), new ResourceLocation("shaders/post/blobs.json"), new ResourceLocation("shaders/post/antialias.json"), new ResourceLocation("shaders/post/creeper.json"), new ResourceLocation("shaders/post/spider.json")};
     public static final int SHADER_COUNT = SHADERS_TEXTURES.length;
+    private static final float MAX_ZOOM = 0.01f;
     private int shaderIndex;
     private boolean useShader;
     private int frameCount;
@@ -195,7 +196,7 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
             }
         }
     }
-    
+
     public void setPrepareTerrain(boolean prepareTerrain) {
         this.prepareTerrain = prepareTerrain;
     }
@@ -505,9 +506,9 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
             this.fovModifierHand = 1.5F;
         }
 
-        if (this.fovModifierHand < 0.05F)
+        if (this.fovModifierHand < MAX_ZOOM)
         {
-            this.fovModifierHand = 0.05F;
+            this.fovModifierHand = MAX_ZOOM;
         }
     }
 
@@ -726,7 +727,7 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
             GlStateManager.scale(this.cameraZoom, this.cameraZoom, 1.0D);
         }
 
-        Project.gluPerspective(this.getFOVModifier(partialTicks, true), 
+        Project.gluPerspective(this.getFOVModifier(partialTicks, true),
                 (float)this.mc.displayWidth / (float)this.mc.displayHeight, 0.05F, this.farPlaneDistance * MathHelper.SQRT_2);
         GlStateManager.matrixMode(5888);
         GlStateManager.loadIdentity();
@@ -1193,7 +1194,7 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
         }
     }
 
-    
+
 
     public void renderStreamIndicator(float partialTicks)
     {
@@ -1278,7 +1279,7 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
         double d1 = entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * (double)partialTicks;
         double d2 = entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * (double)partialTicks;
         icamera.setPosition(d0, d1, d2);
-        
+
 
         if (this.mc.gameSettings.renderDistanceChunks >= 4)
         {
@@ -1286,13 +1287,13 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
             this.mc.mcProfiler.endStartSection("sky");
             GlStateManager.matrixMode(5889);
             GlStateManager.loadIdentity();
-            Project.gluPerspective(this.getFOVModifier(partialTicks, true), 
+            Project.gluPerspective(this.getFOVModifier(partialTicks, true),
                     (float)this.mc.displayWidth / (float)this.mc.displayHeight, 0.05F, this.farPlaneDistance * 2.0F);
             GlStateManager.matrixMode(5888);
             renderglobal.renderSky(partialTicks, pass);
             GlStateManager.matrixMode(5889);
             GlStateManager.loadIdentity();
-            Project.gluPerspective(this.getFOVModifier(partialTicks, true), 
+            Project.gluPerspective(this.getFOVModifier(partialTicks, true),
                     (float)this.mc.displayWidth / (float)this.mc.displayHeight, 0.05F, this.farPlaneDistance * MathHelper.SQRT_2);
             GlStateManager.matrixMode(5888);
         }
@@ -1308,13 +1309,13 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
 
         this.mc.mcProfiler.endStartSection("prepareterrain");
         this.setupFog(0, partialTicks);
-        
-        
+
+
         this.mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
         RenderHelper.disableStandardItemLighting();
         this.mc.mcProfiler.endStartSection("terrain_setup");
-        
-        
+
+
         if(prepareTerrain) {
             renderglobal.setupTerrain(entity, (double)partialTicks, icamera, this.frameCount++, this.mc.thePlayer.isSpectator());
 
@@ -1326,7 +1327,7 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
             this.mc.renderGlobal.updateChunks(finishTimeNano);
         }
 
- 
+
         this.mc.mcProfiler.endStartSection("terrain");
         GlStateManager.matrixMode(5888);
         GlStateManager.pushMatrix();
@@ -1451,7 +1452,7 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
             this.mc.mcProfiler.endStartSection("clouds");
             GlStateManager.matrixMode(5889);
             GlStateManager.loadIdentity();
-            Project.gluPerspective(this.getFOVModifier(partialTicks, true), 
+            Project.gluPerspective(this.getFOVModifier(partialTicks, true),
                     (float)this.mc.displayWidth / (float)this.mc.displayHeight, 0.05F, this.farPlaneDistance * 4.0F);
             GlStateManager.matrixMode(5888);
             GlStateManager.pushMatrix();
@@ -1461,7 +1462,7 @@ public class CompatibleWorldRenderer extends EntityRenderer implements IResource
             GlStateManager.popMatrix();
             GlStateManager.matrixMode(5889);
             GlStateManager.loadIdentity();
-            Project.gluPerspective(this.getFOVModifier(partialTicks, true), 
+            Project.gluPerspective(this.getFOVModifier(partialTicks, true),
                     (float)this.mc.displayWidth / (float)this.mc.displayHeight, 0.05F, this.farPlaneDistance * MathHelper.SQRT_2);
             GlStateManager.matrixMode(5888);
         }
