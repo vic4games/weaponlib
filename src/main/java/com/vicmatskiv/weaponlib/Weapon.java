@@ -474,9 +474,9 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
 
             if (blockImpactHandler == null) {
                 blockImpactHandler = (world, player, entity, position) -> {
-                    Block block = WorldHelper.getBlockAtPosition(world, position);
-                    if (WorldHelper.isGlassBlock(block)) {
-                        WorldHelper.destroyBlock(world, position);
+                    Block block = compatibility.getBlockAtPosition(world, position);
+                    if (compatibility.isGlassBlock(block)) {
+                        compatibility.destroyBlock(world, position);
                     } else  {
                         //compatibility.addBlockHitEffect(position);
                         CompatibleTargetPoint point = new CompatibleTargetPoint(entity.dimension, 

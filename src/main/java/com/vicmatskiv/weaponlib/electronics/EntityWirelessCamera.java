@@ -22,22 +22,22 @@ import net.minecraft.item.Item;
 import net.minecraft.world.World;
 
 public class EntityWirelessCamera extends CompatibleThrowableEntity {
-    
+
     private static final Logger logger = LogManager.getLogger(EntityWirelessCamera.class);
 
     private ModContext modContext;
     private ItemWirelessCamera itemWirelessCamera;
     private long timestamp;
     private long duration;
-    
-    public EntityWirelessCamera(ModContext modContext, World world, EntityPlayer player, 
+
+    public EntityWirelessCamera(ModContext modContext, World world, EntityPlayer player,
             ItemWirelessCamera itemWirelessCamera, long duration) {
         super(world, player);
         this.timestamp = System.currentTimeMillis();
         this.duration = duration;
         this.modContext = modContext;
         this.itemWirelessCamera = itemWirelessCamera;
-        
+
         this.setSize(0.25F, 0.25F);
         this.setLocationAndAngles(player.posX, player.posY + (double)player.getEyeHeight(), player.posZ, player.rotationYaw, player.rotationPitch);
         this.posX -= (double)(compatibility.getMathHelper().cos(this.rotationYaw / 180.0F * (float)Math.PI) * 0.16F);
@@ -56,7 +56,7 @@ public class EntityWirelessCamera extends CompatibleThrowableEntity {
     public EntityWirelessCamera(World world, EntityLivingBase player) {
         super(world, player);
     }
-    
+
     public EntityWirelessCamera(World world) {
         super(world);
     }
@@ -73,8 +73,8 @@ public class EntityWirelessCamera extends CompatibleThrowableEntity {
             } else if(entityHit instanceof EntityLivingBase) {
                 displayName = EntityList.getEntityString(entityHit);
             }
-            
-            if (!this.worldObj.isRemote) {
+
+            if (!compatibility.world(this).isRemote) {
                 logger.debug("Server hit entity uuid {}", rayTraceResult.getEntityHit().getPersistentID());
                 PlayerEntityTracker tracker = PlayerEntityTracker.getTracker((EntityPlayer) getThrower());
                 if(tracker != null) {
@@ -96,7 +96,7 @@ public class EntityWirelessCamera extends CompatibleThrowableEntity {
 //            this.setDead();
 //        }
     }
-    
+
     @Override
     public void onUpdate() {
         super.onUpdate();
@@ -114,7 +114,10 @@ public class EntityWirelessCamera extends CompatibleThrowableEntity {
 
     @Override
     public void readSpawnData(ByteBuf buffer) {
-        itemWirelessCamera = (ItemWirelessCamera) Item.getItemById(buffer.readInt());
+        Item item = Item.getItemById(buffer.readInt());
+        if(item instanceof ItemWirelessCamera) {
+            itemWirelessCamera = (ItemWirelessCamera) item;
+        }
         timestamp = buffer.readLong();
         duration = buffer.readLong();
     }

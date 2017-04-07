@@ -37,7 +37,7 @@ public class AttachmentBuilder<T> {
 
 	protected Consumer<RenderContext<RenderableState>> firstPersonLeftHandPositioning;
 	protected Consumer<RenderContext<RenderableState>> firstPersonRightHandPositioning;
-	
+
 	protected CreativeTabs tab;
 	protected AttachmentCategory attachmentCategory;
 	protected ApplyHandler<T> apply;
@@ -50,11 +50,11 @@ public class AttachmentBuilder<T> {
 	private boolean isRenderablePart;
     private int maxStackSize = 1;
     private Function<ItemStack, String> informationProvider;
-	
+
 	private CraftingComplexity craftingComplexity;
 
 	private Object[] craftingMaterials;
-	
+
 	Map<ItemAttachment<T>, CompatibleAttachment<T>> compatibleAttachments = new HashMap<>();
     private int craftingCount = 1;
 
@@ -62,12 +62,12 @@ public class AttachmentBuilder<T> {
 		this.attachmentCategory = attachmentCategory;
 		return this;
 	}
-	
+
 	public AttachmentBuilder<T> withName(String name) {
 		this.name = name;
 		return this;
 	}
-	
+
 	public AttachmentBuilder<T> withCreativeTab(CreativeTabs tab) {
 		this.tab = tab;
 		return this;
@@ -77,32 +77,32 @@ public class AttachmentBuilder<T> {
 		this.modId = modId;
 		return this;
 	}
-	
+
 	public AttachmentBuilder<T> withCompatibleAttachment(ItemAttachment<T> attachment, Consumer<ModelBase> positioner) {
 		compatibleAttachments.put(attachment, new CompatibleAttachment<>(attachment, positioner));
 		return this;
 	}
-	
+
 	public AttachmentBuilder<T> withModel(ModelBase model) {
 		this.model = model;
 		return this;
 	}
-	
+
 	public AttachmentBuilder<T> withTextureName(String textureName) {
 		this.textureName = textureName.toLowerCase();
 		return this;
 	}
-	
+
 	public AttachmentBuilder<T> withMaxStackSize(int maxStackSize) {
         this.maxStackSize = maxStackSize;
         return this;
     }
-	
+
 	public AttachmentBuilder<T> withEntityPositioning(Consumer<ItemStack> entityPositioning) {
 		this.entityPositioning = entityPositioning;
 		return this;
 	}
-	
+
 	public AttachmentBuilder<T> withInventoryPositioning(Consumer<ItemStack> inventoryPositioning) {
 		this.inventoryPositioning = inventoryPositioning;
 		return this;
@@ -117,17 +117,17 @@ public class AttachmentBuilder<T> {
 		this.firstPersonPositioning = firstPersonPositioning;
 		return this;
 	}
-	
+
 	public AttachmentBuilder<T> withFirstPersonModelPositioning(BiConsumer<ModelBase, ItemStack> firstPersonModelPositioning) {
 		this.firstPersonModelPositioning = firstPersonModelPositioning;
 		return this;
 	}
-	
+
 	public AttachmentBuilder<T> withEntityModelPositioning(BiConsumer<ModelBase, ItemStack> entityModelPositioning) {
 		this.entityModelPositioning = entityModelPositioning;
 		return this;
 	}
-	
+
 	public AttachmentBuilder<T> withInventoryModelPositioning(BiConsumer<ModelBase, ItemStack> inventoryModelPositioning) {
 		this.inventoryModelPositioning = inventoryModelPositioning;
 		return this;
@@ -137,53 +137,53 @@ public class AttachmentBuilder<T> {
 		this.thirdPersonModelPositioning = thirdPersonModelPositioning;
 		return this;
 	}
-	
+
 	public AttachmentBuilder<T> withFirstPersonHandPositioning(
             Consumer<RenderContext<RenderableState>> leftHand,
-            Consumer<RenderContext<RenderableState>> rightHand) 
+            Consumer<RenderContext<RenderableState>> rightHand)
     {
         this.firstPersonLeftHandPositioning = leftHand;
         this.firstPersonRightHandPositioning = rightHand;
         return this;
     }
-	
+
 	public AttachmentBuilder<T> withCrosshair(String crosshair) {
 		this.crosshair = crosshair.toLowerCase();
 		return this;
 	}
-	
+
 
 	public AttachmentBuilder<T> withPostRender(CustomRenderer<?> postRenderer) {
 		this.postRenderer = postRenderer;
 		return this;
 	}
-	
+
 	public AttachmentBuilder<T> withModel(ModelBase model, String textureName) {
 		this.texturedModels.add(new Tuple<>(model, textureName.toLowerCase()));
 		return this;
 	}
-	
+
 	public AttachmentBuilder<T> withRenderablePart() {
 		this.isRenderablePart = true;
 		return this;
 	}
-	
+
 
 	public AttachmentBuilder<T> withApply(ApplyHandler<T> apply) {
 		this.apply = apply;
 		return this;
 	}
-	
+
 	public AttachmentBuilder<T> withRemove(ApplyHandler<T> remove) {
 		this.remove = remove;
 		return this;
 	}
-	
+
 	public AttachmentBuilder<T> withApply(ApplyHandler2<T> apply) {
 		this.apply2 = apply;
 		return this;
 	}
-	
+
 	public AttachmentBuilder<T> withRemove(ApplyHandler2<T> remove) {
 		this.remove2 = remove;
 		return this;
@@ -192,12 +192,12 @@ public class AttachmentBuilder<T> {
 	public AttachmentBuilder<T> withCrafting(CraftingComplexity craftingComplexity, Object...craftingMaterials) {
 	    return withCrafting(1, craftingComplexity, craftingMaterials);
 	}
-	
+
 	public AttachmentBuilder<T> withInformationProvider(Function<ItemStack, String> informationProvider) {
         this.informationProvider = informationProvider;
         return this;
-    } 
-	
+    }
+
 	public AttachmentBuilder<T> withCrafting(int craftingCount, CraftingComplexity craftingComplexity, Object...craftingMaterials) {
 		if(craftingComplexity == null) {
 			throw new IllegalArgumentException("Crafting complexity not set");
@@ -213,17 +213,17 @@ public class AttachmentBuilder<T> {
 		this.craftingCount = craftingCount;
 		return this;
 	}
-	
+
 	protected ItemAttachment<T> createAttachment(ModContext modContext) {
 		return new ItemAttachment<T>(
-				getModId(), attachmentCategory, crosshair, 
+				getModId(), attachmentCategory, crosshair,
 				apply, remove);
 	}
-	
+
 	@SuppressWarnings("deprecation")
 	public ItemAttachment<T> build(ModContext modContext) {
 		ItemAttachment<T> attachment = createAttachment(modContext);
-		attachment.setUnlocalizedName(getModId() + "_" + name); 
+		attachment.setUnlocalizedName(getModId() + "_" + name);
 		attachment.setCreativeTab(tab);
 		attachment.setPostRenderer(postRenderer);
 		attachment.setName(name);
@@ -235,8 +235,8 @@ public class AttachmentBuilder<T> {
 		}
 		if(getTextureName() != null) {
 			attachment.setTextureName(getModId() + ":" + stripFileExtension(getTextureName(), ".png"));
-		} 
-		
+		}
+
 		if(isRenderablePart) {
 			attachment.setRenderablePart(new Part() {
 				@Override
@@ -245,39 +245,39 @@ public class AttachmentBuilder<T> {
 				}
 			});
 		}
-		
+
 		if(getModel() != null) {
 			attachment.addModel(getModel(), addFileExtension(getTextureName(), ".png"));
 		}
-		
+
 		texturedModels.forEach(tm -> attachment.addModel(tm.getU(), addFileExtension(tm.getV(), ".png") ));
-		
+
 		compatibleAttachments.values().forEach(a -> attachment.addCompatibleAttachment(a));
-		
+
 		if((getModel() != null || !texturedModels.isEmpty())) {
 			modContext.registerRenderableItem(name, attachment, compatibility.isClientSide() ? registerRenderer(attachment, modContext) : null);
 		}
-		
+
 		if(craftingComplexity != null) {
 			OptionsMetadata optionsMetadata = new OptionsMetadata.OptionMetadataBuilder()
 				.withSlotCount(9)
             	.build(craftingComplexity, Arrays.copyOf(craftingMaterials, craftingMaterials.length));
-			
+
 			List<Object> shape = modContext.getRecipeGenerator().createShapedRecipe(name, optionsMetadata);
-			
+
 			ItemStack itemStack = new ItemStack(attachment);
-			itemStack.stackSize = craftingCount;
+			compatibility.setStackSize(itemStack, craftingCount);
             if(optionsMetadata.hasOres()) {
 			    compatibility.addShapedOreRecipe(itemStack, shape.toArray());
 			} else {
 			    compatibility.addShapedRecipe(itemStack, shape.toArray());
 			}
 		}
-		
+
 		return attachment;
 	}
 
-	
+
 	private Object registerRenderer(ItemAttachment<T> attachment, ModContext modContext) {
 		return new StaticModelSourceRenderer.Builder()
 		.withEntityPositioning(entityPositioning)
@@ -293,7 +293,7 @@ public class AttachmentBuilder<T> {
 		.withModId(getModId())
 		.build();
 	}
-	
+
 
 	static String addFileExtension(String s, String ext) {
 		return s != null && !s.endsWith(ext) ? s + ext : s;
@@ -302,7 +302,7 @@ public class AttachmentBuilder<T> {
 	protected static String stripFileExtension(String str, String extension) {
 		return str.endsWith(extension) ? str.substring(0, str.length() - extension.length()) : str;
 	}
-	
+
 	public <V extends ItemAttachment<T>> V build(ModContext modContext, Class<V> target) {
 		return target.cast(build(modContext));
 	}

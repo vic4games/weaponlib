@@ -9,9 +9,9 @@ import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
 
 public class WirelessCameraRenderer extends CompatibleEntityRenderer {
-    
+
     private String modId;
-    
+
     public WirelessCameraRenderer(String modId) {
         this.modId = modId;
     }
@@ -26,7 +26,7 @@ public class WirelessCameraRenderer extends CompatibleEntityRenderer {
         ModelBase model = camera.getModel();
         if(model != null) {
             String textureName = camera.getTextureName();
-            ResourceLocation textureLocation = textureName != null ? 
+            ResourceLocation textureLocation = textureName != null ?
                     new ResourceLocation(modId + ":textures/models/" + textureName) : null;
             //System.out.println("Rendering entity at " + x + ", " + y + ", " + z);
             if(model != null) {
@@ -45,6 +45,11 @@ public class WirelessCameraRenderer extends CompatibleEntityRenderer {
     @Override
     protected ResourceLocation getEntityTexture(Entity entity) {
         EntityWirelessCamera camera = (EntityWirelessCamera) entity;
-        return new ResourceLocation(modId + ":textures/models/" + camera.getItem().getTextureName());
+        ItemWirelessCamera item = camera.getItem();
+        if(item != null) {
+            return new ResourceLocation(modId + ":textures/models/" + item.getTextureName());
+        } else {
+            return null;
+        }
     }
 }

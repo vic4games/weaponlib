@@ -1,12 +1,12 @@
 package com.vicmatskiv.weaponlib.compatibility;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.function.Predicate;
 
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.Weapon;
 import com.vicmatskiv.weaponlib.WeaponSpawnEntity;
-import com.vicmatskiv.weaponlib.WorldHelper;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleParticle.CompatibleParticleBreaking;
 
 import net.minecraft.block.Block;
@@ -92,12 +92,6 @@ public class Compatibility1_10_2 implements Compatibility {
 	}
 
 	@Override
-	public ItemStack consumeInventoryItem(Item item, Predicate<ItemStack> condition, EntityPlayer player, int maxSize) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
 	public NBTTagCompound getTagCompound(ItemStack itemStack) {
 		return itemStack.getTagCompound();
 	}
@@ -119,7 +113,7 @@ public class Compatibility1_10_2 implements Compatibility {
 
 	@Override
 	public boolean consumeInventoryItem(EntityPlayer player, Item item) {
-		return WorldHelper.consumeInventoryItem(player.inventory, item);
+		return true; // TODO: remove this method
 	}
 
 	@Override
@@ -564,5 +558,61 @@ public class Compatibility1_10_2 implements Compatibility {
     @Override
     public float getAspectRatio(ModContext modContext) {
         return modContext.getAspectRatio();
+    }
+
+    private static int itemSlotIndex(Item item, Predicate<ItemStack> condition, EntityPlayer player) {
+        for (int i = 0; i < player.inventory.mainInventory.length; ++i) {
+            if (player.inventory.mainInventory[i] != null
+                    && player.inventory.mainInventory[i].getItem() == item
+                    && condition.test(player.inventory.mainInventory[i])) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    @Override
+    public ItemStack consumeInventoryItem(Item item, Predicate<ItemStack> condition, EntityPlayer player, int maxSize) {
+
+        if(maxSize <= 0) {
+            return null;
+        }
+
+        int i = itemSlotIndex(item, condition, player);
+
+        if (i < 0) {
+            return null;
+        } else {
+            ItemStack stackInSlot = player.inventory.mainInventory[i];
+            int consumedStackSize = maxSize >= stackInSlot.stackSize ? stackInSlot.stackSize : maxSize;
+            ItemStack result = stackInSlot.splitStack(consumedStackSize);
+            if (stackInSlot.stackSize <= 0) {
+                player.inventory.mainInventory[i] = null;
+            }
+            return result;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public ItemStack tryConsumingCompatibleItem(List<? extends Item> compatibleParts, int maxSize,
+            EntityPlayer player, Predicate<ItemStack> ...conditions) {
+        ItemStack resultStack = null;
+        for(Predicate<ItemStack> condition: conditions) {
+            for(Item item: compatibleParts) {
+                if((resultStack = consumeInventoryItem(item, condition, player, maxSize)) != null) {
+                    break;
+                }
+            }
+            if(resultStack != null) break;
+        }
+
+        return resultStack;
+    }
+
+    @Override
+    public void setStackSize(ItemStack itemStack, int size) {
+        itemStack.stackSize = size;
     }
 }
