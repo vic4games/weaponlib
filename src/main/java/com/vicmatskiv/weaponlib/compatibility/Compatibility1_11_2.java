@@ -1,6 +1,9 @@
 package com.vicmatskiv.weaponlib.compatibility;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
 import java.util.Iterator;
+import java.util.List;
 import java.util.function.Predicate;
 
 import com.vicmatskiv.weaponlib.ModContext;
@@ -93,12 +96,6 @@ public class Compatibility1_11_2 implements Compatibility {
     }
 
     @Override
-    public ItemStack consumeInventoryItem(Item item, Predicate<ItemStack> condition, EntityPlayer player, int maxSize) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
     public NBTTagCompound getTagCompound(ItemStack itemStack) {
         return itemStack.getTagCompound();
     }
@@ -120,7 +117,7 @@ public class Compatibility1_11_2 implements Compatibility {
 
     @Override
     public boolean consumeInventoryItem(EntityPlayer player, Item item) {
-        return WorldHelper.consumeInventoryItem(player.inventory, item);
+        return consumeInventoryItem(player.inventory, item);
     }
 
     @Override
@@ -237,7 +234,7 @@ public class Compatibility1_11_2 implements Compatibility {
     @Override
     public void registerItem(String modId, Item item, String name) {
         if(item.getRegistryName() == null) {
-            String registryName = item.getUnlocalizedName();
+            String registryName = item.getUnlocalizedName().toLowerCase();
             int indexOfPrefix = registryName.indexOf("." + modId);
             if(indexOfPrefix > 0) {
                 registryName = registryName.substring(indexOfPrefix + modId.length() + 2);
@@ -424,13 +421,13 @@ public class Compatibility1_11_2 implements Compatibility {
 
     @Override
     public boolean consumeInventoryItemFromSlot(EntityPlayer player, int slot) {
-        if(player.inventory.mainInventory.get(slot) == null) {
+        if(player.inventory.getStackInSlot(slot) == null) {
             return false;
         }
 
-        player.inventory.mainInventory.get(slot).shrink(1);
+        player.inventory.getStackInSlot(slot).shrink(1);
         if (player.inventory.mainInventory.get(slot).getCount() <= 0) {
-            player.inventory.mainInventory.remove(slot);
+            player.inventory.removeStackFromSlot(slot);
         }
         return true;
     }
@@ -461,7 +458,7 @@ public class Compatibility1_11_2 implements Compatibility {
             if(block.getUnlocalizedName().length() < modId.length() + 2 + 5) {
                 throw new IllegalArgumentException("Unlocalize block name too short " + block.getUnlocalizedName());
             }
-            String unlocalizedName = block.getUnlocalizedName();
+            String unlocalizedName = block.getUnlocalizedName().toLowerCase();
             String registryName = unlocalizedName.substring(5 + modId.length() + 1);
             block.setRegistryName(modId, registryName);
         }
@@ -487,7 +484,7 @@ public class Compatibility1_11_2 implements Compatibility {
     public boolean inventoryHasFreeSlots(EntityPlayer player) {
         boolean result = false;
         for(int i = 0; i < player.inventory.mainInventory.size(); i++) {
-            if(player.inventory.mainInventory.get(i) == null) {
+            if(player.inventory.getStackInSlot(i) == null) {
                 result = true;
                 break;
             }
@@ -570,5 +567,58 @@ public class Compatibility1_11_2 implements Compatibility {
     @Override
     public void setStackSize(ItemStack itemStack, int size) {
         itemStack.setCount(size);
+    }
+
+    private static int itemSlotIndex(Item item, Predicate<ItemStack> condition, EntityPlayer player) {
+        for (int i = 0; i < player.inventory.mainInventory.size(); ++i) {
+            if (player.inventory.getStackInSlot(i) != null
+                    && player.inventory.getStackInSlot(i).getItem() == item
+                    && condition.test(player.inventory.getStackInSlot(i))) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    @Override
+    public ItemStack consumeInventoryItem(Item item, Predicate<ItemStack> condition, EntityPlayer player, int maxSize) {
+
+        if(maxSize <= 0) {
+            return null;
+        }
+
+        int i = itemSlotIndex(item, condition, player);
+
+        if (i < 0) {
+            return null;
+        } else {
+            ItemStack stackInSlot = player.inventory.getStackInSlot(i);
+            int consumedStackSize = maxSize >= compatibility.getStackSize(stackInSlot) ? compatibility.getStackSize(stackInSlot) : maxSize;
+            ItemStack result = stackInSlot.splitStack(consumedStackSize);
+            if (compatibility.getStackSize(stackInSlot) <= 0) {
+                player.inventory.removeStackFromSlot(i);
+            }
+            return result;
+        }
+    }
+
+    public ItemStack tryConsumingCompatibleItem(List<? extends Item> compatibleParts, int maxSize, EntityPlayer player) {
+        return tryConsumingCompatibleItem(compatibleParts, maxSize, player, i -> true);
+    }
+
+    public ItemStack tryConsumingCompatibleItem(List<? extends Item> compatibleParts, int maxSize,
+            EntityPlayer player, @SuppressWarnings("unchecked") Predicate<ItemStack> ...conditions) {
+        ItemStack resultStack = null;
+        for(Predicate<ItemStack> condition: conditions) {
+            for(Item item: compatibleParts) {
+                if((resultStack = consumeInventoryItem(item, condition, player, maxSize)) != null) {
+                    break;
+                }
+            }
+            if(resultStack != null) break;
+        }
+
+        return resultStack;
     }
 }

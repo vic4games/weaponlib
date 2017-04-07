@@ -36,7 +36,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
-public class Weapon extends CompatibleItem implements 
+public class Weapon extends CompatibleItem implements
 PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContainer, Reloadable, Modifiable, Updatable {
 
     private static final Logger logger = LogManager.getLogger(Weapon.class);
@@ -404,7 +404,7 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
             this.flashOffsetY = flashOffsetY;
             return this;
         }
-        
+
         public Builder withSmokeOffsetX(Supplier<Float> smokeOffsetX) {
             this.smokeOffsetX = smokeOffsetX;
             return this;
@@ -474,12 +474,12 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
 
             if (blockImpactHandler == null) {
                 blockImpactHandler = (world, player, entity, position) -> {
-                    Block block = WorldHelper.getBlockAtPosition(world, position);
-                    if (WorldHelper.isGlassBlock(block)) {
-                        WorldHelper.destroyBlock(world, position);
+                    Block block = compatibility.getBlockAtPosition(world, position);
+                    if (compatibility.isGlassBlock(block)) {
+                        compatibility.destroyBlock(world, position);
                     } else  {
                         //compatibility.addBlockHitEffect(position);
-                        CompatibleTargetPoint point = new CompatibleTargetPoint(entity.dimension, 
+                        CompatibleTargetPoint point = new CompatibleTargetPoint(entity.dimension,
                                 position.getBlockPosX(), position.getBlockPosY(), position.getBlockPosZ(), 100);
                         modContext.getChannel().sendToAllAround(
                                 new BlockHitMessage(position.getBlockPosX(), position.getBlockPosY(), position.getBlockPosZ(), position.getSideHit()), point);
@@ -589,8 +589,8 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
 
     void toggleAiming() {
         PlayerWeaponInstance mainHandHeldWeaponInstance = modContext.getMainHeldWeapon();
-        if(mainHandHeldWeaponInstance != null 
-                && (mainHandHeldWeaponInstance.getState() == WeaponState.READY 
+        if(mainHandHeldWeaponInstance != null
+                && (mainHandHeldWeaponInstance.getState() == WeaponState.READY
                 || mainHandHeldWeaponInstance.getState() == WeaponState.EJECT_REQUIRED)
                 ) {
             mainHandHeldWeaponInstance.setAimed(!mainHandHeldWeaponInstance.isAimed());
@@ -632,7 +632,7 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
     }
 
     public static boolean isActiveAttachment(PlayerWeaponInstance weaponInstance, ItemAttachment<Weapon> attachment) {
-        return weaponInstance != null ? 
+        return weaponInstance != null ?
                 WeaponAttachmentAspect.isActiveAttachment(attachment, weaponInstance) : false;
     }
 
@@ -736,7 +736,7 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
         instance.setState(WeaponState.READY);
         instance.setRecoil(builder.recoil);
         instance.setMaxShots(builder.maxShots.get(0));
-        
+
         for(CompatibleAttachment<Weapon> compatibleAttachment: ((Weapon) itemStack.getItem()).getCompatibleAttachments().values()) {
             ItemAttachment<Weapon> attachment = compatibleAttachment.getAttachment();
             if(compatibleAttachment.isDefault() && attachment.getApply2() != null) {
@@ -785,7 +785,7 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
 
         modContext.getStatusMessageCenter().addMessage("Firearm mode: " + message, 1000);
 
-        compatibility.playSound(instance.getPlayer(),  modContext.getChangeFireModeSound(), 1F, 1F);		
+        compatibility.playSound(instance.getPlayer(),  modContext.getChangeFireModeSound(), 1F, 1F);
     }
 
     public long getTotalReloadingDuration() {
@@ -873,7 +873,7 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
     public float getRecoil() {
         return builder.recoil;
     }
-    
+
     public ModContext getModContext() {
         return modContext;
     }

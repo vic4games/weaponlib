@@ -1,7 +1,9 @@
 package com.vicmatskiv.weaponlib.compatibility;
 
+import java.util.List;
 import java.util.function.Predicate;
 
+import com.vicmatskiv.weaponlib.ItemBullet;
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.Weapon;
 import com.vicmatskiv.weaponlib.WeaponSpawnEntity;
@@ -193,6 +195,9 @@ public interface Compatibility {
     public float getAspectRatio(ModContext modContext);
 
     public void setStackSize(ItemStack itemStack, int craftingCount);
+
+    public ItemStack tryConsumingCompatibleItem(List<? extends Item> compatibleParts, int maxSize,
+            EntityPlayer player, @SuppressWarnings("unchecked") Predicate<ItemStack> ...conditions);
 
 
 }

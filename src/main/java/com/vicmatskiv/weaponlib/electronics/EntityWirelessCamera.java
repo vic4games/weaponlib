@@ -114,7 +114,10 @@ public class EntityWirelessCamera extends CompatibleThrowableEntity {
 
     @Override
     public void readSpawnData(ByteBuf buffer) {
-        itemWirelessCamera = (ItemWirelessCamera) Item.getItemById(buffer.readInt());
+        Item item = Item.getItemById(buffer.readInt());
+        if(item instanceof ItemWirelessCamera) {
+            itemWirelessCamera = (ItemWirelessCamera) item;
+        }
         timestamp = buffer.readLong();
         duration = buffer.readLong();
     }
