@@ -230,29 +230,7 @@ public class CompatibleWorldRenderer extends EntityRenderer
      */
     public void loadEntityShader(@Nullable Entity entityIn)
     {
-        if (OpenGlHelper.shadersSupported)
-        {
-            if (this.theShaderGroup != null)
-            {
-                this.theShaderGroup.deleteShaderGroup();
-            }
 
-            this.theShaderGroup = null;
-
-            if (entityIn instanceof EntityCreeper)
-            {
-                this.loadShader(new ResourceLocation("shaders/post/creeper.json"));
-            }
-            else if (entityIn instanceof EntitySpider)
-            {
-                this.loadShader(new ResourceLocation("shaders/post/spider.json"));
-            }
-            else if (entityIn instanceof EntityEnderman)
-            {
-                this.loadShader(new ResourceLocation("shaders/post/invert.json"));
-            }
-            else net.minecraftforge.client.ForgeHooksClient.loadEntityShader(entityIn, this);
-        }
     }
 
     public void loadShader(ResourceLocation resourceLocationIn)
