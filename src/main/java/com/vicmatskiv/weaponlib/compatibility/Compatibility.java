@@ -3,7 +3,6 @@ package com.vicmatskiv.weaponlib.compatibility;
 import java.util.List;
 import java.util.function.Predicate;
 
-import com.vicmatskiv.weaponlib.ItemBullet;
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.Weapon;
 import com.vicmatskiv.weaponlib.WeaponSpawnEntity;
@@ -37,36 +36,36 @@ import net.minecraftforge.event.entity.item.ItemTossEvent;
 import net.minecraftforge.fml.common.IWorldGenerator;
 
 public interface Compatibility {
-
+	
 	public World world(Entity entity);
-
+	
 	public EntityPlayer clientPlayer();
 
     public void setClientPlayer(EntityPlayer player);
-
-	public WeaponSpawnEntity getSpawnEntity(Weapon weapon, World world, EntityPlayer player, float speed,
+	
+	public WeaponSpawnEntity getSpawnEntity(Weapon weapon, World world, EntityPlayer player, float speed, 
 			float gravityVelocity, float inaccuracy, float damage, float explosionRadius, Material...damageableBlockMaterials);
-
+	
 	public IAttribute getMovementSpeedAttribute();
-
+	
 	public NBTTagCompound getTagCompound(ItemStack itemStack);
-
+	
 	public void setTagCompound(ItemStack itemStack, NBTTagCompound tagCompound);
 
 	public ItemStack getItemStack(ItemTossEvent event);
-
+	
 	public EntityPlayer getPlayer(ItemTossEvent event);
-
+	
 	public ItemStack getHeldItemMainHand(EntityLivingBase player);
-
+	
 	public boolean consumeInventoryItem(EntityPlayer player, Item item);
-
+	
 	public int getCurrentInventoryItemIndex(EntityPlayer player);
-
+	
 	public void ensureTagCompound(ItemStack itemStack);
-
+	
 	public void playSound(EntityPlayer player, CompatibleSound sound, float volume, float pitch);
-
+	
 	public void playSoundToNearExcept(EntityPlayer player, CompatibleSound object, float volume, float pitch);
 
 	public boolean isClientSide();
@@ -94,7 +93,7 @@ public interface Compatibility {
 	public void registerSound(CompatibleSound sound);
 
 	public void registerItem(Item item, String name);
-
+	
 	public void registerItem(String modId, Item item, String name);
 
 	public void runInMainClientThread(Runnable runnable);
@@ -125,7 +124,7 @@ public interface Compatibility {
 	public Block getBlockAtPosition(World world, CompatibleRayTraceResult position);
 
 	public void destroyBlock(World world, CompatibleRayTraceResult position);
-
+	
 	public boolean addItemToPlayerInventory(EntityPlayer player, final Item item, int slot);
 
 	public boolean consumeInventoryItem(InventoryPlayer inventoryPlayer, Item item);
@@ -135,9 +134,9 @@ public interface Compatibility {
 	public boolean isGlassBlock(Block block);
 
 	public float getEffectOffsetX();
-
+	
 	public float getEffectOffsetY();
-
+	
 	public float getEffectScaleFactor();
 
 	public void spawnEntity(EntityPlayer player, Entity entity);
@@ -149,7 +148,7 @@ public interface Compatibility {
 	public ItemStack consumeInventoryItem(Item item, Predicate<ItemStack> condition, EntityPlayer player, int maxSize);
 
 	public ItemStack getInventoryItemStack(EntityPlayer player, int inventoryItemIndex);
-
+	
 	public int getInventorySlot(EntityPlayer player, ItemStack itemStack);
 
 	public boolean consumeInventoryItemFromSlot(EntityPlayer player, int nextAttachmentSlot);
@@ -157,7 +156,7 @@ public interface Compatibility {
 	public void addShapedRecipe(ItemStack itemStack, Object... materials);
 
     public void addShapedOreRecipe(ItemStack itemStack, Object... materials);
-
+    
 	public void disableLightMap();
 
 	public void enableLightMap();

@@ -21,12 +21,12 @@ public class DebugCommand extends CompatibleCommand {
     private static final String DEBUG_ARG_WATCH = "watch";
 
     @Override
-    public String getName() {
+    public String getCompatibleName() {
         return COMMAND_DEBUG;
     }
 
     @Override
-    public String getUsage(ICommandSender sender) {
+    public String getCompatibleUsage(ICommandSender sender) {
         return "/" + COMMAND_DEBUG + "<options>";
     }
 
@@ -80,10 +80,10 @@ public class DebugCommand extends CompatibleCommand {
                 processWatchSubCommand(args);
                 break;
             default:
-                compatibility.addChatMessage(compatibility.clientPlayer(), getUsage(sender));
+                compatibility.addChatMessage(compatibility.clientPlayer(), getCompatibleUsage(sender));
             }
         } else {
-            compatibility.addChatMessage(compatibility.clientPlayer(), getUsage(sender));
+            compatibility.addChatMessage(compatibility.clientPlayer(), getCompatibleUsage(sender));
         }
     }
 

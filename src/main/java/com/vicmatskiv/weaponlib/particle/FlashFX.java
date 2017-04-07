@@ -2,8 +2,6 @@ package com.vicmatskiv.weaponlib.particle;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
-import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
-
 import org.lwjgl.opengl.GL11;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleParticle;

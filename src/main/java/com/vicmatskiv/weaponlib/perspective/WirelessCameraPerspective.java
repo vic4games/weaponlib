@@ -96,8 +96,8 @@ public class WirelessCameraPerspective extends RemoteFirstPersonPerspective {
         if(watchableEntity != null && tickCounter++ %50 == 0) {
             logger.debug("Watching {}, distance: {}  ",
                     watchableEntity,
-                    Math.sqrt(Math.pow(watchableEntity.posX - Minecraft.getMinecraft().player.posX, 2)
-                            + Math.pow(watchableEntity.posZ - Minecraft.getMinecraft().player.posZ, 2))
+                    Math.sqrt(Math.pow(watchableEntity.posX - compatibility.getClientPlayer().posX, 2)
+                            + Math.pow(watchableEntity.posZ - compatibility.getClientPlayer().posZ, 2))
                     );
         }
 
