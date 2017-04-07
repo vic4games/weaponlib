@@ -9,7 +9,6 @@ import java.util.function.Predicate;
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.Weapon;
 import com.vicmatskiv.weaponlib.WeaponSpawnEntity;
-import com.vicmatskiv.weaponlib.WorldHelper;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleParticle.CompatibleParticleBreaking;
 
 import net.minecraft.block.Block;
@@ -484,7 +483,7 @@ public class Compatibility1_11_2 implements Compatibility {
     public boolean inventoryHasFreeSlots(EntityPlayer player) {
         boolean result = false;
         for(int i = 0; i < player.inventory.mainInventory.size(); i++) {
-            if(player.inventory.getStackInSlot(i) == null) {
+            if(player.inventory.getStackInSlot(i).isEmpty()) {
                 result = true;
                 break;
             }
