@@ -1,7 +1,6 @@
 package com.vicmatskiv.weaponlib.compatibility;
 
 import net.minecraft.entity.Entity;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 
 public class CompatibleRayTraceResult {
@@ -34,23 +33,23 @@ public class CompatibleRayTraceResult {
 		}
 		return result;
 	}
-	
+
 	public int getBlockPosX() {
 		return position.getBlockPos().getX();
 	}
-	
+
 	public int getBlockPosY() {
 		return position.getBlockPos().getY();
 	}
-	
+
 	public int getBlockPosZ() {
 		return position.getBlockPos().getZ();
 	}
-	
+
 	public CompatibleBlockPos getBlockPos() {
 	    return new CompatibleBlockPos(position.getBlockPos());
 	}
-	
+
 	public CompatibleEnumFacing getSideHit() {
 	    CompatibleEnumFacing result = null;
 	    switch(position.sideHit) {

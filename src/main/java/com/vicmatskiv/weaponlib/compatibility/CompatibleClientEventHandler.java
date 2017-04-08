@@ -14,21 +14,21 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 public abstract class CompatibleClientEventHandler {
-    
+
     private Entity origRenderVeiwEntity;
-	
+
 	@SideOnly(Side.CLIENT)
 	@SubscribeEvent
 	public final void onClientTick(TickEvent.ClientTickEvent event) {
 		onCompatibleClientTick(new CompatibleClientTickEvent(event));
 	}
-	
+
 	@SideOnly(Side.CLIENT)
 	@SubscribeEvent
 	public final void onRenderTickEvent(TickEvent.RenderTickEvent event) {
 		onCompatibleRenderTickEvent(new CompatibleRenderTickEvent(event));
 	}
-	
+
 	@SideOnly(Side.CLIENT)
     @SubscribeEvent
 	public final void onPreRenderPlayer(RenderPlayerEvent.Pre event) {
@@ -44,7 +44,7 @@ public abstract class CompatibleClientEventHandler {
 	        event.getRenderer().getRenderManager().renderViewEntity = event.getEntityPlayer();
 	    }
 	}
-	
+
 	protected abstract ModContext getModContext();
 
     @SideOnly(Side.CLIENT)
@@ -62,7 +62,7 @@ public abstract class CompatibleClientEventHandler {
             event.getRenderer().getRenderManager().renderViewEntity = origRenderVeiwEntity;
         }
     }
-    
+
     @SubscribeEvent
     public void onTextureStitchEvent(TextureStitchEvent.Pre event) {
         event.getMap().registerSprite(getModContext().getNamedResource(

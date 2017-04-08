@@ -17,25 +17,25 @@ import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 
 public class CompatiblePlayerEntityTrackerProvider implements ICapabilitySerializable<NBTBase> {
-    
+
     public static void register(ModContext modContext) {
-        CapabilityManager.INSTANCE.register(PlayerEntityTrackerContainer.class, new PlayerEntityTrackerStorage(), 
+        CapabilityManager.INSTANCE.register(PlayerEntityTrackerContainer.class, new PlayerEntityTrackerStorage(),
                 PlayerEntityTrackerContainerImpl.class);
     }
 
     public static interface PlayerEntityTrackerContainer {
-        
+
         public byte[] toByteArray();
-        
+
         public void setInitializer(Function<World, PlayerEntityTracker> initializer);
-        
+
         public void setBytes(byte[] bytes);
-        
+
         public PlayerEntityTracker getTracker(World world);
     }
-    
+
     public static class PlayerEntityTrackerContainerImpl implements PlayerEntityTrackerContainer {
-        
+
         private Function<World, PlayerEntityTracker> initializer; // = w -> new PlayerEntityTracker(w);
         private PlayerEntityTracker resolved;
         private byte[] bytes = new byte[0];
@@ -44,7 +44,7 @@ public class CompatiblePlayerEntityTrackerProvider implements ICapabilitySeriali
         public byte[] toByteArray() {
             return resolved == null ? bytes : resolved.toByteArray();
         }
-        
+
         @Override
         public void setBytes(byte[] bytes) {
             this.bytes = bytes;
@@ -63,9 +63,9 @@ public class CompatiblePlayerEntityTrackerProvider implements ICapabilitySeriali
             }
             return resolved;
         }
-        
+
     }
-    
+
     public static class PlayerEntityTrackerStorage implements IStorage<PlayerEntityTrackerContainer> {
 
         @Override
@@ -85,25 +85,25 @@ public class CompatiblePlayerEntityTrackerProvider implements ICapabilitySeriali
             }
         }
     }
-    
+
     @CapabilityInject(PlayerEntityTrackerContainer.class)
     static Capability<PlayerEntityTrackerContainer> playerEntityTrackerContainer = null;
-    
+
     private PlayerEntityTrackerContainer instance = playerEntityTrackerContainer.getDefaultInstance(); // doesn't this trigger null pointer exception if capability is not registered?
 
-    
+
     public static PlayerEntityTracker getTracker(EntityPlayer player) {
         if(player == null) return null;
         PlayerEntityTrackerContainer container = player.getCapability(playerEntityTrackerContainer, null);
         PlayerEntityTracker result;
         if(container != null) {
-            result = container.getTracker(player.worldObj);
+            result = container.getTracker(player.world);
         } else {
             result = null;
         }
         return result;
     }
-    
+
 
     public static void setTracker(EntityPlayer player, PlayerEntityTracker tracker) {
         PlayerEntityTrackerContainer container = player.getCapability(playerEntityTrackerContainer, null);
@@ -111,7 +111,7 @@ public class CompatiblePlayerEntityTrackerProvider implements ICapabilitySeriali
             container.setInitializer(w -> tracker);
         }
     }
-    
+
     @Override
     public final boolean hasCapability(Capability<?> capability, EnumFacing facing) {
         return capability == playerEntityTrackerContainer; //hasCapability(new CompatibleCapability<>(capability), CompatibleEnumFacing.valueOf(facing));

@@ -49,27 +49,27 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 public abstract class CompatibleStaticModelSourceRenderer extends ModelSourceRenderer implements IPerspectiveAwareModel, IBakedModel {
 
 	protected Builder builder;
-	
+
 	protected EntityPlayer owner;
 
 	protected TextureManager textureManager;
 
 	private Pair<? extends IBakedModel, Matrix4f> pair;
-	
+
 	protected ModelBiped playerBiped = new ModelBiped();
-	
+
 	protected ItemStack itemStack;
 
 	protected ModelResourceLocation resourceLocation;
-	
+
 	protected TransformType transformType;
-	
+
 	private class WeaponItemOverrideList extends ItemOverrideList {
 
 		public WeaponItemOverrideList(List<ItemOverride> overridesIn) {
 			super(overridesIn);
 		}
-		
+
 		@Override
 		public IBakedModel handleItemState(IBakedModel originalModel, ItemStack stack, World world,
 				EntityLivingBase entity) {
@@ -78,25 +78,25 @@ public abstract class CompatibleStaticModelSourceRenderer extends ModelSourceRen
 			return super.handleItemState(originalModel, stack, world, entity);
 		}
 	}
-	
+
 	private ItemOverrideList itemOverrideList = new WeaponItemOverrideList(Collections.emptyList());
 
-	
+
 	protected CompatibleStaticModelSourceRenderer(Builder builder)
 	{
 		this.builder = builder;
 		this.pair = Pair.of((IBakedModel) this, null);
 	}
-	
+
 	@Override
 	public List<BakedQuad> getQuads(IBlockState state, EnumFacing side, long rand) {
 		if(itemStack == null) return Collections.emptyList();
-		if(transformType == TransformType.GROUND 
+		if(transformType == TransformType.GROUND
 				|| transformType == TransformType.GUI
-				|| transformType == TransformType.FIRST_PERSON_RIGHT_HAND 
-				|| transformType == TransformType.THIRD_PERSON_RIGHT_HAND 
+				|| transformType == TransformType.FIRST_PERSON_RIGHT_HAND
+				|| transformType == TransformType.THIRD_PERSON_RIGHT_HAND
 				) {
-			
+
 			Tessellator tessellator = Tessellator.getInstance();
 			VertexBuffer worldrenderer = tessellator.getBuffer();
 			tessellator.draw();
@@ -116,12 +116,12 @@ public abstract class CompatibleStaticModelSourceRenderer extends ModelSourceRen
 			GlStateManager.popMatrix();
 			worldrenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.ITEM);
 		}
-		
+
 		// Reset the dynamic values.
 		this.owner = null;
 		this.itemStack = null;
 		this.transformType = null;
-		
+
 		return Collections.emptyList();
 	}
 
@@ -143,7 +143,7 @@ public abstract class CompatibleStaticModelSourceRenderer extends ModelSourceRen
 	public final boolean isBuiltInRenderer() {
 		return false;
 	}
-	
+
 	@Override
 	public TextureAtlasSprite getParticleTexture() {
 		return Minecraft.getMinecraft().getTextureMapBlocks().getMissingSprite();
@@ -153,7 +153,7 @@ public abstract class CompatibleStaticModelSourceRenderer extends ModelSourceRen
 	public void renderItem()
 	{
 		GL11.glPushMatrix();
-		
+
 		GL11.glScaled(-1F, -1F, 1F);
 
 		EntityPlayer player = compatibility.clientPlayer();
@@ -199,26 +199,26 @@ public abstract class CompatibleStaticModelSourceRenderer extends ModelSourceRen
 			break;
 		default:
 		}
-		
+
 		renderModelSource(renderContext, itemStack, transformType, null,  0.0F, 0.0f, -0.4f, 0.0f, 0.0f, 0.08f);
-		
+
 		GL11.glPopMatrix();
 	}
-	
+
 
 	private void renderModelSource(RenderContext<RenderableState> renderContext,
-			ItemStack itemStack, TransformType type, Entity entity, 
+			ItemStack itemStack, TransformType type, Entity entity,
 			float f, float f1, float f2, float f3, float f4, float f5) {
-		
+
 		if(!(itemStack.getItem() instanceof ModelSource)) {
 			throw new IllegalArgumentException();
 		}
-		
+
 		GL11.glPushMatrix();
 
 		ModelSource modelSource = (ModelSource)itemStack.getItem();
         for(Tuple<ModelBase, String> texturedModel: modelSource.getTexturedModels()) {
-			Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(builder.getModId() 
+			Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(builder.getModId()
 					+ ":textures/models/" + texturedModel.getV()));
 			GL11.glPushMatrix();
 			GL11.glPushAttrib(GL11.GL_ENABLE_BIT);
@@ -239,12 +239,12 @@ public abstract class CompatibleStaticModelSourceRenderer extends ModelSourceRen
 				break;
 			default:
 			}
-			
+
 			model.render(entity, f, f1, f2, f3, f4, f5);
 			GL11.glPopAttrib();
 			GL11.glPopMatrix();
 		}
-		
+
         @SuppressWarnings("unchecked")
         CustomRenderer<RenderableState> postRenderer = (CustomRenderer<RenderableState>) modelSource.getPostRenderer();
 
@@ -273,7 +273,7 @@ public abstract class CompatibleStaticModelSourceRenderer extends ModelSourceRen
 
 	@Override
 	public ItemOverrideList getOverrides() {
-		
+
 		return itemOverrideList;
 	}
 
@@ -282,7 +282,7 @@ public abstract class CompatibleStaticModelSourceRenderer extends ModelSourceRen
 		this.transformType = cameraTransformType;
 		return pair;
 	}
-	
+
     protected abstract ModContext getModContext();
 
 }

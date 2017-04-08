@@ -6,7 +6,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.relauncher.Side;
 
 public class CompatibleMessageContext {
-	
+
 	private MessageContext ctx;
 
 	public CompatibleMessageContext(MessageContext ctx) {
@@ -22,7 +22,8 @@ public class CompatibleMessageContext {
 	}
 
 	public void runInMainThread(Runnable runnable) {
-		IThreadListener mainThread = (IThreadListener) ctx.getServerHandler().playerEntity.worldObj;
+		IThreadListener mainThread = (IThreadListener) ctx.getServerHandler().playerEntity.world;
+
 		mainThread.addScheduledTask(runnable);
 	}
 

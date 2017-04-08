@@ -6,6 +6,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.vicmatskiv.weaponlib.SpawnEntityRenderer;
+import com.vicmatskiv.weaponlib.WeaponSpawnEntity;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ItemModelMesher;
 import net.minecraft.client.renderer.RenderItem;
@@ -27,9 +30,9 @@ public class CompatibleRenderingRegistry implements ICustomModelLoader {
 
 	private List<ModelSourceRenderer> renderers = new ArrayList<>();
 	private Set<String> modelSourceLocations = new HashSet<>();
-	
+
 	private String modId;
-	
+
 	public CompatibleRenderingRegistry(String modId) {
 		this.modId = modId;
 		ModelLoaderRegistry.registerLoader(this);
@@ -52,11 +55,11 @@ public class CompatibleRenderingRegistry implements ICustomModelLoader {
 		ItemModelMesher itemModelMesher = renderItem.getItemModelMesher();
 		itemModelMesher.register(item, 0, modelID);
 	}
-	
+
 	@Override
 	public void onResourceManagerReload(IResourceManager resourceManager) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override

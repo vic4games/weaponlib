@@ -14,11 +14,12 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 public abstract class CompatibleParticle extends Particle {
-    
+
+
     public static class CompatibleParticleBreaking extends ParticleBreaking {
-        
+
         public static final String TEXTURE_BLOOD_PARTICLES = "particle/blood";
-        
+
         protected CompatibleParticleBreaking(ModContext modContext, World worldIn, double posXIn, double posYIn, double posZIn) {
             super(worldIn, posXIn, posYIn, posZIn, Items.SNOWBALL);
             TextureAtlasSprite sprite = Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(
@@ -26,29 +27,29 @@ public abstract class CompatibleParticle extends Particle {
             setParticleTexture(sprite);  // initialise the icon to our custom texture
         }
     }
-    
+
     public static CompatibleParticleBreaking createParticleBreaking(ModContext modContext, World worldIn, double posXIn, double posYIn, double posZIn) {
         return new CompatibleParticleBreaking(modContext, worldIn, posXIn, posYIn, posZIn);
     }
 
-	public CompatibleParticle(World par1World, double positionX, double positionY, double positionZ, 
+	public CompatibleParticle(World par1World, double positionX, double positionY, double positionZ,
 			double motionX, double motionY, double motionZ)
 	{
 		super(par1World, positionX, positionY, positionZ, motionX, motionY, motionZ);
 	}
 
 	protected boolean isCollided() {
-		return this.isCollided;
+		return this.isExpired;
 	}
-	
+
 	@Override
 	@SideOnly(Side.CLIENT)
 	public void renderParticle(VertexBuffer worldRendererIn, Entity entityIn, float partialTicks, float rotationX,
 			float rotationZ, float rotationYZ, float rotationXY, float rotationXZ) {
 		renderParticle(CompatibleTessellator.getInstance(), partialTicks, rotationX, rotationZ, rotationYZ, rotationXY, rotationXZ);
 	}
-	
+
 	public abstract void renderParticle(CompatibleTessellator tessellator, float partialTicks, float rotationX,
 			float rotationZ, float rotationYZ, float rotationXY, float rotationXZ);
-	
+
 }

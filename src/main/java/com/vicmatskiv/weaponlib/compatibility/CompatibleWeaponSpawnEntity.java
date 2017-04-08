@@ -13,20 +13,19 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
 
-public abstract class CompatibleThrowableEntity extends EntityThrowable implements IEntityAdditionalSpawnData {
-
+public abstract class CompatibleWeaponSpawnEntity extends EntityThrowable implements IEntityAdditionalSpawnData {
+	
 	static final float DEFAULT_INACCURACY = 1f;
     private int ticksInAir;
 
-
-	public CompatibleThrowableEntity(World world) {
+	public CompatibleWeaponSpawnEntity(World world) {
 		super(world);
 	}
 
-	public CompatibleThrowableEntity(World par1World, EntityLivingBase player) {
-		super(par1World, player);
+	public CompatibleWeaponSpawnEntity(World par1World, EntityLivingBase arg1EntityLivingBase) {
+		super(par1World, arg1EntityLivingBase);
 	}
-
+	
 	/**
 	 * @see net.minecraft.entity.projectile.EntityThrowable#onImpact(net.minecraft.util.MovingObjectPosition)
 	 */
@@ -34,20 +33,20 @@ public abstract class CompatibleThrowableEntity extends EntityThrowable implemen
 	protected void onImpact(RayTraceResult position) {
 		onImpact(new CompatibleRayTraceResult(position));
 	}
-
+	
 	protected abstract void onImpact(CompatibleRayTraceResult rayTraceResult);
-
+	
 	@Override
 	public final void setThrowableHeading(double motionX, double motionY, double motionZ, float velocity, float inaccuracy) {
 		setCompatibleThrowableHeading(motionX, motionY, motionZ, velocity, inaccuracy);
 	}
-
+	
 	protected abstract void setCompatibleThrowableHeading(double motionX, double motionY, double motionZ, float velocity, float ignoredInaccuracy);
-
+	
 	protected abstract float getVelocity();
-
+	
 	protected abstract float getInaccuracy();
-
+	
 	@Override
 	public void onUpdate()
     {
@@ -62,7 +61,7 @@ public abstract class CompatibleThrowableEntity extends EntityThrowable implemen
 
         if (this.inGround)
         {
-            /*if (this.world.getBlockState(new BlockPos(this.xTile, this.yTile, this.zTile)).getBlock() == this.inTile)
+            /*if (this.worldObj.getBlockState(new BlockPos(this.xTile, this.yTile, this.zTile)).getBlock() == this.inTile)
             {
                 ++this.ticksInGround;
 

@@ -15,14 +15,14 @@ public abstract class CompatibleCommand extends CommandBase {
     protected abstract void execCommand(ICommandSender sender, String[] args);
 
     @Override
-    public String getCommandName() {
+    public String getName() {
         return getCompatibleName();
     }
 
     public abstract String getCompatibleName();
 
     @Override
-    public String getCommandUsage(ICommandSender sender) {
+    public String getUsage(ICommandSender sender) {
         return getCompatibleUsage(sender);
     }
 
