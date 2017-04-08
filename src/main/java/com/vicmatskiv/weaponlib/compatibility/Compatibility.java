@@ -193,7 +193,7 @@ public interface Compatibility {
 
     public float getAspectRatio(ModContext modContext);
 
-    public void setStackSize(ItemStack itemStack, int craftingCount);
+    public void setStackSize(ItemStack itemStack, int size);
 
     public ItemStack tryConsumingCompatibleItem(List<? extends Item> compatibleParts, int maxSize,
             EntityPlayer player, @SuppressWarnings("unchecked") Predicate<ItemStack> ...conditions);

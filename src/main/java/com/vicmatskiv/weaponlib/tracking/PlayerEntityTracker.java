@@ -64,12 +64,7 @@ public class PlayerEntityTracker {
             TrackableEntity te = it.next();
             if(te.isExpired()) {
                 it.remove();
-            } /* else {
-                Entity e = te.getEntity();
-                if(e != null && e.isDead) {
-                    it.remove();
-                }
-            } */
+            }
         }
     }
 
