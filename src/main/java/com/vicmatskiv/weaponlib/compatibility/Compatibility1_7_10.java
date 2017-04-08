@@ -1,5 +1,6 @@
 package com.vicmatskiv.weaponlib.compatibility;
 
+import java.util.List;
 import java.util.function.Predicate;
 
 import net.minecraft.block.Block;
@@ -54,9 +55,9 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
 public class Compatibility1_7_10 implements Compatibility {
-	
+
 	private static CompatibleMathHelper mathHelper = new CompatibleMathHelper();
-	
+
 	@Override
 	public World world(Entity entity) {
 		return entity.worldObj;
@@ -67,7 +68,7 @@ public class Compatibility1_7_10 implements Compatibility {
 	public EntityPlayer clientPlayer() {
 		return Minecraft.getMinecraft().thePlayer;
 	}
-	
+
 	@Override
 	@SideOnly(Side.CLIENT)
 	public void setClientPlayer(EntityPlayer player) {
@@ -88,7 +89,7 @@ public class Compatibility1_7_10 implements Compatibility {
 	public int getStackSize(ItemStack consumedStack) {
 		return consumedStack.stackSize;
 	}
-	
+
 	@Override
 	public NBTTagCompound getTagCompound(ItemStack itemStack) {
 		return itemStack.stackTagCompound;
@@ -98,12 +99,12 @@ public class Compatibility1_7_10 implements Compatibility {
 	public ItemStack getItemStack(ItemTossEvent event) {
 		return event.entityItem.getEntityItem();
 	}
-	
+
 	@Override
 	public EntityPlayer getPlayer(ItemTossEvent event) {
 		return event.player;
 	}
-	
+
 	@Override
 	public ItemStack getHeldItemMainHand(EntityLivingBase player) {
 		return player.getHeldItem();
@@ -140,7 +141,7 @@ public class Compatibility1_7_10 implements Compatibility {
 
 	@Override
 	public WeaponSpawnEntity getSpawnEntity(Weapon weapon, World world, EntityPlayer player, float spawnEntitySpeed,
-			float gravityVelocity, float inaccuracy, float spawnEntityDamage, float spawnEntityExplosionRadius, 
+			float gravityVelocity, float inaccuracy, float spawnEntityDamage, float spawnEntityExplosionRadius,
 			Material... damageableBlockMaterials) {
 		return new WeaponSpawnEntity(weapon, world, player, spawnEntitySpeed,
 				gravityVelocity, inaccuracy, spawnEntityDamage, spawnEntityExplosionRadius) {
@@ -227,14 +228,14 @@ public class Compatibility1_7_10 implements Compatibility {
 
 	@Override
 	public void registerWithEventBus(Object object) {
-		MinecraftForge.EVENT_BUS.register(object); 
+		MinecraftForge.EVENT_BUS.register(object);
 	}
 
 	@Override
 	public void registerSound(CompatibleSound sound) {
 		// TODO Auto-generated method stub
 	}
-	
+
 	@Override
 	public void registerItem(Item item, String name) {
 		GameRegistry.registerItem(item, name);
@@ -251,8 +252,8 @@ public class Compatibility1_7_10 implements Compatibility {
 	}
 
 	@Override
-	public void registerModEntity(Class<? extends Entity> entityClass, String entityName, int id, Object mod, 
-			int trackingRange, int updateFrequency, boolean sendsVelocityUpdates) {
+	public void registerModEntity(Class<? extends Entity> entityClass, String entityName, int id, Object mod,
+			String modId, int trackingRange, int updateFrequency, boolean sendsVelocityUpdates) {
 		EntityRegistry.registerModEntity(entityClass, entityName, id, mod, trackingRange, updateFrequency, sendsVelocityUpdates);
 	}
 
@@ -313,11 +314,6 @@ public class Compatibility1_7_10 implements Compatibility {
 	}
 
 	@Override
-	public ItemStack consumeInventoryItem(Item item, Predicate<ItemStack> condition, EntityPlayer player, int maxSize) {
-		throw new UnsupportedOperationException("Implement me");
-	}
-	
-	@Override
 	public boolean consumeInventoryItem(InventoryPlayer inventoryPlayer, Item item) {
 		return inventoryPlayer.consumeInventoryItem(item);
 	}
@@ -336,20 +332,20 @@ public class Compatibility1_7_10 implements Compatibility {
 	public ItemStack itemStackForItem(Item item, Predicate<ItemStack> condition, EntityPlayer player) {
 		ItemStack result = null;
 		for (int i = 0; i < player.inventory.mainInventory.length; ++i) {
-	        if (player.inventory.mainInventory[i] != null 
+	        if (player.inventory.mainInventory[i] != null
 	        		&& player.inventory.mainInventory[i].getItem() == item
 	        		&& condition.test(player.inventory.mainInventory[i])) {
 	            result = player.inventory.mainInventory[i];
 	            break;
 	        }
 	    }
-	
+
 	    return result;
 	}
 
 	@Override
 	public boolean isGlassBlock(Block block) {
-		return block == Blocks.glass || block == Blocks.glass_pane || block == Blocks.stained_glass 
+		return block == Blocks.glass || block == Blocks.glass_pane || block == Blocks.stained_glass
 				|| block == Blocks.stained_glass_pane;
 	}
 
@@ -389,7 +385,7 @@ public class Compatibility1_7_10 implements Compatibility {
 		}
 		return slot;
 	}
-	
+
 	public boolean addItemToPlayerInventory(EntityPlayer player, final Item item, int slot) {
 		boolean result = false;
 		if(slot == -1) {
@@ -402,11 +398,11 @@ public class Compatibility1_7_10 implements Compatibility {
 
 	@Override
 	public boolean consumeInventoryItemFromSlot(EntityPlayer player, int slot) {
-		
+
 		if(player.inventory.mainInventory[slot] == null) {
 			return false;
 		}
-		
+
 		if (--player.inventory.mainInventory[slot].stackSize <= 0) {
 			player.inventory.mainInventory[slot] = null;
         }
@@ -417,7 +413,7 @@ public class Compatibility1_7_10 implements Compatibility {
 	public void addShapedRecipe(ItemStack itemStack,  Object... materials) {
 		GameRegistry.addShapedRecipe(itemStack, materials);
 	}
-	
+
 	@Override
 	public void addShapedOreRecipe(ItemStack itemStack, Object... materials) {
 	    GameRegistry.addRecipe(new ShapedOreRecipe(itemStack, materials));
@@ -461,7 +457,7 @@ public class Compatibility1_7_10 implements Compatibility {
 		return result;
 	}
 
-    
+
     @Override
     public void addBlockHitEffect(int x, int y, int z, CompatibleEnumFacing enumFacing) {
         for(int i = 0; i < 6; i++) {
@@ -493,7 +489,7 @@ public class Compatibility1_7_10 implements Compatibility {
         } else {
             // TODO: log error
         }
-        
+
     }
 
     @Override
@@ -521,7 +517,7 @@ public class Compatibility1_7_10 implements Compatibility {
 
     @Override
     public void clickBlock(CompatibleBlockPos blockPos, CompatibleEnumFacing sideHit) {
-        Minecraft.getMinecraft().playerController.clickBlock(blockPos.getBlockPosX(), blockPos.getBlockPosY(), blockPos.getBlockPosZ(), 
+        Minecraft.getMinecraft().playerController.clickBlock(blockPos.getBlockPosX(), blockPos.getBlockPosY(), blockPos.getBlockPosZ(),
                 sideHit.ordinal());
     }
 
@@ -538,5 +534,65 @@ public class Compatibility1_7_10 implements Compatibility {
     @SideOnly(Side.CLIENT)
     public float getAspectRatio(ModContext modContext) {
         return modContext.getAspectRatio();
+    }
+
+    private static int itemSlotIndex(Item item, Predicate<ItemStack> condition, EntityPlayer player) {
+        for (int i = 0; i < player.inventory.mainInventory.length; ++i) {
+            if (player.inventory.mainInventory[i] != null
+                    && player.inventory.mainInventory[i].getItem() == item
+                    && condition.test(player.inventory.mainInventory[i])) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    public ItemStack consumeInventoryItem(Item item, Predicate<ItemStack> condition, EntityPlayer player, int maxSize) {
+
+        if(maxSize <= 0) {
+            return null;
+        }
+
+        int i = itemSlotIndex(item, condition, player);
+
+        if (i < 0) {
+            return null;
+        } else {
+            ItemStack stackInSlot = player.inventory.mainInventory[i];
+            int consumedStackSize = maxSize >= stackInSlot.stackSize ? stackInSlot.stackSize : maxSize;
+            ItemStack result = stackInSlot.splitStack(consumedStackSize);
+            if (stackInSlot.stackSize <= 0) {
+                player.inventory.mainInventory[i] = null;
+            }
+            return result;
+        }
+    }
+
+//    ItemStack tryConsumingCompatibleItem(List<? extends Item> compatibleParts, int maxSize, EntityPlayer player) {
+//        return tryConsumingCompatibleItem(compatibleParts, maxSize, player, i -> true);
+//    }
+//
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public ItemStack tryConsumingCompatibleItem(List<? extends Item> compatibleParts, int maxSize,
+            EntityPlayer player, Predicate<ItemStack> ...conditions) {
+        ItemStack resultStack = null;
+        for(Predicate<ItemStack> condition: conditions) {
+            for(Item item: compatibleParts) {
+                if((resultStack = consumeInventoryItem(item, condition, player, maxSize)) != null) {
+                    break;
+                }
+            }
+            if(resultStack != null) break;
+        }
+
+        return resultStack;
+    }
+
+    @Override
+    public void setStackSize(ItemStack itemStack, int size) {
+        itemStack.stackSize = size;
     }
 }

@@ -19,31 +19,31 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
 
 public class PlayerEntityTracker {
-    
+
     private static final Logger logger = LogManager.getLogger(PlayerEntityTracker.class);
-        
+
     public static final PlayerEntityTracker getTracker(EntityPlayer player) {
         return CompatiblePlayerEntityTrackerProvider.getTracker(player);
     }
 
     private World world;
     private Map<UUID, TrackableEntity> trackableEntities = new LinkedHashMap<>();
-        
+
     public PlayerEntityTracker(World world) {
         this.world = world;
     }
-    
+
     public PlayerEntityTracker() {}
-    
+
     void init(World world) {
         this.world = world;
     }
-    
+
     public void addTrackableEntity(TrackableEntity te) {
         update();
         trackableEntities.put(te.getEntity().getPersistentID(), te);
     }
-    
+
     public boolean updateTrackableEntity(Entity entity) {
         update();
         TrackableEntity te = trackableEntities.get(entity.getPersistentID());
@@ -53,11 +53,12 @@ public class PlayerEntityTracker {
         }
         return false;
     }
-    
+
     public Collection<TrackableEntity> getTrackableEntitites() {
+        //update();
         return Collections.unmodifiableCollection(trackableEntities.values());
     }
-    
+
     public void update() {
         for(Iterator<TrackableEntity> it = trackableEntities.values().iterator(); it.hasNext();) {
             TrackableEntity te = it.next();
@@ -66,7 +67,7 @@ public class PlayerEntityTracker {
             }
         }
     }
-    
+
     public TrackableEntity getTrackableEntity(int index) {
         Collection<TrackableEntity> values = trackableEntities.values();
         int i = 0;
@@ -80,7 +81,7 @@ public class PlayerEntityTracker {
         }
         return result;
     }
-    
+
     public void serialize(ByteBuf buf) {
         update();
         buf.writeInt(trackableEntities.size());
@@ -88,7 +89,7 @@ public class PlayerEntityTracker {
             te.serialize(buf, world);
         }
     }
-    
+
     private void init(ByteBuf buf) {
         int trackableEntitiesSize = buf.readInt();
         for(int i = 0; i < trackableEntitiesSize; i++) {
@@ -106,7 +107,7 @@ public class PlayerEntityTracker {
         serialize(buf);
         return buf.array();
     }
-    
+
     public static PlayerEntityTracker fromByteArray(byte[] bytes, World world) {
         ByteBuf buf = Unpooled.wrappedBuffer(bytes);
         PlayerEntityTracker tracker = new PlayerEntityTracker(world);

@@ -21,39 +21,39 @@ public class DebugCommand extends CompatibleCommand {
     private static final String DEBUG_ARG_WATCH = "watch";
 
     @Override
-    public String getCommandName() {
+    public String getCompatibleName() {
         return COMMAND_DEBUG;
     }
 
     @Override
-    public String getCommandUsage(ICommandSender sender) {
+    public String getCompatibleUsage(ICommandSender sender) {
         return "/" + COMMAND_DEBUG + "<options>";
     }
-    
+
     private String getSubCommandDebugUsage() {
         return "/" + COMMAND_DEBUG + " <" + DEBUG_ARG_ON + "|" + DEBUG_ARG_OFF + ">";
     }
-    
+
     private String getSubCommandPauseUsage() {
         return String.format("/%s %s <transition-number> <pause-duration>", COMMAND_DEBUG, DEBUG_ARG_PAUSE);
     }
-    
+
     private String getSubCommandPartUsage() {
         return String.format("/%s %s main|lhand|rhand", COMMAND_DEBUG, DEBUG_ARG_PART);
     }
-    
+
     private String getSubCommandShowUsage() {
         return String.format("/%s %s code", COMMAND_DEBUG, DEBUG_ARG_SHOW);
     }
-    
+
     private String getSubCommandScaleUsage() {
         return String.format("/%s %s <scale>", COMMAND_DEBUG, DEBUG_ARG_SCALE);
     }
-    
+
     private String getSubCommandWatchUsage() {
         return String.format("/%s %s [entity-id]", COMMAND_DEBUG, DEBUG_ARG_WATCH);
     }
-    
+
     @Override
     public void execCommand(ICommandSender sender, String[] args) {
         if (args.length > 0) {
@@ -80,13 +80,13 @@ public class DebugCommand extends CompatibleCommand {
                 processWatchSubCommand(args);
                 break;
             default:
-                compatibility.addChatMessage(compatibility.clientPlayer(), getCommandUsage(sender));
+                compatibility.addChatMessage(compatibility.clientPlayer(), getCompatibleUsage(sender));
             }
         } else {
-            compatibility.addChatMessage(compatibility.clientPlayer(), getCommandUsage(sender));
+            compatibility.addChatMessage(compatibility.clientPlayer(), getCompatibleUsage(sender));
         }
     }
-    
+
     private void processDebugModeSubCommand(String[] args) {
         Boolean debugMode = null;
         switch(args[0].toLowerCase()) {
@@ -104,13 +104,13 @@ public class DebugCommand extends CompatibleCommand {
             compatibility.addChatMessage(compatibility.clientPlayer(), getSubCommandDebugUsage());
         }
     }
-    
+
     private void processPauseSubCommand(String[] args) {
         if(args.length != 3) {
             compatibility.addChatMessage(compatibility.clientPlayer(), getSubCommandPauseUsage());
             return;
         }
-        
+
         try {
             int transitionNumber = Integer.parseInt(args[1]);
             long pauseDuration = Long.parseLong(args[2]);
@@ -121,27 +121,27 @@ public class DebugCommand extends CompatibleCommand {
             compatibility.addChatMessage(compatibility.clientPlayer(), getSubCommandPauseUsage());
         }
     }
-    
+
     private void processWatchSubCommand(String[] args) {
         if(args.length < 1) {
             compatibility.addChatMessage(compatibility.clientPlayer(), getSubCommandWatchUsage());
             return;
         }
-        
+
         DebugPositioner.watch();
     }
-    
+
     private void processScaleSubCommand(String[] args) {
         if(args.length != 2) {
             compatibility.addChatMessage(compatibility.clientPlayer(), getSubCommandScaleUsage());
             return;
         }
-        
+
         if(DebugPositioner.getDebugPart() == null) {
             compatibility.addChatMessage(compatibility.clientPlayer(), "Debug part not selected");
             return;
         }
-        
+
         try {
             float scale = Float.parseFloat(args[1]);
             DebugPositioner.setScale(scale);
@@ -150,13 +150,13 @@ public class DebugCommand extends CompatibleCommand {
             compatibility.addChatMessage(compatibility.clientPlayer(), getSubCommandScaleUsage());
         }
     }
-    
+
     private void processShowSubCommand(String[] args) {
         if(args.length != 2) {
             compatibility.addChatMessage(compatibility.clientPlayer(), getSubCommandPauseUsage());
             return;
         }
-        
+
         if(DebugPositioner.getDebugPart() == null) {
             compatibility.addChatMessage(compatibility.clientPlayer(), "Debug part not selected");
             return;
@@ -170,13 +170,13 @@ public class DebugCommand extends CompatibleCommand {
             compatibility.addChatMessage(compatibility.clientPlayer(), getSubCommandShowUsage());
         }
     }
-    
+
     private void processPartSubCommand(String[] args) {
         if(args.length != 2) {
             compatibility.addChatMessage(compatibility.clientPlayer(), getSubCommandPartUsage());
             return;
         }
-        
+
         try {
             switch(args[1].toLowerCase()) {
             case "main":
@@ -189,18 +189,16 @@ public class DebugCommand extends CompatibleCommand {
                 DebugPositioner.setDebugPart(Part.RIGHT_HAND);
                 break;
             }
-            
+
             compatibility.addChatMessage(compatibility.clientPlayer(), "Debugging part "
                     + args[1]);
         } catch(NumberFormatException e) {
             compatibility.addChatMessage(compatibility.clientPlayer(), getSubCommandPartUsage());
         }
     }
-    
+
     @Override
     public int getRequiredPermissionLevel() {
         return 0;
     }
-
-    
 }

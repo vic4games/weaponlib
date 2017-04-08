@@ -200,7 +200,7 @@ public class ItemWirelessCamera extends CompatibleItem implements ModelSource {
                 List<Object> shape = modContext.getRecipeGenerator().createShapedRecipe(name, optionsMetadata);
                 
                 ItemStack itemStack = new ItemStack(camera);
-                itemStack.stackSize = craftingCount;
+                compatibility.setStackSize(itemStack, craftingCount);
                 if(optionsMetadata.hasOres()) {
                     compatibility.addShapedOreRecipe(itemStack, shape.toArray());
                 } else {
@@ -251,7 +251,7 @@ public class ItemWirelessCamera extends CompatibleItem implements ModelSource {
     protected ItemStack onCompatibleItemRightClick(ItemStack itemStack, World world, EntityPlayer player,
             boolean mainHand) {
         
-        --itemStack.stackSize;
+        compatibility.setStackSize(itemStack, compatibility.getStackSize(itemStack) - 1);
 //        System.out.println("Right click");
 //        
 //        if(itemStack.stackSize == 0) {
@@ -264,7 +264,7 @@ public class ItemWirelessCamera extends CompatibleItem implements ModelSource {
         //compatibility.playSound(player, new CompatibleSound("random.bow"), 0.5F, 0.4F / (itemRand.nextFloat() * 0.4F + 0.8F));
 
         if (!world.isRemote) {
-            world.spawnEntityInWorld(new EntityWirelessCamera(modContext, world, player, this, builder.duration));
+            compatibility.spawnEntity(player, new EntityWirelessCamera(modContext, world, player, this, builder.duration));
         }
 
         return itemStack;        

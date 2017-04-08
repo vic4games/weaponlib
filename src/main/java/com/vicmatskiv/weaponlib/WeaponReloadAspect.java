@@ -191,7 +191,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 				int ammo = Tags.getAmmo(weaponItemStack);
 				if(existingMagazine == null) {
 					ammo = 0;
-					ItemStack magazineItemStack = WorldHelper.tryConsumingCompatibleItem(compatibleMagazines,
+					ItemStack magazineItemStack = compatibility.tryConsumingCompatibleItem(compatibleMagazines,
 							1, player, magazineNotEmpty, magazineStack -> true);
 					if(magazineItemStack != null) {
 						ammo = Tags.getAmmo(magazineItemStack);
@@ -205,14 +205,14 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 				}
 				// Update permit instead: modContext.getChannel().getChannel().sendTo(new ReloadMessage(weapon, ReloadMessage.Type.LOAD, newMagazine, ammo), (EntityPlayerMP) player);
 				weaponInstance.setAmmo(ammo);
-			} else if(!compatibleBullets.isEmpty() && (consumedStack = WorldHelper.tryConsumingCompatibleItem(compatibleBullets,
+			} else if(!compatibleBullets.isEmpty() && (consumedStack = compatibility.tryConsumingCompatibleItem(compatibleBullets,
 					Math.min(weapon.getMaxBulletsPerReload(), weapon.getAmmoCapacity() - weaponInstance.getAmmo()), player)) != null) {
 				int ammo = weaponInstance.getAmmo() + compatibility.getStackSize(consumedStack);
 				Tags.setAmmo(weaponItemStack, ammo);
 				// Update permit instead modContext.getChannel().getChannel().sendTo(new ReloadMessage(weapon, ammo), (EntityPlayerMP) player);
 				weaponInstance.setAmmo(ammo);
 				compatibility.playSoundToNearExcept(player, weapon.getReloadSound(), 1.0F, 1.0F);
-			} else if (WorldHelper.consumeInventoryItem(player.inventory, weapon.builder.ammo)) {
+			} else if (compatibility.consumeInventoryItem(player.inventory, weapon.builder.ammo)) {
 				Tags.setAmmo(weaponItemStack, weapon.builder.ammoCapacity);
 				// Update permit instead: modContext.getChannel().getChannel().sendTo(new ReloadMessage(weapon, weapon.builder.ammoCapacity), (EntityPlayerMP) player);
 				weaponInstance.setAmmo(weapon.builder.ammoCapacity);

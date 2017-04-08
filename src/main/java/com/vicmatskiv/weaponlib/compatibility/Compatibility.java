@@ -1,5 +1,6 @@
 package com.vicmatskiv.weaponlib.compatibility;
 
+import java.util.List;
 import java.util.function.Predicate;
 
 import com.vicmatskiv.weaponlib.ModContext;
@@ -97,8 +98,8 @@ public interface Compatibility {
 
 	public void runInMainClientThread(Runnable runnable);
 
-	public void registerModEntity(Class<? extends Entity> class1, String string, int i, Object mod, int j, int k,
-			boolean b);
+	public void registerModEntity(Class<? extends Entity> class1, String string, int i, Object mod,
+	        String modId, int j, int k, boolean b);
 
 	public void registerRenderingRegistry(CompatibleRenderingRegistry rendererRegistry);
 
@@ -191,6 +192,11 @@ public interface Compatibility {
     public void addBreakingParticle(ModContext modContext, double x, double y, double z);
 
     public float getAspectRatio(ModContext modContext);
+
+    public void setStackSize(ItemStack itemStack, int size);
+
+    public ItemStack tryConsumingCompatibleItem(List<? extends Item> compatibleParts, int maxSize,
+            EntityPlayer player, @SuppressWarnings("unchecked") Predicate<ItemStack> ...conditions);
 
 
 }

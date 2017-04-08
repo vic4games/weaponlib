@@ -19,29 +19,29 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 
 public class MagazineReloadAspect implements Aspect<MagazineState, PlayerMagazineInstance> {
-	
+
 	static {
-		TypeRegistry.getInstance().register(LoadPermit.class);		
+		TypeRegistry.getInstance().register(LoadPermit.class);
 	}
-	
+
 	private static final Set<MagazineState> allowedUpdateFromStates = new HashSet<>(
 			Arrays.asList(
-					MagazineState.LOAD_REQUESTED,  
+					MagazineState.LOAD_REQUESTED,
 					MagazineState.LOAD));
-	
+
 	public static class LoadPermit extends Permit<MagazineState> {
-		
+
 		public LoadPermit() {}
-		
+
 		public LoadPermit(MagazineState state) {
 			super(state);
 		}
 	}
-	
+
 	private static long reloadAnimationDuration = 1000;
-	
-		
-	private static Predicate<PlayerMagazineInstance> reloadAnimationCompleted = es -> 
+
+
+	private static Predicate<PlayerMagazineInstance> reloadAnimationCompleted = es ->
 		System.currentTimeMillis() >= es.getStateUpdateTimestamp() + reloadAnimationDuration; // TODO: read reload animation duration from the state itself
 
 	private ModContext modContext;
@@ -65,9 +65,9 @@ public class MagazineReloadAspect implements Aspect<MagazineState, PlayerMagazin
 		if(permitManager == null) {
 			throw new IllegalStateException("Permit manager not initialized");
 		}
-		
+
 		this.stateManager = stateManager
-		
+
 		.in(this)
 			.change(MagazineState.READY).to(MagazineState.LOAD)
 			.when(notFull)
@@ -83,13 +83,13 @@ public class MagazineReloadAspect implements Aspect<MagazineState, PlayerMagazin
 			.automatic()
 		;
 	}
-	
+
 	@Override
 	public void setPermitManager(PermitManager permitManager) {
 		this.permitManager = permitManager;
 		permitManager.registerEvaluator(LoadPermit.class, PlayerMagazineInstance.class, (p, c) -> { evaluateLoad(p, c); });
 	}
-	
+
 	public void reloadMainHeldItem(EntityPlayer player) {
 		PlayerMagazineInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerMagazineInstance.class);
 		stateManager.changeState(this, instance, MagazineState.LOAD);
@@ -101,11 +101,11 @@ public class MagazineReloadAspect implements Aspect<MagazineState, PlayerMagazin
 			stateManager.changeStateFromAnyOf(this, instance, allowedUpdateFromStates); // no target state specified, will trigger auto-transitions
 		}
 	}
-	
+
 	private void evaluateLoad(LoadPermit p, PlayerMagazineInstance magazineInstance) {
-		
+
 		ItemStack magazineStack = magazineInstance.getItemStack();
-		
+
 		Status status = Status.DENIED;
 		if(magazineStack.getItem() instanceof ItemMagazine) {
 			ItemStack magazineItemStack = magazineStack;
@@ -113,18 +113,18 @@ public class MagazineReloadAspect implements Aspect<MagazineState, PlayerMagazin
 			List<ItemBullet> compatibleBullets = magazine.getCompatibleBullets();
 			int currentAmmo = Tags.getAmmo(magazineStack);
 			ItemStack consumedStack;
-			if((consumedStack = WorldHelper.tryConsumingCompatibleItem(compatibleBullets, magazine.getAmmo() - currentAmmo, magazineInstance.getPlayer())) != null) {
+			if((consumedStack = compatibility.tryConsumingCompatibleItem(compatibleBullets, magazine.getAmmo() - currentAmmo, magazineInstance.getPlayer())) != null) {
 				Tags.setAmmo(magazineStack, Tags.getAmmo(magazineStack) + compatibility.getStackSize(consumedStack));
 				if(magazine.getReloadSound() != null) {
 					compatibility.playSound(magazineInstance.getPlayer(), magazine.getReloadSound(), 1.0F, 1.0F);
 				}
 				status = Status.GRANTED;
-			}	
+			}
 		}
-		
+
 		p.setStatus(status);
 	}
-	
+
 	private void doPermittedLoad(PlayerMagazineInstance weaponInstance, LoadPermit permit) {
 		if(permit == null) {
 			System.err.println("Permit is null, something went wrong");

@@ -2,10 +2,12 @@ package com.vicmatskiv.weaponlib.tracking;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
-
 import java.lang.ref.WeakReference;
 import java.util.UUID;
 import java.util.function.Supplier;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
@@ -16,6 +18,8 @@ import net.minecraft.world.World;
 
 public class TrackableEntity {
 
+    private static final Logger logger = LogManager.getLogger(TrackableEntity.class);
+
     private Supplier<Entity> entitySupplier;
     private long startTimestamp;
     private UUID uuid;
@@ -23,7 +27,7 @@ public class TrackableEntity {
     private long trackingDuration;
     private WeakReference<Entity> entityRef;
     private String displayName = "";
-    
+
     private TrackableEntity() {}
 
     public TrackableEntity(Entity entity, long startTimestamp, long trackingDuration) {
@@ -33,7 +37,7 @@ public class TrackableEntity {
         this.startTimestamp = startTimestamp;
         this.trackingDuration = trackingDuration;
     }
-    
+
     public UUID getUuid() {
         if(uuid != null) {
             return uuid;
@@ -41,9 +45,11 @@ public class TrackableEntity {
         Entity entity = getEntity();
         return entity != null ? entity.getPersistentID() : null;
     }
-    
+
     public void setEntitySupplier(Supplier<Entity> entitySupplier) {
         this.entitySupplier = entitySupplier;
+        this.entityId = -1;
+        this.entityRef = null;
     }
 
     public Entity getEntity() {
@@ -62,13 +68,13 @@ public class TrackableEntity {
         return entityRef.get();
     }
 
-    
+
     public static TrackableEntity fromBuf(ByteBuf buf, World world) {
         TrackableEntity te = new TrackableEntity();
         te.init(buf, world);
         return te;
     }
-    
+
     public void init(ByteBuf buf, World world) {
         uuid = new UUID(buf.readLong(), buf.readLong());
         entityId = buf.readInt();
@@ -76,26 +82,30 @@ public class TrackableEntity {
         trackingDuration = buf.readLong();
         if(world.isRemote) {
             // For clients, always use entity id. Remember: entity uuid on client and server don't match.
+            logger.debug("Initializing client entity uuid {}, id {}", uuid, entityId);
             entitySupplier = () -> world.getEntityByID(entityId);
         } else {
             // For server, use persistent uuid
+            logger.debug("Initializing server entity uuid {}, id {}", uuid, entityId);
             entitySupplier = () -> getEntityByUuid(uuid, world);
         }
     }
-    
+
     public void serialize(ByteBuf buf, World world) {
         buf.writeLong(uuid.getMostSignificantBits());
         buf.writeLong(uuid.getLeastSignificantBits());
         Entity entity = getEntity();
+        int entityId = -1;
         if(entity != null) {
-            buf.writeInt(entity.getEntityId());
-        } else {
-            buf.writeInt(-1);
+            entityId = entity.getEntityId();
         }
+        logger.debug("Serializing server entity uuid {}, id {}", uuid, entityId);
+
+        buf.writeInt(entityId);
         buf.writeLong(startTimestamp);
         buf.writeLong(trackingDuration);
     }
-    
+
     private Entity getEntityByUuid(UUID uuid, World world) {
         return (Entity)world.getLoadedEntityList()
                 .stream()
@@ -105,17 +115,18 @@ public class TrackableEntity {
     }
 
     public boolean isExpired() {
-        return startTimestamp + trackingDuration < System.currentTimeMillis();
+        //Entity entity = getEntity();
+        return /*(entity != null && entity.isDead) ||  */ startTimestamp + trackingDuration < System.currentTimeMillis();
     }
-    
+
     public String getDisplayName() {
         return displayName;
     }
-    
+
     public long getTrackingDuration() {
         return trackingDuration;
     }
-    
+
     public long getStartTimestamp() {
         return startTimestamp;
     }

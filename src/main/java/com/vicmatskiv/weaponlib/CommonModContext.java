@@ -42,9 +42,9 @@ import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
 
 public class CommonModContext implements ModContext {
-    
+
     static {
-        TypeRegistry.getInstance().register(LoadPermit.class);      
+        TypeRegistry.getInstance().register(LoadPermit.class);
         TypeRegistry.getInstance().register(MagazineState.class);
         TypeRegistry.getInstance().register(PlayerItemInstance.class);
         TypeRegistry.getInstance().register(PlayerWeaponInstance.class);
@@ -55,134 +55,134 @@ public class CommonModContext implements ModContext {
         TypeRegistry.getInstance().register(ExitAttachmentModePermit.class);
         TypeRegistry.getInstance().register(ChangeAttachmentPermit.class);
         TypeRegistry.getInstance().register(UnloadPermit.class);
-        TypeRegistry.getInstance().register(LoadPermit.class);      
+        TypeRegistry.getInstance().register(LoadPermit.class);
         TypeRegistry.getInstance().register(PlayerWeaponInstance.class);
         TypeRegistry.getInstance().register(WeaponState.class);
-        
+
         TypeRegistry.getInstance().register(PlayerMeleeInstance.class);
-        
+
         TypeRegistry.getInstance().register(PlayerTabletInstance.class);
         TypeRegistry.getInstance().register(MeleeState.class);
         TypeRegistry.getInstance().register(TabletState.class);
     }
 
 	private String modId;
-	
+
 	protected CompatibleChannel channel;
-	
+
 	protected WeaponReloadAspect weaponReloadAspect;
 	protected WeaponAttachmentAspect weaponAttachmentAspect;
 	protected WeaponFireAspect weaponFireAspect;
-	
+
 	protected MeleeAttachmentAspect meleeAttachmentAspect;
     protected MeleeAttackAspect meleeAttackAspect;
 
     protected SyncManager<?> syncManager;
-	
+
 	protected MagazineReloadAspect magazineReloadAspect;
-	
+
 	protected NetworkPermitManager permitManager;
-	
+
 	protected PlayerItemInstanceRegistry playerItemInstanceRegistry;
 
-	
+
 	private Map<ResourceLocation, CompatibleSound> registeredSounds = new HashMap<>();
-	
+
 	private RecipeGenerator recipeGenerator;
-	
+
 	private CompatibleSound changeZoomSound;
-	
+
 	private CompatibleSound changeFireModeSound;
-	
+
 	private CompatibleSound noAmmoSound;
-	
+
 	private int modEntityID = 256;
 
 	@Override
 	public void init(Object mod, String modId, CompatibleChannel channel) {
 		this.channel = channel;
 		this.modId = modId;
-		
+
 		this.weaponReloadAspect = new WeaponReloadAspect(this);
 		this.magazineReloadAspect = new MagazineReloadAspect(this);
 		this.weaponFireAspect = new WeaponFireAspect(this);
 		this.weaponAttachmentAspect = new WeaponAttachmentAspect(this);
-		
+
 		this.meleeAttackAspect = new MeleeAttackAspect(this);
         this.meleeAttachmentAspect = new MeleeAttachmentAspect(this);
-        
+
 		this.permitManager = new NetworkPermitManager(this);
-		
+
 		this.syncManager = new SyncManager<>(permitManager);
-		
+
         this.playerItemInstanceRegistry = new PlayerItemInstanceRegistry(syncManager);
-		
+
 		StateManager<WeaponState, PlayerWeaponInstance> weaponStateManager = new StateManager<>((s1, s2) -> s1 == s2);
         weaponReloadAspect.setPermitManager(permitManager);
         weaponReloadAspect.setStateManager(weaponStateManager);
-        
+
         weaponFireAspect.setPermitManager(permitManager);
         weaponFireAspect.setStateManager(weaponStateManager);
-        
+
         weaponAttachmentAspect.setPermitManager(permitManager);
         weaponAttachmentAspect.setStateManager(weaponStateManager);
-        
+
         StateManager<MeleeState, PlayerMeleeInstance> meleeStateManager = new StateManager<>((s1, s2) -> s1 == s2);
         meleeAttackAspect.setStateManager(meleeStateManager);
         meleeAttachmentAspect.setPermitManager(permitManager);
         meleeAttachmentAspect.setStateManager(meleeStateManager);
-        
+
         StateManager<MagazineState, PlayerMagazineInstance> magazineStateManager = new StateManager<>((s1, s2) -> s1 == s2);
 
         magazineReloadAspect.setPermitManager(permitManager);
         magazineReloadAspect.setStateManager(magazineStateManager);
-		
+
 		this.recipeGenerator = new RecipeGenerator();
 
 		channel.registerMessage(new TryFireMessageHandler(weaponFireAspect),
 				TryFireMessage.class, 11, CompatibleSide.SERVER);
-		
+
 		channel.registerMessage(permitManager,
 				PermitMessage.class, 14, CompatibleSide.SERVER);
-		
+
 		channel.registerMessage(permitManager,
 				PermitMessage.class, 15, CompatibleSide.CLIENT);
-		
+
 		channel.registerMessage(new TryAttackMessageHandler(meleeAttackAspect),
                 TryAttackMessage.class, 16, CompatibleSide.SERVER);
-		
-		channel.registerMessage(new SyncPlayerEntityTrackerMessageMessageHandler(),
+
+		channel.registerMessage(new SyncPlayerEntityTrackerMessageMessageHandler(this),
 		        SyncPlayerEntityTrackerMessage.class, 17, CompatibleSide.CLIENT);
-		
+
 		channel.registerMessage(new SpawnParticleMessageHandler(this),
 		        SpawnParticleMessage.class, 18, CompatibleSide.CLIENT);
-		
+
 		channel.registerMessage(new BlockHitMessageHandler(this),
 		        BlockHitMessage.class, 19, CompatibleSide.CLIENT);
-		
+
 		ServerEventHandler serverHandler = new ServerEventHandler(this, modId);
         compatibility.registerWithFmlEventBus(serverHandler);
         compatibility.registerWithEventBus(serverHandler);
-		
-		compatibility.registerWithFmlEventBus(new WeaponKeyInputHandler(this, (ctx) -> getPlayer(ctx), 
+
+		compatibility.registerWithFmlEventBus(new WeaponKeyInputHandler(this, (ctx) -> getPlayer(ctx),
 				weaponAttachmentAspect, channel));
-		
+
 		CompatiblePlayerEntityTrackerProvider.register(this);
 
-        compatibility.registerModEntity(WeaponSpawnEntity.class, "Ammo" + modEntityID, modEntityID++, mod, 64, 3, true);
-        compatibility.registerModEntity(EntityWirelessCamera.class, "wcam" + modEntityID, modEntityID++, mod, 200, 3, true);
+        compatibility.registerModEntity(WeaponSpawnEntity.class, "Ammo" + modEntityID, modEntityID++, mod, modId, 64, 3, true);
+        compatibility.registerModEntity(EntityWirelessCamera.class, "wcam" + modEntityID, modEntityID++, mod, modId, 200, 3, true);
 	}
-	
+
 	public void registerServerSideOnly() {
-	    
+
 	}
-	
+
 	@Override
 	public CompatibleSound registerSound(String sound) {
 		ResourceLocation soundResourceLocation = new ResourceLocation(modId, sound);
 		return registerSound(soundResourceLocation);
 	}
-	
+
 	protected CompatibleSound registerSound(ResourceLocation soundResourceLocation) {
 		CompatibleSound result = registeredSounds.get(soundResourceLocation);
 		if(result == null) {
@@ -191,17 +191,17 @@ public class CommonModContext implements ModContext {
 			compatibility.registerSound(result);
 		}
 		return result;
-	} 
-	
+	}
+
 	@Override
 	public void registerWeapon(String name, Weapon weapon, WeaponRenderer renderer) {
 		compatibility.registerItem(weapon, name);
 	}
-	
+
 	private EntityPlayer getServerPlayer(CompatibleMessageContext ctx) {
 		return ctx != null ? ctx.getPlayer() : null;
 	}
-	
+
 	protected EntityPlayer getPlayer(CompatibleMessageContext ctx) {
 		return getServerPlayer(ctx);
 	}
@@ -215,7 +215,7 @@ public class CommonModContext implements ModContext {
 	public void runSyncTick(Runnable runnable) {
 		throw new UnsupportedOperationException();
 	}
-	
+
 	@Override
 	public void runInMainThread(Runnable runnable) {
 		throw new UnsupportedOperationException();
@@ -250,22 +250,22 @@ public class CommonModContext implements ModContext {
 	public MagazineReloadAspect getMagazineReloadAspect() {
 		return magazineReloadAspect;
 	}
-	
+
 	@Override
 	public MeleeAttackAspect getMeleeAttackAspect() {
 	    return meleeAttackAspect;
 	}
-	
+
 	@Override
 	public MeleeAttachmentAspect getMeleeAttachmentAspect() {
 	    return meleeAttachmentAspect;
 	}
-	
+
 	@Override
 	public PlayerWeaponInstance getMainHeldWeapon() {
 		throw new IllegalStateException();
 	}
-	
+
 	@Override
 	public StatusMessageCenter getStatusMessageCenter() {
 		throw new IllegalStateException();
@@ -279,9 +279,9 @@ public class CommonModContext implements ModContext {
 
 	@Override
 	public void setChangeZoomSound(String sound) {
-		this.changeZoomSound = registerSound(sound);
+		this.changeZoomSound = registerSound(sound.toLowerCase());
 	}
-	
+
 	@Override
 	public CompatibleSound getZoomSound() {
 		return changeZoomSound;
@@ -294,12 +294,12 @@ public class CommonModContext implements ModContext {
 
 	@Override
 	public void setChangeFireModeSound(String sound) {
-		this.changeFireModeSound = registerSound(sound);
+		this.changeFireModeSound = registerSound(sound.toLowerCase());
 	}
 
 	@Override
 	public void setNoAmmoSound(String sound) {
-		this.noAmmoSound = registerSound(sound);
+		this.noAmmoSound = registerSound(sound.toLowerCase());
 	}
 
 	@Override
