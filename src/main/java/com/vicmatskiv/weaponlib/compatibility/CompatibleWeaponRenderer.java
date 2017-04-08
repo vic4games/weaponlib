@@ -8,6 +8,7 @@ import com.vicmatskiv.weaponlib.PlayerWeaponInstance;
 import com.vicmatskiv.weaponlib.RenderContext;
 import com.vicmatskiv.weaponlib.RenderableState;
 import com.vicmatskiv.weaponlib.WeaponRenderer.Builder;
+import com.vicmatskiv.weaponlib.animation.DebugPositioner;
 import com.vicmatskiv.weaponlib.animation.MultipartPositioning;
 import com.vicmatskiv.weaponlib.animation.MultipartPositioning.Positioner;
 import com.vicmatskiv.weaponlib.animation.MultipartRenderStateManager;
@@ -118,6 +119,10 @@ public abstract class CompatibleWeaponRenderer implements IItemRenderer {
 			
 			positioner.position(Part.MAIN_ITEM, renderContext);
 			
+            if(DebugPositioner.isDebugModeEnabled()) {
+                DebugPositioner.position(Part.MAIN_ITEM, renderContext);
+            }
+			
 			renderLeftArm(player, renderContext, positioner);
 			
 			renderRightArm(player, renderContext, positioner);
@@ -150,6 +155,9 @@ public abstract class CompatibleWeaponRenderer implements IItemRenderer {
 		GL11.glRotatef(0F, 0f, 0f, 1f);
 		
 		positioner.position(Part.RIGHT_HAND, renderContext);
+		if(DebugPositioner.isDebugModeEnabled()) {
+            DebugPositioner.position(Part.RIGHT_HAND, renderContext);
+        }
 		GL11.glColor3f(1F, 1F, 1F);
 		render.modelBipedMain.onGround = 0.0F;
 		render.modelBipedMain.setRotationAngles(0.0F, 0.3F, 0.0F, 0.0F, 0.0F, 0.0625F, player);
@@ -173,6 +181,9 @@ public abstract class CompatibleWeaponRenderer implements IItemRenderer {
 		GL11.glRotatef(10F, 0f, 0f, 1f);
 		
 		positioner.position(Part.LEFT_HAND, renderContext);
+		if(DebugPositioner.isDebugModeEnabled()) {
+            DebugPositioner.position(Part.LEFT_HAND, renderContext);
+        }
 		
 		GL11.glColor3f(1F, 1F, 1F);
 		render.modelBipedMain.onGround = 0.0F;
