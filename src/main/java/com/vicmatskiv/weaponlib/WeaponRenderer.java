@@ -18,7 +18,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL11;
 
+import com.vicmatskiv.weaponlib.animation.DebugPositioner.TransitionConfiguration;
 import com.vicmatskiv.weaponlib.animation.MultipartPositioning.Positioner;
+import com.vicmatskiv.weaponlib.animation.DebugPositioner;
 import com.vicmatskiv.weaponlib.animation.MultipartRenderStateManager;
 import com.vicmatskiv.weaponlib.animation.MultipartTransition;
 import com.vicmatskiv.weaponlib.animation.MultipartTransitionProvider;
@@ -849,7 +851,14 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			Transition<RenderContext<RenderableState>> l = lht.get(i);
 			Transition<RenderContext<RenderableState>> r = rht.get(i);
 			
-			MultipartTransition<Part, RenderContext<RenderableState>> t = new MultipartTransition<Part, RenderContext<RenderableState>>(p.getDuration(), p.getPause())
+			long pause = p.getPause();
+            if(DebugPositioner.isDebugModeEnabled()) {
+                TransitionConfiguration transitionConfiguration = DebugPositioner.getTransitionConfiguration(i, false);
+                if(transitionConfiguration != null) {
+                    pause = transitionConfiguration.getPause();
+                }
+            }
+			MultipartTransition<Part, RenderContext<RenderableState>> t = new MultipartTransition<Part, RenderContext<RenderableState>>(p.getDuration(), pause)
 					.withPartPositionFunction(Part.MAIN_ITEM, createWeaponPartPositionFunction(p))
 					.withPartPositionFunction(Part.LEFT_HAND, createWeaponPartPositionFunction(l))
 					.withPartPositionFunction(Part.RIGHT_HAND, createWeaponPartPositionFunction(r));

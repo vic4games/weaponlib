@@ -5,6 +5,8 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 import java.util.HashMap;
 import java.util.Map;
 
+import net.minecraft.entity.Entity;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL11;
@@ -12,10 +14,7 @@ import org.lwjgl.opengl.GL11;
 import com.vicmatskiv.weaponlib.KeyBindings;
 import com.vicmatskiv.weaponlib.Part;
 import com.vicmatskiv.weaponlib.RenderContext;
-import com.vicmatskiv.weaponlib.melee.RenderableState;
 import com.vicmatskiv.weaponlib.tracking.PlayerEntityTracker;
-
-import net.minecraft.entity.Entity;
 
 public class DebugPositioner {
     
@@ -175,7 +174,7 @@ public class DebugPositioner {
         return transitionConfigurations.computeIfAbsent(transitionNumber, k -> init ? new TransitionConfiguration() : null);
     }
 
-    public static void position(Part part, RenderContext<RenderableState> renderContext) {
+    public static void position(Part part, RenderContext<?> renderContext) {
         if(part != currentPart) {
             return;
         }
