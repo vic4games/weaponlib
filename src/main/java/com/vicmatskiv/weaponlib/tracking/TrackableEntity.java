@@ -49,7 +49,7 @@ public class TrackableEntity {
     public void setEntitySupplier(Supplier<Entity> entitySupplier) {
         this.entitySupplier = entitySupplier;
         this.entityId = -1;
-        this.entityRef.clear();
+        this.entityRef = null;
     }
 
     public Entity getEntity() {
