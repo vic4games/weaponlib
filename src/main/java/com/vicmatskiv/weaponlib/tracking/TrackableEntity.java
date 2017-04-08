@@ -2,10 +2,12 @@ package com.vicmatskiv.weaponlib.tracking;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
-
 import java.lang.ref.WeakReference;
 import java.util.UUID;
 import java.util.function.Supplier;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
@@ -15,6 +17,8 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
 
 public class TrackableEntity {
+
+    private static final Logger logger = LogManager.getLogger(TrackableEntity.class);
 
     private Supplier<Entity> entitySupplier;
     private long startTimestamp;
@@ -44,6 +48,8 @@ public class TrackableEntity {
 
     public void setEntitySupplier(Supplier<Entity> entitySupplier) {
         this.entitySupplier = entitySupplier;
+        this.entityId = -1;
+        this.entityRef.clear();
     }
 
     public Entity getEntity() {
@@ -76,9 +82,11 @@ public class TrackableEntity {
         trackingDuration = buf.readLong();
         if(world.isRemote) {
             // For clients, always use entity id. Remember: entity uuid on client and server don't match.
+            logger.debug("Initializing client entity uuid {}, id {}", uuid, entityId);
             entitySupplier = () -> world.getEntityByID(entityId);
         } else {
             // For server, use persistent uuid
+            logger.debug("Initializing server entity uuid {}, id {}", uuid, entityId);
             entitySupplier = () -> getEntityByUuid(uuid, world);
         }
     }
@@ -87,11 +95,13 @@ public class TrackableEntity {
         buf.writeLong(uuid.getMostSignificantBits());
         buf.writeLong(uuid.getLeastSignificantBits());
         Entity entity = getEntity();
+        int entityId = -1;
         if(entity != null) {
-            buf.writeInt(entity.getEntityId());
-        } else {
-            buf.writeInt(-1);
+            entityId = entity.getEntityId();
         }
+        logger.debug("Serializing server entity uuid {}, id {}", uuid, entityId);
+
+        buf.writeInt(entityId);
         buf.writeLong(startTimestamp);
         buf.writeLong(trackingDuration);
     }

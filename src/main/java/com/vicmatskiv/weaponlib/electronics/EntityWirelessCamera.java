@@ -19,6 +19,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
+import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 
 public class EntityWirelessCamera extends CompatibleThrowableEntity {
@@ -81,20 +82,20 @@ public class EntityWirelessCamera extends CompatibleThrowableEntity {
                     hit = true;
                     tracker.addTrackableEntity(new TrackableEntity(entityHit, timestamp,
                             duration));
-                    modContext.getChannel().getChannel().sendTo(new SyncPlayerEntityTrackerMessage(tracker),
+                    modContext.getChannel().getChannel().sendTo(new SyncPlayerEntityTrackerMessage(tracker,
+                            "Tracking " + displayName),
                             (EntityPlayerMP)getThrower());
                 }
-            } else {
-                modContext.getStatusMessageCenter().addMessage("Tracking " + displayName, 1000);
+                entityHit.attackEntityFrom(DamageSource.causeThrownDamage(this, getThrower()), 0.001f);
             }
         }
 
-//        if (!this.worldObj.isRemote) {
-//            if(!hit) {
-//                dropItem(itemWirelessCamera, 1);
-//            }
-//            this.setDead();
-//        }
+        if (!compatibility.world(this).isRemote) {
+            if(!hit) {
+                dropItem(itemWirelessCamera, 1);
+            }
+            this.setDead();
+        }
     }
 
     @Override

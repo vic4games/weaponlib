@@ -24,7 +24,7 @@ public abstract class RemoteFirstPersonPerspective extends Perspective<Renderabl
     private static final Logger logger = LogManager.getLogger(RemoteFirstPersonPerspective.class);
 
     private long renderEndNanoTime;
-    
+
     protected CompatiblePlayerCreatureWrapper watchablePlayer;
 
     public RemoteFirstPersonPerspective() {
@@ -38,12 +38,13 @@ public abstract class RemoteFirstPersonPerspective extends Perspective<Renderabl
     @Override
     public void update(CompatibleRenderTickEvent event) {
 
+
         EntityPlayer origPlayer = compatibility.clientPlayer();
 
         if(origPlayer == null) {
             return;
         }
-        
+
         updateWatchablePlayer();
 
         RenderGlobal origRenderGlobal = Minecraft.getMinecraft().renderGlobal;
@@ -52,27 +53,30 @@ public abstract class RemoteFirstPersonPerspective extends Perspective<Renderabl
         EntityRenderer origEntityRenderer = Minecraft.getMinecraft().entityRenderer;
         int origDisplayWidth = Minecraft.getMinecraft().displayWidth;
         int origDisplayHeight = Minecraft.getMinecraft().displayHeight;
-        
+
         Minecraft.getMinecraft().displayWidth = this.width;
         Minecraft.getMinecraft().displayHeight = this.height;
-        
+
         framebuffer.bindFramebuffer(true);
-        
+
         Minecraft.getMinecraft().renderGlobal = this.renderGlobal;
         Minecraft.getMinecraft().effectRenderer = this.effectRenderer.getParticleManager();
 
-        if (watchablePlayer.getEntityLiving() != null) {
-            Minecraft.getMinecraft().entityRenderer = this.entityRenderer;
+        Minecraft.getMinecraft().entityRenderer = this.entityRenderer;
+        if (watchablePlayer.getEntityLiving() != null && !watchablePlayer.getEntityLiving().isDead) {
+
             compatibility.setRenderViewEntity(watchablePlayer.getEntityLiving());
-            
             compatibility.setClientPlayer(watchablePlayer);
-            
+
             modContext.getSafeGlobals().renderingPhase.set(RenderingPhase.RENDER_PERSPECTIVE);
-            long p_78471_2_ = this.renderEndNanoTime + (long) (1000000000 / 60);
+
             this.entityRenderer.setPrepareTerrain(true);
             this.entityRenderer.updateRenderer();
+            long p_78471_2_ = this.renderEndNanoTime + (long) (1000000000 / 60);
             this.entityRenderer.renderWorld(event.getRenderTickTime(), p_78471_2_);
-            
+
+            modContext.getSafeGlobals().renderingPhase.set(RenderingPhase.NORMAL);
+
             compatibility.setRenderViewEntity(origRenderViewEntity);
             compatibility.setClientPlayer(origPlayer);
         }
@@ -80,20 +84,19 @@ public abstract class RemoteFirstPersonPerspective extends Perspective<Renderabl
         renderOverlay();
 
         Minecraft.getMinecraft().getFramebuffer().bindFramebuffer(true);
-        modContext.getSafeGlobals().renderingPhase.set(RenderingPhase.NORMAL);
-       
+
         Minecraft.getMinecraft().renderGlobal = origRenderGlobal;
         Minecraft.getMinecraft().effectRenderer = origEffectRenderer.getParticleManager();
-        
+
         Minecraft.getMinecraft().displayWidth = origDisplayWidth;
         Minecraft.getMinecraft().displayHeight = origDisplayHeight;
         Minecraft.getMinecraft().entityRenderer = origEntityRenderer;
 
         this.renderEndNanoTime = System.nanoTime();
     }
-    
+
     protected abstract void updateWatchablePlayer();
-    
+
     protected void renderOverlay() {
         this.entityRenderer.setupOverlayRendering();
     }

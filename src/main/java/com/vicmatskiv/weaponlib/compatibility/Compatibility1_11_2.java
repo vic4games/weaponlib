@@ -251,9 +251,9 @@ public class Compatibility1_11_2 implements Compatibility {
 
     @Override
     public void registerModEntity(Class<? extends Entity> entityClass, String entityName, int id, Object mod,
-            int trackingRange, int updateFrequency, boolean sendsVelocityUpdates) {
+            String modId, int trackingRange, int updateFrequency, boolean sendsVelocityUpdates) {
         net.minecraftforge.fml.common.registry.EntityRegistry.registerModEntity
-            (new ResourceLocation("weaponlib", entityName), entityClass, entityName, id, mod, trackingRange, updateFrequency, sendsVelocityUpdates);
+            (new ResourceLocation(modId, entityName), entityClass, entityName, id, mod, trackingRange, updateFrequency, sendsVelocityUpdates);
 
     }
 
@@ -373,12 +373,12 @@ public class Compatibility1_11_2 implements Compatibility {
 
     @Override
     public float getEffectOffsetX() {
-		return 0f;
+		return -0.1f;
     }
 
     @Override
     public float getEffectOffsetY() {
-		return -1.6f;
+		return -1.7f;
     }
 
     @Override
@@ -600,10 +600,6 @@ public class Compatibility1_11_2 implements Compatibility {
             }
             return result;
         }
-    }
-
-    public ItemStack tryConsumingCompatibleItem(List<? extends Item> compatibleParts, int maxSize, EntityPlayer player) {
-        return tryConsumingCompatibleItem(compatibleParts, maxSize, player, i -> true);
     }
 
     public ItemStack tryConsumingCompatibleItem(List<? extends Item> compatibleParts, int maxSize,

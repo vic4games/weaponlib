@@ -63,7 +63,7 @@ public abstract class CompatibleServerEventHandler {
 
     @SubscribeEvent
     public void onEntityDeath(LivingDeathEvent e) {
-        //onCompatibleLivingDeathEvent(e);
+        onCompatibleLivingDeathEvent(e);
     }
 
     protected abstract void onCompatibleLivingDeathEvent(LivingDeathEvent e);

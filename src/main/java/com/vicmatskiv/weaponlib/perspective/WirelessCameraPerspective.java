@@ -48,6 +48,9 @@ public class WirelessCameraPerspective extends RemoteFirstPersonPerspective {
     @Override
     protected void updateWatchablePlayer() {
 
+//        this.watchablePlayer.setEntityLiving(null);
+//        if(true) return;
+
         EntityPlayer entityPlayer = compatibility.clientPlayer();
         PlayerItemInstance<?> instance = modContext.getPlayerItemInstanceRegistry()
                 .getMainHandItemInstance(entityPlayer);
@@ -89,17 +92,22 @@ public class WirelessCameraPerspective extends RemoteFirstPersonPerspective {
             watchableEntity = (EntityLivingBase) realEntity;
         }
 
-        if(watchableEntity != null && watchableEntity.isDead) {
-            watchableEntity = null;
+//        if(watchableEntity != null && watchableEntity.isDead) {
+//            watchableEntity = null;
+//        }
+
+        if(tickCounter++ %50 == 0) {
+            logger.trace("Using entity tracker {}", playerEntityTracker);
+            if(watchableEntity != null) {
+                logger.debug("Watching {} with uuid {}, distance: {}  ",
+                        watchableEntity,
+                        watchableEntity.getUniqueID(),
+                        Math.sqrt(Math.pow(watchableEntity.posX - compatibility.getClientPlayer().posX, 2)
+                                + Math.pow(watchableEntity.posZ - compatibility.getClientPlayer().posZ, 2))
+                        );
+            }
         }
 
-        if(watchableEntity != null && tickCounter++ %50 == 0) {
-            logger.debug("Watching {}, distance: {}  ",
-                    watchableEntity,
-                    Math.sqrt(Math.pow(watchableEntity.posX - compatibility.getClientPlayer().posX, 2)
-                            + Math.pow(watchableEntity.posZ - compatibility.getClientPlayer().posZ, 2))
-                    );
-        }
 
         if(watchableEntity == null || watchableEntity instanceof EntityLivingBase) {
             this.watchablePlayer.setEntityLiving((EntityLivingBase)watchableEntity);
@@ -122,9 +130,12 @@ public class WirelessCameraPerspective extends RemoteFirstPersonPerspective {
                     + Math.pow(watchableEntity.posY - origPlayer.posY, 2)
                     + Math.pow(watchableEntity.posZ - origPlayer.posZ, 2);
             SignalQuality quality = SignalQuality.getQuality((int)Math.sqrt(distance), maxDistance);
-            if(quality.isInterrupted() || (badSignalTickCounter > 0 && badSignalTickCounter < 5)) {
-                framebuffer.framebufferClear();
-                framebuffer.bindFramebuffer(true);
+            if(watchableEntity.isDead || quality.isInterrupted() || (badSignalTickCounter > 0 && badSignalTickCounter < 5) || watchableEntity.isDead) {
+                if(badSignalTickCounter == 0) {
+                    framebuffer.framebufferClear();
+                    framebuffer.bindFramebuffer(true);
+                }
+
                 color =  0xFFFF00;
                 message = "Cam " + displayCameraIndex  + "/" + totalTrackableEntities + ": no signal";
                 drawStatic();
@@ -134,11 +145,15 @@ public class WirelessCameraPerspective extends RemoteFirstPersonPerspective {
                 badSignalTickCounter = 0;
             }
         } else if(totalTrackableEntities == 0) {
+            framebuffer.framebufferClear();
+            framebuffer.bindFramebuffer(true);
             Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation(DARK_SCREEN_TEXTURE));
             drawTexturedQuadFit(0, 0, width, height, 0);
             color =  0xFF0000;
             message = "No Cameras Available";
         } else {
+            framebuffer.framebufferClear();
+            framebuffer.bindFramebuffer(true);
             message = "Cam " + displayCameraIndex + "/" + totalTrackableEntities + ": " + displayName;
             drawStatic();
         }

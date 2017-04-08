@@ -151,7 +151,7 @@ public class CommonModContext implements ModContext {
 		channel.registerMessage(new TryAttackMessageHandler(meleeAttackAspect),
                 TryAttackMessage.class, 16, CompatibleSide.SERVER);
 
-		channel.registerMessage(new SyncPlayerEntityTrackerMessageMessageHandler(),
+		channel.registerMessage(new SyncPlayerEntityTrackerMessageMessageHandler(this),
 		        SyncPlayerEntityTrackerMessage.class, 17, CompatibleSide.CLIENT);
 
 		channel.registerMessage(new SpawnParticleMessageHandler(this),
@@ -169,8 +169,8 @@ public class CommonModContext implements ModContext {
 
 		CompatiblePlayerEntityTrackerProvider.register(this);
 
-        compatibility.registerModEntity(WeaponSpawnEntity.class, "Ammo" + modEntityID, modEntityID++, mod, 64, 3, true);
-        compatibility.registerModEntity(EntityWirelessCamera.class, "wcam" + modEntityID, modEntityID++, mod, 200, 3, true);
+        compatibility.registerModEntity(WeaponSpawnEntity.class, "Ammo" + modEntityID, modEntityID++, mod, modId, 64, 3, true);
+        compatibility.registerModEntity(EntityWirelessCamera.class, "wcam" + modEntityID, modEntityID++, mod, modId, 200, 3, true);
 	}
 
 	public void registerServerSideOnly() {

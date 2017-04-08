@@ -8,23 +8,23 @@ import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 
 /**
  * Pay special attention to the fact this class is stateful.
- * 
+ *
  * @author victor
  *
  */
 public class CompatibleTessellator {
-	
+
 	private static Tessellator tessellator = Tessellator.getInstance();
-	
+
 	private static CompatibleTessellator compatibleTessellator = new CompatibleTessellator();
 
 	public static CompatibleTessellator getInstance() {
 		return compatibleTessellator;
 	}
-	
+
 	private boolean hasColor; //Pay special attention to the fact this class is stateful.
 	private boolean hasLightMap; //Pay special attention to the fact this class is stateful.
-	
+
 	private float red;
 	private float green;
 	private float blue;
@@ -35,13 +35,15 @@ public class CompatibleTessellator {
 	public void startDrawingQuads() {
 		VertexBuffer vertextBuffer = tessellator.getBuffer();
 		vertextBuffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
+		hasColor = false;
+		hasLightMap = false;
 	}
-	
+
 	public void startDrawingParticles() {
 		VertexBuffer vertextBuffer = tessellator.getBuffer();
 		vertextBuffer.begin(GL11.GL_QUADS, DefaultVertexFormats.PARTICLE_POSITION_TEX_COLOR_LMAP);
 	}
-	
+
 	public void startDrawingLines() {
 		VertexBuffer renderer = tessellator.getBuffer();
 		renderer.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION);
@@ -63,11 +65,15 @@ public class CompatibleTessellator {
 	public void draw() {
 		tessellator.draw();
 	}
-	
+
 	public void setLightMap(int i, int j) {
 		hasLightMap = true;
 		this.i = i;
 		this.j = j;
+	}
+
+	public void disableLightMap() {
+	    hasLightMap = false;
 	}
 
 	public void setColorRgba(float red, float green, float blue, float alpha) {
@@ -85,7 +91,7 @@ public class CompatibleTessellator {
 	public void endVertex() {
 		tessellator.getBuffer().endVertex();
 	}
-	
+
 	public VertexBuffer getBuffer() { // Temporary debug only code
 		return tessellator.getBuffer();
 	}
