@@ -46,7 +46,7 @@ public class ServerEventHandler extends CompatibleServerEventHandler {
     protected void onCompatiblePlayerStartedTracking(CompatibleStartTrackingEvent e) {
         PlayerEntityTracker tracker = PlayerEntityTracker.getTracker((EntityPlayer) e.getEntity());
         if (tracker != null && tracker.updateTrackableEntity(e.getTarget())) {
-            logger.debug("Player {} started tracking {}", e.getPlayer(), e.getTarget());
+            logger.debug("Player {} started tracking {} with uuid {}", e.getPlayer(), e.getTarget(), e.getTarget().getUniqueID());
             modContext.getChannel().getChannel().sendTo(new SyncPlayerEntityTrackerMessage(tracker),
                     (EntityPlayerMP)e.getPlayer());
         }

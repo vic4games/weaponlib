@@ -98,8 +98,8 @@ public interface Compatibility {
 
 	public void runInMainClientThread(Runnable runnable);
 
-	public void registerModEntity(Class<? extends Entity> class1, String string, int i, Object mod, int j, int k,
-			boolean b);
+	public void registerModEntity(Class<? extends Entity> class1, String string, int i, Object mod,
+	        String modId, int j, int k, boolean b);
 
 	public void registerRenderingRegistry(CompatibleRenderingRegistry rendererRegistry);
 

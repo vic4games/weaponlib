@@ -249,7 +249,7 @@ public class Compatibility1_10_2 implements Compatibility {
 
 	@Override
 	public void registerModEntity(Class<? extends Entity> entityClass, String entityName, int id, Object mod,
-			int trackingRange, int updateFrequency, boolean sendsVelocityUpdates) {
+			String modId, int trackingRange, int updateFrequency, boolean sendsVelocityUpdates) {
 		net.minecraftforge.fml.common.registry.EntityRegistry.registerModEntity
 			(entityClass, entityName, id, mod, trackingRange, updateFrequency, sendsVelocityUpdates);
 
