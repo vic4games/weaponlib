@@ -411,12 +411,12 @@ public class Compatibility1_7_10 implements Compatibility {
 
 	@Override
 	public void addShapedRecipe(ItemStack itemStack,  Object... materials) {
-		GameRegistry.addShapedRecipe(itemStack, materials);
+	    GameRegistry.addShapedRecipe(itemStack, materials);
 	}
 
 	@Override
 	public void addShapedOreRecipe(ItemStack itemStack, Object... materials) {
-	    GameRegistry.addRecipe(new ShapedOreRecipe(itemStack, materials));
+	    GameRegistry.addRecipe(new ShapedOreRecipe(itemStack, materials).setMirrored(false));
 	}
 
 	@Override
