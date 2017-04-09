@@ -10,10 +10,10 @@ import com.vicmatskiv.weaponlib.model.FlatModel;
 import net.minecraft.client.model.ModelBase;
 
 public class ItemSkin extends ItemAttachment<Weapon> {
-	
+
 	public static final class Builder extends AttachmentBuilder<Weapon> {
 		private List<String> textureVariants = new ArrayList<>();
-		
+
 		public Builder withTextureVariant(String... textureVariantNames) {
 			for(String s: textureVariantNames) {
 				this.textureVariants.add(stripFileExtension(s.toLowerCase(), ".png"));
@@ -27,7 +27,7 @@ public class ItemSkin extends ItemAttachment<Weapon> {
 			skin.textureVariants = this.textureVariants;
 			return skin;
 		}
-		
+
 		@Override
 		public <V extends ItemAttachment<Weapon>> V build(ModContext modContext, Class<V> target) {
 			this.model = new FlatModel();
@@ -48,9 +48,9 @@ public class ItemSkin extends ItemAttachment<Weapon> {
 			return super.build(modContext, target);
 		}
 	}
-	
+
 	private List<String> textureVariants;
-	
+
 	public ItemSkin(String modId, AttachmentCategory category, ModelBase model, String textureName, String crosshair,
 			com.vicmatskiv.weaponlib.ItemAttachment.ApplyHandler<Weapon> apply,
 			com.vicmatskiv.weaponlib.ItemAttachment.ApplyHandler<Weapon> remove) {
@@ -60,11 +60,11 @@ public class ItemSkin extends ItemAttachment<Weapon> {
 	public String getTextureName() {
 		return textureName;
 	}
-	
+
 	public int getTextureVariantIndex(String name) {
-		return textureVariants.indexOf(name);
+		return textureVariants.indexOf(name.toLowerCase());
 	}
-	
+
 	public String getTextureVariant(int textureIndex) {
 		return textureIndex >= 0 && textureIndex < textureVariants.size() ? textureVariants.get(textureIndex) : null;
 	}
