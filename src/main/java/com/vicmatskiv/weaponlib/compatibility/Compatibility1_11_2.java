@@ -438,7 +438,7 @@ public class Compatibility1_11_2 implements Compatibility {
 
     @Override
     public void addShapedOreRecipe(ItemStack itemStack, Object... materials) {
-        GameRegistry.addRecipe(new ShapedOreRecipe(itemStack, materials));
+        GameRegistry.addRecipe(new ShapedOreRecipe(itemStack, materials).setMirrored(false));
     }
 
     @Override
