@@ -206,7 +206,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 				// Update permit instead: modContext.getChannel().getChannel().sendTo(new ReloadMessage(weapon, ReloadMessage.Type.LOAD, newMagazine, ammo), (EntityPlayerMP) player);
 				weaponInstance.setAmmo(ammo);
 			} else if(!compatibleBullets.isEmpty() && (consumedStack = compatibility.tryConsumingCompatibleItem(compatibleBullets,
-					Math.min(weapon.getMaxBulletsPerReload(), weapon.getAmmoCapacity() - weaponInstance.getAmmo()), player)) != null) {
+					Math.min(weapon.getMaxBulletsPerReload(), weapon.getAmmoCapacity() - weaponInstance.getAmmo()), player, i -> true)) != null) {
 				int ammo = weaponInstance.getAmmo() + compatibility.getStackSize(consumedStack);
 				Tags.setAmmo(weaponItemStack, ammo);
 				// Update permit instead modContext.getChannel().getChannel().sendTo(new ReloadMessage(weapon, ammo), (EntityPlayerMP) player);
