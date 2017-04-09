@@ -301,7 +301,10 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 			return null;
 		}
 		Item activeAttachment = Item.getItemById(activeAttachmentIds[category.ordinal()]);
-		return (ItemAttachment<Weapon>) activeAttachment;
+		if(activeAttachment instanceof ItemAttachment) {
+		    return (ItemAttachment<Weapon>) activeAttachment;
+		}
+		return null;
 	}
 
 	public float getZoom() {
