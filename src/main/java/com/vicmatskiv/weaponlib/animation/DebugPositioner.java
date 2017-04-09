@@ -151,6 +151,7 @@ public class DebugPositioner {
             compatibility.addChatMessage(compatibility.clientPlayer(), "Debug part not selected");
             return;
         }
+        transitionConfigurations.clear();
         partPosition.x = partPosition.y = partPosition.z 
                 = partPosition.xRotation = partPosition.yRotation = partPosition.zRotation = 0f;
         partPosition.scale = 1f;
