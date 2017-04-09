@@ -373,12 +373,12 @@ public class Compatibility1_11_2 implements Compatibility {
 
     @Override
     public float getEffectOffsetX() {
-		return -0.1f;
+		return -0.02f;
     }
 
     @Override
     public float getEffectOffsetY() {
-		return -1.7f;
+		return -1.65f;
     }
 
     @Override
@@ -546,8 +546,10 @@ public class Compatibility1_11_2 implements Compatibility {
 
     @Override
     public void addBlockHitEffect(int x, int y, int z, CompatibleEnumFacing sideHit) {
-        Minecraft.getMinecraft().effectRenderer.addBlockHitEffects(
-                new BlockPos(x, y, z), sideHit.getEnumFacing());
+        for(int i = 0; i < 6; i++) {
+            Minecraft.getMinecraft().effectRenderer.addBlockHitEffects(
+                    new BlockPos(x, y, z), sideHit.getEnumFacing());
+        }
     }
 
     @Override

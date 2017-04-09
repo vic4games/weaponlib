@@ -208,10 +208,11 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
             break;
         case GUI:
             GL11.glScaled(-1F, -1F, 1F);
-            GL11.glScaled(0.5F, 0.5F, 0.5F);
-            GL11.glTranslatef(-1.1f, -0.9f, 0f);
-            GL11.glRotatef(0F, 1f, 0f, 0f);
-            GL11.glRotatef(0F, 0f, 1f, 0f);
+            GL11.glScaled(-1F, -1F, 1F);
+            GL11.glScaled(0.6F, 0.6F, 0.6F);
+            GL11.glTranslatef(-0.9f, -1f, -2f);
+            GL11.glRotatef(-30F, 1f, 0f, 0f);
+            GL11.glRotatef(30F, 0f, 1f, 0f);
             GL11.glRotatef(-10F, 0f, 0f, 1f);
             builder.getInventoryPositioning().accept(itemStack);
             break;
