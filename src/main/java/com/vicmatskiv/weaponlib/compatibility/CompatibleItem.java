@@ -2,13 +2,19 @@ package com.vicmatskiv.weaponlib.compatibility;
 
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
 public abstract class CompatibleItem extends Item {
-	
+
+    @Override
+    public void onCreated(ItemStack stack, World worldIn, EntityPlayer playerIn) {
+        super.onCreated(stack, worldIn, playerIn);
+        stack.setTagCompound(new NBTTagCompound());
+    }
+
 	@Override
 	public final ItemStack onItemRightClick(ItemStack itemStack, World world, EntityPlayer player) {
 		return onCompatibleItemRightClick(itemStack, world, player, true);
@@ -23,11 +29,11 @@ public abstract class CompatibleItem extends Item {
 			float hitX, float hitY, float hitZ) {
 		return super.onItemUseFirst(stack, player, world, x, y, z, side, hitX, hitY, hitZ);
 	}
-	
+
 	protected boolean onItemUseFirst(ItemStack stack, EntityPlayer player, World world) {
 		return false;
 	}
-	
+
 	@Override
 	public void registerIcons(IIconRegister register) {}
 }
