@@ -29,7 +29,6 @@ public abstract class CompatibleServerEventHandler {
     public void onTick(TickEvent.ServerTickEvent event) {
         if(event.phase == Phase.START) {
         }
-<<<<<<< HEAD
         //return ObfuscationReflectionHelper.setPrivateValue(EntityTracker.class, entityTracker, 10, "entityViewDistance", "field_72792_");
     }
 
@@ -42,12 +41,6 @@ public abstract class CompatibleServerEventHandler {
 	    }
 	}
 
-=======
-
-        //return ObfuscationReflectionHelper.setPrivateValue(EntityTracker.class, entityTracker, 10, "entityViewDistance", "field_72792_");
-    }
-
->>>>>>> 152023007a3d5249eeb06ad133ca373d5ae9a05e
     @SubscribeEvent
     public void onEntityConstructing(EntityConstructing event) {
     }
@@ -65,7 +58,6 @@ public abstract class CompatibleServerEventHandler {
 
     @SubscribeEvent
     public void playerStoppedTracking(PlayerEvent.StopTracking e) {
-<<<<<<< HEAD
         //onCompatiblePlayerStoppedTracking(new CompatibleStopTrackingEvent(e));
     }
 
@@ -79,16 +71,4 @@ public abstract class CompatibleServerEventHandler {
     protected abstract void onCompatiblePlayerStartedTracking(CompatibleStartTrackingEvent e);
 
     protected abstract void onCompatiblePlayerStoppedTracking(CompatibleStopTrackingEvent e);
-=======
-        onCompatiblePlayerStoppedTracking(new CompatibleStopTrackingEvent(e));
-    }
-
-    protected abstract void onCompatiblePlayerStartedTracking(CompatibleStartTrackingEvent e);
-
-    public abstract String getModId();
-
-    protected abstract void onCompatiblePlayerStoppedTracking(CompatibleStopTrackingEvent e);
-
-    protected abstract void onCompatibleLivingDeathEvent(LivingDeathEvent e);
->>>>>>> 152023007a3d5249eeb06ad133ca373d5ae9a05e
 }

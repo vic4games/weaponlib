@@ -13,7 +13,6 @@ public class CompatibleStopTrackingEvent {
     }
 
     public EntityPlayer getPlayer() {
-<<<<<<< HEAD
         return event.getEntityPlayer();
     }
 
@@ -23,16 +22,5 @@ public class CompatibleStopTrackingEvent {
 
     public Entity getEntity() {
         return event.getEntity();
-=======
-        return event.entityPlayer;
-    }
-
-    public Entity getTarget() {
-        return event.target;
-    }
-
-    public Entity getEntity() {
-        return event.entity;
->>>>>>> 152023007a3d5249eeb06ad133ca373d5ae9a05e
     }
 }
