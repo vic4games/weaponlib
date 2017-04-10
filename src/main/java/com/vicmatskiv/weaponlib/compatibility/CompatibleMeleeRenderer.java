@@ -224,8 +224,8 @@ public abstract class CompatibleMeleeRenderer extends ModelSourceRenderer implem
         case THIRD_PERSON_RIGHT_HAND: case THIRD_PERSON_LEFT_HAND:
             GL11.glScaled(-1F, -1F, 1F);
             GL11.glScaled(0.4F, 0.4F, 0.4F);
-            GL11.glTranslatef(-1.5f, -2.4f, 1.3f);
-            GL11.glRotatef(-100F, 1f, 0f, 0f);
+            GL11.glTranslatef(-1.33f, -2f, 0.7f);
+            GL11.glRotatef(-70F, 1f, 0f, 0f);
             GL11.glRotatef(50F, 0f, 1f, 0f);
             GL11.glRotatef(0F, 0f, 0f, 1f);
             builder.getThirdPersonPositioning().accept(renderContext);

@@ -520,6 +520,7 @@ public class Compatibility1_11_2 implements Compatibility {
     }
 
     @Override
+    @SideOnly(Side.CLIENT)
     public RenderGlobal createCompatibleRenderGlobal() {
         return /*Minecraft.getMinecraft().renderGlobal; //*/ new CompatibleRenderGlobal(Minecraft.getMinecraft());
     }
