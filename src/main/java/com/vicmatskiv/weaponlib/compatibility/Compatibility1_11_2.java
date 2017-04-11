@@ -6,11 +6,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.Predicate;
 
-import com.vicmatskiv.weaponlib.ModContext;
-import com.vicmatskiv.weaponlib.Weapon;
-import com.vicmatskiv.weaponlib.WeaponSpawnEntity;
-import com.vicmatskiv.weaponlib.compatibility.CompatibleParticle.CompatibleParticleBreaking;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
@@ -30,7 +25,9 @@ import net.minecraft.entity.ai.attributes.IAttribute;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.init.Blocks;
+import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemArmor;
 import net.minecraft.item.ItemArmor.ArmorMaterial;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
@@ -57,6 +54,11 @@ import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.oredict.ShapedOreRecipe;
+
+import com.vicmatskiv.weaponlib.ModContext;
+import com.vicmatskiv.weaponlib.Weapon;
+import com.vicmatskiv.weaponlib.WeaponSpawnEntity;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleParticle.CompatibleParticleBreaking;
 
 public class Compatibility1_11_2 implements Compatibility {
 
@@ -195,8 +197,15 @@ public class Compatibility1_11_2 implements Compatibility {
     @Override
     @SideOnly(Side.CLIENT)
     public ItemStack getHelmet() {
-        Iterator<ItemStack> equipmentIterator = Minecraft.getMinecraft().player.getEquipmentAndArmor().iterator();
-        return equipmentIterator.hasNext() ? equipmentIterator.next() : null;
+        ItemStack result = null;
+        for(Iterator<ItemStack> equipmentIterator = Minecraft.getMinecraft().player.getArmorInventoryList().iterator(); equipmentIterator.hasNext();) {
+            ItemStack stack = equipmentIterator.next();
+            if(stack.getItem() instanceof ItemArmor &&  ((ItemArmor)stack.getItem()).getEquipmentSlot() == EntityEquipmentSlot.HEAD) {
+                result = stack;
+                break;
+            }
+        }
+        return result;
     }
 
     @Override
@@ -526,6 +535,7 @@ public class Compatibility1_11_2 implements Compatibility {
     }
 
     @Override
+    @SideOnly(Side.CLIENT)
     public CompatibleParticleManager createCompatibleParticleManager(WorldClient world) {
         return new CompatibleParticleManager(world);
     }
@@ -541,11 +551,13 @@ public class Compatibility1_11_2 implements Compatibility {
     }
 
     @Override
+    @SideOnly(Side.CLIENT)
     public CompatibleParticleManager getCompatibleParticleManager() {
         return new CompatibleParticleManager(Minecraft.getMinecraft().effectRenderer);
     }
 
     @Override
+    @SideOnly(Side.CLIENT)
     public void addBlockHitEffect(int x, int y, int z, CompatibleEnumFacing sideHit) {
         for(int i = 0; i < 6; i++) {
             Minecraft.getMinecraft().effectRenderer.addBlockHitEffects(
@@ -554,6 +566,7 @@ public class Compatibility1_11_2 implements Compatibility {
     }
 
     @Override
+    @SideOnly(Side.CLIENT)
     public void addBreakingParticle(ModContext modContext, double x, double y, double z) {
         double yOffset = 1;
         CompatibleParticleBreaking particle = CompatibleParticle.createParticleBreaking(
