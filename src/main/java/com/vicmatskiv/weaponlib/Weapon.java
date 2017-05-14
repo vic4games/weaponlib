@@ -24,7 +24,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTargetPoint;
 import com.vicmatskiv.weaponlib.crafting.CraftingComplexity;
 import com.vicmatskiv.weaponlib.crafting.OptionsMetadata;
-import com.vicmatskiv.weaponlib.particle.SpawnParticleMessage;
+import com.vicmatskiv.weaponlib.model.Shell;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.model.ModelBase;
@@ -36,14 +36,21 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
-public class Weapon extends CompatibleItem implements 
+public class Weapon extends CompatibleItem implements
 PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContainer, Reloadable, Modifiable, Updatable {
 
     private static final Logger logger = LogManager.getLogger(Weapon.class);
 
+    public static enum ShellCasingEjectDirection { LEFT, RIGHT };
+
     public static class Builder {
 
         private static final float DEFAULT_SPAWN_ENTITY_SPEED = 10f;
+        private static final float DEFAULT_INACCURACY = 1f;
+        private static final String DEFAULT_SHELL_CASING_TEXTURE_NAME = "weaponlib:/com/vicmatskiv/weaponlib/resources/shell.png";
+        private static final float DEFAULT_SHELL_CASING_VELOCITY = 0.08f;
+        private static final float DEFAULT_SHELL_CASING_GRAVITY_VELOCITY = 0.01f;
+        private static final float DEFAULT_SHELL_CASING_INACCURACY = 20f;
 
         String name;
         List<String> textureNames = new ArrayList<>();
@@ -68,6 +75,7 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
         String crosshairRunning;
         String crosshairZoomed;
         BiFunction<Weapon, EntityPlayer, ? extends WeaponSpawnEntity> spawnEntityWith;
+        BiFunction<PlayerWeaponInstance, EntityPlayer, ? extends EntityShellCasing> spawnShellWith;
         private float spawnEntityDamage;
         private float spawnEntityExplosionRadius;
         private float spawnEntityGravityVelocity;
@@ -80,13 +88,15 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
         Map<ItemAttachment<Weapon>, CompatibleAttachment<Weapon>> compatibleAttachments = new HashMap<>();
         ModelBase ammoModel;
         String ammoModelTextureName;
+        ModelBase shellCasingModel;
+        String shellCasingModelTextureName;
 
         private float spawnEntitySpeed = DEFAULT_SPAWN_ENTITY_SPEED;
         private Class<? extends WeaponSpawnEntity> spawnEntityClass;
         ImpactHandler blockImpactHandler;
         long pumpTimeoutMilliseconds;
 
-        private float inaccuracy = WeaponSpawnEntity.DEFAULT_INACCURACY;
+        private float inaccuracy = DEFAULT_INACCURACY;
 
         int pellets = 1;
 
@@ -114,6 +124,20 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
 
         private Object[] craftingMaterials;
 
+        private float shellCasingForwardOffset = Weapon.DEFAULT_SHELL_CASING_FORWARD_OFFSET;
+
+        private float shellCasingVerticalOffset = Weapon.DEFAULT_SHELL_CASING_VERTICAL_OFFSET;
+
+        private float shellCasingSideOffset = Weapon.DEFAULT_SHELL_CASING_SIDE_OFFSET;
+
+        private float shellCasingSideOffsetAimed = Weapon.DEFAULT_SHELL_CASING_SIDE_OFFSET_AIMED;
+
+        public boolean shellCasingEjectEnabled = true;
+
+        private ShellCasingEjectDirection shellCasingEjectDirection = ShellCasingEjectDirection.RIGHT;
+
+        private float silencedShootSoundVolume = Weapon.DEFAULT_SILENCED_SHOOT_SOUND_VOLUME;
+        private float shootSoundVolume = Weapon.DEFAULT_SHOOT_SOUND_VOLUME;
 
         public Builder withModId(String modId) {
             this.modId = modId;
@@ -273,6 +297,16 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
             return this;
         }
 
+        public Builder withShootSoundVolume(float volume) {
+            this.shootSoundVolume = volume;
+            return this;
+        }
+
+        public Builder withSilenceShootSoundVolume(float volume) {
+            this.silencedShootSoundVolume = volume;
+            return this;
+        }
+
         public Builder withExceededMaxShotsSound(String shootSound) {
             if (modId == null) {
                 throw new IllegalStateException("ModId is not set");
@@ -348,6 +382,12 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
             return this;
         }
 
+        public Builder withCompatibleAttachment(ItemAttachment<Weapon> attachment, boolean isDefault, boolean isPermanent,
+                BiConsumer<EntityPlayer, ItemStack> positioning, Consumer<ModelBase> modelPositioning) {
+            compatibleAttachments.put(attachment, new CompatibleAttachment<>(attachment, positioning, modelPositioning, isDefault, isPermanent));
+            return this;
+        }
+
         public Builder withCompatibleAttachment(ItemAttachment<Weapon> attachment, boolean isDefault,
                 Consumer<ModelBase> positioner) {
             compatibleAttachments.put(attachment, new CompatibleAttachment<>(attachment, positioner, isDefault));
@@ -366,6 +406,46 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
 
         public Builder withSpawnEntityBlockImpactHandler(ImpactHandler impactHandler) {
             this.blockImpactHandler = impactHandler;
+            return this;
+        }
+
+        public Builder withShellCasingEjectEnabled(boolean shellCasingEjectEnabled) {
+            this.shellCasingEjectEnabled = shellCasingEjectEnabled;
+            return this;
+        }
+
+        public Builder withShellCasingModel(ModelBase shellCasingModel) {
+            this.shellCasingModel = shellCasingModel;
+            return this;
+        }
+
+        public Builder withShellCasingModelTexture(String shellModelTextureName) {
+            this.shellCasingModelTextureName = modId + ":" + "textures/models/" + shellModelTextureName.toLowerCase() + ".png";
+            return this;
+        }
+
+        public Builder withShellCasingForwardOffset(float shellCasingForwardOffset) {
+            this.shellCasingForwardOffset = shellCasingForwardOffset;
+            return this;
+        }
+
+        public Builder withShellCasingVerticalOffset(float shellCasingVerticalOffset) {
+            this.shellCasingVerticalOffset = shellCasingVerticalOffset;
+            return this;
+        }
+
+        public Builder withShellCasingSideOffset(float shellCasingSideOffset) {
+            this.shellCasingSideOffset = shellCasingSideOffset;
+            return this;
+        }
+
+        public Builder withShellCasingSideOffsetAimed(float shellCasingSideOffsetAimed) {
+            this.shellCasingSideOffsetAimed = shellCasingSideOffsetAimed;
+            return this;
+        }
+
+        public Builder withShellCasingEjectDirection(ShellCasingEjectDirection shellCasingEjectDirection) {
+            this.shellCasingEjectDirection = shellCasingEjectDirection;
             return this;
         }
 
@@ -404,7 +484,7 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
             this.flashOffsetY = flashOffsetY;
             return this;
         }
-        
+
         public Builder withSmokeOffsetX(Supplier<Float> smokeOffsetX) {
             this.smokeOffsetX = smokeOffsetX;
             return this;
@@ -457,10 +537,28 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
             }
 
             if (spawnEntityWith == null) {
-
                 spawnEntityWith = (weapon, player) -> {
-                    return compatibility.getSpawnEntity(weapon, compatibility.world(player), player, spawnEntitySpeed,
+                    WeaponSpawnEntity bullet = new WeaponSpawnEntity(weapon, compatibility.world(player), player, spawnEntitySpeed,
                             spawnEntityGravityVelocity, inaccuracy, spawnEntityDamage, spawnEntityExplosionRadius);
+                    bullet.setPositionAndDirection();
+                    return bullet;
+                };
+            }
+
+            if(shellCasingModel == null) {
+                shellCasingModel = new Shell();
+            }
+
+            if(shellCasingModelTextureName == null) {
+                shellCasingModelTextureName = DEFAULT_SHELL_CASING_TEXTURE_NAME;
+            }
+
+            if(spawnShellWith == null) {
+                spawnShellWith = (weaponInstance, player) -> {
+                    EntityShellCasing shell = new EntityShellCasing(weaponInstance, compatibility.world(player), player,
+                            DEFAULT_SHELL_CASING_VELOCITY, DEFAULT_SHELL_CASING_GRAVITY_VELOCITY, DEFAULT_SHELL_CASING_INACCURACY);
+                    shell.setPositionAndDirection();
+                    return shell;
                 };
             }
 
@@ -479,7 +577,7 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
                         compatibility.destroyBlock(world, position);
                     } else  {
                         //compatibility.addBlockHitEffect(position);
-                        CompatibleTargetPoint point = new CompatibleTargetPoint(entity.dimension, 
+                        CompatibleTargetPoint point = new CompatibleTargetPoint(entity.dimension,
                                 position.getBlockPosX(), position.getBlockPosY(), position.getBlockPosZ(), 100);
                         modContext.getChannel().sendToAllAround(
                                 new BlockHitMessage(position.getBlockPosX(), position.getBlockPosY(), position.getBlockPosZ(), position.getSideHit()), point);
@@ -536,9 +634,16 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
     static final long MAX_RELOAD_TIMEOUT_TICKS = 60;
     static final long MAX_UNLOAD_TIMEOUT_TICKS = 60;
 
-    private static final float DEFAULT_ZOOM = 0.75f;
+    public static final float DEFAULT_SHELL_CASING_FORWARD_OFFSET = 0.1f;
+    public static final float DEFAULT_SHELL_CASING_VERTICAL_OFFSET = 0.0f;
+    public static final float DEFAULT_SHELL_CASING_SIDE_OFFSET = 0.15f;
+    public static final float DEFAULT_SHELL_CASING_SIDE_OFFSET_AIMED = 0.05f;
 
+    private static final float DEFAULT_ZOOM = 0.75f;
     private static final float DEFAULT_FIRE_RATE = 0.5f;
+
+    private static final float DEFAULT_SILENCED_SHOOT_SOUND_VOLUME = 0.7f;
+    private static final float DEFAULT_SHOOT_SOUND_VOLUME = 10f;
 
     Builder builder;
 
@@ -589,8 +694,8 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
 
     void toggleAiming() {
         PlayerWeaponInstance mainHandHeldWeaponInstance = modContext.getMainHeldWeapon();
-        if(mainHandHeldWeaponInstance != null 
-                && (mainHandHeldWeaponInstance.getState() == WeaponState.READY 
+        if(mainHandHeldWeaponInstance != null
+                && (mainHandHeldWeaponInstance.getState() == WeaponState.READY
                 || mainHandHeldWeaponInstance.getState() == WeaponState.EJECT_REQUIRED)
                 ) {
             mainHandHeldWeaponInstance.setAimed(!mainHandHeldWeaponInstance.isAimed());
@@ -632,7 +737,7 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
     }
 
     public static boolean isActiveAttachment(PlayerWeaponInstance weaponInstance, ItemAttachment<Weapon> attachment) {
-        return weaponInstance != null ? 
+        return weaponInstance != null ?
                 WeaponAttachmentAspect.isActiveAttachment(attachment, weaponInstance) : false;
     }
 
@@ -661,6 +766,14 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
 
     String getAmmoModelTextureName() {
         return builder.ammoModelTextureName;
+    }
+
+    ModelBase getShellCasingModel() {
+        return builder.shellCasingModel;
+    }
+
+    String getShellCasingTextureName() {
+        return builder.shellCasingModelTextureName;
     }
 
     void onSpawnEntityBlockImpact(World world, EntityPlayer player, WeaponSpawnEntity entity, CompatibleRayTraceResult position) {
@@ -736,7 +849,7 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
         instance.setState(WeaponState.READY);
         instance.setRecoil(builder.recoil);
         instance.setMaxShots(builder.maxShots.get(0));
-        
+
         for(CompatibleAttachment<Weapon> compatibleAttachment: ((Weapon) itemStack.getItem()).getCompatibleAttachments().values()) {
             ItemAttachment<Weapon> attachment = compatibleAttachment.getAttachment();
             if(compatibleAttachment.isDefault() && attachment.getApply2() != null) {
@@ -785,7 +898,7 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
 
         modContext.getStatusMessageCenter().addMessage("Firearm mode: " + message, 1000);
 
-        compatibility.playSound(instance.getPlayer(),  modContext.getChangeFireModeSound(), 1F, 1F);		
+        compatibility.playSound(instance.getPlayer(),  modContext.getChangeFireModeSound(), 1F, 1F);
     }
 
     public long getTotalReloadingDuration() {
@@ -873,8 +986,40 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
     public float getRecoil() {
         return builder.recoil;
     }
-    
+
     public ModContext getModContext() {
         return modContext;
+    }
+
+    public float getShellCasingVerticalOffset() {
+        return builder.shellCasingVerticalOffset;
+    }
+
+    public float getShellCasingForwardOffset() {
+        return builder.shellCasingForwardOffset;
+    }
+
+    public float getShellCasingSideOffset() {
+        return builder.shellCasingSideOffset;
+    }
+
+    public float getShellCasingSideOffsetAimed() {
+        return builder.shellCasingSideOffsetAimed;
+    }
+
+    public boolean isShellCasingEjectEnabled() {
+        return builder.shellCasingEjectEnabled;
+    }
+
+    public ShellCasingEjectDirection getShellCasingEjectDirection() {
+        return builder.shellCasingEjectDirection;
+    }
+
+    public float getSilencedShootSoundVolume() {
+        return builder.silencedShootSoundVolume;
+    }
+
+    public float getShootSoundVolume() {
+        return builder.shootSoundVolume;
     }
 }

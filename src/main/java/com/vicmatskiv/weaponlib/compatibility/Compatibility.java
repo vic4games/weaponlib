@@ -3,12 +3,11 @@ package com.vicmatskiv.weaponlib.compatibility;
 import java.util.List;
 import java.util.function.Predicate;
 
+import com.vicmatskiv.weaponlib.EntityShellCasing;
 import com.vicmatskiv.weaponlib.ModContext;
-import com.vicmatskiv.weaponlib.Weapon;
-import com.vicmatskiv.weaponlib.WeaponSpawnEntity;
+import com.vicmatskiv.weaponlib.PlayerWeaponInstance;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.material.Material;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
@@ -43,8 +42,11 @@ public interface Compatibility {
 
     public void setClientPlayer(EntityPlayer player);
 
-	public WeaponSpawnEntity getSpawnEntity(Weapon weapon, World world, EntityPlayer player, float speed,
-			float gravityVelocity, float inaccuracy, float damage, float explosionRadius, Material...damageableBlockMaterials);
+//	public WeaponSpawnEntity getSpawnEntity(Weapon weapon, World world, EntityPlayer player, float speed,
+//			float gravityVelocity, float inaccuracy, float damage, float explosionRadius, Material...damageableBlockMaterials);
+
+	public EntityShellCasing getShellCasingEntity(PlayerWeaponInstance weaponInstance, World world, EntityPlayer player, float speed,
+	        float gravityVelocity, float inaccuracy);
 
 	public IAttribute getMovementSpeedAttribute();
 
@@ -173,6 +175,8 @@ public interface Compatibility {
 
     public String getDisplayName(EntityPlayer player);
 
+    public String getPlayerName(EntityPlayer player);
+
     public void clickBlock(CompatibleBlockPos blockPos, CompatibleEnumFacing sideHit);
 
     public boolean isAirBlock(World world, CompatibleBlockPos blockPos);
@@ -198,5 +202,25 @@ public interface Compatibility {
     public ItemStack tryConsumingCompatibleItem(List<? extends Item> compatibleParts, int maxSize,
             EntityPlayer player, @SuppressWarnings("unchecked") Predicate<ItemStack> ...conditions);
 
+    public Item findItemByName(String modId, String itemName);
+
+    public CompatibleRayTraceResult rayTraceBlocks(Entity entity, CompatibleVec3 vec3, CompatibleVec3 vec31);
+
+    public CompatibleAxisAlignedBB expandEntityBoundingBox(Entity entity, double f, double f2, double f3);
+
+    public CompatibleAxisAlignedBB getBoundingBox(Entity entity);
+
+    public List<?> getEntitiesWithinAABBExcludingEntity(World world, Entity entity, CompatibleAxisAlignedBB boundingBox);
+
+    public void spawnParticle(World world, String particleName, double d, double e, double f, double motionX, double motionY,
+            double motionZ);
+
+    public Block getBlockAtPosition(World world, CompatibleBlockPos blockPos);
+
+    public boolean isBlockPenetratableByBullets(Block block);
+
+    public boolean canCollideCheck(Block block, CompatibleBlockState metadata, boolean hitIfLiquid);
+
+    public float getCompatibleShellCasingForwardOffset();
 
 }

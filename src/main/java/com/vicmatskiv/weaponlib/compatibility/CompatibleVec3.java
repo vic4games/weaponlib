@@ -9,8 +9,36 @@ public class CompatibleVec3 {
 	public CompatibleVec3(Vec3d vec) {
 		this.vec = vec;
 	}
-	
-	public Vec3d getVec() {
+
+	public CompatibleVec3(double posX, double posY, double posZ) {
+        this.vec = new Vec3d(posX, posY, posZ);
+    }
+
+	public CompatibleVec3(CompatibleVec3 hitVec) {
+	    this.vec = new Vec3d(hitVec.getVec().xCoord, hitVec.getVec().yCoord, hitVec.getVec().zCoord);
+    }
+
+    public Vec3d getVec() {
 		return vec;
 	}
+
+    public double distanceTo(CompatibleVec3 otherVec) {
+        return vec.distanceTo(otherVec.vec);
+    }
+
+    public double getXCoord() {
+        return vec.xCoord;
+    }
+
+    public double getYCoord() {
+        return vec.yCoord;
+    }
+
+    public double getZCoord() {
+        return vec.zCoord;
+    }
+
+    public static CompatibleVec3 fromCompatibleVec3(CompatibleVec3 other) {
+        return other != null ? new CompatibleVec3(other) : null;
+    }
 }

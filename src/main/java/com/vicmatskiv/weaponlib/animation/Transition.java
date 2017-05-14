@@ -1,42 +1,44 @@
 package com.vicmatskiv.weaponlib.animation;
 
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
+import com.vicmatskiv.weaponlib.Part;
 
 public class Transition<Context> {
 
-	private BiConsumer<EntityPlayer, ItemStack> positioning;
+    private static final Consumer<?> ANCHORED_POSITION = c -> {};
+
+    @SuppressWarnings("unchecked")
+    public static <T> Consumer<T> anchoredPosition() {
+        return (Consumer<T>) ANCHORED_POSITION;
+    }
+
 	private Consumer<Context> itemPositioning;
 	private long duration;
 	private long pause;
-	
-	public Transition(BiConsumer<EntityPlayer, ItemStack> positioning, long duration, long pause) {
-		this.positioning = positioning;
-		this.duration = duration;
-		this.pause = pause;
+	private Part attachedTo;
+	private boolean animated;
+
+	public Transition(Consumer<Context> itemPositioning, Part attachedTo, boolean animated) {
+        this(itemPositioning, 0, 0);
+        this.animated = animated;
+    }
+
+	public Transition(Consumer<Context> itemPositioning, long duration) {
+	    this(itemPositioning, duration, 0);
 	}
-	
+
 	public Transition(Consumer<Context> itemPositioning, long duration, long pause) {
+        this(itemPositioning, duration, pause, null);
+    }
+
+	public Transition(Consumer<Context> itemPositioning, long duration, long pause, Part attachedTo) {
 		this.itemPositioning = itemPositioning;
 		this.duration = duration;
 		this.pause = pause;
-	}
-	
-	public Transition(BiConsumer<EntityPlayer, ItemStack> positioning, long duration) {
-		this(positioning, duration, 0);
-	}
-	
-	public Transition(Consumer<Context> itemPositioning, long duration) {
-		this(itemPositioning, duration, 0);
+		this.attachedTo = attachedTo;
 	}
 
-	public BiConsumer<EntityPlayer, ItemStack> getPositioning() {
-		return positioning;
-	}
-	
 	public Consumer<Context> getItemPositioning() {
 		return itemPositioning;
 	}
@@ -48,4 +50,12 @@ public class Transition<Context> {
 	public long getPause() {
 		return pause;
 	}
+
+	public Part getAttachedTo() {
+	    return attachedTo;
+	}
+
+	public boolean isAnimated() {
+        return animated;
+    }
 }

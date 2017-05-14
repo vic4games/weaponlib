@@ -10,6 +10,14 @@ public class CompatibleBlockPos {
         this.blockPos = blockPos;
     }
 
+    public CompatibleBlockPos(int xCoord, int yCoord, int zCoord) {
+        this.blockPos = new BlockPos(xCoord, yCoord, zCoord);
+    }
+
+    public CompatibleBlockPos(CompatibleVec3 projectedPos) {
+        this.blockPos = new BlockPos(projectedPos.getVec());
+    }
+
     public BlockPos getBlockPos() {
         return blockPos;
     }

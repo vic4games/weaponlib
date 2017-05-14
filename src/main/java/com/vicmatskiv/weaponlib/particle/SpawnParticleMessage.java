@@ -5,14 +5,19 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleMessage;
 import io.netty.buffer.ByteBuf;
 
 public class SpawnParticleMessage implements CompatibleMessage {
+
+    public enum ParticleType { BLOOD, SHELL }
+
     private double posX;
     private double posY;
     private double posZ;
     private int count;
+    private ParticleType particleType;
 
     public SpawnParticleMessage() {}
 
-    public SpawnParticleMessage(int count, double posX, double posY, double posZ) {
+    public SpawnParticleMessage(ParticleType particleType, int count, double posX, double posY, double posZ) {
+        this.particleType = particleType;
         this.count = count;
         this.posX = posX;
         this.posY = posY;
@@ -20,6 +25,7 @@ public class SpawnParticleMessage implements CompatibleMessage {
     }
 
     public void fromBytes(ByteBuf buf) {
+        particleType = ParticleType.values()[buf.readInt()];
         count = buf.readInt();
         posX = buf.readDouble();
         posY = buf.readDouble();
@@ -27,10 +33,15 @@ public class SpawnParticleMessage implements CompatibleMessage {
     }
 
     public void toBytes(ByteBuf buf) {
+        buf.writeInt(particleType.ordinal());
         buf.writeInt(count);
         buf.writeDouble(posX);
         buf.writeDouble(posY);
         buf.writeDouble(posZ);
+    }
+
+    public ParticleType getParticleType() {
+        return particleType;
     }
 
     public double getPosX() {
@@ -44,7 +55,7 @@ public class SpawnParticleMessage implements CompatibleMessage {
     public double getPosZ() {
         return posZ;
     }
-    
+
     public int getCount() {
         return count;
     }

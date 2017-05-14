@@ -8,6 +8,7 @@ import com.vicmatskiv.weaponlib.StatusMessageCenter.Message;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleGui;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTessellator;
 import com.vicmatskiv.weaponlib.electronics.ItemWirelessCamera;
+import com.vicmatskiv.weaponlib.grenade.ItemGrenade;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
@@ -27,12 +28,12 @@ public class CustomGui extends CompatibleGui {
 		this.attachmentAspect = attachmentAspect;
 	}
 	private static final int BUFF_ICON_SIZE = 256;
-	
-	
+
+
 	//@SubscribeEvent defined in CompatibleGui
 	@Override
 	public void onCompatibleRenderHud(RenderGameOverlayEvent.Pre event) {
-		
+
 		if(compatibility.getEventType(event) == RenderGameOverlayEvent.ElementType.HELMET) {
 			ItemStack helmet = compatibility.getHelmet();
 			if(helmet != null && mc.gameSettings.thirdPersonView == 0 && helmet.getItem() instanceof CustomArmor) {
@@ -42,60 +43,60 @@ public class CustomGui extends CompatibleGui {
 					ScaledResolution scaledResolution = compatibility.getResolution(event);
 					int width = scaledResolution.getScaledWidth();
 				    int height = scaledResolution.getScaledHeight();
-				    
+
 				    GL11.glPushAttrib(GL11.GL_ENABLE_BIT);
 					GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 					GL11.glDisable(GL11.GL_LIGHTING);
 			        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 					GL11.glEnable(GL11.GL_BLEND);
-					
-					
+
+
 					this.mc.renderEngine.bindTexture(new ResourceLocation(hudTexture));
-					
+
 					drawTexturedQuadFit(0, 0, width, height, 0);
-					
+
 					GL11.glPopAttrib();
-					
+
 					event.setCanceled(true);
 				}
 			}
 		}
 	}
 
-	
+
 	//@SubscribeEvent defined in CompatibleGui
 	@Override
 	public void onCompatibleRenderCrosshair(RenderGameOverlayEvent.Pre event) {
 		if (compatibility.getEventType(event) != RenderGameOverlayEvent.ElementType.CROSSHAIRS ) {
 			return;
 		}
-		
+
 		ItemStack itemStack = compatibility.getHeldItemMainHand(compatibility.clientPlayer());
 
 		if(itemStack == null) {
 			return;
 		}
-		
+
 		PlayerWeaponInstance weaponInstance = modContext.getMainHeldWeapon();
-		
+
 		if(weaponInstance != null) {
 			Weapon weaponItem = (Weapon) itemStack.getItem();
-			
+
 			String crosshair = weaponItem != null ? weaponItem.getCrosshair(weaponInstance) : null;
 			if(crosshair != null) {
 				ScaledResolution scaledResolution = compatibility.getResolution(event);
 				int width = scaledResolution.getScaledWidth();
 			    int height = scaledResolution.getScaledHeight();
-			    
+
 			    int xPos = width / 2 - BUFF_ICON_SIZE / 2;
 				int yPos = height / 2 - BUFF_ICON_SIZE / 2;
-				
+
 			    FontRenderer fontRender = compatibility.getFontRenderer();
 
 				mc.entityRenderer.setupOverlayRendering();
-				
+
 				int color = 0xFFFFFF;
-				
+
 				this.mc.renderEngine.bindTexture(new ResourceLocation(crosshair));
 
 				GL11.glPushAttrib(GL11.GL_ENABLE_BIT);
@@ -103,13 +104,13 @@ public class CustomGui extends CompatibleGui {
 				GL11.glDisable(GL11.GL_LIGHTING);
 		        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 				GL11.glEnable(GL11.GL_BLEND);
-				
+
 //				if(weaponItem.isCrosshairFullScreen(itemStack))	 {
 //					drawTexturedQuadFit(0, 0, width, height, 0);
 //				} else {
 //					drawTexturedModalRect(xPos, yPos, 0, 0, BUFF_ICON_SIZE, BUFF_ICON_SIZE);
 //				}
-				
+
 				if(isInModifyingState(weaponInstance) /*Weapon.isModifying(itemStack)*/ /*weaponItem.getState(weapon) == Weapon.STATE_MODIFYING*/) {
 					fontRender.drawStringWithShadow("Press [up] to add optic", width / 2 - 40, 60, color);
 					fontRender.drawStringWithShadow("Press [left] to add barrel rig", 10, height / 2 - 10, color);
@@ -126,10 +127,10 @@ public class CustomGui extends CompatibleGui {
 					} else {
 						messageText = getDefaultWeaponMessage(weaponInstance);
 					}
-					
+
 					int x = width - 80;
 					int y = 10;
-					
+
 
 					int stringWidth = fontRender.getStringWidth(messageText);
 					if(stringWidth > 80 ) {
@@ -139,7 +140,7 @@ public class CustomGui extends CompatibleGui {
 					fontRender.drawStringWithShadow(messageText, x, y, color);
 				}
 				GL11.glPopAttrib();
-				
+
 				event.setCanceled(true);
 			}
 		} else if(itemStack.getItem() instanceof ItemMagazine) {
@@ -148,7 +149,7 @@ public class CustomGui extends CompatibleGui {
 			FontRenderer fontRender = compatibility.getFontRenderer();
 			mc.entityRenderer.setupOverlayRendering();
 			int color = 0xFFFFFF;
-			
+
 			Message message = modContext.getStatusMessageCenter().nextMessage();
 			String messageText;
 			if(message != null) {
@@ -159,7 +160,7 @@ public class CustomGui extends CompatibleGui {
 			} else {
 				messageText = getDefaultMagazineMessage(itemStack);
 			}
-			
+
 			int x = width - 80;
 			int y = 10;
 
@@ -167,7 +168,7 @@ public class CustomGui extends CompatibleGui {
 			if(stringWidth > 80 ) {
 				x = width - stringWidth - 5;
 			}
-			
+
 			fontRender.drawStringWithShadow(messageText, x, y, color);
 			event.setCanceled(true);
 		} else if(itemStack.getItem() instanceof ItemWirelessCamera) {
@@ -176,7 +177,7 @@ public class CustomGui extends CompatibleGui {
             FontRenderer fontRender = compatibility.getFontRenderer();
             mc.entityRenderer.setupOverlayRendering();
             int color = 0xFFFFFF;
-            
+
             Message message = modContext.getStatusMessageCenter().nextMessage();
             String messageText;
             if(message != null) {
@@ -184,7 +185,7 @@ public class CustomGui extends CompatibleGui {
                 if(message.isAlert()) {
                     color = 0xFF0000;
                 }
-                
+
                 int x = width - 80;
                 int y = 10;
 
@@ -192,7 +193,33 @@ public class CustomGui extends CompatibleGui {
                 if(stringWidth > 80 ) {
                     x = width - stringWidth - 5;
                 }
-                
+
+                fontRender.drawStringWithShadow(messageText, x, y, color);
+                event.setCanceled(true);
+            }
+		} else if(itemStack.getItem() instanceof ItemGrenade) {
+		    ScaledResolution scaledResolution = compatibility.getResolution(event);
+            int width = scaledResolution.getScaledWidth();
+            FontRenderer fontRender = compatibility.getFontRenderer();
+            mc.entityRenderer.setupOverlayRendering();
+            int color = 0xFFFFFF;
+
+            Message message = modContext.getStatusMessageCenter().nextMessage();
+            String messageText;
+            if(message != null) {
+                messageText = message.getMessage();
+                if(message.isAlert()) {
+                    color = 0xFFFF00;
+                }
+
+                int x = width - 80;
+                int y = 10;
+
+                int stringWidth = fontRender.getStringWidth(messageText);
+                if(stringWidth > 80 ) {
+                    x = width - stringWidth - 5;
+                }
+
                 fontRender.drawStringWithShadow(messageText, x, y, color);
                 event.setCanceled(true);
             }
@@ -202,7 +229,7 @@ public class CustomGui extends CompatibleGui {
 
 	private String getDefaultMagazineMessage(ItemStack itemStack) {
 		ItemMagazine magazine = (ItemMagazine) itemStack.getItem();
-		
+
 		String text = "Ammo: " + Tags.getAmmo(itemStack) + "/" + magazine.getAmmo();
 		return text;
 	}
@@ -217,7 +244,7 @@ public class CustomGui extends CompatibleGui {
 		} else {
 			totalCapacity = weaponInstance.getWeapon().getAmmoCapacity();
 		}
-		
+
 		String text;
 		if(weaponInstance.getWeapon().getAmmoCapacity() == 0 && totalCapacity == 0) {
 			text = "No magazine";
@@ -234,7 +261,7 @@ public class CustomGui extends CompatibleGui {
 				|| weaponInstance.getState() == WeaponState.NEXT_ATTACHMENT
 				|| weaponInstance.getState() == WeaponState.NEXT_ATTACHMENT_REQUESTED;
 	}
-	
+
 	private static void drawTexturedQuadFit(double x, double y, double width, double height, double zLevel){
 		CompatibleTessellator tessellator = CompatibleTessellator.getInstance();
         tessellator.startDrawingQuads();

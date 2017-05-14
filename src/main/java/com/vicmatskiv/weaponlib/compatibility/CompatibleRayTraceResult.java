@@ -11,12 +11,30 @@ public class CompatibleRayTraceResult {
 	};
 
 	private RayTraceResult position;
+	private CompatibleVec3 hitVec;
+	private CompatibleBlockPos blockPos;
 
-	public CompatibleRayTraceResult(RayTraceResult position) {
-		this.position = position;
+	static CompatibleRayTraceResult fromRayTraceResult (RayTraceResult position) {
+		return position != null ? new CompatibleRayTraceResult(position) : null;
 	}
 
-	protected RayTraceResult getPosition() {
+	private CompatibleRayTraceResult(RayTraceResult position) {
+	    this.position = position;
+	    init();
+	}
+
+	public CompatibleRayTraceResult(Entity entity) {
+	    this.position = new RayTraceResult(entity);
+	    init();
+    }
+
+	private void init() {
+	    this.hitVec = position.hitVec != null ? new CompatibleVec3(position.hitVec) : null;
+	    this.blockPos = position.getBlockPos() != null ? new CompatibleBlockPos(position.getBlockPos()) : null;
+
+	}
+
+    protected RayTraceResult getPosition() {
 		return position;
 	}
 
@@ -35,22 +53,27 @@ public class CompatibleRayTraceResult {
 	}
 
 	public int getBlockPosX() {
-		return position.getBlockPos().getX();
+		return blockPos.getBlockPos().getX();
 	}
 
 	public int getBlockPosY() {
-		return position.getBlockPos().getY();
+		return blockPos.getBlockPos().getY();
 	}
 
 	public int getBlockPosZ() {
-		return position.getBlockPos().getZ();
+		return blockPos.getBlockPos().getZ();
 	}
 
 	public CompatibleBlockPos getBlockPos() {
-	    return new CompatibleBlockPos(position.getBlockPos());
+	    return blockPos;
+	}
+
+	public void setSideHit(CompatibleEnumFacing sideHit) {
+	    position.sideHit = sideHit.getEnumFacing();
 	}
 
 	public CompatibleEnumFacing getSideHit() {
+
 	    CompatibleEnumFacing result = null;
 	    switch(position.sideHit) {
 	    case UP:
@@ -74,4 +97,13 @@ public class CompatibleRayTraceResult {
 	    }
 	    return result;
 	}
+
+    public CompatibleVec3 getHitVec() {
+        return hitVec;
+    }
+
+    public void setHitVec(CompatibleVec3 hitVec) {
+        position.hitVec = hitVec.getVec();
+        this.hitVec = hitVec;
+    }
 }

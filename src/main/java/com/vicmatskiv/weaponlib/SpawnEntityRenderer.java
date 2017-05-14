@@ -17,7 +17,7 @@ public class SpawnEntityRenderer extends CompatibleEntityRenderer {
 		if(weapon == null) {
     		return;
     	}
-    	ModelBase model = weapon.getAmmoModel();
+    	ModelBase model = null; //weapon.getAmmoModel();
     	if(model != null) {
     		String ammoModelTextureName = weapon.getAmmoModelTextureName();
 			ResourceLocation textureLocation = ammoModelTextureName != null ? new ResourceLocation(ammoModelTextureName) : null;
@@ -39,5 +39,5 @@ public class SpawnEntityRenderer extends CompatibleEntityRenderer {
         return new ResourceLocation(weaponSpawnEntity.getWeapon().getAmmoModelTextureName());
 	}
 
-  
+
 }

@@ -17,7 +17,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
 public class PlayerItemInstance<S extends ManagedState<S>> extends UniversalObject implements ExtendedState<S>, PlayerContext {
-	
+
 	private static final Logger logger = LogManager.getLogger(PlayerItemInstance.class);
 
 	static {
@@ -33,11 +33,11 @@ public class PlayerItemInstance<S extends ManagedState<S>> extends UniversalObje
 	protected int itemInventoryIndex;
 	private PlayerItemInstance<S> preparedState;
 	private long syncStartTimestamp;
-	
+
 //	private Set<PlayerItemStateListener<S>> listeners = new HashSet<>();
-	
+
 	public PlayerItemInstance() {}
-	
+
 	public PlayerItemInstance(int itemInventoryIndex, EntityPlayer player) {
 		this.itemInventoryIndex = itemInventoryIndex;
 		this.player = player;
@@ -46,7 +46,7 @@ public class PlayerItemInstance<S extends ManagedState<S>> extends UniversalObje
 			this.item = itemStack.getItem();
 		}
 	}
-	
+
 	public PlayerItemInstance(int itemInventoryIndex, EntityPlayer player, ItemStack itemStack) {
 		this.itemInventoryIndex = itemInventoryIndex;
 		this.player = player;
@@ -65,19 +65,19 @@ public class PlayerItemInstance<S extends ManagedState<S>> extends UniversalObje
 	public void setPlayer(EntityPlayer player) {
 		this.player = player;
 	}
-	
+
 	public Item getItem() {
 		return item;
 	}
-	
+
 	public ItemStack getItemStack() {
 		return compatibility.getInventoryItemStack(player, itemInventoryIndex);
 	}
-	
+
 	public int getItemInventoryIndex() {
 		return itemInventoryIndex;
 	}
-	
+
 	protected void setItemInventoryIndex(int itemInventoryIndex) {
 		this.itemInventoryIndex = itemInventoryIndex;
 	}
@@ -118,7 +118,7 @@ public class PlayerItemInstance<S extends ManagedState<S>> extends UniversalObje
 			} else {
 				rollback();
 			}
-			
+
 			preparedState = null;
 		}
 		return false;
@@ -149,7 +149,7 @@ public class PlayerItemInstance<S extends ManagedState<S>> extends UniversalObje
 	public long getUpdateId() {
 		return updateId;
 	}
-	
+
 	void markDirty() {
 		updateId++;
 	}
@@ -175,15 +175,15 @@ public class PlayerItemInstance<S extends ManagedState<S>> extends UniversalObje
 //    public View<?> createView() {
 //        return null;
 //    }
-	
+
 //	public void addListener(PlayerItemStateListener<S> listener) {
 //		listeners.add(listener);
 //	}
-//	
+//
 //	public void removeListener(PlayerItemStateListener<S> listener) {
 //		listeners.remove(listener);
 //	}
-//	
+//
 //	protected void notifyListeners() {
 //		listeners.forEach(l -> l.stateChanged(this));
 //	}

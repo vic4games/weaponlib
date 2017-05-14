@@ -29,132 +29,132 @@ import net.minecraft.world.World;
  * On a client side this class is used from within a separate client "ticker" thread
  */
 public class MeleeAttackAspect implements Aspect<MeleeState, PlayerMeleeInstance> {
-    
+
     private static final Logger logger = LogManager.getLogger(MeleeAttackAspect.class);
 
     private static final long STUB_DURATION = 250;
-    
+
     private static final long HEAVY_STUB_DURATION = 250;
-    
+
     @SuppressWarnings("unused")
     private static final long ALERT_TIMEOUT = 300;
 
-    private static Predicate<PlayerMeleeInstance> attackTimeoutExpired = 
-            instance -> System.currentTimeMillis() >  instance.getStateUpdateTimestamp() 
+    private static Predicate<PlayerMeleeInstance> attackTimeoutExpired =
+            instance -> System.currentTimeMillis() >  instance.getStateUpdateTimestamp()
                 + STUB_DURATION;
-            
-    private static Predicate<PlayerMeleeInstance> heavyAttackTimeoutExpired = 
-            instance -> System.currentTimeMillis() >  instance.getStateUpdateTimestamp() 
+
+    private static Predicate<PlayerMeleeInstance> heavyAttackTimeoutExpired =
+            instance -> System.currentTimeMillis() >  instance.getStateUpdateTimestamp()
                 + HEAVY_STUB_DURATION;
-            
-    private static Predicate<PlayerMeleeInstance> attackCooldownTimeoutExpired = 
+
+    private static Predicate<PlayerMeleeInstance> attackCooldownTimeoutExpired =
             instance -> System.currentTimeMillis() >  instance.getLastAttackTimestamp() + instance.getWeapon().getAttackCooldownTimeout();
 
-    private static Predicate<PlayerMeleeInstance> heavyAttackCooldownTimeoutExpired = 
-            instance -> System.currentTimeMillis() >  instance.getLastAttackTimestamp() + instance.getWeapon().getHeavyAttackCooldownTimeout();      
+    private static Predicate<PlayerMeleeInstance> heavyAttackCooldownTimeoutExpired =
+            instance -> System.currentTimeMillis() >  instance.getLastAttackTimestamp() + instance.getWeapon().getHeavyAttackCooldownTimeout();
 
-    private static Predicate<PlayerMeleeInstance> readyToStab = 
+    private static Predicate<PlayerMeleeInstance> readyToStab =
             instance -> System.currentTimeMillis() >  instance.getStateUpdateTimestamp() + instance.getWeapon().getPrepareStubTimeout();
 
-    private static Predicate<PlayerMeleeInstance> readyToHeavyStab = 
+    private static Predicate<PlayerMeleeInstance> readyToHeavyStab =
             instance -> System.currentTimeMillis() >  instance.getStateUpdateTimestamp() + instance.getWeapon().getPrepareHeavyStubTimeout();
 
-//    private static Predicate<PlayerMeleeInstance> alertTimeoutExpired = 
+//    private static Predicate<PlayerMeleeInstance> alertTimeoutExpired =
 //            instance -> System.currentTimeMillis() >= ALERT_TIMEOUT + instance.getStateUpdateTimestamp();
 
 //    private static Predicate<PlayerMeleeInstance> sprinting = instance -> instance.getPlayer().isSprinting();
-             
+
     private static final Set<MeleeState> allowedAttackFromStates = new HashSet<>(
             Arrays.asList(MeleeState.READY));
-    
+
     private static final Set<MeleeState> allowedUpdateFromStates = new HashSet<>(
-            Arrays.asList(MeleeState.ATTACKING, MeleeState.HEAVY_ATTACKING, 
+            Arrays.asList(MeleeState.ATTACKING, MeleeState.HEAVY_ATTACKING,
                     MeleeState.ATTACKING_STABBING, MeleeState.HEAVY_ATTACKING_STABBING, MeleeState.ALERT));
-    
-    
+
+
     private ModContext modContext;
 
     private StateManager<MeleeState, ? super PlayerMeleeInstance> stateManager;
-    
+
     public MeleeAttackAspect(CommonModContext modContext) {
         this.modContext = modContext;
     }
-    
+
     @Override
     public void setPermitManager(PermitManager permitManager) {}
 
     @Override
     public void setStateManager(StateManager<MeleeState, ? super PlayerMeleeInstance> stateManager) {
         this.stateManager = stateManager;
-        
+
         stateManager
-        
+
 //        .in(this).change(MeleeState.READY).to(MeleeState.ALERT)
 //        .when(attackCooldownTimeoutExpired.negate())
 //        .withAction(this::cannotAttack)
 //        .manual() // on start fire
-//        
+//
 //        .in(this).change(MeleeState.ALERT).to(MeleeState.READY)
 //        .when(alertTimeoutExpired)
-//        .automatic() // 
-        
+//        .automatic() //
+
         .in(this).change(MeleeState.READY).to(MeleeState.ATTACKING)
         .when(attackCooldownTimeoutExpired)
         .manual() // on start fire
-        
+
         .in(this).change(MeleeState.ATTACKING).to(MeleeState.ATTACKING_STABBING)
         .withAction(i -> attack(i, false))
         .when(readyToStab)
         .automatic()
-        
+
         .in(this).change(MeleeState.ATTACKING_STABBING).to(MeleeState.READY)
         .withAction(i -> {i.setLastAttackTimestamp(System.currentTimeMillis());})
         .when(attackTimeoutExpired)
         .automatic()
-        
+
         .in(this).change(MeleeState.READY).to(MeleeState.HEAVY_ATTACKING)
         .when(heavyAttackCooldownTimeoutExpired)
         .manual()
-        
+
         .in(this).change(MeleeState.HEAVY_ATTACKING).to(MeleeState.HEAVY_ATTACKING_STABBING)
         .withAction(i -> attack(i, true))
         .when(readyToHeavyStab)
         .automatic()
-        
+
         .in(this).change(MeleeState.HEAVY_ATTACKING_STABBING).to(MeleeState.READY)
         .withAction(i -> {i.setLastAttackTimestamp(System.currentTimeMillis());})
         .when(heavyAttackTimeoutExpired)
         .automatic()
         ;
     }
-    
+
     void onAttackButtonClick(EntityPlayer player) {
         PlayerMeleeInstance weaponInstance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerMeleeInstance.class);
         if(weaponInstance != null) {
            stateManager.changeStateFromAnyOf(this, weaponInstance, allowedAttackFromStates, MeleeState.ATTACKING, MeleeState.ALERT);
         }
     }
-    
+
     void onHeavyAttackButtonClick(EntityPlayer player) {
         PlayerMeleeInstance weaponInstance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerMeleeInstance.class);
         if(weaponInstance != null) {
            stateManager.changeStateFromAnyOf(this, weaponInstance, allowedAttackFromStates, MeleeState.HEAVY_ATTACKING, MeleeState.ALERT);
         }
     }
-    
+
     void onUpdate(EntityPlayer player) {
         PlayerMeleeInstance weaponInstance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerMeleeInstance.class);
         if(weaponInstance != null) {
             stateManager.changeStateFromAnyOf(this, weaponInstance, allowedUpdateFromStates);
         }
     }
-    
+
     @SuppressWarnings("unused")
     private void cannotAttack(PlayerMeleeInstance meleeInstance) {
         modContext.getStatusMessageCenter().addAlertMessage("Cooling down...", 2, 200, 100);
         compatibility.playSound(meleeInstance.getPlayer(), modContext.getNoAmmoSound(), 1F, 1F);
     }
-    
+
     private void attack(PlayerMeleeInstance meleeInstance, boolean isHeavyAttack) {
 
         CompatibleRayTraceResult objectMouseOver = compatibility.getObjectMouseOver();
@@ -176,12 +176,12 @@ public class MeleeAttackAspect implements Aspect<MeleeState, PlayerMeleeInstance
                     break;
             }
         }
-    
+
     }
 
     private void attackEntity(Entity entity, EntityPlayer player, PlayerMeleeInstance instance, boolean isHeavyAttack) {
         modContext.getChannel().getChannel().sendToServer(new TryAttackMessage(instance, entity, isHeavyAttack));
-        entity.attackEntityFrom(DamageSource.causePlayerDamage(player), 
+        entity.attackEntityFrom(DamageSource.causePlayerDamage(player),
                 instance.getWeapon().getDamage(isHeavyAttack));
     }
 
@@ -190,8 +190,8 @@ public class MeleeAttackAspect implements Aspect<MeleeState, PlayerMeleeInstance
                 instance.getWeapon().getDamage(isHeavyAttack));
         float damage = instance.getWeapon().getDamage(isHeavyAttack);
         entity.attackEntityFrom(DamageSource.causePlayerDamage(player), damage);
-        
-        CompatibleTargetPoint point = new CompatibleTargetPoint(entity.dimension, 
+
+        CompatibleTargetPoint point = new CompatibleTargetPoint(entity.dimension,
                 entity.posX, entity.posY, entity.posZ, 100);
 
         double motionX = entity.posX - player.posX;
@@ -202,13 +202,14 @@ public class MeleeAttackAspect implements Aspect<MeleeState, PlayerMeleeInstance
         logger.debug("Generating {} particle(s) per damage {}", count, damage);
 
         modContext.getChannel().sendToAllAround(new SpawnParticleMessage(
+                SpawnParticleMessage.ParticleType.BLOOD,
                 count,
-                entity.posX - motionX / 2, 
-                entity.posY - motionY / 2, 
+                entity.posX - motionX / 2,
+                entity.posY - motionY / 2,
                 entity.posZ - motionZ / 2),
                 point);
     }
-    
+
     int getParticleCount(float damage) {
         return (int) (-0.11 * (damage - 30) * (damage - 30) + 100);
     }

@@ -6,13 +6,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.Predicate;
 
+import com.vicmatskiv.weaponlib.EntityShellCasing;
 import com.vicmatskiv.weaponlib.ModContext;
-import com.vicmatskiv.weaponlib.Weapon;
-import com.vicmatskiv.weaponlib.WeaponSpawnEntity;
+import com.vicmatskiv.weaponlib.PlayerWeaponInstance;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleParticle.CompatibleParticleBreaking;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.FontRenderer;
@@ -35,6 +34,7 @@ import net.minecraft.item.ItemArmor.ArmorMaterial;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
@@ -59,6 +59,8 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.oredict.ShapedOreRecipe;
 
 public class Compatibility1_11_2 implements Compatibility {
+
+    private static final float DEFAULT_SHELL_CASING_FORWARD_OFFSET = 0.1f;
 
     private static CompatibleMathHelper mathHelper = new CompatibleMathHelper();
 
@@ -141,14 +143,6 @@ public class Compatibility1_11_2 implements Compatibility {
     @Override
     public void setTagCompound(ItemStack itemStack, NBTTagCompound tagCompound) {
         itemStack.setTagCompound(tagCompound);
-    }
-
-    @Override
-    public WeaponSpawnEntity getSpawnEntity(Weapon weapon, World world, EntityPlayer player, float speed,
-            float gravityVelocity, float inaccuracy, float damage, float explosionRadius,
-            Material... damageableBlockMaterials) {
-        return new WeaponSpawnEntity(weapon, player.world, player, speed, gravityVelocity, inaccuracy, damage,
-                explosionRadius);
     }
 
     @Override
@@ -315,7 +309,7 @@ public class Compatibility1_11_2 implements Compatibility {
 
     @Override
     public CompatibleRayTraceResult getObjectMouseOver() {
-        return new CompatibleRayTraceResult(Minecraft.getMinecraft().objectMouseOver);
+        return CompatibleRayTraceResult.fromRayTraceResult(Minecraft.getMinecraft().objectMouseOver);
     }
 
     @Override
@@ -618,4 +612,79 @@ public class Compatibility1_11_2 implements Compatibility {
 
         return resultStack;
     }
+
+    @Override
+    public CompatibleRayTraceResult rayTraceBlocks(Entity entity, CompatibleVec3 vec3, CompatibleVec3 vec31) {
+        return CompatibleRayTraceResult.fromRayTraceResult(entity.getEntityWorld().rayTraceBlocks(vec3.getVec(), vec31.getVec()));
+    }
+
+    @Override
+    public CompatibleAxisAlignedBB expandEntityBoundingBox(Entity entity1, double f1, double f2, double f3) {
+        return new CompatibleAxisAlignedBB(entity1.getEntityBoundingBox().expand(f1, f2, f3));
+    }
+
+    @Override
+    public CompatibleAxisAlignedBB getBoundingBox(Entity entity) {
+        return new CompatibleAxisAlignedBB(entity.getEntityBoundingBox());
+    }
+
+    @Override
+    public List<?> getEntitiesWithinAABBExcludingEntity(World world, Entity entity, CompatibleAxisAlignedBB boundingBox) {
+        return world.getEntitiesWithinAABBExcludingEntity(entity, boundingBox.getBoundingBox());
+    }
+
+    @Override
+    public void spawnParticle(World world, String particleName, double xCoord, double yCoord, double zCoord,
+            double xSpeed, double ySpeed, double zSpeed) {
+        EnumParticleTypes particleType = EnumParticleTypes.getByName(particleName);
+        if(particleType != null) {
+            world.spawnParticle(particleType, xCoord, yCoord, zCoord, xSpeed, ySpeed, zSpeed);
+        }
+    }
+
+    @Override
+    public Block getBlockAtPosition(World world, CompatibleBlockPos blockPos) {
+        return world.getBlockState(blockPos.getBlockPos()).getBlock();
+    }
+
+    @Override
+    public EntityShellCasing getShellCasingEntity(PlayerWeaponInstance weaponInstance, World world, EntityPlayer player,
+            float speed, float gravityVelocity, float inaccuracy) {
+        return new EntityShellCasing(weaponInstance, world, player, speed, gravityVelocity, inaccuracy);
+    }
+
+    @Override
+    public Item findItemByName(String modId, String itemName) {
+        return Item.REGISTRY.getObject(new ResourceLocation(modId, itemName));
+    }
+
+    @Override
+    public String getPlayerName(EntityPlayer player) {
+        return player.getName();
+    }
+
+    @Override
+    public boolean isBlockPenetratableByBullets(Block block) {
+        return block == Blocks.AIR
+                || block == Blocks.TALLGRASS
+                || block == Blocks.LEAVES
+                || block == Blocks.LEAVES2
+                || block == Blocks.FIRE
+                || block == Blocks.HAY_BLOCK
+                || block == Blocks.DOUBLE_PLANT
+                || block == Blocks.WEB
+                || block == Blocks.WHEAT;
+    }
+
+    @Override
+    public boolean canCollideCheck(Block block, CompatibleBlockState metadata, boolean hitIfLiquid) {
+        return block.canCollideCheck(metadata.getBlockState(), hitIfLiquid);
+    }
+
+    @Override
+    public float getCompatibleShellCasingForwardOffset() {
+        return DEFAULT_SHELL_CASING_FORWARD_OFFSET ;
+    }
+
+
 }

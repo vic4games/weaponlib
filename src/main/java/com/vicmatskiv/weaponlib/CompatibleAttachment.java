@@ -15,26 +15,39 @@ public class CompatibleAttachment<T> {
 	private Consumer<ModelBase> modelPositioning;
 	private BiConsumer<EntityPlayer, ItemStack> positioning;
 	private boolean isDefault;
+	private boolean isPermanent;
 	private ItemAttachment.ApplyHandler2<T> applyHandler;
 	private ItemAttachment.ApplyHandler2<T> removeHandler;
 	ItemAttachment.MeleeWeaponApplyHandler<ItemMelee> meleeApplyHandler;
     ItemAttachment.MeleeWeaponApplyHandler<ItemMelee> meleeRemoveHandler;
-	
-	public CompatibleAttachment(ItemAttachment<T> attachment, BiConsumer<EntityPlayer, ItemStack> positioning, Consumer<ModelBase> modelPositioning, boolean isDefault) {
+
+	public CompatibleAttachment(ItemAttachment<T> attachment,
+	        BiConsumer<EntityPlayer, ItemStack> positioning,
+	        Consumer<ModelBase> modelPositioning,
+	        boolean isDefault,
+	        boolean isPermanent) {
 		this.attachment = attachment;
 		this.positioning = positioning;
 		this.modelPositioning = modelPositioning;
 		this.isDefault = isDefault;
+		this.isPermanent = isPermanent;
 	}
-	
+
+	public CompatibleAttachment(ItemAttachment<T> attachment,
+            BiConsumer<EntityPlayer, ItemStack> positioning,
+            Consumer<ModelBase> modelPositioning,
+            boolean isDefault) {
+	    this(attachment, positioning, modelPositioning, isDefault, false);
+    }
+
 	public CompatibleAttachment(ItemAttachment<T> attachment, ItemAttachment.ApplyHandler2<T> applyHandler, ItemAttachment.ApplyHandler2<T> removeHandler) {
 		this.attachment = attachment;
 		this.applyHandler = applyHandler;
 		this.removeHandler = removeHandler;
 	}
-	
-	public CompatibleAttachment(ItemAttachment<T> attachment, 
-	        ItemAttachment.MeleeWeaponApplyHandler<ItemMelee> meleeApplyHandler, 
+
+	public CompatibleAttachment(ItemAttachment<T> attachment,
+	        ItemAttachment.MeleeWeaponApplyHandler<ItemMelee> meleeApplyHandler,
 	        ItemAttachment.MeleeWeaponApplyHandler<ItemMelee> meleeRemoveHandler) {
         this.attachment = attachment;
         this.meleeApplyHandler = meleeApplyHandler;
@@ -44,7 +57,7 @@ public class CompatibleAttachment<T> {
 	public CompatibleAttachment(ItemAttachment<T> attachment, Consumer<ModelBase> positioning) {
 		this(attachment, null, positioning, false);
 	}
-	
+
 	public CompatibleAttachment(ItemAttachment<T> attachment, Consumer<ModelBase> positioning, boolean isDefault) {
 		this.attachment = attachment;
 		this.modelPositioning = positioning;
@@ -58,7 +71,7 @@ public class CompatibleAttachment<T> {
 	public Consumer<ModelBase> getModelPositioning() {
 		return modelPositioning;
 	}
-	
+
 	public BiConsumer<EntityPlayer, ItemStack> getPositioning() {
 		return positioning;
 	}
@@ -74,12 +87,16 @@ public class CompatibleAttachment<T> {
 	public ItemAttachment.ApplyHandler2<T> getRemoveHandler() {
 		return removeHandler;
 	}
-	
+
 	public ItemAttachment.MeleeWeaponApplyHandler<ItemMelee> getMeleeApplyHandler() {
         return meleeApplyHandler;
     }
 
     public ItemAttachment.MeleeWeaponApplyHandler<ItemMelee> getMeleeRemoveHandler() {
         return meleeRemoveHandler;
+    }
+
+    public boolean isPermanent() {
+        return isPermanent;
     }
 }
