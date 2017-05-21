@@ -9,9 +9,9 @@ public enum GrenadeState implements ManagedState<GrenadeState> {
 
 	READY(false),
 
-	TAKING_SAFETY_PING_OFF(9),
+	SAFETY_PING_OFF(9),
 
-	SAFETY_PIN_OFF(9),
+	STRIKER_LEVER_RELEASED(9),
 
 	THROWING(9),
 

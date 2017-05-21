@@ -7,6 +7,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.vicmatskiv.weaponlib.AsyncWeaponState;
 import com.vicmatskiv.weaponlib.AttachmentCategory;
 import com.vicmatskiv.weaponlib.CompatibleAttachment;
 import com.vicmatskiv.weaponlib.ItemAttachment;
@@ -20,16 +21,16 @@ import net.minecraft.item.ItemStack;
 
 
 public class PlayerMeleeInstance extends PlayerItemInstance<MeleeState> {
-	
+
 	private static final int SERIAL_VERSION = 7;
-	
+
 	@SuppressWarnings("unused")
 	private static final Logger logger = LogManager.getLogger(PlayerMeleeInstance.class);
 
 	static {
 		TypeRegistry.getInstance().register(PlayerMeleeInstance.class);
 	}
-	
+
 	private int ammo;
 	private long lastFireTimestamp;
 	private byte activeTextureIndex;
@@ -49,12 +50,12 @@ public class PlayerMeleeInstance extends PlayerItemInstance<MeleeState> {
 	public PlayerMeleeInstance(int itemInventoryIndex, EntityPlayer player) {
 		super(itemInventoryIndex, player);
 	}
-	
+
 	@Override
 	protected int getSerialVersion() {
 		return SERIAL_VERSION;
 	}
-	
+
 	private void addStateToHistory(MeleeState state) {
 	    AsyncMeleeState t;
 		// Remove existing items from lower priorities from the top of the stack; stop when same or higher priority item is found
@@ -65,11 +66,11 @@ public class PlayerMeleeInstance extends PlayerItemInstance<MeleeState> {
 				break;
 			}
 		}
-		
+
 		long expirationTimeout = 500;
-		
+
 //		long expirationTimeout;
-//		
+//
 //		if(state == MeleeState.FIRING || state == MeleeState.RECOILED || state == MeleeState.PAUSED) {
 //			if(isAutomaticModeEnabled() && !getWeapon().hasRecoilPositioning()) {
 //				expirationTimeout = (long) (50f / getFireRate());
@@ -82,37 +83,33 @@ public class PlayerMeleeInstance extends PlayerItemInstance<MeleeState> {
 //		}
 		filteredStateQueue.addFirst(new AsyncMeleeState(state, this.stateUpdateTimestamp, expirationTimeout));
 	}
-	
+
 	@Override
 	public boolean setState(MeleeState state) {
 		boolean result = super.setState(state);
 		addStateToHistory(state);
 		return result;
 	}
-	
+
 	public AsyncMeleeState nextHistoryState() {
-//		logger.debug("State queue: " + filteredStateQueue.stream().map(t -> t.getState() + ":" + t.getDuration())
-//				.collect(Collectors.toList()));
-	    AsyncMeleeState result;
-		if(filteredStateQueue.size() > 0) { // was > 1 earlier, why?
-			result = filteredStateQueue.pollLast();
-		} else {
-			result = new AsyncMeleeState(getState(), stateUpdateTimestamp);
-		}
-		return result;
+	    AsyncMeleeState result = filteredStateQueue.pollLast();
+        if(result == null) {
+            result = new AsyncMeleeState(getState(), stateUpdateTimestamp);
+        }
+        return result;
 	}
 
 	public int getAmmo() {
 		return ammo;
 	}
-	
+
 	protected void setAmmo(int ammo) {
 		if(ammo != this.ammo) {
 			this.ammo = ammo;
 			updateId++; //TODO: what's going on with this update id?
 		}
 	}
-	
+
 	@Override
 	public void init(ByteBuf buf) {
 		super.init(buf);
@@ -121,7 +118,7 @@ public class PlayerMeleeInstance extends PlayerItemInstance<MeleeState> {
 		ammo = buf.readInt();
 		activeTextureIndex = buf.readByte();
 	}
-	
+
 	@Override
 	public void serialize(ByteBuf buf) {
 		super.serialize(buf);
@@ -130,21 +127,21 @@ public class PlayerMeleeInstance extends PlayerItemInstance<MeleeState> {
 		buf.writeInt(ammo);
 		buf.writeByte(activeTextureIndex);
 	}
-	
+
 	private static void serializeIntArray(ByteBuf buf, int a[]) {
 		buf.writeByte(a.length);
 		for(int i = 0; i < a.length; i++) {
 			buf.writeInt(a[i]);
 		}
 	}
-	
+
 	private static void serializeByteArray(ByteBuf buf, byte a[]) {
 		buf.writeByte(a.length);
 		for(int i = 0; i < a.length; i++) {
 			buf.writeByte(a[i]);
 		}
 	}
-	
+
 	private static int[] initIntArray(ByteBuf buf) {
 		int length = buf.readByte();
 		int a[] = new int[length];
@@ -153,7 +150,7 @@ public class PlayerMeleeInstance extends PlayerItemInstance<MeleeState> {
 		}
 		return a;
 	}
-	
+
 	private static byte[] initByteArray(ByteBuf buf) {
 		int length = buf.readByte();
 		byte a[] = new byte[length];
@@ -162,12 +159,12 @@ public class PlayerMeleeInstance extends PlayerItemInstance<MeleeState> {
 		}
 		return a;
 	}
-	
+
 	@Override
 	protected void updateWith(PlayerItemInstance<MeleeState> otherItemInstance, boolean updateManagedState) {
 		super.updateWith(otherItemInstance, updateManagedState);
 		PlayerMeleeInstance otherWeaponInstance = (PlayerMeleeInstance) otherItemInstance;
-		
+
 		setAmmo(otherWeaponInstance.ammo);
 		setSelectedAttachmentIndexes(otherWeaponInstance.selectedAttachmentIndexes);
 		setActiveAttachmentIds(otherWeaponInstance.activeAttachmentIds);
@@ -178,7 +175,7 @@ public class PlayerMeleeInstance extends PlayerItemInstance<MeleeState> {
 		return (ItemMelee)item;
 	}
 
-	
+
 
 	public long getLastAttackTimestamp() {
 		return lastFireTimestamp;
@@ -239,7 +236,7 @@ public class PlayerMeleeInstance extends PlayerItemInstance<MeleeState> {
 			this.activeTextureIndex = (byte)activeTextureIndex;
 			updateId++;
 		}
-		
+
 	}
 
 	@Override

@@ -19,4 +19,8 @@ public class CompatibleMathHelper {
 	public static float sqrt_double(double in) {
 		return MathHelper.sqrt(in);
 	}
+
+    public static int floor_double(double d) {
+        return MathHelper.floor(d);
+    }
 }

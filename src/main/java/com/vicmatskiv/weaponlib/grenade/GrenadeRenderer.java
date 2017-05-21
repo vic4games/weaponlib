@@ -11,7 +11,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
+
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.model.ModelBase;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -36,12 +43,6 @@ import com.vicmatskiv.weaponlib.animation.MultipartTransition;
 import com.vicmatskiv.weaponlib.animation.MultipartTransitionProvider;
 import com.vicmatskiv.weaponlib.animation.Transition;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleGrenadeRenderer;
-
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.model.ModelBase;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
 
 public class GrenadeRenderer extends CompatibleGrenadeRenderer {
 
@@ -69,6 +70,7 @@ public class GrenadeRenderer extends CompatibleGrenadeRenderer {
 		private String textureName;
 
 		private Consumer<ItemStack> entityPositioning;
+		private Runnable thrownEntityPositioning = () -> {};
 		private Consumer<ItemStack> inventoryPositioning;
 		private Consumer<RenderContext<RenderableState>> thirdPersonPositioning;
 
@@ -82,15 +84,15 @@ public class GrenadeRenderer extends CompatibleGrenadeRenderer {
 		private Consumer<RenderContext<RenderableState>> firstPersonRightHandPositioningRunning;
         private LinkedHashMap<Part, Consumer<RenderContext<RenderableState>>> firstPersonCustomPositioningRunning = new LinkedHashMap<>();
 
-		private List<Transition<RenderContext<RenderableState>>> firstPersonPositioningTakingSafetyPinOff;
-		private List<Transition<RenderContext<RenderableState>>> firstPersonLeftHandPositioningTakingSafetyPinOff;
-		private List<Transition<RenderContext<RenderableState>>> firstPersonRightHandPositioningTakingSafetyPinOff;
-		private LinkedHashMap<Part, List<Transition<RenderContext<RenderableState>>>> firstPersonCustomPositioningTakingSafetyPinOff = new LinkedHashMap<>();
+		private List<Transition<RenderContext<RenderableState>>> firstPersonPositioningSafetyPinOff;
+		private List<Transition<RenderContext<RenderableState>>> firstPersonLeftHandPositioningSafetyPinOff;
+		private List<Transition<RenderContext<RenderableState>>> firstPersonRightHandPositioningSafetyPinOff;
+		private LinkedHashMap<Part, List<Transition<RenderContext<RenderableState>>>> firstPersonCustomPositioningSafetyPinOff = new LinkedHashMap<>();
 
-        private Consumer<RenderContext<RenderableState>> firstPersonPositioningSafetyPinOff;
-		private Consumer<RenderContext<RenderableState>> firstPersonLeftHandPositioningSafetyPinOff;
-		private Consumer<RenderContext<RenderableState>> firstPersonRightHandPositioningSafetyPinOff;
-        private LinkedHashMap<Part, SimplePositioning> firstPersonCustomPositioningSafetyPinOff = new LinkedHashMap<>();
+        private Consumer<RenderContext<RenderableState>> firstPersonPositioningStrikerLeverOff;
+		private Consumer<RenderContext<RenderableState>> firstPersonLeftHandPositioningStrikerLeverOff;
+		private Consumer<RenderContext<RenderableState>> firstPersonRightHandPositioningStrikerLeverOff;
+        private LinkedHashMap<Part, SimplePositioning> firstPersonCustomPositioningStrikerLeverOff = new LinkedHashMap<>();
 
 		private List<Transition<RenderContext<RenderableState>>> firstPersonPositioningThrowing;
         private List<Transition<RenderContext<RenderableState>>> firstPersonLeftHandPositioningThrowing;
@@ -110,6 +112,10 @@ public class GrenadeRenderer extends CompatibleGrenadeRenderer {
 		private float normalRandomizingRate = DEFAULT_RANDOMIZING_RATE; // movements per second, e.g. 0.25 = 0.25 movements per second = 1 movement in 3 minutes
 		private float normalRandomizingAmplitude = DEFAULT_NORMAL_RANDOMIZING_AMPLITUDE;
         public int animationDuration = DEFAULT_ANIMATION_DURATION;
+        private Supplier<Float> xCenterOffset = () -> 0f;
+        private Supplier<Float> yCenterOffset = () -> 0f;
+        private Supplier<Float> zCenterOffset = () -> 0f;
+
 
 		public Builder withModId(String modId) {
 			this.modId = modId;
@@ -140,6 +146,11 @@ public class GrenadeRenderer extends CompatibleGrenadeRenderer {
 			this.entityPositioning = entityPositioning;
 			return this;
 		}
+
+		public Builder withThrownEntityPositioning(Runnable throwEntityPositioning) {
+            this.thrownEntityPositioning = throwEntityPositioning;
+            return this;
+        }
 
 		public Builder withInventoryPositioning(Consumer<ItemStack> inventoryPositioning) {
 			this.inventoryPositioning = inventoryPositioning;
@@ -226,8 +237,8 @@ public class GrenadeRenderer extends CompatibleGrenadeRenderer {
         }
 
 		@SafeVarargs
-		public final Builder withFirstPersonPositioningTakingSafetyPinOff(Transition<RenderContext<RenderableState>> ...transitions) {
-			this.firstPersonPositioningTakingSafetyPinOff = Arrays.asList(transitions);
+		public final Builder withFirstPersonPositioningSafetyPinOff(Transition<RenderContext<RenderableState>> ...transitions) {
+			this.firstPersonPositioningSafetyPinOff = Arrays.asList(transitions);
 			return this;
 		}
 
@@ -237,15 +248,15 @@ public class GrenadeRenderer extends CompatibleGrenadeRenderer {
             return this;
         }
 
-		public Builder withFirstPersonPositioningSafetyPinOff(Consumer<RenderContext<RenderableState>> firstPersonPositioningSafetyPinOff) {
-			this.firstPersonPositioningSafetyPinOff = firstPersonPositioningSafetyPinOff;
+		public Builder withFirstPersonPositioningStrikerLeverOff(Consumer<RenderContext<RenderableState>> firstPersonPositioningStrikerLeverOff) {
+			this.firstPersonPositioningStrikerLeverOff = firstPersonPositioningStrikerLeverOff;
 			return this;
 		}
 
 
 		@SafeVarargs
-		public final Builder withFirstPersonLeftHandPositioningTakingSafetyPinOff(Transition<RenderContext<RenderableState>> ...transitions) {
-			this.firstPersonLeftHandPositioningTakingSafetyPinOff = Arrays.asList(transitions);
+		public final Builder withFirstPersonLeftHandPositioningSafetyPinOff(Transition<RenderContext<RenderableState>> ...transitions) {
+			this.firstPersonLeftHandPositioningSafetyPinOff = Arrays.asList(transitions);
 			return this;
 		}
 
@@ -262,25 +273,25 @@ public class GrenadeRenderer extends CompatibleGrenadeRenderer {
         }
 
 		@SafeVarargs
-		public final Builder withFirstPersonRightHandPositioningTakingSafetyPinOff(Transition<RenderContext<RenderableState>> ...transitions) {
-			this.firstPersonRightHandPositioningTakingSafetyPinOff = Arrays.asList(transitions);
+		public final Builder withFirstPersonRightHandPositioningSafetyPinOff(Transition<RenderContext<RenderableState>> ...transitions) {
+			this.firstPersonRightHandPositioningSafetyPinOff = Arrays.asList(transitions);
 			return this;
 		}
 
-		public Builder withFirstPersonHandPositioningSafetyPinOff(
+		public Builder withFirstPersonHandPositioningStrikerLevelOff(
 				Consumer<RenderContext<RenderableState>> leftHand,
 				Consumer<RenderContext<RenderableState>> rightHand)
 		{
-			this.firstPersonLeftHandPositioningSafetyPinOff = leftHand;
-			this.firstPersonRightHandPositioningSafetyPinOff = rightHand;
+			this.firstPersonLeftHandPositioningStrikerLeverOff = leftHand;
+			this.firstPersonRightHandPositioningStrikerLeverOff = rightHand;
 			return this;
 		}
 
-		public Builder withFirstPersonCustomPositioningSafetyPinOff(Part part, Part attachedTo, Consumer<RenderContext<RenderableState>> positioning) {
+		public Builder withFirstPersonCustomPositioningStrikerLeverOff(Part part, Part attachedTo, Consumer<RenderContext<RenderableState>> positioning) {
             if(part instanceof DefaultPart) {
                 throw new IllegalArgumentException("Part " + part + " is not custom");
             }
-            if(this.firstPersonCustomPositioningSafetyPinOff.put(part,
+            if(this.firstPersonCustomPositioningStrikerLeverOff.put(part,
                     new SimplePositioning(attachedTo, positioning)) != null) {
                 throw new IllegalArgumentException("Part " + part + " already added");
             }
@@ -288,12 +299,12 @@ public class GrenadeRenderer extends CompatibleGrenadeRenderer {
         }
 
 		@SafeVarargs
-		public final Builder withFirstPersonCustomPositioningTakingSafetyPinOff(Part part, Transition<RenderContext<RenderableState>> ...transitions) {
+		public final Builder withFirstPersonCustomPositioningSafetyPinOff(Part part, Transition<RenderContext<RenderableState>> ...transitions) {
 			if(part instanceof DefaultPart) {
 				throw new IllegalArgumentException("Part " + part + " is not custom");
 			}
 
-			this.firstPersonCustomPositioningTakingSafetyPinOff.put(part, Arrays.asList(transitions));
+			this.firstPersonCustomPositioningSafetyPinOff.put(part, Arrays.asList(transitions));
 			return this;
 		}
 
@@ -306,6 +317,13 @@ public class GrenadeRenderer extends CompatibleGrenadeRenderer {
             this.firstPersonCustomPositioningThrowing.put(part, Arrays.asList(transitions));
             return this;
         }
+
+		public Builder withEntityRotationCenterOffsets(Supplier<Float> xCenterOffset, Supplier<Float> yCenterOffset, Supplier<Float> zCenterOffset) {
+		    this.xCenterOffset = xCenterOffset;
+		    this.yCenterOffset = yCenterOffset;
+		    this.zCenterOffset = zCenterOffset;
+		    return this;
+		}
 
 		public GrenadeRenderer build() {
 			if(!compatibility.isClientSide()) {
@@ -331,15 +349,15 @@ public class GrenadeRenderer extends CompatibleGrenadeRenderer {
 				firstPersonPositioning = (renderContext) -> {};
 			}
 
-			if(firstPersonPositioningTakingSafetyPinOff == null) {
-				firstPersonPositioningTakingSafetyPinOff = Collections.singletonList(new Transition<>(firstPersonPositioning, animationDuration));
+			if(firstPersonPositioningSafetyPinOff == null) {
+				firstPersonPositioningSafetyPinOff = Collections.singletonList(new Transition<>(firstPersonPositioning, animationDuration));
 			}
 
 			if(firstPersonPositioningThrowing == null) {
                 firstPersonPositioningThrowing = Collections.singletonList(new Transition<>(firstPersonPositioning, animationDuration));
             }
 
-			for(Transition<RenderContext<RenderableState>> t: firstPersonPositioningTakingSafetyPinOff) {
+			for(Transition<RenderContext<RenderableState>> t: firstPersonPositioningSafetyPinOff) {
 				totalTakingPinOffDuration += t.getDuration();
 				totalTakingPinOffDuration += t.getPause();
 			}
@@ -353,15 +371,15 @@ public class GrenadeRenderer extends CompatibleGrenadeRenderer {
 				firstPersonPositioningRunning = firstPersonPositioning;
 			}
 
-			if(firstPersonPositioningSafetyPinOff == null) {
-			    if(firstPersonPositioningTakingSafetyPinOff != null && !firstPersonPositioningTakingSafetyPinOff.isEmpty()) {
+			if(firstPersonPositioningStrikerLeverOff == null) {
+			    if(firstPersonPositioningSafetyPinOff != null && !firstPersonPositioningSafetyPinOff.isEmpty()) {
 			        // Use last transition
-			        firstPersonPositioningSafetyPinOff = firstPersonPositioningTakingSafetyPinOff
-			                .get(firstPersonPositioningTakingSafetyPinOff.size() - 1).getItemPositioning();
+			        firstPersonPositioningStrikerLeverOff = firstPersonPositioningSafetyPinOff
+			                .get(firstPersonPositioningSafetyPinOff.size() - 1).getItemPositioning();
 			    }
 
-			    if(firstPersonPositioningSafetyPinOff == null) {
-			        firstPersonPositioningSafetyPinOff = firstPersonPositioning;
+			    if(firstPersonPositioningStrikerLeverOff == null) {
+			        firstPersonPositioningStrikerLeverOff = firstPersonPositioning;
 			    }
 			}
 
@@ -391,8 +409,8 @@ public class GrenadeRenderer extends CompatibleGrenadeRenderer {
 				firstPersonLeftHandPositioning = (context) -> {};
 			}
 
-			if(firstPersonLeftHandPositioningTakingSafetyPinOff == null) {
-				firstPersonLeftHandPositioningTakingSafetyPinOff = firstPersonPositioningTakingSafetyPinOff.stream().map(t -> new Transition<RenderContext<RenderableState>>(
+			if(firstPersonLeftHandPositioningSafetyPinOff == null) {
+				firstPersonLeftHandPositioningSafetyPinOff = firstPersonPositioningSafetyPinOff.stream().map(t -> new Transition<RenderContext<RenderableState>>(
 				        c -> {}, 0)).collect(Collectors.toList());
 			}
 
@@ -410,16 +428,16 @@ public class GrenadeRenderer extends CompatibleGrenadeRenderer {
 				firstPersonLeftHandPositioningRunning = firstPersonLeftHandPositioning;
 			}
 
-			if(firstPersonLeftHandPositioningSafetyPinOff == null) {
+			if(firstPersonLeftHandPositioningStrikerLeverOff == null) {
 
-			    if(firstPersonLeftHandPositioningTakingSafetyPinOff != null && !firstPersonLeftHandPositioningTakingSafetyPinOff.isEmpty()) {
+			    if(firstPersonLeftHandPositioningSafetyPinOff != null && !firstPersonLeftHandPositioningSafetyPinOff.isEmpty()) {
                     // Use last transition
-			        firstPersonLeftHandPositioningSafetyPinOff = firstPersonLeftHandPositioningTakingSafetyPinOff
-                            .get(firstPersonLeftHandPositioningTakingSafetyPinOff.size() - 1).getItemPositioning();
+			        firstPersonLeftHandPositioningStrikerLeverOff = firstPersonLeftHandPositioningSafetyPinOff
+                            .get(firstPersonLeftHandPositioningSafetyPinOff.size() - 1).getItemPositioning();
                 }
 
-			    if(firstPersonLeftHandPositioningSafetyPinOff == null) {
-			        firstPersonLeftHandPositioningSafetyPinOff = firstPersonLeftHandPositioning;
+			    if(firstPersonLeftHandPositioningStrikerLeverOff == null) {
+			        firstPersonLeftHandPositioningStrikerLeverOff = firstPersonLeftHandPositioning;
 			    }
 
 			}
@@ -444,14 +462,14 @@ public class GrenadeRenderer extends CompatibleGrenadeRenderer {
 				firstPersonRightHandPositioning = (context) -> {};
 			}
 
-			if(firstPersonRightHandPositioningTakingSafetyPinOff == null) {
-				//firstPersonRightHandPositioningTakingSafetyPinOff = Collections.singletonList(new Transition(firstPersonRightHandPositioning, DEFAULT_ANIMATION_DURATION));
-				firstPersonRightHandPositioningTakingSafetyPinOff = firstPersonPositioningTakingSafetyPinOff.stream().map(t -> new Transition<RenderContext<RenderableState>>(
+			if(firstPersonRightHandPositioningSafetyPinOff == null) {
+				//firstPersonRightHandPositioningSafetyPinOff = Collections.singletonList(new Transition(firstPersonRightHandPositioning, DEFAULT_ANIMATION_DURATION));
+				firstPersonRightHandPositioningSafetyPinOff = firstPersonPositioningSafetyPinOff.stream().map(t -> new Transition<RenderContext<RenderableState>>(
 				        c -> {}, 0)).collect(Collectors.toList());
 			}
 
 			if(firstPersonRightHandPositioningThrowing == null) {
-                //firstPersonRightHandPositioningTakingSafetyPinOff = Collections.singletonList(new Transition(firstPersonRightHandPositioning, DEFAULT_ANIMATION_DURATION));
+                //firstPersonRightHandPositioningSafetyPinOff = Collections.singletonList(new Transition(firstPersonRightHandPositioning, DEFAULT_ANIMATION_DURATION));
                 firstPersonRightHandPositioningThrowing = firstPersonPositioningThrowing.stream().map(t -> new Transition<RenderContext<RenderableState>>(
                         c -> {}, 0)).collect(Collectors.toList());
             }
@@ -460,16 +478,16 @@ public class GrenadeRenderer extends CompatibleGrenadeRenderer {
 				firstPersonRightHandPositioningRunning = firstPersonRightHandPositioning;
 			}
 
-			if(firstPersonRightHandPositioningSafetyPinOff == null) {
+			if(firstPersonRightHandPositioningStrikerLeverOff == null) {
 
-                if(firstPersonRightHandPositioningTakingSafetyPinOff != null && !firstPersonRightHandPositioningTakingSafetyPinOff.isEmpty()) {
+                if(firstPersonRightHandPositioningSafetyPinOff != null && !firstPersonRightHandPositioningSafetyPinOff.isEmpty()) {
                     // Use last transition
-                    firstPersonRightHandPositioningSafetyPinOff = firstPersonRightHandPositioningTakingSafetyPinOff
-                            .get(firstPersonRightHandPositioningTakingSafetyPinOff.size() - 1).getItemPositioning();
+                    firstPersonRightHandPositioningStrikerLeverOff = firstPersonRightHandPositioningSafetyPinOff
+                            .get(firstPersonRightHandPositioningSafetyPinOff.size() - 1).getItemPositioning();
                 }
 
-                if(firstPersonRightHandPositioningSafetyPinOff == null) {
-                    firstPersonRightHandPositioningSafetyPinOff = firstPersonRightHandPositioning;
+                if(firstPersonRightHandPositioningStrikerLeverOff == null) {
+                    firstPersonRightHandPositioningStrikerLeverOff = firstPersonRightHandPositioning;
                 }
 
             }
@@ -488,9 +506,9 @@ public class GrenadeRenderer extends CompatibleGrenadeRenderer {
 
             }
 
-			firstPersonCustomPositioningTakingSafetyPinOff.forEach((p, t) -> {
-				if(t.size() != firstPersonPositioningTakingSafetyPinOff.size()) {
-					throw new IllegalStateException("Custom reloading transition number mismatch. Expected " + firstPersonPositioningTakingSafetyPinOff.size()
+			firstPersonCustomPositioningSafetyPinOff.forEach((p, t) -> {
+				if(t.size() != firstPersonPositioningSafetyPinOff.size()) {
+					throw new IllegalStateException("Custom reloading transition number mismatch. Expected " + firstPersonPositioningSafetyPinOff.size()
 					+ ", actual: " + t.size());
 				}
 			});
@@ -502,9 +520,9 @@ public class GrenadeRenderer extends CompatibleGrenadeRenderer {
                 }
             });
 
-			if(!firstPersonCustomPositioning.isEmpty() && firstPersonCustomPositioningSafetyPinOff.isEmpty()) {
+			if(!firstPersonCustomPositioning.isEmpty() && firstPersonCustomPositioningStrikerLeverOff.isEmpty()) {
                 firstPersonCustomPositioning.forEach((part, pos) -> {
-                    firstPersonCustomPositioningSafetyPinOff.put(part, new SimplePositioning(null, pos.positioning));
+                    firstPersonCustomPositioningStrikerLeverOff.put(part, new SimplePositioning(null, pos.positioning));
                 });
             }
 
@@ -541,12 +559,11 @@ public class GrenadeRenderer extends CompatibleGrenadeRenderer {
 			return modId;
 		}
 
-
 	}
 
 	private Builder builder;
 
-	private Map<EntityPlayer, MultipartRenderStateManager<RenderableState, Part, RenderContext<RenderableState>>> firstPersonStateManagers;
+	private Map<StateManagerKey, MultipartRenderStateManager<RenderableState, Part, RenderContext<RenderableState>>> firstPersonStateManagers;
 
 	private MultipartTransitionProvider<RenderableState, Part, RenderContext<RenderableState>> weaponTransitionProvider;
 
@@ -559,11 +576,11 @@ public class GrenadeRenderer extends CompatibleGrenadeRenderer {
 		this.weaponTransitionProvider = new WeaponPositionProvider();
 	}
 
-	protected long getTotalAttackDuration() {
+	protected long getTotalTakingSafetyPinOffDuration() {
 		return builder.totalTakingPinOffDuration;
 	}
 
-	protected long getTotalHeavyAttackDuration() {
+	protected long getTotalThrowingDuration() {
         return builder.totalThrowingDuration;
     }
 
@@ -576,6 +593,42 @@ public class GrenadeRenderer extends CompatibleGrenadeRenderer {
 	}
 
 
+	private static class StateManagerKey {
+	    EntityPlayer player;
+	    int slot = -1;
+
+        public StateManagerKey(EntityPlayer player, int slot) {
+            this.player = player;
+            this.slot = slot;
+        }
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + ((player == null) ? 0 : player.hashCode());
+            result = prime * result + slot;
+            return result;
+        }
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            StateManagerKey other = (StateManagerKey) obj;
+            if (player == null) {
+                if (other.player != null)
+                    return false;
+            } else if (!player.equals(other.player))
+                return false;
+            if (slot != other.slot)
+                return false;
+            return true;
+        }
+
+	}
 
 	@Override
 	protected StateDescriptor getStateDescriptor(EntityPlayer player, ItemStack itemStack) {
@@ -599,12 +652,12 @@ public class GrenadeRenderer extends CompatibleGrenadeRenderer {
 
 			switch(asyncWeaponState.getState()) {
 
-			case TAKING_SAFETY_PING_OFF:
-                currentState = RenderableState.TAKING_SAFETY_PIN_OFF;
+			case SAFETY_PING_OFF:
+                currentState = RenderableState.SAFETY_PIN_OFF;
                 break;
 
-			case SAFETY_PIN_OFF:
-			    currentState = RenderableState.SAFETY_PIN_OFF;
+			case STRIKER_LEVER_RELEASED:
+			    currentState = RenderableState.STRIKER_LEVEL_OFF;
 			    break;
 
 			case THROWING:
@@ -628,11 +681,14 @@ public class GrenadeRenderer extends CompatibleGrenadeRenderer {
 			currentState = RenderableState.NORMAL;
 		}
 
+
 		// TODO: what if there are multiple items of the same type? They all share the same state manager.
-		MultipartRenderStateManager<RenderableState, Part, RenderContext<RenderableState>> stateManager = firstPersonStateManagers.get(player);
+		StateManagerKey key = new StateManagerKey(player, playerGrenadeInstance != null ?
+		        playerGrenadeInstance.getItemInventoryIndex() : -1);
+		MultipartRenderStateManager<RenderableState, Part, RenderContext<RenderableState>> stateManager = firstPersonStateManagers.get(key);
 		if(stateManager == null) {
 			stateManager = new MultipartRenderStateManager<>(currentState, weaponTransitionProvider, Part.MAIN_ITEM);
-			firstPersonStateManagers.put(player, stateManager);
+			firstPersonStateManagers.put(key, stateManager);
 		} else {
 			stateManager.setState(currentState, true, currentState == RenderableState.THROWING);
 		}
@@ -751,18 +807,18 @@ public class GrenadeRenderer extends CompatibleGrenadeRenderer {
 		@Override
 		public List<MultipartTransition<Part, RenderContext<RenderableState>>> getPositioning(RenderableState state) {
 			switch(state) {
-			case TAKING_SAFETY_PIN_OFF:
-				return getComplexTransition(builder.firstPersonPositioningTakingSafetyPinOff,
-						builder.firstPersonLeftHandPositioningTakingSafetyPinOff,
-						builder.firstPersonRightHandPositioningTakingSafetyPinOff,
-						builder.firstPersonCustomPositioningTakingSafetyPinOff
+			case SAFETY_PIN_OFF:
+				return getComplexTransition(builder.firstPersonPositioningSafetyPinOff,
+						builder.firstPersonLeftHandPositioningSafetyPinOff,
+						builder.firstPersonRightHandPositioningSafetyPinOff,
+						builder.firstPersonCustomPositioningSafetyPinOff
 						);
 
-			case SAFETY_PIN_OFF:
-                return getSimpleTransition(builder.firstPersonPositioningSafetyPinOff,
-                        builder.firstPersonLeftHandPositioningSafetyPinOff,
-                        builder.firstPersonRightHandPositioningSafetyPinOff,
-                        builder.firstPersonCustomPositioningSafetyPinOff,
+			case STRIKER_LEVEL_OFF:
+                return getSimpleTransition(builder.firstPersonPositioningStrikerLeverOff,
+                        builder.firstPersonLeftHandPositioningStrikerLeverOff,
+                        builder.firstPersonRightHandPositioningStrikerLeverOff,
+                        builder.firstPersonCustomPositioningStrikerLeverOff,
                         builder.animationDuration);
 
 			case THROWING:
@@ -907,5 +963,29 @@ public class GrenadeRenderer extends CompatibleGrenadeRenderer {
 	    GL11.glPopMatrix();
 
 	}
+
+    public String getTextureName() {
+        return builder.getTextureName();
+    }
+
+    public ModelBase getModel() {
+        return builder.getModel();
+    }
+
+    public Supplier<Float> getXRotationCenterOffset() {
+        return builder.xCenterOffset;
+    }
+
+    public Supplier<Float> getYRotationCenterOffset() {
+        return builder.yCenterOffset;
+    }
+
+    public Supplier<Float> getZRotationCenterOffset() {
+        return builder.zCenterOffset;
+    }
+
+    public Runnable getThrownEntityPositioning() {
+        return builder.thrownEntityPositioning;
+    }
 
 }

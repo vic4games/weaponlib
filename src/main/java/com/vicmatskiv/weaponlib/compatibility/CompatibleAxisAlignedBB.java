@@ -6,6 +6,10 @@ public class CompatibleAxisAlignedBB {
 
     private AxisAlignedBB boundingBox;
 
+    public CompatibleAxisAlignedBB(double x1, double y1, double z1, double x2, double y2, double z2) {
+        this.boundingBox = new AxisAlignedBB(x1, y1, z1, x2, y2, z2);
+    }
+
     CompatibleAxisAlignedBB(AxisAlignedBB boundingBox) {
         this.boundingBox = boundingBox;
     }

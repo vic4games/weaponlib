@@ -43,7 +43,7 @@ public class ShellCasingRenderer extends CompatibleEntityRenderer {
         		 *
         		 * scale = fov * 0.001 - 0.02
         		 */
-        		float scale = fov * 0.001f - 0.02f;
+        		float scale = (fov * 0.001f - 0.02f) * 0.6f;
         		GL11.glScalef(scale, scale, scale);
 
 

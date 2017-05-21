@@ -33,13 +33,13 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
     private int xTile = -1;
     private int yTile = -1;
     private int zTile = -1;
-    private Block field_145785_f;
+    //private CompatibleBlockState field_145785_f;
     protected boolean inGround;
     public int throwableShake;
 
     protected EntityLivingBase thrower;
     private String throwerName;
-    private int ticksInGround;
+    //private int ticksInGround;
     private int ticksInAir;
 
     protected float gravityVelocity;
@@ -82,7 +82,7 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
 
     public EntityProjectile(World world, double posX, double posY, double posZ) {
         super(world);
-        this.ticksInGround = 0;
+        //this.ticksInGround = 0;
         this.setSize(0.25F, 0.25F);
         this.setPosition(posX, posY, posZ);
         //this.yOffset = 0.0F; // TODO: verify how it works in 1.7.10
@@ -114,7 +114,7 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
         float f3 = CompatibleMathHelper.sqrt_double(x * x + z * z);
         this.prevRotationYaw = this.rotationYaw = (float) (Math.atan2(x, z) * 180.0D / Math.PI);
         this.prevRotationPitch = this.rotationPitch = (float) (Math.atan2(y, (double) f3) * 180.0D / Math.PI);
-        this.ticksInGround = 0;
+        //this.ticksInGround = 0;
     }
 
     /**
@@ -153,21 +153,21 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
 
         if (this.inGround) {
             CompatibleBlockPos p = new CompatibleBlockPos(this.xTile, this.yTile, this.zTile);
-            if (compatibility.getBlockAtPosition(compatibility.world(this), p) == this.field_145785_f) {
-                ++this.ticksInGround;
-
-                if (this.ticksInGround == 1200) {
-                    this.setDead();
-                }
-
-                return;
-            }
+//            if (compatibility.getBlockAtPosition(compatibility.world(this), p) == this.field_145785_f) {
+//                ++this.ticksInGround;
+//
+//                if (this.ticksInGround == 1200) {
+//                    this.setDead();
+//                }
+//
+//                return;
+//            }
 
             this.inGround = false;
             this.motionX *= (double) (this.rand.nextFloat() * 0.2F);
             this.motionY *= (double) (this.rand.nextFloat() * 0.2F);
             this.motionZ *= (double) (this.rand.nextFloat() * 0.2F);
-            this.ticksInGround = 0;
+            //this.ticksInGround = 0;
             this.ticksInAir = 0;
         } else {
             ++this.ticksInAir;
@@ -189,32 +189,7 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
         }
 
         if (!compatibility.world(this).isRemote) {
-            Entity entity = null;
-            List<?> list = compatibility.getEntitiesWithinAABBExcludingEntity(compatibility.world(this), this,
-                    compatibility.getBoundingBox(this).addCoord(this.motionX, this.motionY, this.motionZ).expand(1.0D,
-                            1.0D, 1.0D));
-            double d0 = 0.0D;
-            EntityLivingBase entitylivingbase = this.getThrower();
-
-            for (int j = 0; j < list.size(); ++j) {
-                Entity entity1 = (Entity) list.get(j);
-
-                if (entity1.canBeCollidedWith() && (entity1 != entitylivingbase || this.ticksInAir >= 5)) {
-                    float f = 0.3F;
-                    CompatibleAxisAlignedBB axisalignedbb = compatibility.expandEntityBoundingBox(entity1, (double) f,
-                            (double) f, (double) f);
-                    CompatibleRayTraceResult movingobjectposition1 = axisalignedbb.calculateIntercept(vec3, vec31);
-
-                    if (movingobjectposition1 != null) {
-                        double d1 = vec3.distanceTo(movingobjectposition1.getHitVec());
-
-                        if (d1 < d0 || d0 == 0.0D) {
-                            entity = entity1;
-                            d0 = d1;
-                        }
-                    }
-                }
-            }
+            Entity entity = getRayTraceEntities(vec3, vec31);
 
             if (entity != null) {
                 movingobjectposition = new CompatibleRayTraceResult(entity);
@@ -271,6 +246,36 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
         this.setPosition(this.posX, this.posY, this.posZ);
     }
 
+    private Entity getRayTraceEntities(CompatibleVec3 vec3, CompatibleVec3 vec31) {
+        Entity entity = null;
+        List<?> list = compatibility.getEntitiesWithinAABBExcludingEntity(compatibility.world(this), this,
+                compatibility.getBoundingBox(this).addCoord(this.motionX, this.motionY, this.motionZ).expand(1.0D,
+                        1.0D, 1.0D));
+        double d0 = 0.0D;
+        EntityLivingBase entitylivingbase = this.getThrower();
+
+        for (int j = 0; j < list.size(); ++j) {
+            Entity entity1 = (Entity) list.get(j);
+
+            if (entity1.canBeCollidedWith() && (entity1 != entitylivingbase || this.ticksInAir >= 5)) {
+                float f = 0.3F;
+                CompatibleAxisAlignedBB axisalignedbb = compatibility.expandEntityBoundingBox(entity1, (double) f,
+                        (double) f, (double) f);
+                CompatibleRayTraceResult movingobjectposition1 = axisalignedbb.calculateIntercept(vec3, vec31);
+
+                if (movingobjectposition1 != null) {
+                    double d1 = vec3.distanceTo(movingobjectposition1.getHitVec());
+
+                    if (d1 < d0 || d0 == 0.0D) {
+                        entity = entity1;
+                        d0 = d1;
+                    }
+                }
+            }
+        }
+        return entity;
+    }
+
     /**
      * Called when this EntityThrowable hits a block or entity.
      */
@@ -283,7 +288,7 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
         tagCompound.setShort("xTile", (short) this.xTile);
         tagCompound.setShort("yTile", (short) this.yTile);
         tagCompound.setShort("zTile", (short) this.zTile);
-        tagCompound.setByte("inTile", (byte) Block.getIdFromBlock(this.field_145785_f));
+        //tagCompound.setByte("inTile", (byte) Block.getIdFromBlock(this.field_145785_f));
         tagCompound.setByte("shake", (byte) this.throwableShake);
         tagCompound.setByte("inGround", (byte) (this.inGround ? 1 : 0));
 
@@ -302,7 +307,7 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
         this.xTile = tagCompound.getShort("xTile");
         this.yTile = tagCompound.getShort("yTile");
         this.zTile = tagCompound.getShort("zTile");
-        this.field_145785_f = Block.getBlockById(tagCompound.getByte("inTile") & 255);
+        //this.field_145785_f = Block.getBlockById(tagCompound.getByte("inTile") & 255);
         this.throwableShake = tagCompound.getByte("shake") & 255;
         this.inGround = tagCompound.getByte("inGround") == 1;
         this.throwerName = tagCompound.getString("ownerName");

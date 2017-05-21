@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.vicmatskiv.weaponlib.compatibility.CompatibleBlockState;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleItem;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
@@ -48,8 +49,8 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
         private static final float DEFAULT_SPAWN_ENTITY_SPEED = 10f;
         private static final float DEFAULT_INACCURACY = 1f;
         private static final String DEFAULT_SHELL_CASING_TEXTURE_NAME = "weaponlib:/com/vicmatskiv/weaponlib/resources/shell.png";
-        private static final float DEFAULT_SHELL_CASING_VELOCITY = 0.08f;
-        private static final float DEFAULT_SHELL_CASING_GRAVITY_VELOCITY = 0.01f;
+        private static final float DEFAULT_SHELL_CASING_VELOCITY = 0.1f;
+        private static final float DEFAULT_SHELL_CASING_GRAVITY_VELOCITY = 0.05f;
         private static final float DEFAULT_SHELL_CASING_INACCURACY = 20f;
 
         String name;
@@ -572,8 +573,8 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
 
             if (blockImpactHandler == null) {
                 blockImpactHandler = (world, player, entity, position) -> {
-                    Block block = compatibility.getBlockAtPosition(world, position);
-                    if (compatibility.isGlassBlock(block)) {
+                    CompatibleBlockState blockState = compatibility.getBlockAtPosition(world, position);
+                    if (compatibility.isGlassBlock(blockState)) {
                         compatibility.destroyBlock(world, position);
                     } else  {
                         //compatibility.addBlockHitEffect(position);

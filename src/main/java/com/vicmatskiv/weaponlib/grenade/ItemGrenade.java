@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import com.vicmatskiv.weaponlib.AttachmentContainer;
 import com.vicmatskiv.weaponlib.CompatibleAttachment;
@@ -18,6 +19,7 @@ import com.vicmatskiv.weaponlib.RenderContext;
 import com.vicmatskiv.weaponlib.RenderableState;
 import com.vicmatskiv.weaponlib.Updatable;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleItem;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 import com.vicmatskiv.weaponlib.crafting.CraftingComplexity;
 import com.vicmatskiv.weaponlib.crafting.OptionsMetadata;
 
@@ -32,6 +34,16 @@ PlayerItemInstanceFactory<PlayerGrenadeInstance, GrenadeState>, AttachmentContai
     public static final int DEFAULT_FUSE_TIMEOUT = 3000;
     public static final float DEFAULT_EXPLOSION_STRENTH = 2f;
     public static final int EXPLODE_ON_IMPACT = -1;
+
+    public static final float DEFAULT_GRAVITY_VELOCITY = 0.06f;
+    public static final float DEFAULT_FAR_VELOCITY = 1.3f;
+    public static final float DEFAULT_VELOCITY = 1.0f;
+    public static final float DEFAULT_ROTATION_SLOWDOWN_FACTOR = 0.99f;
+
+    public static final float DEFAULT_EFFECTIVE_RADIUS = 20f;
+    public static final float DEFAULT_FRAGMENT_DAMAGE = 15f;
+    public static final int DEFAULT_FRAGMENT_COUNT = 100;
+
 
     public static class Builder {
 
@@ -53,7 +65,9 @@ PlayerItemInstanceFactory<PlayerGrenadeInstance, GrenadeState>, AttachmentContai
 
         protected Map<ItemAttachment<ItemGrenade>, CompatibleAttachment<ItemGrenade>> compatibleAttachments = new HashMap<>();
 
-
+        private Supplier<Float> velocity = () -> DEFAULT_VELOCITY;
+        private Supplier<Float> farVelocity = () -> DEFAULT_FAR_VELOCITY;
+        private Supplier<Float> gravityVelocity = () -> DEFAULT_GRAVITY_VELOCITY;
 
         private int maxStackSize = 1;
 
@@ -68,6 +82,19 @@ PlayerItemInstanceFactory<PlayerGrenadeInstance, GrenadeState>, AttachmentContai
 
         private GrenadeRenderer renderer;
         List<String> textureNames = new ArrayList<>();
+        private Supplier<Float> rotationSlowdownFactor = () -> DEFAULT_ROTATION_SLOWDOWN_FACTOR;
+
+        private String bounceHardSound;
+        private String bounceSoftSound;
+        private String explosionSound;
+        private String safetyPinOffSound;
+        private String stopAfterThrowingSound;
+        private String throwSound;
+        private float effectiveRadius = DEFAULT_EFFECTIVE_RADIUS;
+        private float fragmentDamage = DEFAULT_FRAGMENT_DAMAGE;
+        private int fragmentCount = DEFAULT_FRAGMENT_COUNT;
+        private boolean smokeOnly;
+        private long activeDuration;
 
 
         public Builder withName(String name) {
@@ -90,6 +117,26 @@ PlayerItemInstanceFactory<PlayerGrenadeInstance, GrenadeState>, AttachmentContai
             return this;
         }
 
+        public Builder withVelocity(Supplier<Float> velocity) {
+            this.velocity = velocity;
+            return this;
+        }
+
+        public Builder withFarVelocity(Supplier<Float> farVelocity) {
+            this.farVelocity = farVelocity;
+            return this;
+        }
+
+        public Builder withGravityVelocity(Supplier<Float> gravityVelocity) {
+            this.gravityVelocity = gravityVelocity;
+            return this;
+        }
+
+        public Builder withRotationSlowdownFactor(Supplier<Float> rotationSlowdownFactor) {
+            this.rotationSlowdownFactor = rotationSlowdownFactor;
+            return this;
+        }
+
         public Builder withExplosionStrength(float explosionStrength) {
             this.explosionStrength = explosionStrength;
             return this;
@@ -102,6 +149,11 @@ PlayerItemInstanceFactory<PlayerGrenadeInstance, GrenadeState>, AttachmentContai
 
         public Builder withExplosionOnImpact() {
             this.explosionTimeout = EXPLODE_ON_IMPACT;
+            return this;
+        }
+
+        public Builder withSmokeOnly() {
+            this.smokeOnly = true;
             return this;
         }
 
@@ -199,12 +251,86 @@ PlayerItemInstanceFactory<PlayerGrenadeInstance, GrenadeState>, AttachmentContai
             return this;
         }
 
+        public Builder withBounceHardSound(String sound) {
+            this.bounceHardSound = sound != null ? sound.toLowerCase() : null;
+            return this;
+        }
+
+        public Builder withBounceSoftSound(String sound) {
+            this.bounceSoftSound = sound != null ? sound.toLowerCase() : null;
+            return this;
+        }
+
+        public Builder withExplosionSound(String sound) {
+            this.explosionSound = sound != null ? sound.toLowerCase() : null;
+            return this;
+        }
+
+        public Builder withSafetyPinOffSound(String sound) {
+            this.safetyPinOffSound = sound != null ? sound.toLowerCase() : null;
+            return this;
+        }
+
+        public Builder withThrowSound(String sound) {
+            this.throwSound = sound != null ? sound.toLowerCase() : null;
+            return this;
+        }
+
+        public Builder withStopAfterThrowingSond(String sound) {
+            this.stopAfterThrowingSound = sound != null ? sound.toLowerCase() : null;
+            return this;
+        }
+
+        public Builder withEffectiveRadius(float effectiveRadius) {
+            this.effectiveRadius = effectiveRadius;
+            return this;
+        }
+
+        public Builder withFragmentDamage(float fragmentDamage) {
+            this.fragmentDamage = fragmentDamage;
+            return this;
+        }
+
+        public Builder withFragmentCount(int fragmentCount) {
+            this.fragmentCount = fragmentCount;
+            return this;
+        }
+
+        public Builder withActiveDuration(long duration) {
+            this.activeDuration = duration;
+            return this;
+        }
+
         public ItemGrenade build(ModContext modContext) {
 
             ItemGrenade grenade = new ItemGrenade(this, modContext);
             grenade.setUnlocalizedName(modId + "_" + name);
             grenade.setCreativeTab(tab);
             grenade.maxStackSize = maxStackSize;
+
+            if(this.bounceHardSound != null) {
+                grenade.bounceHardSound = modContext.registerSound(this.bounceHardSound);
+            }
+
+            if(this.bounceSoftSound != null) {
+                grenade.bounceSoftSound = modContext.registerSound(this.bounceSoftSound);
+            }
+
+            if(this.explosionSound != null) {
+                grenade.explosionSound = modContext.registerSound(this.explosionSound);
+            }
+
+            if(this.safetyPinOffSound != null) {
+                grenade.safetyPinOffSound = modContext.registerSound(this.safetyPinOffSound);
+            }
+
+            if(this.throwSound != null) {
+                grenade.throwSound = modContext.registerSound(this.throwSound);
+            }
+
+            if(this.stopAfterThrowingSound != null) {
+                grenade.stopAfterThrowingSound = modContext.registerSound(this.stopAfterThrowingSound);
+            }
 
             modContext.registerGrenadeWeapon(name, grenade, renderer);
 
@@ -239,6 +365,12 @@ PlayerItemInstanceFactory<PlayerGrenadeInstance, GrenadeState>, AttachmentContai
 
     Builder builder;
     private ModContext modContext;
+    private CompatibleSound bounceHardSound;
+    private CompatibleSound bounceSoftSound;
+    private CompatibleSound explosionSound;
+    private CompatibleSound safetyPinOffSound;
+    private CompatibleSound throwSound;
+    private CompatibleSound stopAfterThrowingSound;
 
     public ItemGrenade(Builder builder, ModContext modContext) {
         this.builder = builder;
@@ -279,8 +411,13 @@ PlayerItemInstanceFactory<PlayerGrenadeInstance, GrenadeState>, AttachmentContai
         return instance;
     }
 
-    public void attack(EntityPlayer player, boolean b) {
-        modContext.getGrenadeAttackAspect().onAttackButtonClick(player);
+    public void attack(EntityPlayer player, boolean throwingFar) {
+        modContext.getGrenadeAttackAspect().onAttackButtonClick(player, throwingFar);
+    }
+
+
+    public void attackUp(EntityPlayer player, boolean throwingFar) {
+        modContext.getGrenadeAttackAspect().onAttackButtonUp(player, throwingFar);
     }
 
     @Override
@@ -301,7 +438,7 @@ PlayerItemInstanceFactory<PlayerGrenadeInstance, GrenadeState>, AttachmentContai
     }
 
     public long getTotalTakeSafetyPinOffDuration() {
-        return 100;
+        return builder.renderer.getTotalTakingSafetyPinOffDuration();
     }
 
     public long getReequipTimeout() {
@@ -309,7 +446,67 @@ PlayerItemInstanceFactory<PlayerGrenadeInstance, GrenadeState>, AttachmentContai
     }
 
     public double getTotalThrowingDuration() {
-        return 500;
+        return builder.renderer.getTotalThrowingDuration();
+    }
+
+    public float getVelocity() {
+        return builder.velocity.get();
+    }
+
+    public float getFarVelocity() {
+        return builder.farVelocity.get();
+    }
+
+    public float getGravityVelocity() {
+        return builder.gravityVelocity.get();
+    }
+
+    public float getRotationSlowdownFactor() {
+        return builder.rotationSlowdownFactor.get();
+    }
+
+    public CompatibleSound getBounceHardSound() {
+        return bounceHardSound;
+    }
+
+    public CompatibleSound getBounceSoftSound() {
+        return bounceSoftSound;
+    }
+
+    public CompatibleSound getExplosionSound() {
+        return explosionSound;
+    }
+
+    public CompatibleSound getSafetyPinOffSound() {
+        return safetyPinOffSound;
+    }
+
+    public CompatibleSound getThrowSound() {
+        return throwSound;
+    }
+
+    public CompatibleSound getStopAfterThrowingSound() {
+        return stopAfterThrowingSound;
+    }
+
+    public float getEffectiveRadius() {
+        return builder.effectiveRadius;
+    }
+
+    public float getFragmentDamage() {
+        return builder.fragmentDamage;
+    }
+
+    public int getFragmentCount() {
+        return builder.fragmentCount;
+    }
+
+    public boolean isSmokeOnly() {
+        return builder.smokeOnly;
+    }
+
+    public long getActiveDuration() {
+        return builder.activeDuration;
     }
 
 }

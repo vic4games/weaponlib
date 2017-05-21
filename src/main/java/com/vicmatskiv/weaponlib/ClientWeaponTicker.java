@@ -51,8 +51,9 @@ class ClientWeaponTicker extends Thread {
 							clientModContext.runSyncTick(this::onRightButtonDown);
 						}
 					}
-				} else if(buttonsPressed[1]) {
+				} else if(buttonsPressed[1] /*TODO: || currentItemIndex != safeGlobals.currentItemIndex.get()*/) {
 					buttonsPressed[1] = false;
+                    clientModContext.runSyncTick(this::onRightButtonUp);
 				}
 
 				if(Mouse.isButtonDown(0)) {
@@ -83,6 +84,16 @@ class ClientWeaponTicker extends Thread {
         Item item = getHeldItemMainHand(player);
         if(item instanceof Weapon) {
             ((Weapon) item).tryStopFire(player);
+        } else if(item instanceof ItemGrenade) {
+            ((ItemGrenade) item).attackUp(player, false);
+        }
+    }
+
+    private void onRightButtonUp() {
+        EntityPlayer player = compatibility.getClientPlayer();
+        Item item = getHeldItemMainHand(player);
+        if(item instanceof ItemGrenade) { // TODO: introduce generic action handler interface with on*Click() handler
+            ((ItemGrenade) item).attackUp(player, true);
         }
     }
 

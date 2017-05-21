@@ -59,6 +59,10 @@ public interface ModContext {
 
 	public void setNoAmmoSound(String sound);
 
+	public CompatibleSound getExplosionSound();
+
+	public void setExplosionSound(String sound);
+
     public void registerMeleeWeapon(String name, ItemMelee itemMelee, MeleeRenderer renderer);
 
     public void registerGrenadeWeapon(String name, ItemGrenade itemGrenade, GrenadeRenderer renderer);
@@ -75,8 +79,5 @@ public interface ModContext {
 
     public GrenadeAttackAspect getGrenadeAttackAspect();
 
-
-
-
-
+    public String getModId();
 }

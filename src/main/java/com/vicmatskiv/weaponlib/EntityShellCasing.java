@@ -71,7 +71,7 @@ public class EntityShellCasing extends EntityProjectile {
 
 		//sideOffset = 0.15f;
 
-		float yOffset = weapon.getShellCasingVerticalOffset() + (thrower.isSneaking() ? -0.03f : 0);
+		float yOffset = weapon.getShellCasingVerticalOffset() + (thrower.isSneaking() ? -0.1f : 0);
 
 		this.setLocationAndAngles(thrower.posX, thrower.posY + (double)thrower.getEyeHeight() + yOffset, thrower.posZ,
 		        thrower.rotationYaw, thrower.rotationPitch);

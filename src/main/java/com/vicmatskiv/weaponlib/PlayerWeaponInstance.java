@@ -98,13 +98,9 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 	}
 
 	public AsyncWeaponState nextHistoryState() {
-//		logger.debug("State queue: " + filteredStateQueue.stream().map(t -> t.getState() + ":" + t.getDuration())
-//				.collect(Collectors.toList()));
-		AsyncWeaponState result;
-		if(filteredStateQueue.size() > 0) { // was > 1 earlier, why?
-			result = filteredStateQueue.pollLast();
-		} else {
-			result = new AsyncWeaponState(getState(), stateUpdateTimestamp);
+		AsyncWeaponState result = filteredStateQueue.pollLast();
+		if(result == null) {
+		    result = new AsyncWeaponState(getState(), stateUpdateTimestamp);
 		}
 		return result;
 	}
@@ -116,7 +112,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 	protected void setAmmo(int ammo) {
 		if(ammo != this.ammo) {
 			this.ammo = ammo;
-			updateId++; //TODO: what's going on with this update id?
+			updateId++;
 		}
 	}
 

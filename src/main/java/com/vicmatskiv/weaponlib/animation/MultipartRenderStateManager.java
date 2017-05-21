@@ -56,7 +56,7 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
 						if(attachedTo != null) {
 						    MatrixHelper.loadMatrix(context.getPartPosition(attachedTo));
 						}
-						if(multipartTransition.getPositioning(part) == MultipartTransition.anchoredPosition()) {
+						if(multipartTransition.getPositioning(part) == (Object)MultipartTransition.anchoredPosition()) {
 						    Matrix4f m = lastApplied.get(part);
 						    MatrixHelper.applyMatrix(m);
 						} else {
@@ -176,7 +176,7 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
 					MultipartTransition<Part, Context> fromMultipart = fromPositioning.get(fromPositioning.size() - 1);
 
                     Matrix4f fromMatrix;
-                    if(fromMultipart.getPositioning(part) == MultipartTransition.anchoredPosition()) {
+                    if(fromMultipart.getPositioning(part) == (Object)MultipartTransition.anchoredPosition()) {
                         fromMatrix = lastApplied.get(p);
                         if(fromMatrix == null) {
                             fromMatrix = new Matrix4f();
@@ -195,7 +195,7 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
                     Matrix4f previous = fromMatrix;
 					for(MultipartTransition<Part, Context> t: toPositioning) {
 					    Matrix4f current;
-					    if(t.getPositioning(part) == MultipartTransition.anchoredPosition()) {
+					    if(t.getPositioning(part) == (Object)MultipartTransition.anchoredPosition()) {
 					        current = previous;
 					    } else {
 					        current = getMatrixForPositioning(t, p, context);

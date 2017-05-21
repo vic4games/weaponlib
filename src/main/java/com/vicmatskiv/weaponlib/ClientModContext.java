@@ -17,6 +17,8 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderingRegistry;
 import com.vicmatskiv.weaponlib.electronics.EntityWirelessCamera;
 import com.vicmatskiv.weaponlib.electronics.WirelessCameraRenderer;
 import com.vicmatskiv.weaponlib.grenade.EntityGrenade;
+import com.vicmatskiv.weaponlib.grenade.EntityGrenadeRenderer;
+import com.vicmatskiv.weaponlib.grenade.EntitySmokeGrenade;
 import com.vicmatskiv.weaponlib.grenade.GrenadeRenderer;
 import com.vicmatskiv.weaponlib.grenade.ItemGrenade;
 import com.vicmatskiv.weaponlib.melee.ItemMelee;
@@ -87,6 +89,7 @@ public class ClientModContext extends CommonModContext {
 		rendererRegistry.registerEntityRenderingHandler(EntityWirelessCamera.class, new WirelessCameraRenderer(modId)); //new RenderSnowball(Items.snowball));
 	    rendererRegistry.registerEntityRenderingHandler(EntityShellCasing.class, new ShellCasingRenderer()); //new RenderSnowball(Items.snowball));
         rendererRegistry.registerEntityRenderingHandler(EntityGrenade.class, new EntityGrenadeRenderer()); //new RenderSnowball(Items.snowball));
+        rendererRegistry.registerEntityRenderingHandler(EntitySmokeGrenade.class, new EntityGrenadeRenderer()); //new RenderSnowball(Items.snowball));
 
 		this.viewManager = new PerspectiveManager(this);
 		this.inventoryTextureMap = new HashMap<>();
@@ -190,5 +193,9 @@ public class ClientModContext extends CommonModContext {
 
     public Map<Object, Integer> getInventoryTextureMap() {
         return inventoryTextureMap;
+    }
+
+    public String getModId() {
+        return modId;
     }
 }

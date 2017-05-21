@@ -25,7 +25,7 @@ import net.minecraft.item.ItemStack;
 
 public class PlayerGrenadeInstance extends PlayerItemInstance<GrenadeState> {
 
-	private static final int SERIAL_VERSION = 9;
+	private static final int SERIAL_VERSION = 11;
 
 	@SuppressWarnings("unused")
 	private static final Logger logger = LogManager.getLogger(PlayerGrenadeInstance.class);
@@ -42,6 +42,8 @@ public class PlayerGrenadeInstance extends PlayerItemInstance<GrenadeState> {
 	private byte[] selectedAttachmentIndexes = new byte[0];
 
     private long lastSafetyPinAlertTimestamp;
+
+    private boolean throwingFar;
 
 	public PlayerGrenadeInstance() {
 		super();
@@ -105,6 +107,7 @@ public class PlayerGrenadeInstance extends PlayerItemInstance<GrenadeState> {
 	@Override
 	public void init(ByteBuf buf) {
 		super.init(buf);
+		throwingFar = buf.readBoolean();
 		activeAttachmentIds = initIntArray(buf);
 		selectedAttachmentIndexes = initByteArray(buf);
 	}
@@ -112,6 +115,7 @@ public class PlayerGrenadeInstance extends PlayerItemInstance<GrenadeState> {
 	@Override
 	public void serialize(ByteBuf buf) {
 		super.serialize(buf);
+		buf.writeBoolean(throwingFar);
 		serializeIntArray(buf, activeAttachmentIds);
 		serializeByteArray(buf, selectedAttachmentIndexes);
 	}
@@ -236,5 +240,13 @@ public class PlayerGrenadeInstance extends PlayerItemInstance<GrenadeState> {
 
     public void setLastSafetyPinAlertTimestamp(long lastSafetyPinAlertTimestamp) {
         this.lastSafetyPinAlertTimestamp = lastSafetyPinAlertTimestamp;
+    }
+
+    public void setThrowingFar(boolean throwingFar) {
+        this.throwingFar = throwingFar;
+    }
+
+    public boolean isThrowingFar() {
+        return throwingFar;
     }
 }

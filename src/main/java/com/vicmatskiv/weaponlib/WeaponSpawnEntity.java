@@ -57,44 +57,50 @@ public class WeaponSpawnEntity extends EntityProjectile {
 	 */
 	@Override
 	protected void onImpact(CompatibleRayTraceResult position) {
-		//if(!compatibility.world(this).isRemote) {
-	    if (weapon != null && position.getEntityHit() != null && position.getEntityHit() != this.getThrower()) {
-	        if(explosionRadius > 0) {
-	            compatibility.world(this).createExplosion(this, this.posX, this.posY, this.posZ, explosionRadius, true);
-	        }
 
-	        position.getEntityHit().attackEntityFrom(DamageSource.causeThrownDamage(this, this.getThrower()), damage);
-	        position.getEntityHit().hurtResistantTime = 0;
-	        position.getEntityHit().prevRotationYaw -= 0.3D;
-
-	        logger.debug("Hit entity {}", position.getEntityHit());
-
-	        CompatibleTargetPoint point = new CompatibleTargetPoint(position.getEntityHit().dimension,
-	                this.posX, this.posY, this.posZ, 100);
-
-	        double magnitude = Math.sqrt(motionX * motionX + motionY * motionY + motionZ * motionZ) + 2;
-
-	        int count = getParticleCount (damage);
-	        logger.debug("Generating {} particle(s) per damage {}", count, damage);
-	        weapon.getModContext().getChannel().sendToAllAround(new SpawnParticleMessage(
-	                SpawnParticleMessage.ParticleType.BLOOD,
-	                count,
-	                position.getEntityHit().posX - motionX / magnitude,
-	                position.getEntityHit().posY - motionY / magnitude,
-	                position.getEntityHit().posZ - motionZ / magnitude),
-	                point);
-
-	    } else if(explosionRadius > 0) {
-	        compatibility.world(this).createExplosion(this, position.getBlockPosX(), position.getBlockPosY(), position.getBlockPosZ(), explosionRadius, true);
-	    } else if(weapon != null && position.getTypeOfHit() == CompatibleRayTraceResult.Type.BLOCK) {
-	        if(!compatibility.world(this).isRemote) {
-	            weapon.onSpawnEntityBlockImpact(compatibility.world(this), null, this, position);
-	        }
+	    if(compatibility.world(this).isRemote) {
+	        return;
 	    }
 
-	    if (!compatibility.world(this).isRemote) {
-	        this.setDead();
+	    if(weapon == null) {
+	        return;
 	    }
+
+	    if(explosionRadius > 0) {
+	        Explosion.createServerSideExplosion(weapon.getModContext(), compatibility.world(this), this,
+	                position.getHitVec().getXCoord(), position.getHitVec().getYCoord(), position.getHitVec().getZCoord(),
+	                explosionRadius, false, true);
+	    } else if(position.getEntityHit() != null){
+	        if(this.getThrower() != null) {
+	            position.getEntityHit().attackEntityFrom(DamageSource.causeThrownDamage(this, this.getThrower()), damage);
+	        } else {
+	            position.getEntityHit().attackEntityFrom(compatibility.genericDamageSource(), damage);
+	        }
+
+            position.getEntityHit().hurtResistantTime = 0;
+            position.getEntityHit().prevRotationYaw -= 0.3D;
+
+            logger.debug("Hit entity {}", position.getEntityHit());
+
+            CompatibleTargetPoint point = new CompatibleTargetPoint(position.getEntityHit().dimension,
+                    this.posX, this.posY, this.posZ, 100);
+
+            double magnitude = Math.sqrt(motionX * motionX + motionY * motionY + motionZ * motionZ) + 2;
+
+            int count = getParticleCount (damage);
+            logger.debug("Generating {} particle(s) per damage {}", count, damage);
+            weapon.getModContext().getChannel().sendToAllAround(new SpawnParticleMessage(
+                    SpawnParticleMessage.ParticleType.BLOOD,
+                    count,
+                    position.getEntityHit().posX - motionX / magnitude,
+                    position.getEntityHit().posY - motionY / magnitude,
+                    position.getEntityHit().posZ - motionZ / magnitude),
+                    point);
+	    } else if(position.getTypeOfHit() == CompatibleRayTraceResult.Type.BLOCK) {
+	        weapon.onSpawnEntityBlockImpact(compatibility.world(this), null, this, position);
+        }
+
+	    this.setDead();
 	}
 
 	@Override

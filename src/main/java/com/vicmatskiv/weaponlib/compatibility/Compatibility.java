@@ -3,9 +3,8 @@ package com.vicmatskiv.weaponlib.compatibility;
 import java.util.List;
 import java.util.function.Predicate;
 
-import com.vicmatskiv.weaponlib.EntityShellCasing;
+import com.vicmatskiv.weaponlib.Explosion;
 import com.vicmatskiv.weaponlib.ModContext;
-import com.vicmatskiv.weaponlib.PlayerWeaponInstance;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.gui.FontRenderer;
@@ -24,6 +23,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemArmor.ArmorMaterial;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.FOVUpdateEvent;
 import net.minecraftforge.client.event.GuiOpenEvent;
@@ -45,8 +45,8 @@ public interface Compatibility {
 //	public WeaponSpawnEntity getSpawnEntity(Weapon weapon, World world, EntityPlayer player, float speed,
 //			float gravityVelocity, float inaccuracy, float damage, float explosionRadius, Material...damageableBlockMaterials);
 
-	public EntityShellCasing getShellCasingEntity(PlayerWeaponInstance weaponInstance, World world, EntityPlayer player, float speed,
-	        float gravityVelocity, float inaccuracy);
+//	public EntityShellCasing getShellCasingEntity(PlayerWeaponInstance weaponInstance, World world, EntityPlayer player, float speed,
+//	        float gravityVelocity, float inaccuracy);
 
 	public IAttribute getMovementSpeedAttribute();
 
@@ -123,7 +123,7 @@ public interface Compatibility {
 
 	public CompatibleRayTraceResult getObjectMouseOver();
 
-	public Block getBlockAtPosition(World world, CompatibleRayTraceResult position);
+	public CompatibleBlockState getBlockAtPosition(World world, CompatibleRayTraceResult position);
 
 	public void destroyBlock(World world, CompatibleRayTraceResult position);
 
@@ -133,7 +133,7 @@ public interface Compatibility {
 
 	public ItemStack itemStackForItem(Item item, Predicate<ItemStack> condition, EntityPlayer player);
 
-	public boolean isGlassBlock(Block block);
+	public boolean isGlassBlock(CompatibleBlockState block);
 
 	public float getEffectOffsetX();
 
@@ -210,17 +210,65 @@ public interface Compatibility {
 
     public CompatibleAxisAlignedBB getBoundingBox(Entity entity);
 
-    public List<?> getEntitiesWithinAABBExcludingEntity(World world, Entity entity, CompatibleAxisAlignedBB boundingBox);
+    public List<Entity> getEntitiesWithinAABBExcludingEntity(World world, Entity entity, CompatibleAxisAlignedBB boundingBox);
 
     public void spawnParticle(World world, String particleName, double d, double e, double f, double motionX, double motionY,
             double motionZ);
 
-    public Block getBlockAtPosition(World world, CompatibleBlockPos blockPos);
+    public CompatibleBlockState getBlockAtPosition(World world, CompatibleBlockPos blockPos);
 
     public boolean isBlockPenetratableByBullets(Block block);
 
     public boolean canCollideCheck(Block block, CompatibleBlockState metadata, boolean hitIfLiquid);
 
     public float getCompatibleShellCasingForwardOffset();
+
+    public boolean madeFromHardMaterial(CompatibleBlockState compatibleBlockState);
+
+    public void playSoundAtEntity(Entity entity, CompatibleSound explosionSound, float volume, float pitch);
+
+    public double getBlockDensity(World world, CompatibleVec3 vec3d, CompatibleAxisAlignedBB boundingBox);
+
+    public boolean isImmuneToExplosions(Entity entity);
+
+    public boolean isAirBlock(CompatibleBlockState blockState);
+
+    public boolean canDropBlockFromExplosion(CompatibleBlockState block, Explosion explosion);
+
+    public void onBlockExploded(World worldObj, CompatibleBlockState blockState, CompatibleBlockPos blockpos, Explosion explosion);
+
+    public float getExplosionResistance(World world, CompatibleBlockState block, CompatibleBlockPos blockpos, Entity entity,
+            Explosion explosion);
+
+    public float getExplosionResistance(World worldObj, Entity exploder, Explosion explosion,
+            CompatibleBlockPos blockpos, CompatibleBlockState blockState);
+
+    public boolean isSpectator(EntityPlayer entityplayer);
+
+    public boolean isCreative(EntityPlayer entityplayer);
+
+    public void setBlockToFire(World world, CompatibleBlockPos blockpos1);
+
+    public DamageSource getDamageSource(Explosion explosion);
+
+    public double getBlastDamageReduction(EntityLivingBase entity, double d10);
+
+    public boolean verifyExplosion(World world, Entity exploder, Explosion explosion, CompatibleBlockPos blockpos,
+            CompatibleBlockState blockState, float f);
+
+    public boolean isFullBlock(CompatibleBlockState blockState);
+
+    public void dropBlockAsItemWithChance(World world, CompatibleBlockState blockState, CompatibleBlockPos blockpos, float f, int i);
+
+    public CompatibleBlockState getBlockBelow(World world, CompatibleBlockPos blockpos1);
+
+    public void playSound(World world, double posX, double posY, double posZ, CompatibleSound explosionSound, float volume, float pitch);
+
+    public boolean isBlockPenetratableByGrenades(Block block);
+
+    public DamageSource genericDamageSource();
+
+    public boolean isCollided(CompatibleParticle particle);
+
 
 }

@@ -61,9 +61,6 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
     private static final int INVENTORY_TEXTURE_WIDTH = 256;
     private static final int INVENTORY_TEXTURE_HEIGHT = 256;
 
-    private static final String CALIBRATION_TEXTURE = "weaponlib:/com/vicmatskiv/weaponlib/resources/calibration.png";
-
-
     protected static class StateDescriptor {
 		protected MultipartRenderStateManager<RenderableState, Part, RenderContext<RenderableState>> stateManager;
         protected float rate;
@@ -213,10 +210,6 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
             Object textureMapKey = this; //weaponItemStack != null ? weaponItemStack : this;
             inventoryTexture = getClientModContext().getInventoryTextureMap().get(textureMapKey);
 
-//            if(System.currentTimeMillis() % 5 == 0 && inventoryTexture != null) {
-//                GlStateManager.deleteTexture(inventoryTexture);
-//                inventoryTexture = null;
-//            }
             if(inventoryTexture == null) {
 
                 inventoryTextureInitializationPhaseOn = true;
