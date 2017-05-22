@@ -1,11 +1,21 @@
 package com.vicmatskiv.weaponlib;
 
+import java.nio.FloatBuffer;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.lwjgl.BufferUtils;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.util.vector.Matrix4f;
+
+import com.vicmatskiv.weaponlib.animation.MatrixHelper;
+import com.vicmatskiv.weaponlib.animation.PartPositionProvider;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTransformType;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 
-public class RenderContext<RS> {
+public class RenderContext<RS> implements PartPositionProvider {
 
 	private EntityPlayer player;
 	private ItemStack itemStack;
@@ -22,10 +32,13 @@ public class RenderContext<RS> {
 	private ModContext modContext;
 	private PlayerItemInstance<?> playerItemInstance;
 
+	private Map<Part, Matrix4f> attachablePartPositions;
+
 	public RenderContext(ModContext modContext, EntityPlayer player, ItemStack itemStack) {
 		this.modContext = modContext;
 		this.player = player;
 		this.itemStack = itemStack;
+		this.attachablePartPositions = new HashMap<>();
 	}
 
 	public ModContext getModContext() {
@@ -135,7 +148,7 @@ public class RenderContext<RS> {
 	public void setPlayerItemInstance(PlayerItemInstance<?> playerItemInstance) {
 		this.playerItemInstance = playerItemInstance;
 	}
-	
+
 	public PlayerWeaponInstance getWeaponInstance() {
 		if(playerItemInstance instanceof PlayerWeaponInstance) {
 			return (PlayerWeaponInstance) playerItemInstance;
@@ -147,4 +160,16 @@ public class RenderContext<RS> {
 		}
 		return null;
 	}
+
+	public void capturePartPosition(Part part) {
+	    attachablePartPositions.put(part, MatrixHelper.captureMatrix());
+	}
+
+    @Override
+    public Matrix4f getPartPosition(Object part) {
+        if(part == null) {
+            part = Part.MAIN_ITEM;
+        }
+        return attachablePartPositions.get(part);
+    }
 }

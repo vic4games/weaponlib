@@ -52,7 +52,7 @@ public class FlashFX extends CompatibleParticle {
 		this.particleAlpha = alpha;
 		this.particleScale *= 1.4F;
 		this.particleScale *= scale;
-		this.particleMaxAge = 3;
+		this.particleMaxAge = 2;
 		
 		this.imageIndex = this.rand.nextInt() % imagesPerRow;
 	}

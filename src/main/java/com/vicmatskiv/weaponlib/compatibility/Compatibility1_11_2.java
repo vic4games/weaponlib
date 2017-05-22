@@ -6,8 +6,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.Predicate;
 
+import com.vicmatskiv.weaponlib.EntityShellCasing;
+import com.vicmatskiv.weaponlib.Explosion;
+import com.vicmatskiv.weaponlib.ModContext;
+import com.vicmatskiv.weaponlib.PlayerWeaponInstance;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleParticle.CompatibleParticleBreaking;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.FontRenderer;
@@ -18,6 +25,7 @@ import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.enchantment.EnchantmentProtection;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.SharedMonsterAttributes;
@@ -25,14 +33,15 @@ import net.minecraft.entity.ai.attributes.IAttribute;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.init.Blocks;
-import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemArmor;
 import net.minecraft.item.ItemArmor.ArmorMaterial;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.DamageSource;
+import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
@@ -55,12 +64,9 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.oredict.ShapedOreRecipe;
 
-import com.vicmatskiv.weaponlib.ModContext;
-import com.vicmatskiv.weaponlib.Weapon;
-import com.vicmatskiv.weaponlib.WeaponSpawnEntity;
-import com.vicmatskiv.weaponlib.compatibility.CompatibleParticle.CompatibleParticleBreaking;
-
 public class Compatibility1_11_2 implements Compatibility {
+
+    private static final float DEFAULT_SHELL_CASING_FORWARD_OFFSET = 0.1f;
 
     private static CompatibleMathHelper mathHelper = new CompatibleMathHelper();
 
@@ -146,14 +152,6 @@ public class Compatibility1_11_2 implements Compatibility {
     }
 
     @Override
-    public WeaponSpawnEntity getSpawnEntity(Weapon weapon, World world, EntityPlayer player, float speed,
-            float gravityVelocity, float inaccuracy, float damage, float explosionRadius,
-            Material... damageableBlockMaterials) {
-        return new WeaponSpawnEntity(weapon, player.world, player, speed, gravityVelocity, inaccuracy, damage,
-                explosionRadius);
-    }
-
-    @Override
     public boolean isClientSide() {
         return FMLCommonHandler.instance().getSide() == Side.CLIENT;
     }
@@ -197,15 +195,8 @@ public class Compatibility1_11_2 implements Compatibility {
     @Override
     @SideOnly(Side.CLIENT)
     public ItemStack getHelmet() {
-        ItemStack result = null;
-        for(Iterator<ItemStack> equipmentIterator = Minecraft.getMinecraft().player.getArmorInventoryList().iterator(); equipmentIterator.hasNext();) {
-            ItemStack stack = equipmentIterator.next();
-            if(stack.getItem() instanceof ItemArmor &&  ((ItemArmor)stack.getItem()).getEquipmentSlot() == EntityEquipmentSlot.HEAD) {
-                result = stack;
-                break;
-            }
-        }
-        return result;
+        Iterator<ItemStack> equipmentIterator = Minecraft.getMinecraft().player.getEquipmentAndArmor().iterator();
+        return equipmentIterator.hasNext() ? equipmentIterator.next() : null;
     }
 
     @Override
@@ -324,15 +315,14 @@ public class Compatibility1_11_2 implements Compatibility {
 
     @Override
     public CompatibleRayTraceResult getObjectMouseOver() {
-        return new CompatibleRayTraceResult(Minecraft.getMinecraft().objectMouseOver);
+        return CompatibleRayTraceResult.fromRayTraceResult(Minecraft.getMinecraft().objectMouseOver);
     }
 
     @Override
-    public Block getBlockAtPosition(World world, CompatibleRayTraceResult position) {
-        Block block = world
-                .getBlockState(new BlockPos(position.getBlockPosX(), position.getBlockPosY(), position.getBlockPosZ()))
-                .getBlock();
-        return block;
+    public CompatibleBlockState getBlockAtPosition(World world, CompatibleRayTraceResult position) {
+        IBlockState blockState = world.getBlockState(
+                new BlockPos(position.getBlockPosX(), position.getBlockPosY(), position.getBlockPosZ()));
+        return CompatibleBlockState.fromBlockState(blockState);
     }
 
     @Override
@@ -375,7 +365,8 @@ public class Compatibility1_11_2 implements Compatibility {
     }
 
     @Override
-    public boolean isGlassBlock(Block block) {
+    public boolean isGlassBlock(CompatibleBlockState blockState) {
+        Block block = blockState.getBlockState().getBlock();
         return block == Blocks.GLASS || block == Blocks.GLASS_PANE || block == Blocks.STAINED_GLASS
                 || block == Blocks.STAINED_GLASS_PANE;
     }
@@ -529,13 +520,11 @@ public class Compatibility1_11_2 implements Compatibility {
     }
 
     @Override
-    @SideOnly(Side.CLIENT)
     public RenderGlobal createCompatibleRenderGlobal() {
         return /*Minecraft.getMinecraft().renderGlobal; //*/ new CompatibleRenderGlobal(Minecraft.getMinecraft());
     }
 
     @Override
-    @SideOnly(Side.CLIENT)
     public CompatibleParticleManager createCompatibleParticleManager(WorldClient world) {
         return new CompatibleParticleManager(world);
     }
@@ -551,13 +540,11 @@ public class Compatibility1_11_2 implements Compatibility {
     }
 
     @Override
-    @SideOnly(Side.CLIENT)
     public CompatibleParticleManager getCompatibleParticleManager() {
         return new CompatibleParticleManager(Minecraft.getMinecraft().effectRenderer);
     }
 
     @Override
-    @SideOnly(Side.CLIENT)
     public void addBlockHitEffect(int x, int y, int z, CompatibleEnumFacing sideHit) {
         for(int i = 0; i < 6; i++) {
             Minecraft.getMinecraft().effectRenderer.addBlockHitEffects(
@@ -566,7 +553,6 @@ public class Compatibility1_11_2 implements Compatibility {
     }
 
     @Override
-    @SideOnly(Side.CLIENT)
     public void addBreakingParticle(ModContext modContext, double x, double y, double z) {
         double yOffset = 1;
         CompatibleParticleBreaking particle = CompatibleParticle.createParticleBreaking(
@@ -631,5 +617,213 @@ public class Compatibility1_11_2 implements Compatibility {
         }
 
         return resultStack;
+    }
+
+    @Override
+    public CompatibleRayTraceResult rayTraceBlocks(Entity entity, CompatibleVec3 vec3, CompatibleVec3 vec31) {
+        return CompatibleRayTraceResult.fromRayTraceResult(entity.getEntityWorld().rayTraceBlocks(vec3.getVec(), vec31.getVec()));
+    }
+
+    @Override
+    public CompatibleAxisAlignedBB expandEntityBoundingBox(Entity entity1, double f1, double f2, double f3) {
+        return new CompatibleAxisAlignedBB(entity1.getEntityBoundingBox().expand(f1, f2, f3));
+    }
+
+    @Override
+    public CompatibleAxisAlignedBB getBoundingBox(Entity entity) {
+        return new CompatibleAxisAlignedBB(entity.getEntityBoundingBox());
+    }
+
+    @Override
+    public List<Entity> getEntitiesWithinAABBExcludingEntity(World world, Entity entity, CompatibleAxisAlignedBB boundingBox) {
+        return world.getEntitiesWithinAABBExcludingEntity(entity, boundingBox.getBoundingBox());
+    }
+
+    @Override
+    public void spawnParticle(World world, String particleName, double xCoord, double yCoord, double zCoord,
+            double xSpeed, double ySpeed, double zSpeed) {
+        EnumParticleTypes particleType = EnumParticleTypes.getByName(particleName);
+        if(particleType != null) {
+            world.spawnParticle(particleType, xCoord, yCoord, zCoord, xSpeed, ySpeed, zSpeed);
+        }
+    }
+
+    @Override
+    public CompatibleBlockState getBlockAtPosition(World world, CompatibleBlockPos blockPos) {
+        return CompatibleBlockState.fromBlockState(world.getBlockState(blockPos.getBlockPos()));
+    }
+
+    @Override
+    public Item findItemByName(String modId, String itemName) {
+        return Item.REGISTRY.getObject(new ResourceLocation(modId, itemName));
+    }
+
+    @Override
+    public String getPlayerName(EntityPlayer player) {
+        return player.getName();
+    }
+
+    @Override
+    public boolean isBlockPenetratableByBullets(Block block) {
+        return block == Blocks.AIR
+                || block == Blocks.TALLGRASS
+                || block == Blocks.LEAVES
+                || block == Blocks.LEAVES2
+                || block == Blocks.FIRE
+                || block == Blocks.HAY_BLOCK
+                || block == Blocks.DOUBLE_PLANT
+                || block == Blocks.WEB
+                || block == Blocks.WHEAT;
+    }
+
+    @Override
+    public boolean canCollideCheck(Block block, CompatibleBlockState metadata, boolean hitIfLiquid) {
+        return block.canCollideCheck(metadata.getBlockState(), hitIfLiquid);
+    }
+
+    @Override
+    public float getCompatibleShellCasingForwardOffset() {
+        return DEFAULT_SHELL_CASING_FORWARD_OFFSET ;
+    }
+
+
+    @Override
+    public boolean madeFromHardMaterial(CompatibleBlockState blockState) {
+        Material material = blockState.getBlockState().getMaterial();
+
+        return material == Material.ROCK
+                || material == Material.IRON
+                || material == Material.ICE
+                || material == Material.WOOD;
+    }
+
+    @Override
+    public void playSoundAtEntity(Entity entity, CompatibleSound sound, float volume, float pitch) {
+        if(sound != null) {
+            entity.playSound(sound.getSound(), volume, pitch);
+        }
+    }
+
+    @Override
+    public double getBlockDensity(World world, CompatibleVec3 vec3, CompatibleAxisAlignedBB boundingBox) {
+        return world.getBlockDensity(vec3.getVec(), boundingBox.getBoundingBox());
+    }
+
+    @Override
+    public boolean isImmuneToExplosions(Entity entity) {
+        return entity.isImmuneToExplosions();
+    }
+
+    @Override
+    public boolean isAirBlock(CompatibleBlockState blockState) {
+        return blockState.getBlockState().getBlock() == Blocks.AIR;
+    }
+
+    private net.minecraft.world.Explosion getCompatibleExplosion(Explosion e) {
+        return new net.minecraft.world.Explosion(
+                e.getWorld(), e.getExploder(),
+                e.getExplosionX(), e.getExplosionY(), e.getExplosionZ(),
+                e.getExplosionSize(), false, true);
+    }
+
+    @Override
+    public boolean canDropBlockFromExplosion(CompatibleBlockState blockState, Explosion e) {
+        return blockState.getBlockState().getBlock().canDropFromExplosion(getCompatibleExplosion(e));
+    }
+
+    @Override
+    public void onBlockExploded(World world, CompatibleBlockState blockState, CompatibleBlockPos blockpos, Explosion explosion) {
+        blockState.getBlockState().getBlock().onBlockExploded(world, blockpos.getBlockPos(), getCompatibleExplosion(explosion));
+    }
+
+    @Override
+    public float getExplosionResistance(World worldObj, CompatibleBlockState blockState, CompatibleBlockPos blockpos, Entity entity,
+            Explosion explosion) {
+        return blockState.getBlockState().getBlock().getExplosionResistance(entity);
+    }
+
+    @Override
+    public float getExplosionResistance(World worldObj, Entity exploder, Explosion explosion,
+            CompatibleBlockPos blockpos, CompatibleBlockState blockState) {
+        return exploder.getExplosionResistance(getCompatibleExplosion(explosion), worldObj, blockpos.getBlockPos(), blockState.getBlockState());
+    }
+
+    @Override
+    public boolean isSpectator(EntityPlayer entityplayer) {
+        return entityplayer.isSpectator();
+    }
+
+    @Override
+    public boolean isCreative(EntityPlayer entityplayer) {
+        return entityplayer.isCreative();
+    }
+
+    @Override
+    public void setBlockToFire(World world, CompatibleBlockPos blockpos1) {
+        world.setBlockState(blockpos1.getBlockPos(), Blocks.FIRE.getDefaultState());
+    }
+
+    @Override
+    public DamageSource getDamageSource(Explosion explosion) {
+        return DamageSource.causeExplosionDamage(getCompatibleExplosion(explosion));
+    }
+
+    @Override
+    public double getBlastDamageReduction(EntityLivingBase entity, double d10) {
+        return EnchantmentProtection.getBlastDamageReduction((EntityLivingBase)entity, d10);
+    }
+
+    @Override
+    public boolean verifyExplosion(World worldObj, Entity exploder, Explosion explosion, CompatibleBlockPos blockpos,
+            CompatibleBlockState blockState, float f) {
+        return exploder.verifyExplosion(getCompatibleExplosion(explosion), worldObj, blockpos.getBlockPos(),
+                blockState.getBlockState(), f);
+    }
+
+    @Override
+    public boolean isFullBlock(CompatibleBlockState blockState) {
+        return blockState.getBlockState().isFullBlock();
+    }
+
+    @Override
+    public void dropBlockAsItemWithChance(World world, CompatibleBlockState blockState, CompatibleBlockPos blockpos, float f, int i) {
+        blockState.getBlockState().getBlock().dropBlockAsItemWithChance(world, blockpos.getBlockPos(), blockState.getBlockState(), f, i);
+    }
+
+    @Override
+    public CompatibleBlockState getBlockBelow(World world, CompatibleBlockPos blockPos) {
+        return CompatibleBlockState.fromBlockState(world.getBlockState(blockPos.getBlockPos().down()));
+    }
+
+    @Override
+    public void playSound(World world, double posX, double posY, double posZ, CompatibleSound sound,
+            float volume, float pitch) {
+        if(sound != null) {
+            world.playSound(posX, posY, posZ, sound.getSound(), SoundCategory.BLOCKS, volume, pitch, false);
+        }
+    }
+
+    @Override
+    public boolean isBlockPenetratableByGrenades(Block block) {
+        return block == Blocks.AIR
+                || block == Blocks.TALLGRASS
+                || block == Blocks.LEAVES
+                || block == Blocks.LEAVES2
+                || block == Blocks.FIRE
+                || block == Blocks.HAY_BLOCK
+                || block == Blocks.DOUBLE_PLANT
+                || block == Blocks.WEB
+                || block == Blocks.WHEAT;
+
+    }
+
+    @Override
+    public DamageSource genericDamageSource() {
+        return DamageSource.GENERIC;
+    }
+
+    @Override
+    public boolean isCollided(CompatibleParticle particle) {
+        return particle.isCollided();
     }
 }

@@ -23,7 +23,6 @@ public class CompatibleMessageContext {
 
 	public void runInMainThread(Runnable runnable) {
 		IThreadListener mainThread = (IThreadListener) ctx.getServerHandler().playerEntity.world;
-
 		mainThread.addScheduledTask(runnable);
 	}
 

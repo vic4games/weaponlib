@@ -42,15 +42,15 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
-public class ItemMelee extends CompatibleItem implements 
+public class ItemMelee extends CompatibleItem implements
 PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer, Modifiable, Updatable {
 
     private static final Logger logger = LogManager.getLogger(ItemMelee.class);
 
     public static class Builder {
-        
+
         private static final int DEFAULT_PREPARE_STUB_TIMEOUT = 100;
-        
+
         private static final int DEFAULT_ATTACK_COOLDOWN_TIMEOUT = 500;
         private static final int DEFAULT_HEAVY_ATTACK_COOLDOWN_TIMEOUT = 1000;
 
@@ -79,7 +79,7 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
         public float heavyAttackDamage = 2f;
         public Supplier<Integer> prepareStubTimeout = () -> DEFAULT_PREPARE_STUB_TIMEOUT;
         public Supplier<Integer> prepareHeavyStubTimeout = () -> DEFAULT_PREPARE_STUB_TIMEOUT;
-        
+
         public Supplier<Integer> attackCooldownTimeout = () -> DEFAULT_ATTACK_COOLDOWN_TIMEOUT;
         public Supplier<Integer> heavyAttackCooldownTimeout = () -> DEFAULT_HEAVY_ATTACK_COOLDOWN_TIMEOUT;
 
@@ -92,22 +92,22 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
             this.informationProvider = informationProvider;
             return this;
         }
-        
+
         public Builder withPrepareStubTimeout(Supplier<Integer> prepareStubTimeout) {
             this.prepareStubTimeout = prepareStubTimeout;
             return this;
         }
-        
+
         public Builder withPrepareHeavyStubTimeout(Supplier<Integer> prepareHeavyStubTimeout) {
             this.prepareHeavyStubTimeout = prepareHeavyStubTimeout;
             return this;
         }
-        
+
         public Builder withAttackCooldownTimeout(Supplier<Integer> attackCooldownTimeout) {
             this.attackCooldownTimeout = attackCooldownTimeout;
             return this;
         }
-        
+
         public Builder withHeavyAttackCooldownTimeout(Supplier<Integer> heavyAttackCooldownTimeout) {
             this.heavyAttackCooldownTimeout = heavyAttackCooldownTimeout;
             return this;
@@ -117,12 +117,12 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
             this.name = name;
             return this;
         }
-        
+
         public Builder withAttackDamage(float attackDamage) {
             this.attackDamage = attackDamage;
             return this;
         }
-        
+
         public Builder withHeavyAttackDamage(float heavyAttackDamage) {
             this.heavyAttackDamage = heavyAttackDamage;
             return this;
@@ -163,9 +163,9 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
             this.renderer = renderer;
             return this;
         }
-        
+
         public Builder withCompatibleSkin(MeleeSkin skin, String activeTextureName) {
-            withCompatibleAttachment(skin, 
+            withCompatibleAttachment(skin,
                     (a, i) -> {
                         i.setActiveTextureIndex(skin.getTextureVariantIndex(activeTextureName.toLowerCase()));
                     },
@@ -179,7 +179,7 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
             compatibleAttachments.put(attachment, new CompatibleAttachment<>(attachment, applyHandler, removeHandler));
             return this;
         }
-        
+
         public Builder withCompatibleAttachment(ItemAttachment<ItemMelee> attachment, BiConsumer<EntityPlayer, ItemStack> positioning) {
             compatibleAttachments.put(attachment, new CompatibleAttachment<>(attachment, positioning, null, false));
             return this;
@@ -229,7 +229,7 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
 
             ItemMelee itemMelee = new ItemMelee(this, modContext);
 
-            itemMelee.attackSound = this.attackSound != null ? 
+            itemMelee.attackSound = this.attackSound != null ?
                     modContext.registerSound(this.attackSound) : CompatibleSound.SNOWBALL_THROW;
             itemMelee.heavyAttackSound = this.heavyAttackSound != null ?
                     modContext.registerSound(this.heavyAttackSound) : CompatibleSound.SNOWBALL_THROW;
@@ -307,14 +307,14 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
     public void onUpdate(ItemStack itemStack, World world, Entity entity, int p_77663_4_, boolean active) {
     }
 
-   
+
     Map<ItemAttachment<ItemMelee>, CompatibleAttachment<ItemMelee>> getCompatibleAttachments() {
         return builder.compatibleAttachments;
     }
 
 
     public static boolean isActiveAttachment(PlayerMeleeInstance weaponInstance, ItemAttachment<ItemMelee> attachment) {
-        return weaponInstance != null ? 
+        return weaponInstance != null ?
                 MeleeAttachmentAspect.isActiveAttachment(attachment, weaponInstance) : false;
     }
 
@@ -368,7 +368,7 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
         PlayerMeleeInstance instance = new PlayerMeleeInstance(slot, player, itemStack);
         //state.setAmmo(Tags.getAmmo(itemStack)); // TODO: get ammo properly
         instance.setState(MeleeState.READY);
-        
+
         for(CompatibleAttachment<ItemMelee> compatibleAttachment: ((ItemMelee) itemStack.getItem()).getCompatibleAttachments().values()) {
             ItemAttachment<ItemMelee> attachment = compatibleAttachment.getAttachment();
             if(compatibleAttachment.isDefault() && attachment.getApply3() != null) {
@@ -406,15 +406,15 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
             modContext.getMeleeAttackAspect().onHeavyAttackButtonClick(player);
         }
     }
-    
+
 //    @SuppressWarnings({ "rawtypes", "unchecked", "deprecation" })
 //    public Multimap getItemAttributeModifiers() {
 //        Multimap multimap = super.getItemAttributeModifiers();
-//        multimap.put(SharedMonsterAttributes.attackDamage.getAttributeUnlocalizedName(), 
+//        multimap.put(SharedMonsterAttributes.attackDamage.getAttributeUnlocalizedName(),
 //                new AttributeModifier(field_111210_e, "Weapon modifier", (double)builder.damage, 0));
 //        return multimap;
 //    }
-    
+
     @Override
     public boolean hitEntity(ItemStack stack, EntityLivingBase target, EntityLivingBase player) {
         //target.attackEntityFrom(DamageSource.fall, builder.damage);
@@ -432,7 +432,7 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
     public long getPrepareStubTimeout() {
         return builder.prepareStubTimeout.get();
     }
-    
+
     public long getPrepareHeavyStubTimeout() {
         return builder.prepareHeavyStubTimeout.get();
     }
@@ -440,7 +440,7 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
     public long getAttackCooldownTimeout() {
         return builder.attackCooldownTimeout.get();
     }
-    
+
     public long getHeavyAttackCooldownTimeout() {
         return builder.heavyAttackCooldownTimeout.get();
     }

@@ -2,11 +2,13 @@ package com.vicmatskiv.weaponlib.command;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
+import com.vicmatskiv.weaponlib.ItemAttachment;
 import com.vicmatskiv.weaponlib.Part;
 import com.vicmatskiv.weaponlib.animation.DebugPositioner;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleCommand;
 
 import net.minecraft.command.ICommandSender;
+import net.minecraft.item.Item;
 
 public class DebugCommand extends CompatibleCommand {
 
@@ -19,6 +21,13 @@ public class DebugCommand extends CompatibleCommand {
     private static final String DEBUG_ARG_SCALE = "scale";
     private static final String DEBUG_ARG_SHOW = "show";
     private static final String DEBUG_ARG_WATCH = "watch";
+    private static final String DEBUG_ARG_STEP = "step";
+
+    private String modId;
+
+    public DebugCommand(String modId) {
+        this.modId = modId;
+    }
 
     @Override
     public String getCompatibleName() {
@@ -50,6 +59,10 @@ public class DebugCommand extends CompatibleCommand {
         return String.format("/%s %s <scale>", COMMAND_DEBUG, DEBUG_ARG_SCALE);
     }
 
+    private String getSubCommandStepUsage() {
+        return String.format("/%s %s <scale>", COMMAND_DEBUG, DEBUG_ARG_STEP);
+    }
+
     private String getSubCommandWatchUsage() {
         return String.format("/%s %s [entity-id]", COMMAND_DEBUG, DEBUG_ARG_WATCH);
     }
@@ -75,6 +88,9 @@ public class DebugCommand extends CompatibleCommand {
                 break;
             case DEBUG_ARG_SCALE:
                 processScaleSubCommand(args);
+                break;
+            case DEBUG_ARG_STEP:
+                processStepSubCommand(args);
                 break;
             case DEBUG_ARG_WATCH:
                 processWatchSubCommand(args);
@@ -151,6 +167,26 @@ public class DebugCommand extends CompatibleCommand {
         }
     }
 
+    private void processStepSubCommand(String[] args) {
+        if(args.length != 2) {
+            compatibility.addChatMessage(compatibility.clientPlayer(), getSubCommandStepUsage());
+            return;
+        }
+
+        if(DebugPositioner.getDebugPart() == null) {
+            compatibility.addChatMessage(compatibility.clientPlayer(), "Debug part not selected");
+            return;
+        }
+
+        try {
+            float step = Float.parseFloat(args[1]);
+            DebugPositioner.setStep(step);
+            compatibility.addChatMessage(compatibility.clientPlayer(), "Set step to " + step);
+        } catch(NumberFormatException e) {
+            compatibility.addChatMessage(compatibility.clientPlayer(), getSubCommandStepUsage());
+        }
+    }
+
     private void processShowSubCommand(String[] args) {
         if(args.length != 2) {
             compatibility.addChatMessage(compatibility.clientPlayer(), getSubCommandPauseUsage());
@@ -165,6 +201,7 @@ public class DebugCommand extends CompatibleCommand {
         switch(args[1].toLowerCase()) {
         case SHOW_OPTION_CODE:
             DebugPositioner.showCode();
+            compatibility.addChatMessage(compatibility.clientPlayer(), "Code is copied to the console");
             break;
         default:
             compatibility.addChatMessage(compatibility.clientPlayer(), getSubCommandShowUsage());
@@ -188,10 +225,26 @@ public class DebugCommand extends CompatibleCommand {
             case "rhand":
                 DebugPositioner.setDebugPart(Part.RIGHT_HAND);
                 break;
+            case "inventory":
+                DebugPositioner.setDebugPart(Part.INVENTORY);
+                break;
+            default:
+                String partName = args[1];
+
+                Item item = compatibility.findItemByName(modId, partName);
+                Part part = null;
+                if(item instanceof Part) {
+                    part = (Part) item;
+                } else if(item instanceof ItemAttachment) {
+                    part = ((ItemAttachment<?>)item).getRenderablePart();
+                }
+                if(part != null) {
+                    DebugPositioner.setDebugPart(part);
+                }
+                break;
             }
 
-            compatibility.addChatMessage(compatibility.clientPlayer(), "Debugging part "
-                    + args[1]);
+            compatibility.addChatMessage(compatibility.clientPlayer(), "Debugging part " + args[1]);
         } catch(NumberFormatException e) {
             compatibility.addChatMessage(compatibility.clientPlayer(), getSubCommandPartUsage());
         }

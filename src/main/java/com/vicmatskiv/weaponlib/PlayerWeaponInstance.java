@@ -18,16 +18,16 @@ import net.minecraft.item.ItemStack;
 
 
 public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
-	
+
 	private static final int SERIAL_VERSION = 7;
-	
+
 	@SuppressWarnings("unused")
 	private static final Logger logger = LogManager.getLogger(PlayerWeaponInstance.class);
 
 	static {
 		TypeRegistry.getInstance().register(PlayerWeaponInstance.class);
 	}
-	
+
 	private int ammo;
 	private float recoil;
 	private int seriesShotCount;
@@ -37,9 +37,9 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 	private float zoom = 1f;
 	private byte activeTextureIndex;
 	private boolean laserOn;
-		
+
 	/*
-	 * Upon adding an element to the head of the queue, all existing elements with lower priority are removed 
+	 * Upon adding an element to the head of the queue, all existing elements with lower priority are removed
 	 * from the queue. Elements with the same priority are not removed.
 	 * This ensures the queue is always sorted by priority, lowest (head) to highest (tail).
 	 */
@@ -58,12 +58,12 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 	public PlayerWeaponInstance(int itemInventoryIndex, EntityPlayer player) {
 		super(itemInventoryIndex, player);
 	}
-	
+
 	@Override
 	protected int getSerialVersion() {
 		return SERIAL_VERSION;
 	}
-	
+
 	private void addStateToHistory(WeaponState state) {
 		AsyncWeaponState t;
 		// Remove existing items from lower priorities from the top of the stack; stop when same or higher priority item is found
@@ -74,9 +74,9 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 				break;
 			}
 		}
-		
+
 		long expirationTimeout;
-		
+
 		if(state == WeaponState.FIRING || state == WeaponState.RECOILED || state == WeaponState.PAUSED) {
 			if(isAutomaticModeEnabled() && !getWeapon().hasRecoilPositioning()) {
 				expirationTimeout = (long) (50f / getFireRate());
@@ -89,22 +89,18 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 		}
 		filteredStateQueue.addFirst(new AsyncWeaponState(state, this.stateUpdateTimestamp, expirationTimeout));
 	}
-	
+
 	@Override
 	public boolean setState(WeaponState state) {
 		boolean result = super.setState(state);
 		addStateToHistory(state);
 		return result;
 	}
-	
+
 	public AsyncWeaponState nextHistoryState() {
-//		logger.debug("State queue: " + filteredStateQueue.stream().map(t -> t.getState() + ":" + t.getDuration())
-//				.collect(Collectors.toList()));
-		AsyncWeaponState result;
-		if(filteredStateQueue.size() > 0) { // was > 1 earlier, why?
-			result = filteredStateQueue.pollLast();
-		} else {
-			result = new AsyncWeaponState(getState(), stateUpdateTimestamp);
+		AsyncWeaponState result = filteredStateQueue.pollLast();
+		if(result == null) {
+		    result = new AsyncWeaponState(getState(), stateUpdateTimestamp);
 		}
 		return result;
 	}
@@ -112,14 +108,14 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 	public int getAmmo() {
 		return ammo;
 	}
-	
+
 	protected void setAmmo(int ammo) {
 		if(ammo != this.ammo) {
 			this.ammo = ammo;
-			updateId++; //TODO: what's going on with this update id?
+			updateId++;
 		}
 	}
-	
+
 	@Override
 	public void init(ByteBuf buf) {
 		super.init(buf);
@@ -133,7 +129,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 		activeTextureIndex = buf.readByte();
 		laserOn = buf.readBoolean();
 	}
-	
+
 	@Override
 	public void serialize(ByteBuf buf) {
 		super.serialize(buf);
@@ -147,21 +143,21 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 		buf.writeByte(activeTextureIndex);
 		buf.writeBoolean(laserOn);
 	}
-	
+
 	private static void serializeIntArray(ByteBuf buf, int a[]) {
 		buf.writeByte(a.length);
 		for(int i = 0; i < a.length; i++) {
 			buf.writeInt(a[i]);
 		}
 	}
-	
+
 	private static void serializeByteArray(ByteBuf buf, byte a[]) {
 		buf.writeByte(a.length);
 		for(int i = 0; i < a.length; i++) {
 			buf.writeByte(a[i]);
 		}
 	}
-	
+
 	private static int[] initIntArray(ByteBuf buf) {
 		int length = buf.readByte();
 		int a[] = new int[length];
@@ -170,7 +166,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 		}
 		return a;
 	}
-	
+
 	private static byte[] initByteArray(ByteBuf buf) {
 		int length = buf.readByte();
 		byte a[] = new byte[length];
@@ -179,12 +175,12 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 		}
 		return a;
 	}
-	
+
 	@Override
 	protected void updateWith(PlayerItemInstance<WeaponState> otherItemInstance, boolean updateManagedState) {
 		super.updateWith(otherItemInstance, updateManagedState);
 		PlayerWeaponInstance otherWeaponInstance = (PlayerWeaponInstance) otherItemInstance;
-		
+
 		setAmmo(otherWeaponInstance.ammo);
 		setZoom(otherWeaponInstance.zoom);
 		setRecoil(otherWeaponInstance.recoil);
@@ -244,11 +240,11 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 	public float getFireRate() {
 		return getWeapon().builder.fireRate;
 	}
-	
+
 	public boolean isAutomaticModeEnabled() {
 		return maxShots > 1;
 	}
-	
+
 	public boolean isAimed() {
 		return aimed;
 	}
@@ -310,14 +306,14 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 	public float getZoom() {
 		return zoom;
 	}
-	
+
 	public void setZoom(float zoom) {
 		if(this.zoom != zoom) {
 			this.zoom = zoom;
 			updateId++;
 		}
 	}
-	
+
 	public boolean isLaserOn() {
 		return laserOn;
 	}
@@ -342,7 +338,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 			updateId++;
 		}
 	}
-	
+
 	@Override
 	public Class<? extends Perspective<?>> getRequiredPerspectiveType() {
 	    Class<? extends Perspective<?>> result = null;
@@ -354,7 +350,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 	    }
 	    return result;
 	}
-	
+
 //	@Override
 //	public View<?> createView() {
 //	    return super.createView();

@@ -5,12 +5,13 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.vicmatskiv.weaponlib.compatibility.CompatibleBlockState;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTargetPoint;
-import com.vicmatskiv.weaponlib.compatibility.CompatibleThrowableEntity;
 import com.vicmatskiv.weaponlib.particle.SpawnParticleMessage;
 
 import io.netty.buffer.ByteBuf;
+import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -18,78 +19,37 @@ import net.minecraft.item.Item;
 import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 
-public class WeaponSpawnEntity extends CompatibleThrowableEntity {
-    
+public class WeaponSpawnEntity extends EntityProjectile {
+
     private static final Logger logger = LogManager.getLogger(WeaponSpawnEntity.class);
 
-	
-	static final float DEFAULT_INACCURACY = 1f;
-	private float explosionRadius = 0.1F;
+	private float explosionRadius;
 	private float damage = 6f;
-	private float speed;
-	private float gravityVelocity;
-	private float inaccuracy;
 	private Weapon weapon;
 
 	public WeaponSpawnEntity(World world) {
 		super(world);
 	}
 
-	public WeaponSpawnEntity(World par1World, EntityLivingBase arg1EntityLivingBase) {
-		super(par1World, arg1EntityLivingBase);
-	}
-	
-	public WeaponSpawnEntity(Weapon weapon, 
-			World world, 
-			EntityLivingBase player, 
+	public WeaponSpawnEntity(Weapon weapon,
+			World world,
+			EntityLivingBase player,
 			float speed,
 			float gravityVelocity,
 			float inaccuracy,
-			float damage, 
+			float damage,
 			float explosionRadius,
-			Material...damageableBlockMaterials) 
+			Material...damageableBlockMaterials)
 	{
-		super(world, player);
+		super(world, player, speed, gravityVelocity, inaccuracy);
 		this.weapon = weapon;
 		this.damage = damage;
-		this.speed = speed;
 		this.explosionRadius = explosionRadius;
-		this.inaccuracy = inaccuracy;
-		this.gravityVelocity = gravityVelocity;
-
-		// TODO: validate for 1.7.10 the code below
-		this.setSize(0.25F, 0.25F);
-		this.setLocationAndAngles(player.posX, player.posY + (double)player.getEyeHeight(), player.posZ, player.rotationYaw, player.rotationPitch);
-		this.posX -= (double)(compatibility.getMathHelper().cos(this.rotationYaw / 180.0F * (float)Math.PI) * 0.16F);
-		this.posY -= 0.10000000149011612D;
-		this.posZ -= (double)(compatibility.getMathHelper().sin(this.rotationYaw / 180.0F * (float)Math.PI) * 0.16F);
-		this.setPosition(this.posX, this.posY, this.posZ);
-		float f = 0.4F;
-		this.motionX = (double)(-compatibility.getMathHelper().sin(this.rotationYaw / 180.0F * (float)Math.PI) * compatibility.getMathHelper().cos(this.rotationPitch / 180.0F * (float)Math.PI) * f);
-		this.motionZ = (double)(compatibility.getMathHelper().cos(this.rotationYaw / 180.0F * (float)Math.PI) * compatibility.getMathHelper().cos(this.rotationPitch / 180.0F * (float)Math.PI) * f);
-		float pitchOffset = 0f;
-		this.motionY = (double)(-compatibility.getMathHelper().sin((this.rotationPitch + pitchOffset) / 180.0F * (float)Math.PI) * f);
-		this.setThrowableHeading(this.motionX, this.motionY, this.motionZ, speed, inaccuracy);
 	}
-	
+
 	@Override
 	public void onUpdate() {
 	    super.onUpdate();
-	}
-
-	@Override
-	protected float getGravityVelocity() {
-		return gravityVelocity;
-	};
-	
-	@Override 
-	protected float getVelocity() {
-		return speed;
-	}
-
-	@Override
-	protected float getInaccuracy() {
-		return DEFAULT_INACCURACY;
 	}
 
 	/**
@@ -97,82 +57,64 @@ public class WeaponSpawnEntity extends CompatibleThrowableEntity {
 	 */
 	@Override
 	protected void onImpact(CompatibleRayTraceResult position) {
-		//if(!compatibility.world(this).isRemote) {
-	    if (position.getEntityHit() != null && position.getEntityHit() != this.getThrower()) {
-	        if(explosionRadius > 0) {
-	            compatibility.world(this).createExplosion(this, this.posX, this.posY, this.posZ, explosionRadius, true);
+
+	    if(compatibility.world(this).isRemote) {
+	        return;
+	    }
+
+	    if(weapon == null) {
+	        return;
+	    }
+
+	    if(explosionRadius > 0) {
+	        Explosion.createServerSideExplosion(weapon.getModContext(), compatibility.world(this), this,
+	                position.getHitVec().getXCoord(), position.getHitVec().getYCoord(), position.getHitVec().getZCoord(),
+	                explosionRadius, false, true);
+	    } else if(position.getEntityHit() != null){
+	        if(this.getThrower() != null) {
+	            position.getEntityHit().attackEntityFrom(DamageSource.causeThrownDamage(this, this.getThrower()), damage);
+	        } else {
+	            position.getEntityHit().attackEntityFrom(compatibility.genericDamageSource(), damage);
 	        }
 
-	        position.getEntityHit().attackEntityFrom(DamageSource.causeThrownDamage(this, this.getThrower()), damage);
-	        position.getEntityHit().hurtResistantTime = 0;
-	        position.getEntityHit().prevRotationYaw -= 0.3D;
+            position.getEntityHit().hurtResistantTime = 0;
+            position.getEntityHit().prevRotationYaw -= 0.3D;
 
-	        logger.debug("Hit entity {}", position.getEntityHit());
+            logger.debug("Hit entity {}", position.getEntityHit());
 
-	        CompatibleTargetPoint point = new CompatibleTargetPoint(position.getEntityHit().dimension, 
-	                this.posX, this.posY, this.posZ, 100);
+            CompatibleTargetPoint point = new CompatibleTargetPoint(position.getEntityHit().dimension,
+                    this.posX, this.posY, this.posZ, 100);
 
-	        double magnitude = Math.sqrt(motionX * motionX + motionY * motionY + motionZ * motionZ) + 2;
+            double magnitude = Math.sqrt(motionX * motionX + motionY * motionY + motionZ * motionZ) + 2;
 
-	        int count = getParticleCount (damage);
-	        logger.debug("Generating {} particle(s) per damage {}", count, damage);
-	        weapon.getModContext().getChannel().sendToAllAround(new SpawnParticleMessage(
-	                count,
-	                position.getEntityHit().posX - motionX / magnitude, 
-	                position.getEntityHit().posY - motionY / magnitude, 
-	                position.getEntityHit().posZ - motionZ / magnitude),
-	                point);
-
-	    } else if(explosionRadius > 0) {
-	        compatibility.world(this).createExplosion(this, position.getBlockPosX(), position.getBlockPosY(), position.getBlockPosZ(), explosionRadius, true);
+            int count = getParticleCount (damage);
+            logger.debug("Generating {} particle(s) per damage {}", count, damage);
+            weapon.getModContext().getChannel().sendToAllAround(new SpawnParticleMessage(
+                    SpawnParticleMessage.ParticleType.BLOOD,
+                    count,
+                    position.getEntityHit().posX - motionX / magnitude,
+                    position.getEntityHit().posY - motionY / magnitude,
+                    position.getEntityHit().posZ - motionZ / magnitude),
+                    point);
 	    } else if(position.getTypeOfHit() == CompatibleRayTraceResult.Type.BLOCK) {
-	        if(!compatibility.world(this).isRemote) {
-	            weapon.onSpawnEntityBlockImpact(compatibility.world(this), null, this, position);
-	        }
-	    }
+	        weapon.onSpawnEntityBlockImpact(compatibility.world(this), null, this, position);
+        }
 
-	    if (!compatibility.world(this).isRemote) {
-	        this.setDead();
-	    }
+	    this.setDead();
 	}
-	
-	@Override
-	public void setCompatibleThrowableHeading(double motionX, double motionY, double motionZ, float velocity, float inaccuracy)
-    {
-        float f2 = compatibility.getMathHelper().sqrt_double(motionX * motionX + motionY * motionY + motionZ * motionZ);
-        motionX /= (double)f2;
-        motionY /= (double)f2;
-        motionZ /= (double)f2;
-        motionX += this.rand.nextGaussian() * 0.007499999832361937D * (double)inaccuracy;
-        motionY += this.rand.nextGaussian() * 0.007499999832361937D * (double)inaccuracy;
-        motionZ += this.rand.nextGaussian() * 0.007499999832361937D * (double)inaccuracy;
-        motionX *= (double)velocity;
-        motionY *= (double)velocity;
-        motionZ *= (double)velocity;
-        this.motionX = motionX;
-        this.motionY = motionY;
-        this.motionZ = motionZ;
-        float f3 = compatibility.getMathHelper().sqrt_double(motionX * motionX + motionZ * motionZ);
-        this.prevRotationYaw = this.rotationYaw = (float)(Math.atan2(motionX, motionZ) * 180.0D / Math.PI);
-        this.prevRotationPitch = this.rotationPitch = (float)(Math.atan2(motionY, (double)f3) * 180.0D / Math.PI);
-    }
 
 	@Override
 	public void writeSpawnData(ByteBuf buffer) {
+	    super.writeSpawnData(buffer);
 		buffer.writeInt(Item.getIdFromItem(weapon));
-		buffer.writeFloat(speed);
-		buffer.writeFloat(gravityVelocity);
-		buffer.writeFloat(inaccuracy);
 		buffer.writeFloat(damage);
 		buffer.writeFloat(explosionRadius);
 	}
 
 	@Override
 	public void readSpawnData(ByteBuf buffer) {
+	    super.readSpawnData(buffer);
 		weapon = (Weapon) Item.getItemById(buffer.readInt());
-		speed = buffer.readFloat();
-		gravityVelocity = buffer.readFloat();
-		inaccuracy = buffer.readFloat();
 		damage = buffer.readFloat();
 		explosionRadius = buffer.readFloat();
 	}
@@ -184,9 +126,16 @@ public class WeaponSpawnEntity extends CompatibleThrowableEntity {
 	boolean isDamageableEntity(Entity entity) {
 		return false;
 	}
-	
+
 	int getParticleCount(float damage) {
         return (int) (-0.11 * (damage - 30) * (damage - 30) + 100);
     }
-	
+
+	@Override
+	public boolean canCollideWithBlock(Block block, CompatibleBlockState metadata) {
+	    return !compatibility.isBlockPenetratableByBullets(block) && super.canCollideWithBlock(block, metadata);
+	}
+
+
+
 }

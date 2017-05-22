@@ -20,6 +20,7 @@ import com.vicmatskiv.weaponlib.state.StateManager;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 
 public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInstance> {
 
@@ -182,7 +183,10 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 		Status status = Status.GRANTED;
 		Weapon weapon = (Weapon) weaponInstance.getItem();
 		EntityPlayer player = weaponInstance.getPlayer();
-		if (compatibility.getTagCompound(weaponItemStack) != null && !player.isSprinting()) {
+		if(compatibility.getTagCompound(weaponItemStack) == null) {
+		    compatibility.setTagCompound(weaponItemStack, new NBTTagCompound());
+		}
+		if (!player.isSprinting()) {
 			List<ItemMagazine> compatibleMagazines = weapon.getCompatibleMagazines();
 			List<ItemAttachment<Weapon>> compatibleBullets = weapon.getCompatibleAttachments(ItemBullet.class);
 			ItemStack consumedStack;

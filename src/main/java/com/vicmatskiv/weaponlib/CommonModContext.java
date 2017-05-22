@@ -19,6 +19,15 @@ import com.vicmatskiv.weaponlib.crafting.RecipeGenerator;
 import com.vicmatskiv.weaponlib.electronics.EntityWirelessCamera;
 import com.vicmatskiv.weaponlib.electronics.PlayerTabletInstance;
 import com.vicmatskiv.weaponlib.electronics.TabletState;
+import com.vicmatskiv.weaponlib.grenade.EntityGrenade;
+import com.vicmatskiv.weaponlib.grenade.EntitySmokeGrenade;
+import com.vicmatskiv.weaponlib.grenade.GrenadeAttackAspect;
+import com.vicmatskiv.weaponlib.grenade.GrenadeMessage;
+import com.vicmatskiv.weaponlib.grenade.GrenadeMessageHandler;
+import com.vicmatskiv.weaponlib.grenade.GrenadeRenderer;
+import com.vicmatskiv.weaponlib.grenade.GrenadeState;
+import com.vicmatskiv.weaponlib.grenade.ItemGrenade;
+import com.vicmatskiv.weaponlib.grenade.PlayerGrenadeInstance;
 import com.vicmatskiv.weaponlib.melee.ItemMelee;
 import com.vicmatskiv.weaponlib.melee.MeleeAttachmentAspect;
 import com.vicmatskiv.weaponlib.melee.MeleeAttackAspect;
@@ -66,7 +75,7 @@ public class CommonModContext implements ModContext {
         TypeRegistry.getInstance().register(TabletState.class);
     }
 
-	private String modId;
+	protected String modId;
 
 	protected CompatibleChannel channel;
 
@@ -98,6 +107,10 @@ public class CommonModContext implements ModContext {
 
 	private int modEntityID = 256;
 
+    private GrenadeAttackAspect grenadeAttackAspect;
+
+    private CompatibleSound explosionSound;
+
 	@Override
 	public void init(Object mod, String modId, CompatibleChannel channel) {
 		this.channel = channel;
@@ -110,6 +123,10 @@ public class CommonModContext implements ModContext {
 
 		this.meleeAttackAspect = new MeleeAttackAspect(this);
         this.meleeAttachmentAspect = new MeleeAttachmentAspect(this);
+
+        this.grenadeAttackAspect = new GrenadeAttackAspect(this);
+        StateManager<GrenadeState, PlayerGrenadeInstance> grenadeStateManager = new StateManager<>((s1, s2) -> s1 == s2);
+        grenadeAttackAspect.setStateManager(grenadeStateManager);
 
 		this.permitManager = new NetworkPermitManager(this);
 
@@ -160,6 +177,12 @@ public class CommonModContext implements ModContext {
 		channel.registerMessage(new BlockHitMessageHandler(this),
 		        BlockHitMessage.class, 19, CompatibleSide.CLIENT);
 
+		channel.registerMessage(new GrenadeMessageHandler(grenadeAttackAspect),
+                GrenadeMessage.class, 20, CompatibleSide.SERVER);
+
+		channel.registerMessage(new ExplosionMessageHandler(this),
+                ExplosionMessage.class, 21, CompatibleSide.CLIENT);
+
 		ServerEventHandler serverHandler = new ServerEventHandler(this, modId);
         compatibility.registerWithFmlEventBus(serverHandler);
         compatibility.registerWithEventBus(serverHandler);
@@ -171,6 +194,10 @@ public class CommonModContext implements ModContext {
 
         compatibility.registerModEntity(WeaponSpawnEntity.class, "Ammo" + modEntityID, modEntityID++, mod, modId, 64, 3, true);
         compatibility.registerModEntity(EntityWirelessCamera.class, "wcam" + modEntityID, modEntityID++, mod, modId, 200, 3, true);
+        compatibility.registerModEntity(EntityShellCasing.class, "ShellCasing" + modEntityID, modEntityID++, mod, modId, 64, 500, true);
+        compatibility.registerModEntity(EntityGrenade.class, "Grenade" + modEntityID, modEntityID++, mod, modId, 64, 10000, false);
+        compatibility.registerModEntity(EntitySmokeGrenade.class, "SmokeGrenade" + modEntityID, modEntityID++, mod, modId, 64, 10000, false);
+
 	}
 
 	public void registerServerSideOnly() {
@@ -307,8 +334,23 @@ public class CommonModContext implements ModContext {
 		return noAmmoSound;
 	}
 
+	@Override
+	public void setExplosionSound(String sound) {
+	    this.explosionSound = registerSound(sound.toLowerCase());
+	}
+
+	@Override
+	public CompatibleSound getExplosionSound() {
+	    return explosionSound;
+	}
+
     @Override
     public void registerMeleeWeapon(String name, ItemMelee itemMelee, MeleeRenderer renderer) {
+        compatibility.registerItem(itemMelee, name);
+    }
+
+    @Override
+    public void registerGrenadeWeapon(String name, ItemGrenade itemMelee, GrenadeRenderer renderer) {
         compatibility.registerItem(itemMelee, name);
     }
 
@@ -320,5 +362,20 @@ public class CommonModContext implements ModContext {
     @Override
     public float getAspectRatio() {
         return 1f;
+    }
+
+    @Override
+    public AttachmentContainer getGrenadeAttachmentAspect() {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public GrenadeAttackAspect getGrenadeAttackAspect() {
+        return grenadeAttackAspect;
+    }
+
+    @Override
+    public String getModId() {
+        return modId;
     }
 }

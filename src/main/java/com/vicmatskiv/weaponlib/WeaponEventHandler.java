@@ -3,6 +3,7 @@ package com.vicmatskiv.weaponlib;
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponEventHandler;
+import com.vicmatskiv.weaponlib.grenade.PlayerGrenadeInstance;
 import com.vicmatskiv.weaponlib.melee.PlayerMeleeInstance;
 
 import net.minecraft.client.renderer.entity.RenderPlayer;
@@ -14,7 +15,7 @@ import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderLivingEvent;
 
 public class WeaponEventHandler extends CompatibleWeaponEventHandler {
-	
+
 	private SafeGlobals safeGlobals;
 	private ModContext modContext;
 
@@ -22,17 +23,17 @@ public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 		this.modContext = modContext;
 		this.safeGlobals = safeGlobals;
 	}
-	
+
 	@Override
 	public void onCompatibleGuiOpenEvent(GuiOpenEvent event) {
 		safeGlobals.guiOpen.set(compatibility.getGui(event) != null);
 	}
-	
+
 	@Override
 	public void compatibleZoom(FOVUpdateEvent event) {
 		/*
 		 * TODO: if optical zoom is on then
-		 * 			if rendering phase is "render viewfinder" then 
+		 * 			if rendering phase is "render viewfinder" then
 		 * 				setNewFov(getZoom());
 		 *          else if rendering phase is normal then
 		 *              setNewFov(1);
@@ -59,14 +60,15 @@ public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 
 		}
 	}
-	
+
 	@Override
 	public void onCompatibleMouse(MouseEvent event) {
 		if(compatibility.getButton(event) == 0 || compatibility.getButton(event) == 1) {
 			// If the current player holds the weapon in their main hand, cancel default minecraft mouse processing
 		    PlayerItemInstance<?> instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(compatibility.clientPlayer());
 		    //PlayerWeaponInstance mainHandHeldWeaponInstance = modContext.getMainHeldWeapon();
-			if(instance instanceof PlayerWeaponInstance || instance instanceof PlayerMeleeInstance) {
+			if(instance instanceof PlayerWeaponInstance || instance instanceof PlayerMeleeInstance
+			        || instance instanceof PlayerGrenadeInstance) { // TODO: introduce common action handler interface and check instanceof ActionHandler instead
 				event.setCanceled(true);
 			}
 		}
@@ -94,7 +96,7 @@ public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 							|| weaponInstance.getState() == WeaponState.PAUSED
 							);
 				}
-				
+
 			}
 		}
 	}

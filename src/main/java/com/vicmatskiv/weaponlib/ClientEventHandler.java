@@ -22,7 +22,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.common.util.FakePlayer;
 
 public class ClientEventHandler extends CompatibleClientEventHandler {
-	
+
 	private static final UUID SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER_UUID = UUID.fromString("8efa8469-0256-4f8e-bdd9-3e7b23970663");
 	private static final AttributeModifier SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER = (new AttributeModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER_UUID, "Slow Down While Zooming", -0.5, 2)).setSaved(false);
 
@@ -32,15 +32,15 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 	private SafeGlobals safeGlobals;
 	private Queue<Runnable> runInClientThreadQueue;
 	private long renderEndNanoTime;
-	
-	
+
+
 	private ClientModContext modContext;
-	
-	private FakePlayer fakePlayer;
-	
+
+	private FakePlayer fakePlayer; // TODO: remove
+
 	//private ReloadAspect reloadAspect;
 
-	public ClientEventHandler(ClientModContext modContext, Lock mainLoopLock, SafeGlobals safeGlobals, 
+	public ClientEventHandler(ClientModContext modContext, Lock mainLoopLock, SafeGlobals safeGlobals,
 			Queue<Runnable> runInClientThreadQueue /*, ReloadAspect reloadAspect*/) {
 		this.modContext = modContext;
 		this.mainLoopLock = mainLoopLock;
@@ -50,13 +50,13 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
         //this.reloadAspect = reloadAspect;
 	}
 
-	public void onCompatibleClientTick(CompatibleClientTickEvent event) {		
+	public void onCompatibleClientTick(CompatibleClientTickEvent event) {
 		if(event.getPhase() == Phase.START) {
 			mainLoopLock.lock();
 		} else if(event.getPhase() == Phase.END) {
 			update();
 			modContext.getSyncManager().run();
-			
+
 			PlayerEntityTracker tracker = PlayerEntityTracker.getTracker(compatibility.clientPlayer());
 			if(tracker != null) {
 			    tracker.update();
@@ -88,7 +88,7 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 			restorePlayerSpeed(player);
 		}
 	}
-	
+
 	// TODO: create player utils, move this method
 	private void restorePlayerSpeed(EntityPlayer entityPlayer) {
 		if(entityPlayer.getEntityAttribute(compatibility.getMovementSpeedAttribute())
@@ -113,11 +113,11 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 			r.run();
 		}
 	}
-	
+
 	@Override
     protected void onCompatibleRenderTickEvent(CompatibleRenderTickEvent event) {
         if(event.getPhase() ==  CompatibleRenderTickEvent.Phase.START && compatibility.clientPlayer() != null) {
-            
+
             PlayerItemInstance<?> instance = modContext.getPlayerItemInstanceRegistry()
                     .getMainHandItemInstance(compatibility.clientPlayer());
             if(instance != null) {
@@ -126,7 +126,7 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
                     view.update(event);
                 }
             }
- 
+
         } else if(event.getPhase() ==  CompatibleRenderTickEvent.Phase.END) {
             safeGlobals.renderingPhase.set(null);
         }
