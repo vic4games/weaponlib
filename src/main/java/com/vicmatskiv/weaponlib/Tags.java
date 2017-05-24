@@ -13,7 +13,7 @@ public final class Tags {
 	private static final String AMMO_TAG = "Ammo";
 
 	private static final String DEFAULT_TIMER_TAG = "DefaultTimer";
-	
+
 	private static final String INSTANCE_TAG = "Instance";
 
 	static int getAmmo(ItemStack itemStack) {
@@ -22,10 +22,11 @@ public final class Tags {
 	}
 
 	static void setAmmo(ItemStack itemStack, int ammo) {
-		if(itemStack == null || compatibility.getTagCompound(itemStack) == null) return;
+		if(itemStack == null) return;
+		compatibility.ensureTagCompound(itemStack);
 		compatibility.getTagCompound(itemStack).setInteger(AMMO_TAG, ammo);
 	}
-	
+
 	public static long getDefaultTimer(ItemStack itemStack) {
 		if(itemStack == null || compatibility.getTagCompound(itemStack) == null) return 0;
 		return compatibility.getTagCompound(itemStack).getLong(DEFAULT_TIMER_TAG);
@@ -35,20 +36,20 @@ public final class Tags {
 		if(itemStack == null || compatibility.getTagCompound(itemStack) == null) return;
 		compatibility.getTagCompound(itemStack).setLong(DEFAULT_TIMER_TAG, ammo);
 	}
-		
+
 	public static PlayerItemInstance<?> getInstance(ItemStack itemStack) {
 		if(itemStack == null || compatibility.getTagCompound(itemStack) == null) return null;
-		
+
 		byte[] bytes = compatibility.getTagCompound(itemStack).getByteArray(INSTANCE_TAG);
 		if(bytes != null && bytes.length > 0) {
 			return TypeRegistry.getInstance().fromBytes(Unpooled.wrappedBuffer(bytes));
 		}
 		return null;
 	}
-	
+
 	public static <T extends PlayerItemInstance<?>> T getInstance(ItemStack itemStack, Class<T> targetClass) {
 		if(itemStack == null || compatibility.getTagCompound(itemStack) == null) return null;
-		
+
 		byte[] bytes = compatibility.getTagCompound(itemStack).getByteArray(INSTANCE_TAG);
 		if(bytes != null && bytes.length > 0) {
 			try {
@@ -59,9 +60,10 @@ public final class Tags {
 		}
 		return null;
 	}
-	
+
 	static void setInstance(ItemStack itemStack, PlayerItemInstance<?> instance) {
-		if(itemStack == null || compatibility.getTagCompound(itemStack) == null) return;
+		if(itemStack == null) return;
+		compatibility.ensureTagCompound(itemStack);
 		ByteBuf buf = Unpooled.buffer();
 		if(instance != null) {
 			TypeRegistry.getInstance().toBytes(instance, buf);
@@ -69,7 +71,7 @@ public final class Tags {
 		} else {
 			compatibility.getTagCompound(itemStack).removeTag(INSTANCE_TAG);
 		}
-		
+
 	}
 
 	public static byte[] getInstanceBytes(ItemStack itemStack) {
