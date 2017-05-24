@@ -85,7 +85,7 @@ class ClientWeaponTicker extends Thread {
         if(item instanceof Weapon) {
             ((Weapon) item).tryStopFire(player);
         } else if(item instanceof ItemGrenade) {
-            ((ItemGrenade) item).attackUp(player, false);
+            ((ItemGrenade) item).attackUp(player, true);
         }
     }
 
@@ -93,7 +93,7 @@ class ClientWeaponTicker extends Thread {
         EntityPlayer player = compatibility.getClientPlayer();
         Item item = getHeldItemMainHand(player);
         if(item instanceof ItemGrenade) { // TODO: introduce generic action handler interface with on*Click() handler
-            ((ItemGrenade) item).attackUp(player, true);
+            ((ItemGrenade) item).attackUp(player, false);
         }
     }
 
@@ -105,7 +105,7 @@ class ClientWeaponTicker extends Thread {
         } else if(item instanceof ItemMelee) {
             ((ItemMelee) item).attack(player, false);
         } else if(item instanceof ItemGrenade) { // TODO: introduce generic action handler interface with on*Click() handler
-            ((ItemGrenade) item).attack(player, false);
+            ((ItemGrenade) item).attack(player, true);
         }
     }
 
@@ -117,7 +117,7 @@ class ClientWeaponTicker extends Thread {
         } else if(item instanceof ItemMelee) {
             ((ItemMelee) item).attack(player, true);
         } else if(item instanceof ItemGrenade) {
-            ((ItemGrenade) item).attack(player, true);
+            ((ItemGrenade) item).attack(player, false);
         }
     }
 

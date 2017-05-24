@@ -231,7 +231,7 @@ public class GrenadeAttackAspect implements Aspect<GrenadeState, PlayerGrenadeIn
             compatibility.spawnEntity(player, entityGrenade);
         }
 
-        //compatibility.consumeInventoryItemFromSlot(player, instance.getItemInventoryIndex());
+        compatibility.consumeInventoryItemFromSlot(player, instance.getItemInventoryIndex());
     }
 
     int getParticleCount(float damage) {

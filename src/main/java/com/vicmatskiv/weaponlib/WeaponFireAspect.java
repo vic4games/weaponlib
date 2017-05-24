@@ -164,14 +164,14 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
         player.rotationYaw = player.rotationYaw + weaponInstance.getRecoil() * rotationYawFactor;
 
         if(weapon.builder.flashIntensity > 0) {
-            EffectManager.getInstance().spawnFlashParticle(player, weapon.builder.flashIntensity,
+            modContext.getEffectManager().spawnFlashParticle(player, weapon.builder.flashIntensity,
                     weapon.builder.flashScale.get(),
                     weaponInstance.isAimed() ? FLASH_X_OFFSET_ZOOMED : compatibility.getEffectOffsetX()
                             + weapon.builder.flashOffsetX.get(),
                             compatibility.getEffectOffsetY() + weapon.builder.flashOffsetY.get());
         }
 
-        EffectManager.getInstance().spawnSmokeParticle(player, compatibility.getEffectOffsetX()
+        modContext.getEffectManager().spawnSmokeParticle(player, compatibility.getEffectOffsetX()
                 + weapon.builder.smokeOffsetX.get(),
                 compatibility.getEffectOffsetY() + weapon.builder.smokeOffsetY.get());
 

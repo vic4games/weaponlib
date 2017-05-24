@@ -32,6 +32,9 @@ public class ServerEventHandler extends CompatibleServerEventHandler {
 
     @Override
     protected void onCompatibleEntityJoinWorld(CompatibleEntityJoinWorldEvent e) {
+        if(e.getEntity() instanceof Contextual) {
+            ((Contextual)e.getEntity()).setContext(modContext);
+        }
         if(e.getEntity() instanceof EntityPlayerMP && !e.getWorld().isRemote) {
             logger.debug("Player {} joined the world", e.getEntity());
             PlayerEntityTracker tracker = PlayerEntityTracker.getTracker((EntityPlayer) e.getEntity());

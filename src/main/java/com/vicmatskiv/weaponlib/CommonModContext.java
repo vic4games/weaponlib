@@ -67,9 +67,8 @@ public class CommonModContext implements ModContext {
         TypeRegistry.getInstance().register(LoadPermit.class);
         TypeRegistry.getInstance().register(PlayerWeaponInstance.class);
         TypeRegistry.getInstance().register(WeaponState.class);
-
         TypeRegistry.getInstance().register(PlayerMeleeInstance.class);
-
+        TypeRegistry.getInstance().register(PlayerGrenadeInstance.class);
         TypeRegistry.getInstance().register(PlayerTabletInstance.class);
         TypeRegistry.getInstance().register(MeleeState.class);
         TypeRegistry.getInstance().register(TabletState.class);
@@ -377,5 +376,10 @@ public class CommonModContext implements ModContext {
     @Override
     public String getModId() {
         return modId;
+    }
+
+    @Override
+    public EffectManager getEffectManager() {
+        throw new IllegalStateException();
     }
 }

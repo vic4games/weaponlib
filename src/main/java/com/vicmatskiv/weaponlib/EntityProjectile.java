@@ -8,7 +8,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleAxisAlignedBB;
-import com.vicmatskiv.weaponlib.compatibility.CompatibleBlockPos;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleBlockState;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleIEntityAdditionalSpawnData;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMathHelper;
@@ -26,6 +25,8 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
 public abstract class EntityProjectile extends Entity implements IProjectile, CompatibleIEntityAdditionalSpawnData {
+
+    private static final String TAG_GRAVITY_VELOCITY = "gravityVelocity";
 
     @SuppressWarnings("unused")
     private static final Logger logger = LogManager.getLogger(EntityProjectile.class);
@@ -152,7 +153,7 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
         }
 
         if (this.inGround) {
-            CompatibleBlockPos p = new CompatibleBlockPos(this.xTile, this.yTile, this.zTile);
+//            CompatibleBlockPos p = new CompatibleBlockPos(this.xTile, this.yTile, this.zTile);
 //            if (compatibility.getBlockAtPosition(compatibility.world(this), p) == this.field_145785_f) {
 //                ++this.ticksInGround;
 //
@@ -298,6 +299,7 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
         }
 
         tagCompound.setString("ownerName", this.throwerName == null ? "" : this.throwerName);
+        tagCompound.setFloat(TAG_GRAVITY_VELOCITY, gravityVelocity);
     }
 
     /**
@@ -315,6 +317,7 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
         if (this.throwerName != null && this.throwerName.length() == 0) {
             this.throwerName = null;
         }
+        this.gravityVelocity = tagCompound.getFloat(TAG_GRAVITY_VELOCITY);
     }
 
     @Override

@@ -195,7 +195,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
     {
         GL11.glPushMatrix();
 
-        Framebuffer originalFramebuffer = Minecraft.getMinecraft().getFramebuffer();
+        //Framebuffer originalFramebuffer = Minecraft.getMinecraft().getFramebuffer();
         Framebuffer framebuffer = null;
         Integer inventoryTexture = null;
 
@@ -204,6 +204,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
         Minecraft mc = Minecraft.getMinecraft();
         final ScaledResolution scaledresolution = new ScaledResolution(mc);
 
+        int originalFramebufferId = -1;
 
         if(transformType == TransformType.GUI) {
 
@@ -211,6 +212,9 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
             inventoryTexture = getClientModContext().getInventoryTextureMap().get(textureMapKey);
 
             if(inventoryTexture == null) {
+                originalFramebufferId = Framebuffers.getCurrentFramebuffer();
+
+                Framebuffers.unbindFramebuffer();
 
                 inventoryTextureInitializationPhaseOn = true;
                 framebuffer = new Framebuffer(INVENTORY_TEXTURE_WIDTH, INVENTORY_TEXTURE_HEIGHT, true);
@@ -317,7 +321,10 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 
         GL11.glPopMatrix();
 
-        originalFramebuffer.bindFramebuffer(true);
+        if(originalFramebufferId >= 0) {
+            Framebuffers.bindFramebuffer(originalFramebufferId, true, mc.getFramebuffer().framebufferWidth,
+                    mc.getFramebuffer().framebufferHeight);
+        }
 
         if(transformType == TransformType.GUI) {
             renderCachedInventoryTexture(inventoryTexture);
