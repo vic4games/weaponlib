@@ -111,11 +111,11 @@ public interface Compatibility {
 
 	public EntityPlayer getEntity(FOVUpdateEvent event);
 
-	public EntityLivingBase getEntity(RenderLivingEvent.Pre event);
+	public EntityLivingBase getEntity(@SuppressWarnings("rawtypes") RenderLivingEvent.Pre event);
 
 	public void setNewFov(FOVUpdateEvent event, float fov);
 
-	public RenderPlayer getRenderer(RenderLivingEvent.Pre event);
+	public RenderPlayer getRenderer(@SuppressWarnings("rawtypes") RenderLivingEvent.Pre event);
 
 	public GuiScreen getGui(GuiOpenEvent event);
 

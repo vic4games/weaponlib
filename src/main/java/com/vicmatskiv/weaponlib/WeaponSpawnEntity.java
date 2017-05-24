@@ -125,7 +125,7 @@ public class WeaponSpawnEntity extends EntityProjectile {
 	}
 
 	@Override
-    public void readFromNBT(NBTTagCompound tagCompound) {
+    public void readEntityFromNBT(NBTTagCompound tagCompound) {
         super.readEntityFromNBT(tagCompound);
         Item item = Item.getItemById(tagCompound.getInteger(TAG_ENTITY_ITEM));
         if(item instanceof Weapon) {

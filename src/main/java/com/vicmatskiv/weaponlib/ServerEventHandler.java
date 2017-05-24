@@ -47,6 +47,9 @@ public class ServerEventHandler extends CompatibleServerEventHandler {
 
     @Override
     protected void onCompatiblePlayerStartedTracking(CompatibleStartTrackingEvent e) {
+        if(e.getTarget() instanceof EntityProjectile || e.getTarget() instanceof EntityBounceable) {
+            return;
+        }
         PlayerEntityTracker tracker = PlayerEntityTracker.getTracker((EntityPlayer) e.getEntity());
         if (tracker != null && tracker.updateTrackableEntity(e.getTarget())) {
             logger.debug("Player {} started tracking {} with uuid {}", e.getPlayer(), e.getTarget(), e.getTarget().getUniqueID());
@@ -57,6 +60,9 @@ public class ServerEventHandler extends CompatibleServerEventHandler {
 
     @Override
     protected void onCompatiblePlayerStoppedTracking(CompatibleStopTrackingEvent e) {
+        if(e.getTarget() instanceof EntityProjectile || e.getTarget() instanceof EntityBounceable) {
+            return;
+        }
         PlayerEntityTracker tracker = PlayerEntityTracker.getTracker((EntityPlayer) e.getEntity());
         if (tracker != null && tracker.updateTrackableEntity(e.getTarget())) {
             logger.debug("Player {} stopped tracking {}", e.getPlayer(), e.getTarget());

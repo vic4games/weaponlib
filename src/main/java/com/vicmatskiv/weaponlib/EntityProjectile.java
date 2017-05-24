@@ -26,10 +26,14 @@ import net.minecraft.world.World;
 
 public abstract class EntityProjectile extends Entity implements IProjectile, CompatibleIEntityAdditionalSpawnData {
 
-    private static final String TAG_GRAVITY_VELOCITY = "gravityVelocity";
-
     @SuppressWarnings("unused")
     private static final Logger logger = LogManager.getLogger(EntityProjectile.class);
+
+    private static final String TAG_GRAVITY_VELOCITY = "gravityVelocity";
+
+    private static final int MAX_TICKS = 200;
+
+    private static final int DEFAULT_MAX_LIFETIME = 5000;
 
     private int xTile = -1;
     private int yTile = -1;
@@ -47,9 +51,14 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
     protected float velocity;
     protected float inaccuracy;
 
+    private long timestamp;
+
+    protected long maxLifetime = DEFAULT_MAX_LIFETIME;
+
     public EntityProjectile(World world) {
         super(world);
         this.setSize(0.25F, 0.25F);
+        this.timestamp = System.currentTimeMillis();
     }
 
     public EntityProjectile(World world, EntityLivingBase thrower, float velocity, float gravityVelocity, float inaccuracy) {
@@ -139,7 +148,7 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
      * Called to update the entity's position/logic.
      */
     public void onUpdate() {
-        if(ticksExisted > 1000) {
+        if(ticksExisted > MAX_TICKS) {
             setDead();
             return;
         }
@@ -286,6 +295,7 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
      * (abstract) Protected helper method to write subclass entity data to NBT.
      */
     public void writeEntityToNBT(NBTTagCompound tagCompound) {
+        tagCompound.setLong("timestamp", timestamp);
         tagCompound.setShort("xTile", (short) this.xTile);
         tagCompound.setShort("yTile", (short) this.yTile);
         tagCompound.setShort("zTile", (short) this.zTile);
@@ -306,6 +316,7 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
      * (abstract) Protected helper method to read subclass entity data from NBT.
      */
     public void readEntityFromNBT(NBTTagCompound tagCompound) {
+
         this.xTile = tagCompound.getShort("xTile");
         this.yTile = tagCompound.getShort("yTile");
         this.zTile = tagCompound.getShort("zTile");
@@ -318,6 +329,11 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
             this.throwerName = null;
         }
         this.gravityVelocity = tagCompound.getFloat(TAG_GRAVITY_VELOCITY);
+        this.timestamp = tagCompound.getLong("timestamp");
+
+        if(System.currentTimeMillis() > timestamp + maxLifetime) {
+            setDead();
+        }
     }
 
     @Override
