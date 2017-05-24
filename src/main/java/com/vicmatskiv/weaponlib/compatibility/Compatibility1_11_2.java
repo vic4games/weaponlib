@@ -256,6 +256,7 @@ public class Compatibility1_11_2 implements Compatibility {
     }
 
     @Override
+    @SideOnly(Side.CLIENT)
     public void registerRenderingRegistry(CompatibleRenderingRegistry rendererRegistry) {
         MinecraftForge.EVENT_BUS.register(rendererRegistry);
     }
@@ -440,11 +441,13 @@ public class Compatibility1_11_2 implements Compatibility {
     }
 
     @Override
+    @SideOnly(Side.CLIENT)
     public void disableLightMap() {
         Minecraft.getMinecraft().entityRenderer.disableLightmap();
     }
 
     @Override
+    @SideOnly(Side.CLIENT)
     public void enableLightMap() {
         Minecraft.getMinecraft().entityRenderer.enableLightmap();
     }
@@ -518,26 +521,31 @@ public class Compatibility1_11_2 implements Compatibility {
     }
 
     @Override
+    @SideOnly(Side.CLIENT)
     public RenderGlobal createCompatibleRenderGlobal() {
         return /*Minecraft.getMinecraft().renderGlobal; //*/ new CompatibleRenderGlobal(Minecraft.getMinecraft());
     }
 
     @Override
+    @SideOnly(Side.CLIENT)
     public CompatibleParticleManager createCompatibleParticleManager(WorldClient world) {
         return new CompatibleParticleManager(world);
     }
 
     @Override
+    @SideOnly(Side.CLIENT)
     public Entity getRenderViewEntity() {
         return Minecraft.getMinecraft().getRenderViewEntity();
     }
 
     @Override
+    @SideOnly(Side.CLIENT)
     public void setRenderViewEntity(Entity entity) {
         Minecraft.getMinecraft().setRenderViewEntity(entity);
     }
 
     @Override
+    @SideOnly(Side.CLIENT)
     public CompatibleParticleManager getCompatibleParticleManager() {
         return new CompatibleParticleManager(Minecraft.getMinecraft().effectRenderer);
     }
@@ -551,6 +559,7 @@ public class Compatibility1_11_2 implements Compatibility {
     }
 
     @Override
+    @SideOnly(Side.CLIENT)
     public void addBreakingParticle(ModContext modContext, double x, double y, double z) {
         double yOffset = 1;
         CompatibleParticleBreaking particle = CompatibleParticle.createParticleBreaking(
