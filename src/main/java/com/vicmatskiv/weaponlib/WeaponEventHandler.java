@@ -2,6 +2,7 @@ package com.vicmatskiv.weaponlib;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
+import com.vicmatskiv.weaponlib.compatibility.CompatibleEntityJoinWorldEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponEventHandler;
 import com.vicmatskiv.weaponlib.grenade.PlayerGrenadeInstance;
 import com.vicmatskiv.weaponlib.melee.PlayerMeleeInstance;
@@ -99,6 +100,13 @@ public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 
 			}
 		}
+	}
+
+	@Override
+	protected void onCompatibleEntityJoinedWorldEvent(CompatibleEntityJoinWorldEvent compatibleEntityJoinWorldEvent) {
+	    if(compatibleEntityJoinWorldEvent.getEntity() instanceof Contextual) {
+	        ((Contextual)compatibleEntityJoinWorldEvent.getEntity()).setContext(modContext);
+	    }
 	}
 
     @Override

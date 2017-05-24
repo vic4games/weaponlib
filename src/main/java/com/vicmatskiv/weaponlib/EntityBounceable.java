@@ -28,7 +28,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
-public class EntityBounceable extends Entity implements CompatibleIEntityAdditionalSpawnData, CompatibleIThrowableEntity {
+public class EntityBounceable extends Entity implements Contextual, CompatibleIEntityAdditionalSpawnData, CompatibleIThrowableEntity {
 
     private static final Logger logger = LogManager.getLogger(EntityBounceable.class);
 
@@ -70,7 +70,7 @@ public class EntityBounceable extends Entity implements CompatibleIEntityAdditio
         this.thrower = thrower;
         this.gravityVelocity = gravityVelocity;
         this.rotationSlowdownFactor = rotationSlowdownFactor;
-        this.setSize(0.2F, 0.2F);
+        this.setSize(0.3F, 0.3F);
         this.setLocationAndAngles(thrower.posX, thrower.posY + (double)thrower.getEyeHeight(), thrower.posZ, thrower.rotationYaw, thrower.rotationPitch);
         this.posX -= (double)(CompatibleMathHelper.cos(this.rotationYaw / 180.0F * (float)Math.PI) * 0.16F);
         this.posY -= 0.10000000149011612D;
@@ -508,6 +508,13 @@ public class EntityBounceable extends Entity implements CompatibleIEntityAdditio
         velocityHistory.add(velocity);
         if(velocityHistory.size() > VELOCITY_HISTORY_SIZE) {
             velocityHistory.poll();
+        }
+    }
+
+    @Override
+    public void setContext(ModContext modContext) {
+        if(this.modContext == null) {
+            this.modContext = modContext;
         }
     }
 

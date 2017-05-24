@@ -13,9 +13,12 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.block.Block;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.Item;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
 public abstract class AbstractEntityGrenade extends EntityBounceable {
+
+    private static final String TAG_ENTITY_ITEM = "entity_item";
 
     protected ItemGrenade itemGrenade;
 
@@ -26,6 +29,21 @@ public abstract class AbstractEntityGrenade extends EntityBounceable {
 
     public AbstractEntityGrenade(World world) {
         super(world);
+    }
+
+    @Override
+    public void readEntityFromNBT(NBTTagCompound tagCompound) {
+        super.readEntityFromNBT(tagCompound);
+        Item item = Item.getItemById(tagCompound.getInteger(TAG_ENTITY_ITEM));
+        if(item instanceof ItemGrenade) {
+            itemGrenade = (ItemGrenade) item;
+        }
+    }
+
+    @Override
+    public void writeEntityToNBT(NBTTagCompound tagCompound) {
+        super.writeEntityToNBT(tagCompound);
+        tagCompound.setInteger(TAG_ENTITY_ITEM, Item.getIdFromItem(itemGrenade));
     }
 
     @Override

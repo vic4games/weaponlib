@@ -6,10 +6,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.Predicate;
 
-import com.vicmatskiv.weaponlib.EntityShellCasing;
 import com.vicmatskiv.weaponlib.Explosion;
 import com.vicmatskiv.weaponlib.ModContext;
-import com.vicmatskiv.weaponlib.PlayerWeaponInstance;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleParticle.CompatibleParticleBreaking;
 
 import net.minecraft.block.Block;
@@ -383,7 +381,7 @@ public class Compatibility1_11_2 implements Compatibility {
 
     @Override
     public float getEffectScaleFactor() {
-        return 1f;
+        return 2.0f;
     }
 
     @Override

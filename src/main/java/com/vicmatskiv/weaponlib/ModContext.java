@@ -80,4 +80,6 @@ public interface ModContext {
     public GrenadeAttackAspect getGrenadeAttackAspect();
 
     public String getModId();
+
+    public EffectManager getEffectManager();
 }

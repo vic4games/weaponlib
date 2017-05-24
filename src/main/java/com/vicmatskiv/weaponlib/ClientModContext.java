@@ -52,6 +52,8 @@ public class ClientModContext extends CommonModContext {
 
     private Map<Object, Integer> inventoryTextureMap;
 
+    private EffectManager effectManager;
+
 	@Override
 	public void init(Object mod, String modId, CompatibleChannel channel) {
 		super.init(mod, modId, channel);
@@ -93,6 +95,8 @@ public class ClientModContext extends CommonModContext {
 
 		this.viewManager = new PerspectiveManager(this);
 		this.inventoryTextureMap = new HashMap<>();
+
+		this.effectManager = new ClientEffectManager();
 	}
 
 	@Override
@@ -197,5 +201,10 @@ public class ClientModContext extends CommonModContext {
 
     public String getModId() {
         return modId;
+    }
+
+    @Override
+    public EffectManager getEffectManager() {
+        return effectManager;
     }
 }

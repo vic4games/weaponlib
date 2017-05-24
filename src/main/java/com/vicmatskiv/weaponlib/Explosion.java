@@ -15,10 +15,8 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleBlockPos;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleBlockState;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMathHelper;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleVec3;
-import com.vicmatskiv.weaponlib.particle.ExplosionParticleFX;
 import com.vicmatskiv.weaponlib.particle.ExplosionSmokeFX;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityTNTPrimed;
@@ -271,16 +269,22 @@ public class Explosion {
                         d4 = d4 * d7;
                         d5 = d5 * d7;
 
-                        ExplosionParticleFX explosionParticle = new ExplosionParticleFX(
-                                world,
+                        modContext.getEffectManager().spawnExplosionParticle(
                                 (d0 + this.explosionX) / 2.0D,
                                 (d1 + this.explosionY) / 2.0D,
                                 (d2 + this.explosionZ) / 2.0D,
-                                1.5f * world.rand.nextFloat(),
                                 d3 / 2, d4 * 2, d5 / 2,
-                                15 + (int)(world.rand.nextFloat() * 10) );
-
-                        Minecraft.getMinecraft().effectRenderer.addEffect(explosionParticle);
+                                1.5f * world.rand.nextFloat(), 15 + (int)(world.rand.nextFloat() * 10));
+//                        ExplosionParticleFX explosionParticle = new ExplosionParticleFX(
+//                                world,
+//                                (d0 + this.explosionX) / 2.0D,
+//                                (d1 + this.explosionY) / 2.0D,
+//                                (d2 + this.explosionZ) / 2.0D,
+//                                1.5f * world.rand.nextFloat(),
+//                                d3 / 2, d4 * 2, d5 / 2,
+//                                15 + (int)(world.rand.nextFloat() * 10) );
+//
+//                        Minecraft.getMinecraft().effectRenderer.addEffect(explosionParticle);
                     }
 
                 }
@@ -305,19 +309,25 @@ public class Explosion {
                     double motionY = world.rand.nextGaussian() * 0.0001;
                     double motionZ = world.rand.nextGaussian() * 0.001;
 
-                    ExplosionSmokeFX smokeParticle = new ExplosionSmokeFX(
-                            world,
-                            pX,
-                            pY,
-                            pZ,
+                    modContext.getEffectManager().spawnExplosionSmoke(
+                            pX, pY, pZ, motionX, motionY, motionZ,
                             1f,
-                            (float)motionX,
-                            (float)motionY,
-                            (float)motionZ,
                             250 + (int)(world.rand.nextFloat() * 30),
                             ExplosionSmokeFX.Behavior.EXPLOSION);
-
-                    Minecraft.getMinecraft().effectRenderer.addEffect(smokeParticle);
+//
+//                    ExplosionSmokeFX smokeParticle = new ExplosionSmokeFX(
+//                            world,
+//                            pX,
+//                            pY,
+//                            pZ,
+//                            1f,
+//                            (float)motionX,
+//                            (float)motionY,
+//                            (float)motionZ,
+//                            250 + (int)(world.rand.nextFloat() * 30),
+//                            ExplosionSmokeFX.Behavior.EXPLOSION);
+//
+//                    Minecraft.getMinecraft().effectRenderer.addEffect(smokeParticle);
                 }
             }
         }

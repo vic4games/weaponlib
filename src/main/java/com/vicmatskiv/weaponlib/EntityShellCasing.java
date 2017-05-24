@@ -15,15 +15,19 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.Item;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
 public class EntityShellCasing extends EntityProjectile {
 
     private static final Logger logger = LogManager.getLogger(EntityShellCasing.class);
 
+    private static final String TAG_ENTITY_ITEM = "entity_item";
+
+    static final float DEFAULT_INACCURACY = 1f;
+
     private Random random = new Random();
 
-	static final float DEFAULT_INACCURACY = 1f;
 
 	private Weapon weapon;
 	private PlayerWeaponInstance weaponInstance;
@@ -142,23 +146,6 @@ public class EntityShellCasing extends EntityProjectile {
 //                */
 	}
 
-//	@Override
-//	public void setVelocity(double p_70016_1_, double p_70016_3_, double p_70016_5_) {
-//	    super.setVelocity(p_70016_1_, p_70016_3_, p_70016_5_);
-//	    logger.debug("Velocity set to {} {} {}", p_70016_1_, p_70016_3_, p_70016_5_);
-//	}
-//
-//	@Override
-//	public void setThrowableHeading(double x, double y, double z, float velocity, float inaccuracy) {
-//	    super.setThrowableHeading(x, y, z, velocity, inaccuracy);
-//	    logger.debug("TH Velocity set to {} {} {}", this.motionX, this.motionY, this.motionZ);
-//	}
-
-//	@Override
-//	public void setPosition(double p_70107_1_, double p_70107_3_, double p_70107_5_) {
-//	    super.setPosition(p_70107_1_, p_70107_3_, p_70107_5_);
-//	    logger.debug("Position set to {} {} {}", p_70107_1_, p_70107_3_, p_70107_5_);
-//	}
 	/**
 	 * @see net.minecraft.entity.projectile.EntityThrowable#onImpact(net.minecraft.util.MovingObjectPosition)
 	 */
@@ -184,6 +171,21 @@ public class EntityShellCasing extends EntityProjectile {
 		initialYaw = buffer.readFloat();
 		initialPitch = buffer.readFloat();
 	}
+
+	@Override
+    public void readEntityFromNBT(NBTTagCompound tagCompound) {
+        super.readEntityFromNBT(tagCompound);
+        Item item = Item.getItemById(tagCompound.getInteger(TAG_ENTITY_ITEM));
+        if(item instanceof Weapon) {
+            weapon = (Weapon) item;
+        }
+    }
+
+    @Override
+    public void writeEntityToNBT(NBTTagCompound tagCompound) {
+        super.writeEntityToNBT(tagCompound);
+        tagCompound.setInteger(TAG_ENTITY_ITEM, Item.getIdFromItem(weapon));
+    }
 
 	Weapon getWeapon() {
 		return weapon;

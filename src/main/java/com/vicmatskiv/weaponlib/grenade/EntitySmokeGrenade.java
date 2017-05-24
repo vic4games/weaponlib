@@ -11,6 +11,7 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
 public class EntitySmokeGrenade extends AbstractEntityGrenade {
@@ -116,8 +117,28 @@ public class EntitySmokeGrenade extends AbstractEntityGrenade {
     }
 
     @Override
-    public void onGrenadeUpdate() {
+    public void writeEntityToNBT(NBTTagCompound tagCompound) {
+        super.writeEntityToNBT(tagCompound);
+        tagCompound.setLong("activationTimestamp", activationTimestamp);
+        tagCompound.setLong("activationDelay", activationDelay);
+        tagCompound.setLong("activeDuration", activeDuration);
+        tagCompound.setFloat("smokeAmount", smokeAmount);
+    }
 
+    @Override
+    public void readEntityFromNBT(NBTTagCompound tagCompound) {
+        super.readEntityFromNBT(tagCompound);
+        activationTimestamp = tagCompound.getLong("activationTimestamp");
+        activationDelay = tagCompound.getLong("activationDelay");
+        activeDuration = tagCompound.getLong("activeDuration");
+        smokeAmount = tagCompound.getFloat("smokeAmount");
+    }
+
+    @Override
+    public void onGrenadeUpdate() {
+        if(modContext == null) {
+            return;
+        }
         long timeRemaining = activationTimestamp + activationDelay + activeDuration - System.currentTimeMillis();
         if(activationDelay == ItemGrenade.EXPLODE_ON_IMPACT) {
             // Do nothing
@@ -160,7 +181,7 @@ public class EntitySmokeGrenade extends AbstractEntityGrenade {
     @Override
     public void onStop() {
         World world = compatibility.world(this);
-        if(!world.isRemote) {
+        if(!world.isRemote && itemGrenade != null) {
             compatibility.playSound(compatibility.world(this), posX, posY, posZ, itemGrenade.getStopAfterThrowingSound(), 2f,
                     (1.0F + (world.rand.nextFloat() - world.rand.nextFloat()) * 0.2F) * 0.7f);
         }

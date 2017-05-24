@@ -16,12 +16,17 @@ import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.Item;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 
 public class WeaponSpawnEntity extends EntityProjectile {
 
     private static final Logger logger = LogManager.getLogger(WeaponSpawnEntity.class);
+
+    private static final String TAG_ENTITY_ITEM = "entityItem";
+    private static final String TAG_DAMAGE = "damage";
+    private static final String TAG_EXPLOSION_RADIUS = "explosionRadius";
 
 	private float explosionRadius;
 	private float damage = 6f;
@@ -119,6 +124,25 @@ public class WeaponSpawnEntity extends EntityProjectile {
 		explosionRadius = buffer.readFloat();
 	}
 
+	@Override
+    public void readEntityFromNBT(NBTTagCompound tagCompound) {
+        super.readEntityFromNBT(tagCompound);
+        Item item = Item.getItemById(tagCompound.getInteger(TAG_ENTITY_ITEM));
+        if(item instanceof Weapon) {
+            weapon = (Weapon) item;
+        }
+        damage = tagCompound.getFloat(TAG_DAMAGE);
+        explosionRadius = tagCompound.getFloat(TAG_EXPLOSION_RADIUS);
+    }
+
+    @Override
+    public void writeEntityToNBT(NBTTagCompound tagCompound) {
+        super.writeEntityToNBT(tagCompound);
+        tagCompound.setInteger(TAG_ENTITY_ITEM, Item.getIdFromItem(weapon));
+        tagCompound.setFloat(TAG_DAMAGE, damage);
+        tagCompound.setFloat(TAG_EXPLOSION_RADIUS, explosionRadius);
+    }
+
 	Weapon getWeapon() {
 		return weapon;
 	}
@@ -135,7 +159,4 @@ public class WeaponSpawnEntity extends EntityProjectile {
 	public boolean canCollideWithBlock(Block block, CompatibleBlockState metadata) {
 	    return !compatibility.isBlockPenetratableByBullets(block) && super.canCollideWithBlock(block, metadata);
 	}
-
-
-
 }
