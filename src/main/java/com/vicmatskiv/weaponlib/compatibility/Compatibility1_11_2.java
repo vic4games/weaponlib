@@ -2,13 +2,8 @@ package com.vicmatskiv.weaponlib.compatibility;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.function.Predicate;
-
-import com.vicmatskiv.weaponlib.Explosion;
-import com.vicmatskiv.weaponlib.ModContext;
-import com.vicmatskiv.weaponlib.compatibility.CompatibleParticle.CompatibleParticleBreaking;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -31,6 +26,7 @@ import net.minecraft.entity.ai.attributes.IAttribute;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.init.Blocks;
+import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemArmor.ArmorMaterial;
 import net.minecraft.item.ItemBlock;
@@ -61,6 +57,10 @@ import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.oredict.ShapedOreRecipe;
+
+import com.vicmatskiv.weaponlib.Explosion;
+import com.vicmatskiv.weaponlib.ModContext;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleParticle.CompatibleParticleBreaking;
 
 public class Compatibility1_11_2 implements Compatibility {
 
@@ -193,8 +193,7 @@ public class Compatibility1_11_2 implements Compatibility {
     @Override
     @SideOnly(Side.CLIENT)
     public ItemStack getHelmet() {
-        Iterator<ItemStack> equipmentIterator = Minecraft.getMinecraft().player.getEquipmentAndArmor().iterator();
-        return equipmentIterator.hasNext() ? equipmentIterator.next() : null;
+        return Minecraft.getMinecraft().player.getItemStackFromSlot(EntityEquipmentSlot.HEAD);
     }
 
     @Override

@@ -252,7 +252,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
             GL11.glScaled(-1F, -1F, 1F);
 
             RenderHelper.enableStandardItemLighting();
-            GL11.glScalef(150f, 150f, 150f);
+            GL11.glScalef(140f, 140f, 140f);
 
             if(DebugPositioner.isDebugModeEnabled()) {
                 DebugPositioner.position(Part.INVENTORY, null);
@@ -261,7 +261,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
             GL11.glRotatef(-20.000000f, 1f, 0f, 0f);
             GL11.glRotatef(60.000000f, 0f, 1f, 0f);
             GL11.glRotatef(15.000000f, 0f, 0f, 1f);
-            GL11.glTranslatef(-1.9f, -0.950f, 0f);
+            GL11.glTranslatef(-1.9f, -1.1f, 0f);
 
             builder.getInventoryPositioning().accept(itemStack);
             break;
