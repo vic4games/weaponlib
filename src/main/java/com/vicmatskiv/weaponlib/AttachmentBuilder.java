@@ -57,6 +57,7 @@ public class AttachmentBuilder<T> {
 
 	Map<ItemAttachment<T>, CompatibleAttachment<T>> compatibleAttachments = new HashMap<>();
     private int craftingCount = 1;
+    private Object[] craftingRecipe;
 
 	public AttachmentBuilder<T> withCategory(AttachmentCategory attachmentCategory) {
 		this.attachmentCategory = attachmentCategory;
@@ -214,6 +215,11 @@ public class AttachmentBuilder<T> {
 		return this;
 	}
 
+	public AttachmentBuilder<T> withCraftingRecipe(Object...craftingRecipe) {
+	    this.craftingRecipe = craftingRecipe;
+	    return this;
+	}
+
 	protected ItemAttachment<T> createAttachment(ModContext modContext) {
 		return new ItemAttachment<T>(
 				getModId(), attachmentCategory, crosshair,
@@ -258,12 +264,21 @@ public class AttachmentBuilder<T> {
 			modContext.registerRenderableItem(name, attachment, compatibility.isClientSide() ? registerRenderer(attachment, modContext) : null);
 		}
 
-		if(craftingComplexity != null) {
+		if(craftingRecipe != null && craftingRecipe.length >= 2) {
+//		    ItemStack itemStack = new ItemStack(attachment);
+		    modContext.getRecipeManager().registerShapedRecipe(attachment, craftingRecipe);
+//		    boolean hasOres = Arrays.stream(craftingRecipe).anyMatch(r -> r instanceof String);
+//		    if(hasOres) {
+//                compatibility.addShapedOreRecipe(itemStack, registeredRecipe.toArray());
+//            } else {
+//                compatibility.addShapedRecipe(itemStack, registeredRecipe.toArray());
+//            }
+		} else if(craftingComplexity != null) {
 			OptionsMetadata optionsMetadata = new OptionsMetadata.OptionMetadataBuilder()
 				.withSlotCount(9)
             	.build(craftingComplexity, Arrays.copyOf(craftingMaterials, craftingMaterials.length));
 
-			List<Object> shape = modContext.getRecipeGenerator().createShapedRecipe(name, optionsMetadata);
+			List<Object> shape = modContext.getRecipeManager().createShapedRecipe(attachment, name, optionsMetadata);
 
 			ItemStack itemStack = new ItemStack(attachment);
 			compatibility.setStackSize(itemStack, craftingCount);
@@ -272,6 +287,15 @@ public class AttachmentBuilder<T> {
 			} else {
 			    compatibility.addShapedRecipe(itemStack, shape.toArray());
 			}
+		} else if(attachment.getCategory() == AttachmentCategory.GRIP
+		        || attachment.getCategory() == AttachmentCategory.SCOPE
+		        || attachment.getCategory() == AttachmentCategory.MAGAZINE
+		        || attachment.getCategory() == AttachmentCategory.BULLET
+		        || attachment.getCategory() == AttachmentCategory.SILENCER
+		        || attachment.getCategory() == AttachmentCategory.SKIN
+		        ){
+		    //throw new IllegalStateException("No recipe defined for attachment " + name);
+		    System.err.println("!!!No recipe defined for attachment " + name);
 		}
 
 		return attachment;

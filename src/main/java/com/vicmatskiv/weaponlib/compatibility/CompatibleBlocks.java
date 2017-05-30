@@ -16,6 +16,14 @@ public class CompatibleBlocks {
     public static final CompatibleBlocks WEB = new CompatibleBlocks(Blocks.WEB);
     public static final CompatibleBlocks WHEAT = new CompatibleBlocks(Blocks.WHEAT);
 
+    public static final CompatibleBlocks STONE = new CompatibleBlocks(Blocks.STONE);
+    public static final CompatibleBlocks SAND = new CompatibleBlocks(Blocks.SAND);
+    public static final CompatibleBlocks TNT = new CompatibleBlocks(Blocks.TNT);
+    public static final CompatibleBlocks GLASS_PANE = new CompatibleBlocks(Blocks.GLASS_PANE);
+    public static final CompatibleBlocks WOOL = new CompatibleBlocks(Blocks.WOOL);
+    public static final CompatibleBlocks SANDSTONE = new CompatibleBlocks(Blocks.SANDSTONE);
+    public static final CompatibleBlocks STONE_BUTTON = new CompatibleBlocks(Blocks.STONE_BUTTON);
+
     private Block block;
 
     private CompatibleBlocks(Block block) {

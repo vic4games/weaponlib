@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema targetNamespace="http://moderwarfaremod.org/config" elementFormDefault="qualified" xmlns="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://moderwarfaremod.org/config">
+
+    <element name="configuration" type="tns:Configuration"></element>
+
+    <complexType name="Configuration">
+    	<sequence>
+    		<element name="ores" type="tns:Ores" minOccurs="0"
+    			maxOccurs="1">
+    		</element>
+    		<element name="explosions" type="tns:Explosions"
+    			minOccurs="0" maxOccurs="1">
+    		</element>
+    		<element name="projectiles" type="tns:Projectiles" minOccurs="0" maxOccurs="1"></element>
+    	</sequence>
+    </complexType>
+
+    <complexType name="Ores">
+    	<sequence>
+    		<element name="ore" type="tns:Ore" minOccurs="0" maxOccurs="unbounded"></element>
+    	</sequence>
+    </complexType>
+
+    <complexType name="Ore">
+    	<attribute name="name" type="string"></attribute>
+    	<attribute name="spawnsPerChunk" type="int"></attribute>
+    </complexType>
+
+    <complexType name="Explosions">
+    	<attribute name="damage" type="float"></attribute>
+    	<attribute name="dropBlockChance" type="float"></attribute>
+    </complexType>
+
+    <complexType name="Projectiles">
+    	<attribute name="bleedingOnHit" type="float"></attribute>
+    	<attribute name="destroyGlassBlocks" type="boolean"></attribute>
+    </complexType>
+</schema>

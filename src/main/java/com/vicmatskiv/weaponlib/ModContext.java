@@ -2,7 +2,8 @@ package com.vicmatskiv.weaponlib;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
-import com.vicmatskiv.weaponlib.crafting.RecipeGenerator;
+import com.vicmatskiv.weaponlib.config.ConfigurationManager;
+import com.vicmatskiv.weaponlib.crafting.RecipeManager;
 import com.vicmatskiv.weaponlib.grenade.GrenadeAttackAspect;
 import com.vicmatskiv.weaponlib.grenade.GrenadeRenderer;
 import com.vicmatskiv.weaponlib.grenade.ItemGrenade;
@@ -16,7 +17,7 @@ import net.minecraft.util.ResourceLocation;
 
 public interface ModContext {
 
-	public void init(Object mod, String modId, CompatibleChannel channel);
+	public void init(Object mod, String modId, ConfigurationManager configurationManager, CompatibleChannel channel);
 
 	public void registerWeapon(String name, Weapon weapon, WeaponRenderer renderer);
 
@@ -45,7 +46,7 @@ public interface ModContext {
 
 	public StatusMessageCenter getStatusMessageCenter();
 
-	public RecipeGenerator getRecipeGenerator();
+	public RecipeManager getRecipeManager();
 
 	public CompatibleSound getZoomSound();
 
@@ -82,4 +83,6 @@ public interface ModContext {
     public String getModId();
 
     public EffectManager getEffectManager();
+
+    public ConfigurationManager getConfigurationManager();
 }

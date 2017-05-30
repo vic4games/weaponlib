@@ -32,7 +32,6 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.Pre;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
-import net.minecraftforge.fml.common.IWorldGenerator;
 
 public interface Compatibility {
 
@@ -111,11 +110,11 @@ public interface Compatibility {
 
 	public EntityPlayer getEntity(FOVUpdateEvent event);
 
-	public EntityLivingBase getEntity(@SuppressWarnings("rawtypes") RenderLivingEvent.Pre event);
+	public EntityLivingBase getEntity(RenderLivingEvent.Pre event);
 
 	public void setNewFov(FOVUpdateEvent event, float fov);
 
-	public RenderPlayer getRenderer(@SuppressWarnings("rawtypes") RenderLivingEvent.Pre event);
+	public RenderPlayer getRenderer(RenderLivingEvent.Pre event);
 
 	public GuiScreen getGui(GuiOpenEvent event);
 
@@ -165,7 +164,7 @@ public interface Compatibility {
 
 	public void registerBlock(String modId, Block block, String name);
 
-	public void registerWorldGenerator(IWorldGenerator worldGeneratorEventHandler, int i);
+	public void registerWorldGenerator(CompatibleWorldGenerator worldGeneratorEventHandler, int i);
 
 	public ArmorMaterial addArmorMaterial(String name, String textureName, int durability, int[] reductionAmounts, int enchantability, CompatibleSound soundOnEquip, float toughness);
 
@@ -269,6 +268,12 @@ public interface Compatibility {
     public DamageSource genericDamageSource();
 
     public boolean isCollided(CompatibleParticle particle);
+
+    public ItemStack createItemStack(CompatibleItems compatibleItem, int stackSize, int damage);
+
+    public void addSmelting(Block block, ItemStack output, float f);
+
+    public void addSmelting(Item item, ItemStack output, float f);
 
 
 }

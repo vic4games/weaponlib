@@ -4,6 +4,7 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -82,6 +83,8 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
 
         public Supplier<Integer> attackCooldownTimeout = () -> DEFAULT_ATTACK_COOLDOWN_TIMEOUT;
         public Supplier<Integer> heavyAttackCooldownTimeout = () -> DEFAULT_HEAVY_ATTACK_COOLDOWN_TIMEOUT;
+
+        private Object[] craftingRecipe;
 
         public Builder withModId(String modId) {
             this.modId = modId;
@@ -209,6 +212,11 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
             return this;
         }
 
+        public Builder withCraftingRecipe(Object...craftingRecipe) {
+            this.craftingRecipe = craftingRecipe;
+            return this;
+        }
+
         public ItemMelee build(ModContext modContext) {
             if (modId == null) {
                 throw new IllegalStateException("ModId is not set");
@@ -239,15 +247,27 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
 
             modContext.registerMeleeWeapon(name, itemMelee, renderer);
 
-            if(craftingComplexity != null) {
+            if(craftingRecipe != null && craftingRecipe.length >= 2) {
+                ItemStack itemStack = new ItemStack(itemMelee);
+                List<Object> registeredRecipe = modContext.getRecipeManager().registerShapedRecipe(itemMelee, craftingRecipe);
+                boolean hasOres = Arrays.stream(craftingRecipe).anyMatch(r -> r instanceof String);
+                if(hasOres) {
+                    compatibility.addShapedOreRecipe(itemStack, registeredRecipe.toArray());
+                } else {
+                    compatibility.addShapedRecipe(itemStack, registeredRecipe.toArray());
+                }
+            } else if(craftingComplexity != null) {
                 OptionsMetadata optionsMetadata = new OptionsMetadata.OptionMetadataBuilder()
                         .withSlotCount(9)
                         .build(craftingComplexity, Arrays.copyOf(craftingMaterials, craftingMaterials.length));
 
-                List<Object> shape = modContext.getRecipeGenerator().createShapedRecipe(itemMelee.getName(), optionsMetadata);
+                List<Object> shape = modContext.getRecipeManager().createShapedRecipe(itemMelee, itemMelee.getName(), optionsMetadata);
 
                 compatibility.addShapedRecipe(new ItemStack(itemMelee), shape.toArray());
 
+            } else {
+                //throw new IllegalStateException("No recipe defined for attachment " + name);
+                System.err.println("!!!No recipe defined for melee weapon " + name);
             }
             return itemMelee;
         }
@@ -453,4 +473,11 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
         return attackSound;
     }
 
+    @Override
+    public Collection<CompatibleAttachment<? extends AttachmentContainer>> getCompatibleAttachments(
+            AttachmentCategory... categories) {
+        Collection<CompatibleAttachment<ItemMelee>> c = builder.compatibleAttachments.values();
+        List<AttachmentCategory> inputCategoryList = Arrays.asList(categories);
+        return c.stream().filter(e -> inputCategoryList.contains(e)).collect(Collectors.toList());
+    }
 }

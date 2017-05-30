@@ -6,12 +6,12 @@ import java.util.List;
 
 import com.vicmatskiv.weaponlib.crafting.OptionsMetadata.OptionMetadata;
 
-public class RecipeGenerator {
-	
+final class RecipeGenerator {
+
 	private static final int SLOT_COUNT = 9;
 
 	private SequenceGenerator sequenceGenerator = new SequenceGenerator(SLOT_COUNT);
-	
+
 	public List<Object> createShapedRecipe(String name, OptionsMetadata metadata) {
 		List<Object> sequence = sequenceGenerator.generate(name, createSeed(name, metadata), metadata);
     	LinkedHashMap<Object, Character> encodingMap = new LinkedHashMap<>();
@@ -25,7 +25,7 @@ public class RecipeGenerator {
 			}
 			encodingMap.put(optionMetadata.getOption(), code);
 		}
-		
+
 		List<Object> output = new ArrayList<>();
 		StringBuilder builder = new StringBuilder();
 		int i = 0;
@@ -38,10 +38,10 @@ public class RecipeGenerator {
 		}
 		encodingMap.entrySet().stream().filter(e -> e.getKey() != OptionsMetadata.EMPTY_OPTION)
 			.forEach(e -> { output.add(e.getValue()); output.add(e.getKey());});
-		
+
 		return output;
 	}
-	
+
 	private byte[] createSeed(String name, OptionsMetadata metadata) {
 		return (name + metadata.getMetadata().length).getBytes();
 	}

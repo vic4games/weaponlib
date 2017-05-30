@@ -26,11 +26,11 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
 public class ItemWirelessCamera extends CompatibleItem implements ModelSource {
-    
+
     public static final long DEFAULT_DURATION = 300 * 1000;
 
     public static class Builder {
-        
+
         protected String name;
         protected String modId;
         protected ModelBase model;
@@ -46,25 +46,25 @@ public class ItemWirelessCamera extends CompatibleItem implements ModelSource {
 
         protected Consumer<RenderContext<RenderableState>> firstPersonLeftHandPositioning;
         protected Consumer<RenderContext<RenderableState>> firstPersonRightHandPositioning;
-        
+
         protected CreativeTabs tab;
         protected AttachmentCategory attachmentCategory;
         private List<Tuple<ModelBase, String>> texturedModels = new ArrayList<>();
         private int maxStackSize = 1;
-        
+
         private CraftingComplexity craftingComplexity;
 
         private Object[] craftingMaterials;
-        
+
         private int craftingCount = 1;
-        
+
         private long duration = DEFAULT_DURATION;
 
         public Builder withName(String name) {
             this.name = name;
             return this;
         }
-        
+
         public Builder withCreativeTab(CreativeTabs tab) {
             this.tab = tab;
             return this;
@@ -74,27 +74,27 @@ public class ItemWirelessCamera extends CompatibleItem implements ModelSource {
             this.modId = modId;
             return this;
         }
-        
+
         public Builder withModel(ModelBase model) {
             this.model = model;
             return this;
         }
-        
+
         public Builder withTextureName(String textureName) {
             this.textureName = textureName.toLowerCase();
             return this;
         }
-        
+
         public Builder withMaxStackSize(int maxStackSize) {
             this.maxStackSize = maxStackSize;
             return this;
         }
-        
+
         public Builder withEntityPositioning(Consumer<ItemStack> entityPositioning) {
             this.entityPositioning = entityPositioning;
             return this;
         }
-        
+
         public Builder withInventoryPositioning(Consumer<ItemStack> inventoryPositioning) {
             this.inventoryPositioning = inventoryPositioning;
             return this;
@@ -109,17 +109,17 @@ public class ItemWirelessCamera extends CompatibleItem implements ModelSource {
             this.firstPersonPositioning = firstPersonPositioning;
             return this;
         }
-        
+
         public Builder withFirstPersonModelPositioning(BiConsumer<ModelBase, ItemStack> firstPersonModelPositioning) {
             this.firstPersonModelPositioning = firstPersonModelPositioning;
             return this;
         }
-        
+
         public Builder withEntityModelPositioning(BiConsumer<ModelBase, ItemStack> entityModelPositioning) {
             this.entityModelPositioning = entityModelPositioning;
             return this;
         }
-        
+
         public Builder withInventoryModelPositioning(BiConsumer<ModelBase, ItemStack> inventoryModelPositioning) {
             this.inventoryModelPositioning = inventoryModelPositioning;
             return this;
@@ -129,16 +129,16 @@ public class ItemWirelessCamera extends CompatibleItem implements ModelSource {
             this.thirdPersonModelPositioning = thirdPersonModelPositioning;
             return this;
         }
-        
+
         public Builder withFirstPersonHandPositioning(
                 Consumer<RenderContext<RenderableState>> leftHand,
-                Consumer<RenderContext<RenderableState>> rightHand) 
+                Consumer<RenderContext<RenderableState>> rightHand)
         {
             this.firstPersonLeftHandPositioning = leftHand;
             this.firstPersonRightHandPositioning = rightHand;
             return this;
         }
-   
+
         public Builder withModel(ModelBase model, String textureName) {
             this.texturedModels.add(new Tuple<>(model, textureName.toLowerCase()));
             return this;
@@ -147,7 +147,7 @@ public class ItemWirelessCamera extends CompatibleItem implements ModelSource {
         public Builder withCrafting(CraftingComplexity craftingComplexity, Object...craftingMaterials) {
             return withCrafting(1, craftingComplexity, craftingMaterials);
         }
-      
+
         public Builder withCrafting(int craftingCount, CraftingComplexity craftingComplexity, Object...craftingMaterials) {
             if(craftingComplexity == null) {
                 throw new IllegalArgumentException("Crafting complexity not set");
@@ -163,16 +163,16 @@ public class ItemWirelessCamera extends CompatibleItem implements ModelSource {
             this.craftingCount = craftingCount;
             return this;
         }
-        
+
         public Builder withDuration(long duration) {
             this.duration = duration;
             return this;
         }
-        
+
         public ItemWirelessCamera build(ModContext modContext) {
-            
+
             ItemWirelessCamera camera = new ItemWirelessCamera(this, modContext);
-            camera.setUnlocalizedName(modId + "_" + name); 
+            camera.setUnlocalizedName(modId + "_" + name);
             camera.setCreativeTab(tab);
 //            camera.setPostRenderer(postRenderer);
 //            camera.setName(name);
@@ -180,25 +180,25 @@ public class ItemWirelessCamera extends CompatibleItem implements ModelSource {
 
 //            if(textureName != null) {
 //                camera.textureName = modId + ":" + stripFileExtension(textureName, ".png");
-//            } 
-            
+//            }
+
             texturedModels.forEach(tm -> camera.texturedModels.add(new Tuple<>(tm.getU(), addFileExtension(tm.getV(), ".png"))));
-            
+
             if(model != null) {
                 texturedModels.add(new Tuple<>(model, addFileExtension(textureName, ".png")));
             }
-                                    
+
             if(model != null || !texturedModels.isEmpty()) {
                 modContext.registerRenderableItem(name, camera, compatibility.isClientSide() ? registerRenderer(camera, modContext) : null);
             }
-            
+
             if(craftingComplexity != null) {
                 OptionsMetadata optionsMetadata = new OptionsMetadata.OptionMetadataBuilder()
                     .withSlotCount(9)
                     .build(craftingComplexity, Arrays.copyOf(craftingMaterials, craftingMaterials.length));
-                
-                List<Object> shape = modContext.getRecipeGenerator().createShapedRecipe(name, optionsMetadata);
-                
+
+                List<Object> shape = modContext.getRecipeManager().createShapedRecipe(camera, name, optionsMetadata);
+
                 ItemStack itemStack = new ItemStack(camera);
                 compatibility.setStackSize(itemStack, craftingCount);
                 if(optionsMetadata.hasOres()) {
@@ -207,10 +207,10 @@ public class ItemWirelessCamera extends CompatibleItem implements ModelSource {
                     compatibility.addShapedRecipe(itemStack, shape.toArray());
                 }
             }
-            
+
             return camera;
         }
-        
+
 
         static String addFileExtension(String s, String ext) {
             return s != null && !s.endsWith(ext) ? s + ext : s;
@@ -219,7 +219,7 @@ public class ItemWirelessCamera extends CompatibleItem implements ModelSource {
         protected static String stripFileExtension(String str, String extension) {
             return str.endsWith(extension) ? str.substring(0, str.length() - extension.length()) : str;
         }
-        
+
         private Object registerRenderer(ItemWirelessCamera camera, ModContext modContext) {
             return new StaticModelSourceRenderer.Builder()
             .withEntityPositioning(entityPositioning)
@@ -236,7 +236,7 @@ public class ItemWirelessCamera extends CompatibleItem implements ModelSource {
             .build();
         }
     }
-    
+
     private Builder builder;
     private ModContext modContext;
     private List<Tuple<ModelBase, String>> texturedModels = new ArrayList<>();
@@ -250,10 +250,10 @@ public class ItemWirelessCamera extends CompatibleItem implements ModelSource {
     @Override
     protected ItemStack onCompatibleItemRightClick(ItemStack itemStack, World world, EntityPlayer player,
             boolean mainHand) {
-        
+
         compatibility.setStackSize(itemStack, compatibility.getStackSize(itemStack) - 1);
 //        System.out.println("Right click");
-//        
+//
 //        if(itemStack.stackSize == 0) {
 //            int slot = compatibility.getInventorySlot(player, itemStack);
 //            if(slot >= 0) {
@@ -267,7 +267,7 @@ public class ItemWirelessCamera extends CompatibleItem implements ModelSource {
             compatibility.spawnEntity(player, new EntityWirelessCamera(modContext, world, player, this, builder.duration));
         }
 
-        return itemStack;        
+        return itemStack;
     }
 
     @Override
@@ -279,7 +279,7 @@ public class ItemWirelessCamera extends CompatibleItem implements ModelSource {
     public CustomRenderer<?> getPostRenderer() {
         return null;
     }
-    
+
     public ModelBase getModel() {
         return texturedModels.get(0).getU();
     }

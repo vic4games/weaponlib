@@ -11,9 +11,11 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import com.vicmatskiv.weaponlib.command.DebugCommand;
+import com.vicmatskiv.weaponlib.command.MainCommand;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderingRegistry;
+import com.vicmatskiv.weaponlib.config.ConfigurationManager;
 import com.vicmatskiv.weaponlib.electronics.EntityWirelessCamera;
 import com.vicmatskiv.weaponlib.electronics.WirelessCameraRenderer;
 import com.vicmatskiv.weaponlib.grenade.EntityGrenade;
@@ -55,12 +57,14 @@ public class ClientModContext extends CommonModContext {
     private EffectManager effectManager;
 
 	@Override
-	public void init(Object mod, String modId, CompatibleChannel channel) {
-		super.init(mod, modId, channel);
+    public void init(Object mod, String modId, ConfigurationManager configurationManager, CompatibleChannel channel) {
+		super.init(mod, modId, configurationManager, channel);
 
 		aspectRatio = (float)Minecraft.getMinecraft().displayWidth / Minecraft.getMinecraft().displayHeight;
 
 		ClientCommandHandler.instance.registerCommand(new DebugCommand(modId));
+
+		ClientCommandHandler.instance.registerCommand(new MainCommand(modId, this));
 
 		this.statusMessageCenter = new StatusMessageCenter();
 

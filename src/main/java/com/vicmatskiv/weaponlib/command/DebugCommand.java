@@ -189,7 +189,7 @@ public class DebugCommand extends CompatibleCommand {
 
     private void processShowSubCommand(String[] args) {
         if(args.length != 2) {
-            compatibility.addChatMessage(compatibility.clientPlayer(), getSubCommandPauseUsage());
+            compatibility.addChatMessage(compatibility.clientPlayer(), getSubCommandShowUsage());
             return;
         }
 

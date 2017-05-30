@@ -5,6 +5,10 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 import java.util.List;
 import java.util.function.Predicate;
 
+import com.vicmatskiv.weaponlib.Explosion;
+import com.vicmatskiv.weaponlib.ModContext;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleParticle.CompatibleParticleBreaking;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -51,16 +55,11 @@ import net.minecraftforge.event.entity.item.ItemTossEvent;
 import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.common.IWorldGenerator;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.oredict.ShapedOreRecipe;
-
-import com.vicmatskiv.weaponlib.Explosion;
-import com.vicmatskiv.weaponlib.ModContext;
-import com.vicmatskiv.weaponlib.compatibility.CompatibleParticle.CompatibleParticleBreaking;
 
 public class Compatibility1_11_2 implements Compatibility {
 
@@ -468,7 +467,7 @@ public class Compatibility1_11_2 implements Compatibility {
     }
 
     @Override
-    public void registerWorldGenerator(IWorldGenerator generator, int modGenerationWeight) {
+    public void registerWorldGenerator(CompatibleWorldGenerator generator, int modGenerationWeight) {
         GameRegistry.registerWorldGenerator(generator, modGenerationWeight);
     }
 
@@ -831,5 +830,20 @@ public class Compatibility1_11_2 implements Compatibility {
     @Override
     public boolean isCollided(CompatibleParticle particle) {
         return particle.isCollided();
+    }
+
+    @Override
+    public ItemStack createItemStack(CompatibleItems compatibleItem, int stackSize, int damage) {
+        return new ItemStack(compatibleItem.getItem(), stackSize, damage);
+    }
+
+    @Override
+    public void addSmelting(Block block, ItemStack output, float f) {
+        GameRegistry.addSmelting(block, output, f);
+    }
+
+    @Override
+    public void addSmelting(Item item, ItemStack output, float f) {
+        GameRegistry.addSmelting(item, output, f);
     }
 }

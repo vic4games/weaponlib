@@ -92,15 +92,19 @@ public class WeaponSpawnEntity extends EntityProjectile {
 
             double magnitude = Math.sqrt(motionX * motionX + motionY * motionY + motionZ * motionZ) + 2;
 
-            int count = getParticleCount (damage);
-            logger.debug("Generating {} particle(s) per damage {}", count, damage);
-            weapon.getModContext().getChannel().sendToAllAround(new SpawnParticleMessage(
-                    SpawnParticleMessage.ParticleType.BLOOD,
-                    count,
-                    position.getEntityHit().posX - motionX / magnitude,
-                    position.getEntityHit().posY - motionY / magnitude,
-                    position.getEntityHit().posZ - motionZ / magnitude),
-                    point);
+            Float bleedingCoefficient = weapon.getModContext().getConfigurationManager().getProjectiles().getBleedingOnHit();
+            if(bleedingCoefficient != null && bleedingCoefficient > 0.0f) {
+                int count = (int)(getParticleCount (damage) * bleedingCoefficient);
+                logger.debug("Generating {} particle(s) per damage {}", count, damage);
+                weapon.getModContext().getChannel().sendToAllAround(new SpawnParticleMessage(
+                        SpawnParticleMessage.ParticleType.BLOOD,
+                        count,
+                        position.getEntityHit().posX - motionX / magnitude,
+                        position.getEntityHit().posY - motionY / magnitude,
+                        position.getEntityHit().posZ - motionZ / magnitude),
+                        point);
+            }
+
 	    } else if(position.getTypeOfHit() == CompatibleRayTraceResult.Type.BLOCK) {
 	        weapon.onSpawnEntityBlockImpact(compatibility.world(this), null, this, position);
         }

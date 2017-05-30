@@ -4,6 +4,7 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -27,7 +28,6 @@ import com.vicmatskiv.weaponlib.crafting.CraftingComplexity;
 import com.vicmatskiv.weaponlib.crafting.OptionsMetadata;
 import com.vicmatskiv.weaponlib.model.Shell;
 
-import net.minecraft.block.Block;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
@@ -70,7 +70,7 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
         float fireRate = Weapon.DEFAULT_FIRE_RATE;
         private CreativeTabs creativeTab;
         private WeaponRenderer renderer;
-        float zoom = Weapon.DEFAULT_ZOOM;
+        //float zoom = Weapon.DEFAULT_ZOOM;
         List<Integer> maxShots = new ArrayList<>();
         String crosshair;
         String crosshairRunning;
@@ -139,6 +139,7 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
 
         private float silencedShootSoundVolume = Weapon.DEFAULT_SILENCED_SHOOT_SOUND_VOLUME;
         private float shootSoundVolume = Weapon.DEFAULT_SHOOT_SOUND_VOLUME;
+        private Object[] craftingRecipe;
 
         public Builder withModId(String modId) {
             this.modId = modId;
@@ -185,8 +186,9 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
             return this;
         }
 
+        @Deprecated
         public Builder withZoom(float zoom) {
-            this.zoom = zoom;
+            //this.zoom = zoom;
             return this;
         }
 
@@ -508,6 +510,11 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
             return this;
         }
 
+        public Builder withCraftingRecipe(Object...craftingRecipe) {
+            this.craftingRecipe = craftingRecipe;
+            return this;
+        }
+
         public Weapon build(ModContext modContext) {
             if (modId == null) {
                 throw new IllegalStateException("ModId is not set");
@@ -574,7 +581,8 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
             if (blockImpactHandler == null) {
                 blockImpactHandler = (world, player, entity, position) -> {
                     CompatibleBlockState blockState = compatibility.getBlockAtPosition(world, position);
-                    if (compatibility.isGlassBlock(blockState)) {
+                    Boolean canDestroyGlassBlocks = modContext.getConfigurationManager().getProjectiles().isDestroyGlassBlocks();
+                    if (canDestroyGlassBlocks != null && canDestroyGlassBlocks && compatibility.isGlassBlock(blockState)) {
                         compatibility.destroyBlock(world, position);
                     } else  {
                         //compatibility.addBlockHitEffect(position);
@@ -616,15 +624,32 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
             }
             modContext.registerWeapon(name, weapon, renderer);
 
-            if(craftingComplexity != null) {
+            if(craftingRecipe != null && craftingRecipe.length >= 2) {
+                ItemStack itemStack = new ItemStack(weapon);
+                List<Object> registeredRecipe = modContext.getRecipeManager().registerShapedRecipe(weapon, craftingRecipe);
+                boolean hasOres = Arrays.stream(craftingRecipe).anyMatch(r -> r instanceof String);
+                if(hasOres) {
+                    compatibility.addShapedOreRecipe(itemStack, registeredRecipe.toArray());
+                } else {
+                    compatibility.addShapedRecipe(itemStack, registeredRecipe.toArray());
+                }
+            } else if(craftingComplexity != null) {
                 OptionsMetadata optionsMetadata = new OptionsMetadata.OptionMetadataBuilder()
                         .withSlotCount(9)
                         .build(craftingComplexity, Arrays.copyOf(craftingMaterials, craftingMaterials.length));
 
-                List<Object> shape = modContext.getRecipeGenerator().createShapedRecipe(weapon.getName(), optionsMetadata);
+                List<Object> shape = modContext.getRecipeManager().createShapedRecipe(weapon, weapon.getName(), optionsMetadata);
 
-                compatibility.addShapedRecipe(new ItemStack(weapon), shape.toArray());
+                if(optionsMetadata.hasOres()) {
+                    compatibility.addShapedOreRecipe(new ItemStack(weapon), shape.toArray());
+                } else {
+                    compatibility.addShapedRecipe(new ItemStack(weapon), shape.toArray());
+                }
 
+
+
+            } else {
+                System.err.println("!!!No recipe defined for weapon " + name);
             }
             return weapon;
         }
@@ -640,7 +665,7 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
     public static final float DEFAULT_SHELL_CASING_SIDE_OFFSET = 0.15f;
     public static final float DEFAULT_SHELL_CASING_SIDE_OFFSET_AIMED = 0.05f;
 
-    private static final float DEFAULT_ZOOM = 0.75f;
+    //private static final float DEFAULT_ZOOM = 0.75f;
     private static final float DEFAULT_FIRE_RATE = 0.5f;
 
     private static final float DEFAULT_SILENCED_SHOOT_SOUND_VOLUME = 0.7f;
@@ -716,8 +741,14 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
         }
     }
 
-    Map<ItemAttachment<Weapon>, CompatibleAttachment<Weapon>> getCompatibleAttachments() {
+    public Map<ItemAttachment<Weapon>, CompatibleAttachment<Weapon>> getCompatibleAttachments() {
         return builder.compatibleAttachments;
+    }
+
+    public Collection<CompatibleAttachment<? extends AttachmentContainer>> getCompatibleAttachments(AttachmentCategory...categories) {
+        Collection<CompatibleAttachment<Weapon>> c = builder.compatibleAttachments.values();
+        List<AttachmentCategory> inputCategoryList = Arrays.asList(categories);
+        return c.stream().filter(e -> inputCategoryList.contains(e.getAttachment().getCategory())).collect(Collectors.toList());
     }
 
     String getCrosshair(PlayerWeaponInstance weaponInstance) {
@@ -966,7 +997,7 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
         switch(attachmentCategory) {
         case SCOPE:
             handler = (a, i) -> {
-                i.setZoom(builder.zoom);
+                //i.setZoom(builder.zoom);
             };
             break;
         case GRIP:

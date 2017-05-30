@@ -3,13 +3,16 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
+import com.vicmatskiv.weaponlib.AttachmentCategory;
 import com.vicmatskiv.weaponlib.AttachmentContainer;
 import com.vicmatskiv.weaponlib.CompatibleAttachment;
 import com.vicmatskiv.weaponlib.ItemAttachment;
@@ -95,6 +98,7 @@ PlayerItemInstanceFactory<PlayerGrenadeInstance, GrenadeState>, AttachmentContai
         private int fragmentCount = DEFAULT_FRAGMENT_COUNT;
         private boolean smokeOnly;
         private long activeDuration;
+        private Object[] craftingRecipe;
 
 
         public Builder withName(String name) {
@@ -251,6 +255,11 @@ PlayerItemInstanceFactory<PlayerGrenadeInstance, GrenadeState>, AttachmentContai
             return this;
         }
 
+        public Builder withCraftingRecipe(Object...craftingRecipe) {
+            this.craftingRecipe = craftingRecipe;
+            return this;
+        }
+
         public Builder withBounceHardSound(String sound) {
             this.bounceHardSound = sound != null ? sound.toLowerCase() : null;
             return this;
@@ -334,12 +343,21 @@ PlayerItemInstanceFactory<PlayerGrenadeInstance, GrenadeState>, AttachmentContai
 
             modContext.registerGrenadeWeapon(name, grenade, renderer);
 
-            if(craftingComplexity != null) {
+            if(craftingRecipe != null && craftingRecipe.length >= 2) {
+                ItemStack itemStack = new ItemStack(grenade);
+                List<Object> registeredRecipe = modContext.getRecipeManager().registerShapedRecipe(grenade, craftingRecipe);
+                boolean hasOres = Arrays.stream(craftingRecipe).anyMatch(r -> r instanceof String);
+                if(hasOres) {
+                    compatibility.addShapedOreRecipe(itemStack, registeredRecipe.toArray());
+                } else {
+                    compatibility.addShapedRecipe(itemStack, registeredRecipe.toArray());
+                }
+            } else if(craftingComplexity != null) {
                 OptionsMetadata optionsMetadata = new OptionsMetadata.OptionMetadataBuilder()
                     .withSlotCount(9)
                     .build(craftingComplexity, Arrays.copyOf(craftingMaterials, craftingMaterials.length));
 
-                List<Object> shape = modContext.getRecipeGenerator().createShapedRecipe(name, optionsMetadata);
+                List<Object> shape = modContext.getRecipeManager().createShapedRecipe(grenade, name, optionsMetadata);
 
                 ItemStack itemStack = new ItemStack(grenade);
                 compatibility.setStackSize(itemStack, craftingCount);
@@ -348,6 +366,9 @@ PlayerItemInstanceFactory<PlayerGrenadeInstance, GrenadeState>, AttachmentContai
                 } else {
                     compatibility.addShapedRecipe(itemStack, shape.toArray());
                 }
+            } else {
+                //throw new IllegalStateException("No recipe defined for attachment " + name);
+                System.err.println("!!!No recipe defined for grenade " + name);
             }
 
             return grenade;
@@ -507,6 +528,14 @@ PlayerItemInstanceFactory<PlayerGrenadeInstance, GrenadeState>, AttachmentContai
 
     public long getActiveDuration() {
         return builder.activeDuration;
+    }
+
+    @Override
+    public Collection<CompatibleAttachment<? extends AttachmentContainer>> getCompatibleAttachments(
+            AttachmentCategory... categories) {
+        Collection<CompatibleAttachment<ItemGrenade>> c = builder.compatibleAttachments.values();
+        List<AttachmentCategory> inputCategoryList = Arrays.asList(categories);
+        return c.stream().filter(e -> inputCategoryList.contains(e)).collect(Collectors.toList());
     }
 
 }

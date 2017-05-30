@@ -14,6 +14,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleEntityEquipmentSlot;
 
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelBiped;
+import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -36,11 +37,17 @@ public class CustomArmor extends CompatibleCustomArmor {
 		private String hudTextureName;
 		//private Function<Integer, ModelBiped> modelFactory;
 		private Map<ItemAttachment<CustomArmor>, CompatibleAttachment<CustomArmor>> compatibleAttachments = new HashMap<>();
+        private CreativeTabs creativeTab;
 
 		public Builder withModId(String modId) {
 			this.modId = modId;
 			return this;
 		}
+		
+		public Builder withCreativeTab(CreativeTabs creativeTab) {
+	        this.creativeTab = creativeTab;
+	        return this;
+	    }
 
 		public Builder withTextureName(String textureName) {
 			this.textureName = textureName.toLowerCase();
@@ -103,18 +110,28 @@ public class CustomArmor extends CompatibleCustomArmor {
 			String unlocalizedHelmetName = unlocalizedName + "_helmet";
 			CustomArmor armorHelmet = new CustomArmor(modId, material, 4, CompatibleEntityEquipmentSlot.HEAD,
 					unlocalizedHelmetName, textureName, chestModel, hudTextureName);
+			if(creativeTab != null) {
+			    armorHelmet.setCreativeTab(creativeTab);
+			}
+			
 			armorHelmet.setUnlocalizedName(unlocalizedHelmetName);
 			compatibility.registerItem(armorHelmet, unlocalizedHelmetName.toLowerCase());
 
 			String unlocalizedChestName = unlocalizedName + "_chest";
 			CustomArmor armorChest = new CustomArmor(modId, material, 4, CompatibleEntityEquipmentSlot.CHEST,
 					unlocalizedChestName, textureName, chestModel, hudTextureName);
+			if(creativeTab != null) {
+			    armorChest.setCreativeTab(creativeTab);
+            }
 			armorChest.setUnlocalizedName(unlocalizedChestName);
 			compatibility.registerItem(armorChest, unlocalizedChestName.toLowerCase());
 
 			String unlocalizedBootsName = unlocalizedName + "_boots";
 			CustomArmor armorBoots = new CustomArmor(modId, material, 4, CompatibleEntityEquipmentSlot.FEET,
 					unlocalizedBootsName, textureName, bootsModel, hudTextureName);
+			if(armorBoots != null) {
+			    armorBoots.setCreativeTab(creativeTab);
+            }
 			armorBoots.setUnlocalizedName(unlocalizedBootsName);
 			compatibility.registerItem(armorBoots, unlocalizedBootsName.toLowerCase());
 		}
@@ -149,6 +166,9 @@ public class CustomArmor extends CompatibleCustomArmor {
 					unlocalizedHelmetName, textureName, chestModel, hudTextureName);
 			armorHelmet.setUnlocalizedName(unlocalizedHelmetName);
 			compatibility.registerItem(armorHelmet, unlocalizedHelmetName.toLowerCase());
+			if(creativeTab != null) {
+			    armorHelmet.setCreativeTab(creativeTab);
+			}
 
 			return armorHelmet;
 		}
@@ -172,6 +192,9 @@ public class CustomArmor extends CompatibleCustomArmor {
 			String unlocalizedChestName = unlocalizedName + "_chest";
 			CustomArmor armorChest = new CustomArmor(modId, material, 4, CompatibleEntityEquipmentSlot.CHEST,
 					unlocalizedChestName, textureName, chestModel, hudTextureName);
+			if(creativeTab != null) {
+			    armorChest.setCreativeTab(creativeTab);
+            }
 			armorChest.setUnlocalizedName(unlocalizedChestName);
 			compatibility.registerItem(armorChest, unlocalizedChestName.toLowerCase());
 
@@ -199,6 +222,9 @@ public class CustomArmor extends CompatibleCustomArmor {
 			String unlocalizedBootsName = unlocalizedName + "_boots";
 			CustomArmor armorBoots = new CustomArmor(modId, material, 4, CompatibleEntityEquipmentSlot.FEET,
 					unlocalizedBootsName, textureName, bootsModel, hudTextureName);
+			if(creativeTab != null) {
+			    armorBoots.setCreativeTab(creativeTab);
+            }
 			armorBoots.setUnlocalizedName(unlocalizedBootsName);
 			compatibility.registerItem(armorBoots, unlocalizedBootsName.toLowerCase());
 

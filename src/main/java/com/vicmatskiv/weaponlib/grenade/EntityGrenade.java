@@ -148,10 +148,13 @@ public class EntityGrenade extends AbstractEntityGrenade {
         List<?> nearbyEntities = compatibility.getEntitiesWithinAABBExcludingEntity(compatibility.world(this), this,
                 compatibility.getBoundingBox(this).expand(5, 5, 5));
 
-        float effectiveRadius = itemGrenade.getEffectiveRadius(); // 5 block sphere with this entity as a center
+        Float damageCoefficient = modContext.getConfigurationManager().getExplosions().getDamage();
+
+        float effectiveRadius = itemGrenade.getEffectiveRadius() * damageCoefficient; // 5 block sphere with this entity as a center
         float fragmentDamage = itemGrenade.getFragmentDamage();
 
-        for(int i = 0; i < itemGrenade.getFragmentCount(); i++) {
+        float configuredFragmentCount = itemGrenade.getFragmentCount() * damageCoefficient;
+        for(int i = 0; i < configuredFragmentCount; i++) {
             double x = (rand.nextDouble() - 0.5) * 2;
             double y = (rand.nextDouble() - 0.5) * 2;
             double z = (rand.nextDouble() - 0.5) * 2;

@@ -15,7 +15,8 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatiblePlayerEntityTrackerProvider;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSide;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
-import com.vicmatskiv.weaponlib.crafting.RecipeGenerator;
+import com.vicmatskiv.weaponlib.config.ConfigurationManager;
+import com.vicmatskiv.weaponlib.crafting.RecipeManager;
 import com.vicmatskiv.weaponlib.electronics.EntityWirelessCamera;
 import com.vicmatskiv.weaponlib.electronics.PlayerTabletInstance;
 import com.vicmatskiv.weaponlib.electronics.TabletState;
@@ -96,7 +97,7 @@ public class CommonModContext implements ModContext {
 
 	private Map<ResourceLocation, CompatibleSound> registeredSounds = new HashMap<>();
 
-	private RecipeGenerator recipeGenerator;
+	private RecipeManager recipeManager;
 
 	private CompatibleSound changeZoomSound;
 
@@ -110,10 +111,14 @@ public class CommonModContext implements ModContext {
 
     private CompatibleSound explosionSound;
 
+    protected ConfigurationManager configurationManager;
+
 	@Override
-	public void init(Object mod, String modId, CompatibleChannel channel) {
+    public void init(Object mod, String modId, ConfigurationManager configurationManager, CompatibleChannel channel) {
 		this.channel = channel;
 		this.modId = modId;
+
+		this.configurationManager = configurationManager;
 
 		this.weaponReloadAspect = new WeaponReloadAspect(this);
 		this.magazineReloadAspect = new MagazineReloadAspect(this);
@@ -153,7 +158,7 @@ public class CommonModContext implements ModContext {
         magazineReloadAspect.setPermitManager(permitManager);
         magazineReloadAspect.setStateManager(magazineStateManager);
 
-		this.recipeGenerator = new RecipeGenerator();
+		this.recipeManager = new RecipeManager();
 
 		channel.registerMessage(new TryFireMessageHandler(weaponFireAspect),
 				TryFireMessage.class, 11, CompatibleSide.SERVER);
@@ -299,8 +304,8 @@ public class CommonModContext implements ModContext {
 
 
 	@Override
-	public RecipeGenerator getRecipeGenerator() {
-		return recipeGenerator;
+	public RecipeManager getRecipeManager() {
+		return recipeManager;
 	}
 
 	@Override
@@ -381,5 +386,10 @@ public class CommonModContext implements ModContext {
     @Override
     public EffectManager getEffectManager() {
         throw new IllegalStateException();
+    }
+
+    @Override
+    public ConfigurationManager getConfigurationManager() {
+        return configurationManager;
     }
 }

@@ -45,6 +45,9 @@ public class Explosion {
     public static void createServerSideExplosion(ModContext modContext, World world, Entity entity, double posX, double posY, double posZ,
             float explosionStrength, boolean isFlaming, boolean isSmoking) {
 
+        Float damageCoefficient = modContext.getConfigurationManager().getExplosions().getDamage();
+        explosionStrength *= damageCoefficient;
+
         Explosion explosion = new Explosion(modContext, world, entity, posX, posY, posZ, explosionStrength, isFlaming, isSmoking);
 
         explosion.doExplosionA();
@@ -274,17 +277,8 @@ public class Explosion {
                                 (d1 + this.explosionY) / 2.0D,
                                 (d2 + this.explosionZ) / 2.0D,
                                 d3 / 2, d4 * 2, d5 / 2,
-                                1.5f * world.rand.nextFloat(), 15 + (int)(world.rand.nextFloat() * 10));
-//                        ExplosionParticleFX explosionParticle = new ExplosionParticleFX(
-//                                world,
-//                                (d0 + this.explosionX) / 2.0D,
-//                                (d1 + this.explosionY) / 2.0D,
-//                                (d2 + this.explosionZ) / 2.0D,
-//                                1.5f * world.rand.nextFloat(),
-//                                d3 / 2, d4 * 2, d5 / 2,
-//                                15 + (int)(world.rand.nextFloat() * 10) );
-//
-//                        Minecraft.getMinecraft().effectRenderer.addEffect(explosionParticle);
+                                1.5f * world.rand.nextFloat(),
+                                15 + (int)(world.rand.nextFloat() * 10));
                     }
 
                 }
@@ -292,7 +286,7 @@ public class Explosion {
                 if (!compatibility.isAirBlock(blockState)) {
                     if (compatibility.canDropBlockFromExplosion(blockState, this)) {
                         compatibility.dropBlockAsItemWithChance(this.world, blockState, blockpos,
-                                1.0F / this.explosionSize, 0);
+                                modContext.getConfigurationManager().getExplosions().getDropBlockChance() * (1.0F / this.explosionSize), 0);
                     }
 
                     compatibility.onBlockExploded(world, blockState, blockpos, this);
@@ -314,20 +308,6 @@ public class Explosion {
                             1f,
                             250 + (int)(world.rand.nextFloat() * 30),
                             ExplosionSmokeFX.Behavior.EXPLOSION);
-//
-//                    ExplosionSmokeFX smokeParticle = new ExplosionSmokeFX(
-//                            world,
-//                            pX,
-//                            pY,
-//                            pZ,
-//                            1f,
-//                            (float)motionX,
-//                            (float)motionY,
-//                            (float)motionZ,
-//                            250 + (int)(world.rand.nextFloat() * 30),
-//                            ExplosionSmokeFX.Behavior.EXPLOSION);
-//
-//                    Minecraft.getMinecraft().effectRenderer.addEffect(smokeParticle);
                 }
             }
         }
