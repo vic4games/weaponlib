@@ -1,6 +1,9 @@
 package com.vicmatskiv.weaponlib.config;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Predicate;
@@ -20,6 +23,11 @@ public class ConfigurationManager {
 
     private static final Logger logger = LogManager.getLogger(ConfigurationManager.class);
 
+    public static enum StatusBarPosition{TOP_RIGHT, BOTTOM_RIGHT, TOP_LEFT, BOTTOM_LEFT};
+
+//    public static final String STATUS_BAR_POSITION_BOTTOM_RIGHT = "bottom-right";
+//
+//    public static final String STATUS_BAR_POSITION_TOP_RIGHT = "top-right";
 
     private static final float DROP_BLOCK_COEFFICIENT_MIN = 0f;
     private static final float DROP_BLOCK_COEFFICIENT_MAX = 5f;
@@ -45,15 +53,17 @@ public class ConfigurationManager {
     public static final class Builder {
 
 
-
         public Map<String, Ore> ores = new HashMap<>();
 
         private Source defaultConfigSource;
         private Source userConfigSource;
         private File userConfigFile;
+        private StatusBarPosition statusBarPosition = StatusBarPosition.TOP_RIGHT;
 
         private Predicate<Ore> oreValidator = DEFAULT_ORE_VALIDATOR;
         private Predicate<Explosions> explosionsValidator = DEFAULT_EXPLOSIONS_VALIDATOR;
+
+        private Configuration userConfig;
 
         public Builder withDefaultConfiguration(Source defaultConfigSource) {
             this.defaultConfigSource = defaultConfigSource;
@@ -83,8 +93,8 @@ public class ConfigurationManager {
 
         public ConfigurationManager build() {
             Configuration defaultUpdatableConfig = createConfiguration(defaultConfigSource);
-            Configuration userConfig = createConfiguration(userConfigSource);
-            return new ConfigurationManager(merge(userConfig, defaultUpdatableConfig), userConfigFile);
+            userConfig = createConfiguration(userConfigSource);
+            return new ConfigurationManager(merge(userConfig, defaultUpdatableConfig), userConfigFile, this);
         }
 
         static Configuration createConfiguration(Source source) {
@@ -106,6 +116,7 @@ public class ConfigurationManager {
             mergeOres(userConfig, defaultUpdatableConfig);
             mergeExplosions(userConfig, defaultUpdatableConfig);
             mergeProjectiles(userConfig, defaultUpdatableConfig);
+            mergeGui(userConfig, defaultUpdatableConfig);
             return defaultUpdatableConfig;
         }
 
@@ -170,14 +181,33 @@ public class ConfigurationManager {
                 updatableDefaultOre.spawnsPerChunk = userOre.spawnsPerChunk;
             }
         }
+
+        private void mergeGui(Configuration userConfig, Configuration defaultUpdatableConfig) {
+            if(userConfig.getGui() != null && userConfig.getGui().getStatusBarPosition() != null) {
+                try {
+                    String positionValue = userConfig.getGui().getStatusBarPosition().toUpperCase()
+                            .replaceAll("[\\.\\-\\s]+", "_");
+                    this.statusBarPosition = StatusBarPosition.valueOf(positionValue);
+                } catch(IllegalArgumentException e) {}
+            }
+            if(this.statusBarPosition == null) {
+                this.statusBarPosition = StatusBarPosition.TOP_RIGHT;
+            }
+            if(defaultUpdatableConfig.getGui() == null) {
+                defaultUpdatableConfig.setGui(new Gui());
+            }
+            defaultUpdatableConfig.getGui().setStatusBarPosition(statusBarPosition.toString());
+        }
     }
 
     private Configuration config;
     private File userConfigFile;
+    private Builder builder;
 
-    protected ConfigurationManager(Configuration config, File userConfigFile) {
+    protected ConfigurationManager(Configuration config, File userConfigFile, Builder builder) {
         this.config = config;
         this.userConfigFile = userConfigFile;
+        this.builder = builder;
     }
 
     protected Configuration getConfiguration() {
@@ -185,6 +215,16 @@ public class ConfigurationManager {
     }
 
     public void save() {
+
+        if(userConfigFile.exists() && builder.userConfig == null) {
+            String extension = ".invalid." + new SimpleDateFormat("yyyyMMddHHmmss").format(new java.util.Date());
+            File invalidFileCopy = new File(userConfigFile.toString() + extension);
+            try {
+                Files.move(userConfigFile.toPath(), invalidFileCopy.toPath());
+            } catch (IOException e) {
+                logger.error("Failed to rename {} to {}", userConfigFile, invalidFileCopy);
+            }
+        }
 
         try {
             JAXBContext jaxbContext = JAXBContext.newInstance(ObjectFactory.class);
@@ -195,9 +235,8 @@ public class ConfigurationManager {
             } else {
                 marshaller.marshal(new ObjectFactory().createConfiguration(config), System.out);
             }
-
         } catch (JAXBException e) {
-            throw new RuntimeException(e);
+            logger.error("Failed to save configuration to {}", userConfigFile);
         }
     }
 
@@ -218,6 +257,10 @@ public class ConfigurationManager {
 
     public Projectiles getProjectiles() {
         return config.getProjectiles();
+    }
+
+    public StatusBarPosition getStatusBarPosition() {
+        return builder.statusBarPosition;
     }
 
 }

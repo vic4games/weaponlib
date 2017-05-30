@@ -51,10 +51,10 @@ public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 				if(safeGlobals.renderingPhase.get() == RenderingPhase.RENDER_PERSPECTIVE) {
 					fov = instance.getZoom();
 				} else {
-					fov = 1f;
+					fov = compatibility.isFlying(compatibility.clientPlayer()) ? 1.1f : 1.0f;
 				}
 			} else {
-				fov = 1f; //instance.isAimed() ? instance.getZoom() : 1f;
+				fov = compatibility.isFlying(compatibility.clientPlayer()) ? 1.1f : 1.0f; //instance.isAimed() ? instance.getZoom() : 1f;
 			}
 
 			compatibility.setNewFov(event, fov); //Tags.getZoom(stack));

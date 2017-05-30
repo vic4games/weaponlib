@@ -846,4 +846,9 @@ public class Compatibility1_11_2 implements Compatibility {
     public void addSmelting(Item item, ItemStack output, float f) {
         GameRegistry.addSmelting(item, output, f);
     }
+    
+    @Override
+    public boolean isFlying(EntityPlayer player) {
+        return player.isAirBorne;
+    }
 }

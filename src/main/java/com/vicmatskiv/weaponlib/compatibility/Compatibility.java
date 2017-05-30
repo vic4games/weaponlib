@@ -275,5 +275,7 @@ public interface Compatibility {
 
     public void addSmelting(Item item, ItemStack output, float f);
 
+    public boolean isFlying(EntityPlayer player);
+
 
 }

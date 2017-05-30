@@ -11,7 +11,12 @@
     		<element name="explosions" type="tns:Explosions"
     			minOccurs="0" maxOccurs="1">
     		</element>
-    		<element name="projectiles" type="tns:Projectiles" minOccurs="0" maxOccurs="1"></element>
+    		<element name="projectiles" type="tns:Projectiles"
+    			minOccurs="0" maxOccurs="1">
+    		</element>
+    		<element name="gui" type="tns:Gui" minOccurs="0"
+    			maxOccurs="1">
+    		</element>
     	</sequence>
     </complexType>
 
@@ -34,5 +39,16 @@
     <complexType name="Projectiles">
     	<attribute name="bleedingOnHit" type="float"></attribute>
     	<attribute name="destroyGlassBlocks" type="boolean"></attribute>
+    </complexType>
+
+    <complexType name="Gui">
+    	<attribute name="statusBarPosition" use="required">
+    		<simpleType>
+    			<restriction base="string">
+    				<enumeration value="top-right"></enumeration>
+    				<enumeration value="bottom-right"></enumeration>
+    			</restriction>
+    		</simpleType>
+    	</attribute>
     </complexType>
 </schema>

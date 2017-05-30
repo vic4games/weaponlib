@@ -74,6 +74,14 @@ public class ObjectFactory {
     }
 
     /**
+     * Create an instance of {@link Gui }
+     * 
+     */
+    public Gui createGui() {
+        return new Gui();
+    }
+
+    /**
      * Create an instance of {@link JAXBElement }{@code <}{@link Configuration }{@code >}}
      * 
      */

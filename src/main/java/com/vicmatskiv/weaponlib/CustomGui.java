@@ -7,6 +7,7 @@ import org.lwjgl.opengl.GL11;
 import com.vicmatskiv.weaponlib.StatusMessageCenter.Message;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleGui;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTessellator;
+import com.vicmatskiv.weaponlib.config.ConfigurationManager.StatusBarPosition;
 import com.vicmatskiv.weaponlib.electronics.ItemWirelessCamera;
 import com.vicmatskiv.weaponlib.grenade.ItemGrenade;
 
@@ -18,19 +19,25 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 
 public class CustomGui extends CompatibleGui {
-	private Minecraft mc;
+
+    //    private static final int BUFF_ICON_SIZE = 256;
+
+	private static final int STATUS_BAR_BOTTOM_OFFSET = 15;
+	private static final int STATUS_BAR_TOP_OFFSET = 10;
+
+    private Minecraft mc;
 	private WeaponAttachmentAspect attachmentAspect;
 	private ModContext modContext;
+	private StatusBarPosition statusBarPosition;
 
 	public CustomGui(Minecraft mc, ModContext modContext, WeaponAttachmentAspect attachmentAspect) {
 		this.mc = mc;
 		this.modContext = modContext;
 		this.attachmentAspect = attachmentAspect;
+		this.statusBarPosition = modContext.getConfigurationManager().getStatusBarPosition();
 	}
-	private static final int BUFF_ICON_SIZE = 256;
 
 
-	//@SubscribeEvent defined in CompatibleGui
 	@Override
 	public void onCompatibleRenderHud(RenderGameOverlayEvent.Pre event) {
 
@@ -63,8 +70,6 @@ public class CustomGui extends CompatibleGui {
 		}
 	}
 
-
-	//@SubscribeEvent defined in CompatibleGui
 	@Override
 	public void onCompatibleRenderCrosshair(RenderGameOverlayEvent.Pre event) {
 		if (compatibility.getEventType(event) != RenderGameOverlayEvent.ElementType.CROSSHAIRS ) {
@@ -88,8 +93,8 @@ public class CustomGui extends CompatibleGui {
 				int width = scaledResolution.getScaledWidth();
 			    int height = scaledResolution.getScaledHeight();
 
-			    int xPos = width / 2 - BUFF_ICON_SIZE / 2;
-				int yPos = height / 2 - BUFF_ICON_SIZE / 2;
+//			    int xPos = width / 2 - BUFF_ICON_SIZE / 2;
+//				int yPos = height / 2 - BUFF_ICON_SIZE / 2;
 
 			    FontRenderer fontRender = compatibility.getFontRenderer();
 
@@ -128,14 +133,14 @@ public class CustomGui extends CompatibleGui {
 						messageText = getDefaultWeaponMessage(weaponInstance);
 					}
 
-					int x = width - 80;
-					int y = 10;
+					int x = getStatusBarXPosition(width, messageText, fontRender);
+					int y = getStatusBarYPosition(height);
 
-
-					int stringWidth = fontRender.getStringWidth(messageText);
-					if(stringWidth > 80 ) {
-						x = width - stringWidth - 5;
-					}
+//
+//					int stringWidth = fontRender.getStringWidth(messageText);
+//					if(stringWidth > 80 ) {
+//						x = width - stringWidth - 5;
+//					}
 
 					fontRender.drawStringWithShadow(messageText, x, y, color);
 				}
@@ -146,6 +151,7 @@ public class CustomGui extends CompatibleGui {
 		} else if(itemStack.getItem() instanceof ItemMagazine) {
 			ScaledResolution scaledResolution = compatibility.getResolution(event);
 			int width = scaledResolution.getScaledWidth();
+			int height = scaledResolution.getScaledHeight();
 			FontRenderer fontRender = compatibility.getFontRenderer();
 			mc.entityRenderer.setupOverlayRendering();
 			int color = 0xFFFFFF;
@@ -161,19 +167,20 @@ public class CustomGui extends CompatibleGui {
 				messageText = getDefaultMagazineMessage(itemStack);
 			}
 
-			int x = width - 80;
-			int y = 10;
+			int x = getStatusBarXPosition(width, messageText, fontRender);
+			int y = getStatusBarYPosition(height);
 
-			int stringWidth = fontRender.getStringWidth(messageText);
-			if(stringWidth > 80 ) {
-				x = width - stringWidth - 5;
-			}
+//			int stringWidth = fontRender.getStringWidth(messageText);
+//			if(stringWidth > 80 ) {
+//				x = width - stringWidth - 5;
+//			}
 
 			fontRender.drawStringWithShadow(messageText, x, y, color);
 			event.setCanceled(true);
 		} else if(itemStack.getItem() instanceof ItemWirelessCamera) {
 		    ScaledResolution scaledResolution = compatibility.getResolution(event);
             int width = scaledResolution.getScaledWidth();
+            int height = scaledResolution.getScaledHeight();
             FontRenderer fontRender = compatibility.getFontRenderer();
             mc.entityRenderer.setupOverlayRendering();
             int color = 0xFFFFFF;
@@ -186,8 +193,8 @@ public class CustomGui extends CompatibleGui {
                     color = 0xFF0000;
                 }
 
-                int x = width - 80;
-                int y = 10;
+                int x = getStatusBarXPosition(width, messageText, fontRender);
+                int y = getStatusBarYPosition(height);
 
                 int stringWidth = fontRender.getStringWidth(messageText);
                 if(stringWidth > 80 ) {
@@ -200,6 +207,7 @@ public class CustomGui extends CompatibleGui {
 		} else if(itemStack.getItem() instanceof ItemGrenade) {
 		    ScaledResolution scaledResolution = compatibility.getResolution(event);
             int width = scaledResolution.getScaledWidth();
+            int height = scaledResolution.getScaledHeight();
             FontRenderer fontRender = compatibility.getFontRenderer();
             mc.entityRenderer.setupOverlayRendering();
             int color = 0xFFFFFF;
@@ -212,8 +220,8 @@ public class CustomGui extends CompatibleGui {
                     color = 0xFFFF00;
                 }
 
-                int x = width - 80;
-                int y = 10;
+                int x = getStatusBarXPosition(width, messageText, fontRender);
+                int y = getStatusBarYPosition(height);
 
                 int stringWidth = fontRender.getStringWidth(messageText);
                 if(stringWidth > 80 ) {
@@ -225,6 +233,37 @@ public class CustomGui extends CompatibleGui {
             }
 		}
 	}
+
+
+    private int getStatusBarXPosition(int width, String text, FontRenderer fontRender) {
+        int x;
+        if(statusBarPosition == StatusBarPosition.BOTTOM_RIGHT || statusBarPosition == StatusBarPosition.TOP_RIGHT) {
+            x = width - 80;
+            int stringWidth = fontRender.getStringWidth(text);
+            if(stringWidth > 80 ) {
+                x = width - stringWidth - 5;
+            }
+        } else {
+            x = 10;
+        }
+
+        return x;
+    }
+
+    private int getStatusBarYPosition(int height) {
+        int yPos;
+        switch(statusBarPosition) {
+        case TOP_RIGHT: case TOP_LEFT:
+            yPos = STATUS_BAR_TOP_OFFSET;
+            break;
+        case BOTTOM_RIGHT: case BOTTOM_LEFT:
+            yPos = height - STATUS_BAR_BOTTOM_OFFSET;
+            break;
+        default:
+            yPos = STATUS_BAR_TOP_OFFSET;
+        }
+        return yPos;
+    }
 
 
 	private String getDefaultMagazineMessage(ItemStack itemStack) {

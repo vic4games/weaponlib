@@ -61,7 +61,8 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 		}
 	}
 
-	private static Predicate<PlayerWeaponInstance> sprinting = instance -> instance.getPlayer().isSprinting();
+	@SuppressWarnings("unused")
+    private static Predicate<PlayerWeaponInstance> sprinting = instance -> instance.getPlayer().isSprinting();
 
 	private static Predicate<PlayerWeaponInstance> supportsDirectBulletLoad =
 			weaponInstance -> weaponInstance.getWeapon().getAmmoCapacity() > 0;
@@ -110,7 +111,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 
 		.in(this)
 			.change(WeaponState.READY).to(WeaponState.LOAD)
-			.when(sprinting.negate().and(supportsDirectBulletLoad.or(magazineAttached.negate())))
+			.when(supportsDirectBulletLoad.or(magazineAttached.negate()))
 			.withPermit((s, es) -> new LoadPermit(s),
 					modContext.getPlayerItemInstanceRegistry()::update,
 					permitManager)
@@ -125,7 +126,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 		.in(this)
 			.prepare((c, f, t) -> { prepareUnload(c); }, unloadAnimationCompleted)
 			.change(WeaponState.READY).to(WeaponState.UNLOAD)
-			.when(sprinting.negate().and(magazineAttached.and(inventoryHasFreeSlots)))
+			.when(magazineAttached.and(inventoryHasFreeSlots))
 			.withPermit((s, c) -> new UnloadPermit(s),
 					modContext.getPlayerItemInstanceRegistry()::update,
 					permitManager)
@@ -186,51 +187,51 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 		if(compatibility.getTagCompound(weaponItemStack) == null) {
 		    compatibility.setTagCompound(weaponItemStack, new NBTTagCompound());
 		}
-		if (!player.isSprinting()) {
-			List<ItemMagazine> compatibleMagazines = weapon.getCompatibleMagazines();
-			List<ItemAttachment<Weapon>> compatibleBullets = weapon.getCompatibleAttachments(ItemBullet.class);
-			ItemStack consumedStack;
-			if(!compatibleMagazines.isEmpty()) {
-				ItemAttachment<Weapon> existingMagazine = WeaponAttachmentAspect.getActiveAttachment(AttachmentCategory.MAGAZINE, weaponInstance);
-				int ammo = Tags.getAmmo(weaponItemStack);
-				if(existingMagazine == null) {
-					ammo = 0;
-					ItemStack magazineItemStack = compatibility.tryConsumingCompatibleItem(compatibleMagazines,
-							1, player, magazineNotEmpty, magazineStack -> true);
-					if(magazineItemStack != null) {
-						ammo = Tags.getAmmo(magazineItemStack);
-						Tags.setAmmo(weaponItemStack, ammo);
-						logger.debug("Setting server side ammo for {} to {}", weaponInstance, ammo);
-						modContext.getAttachmentAspect().addAttachment((ItemAttachment<Weapon>) magazineItemStack.getItem(), weaponInstance);
-						compatibility.playSoundToNearExcept(player, weapon.getReloadSound(), 1.0F, 1.0F);
-					} else {
-						status = Status.DENIED;
-					}
-				}
-				// Update permit instead: modContext.getChannel().getChannel().sendTo(new ReloadMessage(weapon, ReloadMessage.Type.LOAD, newMagazine, ammo), (EntityPlayerMP) player);
-				weaponInstance.setAmmo(ammo);
-			} else if(!compatibleBullets.isEmpty() && (consumedStack = compatibility.tryConsumingCompatibleItem(compatibleBullets,
-					Math.min(weapon.getMaxBulletsPerReload(), weapon.getAmmoCapacity() - weaponInstance.getAmmo()), player, i -> true)) != null) {
-				int ammo = weaponInstance.getAmmo() + compatibility.getStackSize(consumedStack);
-				Tags.setAmmo(weaponItemStack, ammo);
-				// Update permit instead modContext.getChannel().getChannel().sendTo(new ReloadMessage(weapon, ammo), (EntityPlayerMP) player);
-				weaponInstance.setAmmo(ammo);
-				compatibility.playSoundToNearExcept(player, weapon.getReloadSound(), 1.0F, 1.0F);
-			} else if (compatibility.consumeInventoryItem(player.inventory, weapon.builder.ammo)) {
-				Tags.setAmmo(weaponItemStack, weapon.builder.ammoCapacity);
-				// Update permit instead: modContext.getChannel().getChannel().sendTo(new ReloadMessage(weapon, weapon.builder.ammoCapacity), (EntityPlayerMP) player);
-				weaponInstance.setAmmo(weapon.builder.ammoCapacity);
-				compatibility.playSoundToNearExcept(player, weapon.getReloadSound(), 1.0F, 1.0F);
-			} else {
-				logger.debug("No suitable ammo found for {}. Permit denied.", weaponInstance);
-//				Tags.setAmmo(weaponItemStack, 0);
-//				weaponInstance.setAmmo(0);
-				status = Status.DENIED;
-				// Update permit instead: modContext.getChannel().getChannel().sendTo(new ReloadMessage(weapon, 0), (EntityPlayerMP) player);
-			}
+		//if (!player.isSprinting()) {
+		List<ItemMagazine> compatibleMagazines = weapon.getCompatibleMagazines();
+		List<ItemAttachment<Weapon>> compatibleBullets = weapon.getCompatibleAttachments(ItemBullet.class);
+		ItemStack consumedStack;
+		if(!compatibleMagazines.isEmpty()) {
+		    ItemAttachment<Weapon> existingMagazine = WeaponAttachmentAspect.getActiveAttachment(AttachmentCategory.MAGAZINE, weaponInstance);
+		    int ammo = Tags.getAmmo(weaponItemStack);
+		    if(existingMagazine == null) {
+		        ammo = 0;
+		        ItemStack magazineItemStack = compatibility.tryConsumingCompatibleItem(compatibleMagazines,
+		                1, player, magazineNotEmpty, magazineStack -> true);
+		        if(magazineItemStack != null) {
+		            ammo = Tags.getAmmo(magazineItemStack);
+		            Tags.setAmmo(weaponItemStack, ammo);
+		            logger.debug("Setting server side ammo for {} to {}", weaponInstance, ammo);
+		            modContext.getAttachmentAspect().addAttachment((ItemAttachment<Weapon>) magazineItemStack.getItem(), weaponInstance);
+		            compatibility.playSoundToNearExcept(player, weapon.getReloadSound(), 1.0F, 1.0F);
+		        } else {
+		            status = Status.DENIED;
+		        }
+		    }
+		    // Update permit instead: modContext.getChannel().getChannel().sendTo(new ReloadMessage(weapon, ReloadMessage.Type.LOAD, newMagazine, ammo), (EntityPlayerMP) player);
+		    weaponInstance.setAmmo(ammo);
+		} else if(!compatibleBullets.isEmpty() && (consumedStack = compatibility.tryConsumingCompatibleItem(compatibleBullets,
+		        Math.min(weapon.getMaxBulletsPerReload(), weapon.getAmmoCapacity() - weaponInstance.getAmmo()), player, i -> true)) != null) {
+		    int ammo = weaponInstance.getAmmo() + compatibility.getStackSize(consumedStack);
+		    Tags.setAmmo(weaponItemStack, ammo);
+		    // Update permit instead modContext.getChannel().getChannel().sendTo(new ReloadMessage(weapon, ammo), (EntityPlayerMP) player);
+		    weaponInstance.setAmmo(ammo);
+		    compatibility.playSoundToNearExcept(player, weapon.getReloadSound(), 1.0F, 1.0F);
+		} else if (compatibility.consumeInventoryItem(player.inventory, weapon.builder.ammo)) {
+		    Tags.setAmmo(weaponItemStack, weapon.builder.ammoCapacity);
+		    // Update permit instead: modContext.getChannel().getChannel().sendTo(new ReloadMessage(weapon, weapon.builder.ammoCapacity), (EntityPlayerMP) player);
+		    weaponInstance.setAmmo(weapon.builder.ammoCapacity);
+		    compatibility.playSoundToNearExcept(player, weapon.getReloadSound(), 1.0F, 1.0F);
 		} else {
+		    logger.debug("No suitable ammo found for {}. Permit denied.", weaponInstance);
+		    //				Tags.setAmmo(weaponItemStack, 0);
+		    //				weaponInstance.setAmmo(0);
 		    status = Status.DENIED;
+		    // Update permit instead: modContext.getChannel().getChannel().sendTo(new ReloadMessage(weapon, 0), (EntityPlayerMP) player);
 		}
+		/*} else {
+		    status = Status.DENIED;
+		}*/
 
 //		Tags.setInstance(weaponItemStack, weaponInstance);
 
@@ -247,7 +248,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 		EntityPlayer player = weaponInstance.getPlayer();
 
 		Weapon weapon = (Weapon) weaponItemStack.getItem();
-		if (compatibility.getTagCompound(weaponItemStack) != null && !player.isSprinting()) {
+		if (compatibility.getTagCompound(weaponItemStack) != null /* && !player.isSprinting()*/) {
 			ItemAttachment<Weapon> attachment = modContext.getAttachmentAspect().removeAttachment(AttachmentCategory.MAGAZINE, weaponInstance);
 			if(attachment instanceof ItemMagazine) {
 				ItemStack attachmentItemStack = ((ItemMagazine) attachment).createItemStack();

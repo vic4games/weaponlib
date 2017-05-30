@@ -19,6 +19,7 @@ import javax.xml.bind.annotation.XmlType;
  *         &lt;element name="ores" type="{http://moderwarfaremod.org/config}Ores" minOccurs="0"/>
  *         &lt;element name="explosions" type="{http://moderwarfaremod.org/config}Explosions" minOccurs="0"/>
  *         &lt;element name="projectiles" type="{http://moderwarfaremod.org/config}Projectiles" minOccurs="0"/>
+ *         &lt;element name="gui" type="{http://moderwarfaremod.org/config}Gui" minOccurs="0"/>
  *       &lt;/sequence>
  *     &lt;/restriction>
  *   &lt;/complexContent>
@@ -31,13 +32,15 @@ import javax.xml.bind.annotation.XmlType;
 @XmlType(name = "Configuration", propOrder = {
     "ores",
     "explosions",
-    "projectiles"
+    "projectiles",
+    "gui"
 })
 public class Configuration {
 
     protected Ores ores;
     protected Explosions explosions;
     protected Projectiles projectiles;
+    protected Gui gui;
 
     /**
      * Gets the value of the ores property.
@@ -109,6 +112,30 @@ public class Configuration {
      */
     public void setProjectiles(Projectiles value) {
         this.projectiles = value;
+    }
+
+    /**
+     * Gets the value of the gui property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link Gui }
+     *     
+     */
+    public Gui getGui() {
+        return gui;
+    }
+
+    /**
+     * Sets the value of the gui property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link Gui }
+     *     
+     */
+    public void setGui(Gui value) {
+        this.gui = value;
     }
 
 }
