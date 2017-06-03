@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.text.SimpleDateFormat;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Predicate;
 
@@ -52,8 +52,7 @@ public class ConfigurationManager {
 
     public static final class Builder {
 
-
-        public Map<String, Ore> ores = new HashMap<>();
+        private Map<String, Gun> guns = new LinkedHashMap<>();
 
         private Source defaultConfigSource;
         private Source userConfigSource;
@@ -146,8 +145,17 @@ public class ConfigurationManager {
         }
 
         private void mergeProjectiles(Configuration userConfig, Configuration defaultUpdatableConfig) {
+            if(defaultUpdatableConfig.getProjectiles() != null) {
+                defaultUpdatableConfig.getProjectiles().getGun().stream()
+                .filter(gun -> gun.getId() != null)
+                .forEach(gun -> {
+                    guns.put(gun.getId(), gun);
+                });
+            }
+
             if(userConfig != null) {
                 if(userConfig.getProjectiles() != null) {
+
                     Float bleedingOnHit = userConfig.getProjectiles().getBleedingOnHit();
                     if(bleedingOnHit != null) {
                         if(bleedingOnHit < BLEEDING_ON_HIT_COEFFICIENT_MIN) {
@@ -157,11 +165,28 @@ public class ConfigurationManager {
                         }
                         defaultUpdatableConfig.getProjectiles().setBleedingOnHit(bleedingOnHit);
                     }
+
                     if(userConfig.getProjectiles().isDestroyGlassBlocks() != null) {
                         defaultUpdatableConfig.getProjectiles().setDestroyGlassBlocks(
                                 userConfig.getProjectiles().isDestroyGlassBlocks());
                     }
+
+                    if(userConfig.getProjectiles().isKnockbackOnHitEnabled() != null) {
+                        defaultUpdatableConfig.getProjectiles().setKnockbackOnHitEnabled(
+                                userConfig.getProjectiles().isKnockbackOnHitEnabled());
+                    }
+
+                    for(Gun gun: userConfig.getProjectiles().getGun()) {
+                        if(gun.getId() != null) {
+                            guns.put(gun.getId(), gun);
+                        }
+                    }
                 }
+            }
+
+            if(defaultUpdatableConfig.getProjectiles() != null) {
+                defaultUpdatableConfig.getProjectiles().getGun().clear();
+                defaultUpdatableConfig.getProjectiles().getGun().addAll(guns.values());
             }
         }
 
@@ -261,6 +286,10 @@ public class ConfigurationManager {
 
     public StatusBarPosition getStatusBarPosition() {
         return builder.statusBarPosition;
+    }
+
+    public Gun getGun(String id) {
+        return builder.guns.get(id);
     }
 
 }

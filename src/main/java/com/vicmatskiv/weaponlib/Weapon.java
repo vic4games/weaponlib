@@ -24,6 +24,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleItem;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTargetPoint;
+import com.vicmatskiv.weaponlib.config.Gun;
 import com.vicmatskiv.weaponlib.crafting.CraftingComplexity;
 import com.vicmatskiv.weaponlib.crafting.OptionsMetadata;
 import com.vicmatskiv.weaponlib.model.Shell;
@@ -622,35 +623,40 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
             for (ItemAttachment<Weapon> attachment : this.compatibleAttachments.keySet()) {
                 attachment.addCompatibleWeapon(weapon);
             }
-            modContext.registerWeapon(name, weapon, renderer);
 
-            if(craftingRecipe != null && craftingRecipe.length >= 2) {
-                ItemStack itemStack = new ItemStack(weapon);
-                List<Object> registeredRecipe = modContext.getRecipeManager().registerShapedRecipe(weapon, craftingRecipe);
-                boolean hasOres = Arrays.stream(craftingRecipe).anyMatch(r -> r instanceof String);
-                if(hasOres) {
-                    compatibility.addShapedOreRecipe(itemStack, registeredRecipe.toArray());
+            Gun gunConfig = modContext.getConfigurationManager().getGun(name);
+
+            if(gunConfig == null || gunConfig.isEnabled()) {
+                modContext.registerWeapon(name, weapon, renderer);
+
+                if(craftingRecipe != null && craftingRecipe.length >= 2) {
+                    ItemStack itemStack = new ItemStack(weapon);
+                    List<Object> registeredRecipe = modContext.getRecipeManager().registerShapedRecipe(weapon, craftingRecipe);
+                    boolean hasOres = Arrays.stream(craftingRecipe).anyMatch(r -> r instanceof String);
+                    if(hasOres) {
+                        compatibility.addShapedOreRecipe(itemStack, registeredRecipe.toArray());
+                    } else {
+                        compatibility.addShapedRecipe(itemStack, registeredRecipe.toArray());
+                    }
+                } else if(craftingComplexity != null) {
+                    OptionsMetadata optionsMetadata = new OptionsMetadata.OptionMetadataBuilder()
+                            .withSlotCount(9)
+                            .build(craftingComplexity, Arrays.copyOf(craftingMaterials, craftingMaterials.length));
+
+                    List<Object> shape = modContext.getRecipeManager().createShapedRecipe(weapon, weapon.getName(), optionsMetadata);
+
+                    if(optionsMetadata.hasOres()) {
+                        compatibility.addShapedOreRecipe(new ItemStack(weapon), shape.toArray());
+                    } else {
+                        compatibility.addShapedRecipe(new ItemStack(weapon), shape.toArray());
+                    }
+
                 } else {
-                    compatibility.addShapedRecipe(itemStack, registeredRecipe.toArray());
+                    System.err.println("!!!No recipe defined for weapon " + name);
                 }
-            } else if(craftingComplexity != null) {
-                OptionsMetadata optionsMetadata = new OptionsMetadata.OptionMetadataBuilder()
-                        .withSlotCount(9)
-                        .build(craftingComplexity, Arrays.copyOf(craftingMaterials, craftingMaterials.length));
-
-                List<Object> shape = modContext.getRecipeManager().createShapedRecipe(weapon, weapon.getName(), optionsMetadata);
-
-                if(optionsMetadata.hasOres()) {
-                    compatibility.addShapedOreRecipe(new ItemStack(weapon), shape.toArray());
-                } else {
-                    compatibility.addShapedRecipe(new ItemStack(weapon), shape.toArray());
-                }
-
-
-
-            } else {
-                System.err.println("!!!No recipe defined for weapon " + name);
             }
+
+
             return weapon;
         }
     }

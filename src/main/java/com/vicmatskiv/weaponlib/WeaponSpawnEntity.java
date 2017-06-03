@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Logger;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleBlockState;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTargetPoint;
+import com.vicmatskiv.weaponlib.config.Projectiles;
 import com.vicmatskiv.weaponlib.particle.SpawnParticleMessage;
 
 import io.netty.buffer.ByteBuf;
@@ -75,8 +76,12 @@ public class WeaponSpawnEntity extends EntityProjectile {
 	        Explosion.createServerSideExplosion(weapon.getModContext(), compatibility.world(this), this,
 	                position.getHitVec().getXCoord(), position.getHitVec().getYCoord(), position.getHitVec().getZCoord(),
 	                explosionRadius, false, true);
-	    } else if(position.getEntityHit() != null){
-	        if(this.getThrower() != null) {
+	    } else if(position.getEntityHit() != null) {
+
+            Projectiles projectilesConfig = weapon.getModContext().getConfigurationManager().getProjectiles();
+
+	        if(this.getThrower() != null &&
+	                (projectilesConfig.isKnockbackOnHitEnabled() == null || projectilesConfig.isKnockbackOnHitEnabled())) {
 	            position.getEntityHit().attackEntityFrom(DamageSource.causeThrownDamage(this, this.getThrower()), damage);
 	        } else {
 	            position.getEntityHit().attackEntityFrom(compatibility.genericDamageSource(), damage);
@@ -92,7 +97,7 @@ public class WeaponSpawnEntity extends EntityProjectile {
 
             double magnitude = Math.sqrt(motionX * motionX + motionY * motionY + motionZ * motionZ) + 2;
 
-            Float bleedingCoefficient = weapon.getModContext().getConfigurationManager().getProjectiles().getBleedingOnHit();
+            Float bleedingCoefficient = projectilesConfig.getBleedingOnHit();
             if(bleedingCoefficient != null && bleedingCoefficient > 0.0f) {
                 int count = (int)(getParticleCount (damage) * bleedingCoefficient);
                 logger.debug("Generating {} particle(s) per damage {}", count, damage);

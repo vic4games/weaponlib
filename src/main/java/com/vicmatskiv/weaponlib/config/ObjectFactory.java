@@ -42,6 +42,14 @@ public class ObjectFactory {
     }
 
     /**
+     * Create an instance of {@link Gun }
+     * 
+     */
+    public Gun createGun() {
+        return new Gun();
+    }
+
+    /**
      * Create an instance of {@link Ore }
      * 
      */

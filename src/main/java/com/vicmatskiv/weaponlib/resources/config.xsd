@@ -37,8 +37,14 @@
     </complexType>
 
     <complexType name="Projectiles">
+    	<sequence>
+    		<element name="gun" type="tns:Gun" maxOccurs="unbounded"
+    			minOccurs="0">
+    		</element>
+    	</sequence>
     	<attribute name="bleedingOnHit" type="float"></attribute>
     	<attribute name="destroyGlassBlocks" type="boolean"></attribute>
+    	<attribute name="knockbackOnHitEnabled" type="boolean"></attribute>
     </complexType>
 
     <complexType name="Gui">
@@ -50,5 +56,10 @@
     			</restriction>
     		</simpleType>
     	</attribute>
+    </complexType>
+
+    <complexType name="Gun">
+        <attribute name="id" type="string"></attribute>
+        <attribute name="enabled" type="boolean" default="true"></attribute>
     </complexType>
 </schema>

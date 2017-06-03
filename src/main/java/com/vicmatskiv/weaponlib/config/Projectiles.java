@@ -1,6 +1,8 @@
 
 package com.vicmatskiv.weaponlib.config;
 
+import java.util.ArrayList;
+import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -16,8 +18,12 @@ import javax.xml.bind.annotation.XmlType;
  * &lt;complexType name="Projectiles">
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
+ *       &lt;sequence>
+ *         &lt;element name="gun" type="{http://moderwarfaremod.org/config}Gun" maxOccurs="unbounded" minOccurs="0"/>
+ *       &lt;/sequence>
  *       &lt;attribute name="bleedingOnHit" type="{http://www.w3.org/2001/XMLSchema}float" />
  *       &lt;attribute name="destroyGlassBlocks" type="{http://www.w3.org/2001/XMLSchema}boolean" />
+ *       &lt;attribute name="knockbackOnHitEnabled" type="{http://www.w3.org/2001/XMLSchema}boolean" />
  *     &lt;/restriction>
  *   &lt;/complexContent>
  * &lt;/complexType>
@@ -26,13 +32,47 @@ import javax.xml.bind.annotation.XmlType;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "Projectiles")
+@XmlType(name = "Projectiles", propOrder = {
+    "gun"
+})
 public class Projectiles {
 
+    protected List<Gun> gun;
     @XmlAttribute(name = "bleedingOnHit")
     protected Float bleedingOnHit;
     @XmlAttribute(name = "destroyGlassBlocks")
     protected Boolean destroyGlassBlocks;
+    @XmlAttribute(name = "knockbackOnHitEnabled")
+    protected Boolean knockbackOnHitEnabled;
+
+    /**
+     * Gets the value of the gun property.
+     * 
+     * <p>
+     * This accessor method returns a reference to the live list,
+     * not a snapshot. Therefore any modification you make to the
+     * returned list will be present inside the JAXB object.
+     * This is why there is not a <CODE>set</CODE> method for the gun property.
+     * 
+     * <p>
+     * For example, to add a new item, do as follows:
+     * <pre>
+     *    getGun().add(newItem);
+     * </pre>
+     * 
+     * 
+     * <p>
+     * Objects of the following type(s) are allowed in the list
+     * {@link Gun }
+     * 
+     * 
+     */
+    public List<Gun> getGun() {
+        if (gun == null) {
+            gun = new ArrayList<Gun>();
+        }
+        return this.gun;
+    }
 
     /**
      * Gets the value of the bleedingOnHit property.
@@ -80,6 +120,30 @@ public class Projectiles {
      */
     public void setDestroyGlassBlocks(Boolean value) {
         this.destroyGlassBlocks = value;
+    }
+
+    /**
+     * Gets the value of the knockbackOnHitEnabled property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link Boolean }
+     *     
+     */
+    public Boolean isKnockbackOnHitEnabled() {
+        return knockbackOnHitEnabled;
+    }
+
+    /**
+     * Sets the value of the knockbackOnHitEnabled property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link Boolean }
+     *     
+     */
+    public void setKnockbackOnHitEnabled(Boolean value) {
+        this.knockbackOnHitEnabled = value;
     }
 
 }
