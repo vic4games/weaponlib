@@ -163,18 +163,20 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
         float rotationYawFactor = -1.0f + random.nextFloat() * 2.0f;
         player.rotationYaw = player.rotationYaw + weaponInstance.getRecoil() * rotationYawFactor;
 
-        if(weapon.builder.flashIntensity > 0) {
-            modContext.getEffectManager().spawnFlashParticle(player, weapon.builder.flashIntensity,
-                    weapon.builder.flashScale.get(),
-                    weaponInstance.isAimed() ? FLASH_X_OFFSET_ZOOMED : compatibility.getEffectOffsetX()
-                            + weapon.builder.flashOffsetX.get(),
-                            compatibility.getEffectOffsetY() + weapon.builder.flashOffsetY.get());
+        Boolean muzzleFlash = modContext.getConfigurationManager().getProjectiles().isMuzzleEffects();
+        if(muzzleFlash == null || muzzleFlash) {
+            if(weapon.builder.flashIntensity > 0) {
+                modContext.getEffectManager().spawnFlashParticle(player, weapon.builder.flashIntensity,
+                        weapon.builder.flashScale.get(),
+                        weaponInstance.isAimed() ? FLASH_X_OFFSET_ZOOMED : compatibility.getEffectOffsetX()
+                                + weapon.builder.flashOffsetX.get(),
+                                compatibility.getEffectOffsetY() + weapon.builder.flashOffsetY.get());
+            }
+
+            modContext.getEffectManager().spawnSmokeParticle(player, compatibility.getEffectOffsetX()
+                    + weapon.builder.smokeOffsetX.get(),
+                    compatibility.getEffectOffsetY() + weapon.builder.smokeOffsetY.get());
         }
-
-        modContext.getEffectManager().spawnSmokeParticle(player, compatibility.getEffectOffsetX()
-                + weapon.builder.smokeOffsetX.get(),
-                compatibility.getEffectOffsetY() + weapon.builder.smokeOffsetY.get());
-
 
         weaponInstance.setSeriesShotCount(weaponInstance.getSeriesShotCount() + 1);
         weaponInstance.setLastFireTimestamp(System.currentTimeMillis());

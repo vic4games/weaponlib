@@ -44,7 +44,8 @@
     	</sequence>
     	<attribute name="bleedingOnHit" type="float"></attribute>
     	<attribute name="destroyGlassBlocks" type="boolean"></attribute>
-    	<attribute name="knockbackOnHitEnabled" type="boolean"></attribute>
+    	<attribute name="knockbackOnHit" type="boolean"></attribute>
+    	<attribute name="muzzleEffects" type="boolean"></attribute>
     </complexType>
 
     <complexType name="Gui">

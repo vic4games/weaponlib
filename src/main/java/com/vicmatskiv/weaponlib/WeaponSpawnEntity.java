@@ -81,7 +81,7 @@ public class WeaponSpawnEntity extends EntityProjectile {
             Projectiles projectilesConfig = weapon.getModContext().getConfigurationManager().getProjectiles();
 
 	        if(this.getThrower() != null &&
-	                (projectilesConfig.isKnockbackOnHitEnabled() == null || projectilesConfig.isKnockbackOnHitEnabled())) {
+	                (projectilesConfig.isKnockbackOnHit() == null || projectilesConfig.isKnockbackOnHit())) {
 	            position.getEntityHit().attackEntityFrom(DamageSource.causeThrownDamage(this, this.getThrower()), damage);
 	        } else {
 	            position.getEntityHit().attackEntityFrom(compatibility.genericDamageSource(), damage);

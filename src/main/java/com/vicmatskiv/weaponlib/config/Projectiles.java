@@ -23,7 +23,8 @@ import javax.xml.bind.annotation.XmlType;
  *       &lt;/sequence>
  *       &lt;attribute name="bleedingOnHit" type="{http://www.w3.org/2001/XMLSchema}float" />
  *       &lt;attribute name="destroyGlassBlocks" type="{http://www.w3.org/2001/XMLSchema}boolean" />
- *       &lt;attribute name="knockbackOnHitEnabled" type="{http://www.w3.org/2001/XMLSchema}boolean" />
+ *       &lt;attribute name="knockbackOnHit" type="{http://www.w3.org/2001/XMLSchema}boolean" />
+ *       &lt;attribute name="muzzleEffects" type="{http://www.w3.org/2001/XMLSchema}boolean" />
  *     &lt;/restriction>
  *   &lt;/complexContent>
  * &lt;/complexType>
@@ -42,8 +43,10 @@ public class Projectiles {
     protected Float bleedingOnHit;
     @XmlAttribute(name = "destroyGlassBlocks")
     protected Boolean destroyGlassBlocks;
-    @XmlAttribute(name = "knockbackOnHitEnabled")
-    protected Boolean knockbackOnHitEnabled;
+    @XmlAttribute(name = "knockbackOnHit")
+    protected Boolean knockbackOnHit;
+    @XmlAttribute(name = "muzzleEffects")
+    protected Boolean muzzleEffects;
 
     /**
      * Gets the value of the gun property.
@@ -123,27 +126,51 @@ public class Projectiles {
     }
 
     /**
-     * Gets the value of the knockbackOnHitEnabled property.
+     * Gets the value of the knockbackOnHit property.
      * 
      * @return
      *     possible object is
      *     {@link Boolean }
      *     
      */
-    public Boolean isKnockbackOnHitEnabled() {
-        return knockbackOnHitEnabled;
+    public Boolean isKnockbackOnHit() {
+        return knockbackOnHit;
     }
 
     /**
-     * Sets the value of the knockbackOnHitEnabled property.
+     * Sets the value of the knockbackOnHit property.
      * 
      * @param value
      *     allowed object is
      *     {@link Boolean }
      *     
      */
-    public void setKnockbackOnHitEnabled(Boolean value) {
-        this.knockbackOnHitEnabled = value;
+    public void setKnockbackOnHit(Boolean value) {
+        this.knockbackOnHit = value;
+    }
+
+    /**
+     * Gets the value of the muzzleEffects property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link Boolean }
+     *     
+     */
+    public Boolean isMuzzleEffects() {
+        return muzzleEffects;
+    }
+
+    /**
+     * Sets the value of the muzzleEffects property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link Boolean }
+     *     
+     */
+    public void setMuzzleEffects(Boolean value) {
+        this.muzzleEffects = value;
     }
 
 }

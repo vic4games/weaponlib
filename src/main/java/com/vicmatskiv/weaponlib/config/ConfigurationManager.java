@@ -171,9 +171,14 @@ public class ConfigurationManager {
                                 userConfig.getProjectiles().isDestroyGlassBlocks());
                     }
 
-                    if(userConfig.getProjectiles().isKnockbackOnHitEnabled() != null) {
-                        defaultUpdatableConfig.getProjectiles().setKnockbackOnHitEnabled(
-                                userConfig.getProjectiles().isKnockbackOnHitEnabled());
+                    if(userConfig.getProjectiles().isKnockbackOnHit() != null) {
+                        defaultUpdatableConfig.getProjectiles().setKnockbackOnHit(
+                                userConfig.getProjectiles().isKnockbackOnHit());
+                    }
+
+                    if(userConfig.getProjectiles().isMuzzleEffects() != null) {
+                        defaultUpdatableConfig.getProjectiles().setMuzzleEffects(
+                                userConfig.getProjectiles().isMuzzleEffects());
                     }
 
                     for(Gun gun: userConfig.getProjectiles().getGun()) {
