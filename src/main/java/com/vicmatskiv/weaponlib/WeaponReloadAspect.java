@@ -21,6 +21,7 @@ import com.vicmatskiv.weaponlib.state.StateManager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.StatCollector;
 
 public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInstance> {
 
@@ -288,6 +289,6 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 	}
 
 	public void inventoryFullAlert(PlayerWeaponInstance weaponInstance) {
-		modContext.getStatusMessageCenter().addAlertMessage("Inventory full", 3, 250, 200);
+		modContext.getStatusMessageCenter().addAlertMessage(StatCollector.translateToLocal("gui.inventoryFull"), 3, 250, 200);
 	}
 }

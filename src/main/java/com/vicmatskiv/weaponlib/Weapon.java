@@ -36,6 +36,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
 
 public class Weapon extends CompatibleItem implements
@@ -934,7 +935,8 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
         }
         logger.debug("Changed fire mode of {} to {}", instance, result);
 
-        modContext.getStatusMessageCenter().addMessage("Firearm mode: " + message, 1000);
+        modContext.getStatusMessageCenter().addMessage(StatCollector.translateToLocalFormatted(
+                "gui.firearmMode", message), 1000);
 
         compatibility.playSound(instance.getPlayer(),  modContext.getChangeFireModeSound(), 1F, 1F);
     }
@@ -968,7 +970,8 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
 
             float ratio = (minZoom - zoom) / (minZoom - maxZoom);
 
-            modContext.getStatusMessageCenter().addMessage("Zoom: " + Math.round(ratio * 100) + "%", 800);
+            modContext.getStatusMessageCenter().addMessage(
+                    StatCollector.translateToLocalFormatted("gui.currentZoom", Math.round(ratio * 100)), 800);
             compatibility.playSound(instance.getPlayer(),  modContext.getZoomSound(), 1F, 1F);
             logger.debug("Changed optical zoom to {}", instance.getZoom());
         } else {
@@ -990,7 +993,8 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
             instance.setZoom(zoom);
 
             float ratio = (minZoom - zoom) / (minZoom - maxZoom);
-            modContext.getStatusMessageCenter().addMessage("Zoom: " + Math.round(ratio * 100) + "%", 800);
+            modContext.getStatusMessageCenter().addMessage(
+                    StatCollector.translateToLocalFormatted("gui.currentZoom", Math.round(ratio * 100)), 800);
             compatibility.playSound(instance.getPlayer(),  modContext.getZoomSound(), 1F, 1F);
             logger.debug("Changed optical zoom to {}", zoom);
         } else {

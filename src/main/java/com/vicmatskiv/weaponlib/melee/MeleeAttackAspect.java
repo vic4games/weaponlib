@@ -22,6 +22,7 @@ import com.vicmatskiv.weaponlib.state.StateManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
 
 
@@ -151,7 +152,8 @@ public class MeleeAttackAspect implements Aspect<MeleeState, PlayerMeleeInstance
 
     @SuppressWarnings("unused")
     private void cannotAttack(PlayerMeleeInstance meleeInstance) {
-        modContext.getStatusMessageCenter().addAlertMessage("Cooling down...", 2, 200, 100);
+        modContext.getStatusMessageCenter().addAlertMessage(
+                StatCollector.translateToLocalFormatted("gui.coolingDown"), 2, 200, 100);
         compatibility.playSound(meleeInstance.getPlayer(), modContext.getNoAmmoSound(), 1F, 1F);
     }
 

@@ -2,6 +2,7 @@ package com.vicmatskiv.weaponlib;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
+import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
 import com.vicmatskiv.weaponlib.StatusMessageCenter.Message;
@@ -16,6 +17,7 @@ import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.StatCollector;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 
 public class CustomGui extends CompatibleGui {
@@ -117,10 +119,27 @@ public class CustomGui extends CompatibleGui {
 //				}
 
 				if(isInModifyingState(weaponInstance) /*Weapon.isModifying(itemStack)*/ /*weaponItem.getState(weapon) == Weapon.STATE_MODIFYING*/) {
-					fontRender.drawStringWithShadow("Press [up] to add optic", width / 2 - 40, 60, color);
-					fontRender.drawStringWithShadow("Press [left] to add barrel rig", 10, height / 2 - 10, color);
-					fontRender.drawStringWithShadow("Press [right] to change camo", width / 2 + 60, height / 2 - 20, color);
-					fontRender.drawStringWithShadow("Press [down] to add under-barrel rig", 10, height - 40, color);
+
+				    String changeScopeMessage = StatCollector.translateToLocalFormatted(
+				            "gui.attachmentMode.changeScope",
+				            Keyboard.getKeyName(KeyBindings.upArrowKey.getKeyCode()));
+				    fontRender.drawStringWithShadow(changeScopeMessage, width / 2 - 40, 60, color);
+
+				    String changeBarrelRigMessage = StatCollector.translateToLocalFormatted(
+                            "gui.attachmentMode.changeBarrelRig",
+                            Keyboard.getKeyName(KeyBindings.leftArrowKey.getKeyCode()));
+					fontRender.drawStringWithShadow(changeBarrelRigMessage, 10, height / 2 - 10, color);
+
+					String changeCamoMessage = StatCollector.translateToLocalFormatted(
+                            "gui.attachmentMode.changeCamo",
+                            Keyboard.getKeyName(KeyBindings.rightArrowKey.getKeyCode()));
+					fontRender.drawStringWithShadow(changeCamoMessage, width / 2 + 60, height / 2 - 20, color);
+
+					String changeUnderBarrelRig = StatCollector.translateToLocalFormatted(
+                            "gui.attachmentMode.changeUnderBarrelRig",
+                            Keyboard.getKeyName(KeyBindings.downArrowKey.getKeyCode()));
+					fontRender.drawStringWithShadow(changeUnderBarrelRig, 10, height - 40, color);
+
 				} else {
 					Message message = modContext.getStatusMessageCenter().nextMessage();
 					String messageText;
@@ -269,8 +288,9 @@ public class CustomGui extends CompatibleGui {
 	private String getDefaultMagazineMessage(ItemStack itemStack) {
 		ItemMagazine magazine = (ItemMagazine) itemStack.getItem();
 
-		String text = "Ammo: " + Tags.getAmmo(itemStack) + "/" + magazine.getAmmo();
-		return text;
+		String ammoCounterMessage = StatCollector.translateToLocalFormatted(
+                "gui.ammoCounter", Tags.getAmmo(itemStack) + "/" + magazine.getAmmo());
+		return ammoCounterMessage;
 	}
 
 
@@ -286,9 +306,10 @@ public class CustomGui extends CompatibleGui {
 
 		String text;
 		if(weaponInstance.getWeapon().getAmmoCapacity() == 0 && totalCapacity == 0) {
-			text = "No magazine";
+			text = StatCollector.translateToLocalFormatted("gui.noMagazine");
 		} else {
-			text = "Ammo: " + weaponInstance.getWeapon().getCurrentAmmo(compatibility.clientPlayer()) + "/" + totalCapacity;
+			text = StatCollector.translateToLocalFormatted(
+	                "gui.ammoCounter", weaponInstance.getWeapon().getCurrentAmmo(compatibility.clientPlayer()) + "/" + totalCapacity);
 		}
 		return text;
 	}
