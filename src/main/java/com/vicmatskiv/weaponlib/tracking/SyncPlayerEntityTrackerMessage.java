@@ -6,7 +6,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessage;
-import com.vicmatskiv.weaponlib.electronics.EntityWirelessCamera;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.world.World;

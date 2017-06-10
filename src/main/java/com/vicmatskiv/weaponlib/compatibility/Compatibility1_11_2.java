@@ -42,6 +42,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.FOVUpdateEvent;
 import net.minecraftforge.client.event.GuiOpenEvent;
@@ -850,5 +851,11 @@ public class Compatibility1_11_2 implements Compatibility {
     @Override
     public boolean isFlying(EntityPlayer player) {
         return player.capabilities.isFlying;
+    }
+
+    @SuppressWarnings("deprecation")
+    @Override
+    public String getLocalizedString(String format, Object... args) {
+        return I18n.translateToLocalFormatted(format, args);
     }
 }

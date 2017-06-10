@@ -277,5 +277,7 @@ public interface Compatibility {
 
     public boolean isFlying(EntityPlayer player);
 
+    public String getLocalizedString(String format, Object...args);
+
 
 }

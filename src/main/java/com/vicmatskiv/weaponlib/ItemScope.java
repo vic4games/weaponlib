@@ -4,7 +4,6 @@ import java.util.function.BiConsumer;
 
 import org.lwjgl.opengl.GL11;
 
-import com.vicmatskiv.weaponlib.perspective.FirstPersonPerspective;
 import com.vicmatskiv.weaponlib.perspective.PerspectiveRenderer;
 
 import net.minecraft.entity.player.EntityPlayer;

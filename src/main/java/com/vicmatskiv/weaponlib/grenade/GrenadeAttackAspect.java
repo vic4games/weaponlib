@@ -18,7 +18,6 @@ import com.vicmatskiv.weaponlib.state.PermitManager;
 import com.vicmatskiv.weaponlib.state.StateManager;
 
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.StatCollector;
 
 
 /*
@@ -183,7 +182,7 @@ public class GrenadeAttackAspect implements Aspect<GrenadeState, PlayerGrenadeIn
                 if(remainingTimeUntilExplosion < 0) {
                     remainingTimeUntilExplosion = 0;
                 }
-                String message = StatCollector.translateToLocalFormatted("gui.grenadeExplodes",
+                String message = compatibility.getLocalizedString("gui.grenadeExplodes",
                         Math.round(remainingTimeUntilExplosion / 1000f));
                 modContext.getStatusMessageCenter().addAlertMessage(message, 1, 1000, 0);
                 grenadeInstance.setLastSafetyPinAlertTimestamp(System.currentTimeMillis());

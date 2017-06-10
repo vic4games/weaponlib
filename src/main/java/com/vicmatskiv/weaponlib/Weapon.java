@@ -36,7 +36,6 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
 
 public class Weapon extends CompatibleItem implements
@@ -927,15 +926,15 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
         instance.setMaxShots(result);
         String message;
         if(result == 1) {
-            message = "Semi";
+            message = compatibility.getLocalizedString("gui.firearmMode.semi");
         } else if(result == Integer.MAX_VALUE) {
-            message = "Auto";
+            message = compatibility.getLocalizedString("gui.firearmMode.auto");
         } else {
-            message = "Burst";
+            message = compatibility.getLocalizedString("gui.firearmMode.burst");
         }
         logger.debug("Changed fire mode of {} to {}", instance, result);
 
-        modContext.getStatusMessageCenter().addMessage(StatCollector.translateToLocalFormatted(
+        modContext.getStatusMessageCenter().addMessage(compatibility.getLocalizedString(
                 "gui.firearmMode", message), 1000);
 
         compatibility.playSound(instance.getPlayer(),  modContext.getChangeFireModeSound(), 1F, 1F);
@@ -971,7 +970,7 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
             float ratio = (minZoom - zoom) / (minZoom - maxZoom);
 
             modContext.getStatusMessageCenter().addMessage(
-                    StatCollector.translateToLocalFormatted("gui.currentZoom", Math.round(ratio * 100)), 800);
+                    compatibility.getLocalizedString("gui.currentZoom", Math.round(ratio * 100)), 800);
             compatibility.playSound(instance.getPlayer(),  modContext.getZoomSound(), 1F, 1F);
             logger.debug("Changed optical zoom to {}", instance.getZoom());
         } else {
@@ -994,7 +993,7 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
 
             float ratio = (minZoom - zoom) / (minZoom - maxZoom);
             modContext.getStatusMessageCenter().addMessage(
-                    StatCollector.translateToLocalFormatted("gui.currentZoom", Math.round(ratio * 100)), 800);
+                    compatibility.getLocalizedString("gui.currentZoom", Math.round(ratio * 100)), 800);
             compatibility.playSound(instance.getPlayer(),  modContext.getZoomSound(), 1F, 1F);
             logger.debug("Changed optical zoom to {}", zoom);
         } else {

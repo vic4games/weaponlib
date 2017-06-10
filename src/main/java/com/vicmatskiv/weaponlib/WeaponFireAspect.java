@@ -14,7 +14,6 @@ import com.vicmatskiv.weaponlib.state.StateManager;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.StatCollector;
 
 
 /*
@@ -140,9 +139,9 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
             String message;
             if(weaponInstance.getWeapon().getAmmoCapacity() == 0
                     && modContext.getAttachmentAspect().getActiveAttachment(weaponInstance, AttachmentCategory.MAGAZINE) == null) {
-                message = StatCollector.translateToLocal("gui.noMagazine");
+                message = compatibility.getLocalizedString("gui.noMagazine");
             } else {
-                message = StatCollector.translateToLocal("gui.noAmmo");
+                message = compatibility.getLocalizedString("gui.noAmmo");
             }
             modContext.getStatusMessageCenter().addAlertMessage(message, 3, 250, 200);
             compatibility.playSound(weaponInstance.getPlayer(), modContext.getNoAmmoSound(), 1F, 1F);

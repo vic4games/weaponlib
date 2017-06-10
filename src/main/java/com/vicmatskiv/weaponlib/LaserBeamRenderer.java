@@ -3,13 +3,13 @@ package com.vicmatskiv.weaponlib;
 import java.util.Random;
 import java.util.function.BiConsumer;
 
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
-
 import org.lwjgl.opengl.GL11;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTessellator;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTransformType;
+
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 
 public class LaserBeamRenderer implements CustomRenderer {
 	

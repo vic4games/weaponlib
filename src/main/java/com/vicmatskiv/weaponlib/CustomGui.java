@@ -17,7 +17,6 @@ import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.StatCollector;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 
 public class CustomGui extends CompatibleGui {
@@ -120,22 +119,22 @@ public class CustomGui extends CompatibleGui {
 
 				if(isInModifyingState(weaponInstance) /*Weapon.isModifying(itemStack)*/ /*weaponItem.getState(weapon) == Weapon.STATE_MODIFYING*/) {
 
-				    String changeScopeMessage = StatCollector.translateToLocalFormatted(
+				    String changeScopeMessage = compatibility.getLocalizedString(
 				            "gui.attachmentMode.changeScope",
 				            Keyboard.getKeyName(KeyBindings.upArrowKey.getKeyCode()));
 				    fontRender.drawStringWithShadow(changeScopeMessage, width / 2 - 40, 60, color);
 
-				    String changeBarrelRigMessage = StatCollector.translateToLocalFormatted(
+				    String changeBarrelRigMessage = compatibility.getLocalizedString(
                             "gui.attachmentMode.changeBarrelRig",
                             Keyboard.getKeyName(KeyBindings.leftArrowKey.getKeyCode()));
 					fontRender.drawStringWithShadow(changeBarrelRigMessage, 10, height / 2 - 10, color);
 
-					String changeCamoMessage = StatCollector.translateToLocalFormatted(
+					String changeCamoMessage = compatibility.getLocalizedString(
                             "gui.attachmentMode.changeCamo",
                             Keyboard.getKeyName(KeyBindings.rightArrowKey.getKeyCode()));
 					fontRender.drawStringWithShadow(changeCamoMessage, width / 2 + 60, height / 2 - 20, color);
 
-					String changeUnderBarrelRig = StatCollector.translateToLocalFormatted(
+					String changeUnderBarrelRig = compatibility.getLocalizedString(
                             "gui.attachmentMode.changeUnderBarrelRig",
                             Keyboard.getKeyName(KeyBindings.downArrowKey.getKeyCode()));
 					fontRender.drawStringWithShadow(changeUnderBarrelRig, 10, height - 40, color);
@@ -288,7 +287,7 @@ public class CustomGui extends CompatibleGui {
 	private String getDefaultMagazineMessage(ItemStack itemStack) {
 		ItemMagazine magazine = (ItemMagazine) itemStack.getItem();
 
-		String ammoCounterMessage = StatCollector.translateToLocalFormatted(
+		String ammoCounterMessage = compatibility.getLocalizedString(
                 "gui.ammoCounter", Tags.getAmmo(itemStack) + "/" + magazine.getAmmo());
 		return ammoCounterMessage;
 	}
@@ -306,9 +305,9 @@ public class CustomGui extends CompatibleGui {
 
 		String text;
 		if(weaponInstance.getWeapon().getAmmoCapacity() == 0 && totalCapacity == 0) {
-			text = StatCollector.translateToLocalFormatted("gui.noMagazine");
+			text = compatibility.getLocalizedString("gui.noMagazine");
 		} else {
-			text = StatCollector.translateToLocalFormatted(
+			text = compatibility.getLocalizedString(
 	                "gui.ammoCounter", weaponInstance.getWeapon().getCurrentAmmo(compatibility.clientPlayer()) + "/" + totalCapacity);
 		}
 		return text;
