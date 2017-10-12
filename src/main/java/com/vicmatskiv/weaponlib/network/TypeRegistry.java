@@ -23,10 +23,10 @@ public class TypeRegistry {
 	private TypeRegistry() {}
 	
 	public <T extends UniversallySerializable> void register(Class<T> cls) {
-		typeRegistry.put(createUuid(cls), cls);
+		typeRegistry.put(getUuid(cls), cls);
 	}
 	
-	protected UUID createUuid(Class<?> cls) {
+	public UUID getUuid(Class<?> cls) {
 		try {
 			SecureRandom random = SecureRandom.getInstance(SHA1PRNG_ALG);
 			random.setSeed(cls.getName().getBytes());
@@ -38,7 +38,7 @@ public class TypeRegistry {
 	}
 	
 	public <T extends UniversallySerializable> void toBytes(T object, ByteBuf buf) {
-		UUID typeUuid = createUuid(object.getClass());
+		UUID typeUuid = getUuid(object.getClass());
 		if(!typeRegistry.containsKey(typeUuid)) {
 			throw new RuntimeException("Failed to serialize object " + object
 					+ " because its class is not registered: " + object.getClass());
@@ -54,7 +54,7 @@ public class TypeRegistry {
 	}
 	
     public <T extends UniversallySerializable> T fromBytes(ByteBuf buf) {
-    	long mostSigBits = buf.readLong();
+        long mostSigBits = buf.readLong();
 		long leastSigBits = buf.readLong();
 		UUID typeUuid = new UUID(mostSigBits, leastSigBits);
 		

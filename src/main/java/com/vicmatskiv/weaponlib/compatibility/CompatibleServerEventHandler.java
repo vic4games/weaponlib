@@ -9,6 +9,7 @@ import net.minecraftforge.event.entity.EntityEvent.EntityConstructing;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -39,6 +40,10 @@ public abstract class CompatibleServerEventHandler {
 	        ResourceLocation PLAYER_ENTITY_TRACKER = new ResourceLocation(getModId(), "PLAYER_ENTITY_TRACKER");
 	        event.addCapability(PLAYER_ENTITY_TRACKER, new CompatiblePlayerEntityTrackerProvider());
 	    }
+	    
+        ResourceLocation exposureResourceLocation = new ResourceLocation(getModId(), "EXPOSURE");
+        event.addCapability(exposureResourceLocation, new CompatibleExposureCapability());
+	    
 	}
 
     @SubscribeEvent
@@ -65,10 +70,17 @@ public abstract class CompatibleServerEventHandler {
     public void onEntityDeath(LivingDeathEvent e) {
         onCompatibleLivingDeathEvent(e);
     }
+    
+    @SubscribeEvent
+    public void onEntityUpdate(LivingUpdateEvent e) {
+        onCompatibleLivingUpdateEvent(new CompatibleLivingUpdateEvent(e));
+    }
 
     protected abstract void onCompatibleLivingDeathEvent(LivingDeathEvent e);
 
     protected abstract void onCompatiblePlayerStartedTracking(CompatibleStartTrackingEvent e);
 
     protected abstract void onCompatiblePlayerStoppedTracking(CompatibleStopTrackingEvent e);
+    
+    protected abstract void onCompatibleLivingUpdateEvent(CompatibleLivingUpdateEvent e);
 }

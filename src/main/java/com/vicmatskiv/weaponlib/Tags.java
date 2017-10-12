@@ -61,7 +61,7 @@ public final class Tags {
 		return null;
 	}
 
-	static void setInstance(ItemStack itemStack, PlayerItemInstance<?> instance) {
+	public static void setInstance(ItemStack itemStack, PlayerItemInstance<?> instance) {
 		if(itemStack == null) return;
 		compatibility.ensureTagCompound(itemStack);
 		ByteBuf buf = Unpooled.buffer();

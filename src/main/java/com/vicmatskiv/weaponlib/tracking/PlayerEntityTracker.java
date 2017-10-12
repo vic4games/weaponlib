@@ -15,14 +15,14 @@ import com.vicmatskiv.weaponlib.compatibility.CompatiblePlayerEntityTrackerProvi
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.world.World;
 
 public class PlayerEntityTracker {
 
     private static final Logger logger = LogManager.getLogger(PlayerEntityTracker.class);
 
-    public static final PlayerEntityTracker getTracker(EntityPlayer player) {
+    public static final PlayerEntityTracker getTracker(EntityLivingBase player) {
         return CompatiblePlayerEntityTrackerProvider.getTracker(player);
     }
 

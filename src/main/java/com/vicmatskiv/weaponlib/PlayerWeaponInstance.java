@@ -1,7 +1,10 @@
 package com.vicmatskiv.weaponlib;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
 import java.util.Arrays;
 import java.util.Deque;
+import java.util.UUID;
 import java.util.concurrent.LinkedBlockingDeque;
 
 import org.apache.logging.log4j.LogManager;
@@ -10,23 +13,50 @@ import org.apache.logging.log4j.Logger;
 import com.vicmatskiv.weaponlib.network.TypeRegistry;
 import com.vicmatskiv.weaponlib.perspective.OpticalScopePerspective;
 import com.vicmatskiv.weaponlib.perspective.Perspective;
+import com.vicmatskiv.weaponlib.shader.DynamicShaderGroupSource;
+import com.vicmatskiv.weaponlib.shader.DynamicShaderGroupSourceProvider;
+import com.vicmatskiv.weaponlib.shader.DynamicShaderPhase;
 
 import io.netty.buffer.ByteBuf;
+import net.minecraft.client.Minecraft;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
 
 
-public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
+public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implements DynamicShaderGroupSourceProvider {
 
-	private static final int SERIAL_VERSION = 7;
 
-	@SuppressWarnings("unused")
-	private static final Logger logger = LogManager.getLogger(PlayerWeaponInstance.class);
+    private static final int SERIAL_VERSION = 9;
 
-	static {
-		TypeRegistry.getInstance().register(PlayerWeaponInstance.class);
-	}
+    @SuppressWarnings("unused")
+    private static final Logger logger = LogManager.getLogger(PlayerWeaponInstance.class);
+
+    static {
+        TypeRegistry.getInstance().register(PlayerWeaponInstance.class);
+    }
+
+    private static final UUID NIGHT_VISION_SOURCE_UUID = UUID.randomUUID();
+    private static final UUID VIGNETTE_SOURCE_UUID = UUID.randomUUID();
+    private static final UUID BLUR_SOURCE_UUID = UUID.randomUUID();
+
+    public final DynamicShaderGroupSource BLUR_SOURCE = new DynamicShaderGroupSource(BLUR_SOURCE_UUID,
+            new ResourceLocation("weaponlib:/com/vicmatskiv/weaponlib/resources/blur.json"))
+            .withUniform("Radius", context -> hasOpticScope() ? 10f : 5f)
+            .withUniform("Progress", context -> getAimChangeProgress());
+
+    public final DynamicShaderGroupSource NIGHT_VISION_SOURCE = new DynamicShaderGroupSource(NIGHT_VISION_SOURCE_UUID,
+            new ResourceLocation("weaponlib:/com/vicmatskiv/weaponlib/resources/night-vision.json"))
+            .withUniform("IntensityAdjust", context -> 40f - Minecraft.getMinecraft().gameSettings.gammaSetting * 38)
+            .withUniform("NoiseAmplification", context ->  2f + 3f * Minecraft.getMinecraft().gameSettings.gammaSetting);
+
+    public final DynamicShaderGroupSource VIGNETTE_SOURCE = new DynamicShaderGroupSource(VIGNETTE_SOURCE_UUID,
+            new ResourceLocation("weaponlib:/com/vicmatskiv/weaponlib/resources/vignette.json"))
+            .withUniform("Radius", context -> getOpticScopeVignetteRadius(context.getPartialTicks()));
+
+    private static final long AIM_CHANGE_DURATION = 1200;
 
 	private int ammo;
 	private float recoil;
@@ -37,6 +67,10 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 	private float zoom = 1f;
 	private byte activeTextureIndex;
 	private boolean laserOn;
+	private long aimChangeTimestamp;
+	private boolean nightVisionOn;
+	
+	private int loadIterationCount;
 
 	/*
 	 * Upon adding an element to the head of the queue, all existing elements with lower priority are removed
@@ -51,11 +85,12 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 		super();
 	}
 
-	public PlayerWeaponInstance(int itemInventoryIndex, EntityPlayer player, ItemStack itemStack) {
+
+    public PlayerWeaponInstance(int itemInventoryIndex, EntityLivingBase player, ItemStack itemStack) {
 		super(itemInventoryIndex, player, itemStack);
 	}
 
-	public PlayerWeaponInstance(int itemInventoryIndex, EntityPlayer player) {
+	public PlayerWeaponInstance(int itemInventoryIndex, EntityLivingBase player) {
 		super(itemInventoryIndex, player);
 	}
 
@@ -109,7 +144,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 		return ammo;
 	}
 
-	protected void setAmmo(int ammo) {
+	public void setAmmo(int ammo) {
 		if(ammo != this.ammo) {
 			this.ammo = ammo;
 			updateId++;
@@ -128,6 +163,8 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 		zoom = buf.readFloat();
 		activeTextureIndex = buf.readByte();
 		laserOn = buf.readBoolean();
+		nightVisionOn = buf.readBoolean();
+		loadIterationCount = buf.readInt();
 	}
 
 	@Override
@@ -142,6 +179,8 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 		buf.writeFloat(zoom);
 		buf.writeByte(activeTextureIndex);
 		buf.writeBoolean(laserOn);
+		buf.writeBoolean(nightVisionOn);
+		buf.writeInt(loadIterationCount);
 	}
 
 	private static void serializeIntArray(ByteBuf buf, int a[]) {
@@ -189,6 +228,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 		setActiveTextureIndex(otherWeaponInstance.activeTextureIndex);
 		setLaserOn(otherWeaponInstance.laserOn);
 		setMaxShots(otherWeaponInstance.maxShots);
+		setLoadIterationCount(otherWeaponInstance.loadIterationCount);
 	}
 
 	public Weapon getWeapon() {
@@ -253,6 +293,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 		if(aimed != this.aimed) {
 			this.aimed = aimed;
 			updateId++;
+			aimChangeTimestamp = System.currentTimeMillis();
 		}
 	}
 
@@ -325,6 +366,17 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 		}
 	}
 
+	public boolean isNightVisionOn() {
+        return nightVisionOn;
+    }
+
+    public void setNightVisionOn(boolean nightVisionOn) {
+        if(this.nightVisionOn != nightVisionOn) {
+            this.nightVisionOn = nightVisionOn;
+            updateId++;
+        }
+    }
+
 	public int getActiveTextureIndex() {
 		return activeTextureIndex;
 	}
@@ -351,10 +403,57 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> {
 	    return result;
 	}
 
-//	@Override
-//	public View<?> createView() {
-//	    return super.createView();
-//	}
+    private boolean hasOpticScope() {
+        ItemAttachment<Weapon> scope = getAttachmentItemWithCategory(AttachmentCategory.SCOPE);
+        return scope instanceof ItemScope && ((ItemScope) scope).isOptical();
+    }
+
+    private ItemScope getScope() {
+        ItemAttachment<Weapon> scope = getAttachmentItemWithCategory(AttachmentCategory.SCOPE);
+        return scope instanceof ItemScope ? (ItemScope) scope : null;
+    }
+    
+
+    private float getOpticScopeVignetteRadius(float partialTicks) {
+        //ItemAttachment<Weapon> scope = getAttachmentItemWithCategory(AttachmentCategory.SCOPE);
+        EntityPlayer player = compatibility.getClientPlayer();
+//        float f = player.distanceWalkedModified - player.prevDistanceWalkedModified;
+//        float f1 = -(player.distanceWalkedModified + f * partialTicks);
+        float f2 = player.prevCameraYaw + (player.cameraYaw - player.prevCameraYaw) * partialTicks;
+        return -6.5f * f2 + 0.55f;
+    }
+
+    private float getAimChangeProgress() {
+        float p = MiscUtils.clamp((float)(System.currentTimeMillis() - aimChangeTimestamp) / AIM_CHANGE_DURATION, 0f, 1f);
+        if(!isAimed()) {
+            p = 1f - p;
+        }
+
+        return p;
+    }
+
+   	@Override
+    public DynamicShaderGroupSource getShaderSource(DynamicShaderPhase phase) {
+	    if(isAimed() && phase == DynamicShaderPhase.POST_WORLD_OPTICAL_SCOPE_RENDER) {
+	        ItemScope scope = getScope();
+	        if(scope.isOptical()) {
+	            return scope.hasNightVision() && nightVisionOn ? NIGHT_VISION_SOURCE 
+	                    : VIGNETTE_SOURCE;
+	        }
+	    }
+
+	    float progress = getAimChangeProgress();
+        return phase == DynamicShaderPhase.PRE_ITEM_RENDER
+                && (isAimed() || (progress > 0f && progress < 1f)) ? BLUR_SOURCE : null;
+    }
+   	
+   	public void setLoadIterationCount(int loadIterationCount) {
+        this.loadIterationCount = loadIterationCount;
+    }
+   	
+   	public int getLoadIterationCount() {
+        return loadIterationCount;
+    }
 
 	@Override
 	public String toString() {

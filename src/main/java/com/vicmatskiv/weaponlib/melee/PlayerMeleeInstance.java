@@ -14,7 +14,7 @@ import com.vicmatskiv.weaponlib.PlayerItemInstance;
 import com.vicmatskiv.weaponlib.network.TypeRegistry;
 
 import io.netty.buffer.ByteBuf;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
@@ -42,11 +42,11 @@ public class PlayerMeleeInstance extends PlayerItemInstance<MeleeState> {
 		super();
 	}
 
-	public PlayerMeleeInstance(int itemInventoryIndex, EntityPlayer player, ItemStack itemStack) {
+	public PlayerMeleeInstance(int itemInventoryIndex, EntityLivingBase player, ItemStack itemStack) {
 		super(itemInventoryIndex, player, itemStack);
 	}
 
-	public PlayerMeleeInstance(int itemInventoryIndex, EntityPlayer player) {
+	public PlayerMeleeInstance(int itemInventoryIndex, EntityLivingBase player) {
 		super(itemInventoryIndex, player);
 	}
 

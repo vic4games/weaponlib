@@ -25,6 +25,7 @@ import com.vicmatskiv.weaponlib.state.PermitManager;
 import com.vicmatskiv.weaponlib.state.StateManager;
 
 import io.netty.buffer.ByteBuf;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -184,7 +185,7 @@ public final class MeleeAttachmentAspect implements Aspect<MeleeState, PlayerMel
 		permit.setStatus(Status.GRANTED);
 	}
 
-	List<CompatibleAttachment<? extends AttachmentContainer>> getActiveAttachments(EntityPlayer player, ItemStack itemStack) {
+	List<CompatibleAttachment<? extends AttachmentContainer>> getActiveAttachments(EntityLivingBase player, ItemStack itemStack) {
 
 		compatibility.ensureTagCompound(itemStack);
 		
@@ -231,6 +232,12 @@ public final class MeleeAttachmentAspect implements Aspect<MeleeState, PlayerMel
 	
 	@SuppressWarnings("unchecked")
 	private void changeAttachment(ChangeAttachmentPermit permit, PlayerMeleeInstance weaponInstance) {
+        if(!(weaponInstance.getPlayer() instanceof EntityPlayer)) {
+	        return;
+	    }
+        
+        EntityPlayer player = (EntityPlayer) weaponInstance.getPlayer();
+	    
 		AttachmentCategory attachmentCategory = permit.attachmentCategory;
 		int[] originalActiveAttachmentIds = weaponInstance.getActiveAttachmentIds();
 		int[] activeAttachmentIds = Arrays.copyOf(originalActiveAttachmentIds, originalActiveAttachmentIds.length);
@@ -245,7 +252,7 @@ public final class MeleeAttachmentAspect implements Aspect<MeleeState, PlayerMel
 		if(currentAttachment != null) {
 			// Need to apply removal functions first before applying addition functions
 			if(currentAttachment.getRemove() != null) {
-				currentAttachment.getRemove().apply(currentAttachment, weaponInstance.getWeapon(), weaponInstance.getPlayer());
+				currentAttachment.getRemove().apply(currentAttachment, weaponInstance.getWeapon(), player);
 			}
 			if(currentAttachment.getRemove3() != null) {
 				currentAttachment.getRemove3().apply(currentAttachment, weaponInstance);
@@ -253,11 +260,11 @@ public final class MeleeAttachmentAspect implements Aspect<MeleeState, PlayerMel
 		}
 		
 		if(lookupResult.index >= 0) {
-			ItemStack slotItemStack = weaponInstance.getPlayer().inventory.getStackInSlot(lookupResult.index);
+			ItemStack slotItemStack = player.inventory.getStackInSlot(lookupResult.index);
 			ItemAttachment<ItemMelee> nextAttachment = (ItemAttachment<ItemMelee>) slotItemStack.getItem();
 			
 			if(nextAttachment.getApply() != null) {
-				nextAttachment.getApply().apply(nextAttachment, weaponInstance.getWeapon(), weaponInstance.getPlayer());
+				nextAttachment.getApply().apply(nextAttachment, weaponInstance.getWeapon(), player);
 			} else if(nextAttachment.getApply3() != null) {
 				nextAttachment.getApply3().apply(nextAttachment, weaponInstance);
 			} else if(lookupResult.compatibleAttachment.getMeleeApplyHandler() != null) {
@@ -269,7 +276,7 @@ public final class MeleeAttachmentAspect implements Aspect<MeleeState, PlayerMel
 //					handler.apply(null, weaponInstance);
 //				}
 //			}
-			compatibility.consumeInventoryItemFromSlot(weaponInstance.getPlayer(), lookupResult.index);
+			compatibility.consumeInventoryItemFromSlot(player, lookupResult.index);
 			
 			activeAttachmentIds[attachmentCategory.ordinal()] = Item.getIdFromItem(nextAttachment);
 		} else {
@@ -282,7 +289,7 @@ public final class MeleeAttachmentAspect implements Aspect<MeleeState, PlayerMel
 
 		if(currentAttachment != null) {
 			// Item must be added to the same spot the next attachment comes from or to any spot if there is no next attachment
-			compatibility.addItemToPlayerInventory(weaponInstance.getPlayer(), currentAttachment, lookupResult.index);
+			compatibility.addItemToPlayerInventory(player, currentAttachment, lookupResult.index);
 		}
 		
 		weaponInstance.setActiveAttachmentIds(activeAttachmentIds);
@@ -339,7 +346,7 @@ public final class MeleeAttachmentAspect implements Aspect<MeleeState, PlayerMel
 				break;
 			}
 			
-			ItemStack slotItemStack = weaponInstance.getPlayer().inventory.getStackInSlot(currentIndex);
+			ItemStack slotItemStack = ((EntityPlayer)weaponInstance.getPlayer()).inventory.getStackInSlot(currentIndex);
 			if(slotItemStack != null && slotItemStack.getItem() instanceof ItemAttachment) {
 				@SuppressWarnings("unchecked")
 				ItemAttachment<ItemMelee> attachmentItemFromInventory = (ItemAttachment<ItemMelee>) slotItemStack.getItem();

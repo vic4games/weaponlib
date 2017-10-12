@@ -12,6 +12,7 @@ import com.vicmatskiv.weaponlib.PlayerItemInstanceFactory;
 import com.vicmatskiv.weaponlib.Updatable;
 import com.vicmatskiv.weaponlib.perspective.PerspectiveRenderer;
 
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 
@@ -22,38 +23,22 @@ implements PlayerItemInstanceFactory<PlayerTabletInstance, TabletState>, Updatab
         
     public static final class Builder<T> extends AttachmentBuilder<T> {
         
-        private float minZoom;
-        private float maxZoom;
-        private boolean isOpticalZoom;
-        private BiConsumer<EntityPlayer, ItemStack> viewfinderPositioning;
+        private BiConsumer<EntityLivingBase, ItemStack> viewfinderPositioning;
         
-        public Builder<T> withZoomRange(float minZoom, float maxZoom) {
-            this.minZoom = minZoom;
-            this.maxZoom = maxZoom;
-            return this;
-        }
-        
-        public Builder<T> withOpticalZoom() {
-            this.isOpticalZoom = true;
-            return this;
-        }
-        
-        public Builder<T> withViewfinderPositioning(BiConsumer<EntityPlayer, ItemStack> viewfinderPositioning) {
+        public Builder<T> withViewfinderPositioning(BiConsumer<EntityLivingBase, ItemStack> viewfinderPositioning) {
             this.viewfinderPositioning = viewfinderPositioning;
             return this;
         }
         
         @Override
         protected ItemAttachment<T> createAttachment(ModContext modContext) {
-            if(isOpticalZoom) {
-                if(viewfinderPositioning == null) {
-                    viewfinderPositioning = (p, s) -> {
-                        GL11.glScalef(3f, 3f, 3f);
-                        GL11.glTranslatef(0.1f, 0.5f, 0.1f);
-                    };
-                }
-                withPostRender(new PerspectiveRenderer(viewfinderPositioning));
+            if(viewfinderPositioning == null) {
+                viewfinderPositioning = (p, s) -> {
+                    GL11.glScalef(3f, 3f, 3f);
+                    GL11.glTranslatef(0.1f, 0.5f, 0.1f);
+                };
             }
+            withPostRender(new PerspectiveRenderer(viewfinderPositioning));
             
             ItemTablet<T> itemTablet = new ItemTablet<>(this);
             itemTablet.modContext = modContext;
@@ -63,13 +48,6 @@ implements PlayerItemInstanceFactory<PlayerTabletInstance, TabletState>, Updatab
         
         @Override
         public ItemAttachment<T> build(ModContext modContext) {
-            this.apply2 = (a, instance) -> {
-                float zoom = minZoom + (maxZoom - minZoom) / 2f;
-                instance.setZoom(zoom);
-            };
-            this.remove2 = (a, instance) -> {
-                instance.setZoom(1);
-            };
             return super.build(modContext);
         }
     }
@@ -85,18 +63,6 @@ implements PlayerItemInstanceFactory<PlayerTabletInstance, TabletState>, Updatab
         
         setMaxStackSize(DEFAULT_MAX_STACK_SIZE);
     }
-    
-    public float getMinZoom() {
-        return builder.minZoom;
-    }
-    
-    public float getMaxZoom() {
-        return builder.maxZoom;
-    }
-    
-    public boolean isOptical() {
-        return builder.isOpticalZoom;
-    }
 
     @Override
     public void update(EntityPlayer player) {
@@ -104,11 +70,10 @@ implements PlayerItemInstanceFactory<PlayerTabletInstance, TabletState>, Updatab
     }
 
     @Override
-    public PlayerTabletInstance createItemInstance(EntityPlayer player, ItemStack stack, int slot) {
+    public PlayerTabletInstance createItemInstance(EntityLivingBase player, ItemStack stack, int slot) {
         PlayerTabletInstance instance = new PlayerTabletInstance(slot, player, stack);
         instance.setState(TabletState.READY);
         return instance;
     }
-
   
 }

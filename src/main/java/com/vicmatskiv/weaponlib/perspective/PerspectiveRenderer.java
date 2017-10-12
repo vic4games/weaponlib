@@ -16,7 +16,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleTransformType;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.ITextureObject;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 
@@ -52,10 +52,10 @@ public class PerspectiveRenderer implements CustomRenderer<RenderableState> {
     private static Perspective<RenderableState> STATIC_TEXTURE_PERSPECTIVE = new StaticTexturePerspective();
 
 	private ViewfinderModel model = new ViewfinderModel();
-	private BiConsumer<EntityPlayer, ItemStack> positioning;
+	private BiConsumer<EntityLivingBase, ItemStack> positioning;
 
 
-	public PerspectiveRenderer(BiConsumer<EntityPlayer, ItemStack> positioning) {
+	public PerspectiveRenderer(BiConsumer<EntityLivingBase, ItemStack> positioning) {
 		this.positioning = positioning;
 	}
 

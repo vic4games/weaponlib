@@ -21,6 +21,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleBlockState;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleItem;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleItemMethods;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTargetPoint;
@@ -30,6 +31,7 @@ import com.vicmatskiv.weaponlib.crafting.OptionsMetadata;
 import com.vicmatskiv.weaponlib.model.Shell;
 
 import net.minecraft.client.model.ModelBase;
+import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -38,7 +40,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
-public class Weapon extends CompatibleItem implements
+public class Weapon extends CompatibleItem implements CompatibleItemMethods,
 PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContainer, Reloadable, Modifiable, Updatable {
 
     private static final Logger logger = LogManager.getLogger(Weapon.class);
@@ -62,6 +64,8 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
         private String shootSound;
         private String silencedShootSound;
         private String reloadSound;
+        private String reloadIterationSound;
+        private String allReloadIterationsCompletedSound;
         private String unloadSound;
         private String ejectSpentRoundSound;
 
@@ -76,12 +80,14 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
         String crosshair;
         String crosshairRunning;
         String crosshairZoomed;
-        BiFunction<Weapon, EntityPlayer, ? extends WeaponSpawnEntity> spawnEntityWith;
-        BiFunction<PlayerWeaponInstance, EntityPlayer, ? extends EntityShellCasing> spawnShellWith;
+        BiFunction<Weapon, EntityLivingBase, ? extends WeaponSpawnEntity> spawnEntityWith;
+        BiFunction<PlayerWeaponInstance, EntityLivingBase, ? extends EntityShellCasing> spawnShellWith;
         private float spawnEntityDamage;
         private float spawnEntityExplosionRadius;
         private float spawnEntityGravityVelocity;
         long reloadingTimeout = Weapon.DEFAULT_RELOADING_TIMEOUT_TICKS;
+        long loadIterationTimeout = Weapon.DEFAULT_LOAD_ITERATION_TIMEOUT_TICKS;
+
         private String modId;
 
         boolean crosshairFullScreen = false;
@@ -135,12 +141,15 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
         private float shellCasingSideOffsetAimed = Weapon.DEFAULT_SHELL_CASING_SIDE_OFFSET_AIMED;
 
         public boolean shellCasingEjectEnabled = true;
+        
+        private boolean hasIteratedLoad;
 
         private ShellCasingEjectDirection shellCasingEjectDirection = ShellCasingEjectDirection.RIGHT;
 
         private float silencedShootSoundVolume = Weapon.DEFAULT_SILENCED_SHOOT_SOUND_VOLUME;
         private float shootSoundVolume = Weapon.DEFAULT_SHOOT_SOUND_VOLUME;
         private Object[] craftingRecipe;
+        
 
         public Builder withModId(String modId) {
             this.modId = modId;
@@ -179,6 +188,11 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
 
         public Builder withMaxBulletsPerReload(int maxBulletsPerReload) {
             this.maxBulletsPerReload = maxBulletsPerReload;
+            return this;
+        }
+        
+        public Builder withIteratedLoad() {
+            this.hasIteratedLoad = true;
             return this;
         }
 
@@ -292,6 +306,22 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
             this.reloadSound = reloadSound.toLowerCase(); //modId + ":" + reloadSound;
             return this;
         }
+        
+        public Builder withReloadIterationSound(String reloadIterationSound) {
+            if (modId == null) {
+                throw new IllegalStateException("ModId is not set");
+            }
+            this.reloadIterationSound = reloadIterationSound.toLowerCase(); //modId + ":" + reloadSound;
+            return this;
+        }
+        
+        public Builder withAllReloadIterationsCompletedSound(String allReloadIterationCompletedSound) {
+            if (modId == null) {
+                throw new IllegalStateException("ModId is not set");
+            }
+            this.allReloadIterationsCompletedSound = allReloadIterationCompletedSound.toLowerCase(); //modId + ":" + reloadSound;
+            return this;
+        }
 
         public Builder withUnloadSound(String unloadSound) {
             if (modId == null) {
@@ -365,12 +395,12 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
             return this;
         }
 
-        public Builder withCompatibleAttachment(ItemAttachment<Weapon> attachment, BiConsumer<EntityPlayer, ItemStack> positioning, Consumer<ModelBase> modelPositioning) {
+        public Builder withCompatibleAttachment(ItemAttachment<Weapon> attachment, BiConsumer<EntityLivingBase, ItemStack> positioning, Consumer<ModelBase> modelPositioning) {
             compatibleAttachments.put(attachment, new CompatibleAttachment<>(attachment, positioning, modelPositioning, false));
             return this;
         }
 
-        public Builder withCompatibleAttachment(ItemAttachment<Weapon> attachment, BiConsumer<EntityPlayer, ItemStack> positioning) {
+        public Builder withCompatibleAttachment(ItemAttachment<Weapon> attachment, BiConsumer<EntityLivingBase, ItemStack> positioning) {
             compatibleAttachments.put(attachment, new CompatibleAttachment<>(attachment, positioning, null, false));
             return this;
         }
@@ -381,13 +411,13 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
         }
 
         public Builder withCompatibleAttachment(ItemAttachment<Weapon> attachment, boolean isDefault,
-                BiConsumer<EntityPlayer, ItemStack> positioning, Consumer<ModelBase> modelPositioning) {
+                BiConsumer<EntityLivingBase, ItemStack> positioning, Consumer<ModelBase> modelPositioning) {
             compatibleAttachments.put(attachment, new CompatibleAttachment<>(attachment, positioning, modelPositioning, isDefault));
             return this;
         }
 
         public Builder withCompatibleAttachment(ItemAttachment<Weapon> attachment, boolean isDefault, boolean isPermanent,
-                BiConsumer<EntityPlayer, ItemStack> positioning, Consumer<ModelBase> modelPositioning) {
+                BiConsumer<EntityLivingBase, ItemStack> positioning, Consumer<ModelBase> modelPositioning) {
             compatibleAttachments.put(attachment, new CompatibleAttachment<>(attachment, positioning, modelPositioning, isDefault, isPermanent));
             return this;
         }
@@ -607,6 +637,8 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
 
             weapon.shootSound = modContext.registerSound(this.shootSound);
             weapon.reloadSound = modContext.registerSound(this.reloadSound);
+            weapon.reloadIterationSound = modContext.registerSound(this.reloadIterationSound);
+            weapon.allReloadIterationsCompletedSound = modContext.registerSound(this.allReloadIterationsCompletedSound);
             weapon.unloadSound = modContext.registerSound(this.unloadSound);
             weapon.silencedShootSound = modContext.registerSound(this.silencedShootSound);
 
@@ -663,6 +695,8 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
 
     private static final long DEFAULT_RELOADING_TIMEOUT_TICKS = 10;
     private static final long DEFAULT_UNLOADING_TIMEOUT_TICKS = 10;
+    private static final long DEFAULT_LOAD_ITERATION_TIMEOUT_TICKS = 10;
+    
     static final long MAX_RELOAD_TIMEOUT_TICKS = 60;
     static final long MAX_UNLOAD_TIMEOUT_TICKS = 60;
 
@@ -684,6 +718,8 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
     private CompatibleSound shootSound;
     private CompatibleSound silencedShootSound;
     private CompatibleSound reloadSound;
+    private CompatibleSound reloadIterationSound;
+    private CompatibleSound allReloadIterationsCompletedSound;
     private CompatibleSound unloadSound;
     private CompatibleSound ejectSpentRoundSound;
 
@@ -709,6 +745,15 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
 
     public CompatibleSound getReloadSound() {
         return reloadSound;
+    }
+    
+
+    public CompatibleSound getReloadIterationSound() {
+        return reloadIterationSound;
+    }
+    
+    public CompatibleSound getAllReloadIterationsCompletedSound() {
+        return allReloadIterationsCompletedSound;
     }
 
     public CompatibleSound getUnloadSound() {
@@ -738,7 +783,7 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
     public void onUpdate(ItemStack itemStack, World world, Entity entity, int p_77663_4_, boolean active) {
     }
 
-    public void changeRecoil(EntityPlayer player, float factor) {
+    public void changeRecoil(EntityLivingBase player, float factor) {
         PlayerWeaponInstance instance = modContext.getMainHeldWeapon();
         if(instance != null) {
             float recoil = instance.getWeapon().builder.recoil * factor;
@@ -790,7 +835,7 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
 
     }
 
-    int getAmmoCapacity() {
+    public int getAmmoCapacity() {
         return builder.ammoCapacity;
     }
 
@@ -821,7 +866,7 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
     }
 
     @Override
-    public List<CompatibleAttachment<? extends AttachmentContainer>> getActiveAttachments(EntityPlayer player, ItemStack itemStack) {
+    public List<CompatibleAttachment<? extends AttachmentContainer>> getActiveAttachments(EntityLivingBase player, ItemStack itemStack) {
         return modContext.getAttachmentAspect().getActiveAttachments(player, itemStack);
     }
 
@@ -850,13 +895,11 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
                 .map(e -> e.getKey())
                 .collect(Collectors.toList());
     }
-
-    @SuppressWarnings("unchecked")
+    
     @Override
-    public void addInformation(ItemStack itemStack, EntityPlayer entityPlayer,
-            @SuppressWarnings("rawtypes") List list, boolean p_77624_4_) {
-        if(list != null && builder.informationProvider != null) {
-            list.addAll(builder.informationProvider.apply(itemStack));
+    public void addInformation(ItemStack itemStack, List<String> info, boolean flag) {
+        if(info != null && builder.informationProvider != null) {
+            info.addAll(builder.informationProvider.apply(itemStack));
         }
     }
 
@@ -881,7 +924,7 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
     }
 
     @Override
-    public PlayerWeaponInstance createItemInstance(EntityPlayer player, ItemStack itemStack, int slot){
+    public PlayerWeaponInstance createItemInstance(EntityLivingBase player, ItemStack itemStack, int slot){
         PlayerWeaponInstance instance = new PlayerWeaponInstance(slot, player, itemStack);
         //state.setAmmo(Tags.getAmmo(itemStack)); // TODO: get ammo properly
         instance.setState(WeaponState.READY);
@@ -943,6 +986,14 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
     public long getTotalReloadingDuration() {
         //logger.debug("Total load duration " + builder.renderer.getTotalReloadingDuration());
         return builder.renderer.getTotalReloadingDuration();
+    }
+    
+    public long getPrepareFirstLoadIterationAnimationDuration() {
+        return builder.renderer.getPrepareFirstLoadIterationAnimationDuration();
+    }
+    
+    public long getTotalLoadIterationDuration() {
+        return builder.renderer.getTotalLoadIterationDuration();
     }
 
     public long getTotalUnloadingDuration() {
@@ -1062,5 +1113,29 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
 
     public float getShootSoundVolume() {
         return builder.shootSoundVolume;
+    }
+
+    public boolean hasIteratedLoad() {
+        return builder.hasIteratedLoad;
+    }
+    
+    public float getSpawnEntityVelocity() {
+        return builder.spawnEntitySpeed;
+    }
+    
+    public float getSpawnEntityGravityVelocity() {
+        return builder.spawnEntityGravityVelocity;
+    }
+
+    public float getSpawnEntityDamage() {
+        return builder.spawnEntityDamage;
+    }
+    
+    public float getSpawnEntityExplosionRadius() {
+        return builder.spawnEntityExplosionRadius;
+    }
+    
+    public float getInaccuracy() {
+        return builder.inaccuracy;
     }
 }

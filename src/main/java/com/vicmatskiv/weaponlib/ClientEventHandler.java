@@ -13,27 +13,41 @@ import org.apache.logging.log4j.Logger;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientTickEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientTickEvent.Phase;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleExposureCapability;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderHandEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderTickEvent;
 import com.vicmatskiv.weaponlib.perspective.Perspective;
+import com.vicmatskiv.weaponlib.shader.DynamicShaderContext;
+import com.vicmatskiv.weaponlib.shader.DynamicShaderGroupManager;
+import com.vicmatskiv.weaponlib.shader.DynamicShaderGroupSource;
+import com.vicmatskiv.weaponlib.shader.DynamicShaderPhase;
 import com.vicmatskiv.weaponlib.tracking.PlayerEntityTracker;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 
 public class ClientEventHandler extends CompatibleClientEventHandler {
 
-	private static final UUID SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER_UUID = UUID.fromString("8efa8469-0256-4f8e-bdd9-3e7b23970663");
+	private static final float SLOW_DOWN_WHEN_POISONED_DOSE_THRESHOLD = 0.4f;
+	
+    private static final UUID SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER_UUID = UUID.fromString("8efa8469-0256-4f8e-bdd9-3e7b23970663");
 	private static final AttributeModifier SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER = (new AttributeModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER_UUID, "Slow Down While Zooming", -0.5, 2)).setSaved(false);
+    
+	private static final UUID SLOW_DOWN_WHILE_POISONED_ATTRIBUTE_MODIFIER_UUID = UUID.fromString("9d2eac95-9b9c-4942-8287-7952c6de353e");
+    private static final AttributeModifier SLOW_DOWN_WHILE_POISONED_ATTRIBUTE_MODIFIER = (new AttributeModifier(SLOW_DOWN_WHILE_POISONED_ATTRIBUTE_MODIFIER_UUID, "Slow Down While Poisoned", -0.7, 2)).setSaved(false);
 
-	private static final Logger logger = LogManager.getLogger(ClientEventHandler.class);
+	@SuppressWarnings("unused")
+    private static final Logger logger = LogManager.getLogger(ClientEventHandler.class);
 
 	private Lock mainLoopLock = new ReentrantLock();
 	private SafeGlobals safeGlobals;
 	private Queue<Runnable> runInClientThreadQueue;
-	private long renderEndNanoTime;
-
 
 	private ClientModContext modContext;
+    private DynamicShaderGroupManager shaderGroupManager;
+    private PipelineShaderGroupSourceProvider pipelineShaderGroupSourceProvider = new PipelineShaderGroupSourceProvider();
 
 
 	public ClientEventHandler(ClientModContext modContext, Lock mainLoopLock, SafeGlobals safeGlobals,
@@ -42,7 +56,7 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 		this.mainLoopLock = mainLoopLock;
 		this.safeGlobals = safeGlobals;
 		this.runInClientThreadQueue = runInClientThreadQueue;
-        this.renderEndNanoTime = System.nanoTime();
+        this.shaderGroupManager = new DynamicShaderGroupManager();
         //this.reloadAspect = reloadAspect;
 	}
 
@@ -57,6 +71,7 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 			if(tracker != null) {
 			    tracker.update();
 			}
+			
 			mainLoopLock.unlock();
 			processRunInClientThreadQueue();
 			safeGlobals.objectMouseOver.set(compatibility.getObjectMouseOver());
@@ -67,7 +82,7 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 		}
 	}
 
-	private void update() {
+    private void update() {
 		EntityPlayer player = compatibility.clientPlayer();
 		modContext.getPlayerItemInstanceRegistry().update(player);
 		PlayerWeaponInstance mainHandHeldWeaponInstance = modContext.getMainHeldWeapon();
@@ -76,30 +91,42 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 				mainHandHeldWeaponInstance.setAimed(false);
 			}
 			if(mainHandHeldWeaponInstance.isAimed()) {
-				slowPlayerDown(player);
+				slowPlayerDown(player, SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER);
 			} else {
-				restorePlayerSpeed(player);
+				restorePlayerSpeed(player, SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER);
 			}
 		} else if(player != null){
-			restorePlayerSpeed(player);
+			restorePlayerSpeed(player, SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER);
+		}
+		
+		
+		if(player != null) {
+		    ItemStack helmet = compatibility.getHelmet();
+		    
+		    SpreadableExposure spreadableExposure = CompatibleExposureCapability.getExposure(compatibility.clientPlayer(), SpreadableExposure.class);
+	        if(spreadableExposure != null && spreadableExposure.getTotalDose() > SLOW_DOWN_WHEN_POISONED_DOSE_THRESHOLD) {
+	            slowPlayerDown(player, SLOW_DOWN_WHILE_POISONED_ATTRIBUTE_MODIFIER);
+	        } else {
+	            restorePlayerSpeed(player, SLOW_DOWN_WHILE_POISONED_ATTRIBUTE_MODIFIER);
+	        }
 		}
 	}
 
 	// TODO: create player utils, move this method
-	private void restorePlayerSpeed(EntityPlayer entityPlayer) {
+	private void restorePlayerSpeed(EntityPlayer entityPlayer, AttributeModifier modifier) {
 		if(entityPlayer.getEntityAttribute(compatibility.getMovementSpeedAttribute())
-				.getModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER.getID()) != null) {
+				.getModifier(modifier.getID()) != null) {
 			entityPlayer.getEntityAttribute(compatibility.getMovementSpeedAttribute())
-				.removeModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER);
+				.removeModifier(modifier);
 		}
 	}
 
 	// TODO: create player utils, move this method
-	private void slowPlayerDown(EntityPlayer entityPlayer) {
+	private void slowPlayerDown(EntityPlayer entityPlayer, AttributeModifier modifier) {
 		if(entityPlayer.getEntityAttribute(compatibility.getMovementSpeedAttribute())
-				.getModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER.getID()) == null) {
+				.getModifier(modifier.getID()) == null) {
 			entityPlayer.getEntityAttribute(compatibility.getMovementSpeedAttribute())
-				.applyModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER);
+				.applyModifier(modifier);
 		}
 	}
 
@@ -111,20 +138,57 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 	}
 
 	@Override
-    protected void onCompatibleRenderTickEvent(CompatibleRenderTickEvent event) {
-        if(event.getPhase() ==  CompatibleRenderTickEvent.Phase.START && compatibility.clientPlayer() != null) {
+	public void onCompatibleRenderHand(CompatibleRenderHandEvent event) {
+	    
+	    Minecraft minecraft = Minecraft.getMinecraft();
+	    if(minecraft.gameSettings.thirdPersonView == 0) {
+	        PlayerWeaponInstance weaponInstance = modContext.getMainHeldWeapon();
+	        
+	        DynamicShaderContext shaderContext = new DynamicShaderContext(DynamicShaderPhase.PRE_ITEM_RENDER,
+	                null,
+	                minecraft.getFramebuffer(),
+	                event.getPartialTicks())
+	                .withProperty("weaponInstance", weaponInstance);
+	        shaderGroupManager.applyShader(shaderContext, weaponInstance);
+	    }
+	}
+		
 
-            PlayerItemInstance<?> instance = modContext.getPlayerItemInstanceRegistry()
-                    .getMainHandItemInstance(compatibility.clientPlayer());
-            if(instance != null) {
-                Perspective<?> view = modContext.getViewManager().getPerspective(instance, true);
-                if(view != null) {
-                    view.update(event);
+	@Override
+    protected void onCompatibleRenderTickEvent(CompatibleRenderTickEvent event) {
+
+        Minecraft minecraft = Minecraft.getMinecraft();
+        DynamicShaderContext shaderContext = new DynamicShaderContext(DynamicShaderPhase.POST_WORLD_RENDER,
+                minecraft.entityRenderer,
+                minecraft.getFramebuffer(), event.getRenderTickTime());
+
+        EntityPlayer clientPlayer = compatibility.clientPlayer();
+        
+        if(event.getPhase() == CompatibleRenderTickEvent.Phase.START ) {
+            mainLoopLock.lock();
+            if(clientPlayer != null) {
+                PlayerItemInstance<?> instance = modContext.getPlayerItemInstanceRegistry()
+                        .getMainHandItemInstance(clientPlayer);
+
+                if(minecraft.gameSettings.thirdPersonView == 0) {
+                    DynamicShaderGroupSource source = pipelineShaderGroupSourceProvider.getShaderSource(shaderContext.getPhase());
+                    if(source != null) {
+                        shaderGroupManager.loadFromSource(shaderContext, source);
+                    }
+                }
+
+                if(instance != null) {
+                    Perspective<?> view = modContext.getViewManager().getPerspective(instance, true);
+                    if(view != null) {
+                        view.update(event);
+                    }
                 }
             }
 
-        } else if(event.getPhase() ==  CompatibleRenderTickEvent.Phase.END) {
+        } else if(event.getPhase() == CompatibleRenderTickEvent.Phase.END) {
             safeGlobals.renderingPhase.set(null);
+            shaderGroupManager.removeStaleShaders(shaderContext);
+            mainLoopLock.unlock();
         }
     }
 

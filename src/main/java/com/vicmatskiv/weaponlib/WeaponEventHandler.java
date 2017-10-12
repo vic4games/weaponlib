@@ -3,6 +3,7 @@ package com.vicmatskiv.weaponlib;
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleEntityJoinWorldEvent;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleExposureCapability;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponEventHandler;
 import com.vicmatskiv.weaponlib.grenade.PlayerGrenadeInstance;
 import com.vicmatskiv.weaponlib.melee.PlayerMeleeInstance;
@@ -44,22 +45,29 @@ public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 
 		//ItemStack stack = compatibility.getHeldItemMainHand(compatibility.getEntity(event));
 		PlayerWeaponInstance instance = modContext.getMainHeldWeapon();
+		EntityPlayer clientPlayer = compatibility.clientPlayer();
 		if (instance != null) {
 
-			final float fov;
-			if(instance.isAttachmentZoomEnabled()) {
-				if(safeGlobals.renderingPhase.get() == RenderingPhase.RENDER_PERSPECTIVE) {
-					fov = instance.getZoom();
-				} else {
-					fov = compatibility.isFlying(compatibility.clientPlayer()) ? 1.1f : 1.0f;
-				}
-			} else {
-				fov = compatibility.isFlying(compatibility.clientPlayer()) ? 1.1f : 1.0f; //instance.isAimed() ? instance.getZoom() : 1f;
-			}
+		    final float fov;
+		    if(instance.isAttachmentZoomEnabled()) {
+		        if(safeGlobals.renderingPhase.get() == RenderingPhase.RENDER_PERSPECTIVE) {
+		            fov = instance.getZoom();
+		        } else {
+		            fov = compatibility.isFlying(clientPlayer) ? 1.1f : 1.0f;
+		        }
+		    } else {
+		        fov = compatibility.isFlying(compatibility.clientPlayer()) ? 1.1f : 1.0f; //instance.isAimed() ? instance.getZoom() : 1f;
+		    }
 
-			compatibility.setNewFov(event, fov); //Tags.getZoom(stack));
-
+		    compatibility.setNewFov(event, fov); //Tags.getZoom(stack));
+		} else {
+		    SpreadableExposure spreadableExposure = CompatibleExposureCapability.getExposure(compatibility.clientPlayer(), SpreadableExposure.class);
+            if(spreadableExposure != null && spreadableExposure.getTotalDose() > 0f) {
+                float fov = compatibility.isFlying(compatibility.clientPlayer()) ? 1.1f : 1.0f; 
+                compatibility.setNewFov(event, fov);
+            }
 		}
+		
 	}
 
 	@Override

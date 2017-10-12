@@ -60,7 +60,7 @@ public class EntityBounceable extends Entity implements Contextual, CompatibleIE
     private float rotationSlowdownFactor = 0.99f;
     private float maxRotationChange = 20f;
 
-    private boolean stopped;
+    protected boolean stopped;
 
     private Queue<Double> velocityHistory = new ArrayDeque<>(VELOCITY_HISTORY_SIZE);
 
@@ -71,7 +71,8 @@ public class EntityBounceable extends Entity implements Contextual, CompatibleIE
         this.gravityVelocity = gravityVelocity;
         this.rotationSlowdownFactor = rotationSlowdownFactor;
         this.setSize(0.3F, 0.3F);
-        this.setLocationAndAngles(thrower.posX, thrower.posY + (double)thrower.getEyeHeight(), thrower.posZ, thrower.rotationYaw, thrower.rotationPitch);
+        this.setLocationAndAngles(thrower.posX, thrower.posY + (double)thrower.getEyeHeight(), thrower.posZ, 
+                compatibility.getCompatibleAimingRotationYaw(thrower), thrower.rotationPitch);
         this.posX -= (double)(CompatibleMathHelper.cos(this.rotationYaw / 180.0F * (float)Math.PI) * 0.16F);
         this.posY -= 0.10000000149011612D;
         this.posZ -= (double)(CompatibleMathHelper.sin(this.rotationYaw / 180.0F * (float)Math.PI) * 0.16F);

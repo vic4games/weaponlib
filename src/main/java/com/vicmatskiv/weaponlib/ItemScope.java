@@ -6,7 +6,7 @@ import org.lwjgl.opengl.GL11;
 
 import com.vicmatskiv.weaponlib.perspective.PerspectiveRenderer;
 
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemStack;
 
 public class ItemScope extends ItemAttachment<Weapon> {
@@ -18,7 +18,8 @@ public class ItemScope extends ItemAttachment<Weapon> {
         private float minZoom;
         private float maxZoom;
         private boolean isOpticalZoom;
-        private BiConsumer<EntityPlayer, ItemStack> viewfinderPositioning;
+        private boolean hasNightVision;
+        private BiConsumer<EntityLivingBase, ItemStack> viewfinderPositioning;
 
         public Builder withZoomRange(float minZoom, float maxZoom) {
             this.minZoom = minZoom;
@@ -30,8 +31,13 @@ public class ItemScope extends ItemAttachment<Weapon> {
             this.isOpticalZoom = true;
             return this;
         }
+        
+        public Builder withNightVision() {
+            this.hasNightVision = true;
+            return this;
+        }
 
-        public Builder withViewfinderPositioning(BiConsumer<EntityPlayer, ItemStack> viewfinderPositioning) {
+        public Builder withViewfinderPositioning(BiConsumer<EntityLivingBase, ItemStack> viewfinderPositioning) {
             this.viewfinderPositioning = viewfinderPositioning;
             return this;
         }
@@ -91,28 +97,7 @@ public class ItemScope extends ItemAttachment<Weapon> {
         return builder.isOpticalZoom;
     }
 
-//    private static float getBrightness(RenderContext<RenderableState> renderContext) {
-//        float brightness = 0f;
-//        PlayerWeaponInstance instance = renderContext.getWeaponInstance();
-//        if(instance == null) {
-//            return 0f;
-//        }
-//        boolean aimed = instance != null && instance.isAimed();
-//        float progress = Math.min(1f, renderContext.getTransitionProgress());
-//
-//        if(isAimingState(renderContext.getFromState()) && isAimingState(renderContext.getToState())) {
-//            brightness = 1f;
-//        } else if(progress > 0f && aimed) {
-//            brightness = progress;
-//        } else if(isAimingState(renderContext.getFromState()) && progress > 0f && !aimed) {
-//            brightness = Math.max(1 - progress, 0f);
-//        }
-//        return brightness;
-//    }
-//
-//    private static boolean isAimingState(RenderableState renderableState) {
-//        return renderableState == RenderableState.ZOOMING
-//                || renderableState ==RenderableState.ZOOMING_RECOILED
-//                || renderableState ==RenderableState.ZOOMING_SHOOTING;
-//    }
+    public boolean hasNightVision() {
+        return builder.hasNightVision;
+    }
 }

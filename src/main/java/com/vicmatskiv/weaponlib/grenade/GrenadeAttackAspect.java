@@ -13,10 +13,12 @@ import org.apache.logging.log4j.Logger;
 import com.vicmatskiv.weaponlib.CommonModContext;
 import com.vicmatskiv.weaponlib.Explosion;
 import com.vicmatskiv.weaponlib.ModContext;
+import com.vicmatskiv.weaponlib.grenade.ItemGrenade.Type;
 import com.vicmatskiv.weaponlib.state.Aspect;
 import com.vicmatskiv.weaponlib.state.PermitManager;
 import com.vicmatskiv.weaponlib.state.StateManager;
 
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 
 
@@ -36,8 +38,8 @@ public class GrenadeAttackAspect implements Aspect<GrenadeState, PlayerGrenadeIn
             instance -> System.currentTimeMillis() >  instance.getStateUpdateTimestamp()
                 + instance.getWeapon().getReequipTimeout();
 
-    private static Predicate<PlayerGrenadeInstance> isSmokeGrenade =
-                    instance -> instance.getWeapon().isSmokeOnly();
+//    private static Predicate<PlayerGrenadeInstance> isSmokeGrenade =
+//                    instance -> instance.getWeapon().isSmokeOnly();
 
 //    private static Predicate<PlayerGrenadeInstance> takingOffSafetyPinCompleted = instance ->
 //            System.currentTimeMillis() >= instance.getStateUpdateTimestamp()
@@ -93,7 +95,7 @@ public class GrenadeAttackAspect implements Aspect<GrenadeState, PlayerGrenadeIn
 
         .in(this).change(GrenadeState.STRIKER_LEVER_RELEASED).to(GrenadeState.EXPLODED_IN_HANDS)
         .withAction(i -> explode(i))
-        .when(explosionTimeoutExpired.and(isSmokeGrenade.negate()))
+        .when(explosionTimeoutExpired.and(i -> i.getWeapon().getType() == Type.REGULAR))
         .automatic()
 
         .in(this).change(GrenadeState.READY).to(GrenadeState.THROWING)
@@ -128,7 +130,7 @@ public class GrenadeAttackAspect implements Aspect<GrenadeState, PlayerGrenadeIn
     private void throwIt(PlayerGrenadeInstance instance) {
         logger.debug("Throwing with state " + instance.getState());
         long activationTimestamp;
-        if(instance.getWeapon().isSmokeOnly()) {
+        if(instance.getWeapon().getType() != Type.REGULAR) {
             activationTimestamp = System.currentTimeMillis();
         } else if(instance.getWeapon().getExplosionTimeout() > 0) {
             activationTimestamp = instance.getActivationTimestamp();
@@ -174,7 +176,7 @@ public class GrenadeAttackAspect implements Aspect<GrenadeState, PlayerGrenadeIn
         PlayerGrenadeInstance grenadeInstance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerGrenadeInstance.class);
         if(grenadeInstance != null) {
             if(grenadeInstance.getState() == GrenadeState.STRIKER_LEVER_RELEASED
-                    && !grenadeInstance.getWeapon().isSmokeOnly()
+                    && grenadeInstance.getWeapon().getType() == Type.REGULAR
                     && System.currentTimeMillis() > grenadeInstance.getLastSafetyPinAlertTimestamp() + SAFETY_IN_ALERT_TIMEOUT) {
                 long remainingTimeUntilExplosion = grenadeInstance.getWeapon().getExplosionTimeout() - (
                                 System.currentTimeMillis() - grenadeInstance.getActivationTimestamp());
@@ -193,14 +195,23 @@ public class GrenadeAttackAspect implements Aspect<GrenadeState, PlayerGrenadeIn
 
     public void serverThrowGrenade(EntityPlayer player, PlayerGrenadeInstance instance, long activationTimestamp) {
         logger.debug("Throwing grenade");
-        boolean isSmokeGrenade = instance.getWeapon().isSmokeOnly();
-        if(activationTimestamp == 0 && !isSmokeGrenade) {
+        
+        //boolean isSmokeGrenade = instance.getWeapon().isSmokeOnly();
+        
+        serverThrowGrenade(modContext, player, instance, activationTimestamp);
+
+        compatibility.consumeInventoryItemFromSlot(player, instance.getItemInventoryIndex());
+    }
+
+    public static void serverThrowGrenade(ModContext modContext, EntityLivingBase player, PlayerGrenadeInstance instance,
+            long activationTimestamp) {
+        if(activationTimestamp == 0 && instance.getWeapon().getType() == Type.REGULAR) {
             // explode immediately
 
             Explosion.createServerSideExplosion(modContext, compatibility.world(player), null,
                     player.posX, player.posY, player.posZ, instance.getWeapon().getExplosionStrength(), false, true);
 
-        } else if(isSmokeGrenade) {
+        } else if(instance.getWeapon().getType() == Type.SMOKE) {
             float velocity = instance.isThrowingFar() ? instance.getWeapon().getFarVelocity() : instance.getWeapon().getVelocity();
             EntitySmokeGrenade entityGrenade = new EntitySmokeGrenade.Builder()
                     .withThrower(player)
@@ -208,6 +219,21 @@ public class GrenadeAttackAspect implements Aspect<GrenadeState, PlayerGrenadeIn
                     .withGrenade(instance.getWeapon())
                     .withSmokeAmount(instance.getWeapon().getExplosionStrength())
                     .withActivationDelay(0) //instance.getWeapon().getExplosionTimeout())
+                    .withActiveDuration(instance.getWeapon().getActiveDuration())
+                    .withVelocity(velocity)
+                    .withGravityVelocity(instance.getWeapon().getGravityVelocity())
+                    .withRotationSlowdownFactor(instance.getWeapon().getRotationSlowdownFactor())
+                    .build(modContext);
+            logger.debug("Throwing velocity {} ", velocity);
+            compatibility.spawnEntity(player, entityGrenade);
+        } else if(instance.getWeapon().getType() == Type.GAS) {
+            float velocity = instance.isThrowingFar() ? instance.getWeapon().getFarVelocity() : instance.getWeapon().getVelocity();
+            EntityGasGrenade entityGrenade = new EntityGasGrenade.Builder()
+                    .withThrower(player)
+                    .withActivationTimestamp(activationTimestamp)
+                    .withGrenade(instance.getWeapon())
+                    .withSmokeAmount(instance.getWeapon().getExplosionStrength())
+                    .withActivationDelay(0)
                     .withActiveDuration(instance.getWeapon().getActiveDuration())
                     .withVelocity(velocity)
                     .withGravityVelocity(instance.getWeapon().getGravityVelocity())
@@ -230,8 +256,6 @@ public class GrenadeAttackAspect implements Aspect<GrenadeState, PlayerGrenadeIn
             logger.debug("Throwing velocity {} ", velocity);
             compatibility.spawnEntity(player, entityGrenade);
         }
-
-        compatibility.consumeInventoryItemFromSlot(player, instance.getItemInventoryIndex());
     }
 
     int getParticleCount(float damage) {

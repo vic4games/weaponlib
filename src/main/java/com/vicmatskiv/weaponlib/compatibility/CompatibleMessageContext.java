@@ -18,11 +18,11 @@ public class CompatibleMessageContext {
 	}
 
 	public EntityPlayer getPlayer() {
-		return ctx.getServerHandler().playerEntity;
+		return ctx.getServerHandler().player;
 	}
 
 	public void runInMainThread(Runnable runnable) {
-		IThreadListener mainThread = (IThreadListener) ctx.getServerHandler().playerEntity.world;
+		IThreadListener mainThread = (IThreadListener) ctx.getServerHandler().player.world;
 		mainThread.addScheduledTask(runnable);
 	}
 

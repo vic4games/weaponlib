@@ -6,7 +6,13 @@ import io.netty.buffer.ByteBuf;
 
 public class SpawnParticleMessage implements CompatibleMessage {
 
-    public enum ParticleType { BLOOD, SHELL, SMOKE_GRENADE_SMOKE }
+    public enum ParticleType { BLOOD(false), SHELL(false), SMOKE_GRENADE_SMOKE(true), SMOKE_GRENADE_YELLOW_SMOKE(true);
+        
+        private boolean isSmokeParticle;
+        private ParticleType(boolean isSmokeParticle) {
+            this.isSmokeParticle = isSmokeParticle;
+        }
+    }
 
     private double posX;
     private double posY;
@@ -45,7 +51,7 @@ public class SpawnParticleMessage implements CompatibleMessage {
         posX = buf.readDouble();
         posY = buf.readDouble();
         posZ = buf.readDouble();
-        if(particleType == ParticleType.SMOKE_GRENADE_SMOKE) {
+        if(particleType.isSmokeParticle) {
             motionX = buf.readDouble();
             motionY = buf.readDouble();
             motionZ = buf.readDouble();
@@ -58,7 +64,7 @@ public class SpawnParticleMessage implements CompatibleMessage {
         buf.writeDouble(posX);
         buf.writeDouble(posY);
         buf.writeDouble(posZ);
-        if(particleType == ParticleType.SMOKE_GRENADE_SMOKE) {
+        if(particleType.isSmokeParticle) {
             buf.writeDouble(motionX);
             buf.writeDouble(motionY);
             buf.writeDouble(motionZ);

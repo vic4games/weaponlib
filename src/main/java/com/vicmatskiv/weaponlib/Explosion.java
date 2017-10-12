@@ -22,9 +22,14 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityTNTPrimed;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
 public class Explosion {
+    
+    private static final ResourceLocation SMOKE_TEXTURE = new ResourceLocation(
+            "weaponlib:/com/vicmatskiv/weaponlib/resources/large-smoke.png");
+
 
     private ModContext modContext;
     /** whether or not the explosion sets fire to blocks around it */
@@ -307,7 +312,8 @@ public class Explosion {
                             pX, pY, pZ, motionX, motionY, motionZ,
                             1f,
                             250 + (int)(world.rand.nextFloat() * 30),
-                            ExplosionSmokeFX.Behavior.EXPLOSION);
+                            ExplosionSmokeFX.Behavior.EXPLOSION,
+                            SMOKE_TEXTURE);
                 }
             }
         }

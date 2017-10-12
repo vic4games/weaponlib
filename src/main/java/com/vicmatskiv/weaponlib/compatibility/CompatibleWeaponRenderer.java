@@ -27,10 +27,10 @@ import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.model.ModelPlayer;
+import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
@@ -52,11 +52,10 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHandSide;
 import net.minecraft.world.World;
-import net.minecraftforge.client.model.IPerspectiveAwareModel;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer implements IPerspectiveAwareModel, IBakedModel {
+public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer implements IBakedModel {
 
     private static final int INVENTORY_TEXTURE_WIDTH = 256;
     private static final int INVENTORY_TEXTURE_HEIGHT = 256;
@@ -75,7 +74,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
         }
     }
 
-    protected EntityPlayer player;
+    protected EntityLivingBase player;
 
     protected TextureManager textureManager;
 
@@ -96,7 +95,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
         public IBakedModel handleItemState(IBakedModel originalModel, ItemStack stack, World world,
                 EntityLivingBase entity) {
             CompatibleWeaponRenderer.this.itemStack = stack;
-            CompatibleWeaponRenderer.this.player = (EntityPlayer) entity;
+            CompatibleWeaponRenderer.this.player = entity;
             return super.handleItemState(originalModel, stack, world, entity);
         }
     }
@@ -129,7 +128,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
                 ) {
 
             Tessellator tessellator = Tessellator.getInstance();
-            VertexBuffer worldrenderer = tessellator.getBuffer();
+            BufferBuilder worldrenderer = tessellator.getBuffer();
             tessellator.draw();
             GlStateManager.pushMatrix();
 
@@ -182,13 +181,13 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
         return Minecraft.getMinecraft().getTextureMapBlocks().getMissingSprite();
     }
 
-    public void setOwner(EntityPlayer player) {
+    public void setOwner(EntityLivingBase player) {
         this.player = player;
     }
 
     protected abstract ClientModContext getClientModContext();
 
-    protected abstract StateDescriptor getStateDescriptor(EntityPlayer player, ItemStack itemStack);
+    protected abstract StateDescriptor getStateDescriptor(EntityLivingBase player, ItemStack itemStack);
 
     @SideOnly(Side.CLIENT)
     public void renderItem()
@@ -419,7 +418,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
         tessellator.draw();
     }
 
-    static <T> void renderRightArm(EntityPlayer player, RenderContext<T> renderContext,
+    static <T> void renderRightArm(EntityLivingBase player, RenderContext<T> renderContext,
             Positioner<Part, RenderContext<T>> positioner) {
         Render<AbstractClientPlayer> entityRenderObject = Minecraft.getMinecraft().getRenderManager().getEntityRenderObject((AbstractClientPlayer)player);
         RenderPlayer render = (RenderPlayer) entityRenderObject;
@@ -442,7 +441,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
         GL11.glPopMatrix();
     }
 
-    static <T> void renderLeftArm(EntityPlayer player, RenderContext<T> renderContext,
+    static <T> void renderLeftArm(EntityLivingBase player, RenderContext<T> renderContext,
             Positioner<Part, RenderContext<T>> positioner) {
         Render<AbstractClientPlayer> entityRenderObject = Minecraft.getMinecraft().getRenderManager().getEntityRenderObject((AbstractClientPlayer)player);
         RenderPlayer render = (RenderPlayer) entityRenderObject;
@@ -493,7 +492,8 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 
         if (clientPlayer.isSpectator())
         {
-            modelplayer.setInvisible(false);
+            //modelplayer.setInvisible(false);
+            modelplayer.setVisible(true);
             modelplayer.bipedHead.showModel = true;
             modelplayer.bipedHeadwear.showModel = true;
         }
@@ -501,7 +501,8 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
         {
             ItemStack itemstack = clientPlayer.getHeldItemMainhand();
             ItemStack itemstack1 = clientPlayer.getHeldItemOffhand();
-            modelplayer.setInvisible(true);
+            //modelplayer.setInvisible(true);
+            modelplayer.setVisible(false);
             modelplayer.bipedHeadwear.showModel = clientPlayer.isWearing(EnumPlayerModelParts.HAT);
             modelplayer.bipedBodyWear.showModel = clientPlayer.isWearing(EnumPlayerModelParts.JACKET);
             modelplayer.bipedLeftLegwear.showModel = clientPlayer.isWearing(EnumPlayerModelParts.LEFT_PANTS_LEG);

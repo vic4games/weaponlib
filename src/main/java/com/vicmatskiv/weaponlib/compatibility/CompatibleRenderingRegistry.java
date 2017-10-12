@@ -13,6 +13,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ItemModelMesher;
 import net.minecraft.client.renderer.RenderItem;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.Item;
@@ -36,6 +37,9 @@ public class CompatibleRenderingRegistry implements ICustomModelLoader {
 	public CompatibleRenderingRegistry(String modId) {
 		this.modId = modId;
 		ModelLoaderRegistry.registerLoader(this);
+		{
+		    System.setProperty("fml.reloadResourcesOnStart", "true");
+		}
 	}
 
 	@SideOnly(Side.CLIENT)
@@ -73,9 +77,9 @@ public class CompatibleRenderingRegistry implements ICustomModelLoader {
 		return ModelLoaderRegistry.getMissingModel();
 	}
 
-	@SuppressWarnings("deprecation")
+	@SuppressWarnings({ "deprecation", "unchecked" })
 	public void registerEntityRenderingHandler(Class<? extends Entity> class1,
-	        CompatibleEntityRenderer spawnEntityRenderer) {
-		RenderingRegistry.registerEntityRenderingHandler(class1, spawnEntityRenderer);
+	        Object spawnEntityRenderer) {
+		RenderingRegistry.registerEntityRenderingHandler(class1, (Render<? extends Entity>) spawnEntityRenderer);
 	}
 }

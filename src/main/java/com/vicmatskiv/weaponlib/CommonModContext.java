@@ -11,6 +11,7 @@ import com.vicmatskiv.weaponlib.WeaponAttachmentAspect.EnterAttachmentModePermit
 import com.vicmatskiv.weaponlib.WeaponAttachmentAspect.ExitAttachmentModePermit;
 import com.vicmatskiv.weaponlib.WeaponReloadAspect.UnloadPermit;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleExposureCapability;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatiblePlayerEntityTrackerProvider;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSide;
@@ -20,6 +21,7 @@ import com.vicmatskiv.weaponlib.crafting.RecipeManager;
 import com.vicmatskiv.weaponlib.electronics.EntityWirelessCamera;
 import com.vicmatskiv.weaponlib.electronics.PlayerTabletInstance;
 import com.vicmatskiv.weaponlib.electronics.TabletState;
+import com.vicmatskiv.weaponlib.grenade.EntityGasGrenade;
 import com.vicmatskiv.weaponlib.grenade.EntityGrenade;
 import com.vicmatskiv.weaponlib.grenade.EntitySmokeGrenade;
 import com.vicmatskiv.weaponlib.grenade.GrenadeAttackAspect;
@@ -47,6 +49,8 @@ import com.vicmatskiv.weaponlib.state.StateManager;
 import com.vicmatskiv.weaponlib.tracking.SyncPlayerEntityTrackerMessage;
 import com.vicmatskiv.weaponlib.tracking.SyncPlayerEntityTrackerMessageMessageHandler;
 
+import net.minecraft.client.renderer.entity.Render;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
@@ -73,10 +77,13 @@ public class CommonModContext implements ModContext {
         TypeRegistry.getInstance().register(PlayerTabletInstance.class);
         TypeRegistry.getInstance().register(MeleeState.class);
         TypeRegistry.getInstance().register(TabletState.class);
+        TypeRegistry.getInstance().register(SpreadableExposure.class);
     }
 
 	protected String modId;
 
+	protected Object mod;
+	
 	protected CompatibleChannel channel;
 
 	protected WeaponReloadAspect weaponReloadAspect;
@@ -104,18 +111,23 @@ public class CommonModContext implements ModContext {
 	private CompatibleSound changeFireModeSound;
 
 	private CompatibleSound noAmmoSound;
+	
+    private CompatibleSound explosionSound;
+    
+    private CompatibleSound nightVisionOnSound;
+    
+    private CompatibleSound nightVisionOffSound;
 
 	private int modEntityID = 256;
 
     private GrenadeAttackAspect grenadeAttackAspect;
 
-    private CompatibleSound explosionSound;
-
     protected ConfigurationManager configurationManager;
 
 	@Override
     public void init(Object mod, String modId, ConfigurationManager configurationManager, CompatibleChannel channel) {
-		this.channel = channel;
+		this.mod = mod;
+	    this.channel = channel;
 		this.modId = modId;
 
 		this.configurationManager = configurationManager;
@@ -186,6 +198,12 @@ public class CommonModContext implements ModContext {
 
 		channel.registerMessage(new ExplosionMessageHandler(this),
                 ExplosionMessage.class, 21, CompatibleSide.CLIENT);
+		
+		channel.registerMessage(new ArmorControlHandler(this),
+                ArmorControlMessage.class, 22, CompatibleSide.SERVER);
+		
+		channel.registerMessage(new SpreadableExposureMessageHandler(this),
+		        SpreadableExposureMessage.class, 23, CompatibleSide.CLIENT);
 
 		ServerEventHandler serverHandler = new ServerEventHandler(this, modId);
         compatibility.registerWithFmlEventBus(serverHandler);
@@ -195,13 +213,28 @@ public class CommonModContext implements ModContext {
 				weaponAttachmentAspect, channel));
 
 		CompatiblePlayerEntityTrackerProvider.register(this);
+		//CompatibleEntityPropertyProvider.register(this);
+		CompatibleExposureCapability.register(this);
 
         compatibility.registerModEntity(WeaponSpawnEntity.class, "Ammo" + modEntityID, modEntityID++, mod, modId, 64, 3, true);
         compatibility.registerModEntity(EntityWirelessCamera.class, "wcam" + modEntityID, modEntityID++, mod, modId, 200, 3, true);
         compatibility.registerModEntity(EntityShellCasing.class, "ShellCasing" + modEntityID, modEntityID++, mod, modId, 64, 500, true);
         compatibility.registerModEntity(EntityGrenade.class, "Grenade" + modEntityID, modEntityID++, mod, modId, 64, 10000, false);
         compatibility.registerModEntity(EntitySmokeGrenade.class, "SmokeGrenade" + modEntityID, modEntityID++, mod, modId, 64, 10000, false);
+        compatibility.registerModEntity(EntityGasGrenade.class, "GasGrenade" + modEntityID, modEntityID++, mod, modId, 64, 10000, false);
+        compatibility.registerModEntity(EntitySpreadable.class, "EntitySpreadable" + modEntityID, modEntityID++, mod, modId, 64, 3, false);
 
+//        compatibility.registerModEntity(EntityCustomMob.class, "CustomMob" + modEntityID, modEntityID++, mod, modId, 64, 3, true);
+//
+//        EntityRegistry.addSpawn(EntityCustomMob.class, 1, 1, 3, EnumCreatureType.MONSTER, 
+//                BiomeDictionary.getBiomesForType(Type.PLAINS));
+        
+       
+	}
+	
+	@Override
+	public boolean isClient() {
+	    return false;
 	}
 
 	public void registerServerSideOnly() {
@@ -210,6 +243,9 @@ public class CommonModContext implements ModContext {
 
 	@Override
 	public CompatibleSound registerSound(String sound) {
+	    if(sound == null) {
+	        return null;
+	    }
 		ResourceLocation soundResourceLocation = new ResourceLocation(modId, sound);
 		return registerSound(soundResourceLocation);
 	}
@@ -347,6 +383,26 @@ public class CommonModContext implements ModContext {
 	public CompatibleSound getExplosionSound() {
 	    return explosionSound;
 	}
+	
+	@Override
+    public void setNightVisionOnSound(String sound) {
+        this.nightVisionOnSound = registerSound(sound.toLowerCase());
+    }
+
+    @Override
+    public CompatibleSound getNightVisionOnSound() {
+        return nightVisionOnSound;
+    }
+    
+    @Override
+    public void setNightVisionOffSound(String sound) {
+        this.nightVisionOffSound = registerSound(sound.toLowerCase());
+    }
+
+    @Override
+    public CompatibleSound getNightVisionOffSound() {
+        return nightVisionOffSound;
+    }
 
     @Override
     public void registerMeleeWeapon(String name, ItemMelee itemMelee, MeleeRenderer renderer) {
@@ -382,6 +438,11 @@ public class CommonModContext implements ModContext {
     public String getModId() {
         return modId;
     }
+    
+    @Override
+    public Object getMod() {
+        return mod;
+    }
 
     @Override
     public EffectManager getEffectManager() {
@@ -392,4 +453,7 @@ public class CommonModContext implements ModContext {
     public ConfigurationManager getConfigurationManager() {
         return configurationManager;
     }
+
+    @Override
+    public void registerRenderableEntity(Class<? extends Entity> entityClass, Object renderer) {}
 }

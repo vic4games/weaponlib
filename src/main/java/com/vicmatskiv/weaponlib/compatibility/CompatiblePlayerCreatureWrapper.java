@@ -11,7 +11,7 @@ public class CompatiblePlayerCreatureWrapper extends EntityPlayerSP {
     private EntityLivingBase entityLiving;
     
     public CompatiblePlayerCreatureWrapper(Minecraft mc, World world) {
-        super(mc, world, mc.getConnection(), new StatisticsManager());
+        super(mc, world, mc.getConnection(), new StatisticsManager(),/* TODO: recipe book */ null); 
         
     }
     

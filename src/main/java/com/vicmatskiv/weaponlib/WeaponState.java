@@ -9,7 +9,10 @@ public enum WeaponState implements ManagedState<WeaponState> {
 
 	READY(false), 
 	LOAD_REQUESTED, 
-	LOAD(null, LOAD_REQUESTED, null, true), 
+	LOAD(null, LOAD_REQUESTED, null, true),
+	LOAD_ITERATION,
+	LOAD_ITERATION_COMPLETED,
+	ALL_LOAD_ITERATIONS_COMPLETED, // Applies to iterated loads
 	
 	UNLOAD_PREPARING, 
 	UNLOAD_REQUESTED, 

@@ -8,6 +8,7 @@ import org.lwjgl.opengl.GL11;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTessellator;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTransformType;
 
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 
@@ -17,9 +18,9 @@ public class LaserBeamRenderer implements CustomRenderer {
 	private float yOffset = -1.3f;
 	private float zOffset = -1.7f;
 	
-	private BiConsumer<EntityPlayer, ItemStack> positioning;
+	private BiConsumer<EntityLivingBase, ItemStack> positioning;
 	
-	public LaserBeamRenderer(BiConsumer<EntityPlayer, ItemStack> positioning) {
+	public LaserBeamRenderer(BiConsumer<EntityLivingBase, ItemStack> positioning) {
 	    this.positioning = positioning;
 	}
 

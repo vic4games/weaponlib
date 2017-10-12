@@ -10,14 +10,17 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.vicmatskiv.weaponlib.animation.PlayerRawPitchAnimationManager;
 import com.vicmatskiv.weaponlib.command.DebugCommand;
 import com.vicmatskiv.weaponlib.command.MainCommand;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleEntityRenderer;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderingRegistry;
 import com.vicmatskiv.weaponlib.config.ConfigurationManager;
 import com.vicmatskiv.weaponlib.electronics.EntityWirelessCamera;
 import com.vicmatskiv.weaponlib.electronics.WirelessCameraRenderer;
+import com.vicmatskiv.weaponlib.grenade.EntityGasGrenade;
 import com.vicmatskiv.weaponlib.grenade.EntityGrenade;
 import com.vicmatskiv.weaponlib.grenade.EntityGrenadeRenderer;
 import com.vicmatskiv.weaponlib.grenade.EntitySmokeGrenade;
@@ -29,8 +32,10 @@ import com.vicmatskiv.weaponlib.melee.PlayerMeleeInstance;
 import com.vicmatskiv.weaponlib.perspective.PerspectiveManager;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.client.shader.Framebuffer;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraftforge.client.ClientCommandHandler;
@@ -55,6 +60,8 @@ public class ClientModContext extends CommonModContext {
     private Map<Object, Integer> inventoryTextureMap;
 
     private EffectManager effectManager;
+
+    private PlayerRawPitchAnimationManager playerRawPitchAnimationManager;
 
 	@Override
     public void init(Object mod, String modId, ConfigurationManager configurationManager, CompatibleChannel channel) {
@@ -88,6 +95,8 @@ public class ClientModContext extends CommonModContext {
 		clientWeaponTicker.start();
 		clientEventHandler = new ClientEventHandler(this, mainLoopLock, safeGlobals, runInClientThreadQueue);
 		compatibility.registerWithFmlEventBus(clientEventHandler);
+		
+		compatibility.registerWithEventBus(clientEventHandler); // TODO: what are the implications of registering the same class with 2 buses
 
 		compatibility.registerRenderingRegistry(rendererRegistry);
 
@@ -96,12 +105,25 @@ public class ClientModContext extends CommonModContext {
 	    rendererRegistry.registerEntityRenderingHandler(EntityShellCasing.class, new ShellCasingRenderer()); //new RenderSnowball(Items.snowball));
         rendererRegistry.registerEntityRenderingHandler(EntityGrenade.class, new EntityGrenadeRenderer()); //new RenderSnowball(Items.snowball));
         rendererRegistry.registerEntityRenderingHandler(EntitySmokeGrenade.class, new EntityGrenadeRenderer()); //new RenderSnowball(Items.snowball));
+        rendererRegistry.registerEntityRenderingHandler(EntityGasGrenade.class, new EntityGrenadeRenderer()); //new RenderSnowball(Items.snowball));
+
+//        rendererRegistry.registerEntityRenderingHandler(EntityCustomMob.class, new RenderCustomMob(Minecraft.getMinecraft().getRenderManager())); //new RenderSnowball(Items.snowball));
+
+        rendererRegistry.registerEntityRenderingHandler(EntitySpreadable.class, new InvisibleEntityRenderer());
 
 		this.viewManager = new PerspectiveManager(this);
 		this.inventoryTextureMap = new HashMap<>();
 
 		this.effectManager = new ClientEffectManager();
+
+		this.playerRawPitchAnimationManager = new PlayerRawPitchAnimationManager();
+		//ClientRegistry.registerEntityShader(EntityPlayer.class, new ResourceLocation("shaders/post/creeper.json"));
 	}
+	
+	@Override
+    public boolean isClient() {
+        return true;
+    }
 
 	@Override
 	public void registerServerSideOnly() {}
@@ -210,5 +232,14 @@ public class ClientModContext extends CommonModContext {
     @Override
     public EffectManager getEffectManager() {
         return effectManager;
+    }
+
+    public PlayerRawPitchAnimationManager getPlayerRawPitchAnimationManager() {
+        return playerRawPitchAnimationManager;
+    }
+    
+    @Override
+    public void registerRenderableEntity(Class<? extends Entity> entityClass, Object renderer) {
+        rendererRegistry.registerEntityRenderingHandler(entityClass, renderer);
     }
 }

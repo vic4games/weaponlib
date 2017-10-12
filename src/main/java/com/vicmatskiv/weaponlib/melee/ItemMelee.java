@@ -31,6 +31,7 @@ import com.vicmatskiv.weaponlib.Tags;
 import com.vicmatskiv.weaponlib.Updatable;
 import com.vicmatskiv.weaponlib.WeaponSpawnEntity;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleItem;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleItemMethods;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 import com.vicmatskiv.weaponlib.crafting.CraftingComplexity;
 import com.vicmatskiv.weaponlib.crafting.OptionsMetadata;
@@ -43,7 +44,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
-public class ItemMelee extends CompatibleItem implements
+public class ItemMelee extends CompatibleItem implements CompatibleItemMethods,
 PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer, Modifiable, Updatable {
 
     private static final Logger logger = LogManager.getLogger(ItemMelee.class);
@@ -183,13 +184,13 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
             return this;
         }
 
-        public Builder withCompatibleAttachment(ItemAttachment<ItemMelee> attachment, BiConsumer<EntityPlayer, ItemStack> positioning) {
+        public Builder withCompatibleAttachment(ItemAttachment<ItemMelee> attachment, BiConsumer<EntityLivingBase, ItemStack> positioning) {
             compatibleAttachments.put(attachment, new CompatibleAttachment<>(attachment, positioning, null, false));
             return this;
         }
 
         public Builder withCompatibleAttachment(ItemAttachment<ItemMelee> attachment, boolean isDefault,
-                BiConsumer<EntityPlayer, ItemStack> positioning, Consumer<ModelBase> modelPositioning) {
+                BiConsumer<EntityLivingBase, ItemStack> positioning, Consumer<ModelBase> modelPositioning) {
             compatibleAttachments.put(attachment, new CompatibleAttachment<>(attachment, positioning, modelPositioning, isDefault));
             return this;
         }
@@ -344,7 +345,7 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
     }
 
     @Override
-    public List<CompatibleAttachment<? extends AttachmentContainer>> getActiveAttachments(EntityPlayer player, ItemStack itemStack) {
+    public List<CompatibleAttachment<? extends AttachmentContainer>> getActiveAttachments(EntityLivingBase player, ItemStack itemStack) {
         return modContext.getMeleeAttachmentAspect().getActiveAttachments(player, itemStack);
     }
 
@@ -358,13 +359,11 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
                 .map(e -> e.getKey())
                 .collect(Collectors.toList());
     }
-
-    @SuppressWarnings("unchecked")
+    
     @Override
-    public void addInformation(ItemStack itemStack, EntityPlayer entityPlayer,
-            @SuppressWarnings("rawtypes") List list, boolean p_77624_4_) {
-        if(list != null && builder.informationProvider != null) {
-            list.addAll(builder.informationProvider.apply(itemStack));
+    public void addInformation(ItemStack itemStack, List<String> info, boolean flag) {
+        if(info != null && builder.informationProvider != null) {
+            info.addAll(builder.informationProvider.apply(itemStack));
         }
     }
 
@@ -384,7 +383,7 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
 //    }
 
     @Override
-    public PlayerMeleeInstance createItemInstance(EntityPlayer player, ItemStack itemStack, int slot){
+    public PlayerMeleeInstance createItemInstance(EntityLivingBase player, ItemStack itemStack, int slot){
         PlayerMeleeInstance instance = new PlayerMeleeInstance(slot, player, itemStack);
         //state.setAmmo(Tags.getAmmo(itemStack)); // TODO: get ammo properly
         instance.setState(MeleeState.READY);

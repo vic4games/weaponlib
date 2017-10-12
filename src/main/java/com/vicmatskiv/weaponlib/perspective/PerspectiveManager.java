@@ -23,13 +23,15 @@ public class PerspectiveManager {
     private CompatibleWorldRenderer entityRenderer;
     private RenderGlobal renderGlobal;
     private CompatibleParticleManager effectRenderer;
+    //private DynamicShaderGroupManager shaderGroupManager;
 
     public PerspectiveManager(ClientModContext clientModContext) {
         this.clientModContext = clientModContext;
+        //this.shaderGroupManager = new DynamicShaderGroupManager();
     }
 
     public Perspective<?> getPerspective(PlayerItemInstance<?> currentInstance, boolean init) {
-        
+
         if(currentInstance == null || (currentPerspective == null && !init)) {
             return null;
         }
@@ -46,8 +48,9 @@ public class PerspectiveManager {
         } else if (currentPerspective != null) {
             if(init) {
                 currentPerspective.deactivate(clientModContext);
+                currentPerspective = null;
             }
-            currentPerspective = null;
+
         }
 
         return currentPerspective;
@@ -55,7 +58,7 @@ public class PerspectiveManager {
 
     private Perspective<?> createActivePerspective(Class<? extends Perspective<?>> perspectiveClass) {
         Perspective<?> result = null;
-        
+
         try {
             result = perspectiveClass.newInstance();
             result.activate(clientModContext, this);
@@ -67,7 +70,7 @@ public class PerspectiveManager {
 
     CompatibleWorldRenderer getEntityRenderer() {
         if(entityRenderer == null) {
-            entityRenderer = new CompatibleWorldRenderer(Minecraft.getMinecraft(), 
+            entityRenderer = new CompatibleWorldRenderer(Minecraft.getMinecraft(),
                     Minecraft.getMinecraft().getResourceManager());
         }
         return entityRenderer;
@@ -82,12 +85,16 @@ public class PerspectiveManager {
         return renderGlobal;
     }
 
-    CompatibleParticleManager getEffectRenderer() {        
+    CompatibleParticleManager getEffectRenderer() {
         if(effectRenderer == null) {
             WorldClient world = (WorldClient) compatibility.world(compatibility.clientPlayer());
             effectRenderer = compatibility.createCompatibleParticleManager(world);
         }
         return effectRenderer;
     }
+
+//    DynamicShaderGroupManager getShaderGroupManager() {
+//        return shaderGroupManager;
+//    }
 
 }

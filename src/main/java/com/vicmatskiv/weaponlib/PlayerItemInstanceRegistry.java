@@ -19,6 +19,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.vicmatskiv.weaponlib.state.ManagedState;
 
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -52,16 +53,19 @@ public class PlayerItemInstanceRegistry {
 	 * @param targetClass
 	 * @return
 	 */
-	public <T extends PlayerItemInstance<S>, S extends ManagedState<S>> T getMainHandItemInstance(EntityPlayer player, Class<T> targetClass) {
-		if(player == null) {
+	public <T extends PlayerItemInstance<S>, S extends ManagedState<S>> T getMainHandItemInstance(EntityLivingBase player, Class<T> targetClass) {
+		if(player == null && !(player instanceof EntityPlayer)) {
 			return null;
 		}
-		PlayerItemInstance<?> instance = getItemInstance(player, compatibility.getCurrentInventoryItemIndex(player));
+		PlayerItemInstance<?> instance = getItemInstance((EntityPlayer) player, compatibility.getCurrentInventoryItemIndex((EntityPlayer) player));
 		return targetClass.isInstance(instance) ? targetClass.cast(instance) : null;
 	}
 	
-	public PlayerItemInstance<?> getMainHandItemInstance(EntityPlayer player) {
-	    return getItemInstance(player, compatibility.getCurrentInventoryItemIndex(player));
+	public PlayerItemInstance<?> getMainHandItemInstance(EntityLivingBase player) {
+	    if(player == null && !(player instanceof EntityPlayer)) {
+            return null;
+        }
+	    return getItemInstance((EntityPlayer) player, compatibility.getCurrentInventoryItemIndex((EntityPlayer) player));
 	}
 	
 	public PlayerItemInstance<?> getItemInstance(EntityPlayer player, int slot) {
@@ -72,7 +76,9 @@ public class PlayerItemInstanceRegistry {
 			if(result != null) {
 				slotInstances.put(slot, result);
 				syncManager.watch(result);
-				result.markDirty();
+				if(result.updateId == 0) { // sync to server if newly created
+				    result.markDirty();
+				}
 			}
 		} else {
 			ItemStack slotItemStack = compatibility.getInventoryItemStack(player, slot);
@@ -82,7 +88,9 @@ public class PlayerItemInstanceRegistry {
 				if(result != null) {
 					slotInstances.put(slot, result);
 					syncManager.watch(result);
-					result.markDirty();
+					if(result.updateId == 0) { // sync to server if newly created
+					    result.markDirty();
+					}
 				}
 			}
 			if(result != null && result.getItemInventoryIndex() != slot) {
@@ -132,19 +140,27 @@ public class PlayerItemInstanceRegistry {
 		return result;
 	}
 
-	private PlayerItemInstance<?> createItemInstance(EntityPlayer player, int slot) {
+	private PlayerItemInstance<?> createItemInstance(EntityLivingBase entityLivingBase, int slot) {
+	    if(!(entityLivingBase instanceof EntityPlayer)) {
+	        return null;
+	    }
+	    
+	    EntityPlayer player = (EntityPlayer) entityLivingBase;
 		ItemStack itemStack = compatibility.getInventoryItemStack(player, slot);
 		
 		PlayerItemInstance<?> result = null;
 		if(itemStack != null && itemStack.getItem() instanceof PlayerItemInstanceFactory) {
-			logger.debug("Creating instance for slot {} from stack {}", slot, itemStack);
 			try {
+			    logger.debug("Deserializing instance for slot {} from stack {}", slot, itemStack);
 				result = Tags.getInstance(itemStack);
+				logger.debug("Deserialized instance {} for slot {} from stack {}", result, slot, itemStack);
 			} catch(RuntimeException e) {
 				logger.debug("Failed to deserialize instance from {}", itemStack);
 			}
 			if(result == null) {
+			    logger.debug("Creating instance for slot {} from stack {}", slot, itemStack);
 				result = ((PlayerItemInstanceFactory<?, ?>) itemStack.getItem()).createItemInstance(player, itemStack, slot);
+				result.updateId = 0;
 			}
 			result.setItemInventoryIndex(slot);
 			result.setPlayer(player);
@@ -153,7 +169,15 @@ public class PlayerItemInstanceRegistry {
 		return result;
 	}
 	
-	public PlayerItemInstance<?> getItemInstance(EntityPlayer player, ItemStack itemStack) {
+	/**
+	 * Maps the item stack to an item instance using the internal cache.
+	 * This method should be used when rendering only. 
+	 * 
+	 * @param player
+	 * @param itemStack
+	 * @return
+	 */
+	public PlayerItemInstance<?> getItemInstance(EntityLivingBase player, ItemStack itemStack) {
 		Optional<PlayerItemInstance<?>> result = Optional.empty();
 		try {
 			result = itemStackInstanceCache.get(itemStack, () -> {
@@ -162,18 +186,29 @@ public class PlayerItemInstanceRegistry {
 				int slot = -1;
 				if(compatibility.clientPlayer() == player) {
 				    // For current player, the latest instance is available locally
-				    slot = compatibility.getInventorySlot(player, itemStack);
+				    slot = compatibility.getInventorySlot((EntityPlayer)player, itemStack);
 				}
+				
 				if(slot >= 0) {
-					instance = getItemInstance(player, slot);
+					instance = getItemInstance((EntityPlayer) player, slot);
 					logger.debug("Resolved item stack instance {} in slot {}", instance, slot);
-				} else {
+				}
+				
+				if(instance == null || instance.getItem() != itemStack.getItem()) {
 					try {
 						instance = Tags.getInstance(itemStack);
 					} catch(RuntimeException e) {
 						logger.error("Failed to deserialize instance from stack {}: {}", itemStack, e.toString());
 					}
 				}
+				
+				if((instance == null || instance.getItem() != itemStack.getItem())
+				        && itemStack.getItem() instanceof PlayerItemInstanceFactory) {
+				    logger.debug("Creating temporary item stack instance {}", instance);
+                    instance = ((PlayerItemInstanceFactory<?, ?>) itemStack.getItem()).createItemInstance(player, itemStack, -1);
+		            instance.setPlayer(player);
+		        }
+				
 				return Optional.ofNullable(instance);
 			});
 		} catch (UncheckedExecutionException | ExecutionException e) {

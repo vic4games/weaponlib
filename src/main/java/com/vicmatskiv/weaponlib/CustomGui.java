@@ -41,7 +41,6 @@ public class CustomGui extends CompatibleGui {
 
 	@Override
 	public void onCompatibleRenderHud(RenderGameOverlayEvent.Pre event) {
-
 		if(compatibility.getEventType(event) == RenderGameOverlayEvent.ElementType.HELMET) {
 			ItemStack helmet = compatibility.getHelmet();
 			if(helmet != null && mc.gameSettings.thirdPersonView == 0 && helmet.getItem() instanceof CustomArmor) {
@@ -52,16 +51,16 @@ public class CustomGui extends CompatibleGui {
 					int width = scaledResolution.getScaledWidth();
 				    int height = scaledResolution.getScaledHeight();
 
-				    GL11.glPushAttrib(GL11.GL_ENABLE_BIT);
+				    GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
 					GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 					GL11.glDisable(GL11.GL_LIGHTING);
 			        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 					GL11.glEnable(GL11.GL_BLEND);
-
-
+//
+//
 					this.mc.renderEngine.bindTexture(new ResourceLocation(hudTexture));
-
-					drawTexturedQuadFit(0, 0, width, height, 0);
+//
+					drawTexturedQuadFit(0, 0, width, height, -100);
 
 					GL11.glPopAttrib();
 

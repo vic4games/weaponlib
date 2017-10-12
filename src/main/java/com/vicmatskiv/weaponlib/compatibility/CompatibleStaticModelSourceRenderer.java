@@ -22,9 +22,9 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelBiped;
+import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
@@ -42,11 +42,10 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
-import net.minecraftforge.client.model.IPerspectiveAwareModel;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public abstract class CompatibleStaticModelSourceRenderer extends ModelSourceRenderer implements IPerspectiveAwareModel, IBakedModel {
+public abstract class CompatibleStaticModelSourceRenderer extends ModelSourceRenderer implements IBakedModel {
 
 	protected Builder builder;
 
@@ -98,7 +97,7 @@ public abstract class CompatibleStaticModelSourceRenderer extends ModelSourceRen
 				) {
 
 			Tessellator tessellator = Tessellator.getInstance();
-			VertexBuffer worldrenderer = tessellator.getBuffer();
+			BufferBuilder worldrenderer = tessellator.getBuffer();
 			tessellator.draw();
 			GlStateManager.pushMatrix();
 

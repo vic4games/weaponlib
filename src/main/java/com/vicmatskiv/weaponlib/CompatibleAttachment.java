@@ -6,6 +6,7 @@ import java.util.function.Consumer;
 import com.vicmatskiv.weaponlib.melee.ItemMelee;
 
 import net.minecraft.client.model.ModelBase;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 
@@ -13,7 +14,7 @@ public class CompatibleAttachment<T> {
 
 	private ItemAttachment<T> attachment;
 	private Consumer<ModelBase> modelPositioning;
-	private BiConsumer<EntityPlayer, ItemStack> positioning;
+	private BiConsumer<EntityLivingBase, ItemStack> positioning;
 	private boolean isDefault;
 	private boolean isPermanent;
 	private ItemAttachment.ApplyHandler2<T> applyHandler;
@@ -22,7 +23,7 @@ public class CompatibleAttachment<T> {
     ItemAttachment.MeleeWeaponApplyHandler<ItemMelee> meleeRemoveHandler;
 
 	public CompatibleAttachment(ItemAttachment<T> attachment,
-	        BiConsumer<EntityPlayer, ItemStack> positioning,
+	        BiConsumer<EntityLivingBase, ItemStack> positioning,
 	        Consumer<ModelBase> modelPositioning,
 	        boolean isDefault,
 	        boolean isPermanent) {
@@ -34,7 +35,7 @@ public class CompatibleAttachment<T> {
 	}
 
 	public CompatibleAttachment(ItemAttachment<T> attachment,
-            BiConsumer<EntityPlayer, ItemStack> positioning,
+            BiConsumer<EntityLivingBase, ItemStack> positioning,
             Consumer<ModelBase> modelPositioning,
             boolean isDefault) {
 	    this(attachment, positioning, modelPositioning, isDefault, false);
@@ -72,7 +73,7 @@ public class CompatibleAttachment<T> {
 		return modelPositioning;
 	}
 
-	public BiConsumer<EntityPlayer, ItemStack> getPositioning() {
+	public BiConsumer<EntityLivingBase, ItemStack> getPositioning() {
 		return positioning;
 	}
 

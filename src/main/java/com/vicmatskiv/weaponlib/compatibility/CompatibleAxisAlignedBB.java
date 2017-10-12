@@ -27,7 +27,7 @@ public class CompatibleAxisAlignedBB {
     }
 
     public boolean intersectsWith(CompatibleAxisAlignedBB other) {
-        return boundingBox.intersectsWith(other.boundingBox);
+        return boundingBox.intersects(other.boundingBox);
     }
 
     public CompatibleRayTraceResult calculateIntercept(CompatibleVec3 vec3, CompatibleVec3 vec31) {
@@ -35,14 +35,18 @@ public class CompatibleAxisAlignedBB {
     }
 
     public CompatibleAxisAlignedBB addCoord(double x, double y, double z) {
-        return new CompatibleAxisAlignedBB(this.boundingBox.addCoord(x, y, z));
+        return new CompatibleAxisAlignedBB(this.boundingBox.expand(x, y, z));
     }
 
     public CompatibleAxisAlignedBB expand(double x, double y, double z) {
-        return new CompatibleAxisAlignedBB(boundingBox.expand(x, y, z));
+        return new CompatibleAxisAlignedBB(boundingBox.grow(x, y, z));
     }
 
     public double getAverageEdgeLength() {
         return boundingBox.getAverageEdgeLength();
+    }
+
+    public double getMinY() {
+        return boundingBox.minY;
     }
 }

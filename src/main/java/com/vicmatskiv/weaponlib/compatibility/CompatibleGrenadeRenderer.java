@@ -23,9 +23,9 @@ import com.vicmatskiv.weaponlib.grenade.RenderableState;
 
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
@@ -36,16 +36,16 @@ import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.client.renderer.vertex.VertexBuffer;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.world.World;
-import net.minecraftforge.client.model.IPerspectiveAwareModel;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public abstract class CompatibleGrenadeRenderer extends ModelSourceRenderer implements IPerspectiveAwareModel, IBakedModel {
+public abstract class CompatibleGrenadeRenderer extends ModelSourceRenderer implements IBakedModel {
 
     protected static class StateDescriptor {
         protected MultipartRenderStateManager<RenderableState, Part, RenderContext<RenderableState>> stateManager;
@@ -72,9 +72,9 @@ public abstract class CompatibleGrenadeRenderer extends ModelSourceRenderer impl
 
     protected abstract ClientModContext getClientModContext();
 
-    protected abstract StateDescriptor getStateDescriptor(EntityPlayer player, ItemStack itemStack);
+    protected abstract StateDescriptor getStateDescriptor(EntityLivingBase player, ItemStack itemStack);
 
-    protected EntityPlayer player;
+    protected EntityLivingBase player;
 
     protected TextureManager textureManager;
 
@@ -95,7 +95,7 @@ public abstract class CompatibleGrenadeRenderer extends ModelSourceRenderer impl
         public IBakedModel handleItemState(IBakedModel originalModel, ItemStack stack, World world,
                 EntityLivingBase entity) {
             CompatibleGrenadeRenderer.this.itemStack = stack;
-            CompatibleGrenadeRenderer.this.player = (EntityPlayer) entity;
+            CompatibleGrenadeRenderer.this.player = entity;
             return super.handleItemState(originalModel, stack, world, entity);
         }
     }
@@ -116,7 +116,7 @@ public abstract class CompatibleGrenadeRenderer extends ModelSourceRenderer impl
                 ) {
 
             Tessellator tessellator = Tessellator.getInstance();
-            VertexBuffer worldrenderer = tessellator.getBuffer();
+            BufferBuilder worldrenderer = tessellator.getBuffer();
             tessellator.draw();
             GlStateManager.pushMatrix();
 

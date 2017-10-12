@@ -94,13 +94,14 @@ public abstract class CompatibleThrowableEntity extends EntityThrowable implemen
 
         if (movingobjectposition != null)
         {
-            vec31 = new Vec3d(movingobjectposition.hitVec.xCoord, movingobjectposition.hitVec.yCoord, movingobjectposition.hitVec.zCoord);
+            vec31 = new Vec3d(movingobjectposition.hitVec.x, movingobjectposition.hitVec.y, movingobjectposition.hitVec.z);
         }
 
         if (!this.world.isRemote)
         {
             Entity entity = null;
-            List<Entity> list = this.world.getEntitiesWithinAABBExcludingEntity(this, this.getEntityBoundingBox().addCoord(this.motionX, this.motionY, this.motionZ).expand(1.0D, 1.0D, 1.0D));
+            List<Entity> list = this.world.getEntitiesWithinAABBExcludingEntity(this, this.getEntityBoundingBox()
+                    .expand(this.motionX, this.motionY, this.motionZ).grow(1.0D));
             double d0 = 0.0D;
             EntityLivingBase entitylivingbase = this.getThrower();
 

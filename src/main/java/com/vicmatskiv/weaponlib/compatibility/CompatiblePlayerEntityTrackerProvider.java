@@ -5,7 +5,7 @@ import java.util.function.Function;
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.tracking.PlayerEntityTracker;
 
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagByteArray;
 import net.minecraft.util.EnumFacing;
@@ -92,7 +92,7 @@ public class CompatiblePlayerEntityTrackerProvider implements ICapabilitySeriali
     private PlayerEntityTrackerContainer instance = playerEntityTrackerContainer.getDefaultInstance(); // doesn't this trigger null pointer exception if capability is not registered?
 
 
-    public static PlayerEntityTracker getTracker(EntityPlayer player) {
+    public static PlayerEntityTracker getTracker(EntityLivingBase player) {
         if(player == null) return null;
         PlayerEntityTrackerContainer container = player.getCapability(playerEntityTrackerContainer, null);
         PlayerEntityTracker result;
@@ -105,7 +105,7 @@ public class CompatiblePlayerEntityTrackerProvider implements ICapabilitySeriali
     }
 
 
-    public static void setTracker(EntityPlayer player, PlayerEntityTracker tracker) {
+    public static void setTracker(EntityLivingBase player, PlayerEntityTracker tracker) {
         PlayerEntityTrackerContainer container = player.getCapability(playerEntityTrackerContainer, null);
         if(container != null) {
             container.setInitializer(w -> tracker);

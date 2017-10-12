@@ -95,7 +95,7 @@ public class WeaponSpawnEntity extends EntityProjectile {
             CompatibleTargetPoint point = new CompatibleTargetPoint(position.getEntityHit().dimension,
                     this.posX, this.posY, this.posZ, 100);
 
-            double magnitude = Math.sqrt(motionX * motionX + motionY * motionY + motionZ * motionZ) + 2;
+            double magnitude = Math.sqrt(motionX * motionX + motionY * motionY + motionZ * motionZ) + 1;
 
             Float bleedingCoefficient = projectilesConfig.getBleedingOnHit();
             if(bleedingCoefficient != null && bleedingCoefficient > 0.0f) {

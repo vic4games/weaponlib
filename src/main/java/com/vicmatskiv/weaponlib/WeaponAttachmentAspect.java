@@ -20,6 +20,7 @@ import com.vicmatskiv.weaponlib.state.PermitManager;
 import com.vicmatskiv.weaponlib.state.StateManager;
 
 import io.netty.buffer.ByteBuf;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -179,7 +180,7 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 		permit.setStatus(Status.GRANTED);
 	}
 
-	List<CompatibleAttachment<? extends AttachmentContainer>> getActiveAttachments(EntityPlayer player, ItemStack itemStack) {
+	List<CompatibleAttachment<? extends AttachmentContainer>> getActiveAttachments(EntityLivingBase player, ItemStack itemStack) {
 
 		compatibility.ensureTagCompound(itemStack);
 
@@ -226,6 +227,12 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 
 	@SuppressWarnings("unchecked")
 	private void changeAttachment(ChangeAttachmentPermit permit, PlayerWeaponInstance weaponInstance) {
+	    if(!(weaponInstance.getPlayer() instanceof EntityPlayer)) {
+	        return;
+	    }
+	    
+	    EntityPlayer player = (EntityPlayer) weaponInstance.getPlayer();
+	    
 		AttachmentCategory attachmentCategory = permit.attachmentCategory;
 		int[] originalActiveAttachmentIds = weaponInstance.getActiveAttachmentIds();
 		int[] activeAttachmentIds = Arrays.copyOf(originalActiveAttachmentIds, originalActiveAttachmentIds.length);
@@ -244,11 +251,11 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 		
 
 		AttachmentLookupResult lookupResult = next(attachmentCategory, currentAttachment, weaponInstance);
-
-		if(currentAttachment != null) {
+		
+        if(currentAttachment != null) {
 			// Need to apply removal functions first before applying addition functions
 			if(currentAttachment.getRemove() != null) {
-				currentAttachment.getRemove().apply(currentAttachment, weaponInstance.getWeapon(), weaponInstance.getPlayer());
+				currentAttachment.getRemove().apply(currentAttachment, weaponInstance.getWeapon(), player);
 			}
 			if(currentAttachment.getRemove2() != null) {
 				currentAttachment.getRemove2().apply(currentAttachment, weaponInstance);
@@ -256,11 +263,11 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 		}
 
 		if(lookupResult.index >= 0) {
-			ItemStack slotItemStack = weaponInstance.getPlayer().inventory.getStackInSlot(lookupResult.index);
+			ItemStack slotItemStack = player.inventory.getStackInSlot(lookupResult.index);
 			ItemAttachment<Weapon> nextAttachment = (ItemAttachment<Weapon>) slotItemStack.getItem();
 
 			if(nextAttachment.getApply() != null) {
-				nextAttachment.getApply().apply(nextAttachment, weaponInstance.getWeapon(), weaponInstance.getPlayer());
+				nextAttachment.getApply().apply(nextAttachment, weaponInstance.getWeapon(), player);
 			} else if(nextAttachment.getApply2() != null) {
 				nextAttachment.getApply2().apply(nextAttachment, weaponInstance);
 			} else if(lookupResult.compatibleAttachment.getApplyHandler() != null) {
@@ -271,7 +278,7 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 					handler.apply(null, weaponInstance);
 				}
 			}
-			compatibility.consumeInventoryItemFromSlot(weaponInstance.getPlayer(), lookupResult.index);
+			compatibility.consumeInventoryItemFromSlot(player, lookupResult.index);
 
 			activeAttachmentIds[attachmentCategory.ordinal()] = Item.getIdFromItem(nextAttachment);
 		} else {
@@ -284,7 +291,7 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 
 		if(currentAttachment != null) {
 			// Item must be added to the same spot the next attachment comes from or to any spot if there is no next attachment
-			compatibility.addItemToPlayerInventory(weaponInstance.getPlayer(), currentAttachment, lookupResult.index);
+			compatibility.addItemToPlayerInventory(player, currentAttachment, lookupResult.index);
 		}
 
 		weaponInstance.setActiveAttachmentIds(activeAttachmentIds);
@@ -341,7 +348,7 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 				break;
 			}
 
-			ItemStack slotItemStack = weaponInstance.getPlayer().inventory.getStackInSlot(currentIndex);
+			ItemStack slotItemStack = ((EntityPlayer)weaponInstance.getPlayer()).inventory.getStackInSlot(currentIndex);
 			if(slotItemStack != null && slotItemStack.getItem() instanceof ItemAttachment) {
 				@SuppressWarnings("unchecked")
 				ItemAttachment<Weapon> attachmentItemFromInventory = (ItemAttachment<Weapon>) slotItemStack.getItem();
@@ -371,7 +378,7 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 	 * @param itemStack
 	 * @param player
 	 */
-	void addAttachment(ItemAttachment<Weapon> attachment, PlayerWeaponInstance weaponInstance) {
+	public static void addAttachment(ItemAttachment<Weapon> attachment, PlayerWeaponInstance weaponInstance) {
 
 		int[] activeAttachmentsIds = weaponInstance.getActiveAttachmentIds();
 		int activeAttachmentIdForThisCategory = activeAttachmentsIds[attachment.getCategory().ordinal()];
@@ -381,8 +388,12 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 		}
 
 		if(currentAttachment == null) {
-			if(attachment != null && attachment.getApply() != null) {
-				attachment.getApply().apply(attachment, weaponInstance.getWeapon(), weaponInstance.getPlayer());
+			if(attachment != null) {
+			    if(attachment.getApply() != null) {
+			        attachment.getApply().apply(attachment, weaponInstance.getWeapon(), weaponInstance.getPlayer());
+			    } else if(attachment.getApply2() != null) {
+                    attachment.getApply2().apply(attachment, weaponInstance);
+               }
 			}
 			activeAttachmentsIds[attachment.getCategory().ordinal()] = Item.getIdFromItem(attachment);;
 		} else {
@@ -420,7 +431,7 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 		return currentAttachment;
 	}
 
-	static ItemAttachment<Weapon> getActiveAttachment(AttachmentCategory category, PlayerWeaponInstance weaponInstance) {
+	public static ItemAttachment<Weapon> getActiveAttachment(AttachmentCategory category, PlayerWeaponInstance weaponInstance) {
 
 
 		ItemAttachment<Weapon> itemAttachment = null;

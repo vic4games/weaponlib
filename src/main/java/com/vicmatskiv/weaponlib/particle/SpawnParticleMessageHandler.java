@@ -7,8 +7,16 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleMessage;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageHandler;
 
+import net.minecraft.util.ResourceLocation;
+
 public class SpawnParticleMessageHandler implements CompatibleMessageHandler<SpawnParticleMessage, CompatibleMessage>  {
 
+    private static final ResourceLocation REGULAR_SMOKE_TEXTURE = new ResourceLocation(
+            "weaponlib:/com/vicmatskiv/weaponlib/resources/large-smoke.png");
+    
+    private static final ResourceLocation YELLOW_SMOKE_TEXTURE = new ResourceLocation(
+            "weaponlib:/com/vicmatskiv/weaponlib/resources/large-yellow-smoke.png");
+    
     private ModContext modContext;
 
     @SuppressWarnings("unused")
@@ -31,13 +39,19 @@ public class SpawnParticleMessageHandler implements CompatibleMessageHandler<Spa
                         modContext.getEffectManager().spawnExplosionSmoke(
                                 message.getPosX(), message.getPosY(), message.getPosZ(),
                                 message.getMotionX(), message.getMotionY(), message.getMotionZ(),
+                                1.5f * compatibility.world(compatibility.clientPlayer()).rand.nextFloat(),
+                                300, ExplosionSmokeFX.Behavior.SMOKE_GRENADE, REGULAR_SMOKE_TEXTURE);
+                        break;
+                    case SMOKE_GRENADE_YELLOW_SMOKE:
+                        modContext.getEffectManager().spawnExplosionSmoke(
+                                message.getPosX(), message.getPosY(), message.getPosZ(),
+                                message.getMotionX(), message.getMotionY(), message.getMotionZ(),
                                 0.2f * compatibility.world(compatibility.clientPlayer()).rand.nextFloat(),
-                                300, ExplosionSmokeFX.Behavior.SMOKE_GRENADE);
+                                300, ExplosionSmokeFX.Behavior.SMOKE_GRENADE, YELLOW_SMOKE_TEXTURE);
                         break;
                     default:
                         break;
                     }
-
                 }
             });
         }

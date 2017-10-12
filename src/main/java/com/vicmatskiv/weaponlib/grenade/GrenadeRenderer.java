@@ -40,7 +40,8 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleGrenadeRenderer;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.EntityLivingBase;
+//import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 
@@ -594,10 +595,10 @@ public class GrenadeRenderer extends CompatibleGrenadeRenderer {
 
 
 	private static class StateManagerKey {
-	    EntityPlayer player;
+	    EntityLivingBase player;
 	    int slot = -1;
 
-        public StateManagerKey(EntityPlayer player, int slot) {
+        public StateManagerKey(EntityLivingBase player, int slot) {
             this.player = player;
             this.slot = slot;
         }
@@ -631,7 +632,7 @@ public class GrenadeRenderer extends CompatibleGrenadeRenderer {
 	}
 
 	@Override
-	protected StateDescriptor getStateDescriptor(EntityPlayer player, ItemStack itemStack) {
+	protected StateDescriptor getStateDescriptor(EntityLivingBase player, ItemStack itemStack) {
 		float amplitude = builder.normalRandomizingAmplitude;
 		float rate = builder.normalRandomizingRate;
 		RenderableState currentState = null;

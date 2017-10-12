@@ -11,6 +11,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -116,7 +117,7 @@ Reloadable, Updatable, Part {
 		return compatibleBullets;
 	}
 
-	int getAmmo() {
+	public int getAmmo() {
 		return ammo;
 	}
 
@@ -134,7 +135,7 @@ Reloadable, Updatable, Part {
 	}
 
 	@Override
-	public PlayerMagazineInstance createItemInstance(EntityPlayer player, ItemStack itemStack, int slot) {
+	public PlayerMagazineInstance createItemInstance(EntityLivingBase player, ItemStack itemStack, int slot) {
 		PlayerMagazineInstance instance = new PlayerMagazineInstance(slot, player, itemStack);
 		instance.setState(MagazineState.READY);
 		return instance;

@@ -15,6 +15,7 @@ import com.vicmatskiv.weaponlib.melee.PlayerMeleeInstance;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 
 public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
 
@@ -81,6 +82,23 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
     		if(instance != null && (instance.getState() == WeaponState.READY || instance.getState() == WeaponState.MODIFYING)) {
     			instance.setLaserOn(!instance.isLaserOn());
     		}
+        }
+
+        else if(KeyBindings.nightVisionSwitchKey.isPressed()) {
+            ItemStack helmetStack = compatibility.getHelmet();
+            if(helmetStack != null && helmetStack.getItem() instanceof CustomArmor 
+                    && ((CustomArmor)helmetStack.getItem()).hasNightVision()){
+                modContext.getChannel().getChannel().sendToServer(new ArmorControlMessage(true));
+                NBTTagCompound tagCompound = compatibility.getTagCompound(helmetStack);
+                boolean nightVisionOn = tagCompound != null && tagCompound.getBoolean(ArmorControlHandler.TAG_NIGHT_VISION);
+                compatibility.playSound(compatibility.clientPlayer(), 
+                        nightVisionOn ? modContext.getNightVisionOffSound() : modContext.getNightVisionOnSound(), 1.0f, 1.0f);
+            } else {
+                PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
+                if(instance != null && (instance.getState() == WeaponState.READY || instance.getState() == WeaponState.MODIFYING || instance.getState() == WeaponState.EJECT_REQUIRED)) {
+                    instance.setNightVisionOn(!instance.isNightVisionOn());
+                }
+            }
         }
 
         else if(KeyBindings.attachmentKey.isPressed()) {

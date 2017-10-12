@@ -9,7 +9,8 @@ import com.vicmatskiv.weaponlib.particle.FlashFX;
 import com.vicmatskiv.weaponlib.particle.SmokeFX;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
 final class ClientEffectManager implements EffectManager {
@@ -19,7 +20,7 @@ final class ClientEffectManager implements EffectManager {
 
 
 	@Override
-    public void spawnSmokeParticle(EntityPlayer player, float xOffset, float yOffset) {
+    public void spawnSmokeParticle(EntityLivingBase player, float xOffset, float yOffset) {
 
 		double motionX = compatibility.world(player).rand.nextGaussian() * 0.003;
 		double motionY = compatibility.world(player).rand.nextGaussian() * 0.003;
@@ -30,9 +31,9 @@ final class ClientEffectManager implements EffectManager {
 		float scale = 1f * compatibility.getEffectScaleFactor(); // TODO: check why scale was set to 2.0 in 1.7.10
 		float positionRandomizationFactor = 0.01f;
 
-		double posX = player.posX + (look.getVec().xCoord * distance) + (compatibility.world(player).rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor + (-look.getVec().zCoord * xOffset);
-		double posY = player.posY + (look.getVec().yCoord * distance) + (compatibility.world(player).rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor - yOffset;
-		double posZ = player.posZ + (look.getVec().zCoord * distance) + (compatibility.world(player).rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor  + (look.getVec().xCoord * xOffset);
+		double posX = player.posX + (look.getXCoord() * distance) + (compatibility.world(player).rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor + (-look.getZCoord() * xOffset);
+		double posY = player.posY + (look.getYCoord() * distance) + (compatibility.world(player).rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor - yOffset;
+		double posZ = player.posZ + (look.getZCoord() * distance) + (compatibility.world(player).rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor  + (look.getXCoord() * xOffset);
 
 		SmokeFX smokeParticle = new SmokeFX(
 				compatibility.world(player),
@@ -51,7 +52,7 @@ final class ClientEffectManager implements EffectManager {
      * @see com.vicmatskiv.weaponlib.IEffectManager#spawnFlashParticle(net.minecraft.entity.player.EntityPlayer, float, float, float, float)
      */
 	@Override
-    public void spawnFlashParticle(EntityPlayer player, float flashIntensity, float flashScale,
+    public void spawnFlashParticle(EntityLivingBase player, float flashIntensity, float flashScale,
 			float xOffset, float yOffset) {
 
 		float distance = 0.5f;
@@ -65,9 +66,9 @@ final class ClientEffectManager implements EffectManager {
 		float motionY = (float)compatibility.world(player).rand.nextGaussian() * 0.003f;
 		float motionZ = (float)compatibility.world(player).rand.nextGaussian() * 0.003f;
 
-		double posX = player.posX + (look.getVec().xCoord * distance) + (compatibility.world(player).rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor + (-look.getVec().zCoord * xOffset);
-		double posY = player.posY + (look.getVec().yCoord * distance) + (compatibility.world(player).rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor - yOffset;
-		double posZ = player.posZ + (look.getVec().zCoord * distance) + (compatibility.world(player).rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor + (look.getVec().xCoord * xOffset);
+		double posX = player.posX + (look.getXCoord() * distance) + (compatibility.world(player).rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor + (-look.getZCoord() * xOffset);
+		double posY = player.posY + (look.getYCoord() * distance) + (compatibility.world(player).rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor - yOffset;
+		double posZ = player.posZ + (look.getZCoord() * distance) + (compatibility.world(player).rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor + (look.getXCoord() * xOffset);
 
 		FlashFX flashParticle = new FlashFX(
 				compatibility.world(player),
@@ -88,9 +89,8 @@ final class ClientEffectManager implements EffectManager {
      */
 	@Override
     public void spawnExplosionSmoke(double posX, double posY, double posZ,
-            double motionX, double motionY, double motionZ,
-            float scale,
-            int maxAge, ExplosionSmokeFX.Behavior behavior) {
+            double motionX, double motionY, double motionZ, float scale,
+            int maxAge, ExplosionSmokeFX.Behavior behavior, ResourceLocation textureResource) {
 	    World world = compatibility.world(compatibility.clientPlayer());
         ExplosionSmokeFX smokeParticle = new ExplosionSmokeFX(
                 world,
@@ -102,7 +102,8 @@ final class ClientEffectManager implements EffectManager {
                 (float)motionY,
                 (float)motionZ,
                 maxAge,
-                ExplosionSmokeFX.Behavior.SMOKE_GRENADE);
+                ExplosionSmokeFX.Behavior.SMOKE_GRENADE,
+                textureResource);
 
         Minecraft.getMinecraft().effectRenderer.addEffect(smokeParticle);
 	}

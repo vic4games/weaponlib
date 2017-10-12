@@ -6,6 +6,7 @@ import com.vicmatskiv.weaponlib.RenderingPhase;
 
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.Entity;
+import net.minecraftforge.client.event.RenderHandEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -62,6 +63,11 @@ public abstract class CompatibleClientEventHandler {
             event.getRenderer().getRenderManager().renderViewEntity = origRenderVeiwEntity;
         }
     }
+    
+    @SubscribeEvent
+    public void onRenderHand(RenderHandEvent event) {
+        onCompatibleRenderHand(new CompatibleRenderHandEvent(event));
+    }
 
     @SubscribeEvent
     public void onTextureStitchEvent(TextureStitchEvent.Pre event) {
@@ -72,4 +78,7 @@ public abstract class CompatibleClientEventHandler {
 	protected abstract void onCompatibleRenderTickEvent(CompatibleRenderTickEvent compatibleRenderTickEvent);
 
 	protected abstract void onCompatibleClientTick(CompatibleClientTickEvent compatibleClientTickEvent);
+
+	protected abstract void onCompatibleRenderHand(CompatibleRenderHandEvent event);
+
 }

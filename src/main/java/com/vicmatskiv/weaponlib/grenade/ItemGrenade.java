@@ -28,6 +28,7 @@ import com.vicmatskiv.weaponlib.crafting.OptionsMetadata;
 
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 
@@ -46,7 +47,10 @@ PlayerItemInstanceFactory<PlayerGrenadeInstance, GrenadeState>, AttachmentContai
     public static final float DEFAULT_EFFECTIVE_RADIUS = 20f;
     public static final float DEFAULT_FRAGMENT_DAMAGE = 15f;
     public static final int DEFAULT_FRAGMENT_COUNT = 100;
-
+    
+    public static enum Type {
+        REGULAR, SMOKE, GAS
+    }
 
     public static class Builder {
 
@@ -56,8 +60,8 @@ PlayerItemInstanceFactory<PlayerGrenadeInstance, GrenadeState>, AttachmentContai
         protected String textureName;
         protected Consumer<ItemStack> entityPositioning;
         protected Consumer<ItemStack> inventoryPositioning;
-        protected BiConsumer<EntityPlayer, ItemStack> thirdPersonPositioning;
-        protected BiConsumer<EntityPlayer, ItemStack> firstPersonPositioning;
+        protected BiConsumer<EntityLivingBase, ItemStack> thirdPersonPositioning;
+        protected BiConsumer<EntityLivingBase, ItemStack> firstPersonPositioning;
         protected BiConsumer<ModelBase, ItemStack> firstPersonModelPositioning;
         protected BiConsumer<ModelBase, ItemStack> thirdPersonModelPositioning;
         protected BiConsumer<ModelBase, ItemStack> inventoryModelPositioning;
@@ -96,7 +100,8 @@ PlayerItemInstanceFactory<PlayerGrenadeInstance, GrenadeState>, AttachmentContai
         private float effectiveRadius = DEFAULT_EFFECTIVE_RADIUS;
         private float fragmentDamage = DEFAULT_FRAGMENT_DAMAGE;
         private int fragmentCount = DEFAULT_FRAGMENT_COUNT;
-        private boolean smokeOnly;
+        //private boolean smokeOnly;
+        private Type type = Type.REGULAR;
         private long activeDuration;
         private Object[] craftingRecipe;
 
@@ -156,8 +161,13 @@ PlayerItemInstanceFactory<PlayerGrenadeInstance, GrenadeState>, AttachmentContai
             return this;
         }
 
-        public Builder withSmokeOnly() {
-            this.smokeOnly = true;
+//        public Builder withSmokeOnly() {
+//            this.smokeOnly = true;
+//            return this;
+//        }
+        
+        public Builder withType(Type type) {
+            this.type = type;
             return this;
         }
 
@@ -171,7 +181,7 @@ PlayerItemInstanceFactory<PlayerGrenadeInstance, GrenadeState>, AttachmentContai
             return this;
         }
 
-        public Builder withCompatibleAttachment(ItemAttachment<ItemGrenade> attachment, BiConsumer<EntityPlayer, ItemStack> positioning) {
+        public Builder withCompatibleAttachment(ItemAttachment<ItemGrenade> attachment, BiConsumer<EntityLivingBase, ItemStack> positioning) {
             compatibleAttachments.put(attachment, new CompatibleAttachment<>(attachment, positioning, null, true));
             return this;
         }
@@ -191,12 +201,12 @@ PlayerItemInstanceFactory<PlayerGrenadeInstance, GrenadeState>, AttachmentContai
             return this;
         }
 
-        public  Builder withThirdPersonPositioning(BiConsumer<EntityPlayer, ItemStack> thirdPersonPositioning) {
+        public  Builder withThirdPersonPositioning(BiConsumer<EntityLivingBase, ItemStack> thirdPersonPositioning) {
             this.thirdPersonPositioning = thirdPersonPositioning;
             return this;
         }
 
-        public Builder withFirstPersonPositioning(BiConsumer<EntityPlayer, ItemStack> firstPersonPositioning) {
+        public Builder withFirstPersonPositioning(BiConsumer<EntityLivingBase, ItemStack> firstPersonPositioning) {
             this.firstPersonPositioning = firstPersonPositioning;
             return this;
         }
@@ -412,7 +422,7 @@ PlayerItemInstanceFactory<PlayerGrenadeInstance, GrenadeState>, AttachmentContai
         return builder.explosionTimeout > 0;
     }
 
-    public List<CompatibleAttachment<? extends AttachmentContainer>> getActiveAttachments(EntityPlayer player,
+    public List<CompatibleAttachment<? extends AttachmentContainer>> getActiveAttachments(EntityLivingBase player,
             ItemStack itemStack) {
         return new ArrayList<>(builder.compatibleAttachments.values());
     }
@@ -426,7 +436,7 @@ PlayerItemInstanceFactory<PlayerGrenadeInstance, GrenadeState>, AttachmentContai
     }
 
     @Override
-    public PlayerGrenadeInstance createItemInstance(EntityPlayer player, ItemStack itemStack, int slot) {
+    public PlayerGrenadeInstance createItemInstance(EntityLivingBase player, ItemStack itemStack, int slot) {
         PlayerGrenadeInstance instance = new PlayerGrenadeInstance(slot, player, itemStack);
         instance.setState(GrenadeState.READY);
         return instance;
@@ -522,8 +532,12 @@ PlayerItemInstanceFactory<PlayerGrenadeInstance, GrenadeState>, AttachmentContai
         return builder.fragmentCount;
     }
 
-    public boolean isSmokeOnly() {
-        return builder.smokeOnly;
+//    public boolean isSmokeOnly() {
+//        return builder.smokeOnly;
+//    }
+    
+    public Type getType() {
+        return builder.type;
     }
 
     public long getActiveDuration() {

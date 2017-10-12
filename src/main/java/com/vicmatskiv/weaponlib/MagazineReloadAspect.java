@@ -104,6 +104,9 @@ public class MagazineReloadAspect implements Aspect<MagazineState, PlayerMagazin
 
 	private void evaluateLoad(LoadPermit p, PlayerMagazineInstance magazineInstance) {
 
+	    if(!(magazineInstance.getPlayer() instanceof EntityPlayer)) {
+	        return;
+	    }
 		ItemStack magazineStack = magazineInstance.getItemStack();
 
 		Status status = Status.DENIED;
@@ -113,7 +116,8 @@ public class MagazineReloadAspect implements Aspect<MagazineState, PlayerMagazin
 			List<ItemBullet> compatibleBullets = magazine.getCompatibleBullets();
 			int currentAmmo = Tags.getAmmo(magazineStack);
 			ItemStack consumedStack;
-			if((consumedStack = compatibility.tryConsumingCompatibleItem(compatibleBullets, magazine.getAmmo() - currentAmmo, magazineInstance.getPlayer(), i -> true)) != null) {
+			if((consumedStack = compatibility.tryConsumingCompatibleItem(compatibleBullets, magazine.getAmmo() - currentAmmo, 
+			        (EntityPlayer)magazineInstance.getPlayer(), i -> true)) != null) {
 				Tags.setAmmo(magazineStack, Tags.getAmmo(magazineStack) + compatibility.getStackSize(consumedStack));
 				if(magazine.getReloadSound() != null) {
 					compatibility.playSound(magazineInstance.getPlayer(), magazine.getReloadSound(), 1.0F, 1.0F);

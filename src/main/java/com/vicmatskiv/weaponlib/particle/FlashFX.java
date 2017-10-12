@@ -22,7 +22,7 @@ public class FlashFX extends CompatibleParticle {
 
 	private int imageIndex;
 
-    private static final int imagesPerRow = 4;
+    private static final int imagesPerRow = 8;
 
 	public FlashFX(World par1World, double positionX, double positionY, double positionZ,
 			float scale, float alpha,
@@ -53,7 +53,7 @@ public class FlashFX extends CompatibleParticle {
 		this.particleAlpha = alpha;
 		this.particleScale *= 1.4F;
 		this.particleScale *= scale;
-		this.particleMaxAge = 2;
+		this.particleMaxAge = 1;
 
 		this.imageIndex = this.rand.nextInt() % imagesPerRow;
 	}

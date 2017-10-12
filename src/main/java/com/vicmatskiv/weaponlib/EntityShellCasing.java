@@ -218,7 +218,7 @@ public class EntityShellCasing extends EntityProjectile {
     @Override
     public void setDead() {
         super.setDead();
-        logger.debug("{} despawned", this);
+        //logger.debug("{} despawned", this);
     }
 
 }

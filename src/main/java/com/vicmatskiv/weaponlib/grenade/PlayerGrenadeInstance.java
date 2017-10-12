@@ -18,7 +18,7 @@ import com.vicmatskiv.weaponlib.RenderContext;
 import com.vicmatskiv.weaponlib.network.TypeRegistry;
 
 import io.netty.buffer.ByteBuf;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
@@ -49,11 +49,11 @@ public class PlayerGrenadeInstance extends PlayerItemInstance<GrenadeState> {
 		super();
 	}
 
-	public PlayerGrenadeInstance(int itemInventoryIndex, EntityPlayer player, ItemStack itemStack) {
+	public PlayerGrenadeInstance(int itemInventoryIndex, EntityLivingBase player, ItemStack itemStack) {
 		super(itemInventoryIndex, player, itemStack);
 	}
 
-	public PlayerGrenadeInstance(int itemInventoryIndex, EntityPlayer player) {
+	public PlayerGrenadeInstance(int itemInventoryIndex, EntityLivingBase player) {
 		super(itemInventoryIndex, player);
 	}
 

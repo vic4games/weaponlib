@@ -72,7 +72,27 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
     public void setPositionAndDirection() {
 
         this.setLocationAndAngles(thrower.posX, thrower.posY + (double) thrower.getEyeHeight(),
-                thrower.posZ, thrower.rotationYaw, thrower.rotationPitch);
+                thrower.posZ, compatibility.getCompatibleAimingRotationYaw(thrower), thrower.rotationPitch);
+
+        this.posX -= (double) (CompatibleMathHelper.cos(this.rotationYaw / 180.0F * (float) Math.PI) * 0.16F);
+        this.posY -= 0.10000000149011612D;
+        this.posZ -= (double) (CompatibleMathHelper.sin(this.rotationYaw / 180.0F * (float) Math.PI) * 0.16F);
+        this.setPosition(this.posX, this.posY, this.posZ);
+
+        //this.yOffset = 0.0F; TODO: verify how this works in 1.7.10
+        float f = velocity; //0.4F;
+        this.motionX = (double) (-CompatibleMathHelper.sin(this.rotationYaw / 180.0F * (float) Math.PI)
+                * CompatibleMathHelper.cos(this.rotationPitch / 180.0F * (float) Math.PI) * f);
+        this.motionZ = (double) (CompatibleMathHelper.cos(this.rotationYaw / 180.0F * (float) Math.PI)
+                * CompatibleMathHelper.cos(this.rotationPitch / 180.0F * (float) Math.PI) * f);
+        this.motionY = (double) (-CompatibleMathHelper
+                .sin((this.rotationPitch + this.getPitchOffset()) / 180.0F * (float) Math.PI) * f);
+        this.setThrowableHeading(this.motionX, this.motionY, this.motionZ, velocity, inaccuracy);
+    }
+    
+    public void setPositionAndDirection(double x, double y, double z, float rotationYaw, float rotationPitch) {
+
+        this.setLocationAndAngles(x, y + (double) thrower.getEyeHeight(), z, rotationYaw, rotationPitch);
 
         this.posX -= (double) (CompatibleMathHelper.cos(this.rotationYaw / 180.0F * (float) Math.PI) * 0.16F);
         this.posY -= 0.10000000149011612D;

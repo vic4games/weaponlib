@@ -1,10 +1,10 @@
 package com.vicmatskiv.weaponlib;
 
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.EntityLivingBase;
 
 public interface PlayerContext {
 
-	public EntityPlayer getPlayer();
+	public EntityLivingBase getPlayer();
 	
-	public void setPlayer(EntityPlayer player);
+	public void setPlayer(EntityLivingBase player);
 }

@@ -15,7 +15,7 @@ public class CompatibleVec3 {
     }
 
 	public CompatibleVec3(CompatibleVec3 hitVec) {
-	    this.vec = new Vec3d(hitVec.getVec().xCoord, hitVec.getVec().yCoord, hitVec.getVec().zCoord);
+	    this.vec = new Vec3d(hitVec.getVec().x, hitVec.getVec().y, hitVec.getVec().z);
     }
 
     public Vec3d getVec() {
@@ -27,15 +27,15 @@ public class CompatibleVec3 {
     }
 
     public double getXCoord() {
-        return vec.xCoord;
+        return vec.x;
     }
 
     public double getYCoord() {
-        return vec.yCoord;
+        return vec.y;
     }
 
     public double getZCoord() {
-        return vec.zCoord;
+        return vec.z;
     }
 
     public static CompatibleVec3 fromCompatibleVec3(CompatibleVec3 other) {

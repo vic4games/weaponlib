@@ -152,14 +152,14 @@ public class EntitySmokeGrenade extends AbstractEntityGrenade {
                     EntityPlayer player = (EntityPlayer) o;
                     if (player.getDistanceSq(posX, posY, posZ) < 4096.0D) {
                         ParticleType particleType = ParticleType.SMOKE_GRENADE_SMOKE;
-                        double movement = bounceCount > 0 ? 0.007 : 0.001;
+                        double movement = bounceCount > 0 ? 0.1 : 0.005;
                         modContext.getChannel().getChannel().sendTo(
                                 new SpawnParticleMessage(particleType, 1,
                                         posX + rand.nextGaussian() / 7,
                                         posY + rand.nextGaussian() / 10,
                                         posZ + rand.nextGaussian() / 7,
                                         rand.nextGaussian() * movement,
-                                        rand.nextGaussian() * movement,
+                                        rand.nextGaussian() * movement / 4,
                                         rand.nextGaussian() * movement),
                                     (EntityPlayerMP) player);
                     }

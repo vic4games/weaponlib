@@ -2,8 +2,8 @@ package com.vicmatskiv.weaponlib.compatibility;
 
 import org.lwjgl.opengl.GL11;
 
+import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 
 /**
@@ -33,24 +33,24 @@ public class CompatibleTessellator {
 	private int j;
 
 	public void startDrawingQuads() {
-		VertexBuffer vertextBuffer = tessellator.getBuffer();
+		BufferBuilder vertextBuffer = tessellator.getBuffer();
 		vertextBuffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
 		hasColor = false;
 		hasLightMap = false;
 	}
 
 	public void startDrawingParticles() {
-		VertexBuffer vertextBuffer = tessellator.getBuffer();
+	    BufferBuilder vertextBuffer = tessellator.getBuffer();
 		vertextBuffer.begin(GL11.GL_QUADS, DefaultVertexFormats.PARTICLE_POSITION_TEX_COLOR_LMAP);
 	}
 
 	public void startDrawingLines() {
-		VertexBuffer renderer = tessellator.getBuffer();
+	    BufferBuilder renderer = tessellator.getBuffer();
 		renderer.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION);
 	}
 
 	public void addVertexWithUV(double d, double e, double zLevel, double u, double v) {
-		VertexBuffer vertextBuffer = tessellator.getBuffer();
+	    BufferBuilder vertextBuffer = tessellator.getBuffer();
 		vertextBuffer.pos(d, e, zLevel);
 		vertextBuffer.tex(u, v);
 		if(hasColor) {
@@ -92,7 +92,7 @@ public class CompatibleTessellator {
 		tessellator.getBuffer().endVertex();
 	}
 
-	public VertexBuffer getBuffer() { // Temporary debug only code
+	public BufferBuilder getBuffer() { // Temporary debug only code
 		return tessellator.getBuffer();
 	}
 

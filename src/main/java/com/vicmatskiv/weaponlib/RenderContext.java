@@ -9,12 +9,13 @@ import com.vicmatskiv.weaponlib.animation.MatrixHelper;
 import com.vicmatskiv.weaponlib.animation.PartPositionProvider;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTransformType;
 
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 
 public class RenderContext<RS> implements PartPositionProvider {
 
-	private EntityPlayer player;
+	private EntityLivingBase player;
 	private ItemStack itemStack;
 	private float limbSwing;
 	private float flimbSwingAmount;
@@ -31,7 +32,7 @@ public class RenderContext<RS> implements PartPositionProvider {
 
 	private Map<Part, Matrix4f> attachablePartPositions;
 
-	public RenderContext(ModContext modContext, EntityPlayer player, ItemStack itemStack) {
+	public RenderContext(ModContext modContext, EntityLivingBase player, ItemStack itemStack) {
 		this.modContext = modContext;
 		this.player = player;
 		this.itemStack = itemStack;
@@ -98,7 +99,7 @@ public class RenderContext<RS> implements PartPositionProvider {
 		this.itemStack = weapon;
 	}
 
-	public EntityPlayer getPlayer() {
+	public EntityLivingBase getPlayer() {
 		return player;
 	}
 
@@ -150,7 +151,7 @@ public class RenderContext<RS> implements PartPositionProvider {
 		if(playerItemInstance instanceof PlayerWeaponInstance) {
 			return (PlayerWeaponInstance) playerItemInstance;
 		}
-		PlayerWeaponInstance itemInstance = (PlayerWeaponInstance) modContext.getPlayerItemInstanceRegistry()
+		PlayerItemInstance<?> itemInstance = modContext.getPlayerItemInstanceRegistry()
 				.getItemInstance(player, itemStack);
 		if(itemInstance instanceof PlayerWeaponInstance) {
 			return (PlayerWeaponInstance) itemInstance;

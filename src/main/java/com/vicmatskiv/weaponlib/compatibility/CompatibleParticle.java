@@ -5,7 +5,7 @@ import com.vicmatskiv.weaponlib.ModContext;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleBreaking;
-import net.minecraft.client.renderer.VertexBuffer;
+import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.entity.Entity;
 import net.minecraft.init.Items;
@@ -44,7 +44,7 @@ public abstract class CompatibleParticle extends Particle {
 
 	@Override
 	@SideOnly(Side.CLIENT)
-	public void renderParticle(VertexBuffer worldRendererIn, Entity entityIn, float partialTicks, float rotationX,
+	public void renderParticle(BufferBuilder worldRendererIn, Entity entityIn, float partialTicks, float rotationX,
 			float rotationZ, float rotationYZ, float rotationXY, float rotationXZ) {
 		renderParticle(CompatibleTessellator.getInstance(), partialTicks, rotationX, rotationZ, rotationYZ, rotationXY, rotationXZ);
 	}

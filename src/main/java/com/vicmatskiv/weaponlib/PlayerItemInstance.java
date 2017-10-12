@@ -12,6 +12,7 @@ import com.vicmatskiv.weaponlib.state.ExtendedState;
 import com.vicmatskiv.weaponlib.state.ManagedState;
 
 import io.netty.buffer.ByteBuf;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -28,7 +29,7 @@ public class PlayerItemInstance<S extends ManagedState<S>> extends UniversalObje
 	protected S state;
 	protected long stateUpdateTimestamp = System.currentTimeMillis();
 	protected long updateId;
-	protected EntityPlayer player;
+	protected EntityLivingBase player;
 	protected Item item;
 	protected int itemInventoryIndex;
 	private PlayerItemInstance<S> preparedState;
@@ -38,7 +39,7 @@ public class PlayerItemInstance<S extends ManagedState<S>> extends UniversalObje
 
 	public PlayerItemInstance() {}
 
-	public PlayerItemInstance(int itemInventoryIndex, EntityPlayer player) {
+	public PlayerItemInstance(int itemInventoryIndex, EntityLivingBase player) {
 		this.itemInventoryIndex = itemInventoryIndex;
 		this.player = player;
 		ItemStack itemStack = compatibility.getHeldItemMainHand(player);
@@ -47,7 +48,7 @@ public class PlayerItemInstance<S extends ManagedState<S>> extends UniversalObje
 		}
 	}
 
-	public PlayerItemInstance(int itemInventoryIndex, EntityPlayer player, ItemStack itemStack) {
+	public PlayerItemInstance(int itemInventoryIndex, EntityLivingBase player, ItemStack itemStack) {
 		this.itemInventoryIndex = itemInventoryIndex;
 		this.player = player;
 		//this.itemStack = itemStack;
@@ -57,12 +58,12 @@ public class PlayerItemInstance<S extends ManagedState<S>> extends UniversalObje
 	}
 
 	@Override
-	public EntityPlayer getPlayer() {
+	public EntityLivingBase getPlayer() {
 		return player;
 	}
 
 	@Override
-	public void setPlayer(EntityPlayer player) {
+	public void setPlayer(EntityLivingBase player) {
 		this.player = player;
 	}
 
@@ -71,7 +72,8 @@ public class PlayerItemInstance<S extends ManagedState<S>> extends UniversalObje
 	}
 
 	public ItemStack getItemStack() {
-		return compatibility.getInventoryItemStack(player, itemInventoryIndex);
+		return player instanceof EntityPlayer ? 
+		        compatibility.getInventoryItemStack((EntityPlayer)player, itemInventoryIndex) : null;
 	}
 
 	public int getItemInventoryIndex() {

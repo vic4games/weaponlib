@@ -31,12 +31,17 @@ public class SyncManager<S extends ManagedState<S>> {
 	}
 	
 	private void syncOnServer(Permit<S> permit, PlayerItemInstance<S> instance) {
-		logger.debug("Syncing {} in state {} on server", instance, instance.getState());
-		ItemStack itemStack = instance.getItemStack();
-		if(itemStack != null) {
-			logger.debug("Stored {} in stack {}", instance, itemStack);
-			Tags.setInstance(itemStack, instance);
-		}
+	    logger.debug("Syncing {} in state {} on server", instance, instance.getState());
+        ItemStack itemStack = instance.getItemStack();
+        if(itemStack != null) {
+            if(instance.getItem() == itemStack.getItem()) {
+                logger.debug("Stored instance {} of {} in stack {}", instance, instance.getItem(), itemStack);
+                Tags.setInstance(itemStack, instance);
+            } else {
+                logger.debug("Item mismatch, expected: {}, actual: {}", instance.getItem().getUnlocalizedName(), 
+                        itemStack.getItem().getUnlocalizedName());
+            }
+        }
 	}
 
 	public void watch(PlayerItemInstance<?> watchableInstance) {

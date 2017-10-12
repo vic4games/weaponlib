@@ -4,12 +4,14 @@ import com.vicmatskiv.weaponlib.PlayerWeaponInstance;
 import com.vicmatskiv.weaponlib.RenderContext;
 import com.vicmatskiv.weaponlib.RenderableState;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderTickEvent;
+import com.vicmatskiv.weaponlib.shader.DynamicShaderContext;
+import com.vicmatskiv.weaponlib.shader.DynamicShaderPhase;
 
 public class OpticalScopePerspective extends FirstPersonPerspective<RenderableState> {
-    
+
     private static final int DEFAULT_WIDTH = 400;
     private static final int DEFAULT_HEIGHT = 400;
-    
+
     public OpticalScopePerspective() {
         this.width = DEFAULT_WIDTH;
         this.height = DEFAULT_HEIGHT;
@@ -34,19 +36,40 @@ public class OpticalScopePerspective extends FirstPersonPerspective<RenderableSt
         }
         return brightness;
     }
-    
+
     private static boolean isAimingState(RenderableState renderableState) {
         return renderableState == RenderableState.ZOOMING
                 || renderableState == RenderableState.ZOOMING_RECOILED
                 || renderableState == RenderableState.ZOOMING_SHOOTING
                 ;
     }
-    
+
     @Override
     public void update(CompatibleRenderTickEvent event) {
         PlayerWeaponInstance instance = modContext.getMainHeldWeapon();
         if(instance != null && instance.isAimed()) {
             super.update(event);
         }
+    }
+
+    @Override
+    protected void prepareRenderWorld(CompatibleRenderTickEvent event) {
+        DynamicShaderContext shaderContext = new DynamicShaderContext(
+                DynamicShaderPhase.POST_WORLD_OPTICAL_SCOPE_RENDER,
+                this.entityRenderer,
+                framebuffer,
+                event.getRenderTickTime());
+        PlayerWeaponInstance instance = modContext.getMainHeldWeapon();
+        shaderGroupManager.applyShader(shaderContext, instance);
+    }
+
+    @Override
+    protected void postRenderWorld(CompatibleRenderTickEvent event) {
+        DynamicShaderContext shaderContext = new DynamicShaderContext(
+                DynamicShaderPhase.POST_WORLD_OPTICAL_SCOPE_RENDER,
+                this.entityRenderer,
+                framebuffer,
+                event.getRenderTickTime());
+        shaderGroupManager.removeStaleShaders(shaderContext); // this is probably not the right place
     }
 }

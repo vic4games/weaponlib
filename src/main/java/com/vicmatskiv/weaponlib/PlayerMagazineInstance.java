@@ -3,7 +3,7 @@ package com.vicmatskiv.weaponlib;
 import com.vicmatskiv.weaponlib.network.TypeRegistry;
 
 import io.netty.buffer.ByteBuf;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemStack;
 
 public class PlayerMagazineInstance extends PlayerItemInstance<MagazineState> {
@@ -19,11 +19,11 @@ public class PlayerMagazineInstance extends PlayerItemInstance<MagazineState> {
 		super();
 	}
 
-	public PlayerMagazineInstance(int itemInventoryIndex, EntityPlayer player, ItemStack itemStack) {
+	public PlayerMagazineInstance(int itemInventoryIndex, EntityLivingBase player, ItemStack itemStack) {
 		super(itemInventoryIndex, player, itemStack);
 	}
 
-	public PlayerMagazineInstance(int itemInventoryIndex, EntityPlayer player) {
+	public PlayerMagazineInstance(int itemInventoryIndex, EntityLivingBase player) {
 		super(itemInventoryIndex, player);
 	}
 	

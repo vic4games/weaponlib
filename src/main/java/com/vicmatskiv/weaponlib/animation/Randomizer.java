@@ -7,7 +7,7 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Matrix4f;
 
-final class Randomizer {
+public final class Randomizer {
 
 	private Random random = new Random();
 

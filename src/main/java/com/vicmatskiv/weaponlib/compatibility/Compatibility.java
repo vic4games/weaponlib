@@ -5,17 +5,25 @@ import java.util.function.Predicate;
 
 import com.vicmatskiv.weaponlib.Explosion;
 import com.vicmatskiv.weaponlib.ModContext;
+import com.vicmatskiv.weaponlib.ai.EntityCustomMob;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.client.shader.ShaderGroup;
+import net.minecraft.client.shader.ShaderManager;
+import net.minecraft.client.shader.ShaderUniform;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.ai.EntityAIBase;
+import net.minecraft.entity.ai.EntityAITarget;
 import net.minecraft.entity.ai.attributes.IAttribute;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -24,6 +32,8 @@ import net.minecraft.item.ItemArmor.ArmorMaterial;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.EnumDifficulty;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.FOVUpdateEvent;
 import net.minecraftforge.client.event.GuiOpenEvent;
@@ -40,12 +50,6 @@ public interface Compatibility {
 	public EntityPlayer clientPlayer();
 
     public void setClientPlayer(EntityPlayer player);
-
-//	public WeaponSpawnEntity getSpawnEntity(Weapon weapon, World world, EntityPlayer player, float speed,
-//			float gravityVelocity, float inaccuracy, float damage, float explosionRadius, Material...damageableBlockMaterials);
-
-//	public EntityShellCasing getShellCasingEntity(PlayerWeaponInstance weaponInstance, World world, EntityPlayer player, float speed,
-//	        float gravityVelocity, float inaccuracy);
 
 	public IAttribute getMovementSpeedAttribute();
 
@@ -65,9 +69,9 @@ public interface Compatibility {
 
 	public void ensureTagCompound(ItemStack itemStack);
 
-	public void playSound(EntityPlayer player, CompatibleSound sound, float volume, float pitch);
+    public void playSound(EntityLivingBase player, CompatibleSound sound, float volume, float pitch);
 
-	public void playSoundToNearExcept(EntityPlayer player, CompatibleSound object, float volume, float pitch);
+    public void playSoundToNearExcept(EntityLivingBase player, CompatibleSound object, float volume, float pitch);
 
 	public boolean isClientSide();
 
@@ -82,6 +86,8 @@ public interface Compatibility {
 	public ElementType getEventType(Pre event);
 
 	public ItemStack getHelmet();
+
+    public ItemStack getHelmet(EntityLivingBase entity);
 
 	public CompatibleVec3 getLookVec(EntityPlayer player);
 
@@ -110,11 +116,11 @@ public interface Compatibility {
 
 	public EntityPlayer getEntity(FOVUpdateEvent event);
 
-	public EntityLivingBase getEntity(RenderLivingEvent.Pre event);
+    public EntityLivingBase getEntity(@SuppressWarnings("rawtypes") RenderLivingEvent.Pre event);
 
 	public void setNewFov(FOVUpdateEvent event, float fov);
 
-	public RenderPlayer getRenderer(RenderLivingEvent.Pre event);
+    public RenderPlayer getRenderer(@SuppressWarnings("rawtypes") RenderLivingEvent.Pre event);
 
 	public GuiScreen getGui(GuiOpenEvent event);
 
@@ -140,7 +146,7 @@ public interface Compatibility {
 
 	public float getEffectScaleFactor();
 
-	public void spawnEntity(EntityPlayer player, Entity entity);
+    public void spawnEntity(EntityLivingBase player, Entity entity);
 
 	public void moveParticle(CompatibleParticle particle, double motionX, double motionY, double motionZ);
 
@@ -278,6 +284,64 @@ public interface Compatibility {
     public boolean isFlying(EntityPlayer player);
 
     public String getLocalizedString(String format, Object...args);
+
+    public ShaderUniform getShaderUniform(ShaderManager shaderManager, String uniformName);
+
+    public void setUniform(ShaderUniform uniform, float value);
+
+    public void setUniform(ShaderUniform uniform, float value1, float value2);
+
+    public void setUniform(ShaderUniform uniform, float value1, float value2, float value3);
+
+    public void setUniform(ShaderUniform uniform, float value1, float value2, float value3, float value4);
+
+    public CompatibleVec3 getLookVec(EntityLivingBase player);
+
+    public void setEntityAttribute(EntityLivingBase entity, CompatibleSharedMonsterAttributes attributes, double value);
+
+    public EnumDifficulty getDifficulty(World world);
+
+    public void addStat(EntityPlayer entityplayer, CompatibleAchievement achievementList);
+
+    public float getLightBrightness(World world, CompatibleBlockPos pos);
+
+    public void setItemStackToSlot(Entity entity, CompatibleEntityEquipmentSlot compatibleEquipmentSlot, ItemStack itemStack);
+
+    public boolean isStrafingSupported();
+
+    public void strafe(EntityCustomMob entity, float forward, float strafe);
+    
+    public void addSpawn(Class<? extends EntityLiving> entity, int weightedProb, int min, int max,
+            CompatibleBiomeType...biomeTypes);
+
+    public void registerEgg(ModContext context, Class<? extends Entity> entityClass, String entityName, int primaryEggColor, int secondaryEggColor);
+
+    public void useShader(EntityRenderer entityRenderer, boolean value);
+
+    public boolean is3dRenderable(Item item);
+
+    public float getCompatibleAimingRotationYaw(EntityLivingBase thrower);
+    
+    public <T> void setPrivateValue(Class<T> class1, T instance, Object value, String...fieldNames);
+
+    public ItemStack createItemStack(NBTTagCompound secondaryNbt);
+
+    public EntityAITarget createAINearestAttackableTarget(EntityLivingBase e, Class<? extends EntityLivingBase> targetClass, boolean checkSight);
+    
+    public EntityAIBase createAiAvoidEntity(EntityLivingBase e, Class<? extends EntityLivingBase> entityClassToAvoid,
+            float avoidDistanceIn, double farSpeedIn, double nearSpeedIn);
+
+    public double xCoord(Vec3d vec);
+
+    public double yCoord(Vec3d vec);
+
+    public double zCoord(Vec3d vec);
+
+    public ShaderGroup getShaderGroup(EntityRenderer entityRenderer);
+
+    public void setShaderGroup(EntityRenderer entityRenderer, ShaderGroup shaderGroup);
+
+    public Entity getDamageSourceEntity(DamageSource cause);
 
 
 }

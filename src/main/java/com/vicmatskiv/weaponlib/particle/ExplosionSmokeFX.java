@@ -14,7 +14,7 @@ import net.minecraft.world.World;
 
 public class ExplosionSmokeFX extends CompatibleParticle {
 
-	private static final String SMOKE_TEXTURE = "weaponlib:/com/vicmatskiv/weaponlib/resources/large-smoke.png";
+	//private static final String SMOKE_TEXTURE = "weaponlib:/com/vicmatskiv/weaponlib/resources/large-yellow-smoke.png";
 
 	private int imageIndex;
 
@@ -88,11 +88,14 @@ public class ExplosionSmokeFX extends CompatibleParticle {
     }
 
     private Behavior behavior;
+    private ResourceLocation smokeTexture;
 
 	public ExplosionSmokeFX(World par1World, double positionX, double positionY, double positionZ, float scale,
-			float motionX, float motionY, float motionZ, int particleMaxAge, Behavior behavior)
+			float motionX, float motionY, float motionZ, int particleMaxAge, Behavior behavior, ResourceLocation smokeTexture)
 	{
 		super(par1World, positionX, positionY, positionZ, 0.0D, 0.0D, 0.0D);
+		
+		this.smokeTexture = smokeTexture;
 
 		this.motionX = motionX;
 		this.motionY = motionY;
@@ -128,9 +131,9 @@ public class ExplosionSmokeFX extends CompatibleParticle {
         this.motionY += 0.00001D; //this.motionY += 0.0005D;
         compatibility.moveParticle(this, this.motionX, this.motionY, this.motionZ);
 
-        this.motionX *= 0.599999785423279D;
+        this.motionX *= 0.799999785423279D;
         this.motionY *= 0.9999999785423279D;
-        this.motionZ *= 0.599999785423279D;
+        this.motionZ *= 0.799999785423279D;
 
         this.particleAlpha = behavior.alphaUpdateFunction.apply(particleAlpha, particleAge, particleMaxAge);
 
@@ -146,7 +149,7 @@ public class ExplosionSmokeFX extends CompatibleParticle {
     @Override
     public void renderParticle(CompatibleTessellator tessellator, float partialTicks, float par3, float par4, float par5, float par6, float par7) {
 
-    	Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation(SMOKE_TEXTURE));
+    	    Minecraft.getMinecraft().getTextureManager().bindTexture(smokeTexture);
 
 		GL11.glPushMatrix();
 		GL11.glPushAttrib(GL11.GL_ENABLE_BIT);

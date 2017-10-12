@@ -10,7 +10,7 @@ import com.vicmatskiv.weaponlib.perspective.WirelessCameraPerspective;
 import com.vicmatskiv.weaponlib.tracking.PlayerEntityTracker;
 
 import io.netty.buffer.ByteBuf;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemStack;
 
 public class PlayerTabletInstance extends PlayerItemInstance<TabletState> {
@@ -29,11 +29,11 @@ public class PlayerTabletInstance extends PlayerItemInstance<TabletState> {
 		super();
 	}
 
-	public PlayerTabletInstance(int itemInventoryIndex, EntityPlayer player, ItemStack itemStack) {
+	public PlayerTabletInstance(int itemInventoryIndex, EntityLivingBase player, ItemStack itemStack) {
 		super(itemInventoryIndex, player, itemStack);
 	}
 
-	public PlayerTabletInstance(int itemInventoryIndex, EntityPlayer player) {
+	public PlayerTabletInstance(int itemInventoryIndex, EntityLivingBase player) {
 		super(itemInventoryIndex, player);
 	}
 	

@@ -6,12 +6,14 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.Predicate;
 
 import com.vicmatskiv.weaponlib.state.Aspect;
 import com.vicmatskiv.weaponlib.state.PermitManager;
 import com.vicmatskiv.weaponlib.state.StateManager;
 
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 
@@ -144,12 +146,14 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
                 message = compatibility.getLocalizedString("gui.noAmmo");
             }
             modContext.getStatusMessageCenter().addAlertMessage(message, 3, 250, 200);
-            compatibility.playSound(weaponInstance.getPlayer(), modContext.getNoAmmoSound(), 1F, 1F);
+            if(weaponInstance.getPlayer() instanceof EntityPlayer) {
+                compatibility.playSound((EntityPlayer)weaponInstance.getPlayer(), modContext.getNoAmmoSound(), 1F, 1F);
+            }
         }
     }
 
     private void fire(PlayerWeaponInstance weaponInstance) {
-        EntityPlayer player = weaponInstance.getPlayer();
+        EntityLivingBase player = weaponInstance.getPlayer();
         Weapon weapon = (Weapon) weaponInstance.getItem();
         Random random = player.getRNG();
 
@@ -184,34 +188,43 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
     }
 
     private void ejectSpentRound(PlayerWeaponInstance weaponInstance) {
-        EntityPlayer player = weaponInstance.getPlayer();
+        EntityLivingBase player = weaponInstance.getPlayer();
         compatibility.playSound(player, weaponInstance.getWeapon().getEjectSpentRoundSound(), 1F, 1F);
     }
 
-    void serverFire(EntityPlayer player, ItemStack itemStack) {
+    //(weapon, player) 
+    public void serverFire(EntityLivingBase player, ItemStack itemStack) {
+        serverFire(player, itemStack, null);
+    }
+    
+    public void serverFire(EntityLivingBase player, ItemStack itemStack, BiFunction<Weapon, EntityLivingBase, ? extends WeaponSpawnEntity> spawnEntityWith) {
         if(!(itemStack.getItem() instanceof Weapon)) {
             return;
         }
 
         Weapon weapon = (Weapon) itemStack.getItem();
 
+        if(spawnEntityWith == null) {
+            spawnEntityWith = weapon.builder.spawnEntityWith;
+        }
+        
         for(int i = 0; i < weapon.builder.pellets; i++) {
-            WeaponSpawnEntity spawnEntity = weapon.builder.spawnEntityWith.apply(weapon, player);
+            WeaponSpawnEntity spawnEntity = spawnEntityWith.apply(weapon, player);
             compatibility.spawnEntity(player, spawnEntity);
         }
 
         PlayerWeaponInstance playerWeaponInstance = Tags.getInstance(itemStack, PlayerWeaponInstance.class);
 
-        if(weapon.isShellCasingEjectEnabled())  {
+        if(weapon.isShellCasingEjectEnabled() && playerWeaponInstance != null)  {
             EntityShellCasing entityShellCasing = weapon.builder.spawnShellWith.apply(playerWeaponInstance, player);
             if(entityShellCasing != null) {
                 compatibility.spawnEntity(player, entityShellCasing);
             }
         }
 
-        boolean silencerOn = modContext.getAttachmentAspect().isSilencerOn(playerWeaponInstance);
+        boolean silencerOn = playerWeaponInstance != null && modContext.getAttachmentAspect().isSilencerOn(playerWeaponInstance);
         compatibility.playSoundToNearExcept(player,
-                playerWeaponInstance !=null && silencerOn ? weapon.getSilencedShootSound() : weapon.getShootSound(),
+                silencerOn ? weapon.getSilencedShootSound() : weapon.getShootSound(),
                         silencerOn ? weapon.getSilencedShootSoundVolume() : weapon.getShootSoundVolume(), 1.0F);
 
     }
