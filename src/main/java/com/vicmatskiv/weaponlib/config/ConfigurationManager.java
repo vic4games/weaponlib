@@ -109,9 +109,6 @@ public class ConfigurationManager {
         }
 
         private Configuration merge(Configuration userConfig, Configuration defaultUpdatableConfig) {
-            if(userConfig == null) {
-                return defaultUpdatableConfig;
-            }
             mergeOres(userConfig, defaultUpdatableConfig);
             mergeExplosions(userConfig, defaultUpdatableConfig);
             mergeProjectiles(userConfig, defaultUpdatableConfig);
@@ -121,7 +118,7 @@ public class ConfigurationManager {
         }
 
         private void mergeExplosions(Configuration userConfig, Configuration defaultUpdatableConfig) {
-            if(explosionsValidator.test(userConfig.getExplosions())) {
+            if(userConfig != null && explosionsValidator.test(userConfig.getExplosions())) {
 
                 Float userDamageCoefficient = userConfig.getExplosions().getDamage();
                 if (userDamageCoefficient == null) {
@@ -250,7 +247,7 @@ public class ConfigurationManager {
         }
 
         private void mergeOres(Configuration userConfiguration, Configuration updatableDefaults) {
-            if(userConfiguration.getOres() != null) {
+            if(userConfiguration != null && userConfiguration.getOres() != null) {
                 updatableDefaults.getOres().getOre().forEach(updatableDefaultOre -> {
                     userConfiguration.getOres().getOre().stream()
                     .filter(o -> updatableDefaultOre.getName().equalsIgnoreCase(o.getName()))
@@ -267,7 +264,7 @@ public class ConfigurationManager {
         }
 
         private void mergeGui(Configuration userConfig, Configuration defaultUpdatableConfig) {
-            if(userConfig.getGui() != null && userConfig.getGui().getStatusBarPosition() != null) {
+            if(userConfig != null && userConfig.getGui() != null && userConfig.getGui().getStatusBarPosition() != null) {
                 try {
                     String positionValue = userConfig.getGui().getStatusBarPosition().toUpperCase()
                             .replaceAll("[\\.\\-\\s]+", "_");
