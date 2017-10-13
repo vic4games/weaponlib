@@ -88,7 +88,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.oredict.ShapedOreRecipe;
 
-public class Compatibility1_12 implements Compatibility {
+public class Compatibility1_12_2 implements Compatibility {
 
     private static final float DEFAULT_SHELL_CASING_FORWARD_OFFSET = 0.1f;
 

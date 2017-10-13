@@ -4,12 +4,12 @@ import java.util.Map;
 
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin.MCVersion;
-import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin.TransformerExclusions;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin.Name;
+import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin.TransformerExclusions;
 
 @Name("weaponlib")
 @TransformerExclusions({"com.vicmatskiv.weaponlib.core"})
-@MCVersion(value = "1.12")
+@MCVersion(value = "1.12.2")
 public class WeaponlibCorePlugin implements IFMLLoadingPlugin {
 
     @Override
