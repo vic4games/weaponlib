@@ -87,10 +87,13 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 	private PermitManager permitManager;
 	private StateManager<WeaponState, ? super PlayerWeaponInstance> stateManager;
 
-	private long clickSpammingTimeout = 100;
+	private long clickSpammingTimeout = 150;
 
 	private Predicate<PlayerWeaponInstance> clickSpammingPreventer = es ->
 		System.currentTimeMillis() >= es.getStateUpdateTimestamp() + clickSpammingTimeout;
+		
+    private Predicate<PlayerWeaponInstance> clickSpammingPreventer2 = es ->
+        System.currentTimeMillis() >= es.getStateUpdateTimestamp() + clickSpammingTimeout * 2;
 
 	private Collection<WeaponState> allowedUpdateFromStates = Arrays.asList(WeaponState.MODIFYING_REQUESTED);
 
@@ -117,7 +120,7 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 
 		.in(this)
 			.change(WeaponState.MODIFYING).to(WeaponState.READY)
-			.when(clickSpammingPreventer)
+			.when(clickSpammingPreventer2)
 			.withAction((instance) -> {permitManager.request(new ExitAttachmentModePermit(WeaponState.READY),
 					instance, (p, e) -> { /* do nothing on callback */});})
 			.manual()

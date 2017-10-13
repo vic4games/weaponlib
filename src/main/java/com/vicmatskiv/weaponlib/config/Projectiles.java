@@ -3,7 +3,6 @@ package com.vicmatskiv.weaponlib.config;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -26,6 +25,7 @@ import javax.xml.bind.annotation.XmlType;
  *       &lt;attribute name="destroyGlassBlocks" type="{http://www.w3.org/2001/XMLSchema}boolean" />
  *       &lt;attribute name="knockbackOnHit" type="{http://www.w3.org/2001/XMLSchema}boolean" />
  *       &lt;attribute name="muzzleEffects" type="{http://www.w3.org/2001/XMLSchema}boolean" />
+ *       &lt;attribute name="blurOnAim" type="{http://www.w3.org/2001/XMLSchema}boolean" />
  *     &lt;/restriction>
  *   &lt;/complexContent>
  * &lt;/complexType>
@@ -48,6 +48,8 @@ public class Projectiles {
     protected Boolean knockbackOnHit;
     @XmlAttribute(name = "muzzleEffects")
     protected Boolean muzzleEffects;
+    @XmlAttribute(name = "blurOnAim")
+    protected Boolean blurOnAim;
 
     /**
      * Gets the value of the gun property.
@@ -172,6 +174,30 @@ public class Projectiles {
      */
     public void setMuzzleEffects(Boolean value) {
         this.muzzleEffects = value;
+    }
+
+    /**
+     * Gets the value of the blurOnAim property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link Boolean }
+     *     
+     */
+    public Boolean isBlurOnAim() {
+        return blurOnAim;
+    }
+
+    /**
+     * Sets the value of the blurOnAim property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link Boolean }
+     *     
+     */
+    public void setBlurOnAim(Boolean value) {
+        this.blurOnAim = value;
     }
 
 }

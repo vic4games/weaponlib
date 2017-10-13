@@ -18,6 +18,7 @@ import javax.xml.bind.annotation.XmlType;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *       &lt;attribute name="id" type="{http://www.w3.org/2001/XMLSchema}string" />
  *       &lt;attribute name="enabled" type="{http://www.w3.org/2001/XMLSchema}boolean" default="true" />
+ *       &lt;attribute name="damage" type="{http://www.w3.org/2001/XMLSchema}float" default="1.0" />
  *     &lt;/restriction>
  *   &lt;/complexContent>
  * &lt;/complexType>
@@ -33,6 +34,8 @@ public class Gun {
     protected String id;
     @XmlAttribute(name = "enabled")
     protected Boolean enabled;
+    @XmlAttribute(name = "damage")
+    protected Float damage;
 
     /**
      * Gets the value of the id property.
@@ -84,6 +87,34 @@ public class Gun {
      */
     public void setEnabled(Boolean value) {
         this.enabled = value;
+    }
+
+    /**
+     * Gets the value of the damage property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link Float }
+     *     
+     */
+    public float getDamage() {
+        if (damage == null) {
+            return  1.0F;
+        } else {
+            return damage;
+        }
+    }
+
+    /**
+     * Sets the value of the damage property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link Float }
+     *     
+     */
+    public void setDamage(Float value) {
+        this.damage = value;
     }
 
 }

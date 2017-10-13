@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import com.vicmatskiv.weaponlib.CustomArmor;
 import com.vicmatskiv.weaponlib.ItemAttachment;
@@ -19,6 +20,7 @@ import com.vicmatskiv.weaponlib.WeightedOptions;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleBiomeType;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleEntityEquipmentSlot;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
+import com.vicmatskiv.weaponlib.config.AIEntity;
 
 import net.minecraft.client.model.ModelBiped;
 import net.minecraft.entity.Entity;
@@ -154,7 +156,8 @@ public class EntityConfiguration {
         private ResourceLocation lootTable;
         
         private Predicate<Entity> canSpawnHere;
-        private Predicate<Entity> isValidLightLevel = e -> true;
+        private Predicate<Entity> isValidLightLevel = e -> compatibility.world(e).rand.nextFloat() > 0.5f;
+        
         private float maxTolerableLightBrightness = DEFAULT_MAX_TOLERABLE_LIGHT_BRIGHTNESS;
         
         private EnumCreatureAttribute creatureAttribute = EnumCreatureAttribute.UNDEFINED;
@@ -334,10 +337,46 @@ public class EntityConfiguration {
             configuration.aiTasks = aiTasks;
             configuration.aiTargetTasks = aiTargetTasks;
             
+            int modEntityId = entityIdSupplier.get();
+            String entityName = name != null ? name : baseClass.getSimpleName() + "Ext" + modEntityId;
+            AIEntity entityConfig = context.getConfigurationManager().getAIEntity(entityName);
+            
             WeightedOptions.Builder<EnumDifficulty, Equipment> equipmentOptionsBuilder = new WeightedOptions.Builder<>();
-            equipmentOptions.forEach((key, value) -> {
-                equipmentOptionsBuilder.withOption(value.equipment, key.difficulty, value.weight);
-            });
+            
+            if(entityConfig.getEquipment().isEmpty())  {
+                // if no equipment configured externally, use the default configuration
+                equipmentOptions.forEach((key, value) -> {
+                    equipmentOptionsBuilder.withOption(value.equipment, key.difficulty, value.weight);
+                });
+            } else {
+                Map<EquipmentKey, EquipmentValue> equipmentOptions = new HashMap<>();
+
+                EnumDifficulty difficultyLevel = EnumDifficulty.EASY;
+                EnumDifficulty[] difficultyValues = EnumDifficulty.values();
+                
+                entityConfig.getEquipment().forEach(ee -> {
+                    Item equipmentItem = compatibility.findItemByName(context.getModId(), ee.getId());
+                    
+                    Equipment equipment = new Equipment();
+                    equipment.item = equipmentItem;
+                    equipment.attachments = ee.getAttachment().stream()
+                            .map(a -> compatibility.findItemByName(context.getModId(), a.getId()))
+                            .filter(e -> e instanceof ItemAttachment<?>)
+                            .map(a -> (ItemAttachment<?>)a)
+                            .collect(Collectors.toList());
+                    
+                    for(int i = difficultyLevel.ordinal(); i < difficultyValues.length; i++) {      
+                        equipmentOptions.put(new EquipmentKey(difficultyValues[i], equipment.item, 
+                                equipment.attachments.toArray(new ItemAttachment<?>[0])), 
+                                new EquipmentValue(equipment, ee.getWeight()));
+                    }
+                });
+                
+                equipmentOptions.forEach((key, value) -> {
+                    equipmentOptionsBuilder.withOption(value.equipment, key.difficulty, value.weight);
+                });
+            }
+            
             configuration.equipmentOptions = equipmentOptionsBuilder.build();
             
             WeightedOptions.Builder<EnumDifficulty, Equipment> secondaryEquipmentOptionsBuilder = new WeightedOptions.Builder<>();
@@ -351,7 +390,7 @@ public class EntityConfiguration {
             configuration.deathSound = context.registerSound(deathSound);
             configuration.stepSound = context.registerSound(stepSound);
             configuration.lootTable = lootTable;
-            configuration.maxHealth = maxHealth;
+            configuration.maxHealth = entityConfig != null ? entityConfig.getHealth() * maxHealth : maxHealth;
             configuration.maxSpeed = maxSpeed;
             configuration.followRange = followRange;
             configuration.canSpawnHere = canSpawnHere;
@@ -363,13 +402,8 @@ public class EntityConfiguration {
             configuration.secondaryEquipmentDropChance = secondaryEquipmentDropChance;
             configuration.armorDropChance = armorDropChance;
             
-            int modEntityId = entityIdSupplier.get();
-            
             Class<? extends Entity> entityClass = EntityClassFactory.getInstance()
                     .generateEntitySubclass(baseClass, modEntityId, configuration);
-            
-            
-            String entityName = name != null ? name : baseClass.getSimpleName() + "Ext" + modEntityId;
             
             compatibility.registerModEntity(entityClass, entityName, 
                     modEntityId, context.getMod(), context.getModId(), trackingRange, updateFrequency, sendVelocityUpdates);
@@ -379,8 +413,11 @@ public class EntityConfiguration {
             }
             
             for(Spawn spawn: spawns) {
-                compatibility.addSpawn(safeCast(entityClass), spawn.weightedProb, 
-                        spawn.min, spawn.max, spawn.biomeTypes);
+                int weightedProb = entityConfig != null ? (int)(entityConfig.getSpawn() * spawn.weightedProb) : spawn.weightedProb;
+                if(weightedProb > 0) {
+                    compatibility.addSpawn(safeCast(entityClass), weightedProb, 
+                            spawn.min, spawn.max, spawn.biomeTypes);
+                }
             }
             
             if(compatibility.isClientSide()) {

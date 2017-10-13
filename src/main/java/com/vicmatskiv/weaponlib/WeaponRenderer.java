@@ -1009,9 +1009,10 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			firstPersonStateManagers.put(player, stateManager);
 		} else {
 			stateManager.setState(currentState, true, currentState == RenderableState.SHOOTING
-					|| currentState == RenderableState.ZOOMING_SHOOTING);
+					|| currentState == RenderableState.ZOOMING_SHOOTING
+					|| currentState == RenderableState.RUNNING
+					|| currentState == RenderableState.ZOOMING);
 		}
-
 
 		return new StateDescriptor(playerWeaponInstance, stateManager, rate, amplitude);
 	}

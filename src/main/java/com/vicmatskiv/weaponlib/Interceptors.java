@@ -8,7 +8,6 @@ import com.vicmatskiv.weaponlib.animation.PlayerRawPitchAnimationManager;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleExposureCapability;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMathHelper;
 
-import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -77,6 +76,10 @@ public class Interceptors {
     
     public static boolean setupViewBobbing(float partialTicks) {
         
+        if(!(compatibility.getRenderViewEntity() instanceof EntityPlayer)) {
+            return true;
+        }
+        
         EntityPlayer entityplayer = (EntityPlayer)compatibility.getRenderViewEntity();
 
         {
@@ -117,9 +120,13 @@ public class Interceptors {
     
     public static boolean hurtCameraEffect(float partialTicks) {
         
+        if(!(compatibility.getRenderViewEntity() instanceof EntityPlayer)) {
+            return true;
+        }
+        
         boolean allowDefaultEffect = false;
 
-        EntityLivingBase entitylivingbase = (EntityPlayer)compatibility.getRenderViewEntity();
+        EntityPlayer entitylivingbase = (EntityPlayer)compatibility.getRenderViewEntity();
         float f = (float) entitylivingbase.hurtTime - partialTicks;
 
         if (entitylivingbase.getHealth() <= 0.0F) {
@@ -165,7 +172,7 @@ public class Interceptors {
 //        GlStateManager.rotate(-((float)rendererUpdateCount + partialTicks) * (float)i, 0.0F, 1.0F, 1.0F);
 
         //rendererUpdateCount++;
-        return false;
+        return allowDefaultEffect;
     }
 
 }

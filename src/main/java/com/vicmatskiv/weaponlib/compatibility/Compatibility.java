@@ -32,7 +32,6 @@ import net.minecraft.item.ItemArmor.ArmorMaterial;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.EnumDifficulty;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.FOVUpdateEvent;
@@ -331,17 +330,9 @@ public interface Compatibility {
     public EntityAIBase createAiAvoidEntity(EntityLivingBase e, Class<? extends EntityLivingBase> entityClassToAvoid,
             float avoidDistanceIn, double farSpeedIn, double nearSpeedIn);
 
-    public double xCoord(Vec3d vec);
-
-    public double yCoord(Vec3d vec);
-
-    public double zCoord(Vec3d vec);
-
     public ShaderGroup getShaderGroup(EntityRenderer entityRenderer);
 
     public void setShaderGroup(EntityRenderer entityRenderer, ShaderGroup shaderGroup);
 
-    public Entity getDamageSourceEntity(DamageSource cause);
-
-
+    public Entity getTrueDamageSource(DamageSource cause);
 }

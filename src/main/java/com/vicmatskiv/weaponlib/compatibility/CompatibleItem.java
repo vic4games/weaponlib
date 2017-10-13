@@ -1,5 +1,8 @@
 package com.vicmatskiv.weaponlib.compatibility;
 
+import java.util.List;
+
+import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -48,4 +51,12 @@ public abstract class CompatibleItem extends Item {
             EnumFacing facing, float hitX, float hitY, float hitZ) {
         return EnumActionResult.SUCCESS;
     }
+    
+    @Override
+    public void addInformation(ItemStack itemStack, World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
+        addInformation(itemStack, tooltip, true);
+    }
+    
+    public void addInformation(ItemStack itemStack, List<String> info,  boolean flag) {}
+
 }

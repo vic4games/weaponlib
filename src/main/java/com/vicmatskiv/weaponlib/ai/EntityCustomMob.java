@@ -50,9 +50,11 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldType;
 
 public class EntityCustomMob extends CompatibleEntityMob implements IRangedAttackMob, Contextual, Configurable<EntityConfiguration> {
 
+    private static final float FLAT_WORLD_SPAWN_CHANCE = 0.01f;
     private static final CompatibleDataManager.Key VARIANT = CompatibleDataManager.createKey(EntityCustomMob.class, int.class);
     private static final CompatibleDataManager.Key SWINGING_ARMS = CompatibleDataManager.createKey(EntityCustomMob.class, boolean.class);
 
@@ -138,9 +140,10 @@ public class EntityCustomMob extends CompatibleEntityMob implements IRangedAttac
         }
         
         super.onDeath(cause);
-        
-        if (compatibility.getDamageSourceEntity(cause) instanceof EntityPlayer) {
-            EntityPlayer entityplayer = (EntityPlayer)compatibility.getDamageSourceEntity(cause);
+
+        Entity trueDamageSource = compatibility.getTrueDamageSource(cause);
+        if (trueDamageSource instanceof EntityPlayer) {
+            EntityPlayer entityplayer = (EntityPlayer)trueDamageSource;
             compatibility.addStat(entityplayer, CompatibleAchievement.KILL_ENEMY);
         }
         
@@ -291,7 +294,7 @@ public class EntityCustomMob extends CompatibleEntityMob implements IRangedAttac
 
             BiFunction<Weapon, EntityLivingBase, ? extends WeaponSpawnEntity> spawnEntityWith = (weapon, player) -> {
                 int difficultyId = compatibility.getDifficulty(compatibility.world(this)).getDifficultyId();
-                float inaccuracy = weapon.getInaccuracy() + (3f - difficultyId) * 2 + distanceFactor * 3f;
+                float inaccuracy = weapon.getInaccuracy() + (3f - difficultyId) * 0.5f; // * 2 + distanceFactor * 3f;
                 WeaponSpawnEntity bullet = new WeaponSpawnEntity(weapon, compatibility.world(player), player, 
                         weapon.getSpawnEntityVelocity(),
                         weapon.getSpawnEntityGravityVelocity(), 
@@ -393,8 +396,10 @@ public class EntityCustomMob extends CompatibleEntityMob implements IRangedAttac
     
     @Override
     public boolean getCanSpawnHere() {
+        boolean canSpawn = compatibility.world(this).getWorldType() != WorldType.FLAT
+            || rand.nextFloat() > (1f - FLAT_WORLD_SPAWN_CHANCE);
         Predicate<Entity> predicate = getConfiguration().getCanSpawnHere();
-        return predicate != null ? predicate.test(this) : super.getCanSpawnHere();
+        return canSpawn && (predicate != null ? predicate.test(this) : super.getCanSpawnHere());
     }
 
     @Override

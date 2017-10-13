@@ -252,16 +252,6 @@ public class ItemWirelessCamera extends CompatibleItem implements ModelSource {
             boolean mainHand) {
 
         compatibility.setStackSize(itemStack, compatibility.getStackSize(itemStack) - 1);
-//        System.out.println("Right click");
-//
-//        if(itemStack.stackSize == 0) {
-//            int slot = compatibility.getInventorySlot(player, itemStack);
-//            if(slot >= 0) {
-//                player.inventory.removeStackFromSlot(slot);
-//            }
-//        }
-
-        //compatibility.playSound(player, new CompatibleSound("random.bow"), 0.5F, 0.4F / (itemRand.nextFloat() * 0.4F + 0.8F));
 
         if (!world.isRemote) {
             compatibility.spawnEntity(player, new EntityWirelessCamera(modContext, world, player, this, builder.duration));

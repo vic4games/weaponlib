@@ -20,6 +20,7 @@ import javax.xml.bind.annotation.XmlType;
  *         &lt;element name="explosions" type="{http://moderwarfaremod.org/config}Explosions" minOccurs="0"/>
  *         &lt;element name="projectiles" type="{http://moderwarfaremod.org/config}Projectiles" minOccurs="0"/>
  *         &lt;element name="gui" type="{http://moderwarfaremod.org/config}Gui" minOccurs="0"/>
+ *         &lt;element name="ai" type="{http://moderwarfaremod.org/config}AI" minOccurs="0"/>
  *       &lt;/sequence>
  *     &lt;/restriction>
  *   &lt;/complexContent>
@@ -33,7 +34,8 @@ import javax.xml.bind.annotation.XmlType;
     "ores",
     "explosions",
     "projectiles",
-    "gui"
+    "gui",
+    "ai"
 })
 public class Configuration {
 
@@ -41,6 +43,7 @@ public class Configuration {
     protected Explosions explosions;
     protected Projectiles projectiles;
     protected Gui gui;
+    protected AI ai;
 
     /**
      * Gets the value of the ores property.
@@ -136,6 +139,30 @@ public class Configuration {
      */
     public void setGui(Gui value) {
         this.gui = value;
+    }
+
+    /**
+     * Gets the value of the ai property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link AI }
+     *     
+     */
+    public AI getAi() {
+        return ai;
+    }
+
+    /**
+     * Sets the value of the ai property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link AI }
+     *     
+     */
+    public void setAi(AI value) {
+        this.ai = value;
     }
 
 }

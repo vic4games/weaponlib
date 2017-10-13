@@ -7,9 +7,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
 
-import net.minecraft.stats.StatBase;
-import net.minecraft.stats.StatList;
-
 import com.vicmatskiv.weaponlib.Explosion;
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.ai.EntityCustomMob;
@@ -50,9 +47,9 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemArmor.ArmorMaterial;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemArmor.ArmorMaterial;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumParticleTypes;
@@ -68,13 +65,13 @@ import net.minecraft.world.biome.Biome;
 import net.minecraftforge.client.event.FOVUpdateEvent;
 import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.client.event.MouseEvent;
-import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.Pre;
+import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.client.model.ModelLoaderRegistry;
 import net.minecraftforge.common.BiomeDictionary;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.BiomeDictionary.Type;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.EnumHelper;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
 import net.minecraftforge.fml.client.FMLClientHandler;
@@ -88,6 +85,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.oredict.ShapedOreRecipe;
 
+@SuppressWarnings("deprecation")
 public class Compatibility1_12_2 implements Compatibility {
 
     private static final float DEFAULT_SHELL_CASING_FORWARD_OFFSET = 0.1f;
@@ -902,7 +900,6 @@ public class Compatibility1_12_2 implements Compatibility {
         return player.capabilities.isFlying;
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     public String getLocalizedString(String format, Object... args) {
         return I18n.translateToLocalFormatted(format, args);
@@ -1055,22 +1052,6 @@ public class Compatibility1_12_2 implements Compatibility {
             float avoidDistanceIn, double farSpeedIn, double nearSpeedIn) {
         return new EntityAIAvoidEntity<>((EntityCreature)e, entityClassToAvoid, avoidDistanceIn, farSpeedIn, nearSpeedIn);
     }
-    
-    
-    @Override
-    public double xCoord(Vec3d vec) {
-        return vec.x;
-    }
-
-    @Override
-    public double yCoord(Vec3d vec) {
-        return vec.y;
-    }
-
-    @Override
-    public double zCoord(Vec3d vec) {
-        return vec.z;
-    }
 
     @Override
     public ShaderGroup getShaderGroup(EntityRenderer entityRenderer) {
@@ -1083,7 +1064,7 @@ public class Compatibility1_12_2 implements Compatibility {
     }
 
     @Override
-    public Entity getDamageSourceEntity(DamageSource cause) {
+    public Entity getTrueDamageSource(DamageSource cause) {
         return cause.getTrueSource();
     }
 }

@@ -9,16 +9,16 @@ import javax.xml.bind.annotation.XmlType;
 
 
 /**
- * <p>Java class for Ores complex type.
+ * <p>Java class for AI complex type.
  * 
  * <p>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
- * &lt;complexType name="Ores">
+ * &lt;complexType name="AI">
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *       &lt;sequence>
- *         &lt;element name="ore" type="{http://moderwarfaremod.org/config}Ore" maxOccurs="unbounded" minOccurs="0"/>
+ *         &lt;element name="entity" type="{http://moderwarfaremod.org/config}AIEntity" maxOccurs="unbounded" minOccurs="0"/>
  *       &lt;/sequence>
  *     &lt;/restriction>
  *   &lt;/complexContent>
@@ -28,40 +28,40 @@ import javax.xml.bind.annotation.XmlType;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "Ores", propOrder = {
-    "ore"
+@XmlType(name = "AI", propOrder = {
+    "entity"
 })
-public class Ores {
+public class AI {
 
-    protected List<Ore> ore;
+    protected List<AIEntity> entity;
 
     /**
-     * Gets the value of the ore property.
+     * Gets the value of the entity property.
      * 
      * <p>
      * This accessor method returns a reference to the live list,
      * not a snapshot. Therefore any modification you make to the
      * returned list will be present inside the JAXB object.
-     * This is why there is not a <CODE>set</CODE> method for the ore property.
+     * This is why there is not a <CODE>set</CODE> method for the entity property.
      * 
      * <p>
      * For example, to add a new item, do as follows:
      * <pre>
-     *    getOre().add(newItem);
+     *    getEntity().add(newItem);
      * </pre>
      * 
      * 
      * <p>
      * Objects of the following type(s) are allowed in the list
-     * {@link Ore }
+     * {@link AIEntity }
      * 
      * 
      */
-    public List<Ore> getOre() {
-        if (ore == null) {
-            ore = new ArrayList<Ore>();
+    public List<AIEntity> getEntity() {
+        if (entity == null) {
+            entity = new ArrayList<AIEntity>();
         }
-        return this.ore;
+        return this.entity;
     }
 
 }

@@ -3,12 +3,11 @@ package com.vicmatskiv.weaponlib;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.vicmatskiv.weaponlib.compatibility.CompatibleItemMethods;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleItem;
 
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
-public class ItemAmmo extends Item implements CompatibleItemMethods {
+public class ItemAmmo extends CompatibleItem {
 	
 	private List<Weapon> compatibleWeapons = new ArrayList<>();
 

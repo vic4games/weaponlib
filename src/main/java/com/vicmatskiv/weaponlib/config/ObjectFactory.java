@@ -74,6 +74,22 @@ public class ObjectFactory {
     }
 
     /**
+     * Create an instance of {@link EntityEquipment }
+     * 
+     */
+    public EntityEquipment createEntityEquipment() {
+        return new EntityEquipment();
+    }
+
+    /**
+     * Create an instance of {@link AI }
+     * 
+     */
+    public AI createAI() {
+        return new AI();
+    }
+
+    /**
      * Create an instance of {@link Explosions }
      * 
      */
@@ -87,6 +103,22 @@ public class ObjectFactory {
      */
     public Gui createGui() {
         return new Gui();
+    }
+
+    /**
+     * Create an instance of {@link Attachment }
+     * 
+     */
+    public Attachment createAttachment() {
+        return new Attachment();
+    }
+
+    /**
+     * Create an instance of {@link AIEntity }
+     * 
+     */
+    public AIEntity createAIEntity() {
+        return new AIEntity();
     }
 
     /**

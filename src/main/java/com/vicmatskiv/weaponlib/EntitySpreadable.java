@@ -314,10 +314,7 @@ public class EntitySpreadable extends Entity implements Contextual {
                 }
             }
             if(spreadMap.isEmpty()) {
-                System.out.println("Spread cleared");
                 setDead();
-            } else {
-                System.out.println("Blocks affected: " + spreadMap.size());
             }
         }
     }

@@ -25,10 +25,6 @@ public class ConfigurationManager {
 
     public static enum StatusBarPosition{TOP_RIGHT, BOTTOM_RIGHT, TOP_LEFT, BOTTOM_LEFT};
 
-//    public static final String STATUS_BAR_POSITION_BOTTOM_RIGHT = "bottom-right";
-//
-//    public static final String STATUS_BAR_POSITION_TOP_RIGHT = "top-right";
-
     private static final float DROP_BLOCK_COEFFICIENT_MIN = 0f;
     private static final float DROP_BLOCK_COEFFICIENT_MAX = 5f;
 
@@ -52,7 +48,11 @@ public class ConfigurationManager {
 
     public static final class Builder {
 
+        private static final float DEFAULT_GUN_DAMAGE_MULTIPLIER = 1f;
+        private static final float MAX_GUN_DAMAGE_MULTIPLIER = 2f;
+        private static final float MIN_GUN_DAMAGE_MULTIPLIER = 0.1f;
         private Map<String, Gun> guns = new LinkedHashMap<>();
+        private Map<String, AIEntity> aiEntities = new LinkedHashMap<>();
 
         private Source defaultConfigSource;
         private Source userConfigSource;
@@ -116,6 +116,7 @@ public class ConfigurationManager {
             mergeExplosions(userConfig, defaultUpdatableConfig);
             mergeProjectiles(userConfig, defaultUpdatableConfig);
             mergeGui(userConfig, defaultUpdatableConfig);
+            mergeAi(userConfig, defaultUpdatableConfig);
             return defaultUpdatableConfig;
         }
 
@@ -143,12 +144,57 @@ public class ConfigurationManager {
                 defaultUpdatableConfig.getExplosions().setDropBlockChance(userDropBlockChance);
             }
         }
+        
+        private void mergeAi(Configuration userConfig, Configuration defaultUpdatableConfig) {
+            if(defaultUpdatableConfig.getAi() != null) {
+                defaultUpdatableConfig.getAi().getEntity().stream()
+                .filter(aiEntity -> aiEntity.getName() != null)
+                .forEach(aiEntity -> {
+                    if(aiEntity.getHealth() <= 0.1f || aiEntity.getHealth() > 2f) {
+                        aiEntity.setHealth(1f);
+                    }
+                    if(aiEntity.getSpawn() < 0f || aiEntity.getSpawn() > 5f) {
+                        aiEntity.setSpawn(1f);
+                    }
+                    aiEntities.put(aiEntity.getName(), aiEntity);
+                });
+            }
+            
+            if(userConfig != null) {
+                if(userConfig.getAi() != null) {
+                    for(AIEntity aiEntity: userConfig.getAi().getEntity()) {
+                        if(aiEntity.getName() != null) {
+                            if(aiEntity.getHealth() <= 0.1f || aiEntity.getHealth() > 2f) {
+                                aiEntity.setHealth(1f);
+                            }
+                            if(aiEntity.getSpawn() < 0f || aiEntity.getSpawn() > 5f) {
+                                aiEntity.setSpawn(1f);
+                            }
+                            aiEntities.put(aiEntity.getName(), aiEntity);
+                        }
+                    }
+                }
+            }
+            
+            if(!aiEntities.isEmpty()) {
+                AI ai = defaultUpdatableConfig.getAi();
+                if(ai == null) {
+                    ai = new AI();
+                    defaultUpdatableConfig.setAi(ai);
+                }
+                ai.getEntity().clear();
+                ai.getEntity().addAll(aiEntities.values());
+            }
+        }
 
         private void mergeProjectiles(Configuration userConfig, Configuration defaultUpdatableConfig) {
             if(defaultUpdatableConfig.getProjectiles() != null) {
                 defaultUpdatableConfig.getProjectiles().getGun().stream()
                 .filter(gun -> gun.getId() != null)
                 .forEach(gun -> {
+                    if(gun.getDamage() < MIN_GUN_DAMAGE_MULTIPLIER || gun.getDamage() > MAX_GUN_DAMAGE_MULTIPLIER) {
+                        gun.setDamage(DEFAULT_GUN_DAMAGE_MULTIPLIER);
+                    }
                     guns.put(gun.getId(), gun);
                 });
             }
@@ -180,8 +226,16 @@ public class ConfigurationManager {
                         defaultUpdatableConfig.getProjectiles().setMuzzleEffects(
                                 userConfig.getProjectiles().isMuzzleEffects());
                     }
+                    
+                    if(userConfig.getProjectiles().isBlurOnAim() != null) {
+                        defaultUpdatableConfig.getProjectiles().setBlurOnAim(
+                                userConfig.getProjectiles().isBlurOnAim());
+                    }
 
                     for(Gun gun: userConfig.getProjectiles().getGun()) {
+                        if(gun.getDamage() < MIN_GUN_DAMAGE_MULTIPLIER || gun.getDamage() > MAX_GUN_DAMAGE_MULTIPLIER) {
+                            gun.setDamage(DEFAULT_GUN_DAMAGE_MULTIPLIER);
+                        }
                         if(gun.getId() != null) {
                             guns.put(gun.getId(), gun);
                         }
@@ -295,6 +349,10 @@ public class ConfigurationManager {
 
     public Gun getGun(String id) {
         return builder.guns.get(id);
+    }
+    
+    public AIEntity getAIEntity(String name) {
+        return builder.aiEntities.get(name);
     }
 
 }

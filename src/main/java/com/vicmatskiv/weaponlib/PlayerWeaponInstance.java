@@ -443,7 +443,10 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 	    }
 
 	    float progress = getAimChangeProgress();
-        return phase == DynamicShaderPhase.PRE_ITEM_RENDER
+        return getWeapon() != null 
+                && getWeapon().getModContext() != null
+                && getWeapon().getModContext().getConfigurationManager().getProjectiles().isBlurOnAim()
+                && phase == DynamicShaderPhase.PRE_ITEM_RENDER
                 && (isAimed() || (progress > 0f && progress < 1f)) ? BLUR_SOURCE : null;
     }
    	

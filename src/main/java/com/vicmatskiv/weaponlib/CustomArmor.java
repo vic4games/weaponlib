@@ -20,11 +20,9 @@ import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelBiped;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
 public class CustomArmor extends CompatibleCustomArmor implements ExposureProtection {
@@ -32,6 +30,66 @@ public class CustomArmor extends CompatibleCustomArmor implements ExposureProtec
     private static final String ACTIVE_ATTACHMENT_TAG = "ActiveAttachments";
 
 	public static class Builder {
+	    
+	    private static class ChestModelFactory {
+	        
+	        private static ModelBiped createModel(String modelClassName) {
+	            try {
+	                return (ModelBiped) Class.forName(modelClassName).newInstance();
+	            } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+	                throw new IllegalStateException("Missing chest model", e);
+	            }
+	        }
+	    }
+	    
+
+	    private static class HelmetModelFactory {
+	        private static ModelBiped create(String modelClassName) {
+	            ModelBiped helmetModel = null;
+	            try {
+	                Class<?> modelClass = Class.forName(modelClassName);
+	                
+	                
+	                if(ModelBiped.class.isAssignableFrom(modelClass)) {
+	                    helmetModel = (ModelBiped) modelClass.newInstance();
+	                } else if(ModelBase.class.isAssignableFrom(modelClass)) {
+	                    helmetModel = new ModelBiped() {
+	                        {
+	                            this.bipedHead = new ModelBaseRendererWrapper((WrappableModel) modelClass.newInstance());
+	                            this.bipedHeadwear.isHidden = true;
+	                        }
+	                    };
+	                }
+	            } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+	                throw new IllegalStateException("Missing helmet model", e);
+	            }
+	            return helmetModel;
+	        }
+	    }
+	    
+	    private static final class BootsModelFactory {
+	        
+	        private static ModelBiped createModel(String modelClassName) {
+	            ModelBiped bootsModel = null;
+	            try {
+	                Class<?> modelClass = Class.forName(modelClassName);
+	                
+	                if(ModelBiped.class.isAssignableFrom(modelClass)) {
+	                    bootsModel = (ModelBiped) modelClass.newInstance();
+	                } else if(ModelBase.class.isAssignableFrom(modelClass)) {
+//	                          bootsModel = new ModelBiped() {
+//	                              {
+//	                                  this.bipedHead = new ModelBaseRendererWrapper((WrappableModel) modelClass.newInstance());
+//	                                  this.bipedHeadwear.isHidden = true;
+//	                              }
+//	                          };
+	                }
+	            } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+	                throw new IllegalStateException("Missing boots model", e);
+	            }
+	            return bootsModel;
+	        }
+	    }
 
 		private String modId;
 		private String textureName;
@@ -117,17 +175,17 @@ public class CustomArmor extends CompatibleCustomArmor implements ExposureProtec
 		public void build(boolean isClient) {
 
 			if(isClient) {
-				try {
-					chestModel = (ModelBiped) Class.forName(modelClassName).newInstance();
-				} catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
-					throw new IllegalStateException("Missing chest model", e);
-				}
-
-				try {
-					bootsModel = (ModelBiped) Class.forName(modelClassName).newInstance();
-				} catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
-					throw new IllegalStateException("Missing boots model", e);
-				}
+//				try {
+//					chestModel = (ModelBiped) Class.forName(modelClassName).newInstance();
+//				} catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+//					throw new IllegalStateException("Missing chest model", e);
+//				}
+//
+//				try {
+//					bootsModel = (ModelBiped) Class.forName(modelClassName).newInstance();
+//				} catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+//					throw new IllegalStateException("Missing boots model", e);
+//				}
 			}
 
 			if(modId == null) {
@@ -167,24 +225,8 @@ public class CustomArmor extends CompatibleCustomArmor implements ExposureProtec
 		public CustomArmor buildHelmet(ModContext context) {
 		    
 			if(context.isClient()) {
-			    //ModelBiped helmetModel = null;
 				if(helmetModel == null) {
-					try {
-					    Class<?> modelClass = Class.forName(modelClassName);
-						
-						if(ModelBiped.class.isAssignableFrom(modelClass)) {
-						    helmetModel = (ModelBiped) modelClass.newInstance();
-						} else if(ModelBase.class.isAssignableFrom(modelClass)) {
-						    helmetModel = new ModelBiped() {
-	                            {
-	                                this.bipedHead = new ModelBaseRendererWrapper((WrappableModel) modelClass.newInstance());
-	                                this.bipedHeadwear.isHidden = true;
-	                            }
-	                        };
-	                    }
-					} catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
-						throw new IllegalStateException("Missing helmet model", e);
-					}
+				    helmetModel = HelmetModelFactory.create(modelClassName);
 				}
 			}
 
@@ -213,11 +255,7 @@ public class CustomArmor extends CompatibleCustomArmor implements ExposureProtec
 
 			if(isClient) {
 				if(chestModel == null) {
-					try {
-						chestModel = (ModelBiped) Class.forName(modelClassName).newInstance();
-					} catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
-						throw new IllegalStateException("Missing chest model", e);
-					}
+				    chestModel = ChestModelFactory.createModel(modelClassName);
 				}
 			}
 
@@ -242,22 +280,7 @@ public class CustomArmor extends CompatibleCustomArmor implements ExposureProtec
 			if(isClient) {
 
 				if(bootsModel == null) {
-					try {
-						Class<?> modelClass = Class.forName(modelClassName);
-						
-						if(ModelBiped.class.isAssignableFrom(modelClass)) {
-						    bootsModel = (ModelBiped) modelClass.newInstance();
-                        } else if(ModelBase.class.isAssignableFrom(modelClass)) {
-//                            bootsModel = new ModelBiped() {
-//                                {
-//                                    this.bipedHead = new ModelBaseRendererWrapper((WrappableModel) modelClass.newInstance());
-//                                    this.bipedHeadwear.isHidden = true;
-//                                }
-//                            };
-                        }
-					} catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
-						throw new IllegalStateException("Missing boots model", e);
-					}
+				    bootsModel = BootsModelFactory.createModel(modelClassName);
 				}
 			}
 
@@ -277,6 +300,9 @@ public class CustomArmor extends CompatibleCustomArmor implements ExposureProtec
 
 			return armorBoots;
 		}
+
+		
+        
 	}
 
 	private Map<ItemAttachment<CustomArmor>, CompatibleAttachment<CustomArmor>> compatibleAttachments = new HashMap<>();
@@ -284,7 +310,8 @@ public class CustomArmor extends CompatibleCustomArmor implements ExposureProtec
 	//private CompatibleEntityEquipmentSlot slot;
 	private boolean hasNightVision;
 	private float exposureReductionFactor;
-	private CompatibleSound breathingSound;
+	@SuppressWarnings("unused")
+    private CompatibleSound breathingSound;
 
     private CompatibleEntityEquipmentSlot compatibleEquipmentType;
 
@@ -418,6 +445,9 @@ public class CustomArmor extends CompatibleCustomArmor implements ExposureProtec
 		return Arrays.stream(activeAttachmentsIds).anyMatch((attachmentId) -> attachment == Item.getItemById(attachmentId));
 	}
     
+	
+    
+
     public boolean hasNightVision() {
         return hasNightVision;
     }

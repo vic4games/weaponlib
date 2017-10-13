@@ -31,7 +31,6 @@ import com.vicmatskiv.weaponlib.Tags;
 import com.vicmatskiv.weaponlib.Updatable;
 import com.vicmatskiv.weaponlib.WeaponSpawnEntity;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleItem;
-import com.vicmatskiv.weaponlib.compatibility.CompatibleItemMethods;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 import com.vicmatskiv.weaponlib.crafting.CraftingComplexity;
 import com.vicmatskiv.weaponlib.crafting.OptionsMetadata;
@@ -44,7 +43,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
-public class ItemMelee extends CompatibleItem implements CompatibleItemMethods,
+public class ItemMelee extends CompatibleItem implements
 PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer, Modifiable, Updatable {
 
     private static final Logger logger = LogManager.getLogger(ItemMelee.class);
@@ -359,7 +358,7 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
                 .map(e -> e.getKey())
                 .collect(Collectors.toList());
     }
-    
+
     @Override
     public void addInformation(ItemStack itemStack, List<String> info, boolean flag) {
         if(info != null && builder.informationProvider != null) {

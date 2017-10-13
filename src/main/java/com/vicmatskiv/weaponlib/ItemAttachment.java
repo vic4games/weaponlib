@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.function.Function;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleItem;
-import com.vicmatskiv.weaponlib.compatibility.CompatibleItemMethods;
 import com.vicmatskiv.weaponlib.melee.PlayerMeleeInstance;
 
 import net.minecraft.client.model.ModelBase;
@@ -14,7 +13,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
-public class ItemAttachment<T> extends CompatibleItem implements CompatibleItemMethods, ModelSource {
+public class ItemAttachment<T> extends CompatibleItem implements ModelSource {
 
 	private AttachmentCategory category;
 	private String crosshair;
@@ -136,17 +135,10 @@ public class ItemAttachment<T> extends CompatibleItem implements CompatibleItemM
 		compatibleWeapons.add(weapon);
 	}
 
-//	@SuppressWarnings({ "rawtypes", "unchecked" })
-//	@Override
-//	public void addInformation(ItemStack itemStack, EntityPlayer entityPlayer, List info, boolean p_77624_4_) {
-//		info.add("Compatible guns:");
-//		compatibleWeapons.forEach((weapon) -> info.add(weapon.getName()));
-//	}
-
 	@Override
-	public void addInformation(ItemStack itemStack, List<String> list, boolean p_77624_4_) {
-		if(list != null && informationProvider != null) {
-			list.add(informationProvider.apply(itemStack));
+    public void addInformation(ItemStack itemStack, List<String> info, boolean flag) {
+		if(info != null && informationProvider != null) {
+		    info.add(informationProvider.apply(itemStack));
 		}
 	}
 

@@ -21,7 +21,6 @@ import org.apache.logging.log4j.Logger;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleBlockState;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleItem;
-import com.vicmatskiv.weaponlib.compatibility.CompatibleItemMethods;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTargetPoint;
@@ -31,7 +30,6 @@ import com.vicmatskiv.weaponlib.crafting.OptionsMetadata;
 import com.vicmatskiv.weaponlib.model.Shell;
 
 import net.minecraft.client.model.ModelBase;
-import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -40,8 +38,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
-public class Weapon extends CompatibleItem implements CompatibleItemMethods,
-PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContainer, Reloadable, Modifiable, Updatable {
+public class Weapon extends CompatibleItem implements PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContainer, Reloadable, Modifiable, Updatable {
 
     private static final Logger logger = LogManager.getLogger(Weapon.class);
 
@@ -554,6 +551,12 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
             if (name == null) {
                 throw new IllegalStateException("Weapon name not provided");
             }
+            
+            Gun gunConfig = modContext.getConfigurationManager().getGun(name);
+            
+            if(gunConfig != null) {
+                spawnEntityDamage *= gunConfig.getDamage();
+            }
 
             if (shootSound == null) {
                 shootSound = name;
@@ -656,7 +659,6 @@ PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContaine
                 attachment.addCompatibleWeapon(weapon);
             }
 
-            Gun gunConfig = modContext.getConfigurationManager().getGun(name);
 
             if(gunConfig == null || gunConfig.isEnabled()) {
                 modContext.registerWeapon(name, weapon, renderer);
