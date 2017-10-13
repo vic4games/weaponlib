@@ -438,6 +438,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
         renderContext.capturePartPosition(Part.RIGHT_HAND);
 
         renderRightArm(render,(AbstractClientPlayer) player);
+        //render.renderRightArm((AbstractClientPlayer) player);
         GL11.glPopMatrix();
     }
 
@@ -484,6 +485,22 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
         modelplayer.bipedRightArmwear.rotateAngleX = 0.0F;
         modelplayer.bipedRightArmwear.render(0.0625F);
         GlStateManager.disableBlend();
+        
+        
+//        float f = 1.0F;
+//        GlStateManager.color(1.0F, 1.0F, 1.0F);
+//        float f1 = 0.0625F;
+//        ModelPlayer modelplayer = renderPlayer.getMainModel();
+//        setModelVisibilities(renderPlayer, clientPlayer);
+//        GlStateManager.enableBlend();
+//        modelplayer.swingProgress = 0.0F;
+//        modelplayer.isSneak = false;
+//        modelplayer.setRotationAngles(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0625F, clientPlayer);
+//        modelplayer.bipedRightArm.rotateAngleX = 0.0F;
+//        modelplayer.bipedRightArm.render(0.0625F);
+//        modelplayer.bipedRightArmwear.rotateAngleX = 0.0F;
+//        modelplayer.bipedRightArmwear.render(0.0625F);
+//        GlStateManager.disableBlend();
     }
 
     private static void setModelVisibilities(RenderPlayer renderPlayer, AbstractClientPlayer clientPlayer)
@@ -502,7 +519,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
             ItemStack itemstack = clientPlayer.getHeldItemMainhand();
             ItemStack itemstack1 = clientPlayer.getHeldItemOffhand();
             //modelplayer.setInvisible(true);
-            modelplayer.setVisible(false);
+            modelplayer.setVisible(true);
             modelplayer.bipedHeadwear.showModel = clientPlayer.isWearing(EnumPlayerModelParts.HAT);
             modelplayer.bipedBodyWear.showModel = clientPlayer.isWearing(EnumPlayerModelParts.JACKET);
             modelplayer.bipedLeftLegwear.showModel = clientPlayer.isWearing(EnumPlayerModelParts.LEFT_PANTS_LEG);
