@@ -442,10 +442,15 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 	        }
 	    }
 
+	    Boolean blurOnAim = true;
+	    if(getWeapon() != null && getWeapon().getModContext() != null && getWeapon().getModContext().getConfigurationManager().getProjectiles() != null) {
+	        blurOnAim = getWeapon().getModContext().getConfigurationManager().getProjectiles().isBlurOnAim();
+	        if(blurOnAim == null) {
+	            blurOnAim = true;
+	        }
+	    }
 	    float progress = getAimChangeProgress();
-        return getWeapon() != null 
-                && getWeapon().getModContext() != null
-                && getWeapon().getModContext().getConfigurationManager().getProjectiles().isBlurOnAim()
+        return blurOnAim
                 && phase == DynamicShaderPhase.PRE_ITEM_RENDER
                 && (isAimed() || (progress > 0f && progress < 1f)) ? BLUR_SOURCE : null;
     }

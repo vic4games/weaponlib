@@ -34,6 +34,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.world.EnumDifficulty;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldType;
 import net.minecraftforge.client.event.FOVUpdateEvent;
 import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.client.event.MouseEvent;
@@ -335,4 +336,6 @@ public interface Compatibility {
     public void setShaderGroup(EntityRenderer entityRenderer, ShaderGroup shaderGroup);
 
     public Entity getTrueDamageSource(DamageSource cause);
+
+    public WorldType getWorldType(World world);
 }

@@ -61,6 +61,7 @@ import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.EnumDifficulty;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldType;
 import net.minecraft.world.biome.Biome;
 import net.minecraftforge.client.event.FOVUpdateEvent;
 import net.minecraftforge.client.event.GuiOpenEvent;
@@ -1066,5 +1067,10 @@ public class Compatibility1_12_2 implements Compatibility {
     @Override
     public Entity getTrueDamageSource(DamageSource cause) {
         return cause.getTrueSource();
+    }
+    
+    @Override
+    public WorldType getWorldType(World world) {
+        return world.getWorldType();
     }
 }

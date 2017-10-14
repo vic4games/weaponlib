@@ -49,6 +49,8 @@ public class ClassInfo {
     private String notchClassName;
     private String mcpClassName;
     private Map<MethodSignature, String> notchMethodInfoMap = new HashMap<>();
+    private Map<MethodSignature, String> notchSignatureMap = new HashMap<>();
+
     private Map<MethodSignature, String> mcpMethodInfoMap = new HashMap<>();
 
 
@@ -59,6 +61,12 @@ public class ClassInfo {
 
     public ClassInfo addMethodInfo(String mcpMethodName, String signature, String notchName) {
         notchMethodInfoMap.put(new MethodSignature(mcpMethodName, signature), notchName);
+        return this;
+    }
+    
+    public ClassInfo addMethodInfo2(String mcpMethodName, String signature, String notchName, String notchSignature) {
+        notchMethodInfoMap.put(new MethodSignature(mcpMethodName, signature), notchName);
+        notchSignatureMap.put(new MethodSignature(mcpMethodName, signature), notchSignature);
         return this;
     }
     
@@ -79,7 +87,8 @@ public class ClassInfo {
             String methodName,
             String methodSignature)
     {
-        if(!expectedMcpMethodSignature.equals(methodSignature)) {
+        if(!expectedMcpMethodSignature.equals(methodSignature) 
+                && !methodSignature.equals(notchSignatureMap.get(new MethodSignature(expectedMcpMethodName, expectedMcpMethodSignature)))) {
             return false;
         }
 
@@ -98,6 +107,10 @@ public class ClassInfo {
 
     public String getNotchClassName() {
         return notchClassName;
+    }
+    
+    public String getMcpClassName() {
+        return mcpClassName;
     }
 
     public String getNotchMethodName(String mcpMethodName, String signature) {

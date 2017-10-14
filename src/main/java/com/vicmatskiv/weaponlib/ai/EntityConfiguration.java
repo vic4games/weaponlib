@@ -343,7 +343,7 @@ public class EntityConfiguration {
             
             WeightedOptions.Builder<EnumDifficulty, Equipment> equipmentOptionsBuilder = new WeightedOptions.Builder<>();
             
-            if(entityConfig.getEquipment().isEmpty())  {
+            if(entityConfig == null || entityConfig.getEquipment().isEmpty())  {
                 // if no equipment configured externally, use the default configuration
                 equipmentOptions.forEach((key, value) -> {
                     equipmentOptionsBuilder.withOption(value.equipment, key.difficulty, value.weight);
