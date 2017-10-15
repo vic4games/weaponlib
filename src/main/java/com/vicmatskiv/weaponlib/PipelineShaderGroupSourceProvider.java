@@ -98,6 +98,8 @@ class PipelineShaderGroupSourceProvider implements DynamicShaderGroupSourceProvi
             NBTTagCompound tagCompound = compatibility.getTagCompound(helmetStack);
             if(tagCompound != null) {
                 nightVisionEnabled = tagCompound.getBoolean("nv");
+            } else {
+                nightVisionEnabled = false;
             }
         } else {
             nightVisionEnabled = false;

@@ -11,7 +11,7 @@ public class CompatibleClassInfoProvider {
 
     static {
         classInfoMap.put("net/minecraft/client/renderer/EntityRenderer",
-                new ClassInfo("net/minecraft/client/renderer/EntityRenderer", "buo")
+                new ClassInfo("net/minecraft/client/renderer/EntityRenderer", "buq")
                 .addMethodInfo("hurtCameraEffect", "(F)V", "d")
                 .addMethodInfo("setupCameraTransform", "(FI)V", "a")
                 .addMethodInfo("setupViewBobbing", "applyBobbing", "(F)V", "e")

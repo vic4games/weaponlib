@@ -336,7 +336,7 @@ public class CompatibleWorldRenderer extends EntityRenderer
         float f2 = f3 * (1.0F - f4) + f4;
         this.fogColor1 += (f2 - this.fogColor1) * 0.1F;
         ++this.rendererUpdateCount;
-        this.itemRenderer.updateEquippedItem();
+        //this.itemRenderer.updateEquippedItem();
         this.addRainParticles();
         this.bossColorModifierPrev = this.bossColorModifier;
 
@@ -1324,6 +1324,8 @@ public class CompatibleWorldRenderer extends EntityRenderer
                     this.shaderGroup.render(partialTicks);
                     GlStateManager.popMatrix();
                 }
+
+                this.mc.getFramebuffer().bindFramebuffer(true);
             }
         }
 
