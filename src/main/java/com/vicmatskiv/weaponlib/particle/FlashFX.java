@@ -14,9 +14,9 @@ import net.minecraft.world.World;
 
 public class FlashFX extends CompatibleParticle {
 
-	private static final float FLASH_ALPHA_FACTOR = 0.8f;
+	private static final float FLASH_ALPHA_FACTOR = 0.2f;
 
-	private static final double FLASH_SCALE_FACTOR = 1.1;
+	private static final double FLASH_SCALE_FACTOR = 0.1f;
 
 	private static final String FLASH_TEXTURE = "weaponlib:/com/vicmatskiv/weaponlib/resources/flashes.png";
 

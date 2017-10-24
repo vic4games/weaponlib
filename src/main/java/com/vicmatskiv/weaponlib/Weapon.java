@@ -105,7 +105,7 @@ public class Weapon extends CompatibleItem implements PlayerItemInstanceFactory<
 
         int pellets = 1;
 
-        float flashIntensity = 0.7f;
+        float flashIntensity = 0.2f;
 
         Supplier<Float> flashScale = () -> 1f;
 
@@ -992,6 +992,10 @@ public class Weapon extends CompatibleItem implements PlayerItemInstanceFactory<
     
     public long getPrepareFirstLoadIterationAnimationDuration() {
         return builder.renderer.getPrepareFirstLoadIterationAnimationDuration();
+    }
+    
+    public long getAllLoadIterationAnimationsCompletedDuration() {
+        return builder.renderer.getAllLoadIterationAnimationsCompletedDuration();
     }
     
     public long getTotalLoadIterationDuration() {

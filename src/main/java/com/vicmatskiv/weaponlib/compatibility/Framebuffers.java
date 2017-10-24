@@ -1,11 +1,20 @@
 package com.vicmatskiv.weaponlib.compatibility;
 
 import org.lwjgl.opengl.ARBFramebufferObject;
+import org.lwjgl.opengl.GL11;
 
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
 
 public class Framebuffers {
+
+    public static int getCurrentTexture() {
+        return GlStateManager.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
+    }
+    
+    public static void bindTexture(int textureId) {
+        GlStateManager.bindTexture(textureId);
+    }
 
     public static int getCurrentFramebuffer() {
         return GlStateManager.glGetInteger(ARBFramebufferObject.GL_FRAMEBUFFER_BINDING);

@@ -396,7 +396,7 @@ public class EntityCustomMob extends CompatibleEntityMob implements IRangedAttac
     
     @Override
     public boolean getCanSpawnHere() {
-        boolean canSpawn = compatibility.world(this).getWorldType() != WorldType.FLAT
+        boolean canSpawn = compatibility.getWorldType(compatibility.world(this)) != WorldType.FLAT
             || rand.nextFloat() > (1f - FLAT_WORLD_SPAWN_CHANCE);
         Predicate<Entity> predicate = getConfiguration().getCanSpawnHere();
         return canSpawn && (predicate != null ? predicate.test(this) : super.getCanSpawnHere());

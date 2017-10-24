@@ -144,7 +144,11 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
                 GlStateManager.scale(-3f, -3f, -3f);
             }
 
+            int currentTextureId = Framebuffers.getCurrentTexture();
             renderItem();
+            if(currentTextureId != 0) {
+                GlStateManager.bindTexture(currentTextureId);
+            }
             GlStateManager.popMatrix();
             worldrenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.ITEM);
         }
@@ -250,7 +254,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
         case GUI:
             GL11.glScaled(-1F, -1F, 1F);
 
-            RenderHelper.enableStandardItemLighting();
+            //RenderHelper.enableStandardItemLighting();
             GL11.glScalef(140f, 140f, 140f);
 
             if(DebugPositioner.isDebugModeEnabled()) {
@@ -376,7 +380,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 
     private void renderCachedInventoryTexture(Integer inventoryTexture) {
 
-        RenderHelper.enableGUIStandardItemLighting();
+        //RenderHelper.enableGUIStandardItemLighting();
 
         GL11.glPushMatrix();
         GL11.glPushAttrib(GL11.GL_ENABLE_BIT);
@@ -388,21 +392,24 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
         GL11.glScalef(1.0F, -1.0F, 1F);
         GlStateManager.translate(-8.0F, -8.0F, 0.0F);
 
-        GlStateManager.enableTexture2D();
-        GlStateManager.disableLighting();
+//        GlStateManager.enableTexture2D();
+//        GlStateManager.disableLighting();
 
-        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-//          GL11.glDepthMask(true);
-        GL11.glEnable(GL11.GL_BLEND);
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-        GL11.glAlphaFunc(GL11.GL_GREATER, 0.003921569F);
+//        GlStateManager.enableTexture2D();
+//        GlStateManager.disableLighting();
+
+//        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+////          GL11.glDepthMask(true);
+//        GL11.glEnable(GL11.GL_BLEND);
+//        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+//        GL11.glAlphaFunc(GL11.GL_GREATER, 0.003921569F);
 
         GlStateManager.bindTexture(inventoryTexture);
         //Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation(CALIBRATION_TEXTURE));
 
         drawTexturedQuadFit(0, 0, 256, 256, 0);
 
-        GlStateManager.enableLighting();
+//        GlStateManager.enableLighting();
         GL11.glPopAttrib();
 
         GL11.glPopMatrix();
@@ -438,7 +445,6 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
         renderContext.capturePartPosition(Part.RIGHT_HAND);
 
         renderRightArm(render,(AbstractClientPlayer) player);
-        //render.renderRightArm((AbstractClientPlayer) player);
         GL11.glPopMatrix();
     }
 

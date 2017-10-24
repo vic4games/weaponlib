@@ -128,7 +128,11 @@ public abstract class CompatibleMeleeRenderer extends ModelSourceRenderer implem
                 GlStateManager.scale(-3f, -3f, -3f);
             }
 
+            int currentTextureId = Framebuffers.getCurrentTexture();
             renderItem();
+            if(currentTextureId != 0) {
+                GlStateManager.bindTexture(currentTextureId);
+            }
             GlStateManager.popMatrix();
             worldrenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.ITEM);
         }

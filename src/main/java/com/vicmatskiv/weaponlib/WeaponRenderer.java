@@ -14,6 +14,12 @@ import java.util.Random;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.model.ModelBase;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL11;
@@ -51,7 +57,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 	private static final int DEFAULT_SHOOTING_ANIMATION_DURATION = 100;
 	private static final int DEFAULT_ITERATION_COMPLETED_ANIMATION_DURATION = 100;
 	private static final int DEFAULT_PREPARE_FIRST_LOAD_ITERATION_ANIMATION_DURATION = 100;
-
+	private static final int DEFAULT_ALL_LOAD_ITERATION_ANIMATIONS_COMPLETED_DURATION = 100;
 
 	public static class Builder {
 	    
@@ -119,6 +125,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		private int shootingAnimationDuration = DEFAULT_SHOOTING_ANIMATION_DURATION;
 		private int loadIterationCompletedAnimationDuration = DEFAULT_ITERATION_COMPLETED_ANIMATION_DURATION;
 	    private int prepareFirstLoadIterationAnimationDuration = DEFAULT_PREPARE_FIRST_LOAD_ITERATION_ANIMATION_DURATION;
+	    private int allLoadIterationAnimationsCompletedDuration = DEFAULT_ALL_LOAD_ITERATION_ANIMATIONS_COMPLETED_DURATION;
 
 		private float normalRandomizingRate = DEFAULT_RANDOMIZING_RATE; // movements per second, e.g. 0.25 = 0.25 movements per second = 1 movement in 3 minutes
 		private float firingRandomizingRate = DEFAULT_RANDOMIZING_FIRING_RATE; // movements per second, e.g. 20 = 20 movements per second = 1 movement in 50 ms
@@ -170,6 +177,12 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
             this.prepareFirstLoadIterationAnimationDuration = prepareFirstLoadIterationAnimationDuration;
             return this;
         }
+
+        public Builder withAllLoadIterationAnimationsCompletedDuration(int allLoadIterationAnimationsCompletedDuration) {
+            this.allLoadIterationAnimationsCompletedDuration = allLoadIterationAnimationsCompletedDuration;
+            return this;
+        }
+
 
 		public Builder withNormalRandomizingRate(float normalRandomizingRate) {
 			this.normalRandomizingRate = normalRandomizingRate;
@@ -1340,5 +1353,9 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 
     public long getPrepareFirstLoadIterationAnimationDuration() {
         return builder.prepareFirstLoadIterationAnimationDuration;
+    }
+    
+    public long getAllLoadIterationAnimationsCompletedDuration() {
+        return builder.allLoadIterationAnimationsCompletedDuration;
     }
 }

@@ -77,16 +77,14 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 	private static Predicate<PlayerWeaponInstance> magazineAttached =
 			weaponInstance -> WeaponAttachmentAspect.getActiveAttachment(AttachmentCategory.MAGAZINE, weaponInstance) != null;
 
-	// TODO: introduce iteration timeout
 	private static Predicate<PlayerWeaponInstance> loadIterationCompleted = weaponInstance ->
 	        System.currentTimeMillis() >= weaponInstance.getStateUpdateTimestamp()
 	            + Math.max(weaponInstance.getWeapon().builder.loadIterationTimeout,
 	                    weaponInstance.getWeapon().getTotalLoadIterationDuration() + 250);
 	        
-	private static Predicate<PlayerWeaponInstance> allLoadIterationsCompleted = weaponInstance ->
-            System.currentTimeMillis() >= weaponInstance.getStateUpdateTimestamp()
-                + Math.max(weaponInstance.getWeapon().builder.reloadingTimeout,
-                        weaponInstance.getWeapon().getTotalReloadingDuration() * 1.1); // TODO: fix
+    private static Predicate<PlayerWeaponInstance> allLoadIterationsCompleted = weaponInstance ->
+        System.currentTimeMillis() >= weaponInstance.getStateUpdateTimestamp()
+            + weaponInstance.getWeapon().getAllLoadIterationAnimationsCompletedDuration(); 
 	        
 	private static Predicate<PlayerWeaponInstance> reloadAnimationCompleted = weaponInstance ->
 		System.currentTimeMillis() >= weaponInstance.getStateUpdateTimestamp()

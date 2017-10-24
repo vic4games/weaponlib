@@ -49,7 +49,7 @@ public abstract class CompatibleStaticModelSourceRenderer extends ModelSourceRen
 
 	protected Builder builder;
 
-	protected EntityPlayer owner;
+	protected EntityLivingBase owner;
 
 	protected TextureManager textureManager;
 
@@ -73,7 +73,7 @@ public abstract class CompatibleStaticModelSourceRenderer extends ModelSourceRen
 		public IBakedModel handleItemState(IBakedModel originalModel, ItemStack stack, World world,
 				EntityLivingBase entity) {
 			CompatibleStaticModelSourceRenderer.this.itemStack = stack;
-			CompatibleStaticModelSourceRenderer.this.owner = (EntityPlayer) entity;
+			CompatibleStaticModelSourceRenderer.this.owner = entity;
 			return super.handleItemState(originalModel, stack, world, entity);
 		}
 	}
@@ -111,7 +111,11 @@ public abstract class CompatibleStaticModelSourceRenderer extends ModelSourceRen
 				GlStateManager.scale(-3f, -3f, -3f);
 			}
 
+			int currentTextureId = Framebuffers.getCurrentTexture();
 			renderItem();
+			if(currentTextureId != 0) {
+			    GlStateManager.bindTexture(currentTextureId);
+			}
 			GlStateManager.popMatrix();
 			worldrenderer.begin(GL11.GL_QUADS, DefaultVertexFormats.ITEM);
 		}
