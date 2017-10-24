@@ -72,6 +72,7 @@ public class ClassInfo {
     
     public ClassInfo addMethodInfo(String genericMethodName, String mcpMethodName, String signature, String notchName) {
         mcpMethodInfoMap.put(new MethodSignature(genericMethodName, signature), mcpMethodName);
+        notchMethodInfoMap.put(new MethodSignature(genericMethodName, signature), notchName);
         return this;
     }
 
