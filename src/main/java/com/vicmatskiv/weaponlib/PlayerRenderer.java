@@ -66,7 +66,7 @@ public class PlayerRenderer {
         long elapseRenderingStart = System.currentTimeMillis() - renderingStartTimestamp;
         int renderingStartThreshold = 400;
         if(elapseRenderingStart < renderingStartThreshold) {
-            System.out.println("Elapsed: " + elapseRenderingStart);
+            //System.out.println("Elapsed: " + elapseRenderingStart);
             return elapseRenderingStart;
         }
         return (long)(renderingStartThreshold + player.distanceWalkedModified * 300);

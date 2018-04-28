@@ -32,14 +32,14 @@ public class EntityControlHandler implements CompatibleMessageHandler<EntityCont
                 if((updatedFlags & CompatibleExtraEntityFlags.PRONING) != 0) {
                     setSize(player, 0.6f, 0.6f); //player.width, player.width);
                 }
-                System.out.println("Set flags to: " + updatedFlags + " for " + player);
+                //System.out.println("Set flags to: " + updatedFlags + " for " + player);
                 modContext.getChannel().sendToAllAround(new EntityControlMessage(player, updatedFlags), point);
             });
         } else {
             compatibility.runInMainClientThread(() -> {
                 EntityPlayer player = compatibility.clientPlayer();
                 Entity targetEntity = message.getEntity(compatibility.world(player));
-                System.out.println("Setting flags to: " + Integer.toBinaryString(message.getValues()) + " for " + targetEntity);
+                //System.out.println("Setting flags to: " + Integer.toBinaryString(message.getValues()) + " for " + targetEntity);
                 CompatibleExtraEntityFlags.setFlags(targetEntity, message.getFlags(), message.getValues());
             });
         }

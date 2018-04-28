@@ -7,6 +7,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleEntityJoinWorldEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleExposureCapability;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleExtraEntityFlags;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleLivingUpdateEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleServerEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleStartTrackingEvent;
@@ -82,6 +83,10 @@ public class ServerEventHandler extends CompatibleServerEventHandler {
                 modContext.getChannel().getChannel().sendTo(new SyncPlayerEntityTrackerMessage(tracker),
                         (EntityPlayerMP)e.getEntity());
             }
+            EntityPlayer player = (EntityPlayer) e.getEntity();
+            modContext.getChannel().getChannel().sendTo(
+                    new EntityControlMessage(player, CompatibleExtraEntityFlags.getFlags(player)),
+                    (EntityPlayerMP)e.getEntity());
         }
     }
 
@@ -95,6 +100,11 @@ public class ServerEventHandler extends CompatibleServerEventHandler {
             logger.debug("Player {} started tracking {} with uuid {}", e.getPlayer(), e.getTarget(), e.getTarget().getUniqueID());
             modContext.getChannel().getChannel().sendTo(new SyncPlayerEntityTrackerMessage(tracker),
                     (EntityPlayerMP)e.getPlayer());
+            
+            EntityPlayer player = (EntityPlayer) e.getEntity();
+            modContext.getChannel().getChannel().sendTo(
+                    new EntityControlMessage(player, CompatibleExtraEntityFlags.getFlags(player)),
+                    (EntityPlayerMP)e.getEntity());
         }
     }
 
@@ -108,6 +118,11 @@ public class ServerEventHandler extends CompatibleServerEventHandler {
             logger.debug("Player {} stopped tracking {}", e.getPlayer(), e.getTarget());
             modContext.getChannel().getChannel().sendTo(new SyncPlayerEntityTrackerMessage(tracker),
                     (EntityPlayerMP)e.getPlayer());
+            
+            EntityPlayer player = (EntityPlayer) e.getEntity();
+            modContext.getChannel().getChannel().sendTo(
+                    new EntityControlMessage(player, CompatibleExtraEntityFlags.getFlags(player)),
+                    (EntityPlayerMP)e.getEntity());
         }
     }
 

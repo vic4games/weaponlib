@@ -84,7 +84,7 @@ public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 	}
 
 	@Override
-	public void onCompatibleHandleRenderLivingEvent(RenderLivingEvent.Pre event) {
+	public void onCompatibleHandleRenderLivingEvent(@SuppressWarnings("rawtypes") RenderLivingEvent.Pre event) {
 
 		if ((event.isCanceled()) || (!(compatibility.getEntity(event) instanceof EntityPlayer)))
 			return;
@@ -95,17 +95,18 @@ public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 			RenderPlayer rp = compatibility.getRenderer(event);
 
 			if (itemStack != null ) {
-				PlayerItemInstance<?> instance = modContext.getPlayerItemInstanceRegistry()
-						.getItemInstance((EntityPlayer)compatibility.getEntity(event), itemStack);
-				if(instance instanceof PlayerWeaponInstance) {
-					PlayerWeaponInstance weaponInstance = (PlayerWeaponInstance) instance;
-						compatibility.setAimed(rp, weaponInstance.isAimed()
-							|| weaponInstance.getState() == WeaponState.FIRING
-							|| weaponInstance.getState() == WeaponState.RECOILED
-							|| weaponInstance.getState() == WeaponState.PAUSED
-							);
-				}
-
+			    EntityPlayer player = (EntityPlayer)compatibility.getEntity(event);
+			    PlayerItemInstance<?> instance = modContext.getPlayerItemInstanceRegistry()
+			            .getItemInstance(player, itemStack);
+			    if(instance instanceof PlayerWeaponInstance) {
+			        PlayerWeaponInstance weaponInstance = (PlayerWeaponInstance) instance;
+			        compatibility.setAimed(rp, !Interceptors.isProning(player) && 
+			                (weaponInstance.isAimed()
+			                || weaponInstance.getState() == WeaponState.FIRING
+			                || weaponInstance.getState() == WeaponState.RECOILED
+			                || weaponInstance.getState() == WeaponState.PAUSED
+			                ));
+			    }
 			}
 		}
 	}

@@ -260,7 +260,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 	}
 
 	public int getSeriesShotCount() {
-	    System.out.println("Series shot count: " + seriesShotCount);
+	    //System.out.println("Series shot count: " + seriesShotCount);
 		return seriesShotCount;
 	}
 
@@ -310,7 +310,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 	}
 	
     public boolean isOneClickBurstAllowed() {
-        System.out.println("One click burst allowed: " + getWeapon().builder.isOneClickBurstAllowed);
+        //System.out.println("One click burst allowed: " + getWeapon().builder.isOneClickBurstAllowed);
         return getWeapon().builder.isOneClickBurstAllowed;
     }
 

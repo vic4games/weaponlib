@@ -1,5 +1,6 @@
 package com.vicmatskiv.weaponlib;
 
+import com.vicmatskiv.weaponlib.compatibility.CompatibleExtraEntityFlags;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessage;
 
 import io.netty.buffer.ByteBuf;
@@ -15,7 +16,7 @@ public class EntityControlMessage implements CompatibleMessage {
     public EntityControlMessage() {}
 
     public EntityControlMessage(Entity entity, int values) {
-        this(entity, 0xFFFFFFFF, values);
+        this(entity, 0xFFFFFFFF & ~CompatibleExtraEntityFlags.FLIP, values);
     }
     
     public EntityControlMessage(Entity entity, int flags, int values) {

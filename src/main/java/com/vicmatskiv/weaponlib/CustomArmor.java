@@ -607,7 +607,7 @@ public class CustomArmor extends CompatibleCustomArmor implements ExposureProtec
                         if(currentShieldCapacity > maxShieldCapacity) {
                             currentShieldCapacity = maxShieldCapacity;
                         }
-                        System.out.println("Shield capacity increased to " + currentShieldCapacity);
+                        //System.out.println("Shield capacity increased to " + currentShieldCapacity);
 
                         setShieldCapacity(stack, currentShieldCapacity);
                     }

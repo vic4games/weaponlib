@@ -10,6 +10,7 @@ import com.vicmatskiv.weaponlib.particle.SmokeFX;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
@@ -35,6 +36,14 @@ final class ClientEffectManager implements EffectManager {
 		double posY = player.posY + (look.getYCoord() * distance) + (compatibility.world(player).rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor - yOffset;
 		double posZ = player.posZ + (look.getZCoord() * distance) + (compatibility.world(player).rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor  + (look.getXCoord() * xOffset);
 
+	    if(player instanceof EntityPlayer) {
+	        if(player.isSneaking()) {
+	            posY -= 0.1f;
+            } else if(Interceptors.isProning((EntityPlayer) player)) {
+                posY -= 1.2f;
+            }
+	    }
+	        
 		SmokeFX smokeParticle = new SmokeFX(
 				compatibility.world(player),
 				posX,
@@ -70,6 +79,14 @@ final class ClientEffectManager implements EffectManager {
 		double posY = player.posY + (look.getYCoord() * distance) + (compatibility.world(player).rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor - yOffset;
 		double posZ = player.posZ + (look.getZCoord() * distance) + (compatibility.world(player).rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor + (look.getXCoord() * xOffset);
 
+		if(player instanceof EntityPlayer) {
+            if(player.isSneaking()) {
+                posY -= 0.1f;
+            } else if(Interceptors.isProning((EntityPlayer) player)) {
+                posY -= 1.2f;
+            }
+        }
+		
 		FlashFX flashParticle = new FlashFX(
 				compatibility.world(player),
 				posX,

@@ -14,6 +14,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
@@ -73,9 +74,12 @@ public class EntityShellCasing extends EntityProjectile {
 		    sideOffset = weaponInstance.isAimed() ? -0.1f : 0f;
 		}
 
-		//sideOffset = 0.15f;
-
-		float yOffset = weapon.getShellCasingVerticalOffset() + (thrower.isSneaking() ? -0.1f : 0);
+		float yOffset = weapon.getShellCasingVerticalOffset();
+		if(thrower.isSneaking()) {
+		    yOffset -= 0.1f;
+		} else if(thrower instanceof EntityPlayer && Interceptors.isProning((EntityPlayer) thrower)) {
+		    yOffset -= 0.0f;
+		}
 
 		this.setLocationAndAngles(thrower.posX, thrower.posY + (double)thrower.getEyeHeight() + yOffset, thrower.posZ,
 		        thrower.rotationYaw, thrower.rotationPitch);
