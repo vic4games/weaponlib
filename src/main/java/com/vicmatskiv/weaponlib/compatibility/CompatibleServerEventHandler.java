@@ -4,6 +4,7 @@ package com.vicmatskiv.weaponlib.compatibility;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.EntityEvent.EntityConstructing;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
@@ -25,6 +26,27 @@ public abstract class CompatibleServerEventHandler {
 	}
 
 	protected abstract void onCompatibleItemToss(ItemTossEvent itemTossEvent);
+	
+	@SubscribeEvent
+    public final void onPlayerTickEvent(TickEvent.PlayerTickEvent event) {
+        if(event.phase == Phase.END) {            
+            int updatedFlags = CompatibleExtraEntityFlags.getFlags(event.player);
+            if((updatedFlags & CompatibleExtraEntityFlags.PRONING) != 0) {
+                setSize(event.player, 0.6f, 0.6f); //player.width, player.width);
+            }
+        }
+    }
+    
+    protected void setSize(EntityPlayer entityPlayer, float width, float height)
+    {
+        if (width != entityPlayer.width || height != entityPlayer.height)
+        {
+            entityPlayer.width = width;
+            entityPlayer.height = height;
+            AxisAlignedBB axisalignedbb = entityPlayer.getEntityBoundingBox();
+            entityPlayer.setEntityBoundingBox(new AxisAlignedBB(axisalignedbb.minX, axisalignedbb.minY, axisalignedbb.minZ, axisalignedbb.minX + (double)entityPlayer.width, axisalignedbb.minY + (double)entityPlayer.height, axisalignedbb.minZ + (double)entityPlayer.width));
+        }
+    }
 
 	@SubscribeEvent
     public void onTick(TickEvent.ServerTickEvent event) {
@@ -39,6 +61,9 @@ public abstract class CompatibleServerEventHandler {
 	    if(event.getObject() instanceof EntityPlayer) {
 	        ResourceLocation PLAYER_ENTITY_TRACKER = new ResourceLocation(getModId(), "PLAYER_ENTITY_TRACKER");
 	        event.addCapability(PLAYER_ENTITY_TRACKER, new CompatiblePlayerEntityTrackerProvider());
+	        
+	        ResourceLocation extraFlagsResourceLocation = new ResourceLocation(getModId(), "PLAYER_ENTITY_FLAGS");
+            event.addCapability(extraFlagsResourceLocation, new CompatibleExtraEntityFlags());
 	    }
 	    
         ResourceLocation exposureResourceLocation = new ResourceLocation(getModId(), "EXPOSURE");

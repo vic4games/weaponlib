@@ -2,6 +2,8 @@ package com.vicmatskiv.weaponlib.compatibility;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -56,7 +58,6 @@ import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.EnumDifficulty;
@@ -617,6 +618,44 @@ public class Compatibility1_12_2 implements Compatibility {
     public float getAspectRatio(ModContext modContext) {
         return modContext.getAspectRatio();
     }
+    
+    private static int findGreatesItemIndex(Collection<? extends Item> compatibleItems, Comparator<ItemStack> comparator, EntityPlayer player) {
+        ItemStack maxStack = null;
+        int maxItemIndex = -1;
+        for (int i = 0; i < player.inventory.mainInventory.size(); ++i) {
+            if (player.inventory.getStackInSlot(i) != null
+                    && compatibleItems.contains(player.inventory.getStackInSlot(i).getItem())
+                    && (maxStack == null || comparator.compare(player.inventory.getStackInSlot(i), maxStack) > 0)) {
+                maxStack = player.inventory.getStackInSlot(i);
+                maxItemIndex = i;
+            }
+        }
+        return maxItemIndex;
+    }
+    
+    @Override
+    public ItemStack tryConsumingCompatibleItem(Collection<? extends Item> compatibleItems, Comparator<ItemStack> comparator, EntityPlayer player) {
+
+        int maxSize = 1;
+//        if(maxSize <= 0) {
+//            return null;
+//        }
+
+        int i = findGreatesItemIndex(compatibleItems, comparator, player);
+
+        if (i < 0) {
+            return null;
+        } else {
+            ItemStack stackInSlot = player.inventory.getStackInSlot(i);
+            int consumedStackSize = maxSize >= getStackSize(stackInSlot) ? getStackSize(stackInSlot) : maxSize;
+            ItemStack result = stackInSlot.splitStack(consumedStackSize);
+            if (getStackSize(stackInSlot) <= 0) {
+                player.inventory.removeStackFromSlot(i);
+            }
+            return result;
+        }
+    }
+
 
     @Override
     public void setStackSize(ItemStack itemStack, int size) {

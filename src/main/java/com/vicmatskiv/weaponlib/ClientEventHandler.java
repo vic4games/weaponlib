@@ -14,6 +14,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientTickEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientTickEvent.Phase;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleExposureCapability;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleExtraEntityFlags;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderHandEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderTickEvent;
 import com.vicmatskiv.weaponlib.perspective.Perspective;
@@ -33,7 +34,7 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 	private static final float SLOW_DOWN_WHEN_POISONED_DOSE_THRESHOLD = 0.4f;
 	
     private static final UUID SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER_UUID = UUID.fromString("8efa8469-0256-4f8e-bdd9-3e7b23970663");
-	private static final AttributeModifier SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER = (new AttributeModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER_UUID, "Slow Down While Zooming", -0.5, 2)).setSaved(false);
+	private static final AttributeModifier SLOW_DOWN_WHILE_ZOOMING_OR_PRONING_ATTRIBUTE_MODIFIER = (new AttributeModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER_UUID, "Slow Down While Zooming", -0.5, 2)).setSaved(false);
     
 	private static final UUID SLOW_DOWN_WHILE_POISONED_ATTRIBUTE_MODIFIER_UUID = UUID.fromString("9d2eac95-9b9c-4942-8287-7952c6de353e");
     private static final AttributeModifier SLOW_DOWN_WHILE_POISONED_ATTRIBUTE_MODIFIER = (new AttributeModifier(SLOW_DOWN_WHILE_POISONED_ATTRIBUTE_MODIFIER_UUID, "Slow Down While Poisoned", -0.7, 2)).setSaved(false);
@@ -86,17 +87,19 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 		EntityPlayer player = compatibility.clientPlayer();
 		modContext.getPlayerItemInstanceRegistry().update(player);
 		PlayerWeaponInstance mainHandHeldWeaponInstance = modContext.getMainHeldWeapon();
-		if(mainHandHeldWeaponInstance != null) {
+		if(isProning(player)) {
+		    slowPlayerDown(player, SLOW_DOWN_WHILE_ZOOMING_OR_PRONING_ATTRIBUTE_MODIFIER);
+		} else if(mainHandHeldWeaponInstance != null) {
 			if(player.isSprinting()) {
 				mainHandHeldWeaponInstance.setAimed(false);
 			}
 			if(mainHandHeldWeaponInstance.isAimed()) {
-				slowPlayerDown(player, SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER);
+				slowPlayerDown(player, SLOW_DOWN_WHILE_ZOOMING_OR_PRONING_ATTRIBUTE_MODIFIER);
 			} else {
-				restorePlayerSpeed(player, SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER);
+				restorePlayerSpeed(player, SLOW_DOWN_WHILE_ZOOMING_OR_PRONING_ATTRIBUTE_MODIFIER);
 			}
 		} else if(player != null){
-			restorePlayerSpeed(player, SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER);
+			restorePlayerSpeed(player, SLOW_DOWN_WHILE_ZOOMING_OR_PRONING_ATTRIBUTE_MODIFIER);
 		}
 		
 		
@@ -111,6 +114,10 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 	        }
 		}
 	}
+    
+    private static boolean isProning(EntityPlayer player) {
+        return (CompatibleExtraEntityFlags.getFlags(player) & CompatibleExtraEntityFlags.PRONING) != 0;
+    }
 
 	// TODO: create player utils, move this method
 	private void restorePlayerSpeed(EntityPlayer entityPlayer, AttributeModifier modifier) {
@@ -165,6 +172,7 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
         EntityPlayer clientPlayer = compatibility.clientPlayer();
         
         if(event.getPhase() == CompatibleRenderTickEvent.Phase.START ) {
+            ClientModContext.currentContext.set(modContext);
             mainLoopLock.lock();
             if(clientPlayer != null) {
                 PlayerItemInstance<?> instance = modContext.getPlayerItemInstanceRegistry()
@@ -189,6 +197,7 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
             safeGlobals.renderingPhase.set(null);
             shaderGroupManager.removeStaleShaders(shaderContext);
             mainLoopLock.unlock();
+            ClientModContext.currentContext.remove();
         }
     }
 

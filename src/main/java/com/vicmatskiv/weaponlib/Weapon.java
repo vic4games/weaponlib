@@ -52,6 +52,7 @@ public class Weapon extends CompatibleItem implements PlayerItemInstanceFactory<
         private static final float DEFAULT_SHELL_CASING_VELOCITY = 0.1f;
         private static final float DEFAULT_SHELL_CASING_GRAVITY_VELOCITY = 0.05f;
         private static final float DEFAULT_SHELL_CASING_INACCURACY = 20f;
+       
 
         String name;
         List<String> textureNames = new ArrayList<>();
@@ -65,6 +66,9 @@ public class Weapon extends CompatibleItem implements PlayerItemInstanceFactory<
         private String allReloadIterationsCompletedSound;
         private String unloadSound;
         private String ejectSpentRoundSound;
+        private String endOfShootSound;
+        private String burstShootSound;
+        private String silencedBurstShootSound;
 
         @SuppressWarnings("unused")
         private String exceededMaxShotsSound;
@@ -100,6 +104,7 @@ public class Weapon extends CompatibleItem implements PlayerItemInstanceFactory<
         private Class<? extends WeaponSpawnEntity> spawnEntityClass;
         ImpactHandler blockImpactHandler;
         long pumpTimeoutMilliseconds;
+        long burstTimeoutMilliseconds = Weapon.DEFAULT_BURST_TIMEOUT_MILLISECONDS;
 
         private float inaccuracy = DEFAULT_INACCURACY;
 
@@ -146,6 +151,7 @@ public class Weapon extends CompatibleItem implements PlayerItemInstanceFactory<
         private float silencedShootSoundVolume = Weapon.DEFAULT_SILENCED_SHOOT_SOUND_VOLUME;
         private float shootSoundVolume = Weapon.DEFAULT_SHOOT_SOUND_VOLUME;
         private Object[] craftingRecipe;
+        public boolean isOneClickBurstAllowed;
         
 
         public Builder withModId(String modId) {
@@ -215,6 +221,16 @@ public class Weapon extends CompatibleItem implements PlayerItemInstanceFactory<
             }
             return this;
         }
+        
+        public Builder withOneClickBurst() {
+            this.isOneClickBurstAllowed = true;
+            return this;
+        }
+        
+        public Builder withBurstTimeout(long burstTimeoutMilliseconds) {
+            this.burstTimeoutMilliseconds = burstTimeoutMilliseconds;
+            return this;
+        }
 
         public Builder withFireRate(float fireRate) {
             if (fireRate >= 1 || fireRate <= 0) {
@@ -279,6 +295,14 @@ public class Weapon extends CompatibleItem implements PlayerItemInstanceFactory<
             this.shootSound = shootSound.toLowerCase(); //modId + ":" + shootSound;
             return this;
         }
+        
+        public Builder withEndOfShootSound(String endOfShootSound) {
+            if (modId == null) {
+                throw new IllegalStateException("ModId is not set");
+            }
+            this.endOfShootSound = endOfShootSound.toLowerCase(); //modId + ":" + shootSound;
+            return this;
+        }
 
         public Builder withEjectSpentRoundSound(String ejectSpentRoundSound) {
             if (modId == null) {
@@ -293,6 +317,22 @@ public class Weapon extends CompatibleItem implements PlayerItemInstanceFactory<
                 throw new IllegalStateException("ModId is not set");
             }
             this.silencedShootSound = silencedShootSound.toLowerCase();
+            return this;
+        }
+        
+        public Builder withBurstShootSound(String burstShootSound) {
+            if (modId == null) {
+                throw new IllegalStateException("ModId is not set");
+            }
+            this.burstShootSound = burstShootSound.toLowerCase(); //modId + ":" + shootSound;
+            return this;
+        }
+        
+        public Builder withSilencedBurstShootSound(String silencedBurstShootSound) {
+            if (modId == null) {
+                throw new IllegalStateException("ModId is not set");
+            }
+            this.silencedBurstShootSound = silencedBurstShootSound.toLowerCase(); //modId + ":" + shootSound;
             return this;
         }
 
@@ -639,6 +679,13 @@ public class Weapon extends CompatibleItem implements PlayerItemInstanceFactory<
             Weapon weapon = new Weapon(this, modContext);
 
             weapon.shootSound = modContext.registerSound(this.shootSound);
+            if(this.endOfShootSound != null) {
+                weapon.endOfShootSound = modContext.registerSound(this.endOfShootSound);
+            }
+            
+            weapon.burstShootSound = modContext.registerSound(this.burstShootSound);
+            weapon.silencedBurstShootSound = modContext.registerSound(this.silencedBurstShootSound);
+
             weapon.reloadSound = modContext.registerSound(this.reloadSound);
             weapon.reloadIterationSound = modContext.registerSound(this.reloadIterationSound);
             weapon.allReloadIterationsCompletedSound = modContext.registerSound(this.allReloadIterationsCompletedSound);
@@ -658,7 +705,6 @@ public class Weapon extends CompatibleItem implements PlayerItemInstanceFactory<
             for (ItemAttachment<Weapon> attachment : this.compatibleAttachments.keySet()) {
                 attachment.addCompatibleWeapon(weapon);
             }
-
 
             if(gunConfig == null || gunConfig.isEnabled()) {
                 modContext.registerWeapon(name, weapon, renderer);
@@ -701,6 +747,8 @@ public class Weapon extends CompatibleItem implements PlayerItemInstanceFactory<
     
     static final long MAX_RELOAD_TIMEOUT_TICKS = 60;
     static final long MAX_UNLOAD_TIMEOUT_TICKS = 60;
+    
+    private static final long DEFAULT_BURST_TIMEOUT_MILLISECONDS = 150;
 
     public static final float DEFAULT_SHELL_CASING_FORWARD_OFFSET = 0.1f;
     public static final float DEFAULT_SHELL_CASING_VERTICAL_OFFSET = 0.0f;
@@ -718,12 +766,15 @@ public class Weapon extends CompatibleItem implements PlayerItemInstanceFactory<
     private ModContext modContext;
 
     private CompatibleSound shootSound;
+    private CompatibleSound endOfShootSound;
     private CompatibleSound silencedShootSound;
     private CompatibleSound reloadSound;
     private CompatibleSound reloadIterationSound;
     private CompatibleSound allReloadIterationsCompletedSound;
     private CompatibleSound unloadSound;
     private CompatibleSound ejectSpentRoundSound;
+    private CompatibleSound burstShootSound;
+    private CompatibleSound silencedBurstShootSound;
 
     public static enum State { READY, SHOOTING, RELOAD_REQUESTED, RELOAD_CONFIRMED, UNLOAD_STARTED, UNLOAD_REQUESTED_FROM_SERVER, UNLOAD_CONFIRMED, PAUSED, MODIFYING, EJECT_SPENT_ROUND};
 
@@ -739,6 +790,18 @@ public class Weapon extends CompatibleItem implements PlayerItemInstanceFactory<
 
     public CompatibleSound getShootSound() {
         return shootSound;
+    }
+    
+    public CompatibleSound getBurstShootSound() {
+        return burstShootSound;
+    }
+    
+    public CompatibleSound getSilencedBurstShootSound() {
+        return silencedBurstShootSound;
+    }
+    
+    public CompatibleSound getEndOfShootSound() {
+        return endOfShootSound;
     }
 
     public CompatibleSound getSilencedShootSound() {
@@ -918,7 +981,7 @@ public class Weapon extends CompatibleItem implements PlayerItemInstanceFactory<
     }
 
     public void tryFire(EntityPlayer player) {
-        modContext.getWeaponFireAspect().onFireButtonClick(player);
+        modContext.getWeaponFireAspect().onFireButtonDown(player);
     }
 
     public void tryStopFire(EntityPlayer player) {

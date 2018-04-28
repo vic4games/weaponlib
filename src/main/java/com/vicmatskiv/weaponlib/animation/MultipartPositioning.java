@@ -15,8 +15,8 @@ public interface MultipartPositioning<Part, Context> {
 	
 	public boolean isExpired(Queue<MultipartPositioning<Part, Context>> positioningQueue);
 	
-	public Positioner<Part, Context> getPositioner();
+	public Positioner<Part, Context> getPositioner(); // TODO: add partial ticks parameter or maybe a context?
 	
-	public float getProgress();
+	public float getProgress(); // TODO: add partial ticks parameter or maybe a context?
 
 }

@@ -13,6 +13,9 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.vicmatskiv.weaponlib.CustomArmor;
 import com.vicmatskiv.weaponlib.ItemAttachment;
 import com.vicmatskiv.weaponlib.ModContext;
@@ -34,6 +37,8 @@ import net.minecraft.world.EnumDifficulty;
 
 public class EntityConfiguration {
     
+    private static final Logger logger = LogManager.getLogger(EntityConfiguration.class);
+
     private static final int DEFAULT_TRACKING_RANGE = 64;
     private static final int DEFAULT_UPDATE_FREQUENCY = 3;
     private static final int DEFAULT_MAX_HEALTH = 20;
@@ -213,8 +218,12 @@ public class EntityConfiguration {
             return this;
         }
 
-        private static void withEquipmentOption(Map<EquipmentKey, EquipmentValue> equipmentOptions, Item item, 
+        private Builder withEquipmentOption(Map<EquipmentKey, EquipmentValue> equipmentOptions, Item item, 
                 EnumDifficulty difficultyLevel, float weight, ItemAttachment<?>... attachments) {
+            if(item == null) {
+                logger.warn("Attempted to configure entity equipment with null item");
+                return this;
+            }
             Equipment equipment = new Equipment();
             equipment.item = item;
             equipment.attachments = Arrays.asList(attachments);
@@ -223,6 +232,7 @@ public class EntityConfiguration {
                 equipmentOptions.put(new EquipmentKey(difficultyValues[i], equipment.item, attachments), 
                         new EquipmentValue(equipment, weight));
             }
+            return this;
         }
         
         public Builder withPrimaryEquipmentDropChance(float chance) {
@@ -356,20 +366,24 @@ public class EntityConfiguration {
                 
                 entityConfig.getEquipment().forEach(ee -> {
                     Item equipmentItem = compatibility.findItemByName(context.getModId(), ee.getId());
-                    
-                    Equipment equipment = new Equipment();
-                    equipment.item = equipmentItem;
-                    equipment.attachments = ee.getAttachment().stream()
-                            .map(a -> compatibility.findItemByName(context.getModId(), a.getId()))
-                            .filter(e -> e instanceof ItemAttachment<?>)
-                            .map(a -> (ItemAttachment<?>)a)
-                            .collect(Collectors.toList());
-                    
-                    for(int i = difficultyLevel.ordinal(); i < difficultyValues.length; i++) {      
-                        equipmentOptions.put(new EquipmentKey(difficultyValues[i], equipment.item, 
-                                equipment.attachments.toArray(new ItemAttachment<?>[0])), 
-                                new EquipmentValue(equipment, ee.getWeight()));
+                    if(equipmentItem != null) {
+                        Equipment equipment = new Equipment();
+                        equipment.item = equipmentItem;
+                        equipment.attachments = ee.getAttachment().stream()
+                                .map(a -> compatibility.findItemByName(context.getModId(), a.getId()))
+                                .filter(e -> e instanceof ItemAttachment<?>)
+                                .map(a -> (ItemAttachment<?>)a)
+                                .collect(Collectors.toList());
+                        
+                        for(int i = difficultyLevel.ordinal(); i < difficultyValues.length; i++) {      
+                            equipmentOptions.put(new EquipmentKey(difficultyValues[i], equipment.item, 
+                                    equipment.attachments.toArray(new ItemAttachment<?>[0])), 
+                                    new EquipmentValue(equipment, ee.getWeight()));
+                        }
+                    } else {
+                        logger.warn("Attempted to configure entity equipment with invalid item {}", ee.getId());
                     }
+                    
                 });
                 
                 equipmentOptions.forEach((key, value) -> {

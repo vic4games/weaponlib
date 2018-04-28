@@ -83,11 +83,10 @@ class PipelineShaderGroupSourceProvider implements DynamicShaderGroupSourceProvi
 
     private void updateVignette() {
         vignetteEnabled = nightVisionEnabled;
-        if(!vignetteEnabled) {
-            ItemStack helmetStack = compatibility.getHelmet();
-            if(helmetStack != null && helmetStack.getItem() instanceof CustomArmor) {
-                vignetteEnabled = ((CustomArmor)helmetStack.getItem()).hasNightVision();
-            }
+        ItemStack helmetStack = compatibility.getHelmet();
+        if(nightVisionEnabled && helmetStack != null && helmetStack.getItem() instanceof CustomArmor) {
+            CustomArmor helmet = (CustomArmor)helmetStack.getItem();
+            vignetteEnabled = helmet.isVignetteEnabled();
         }
         vignetteRadius = 0.55f;            
     }

@@ -9,6 +9,10 @@ import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 import com.vicmatskiv.weaponlib.state.Aspect;
 import com.vicmatskiv.weaponlib.state.PermitManager;
 import com.vicmatskiv.weaponlib.state.StateManager;
@@ -22,16 +26,35 @@ import net.minecraft.item.ItemStack;
  * On a client side this class is used from within a separate client "ticker" thread
  */
 public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstance> {
+    
+    @SuppressWarnings("unused")
+    private static final Logger logger = LogManager.getLogger(WeaponFireAspect.class);
 
     private static final float FLASH_X_OFFSET_ZOOMED = 0;
 
     private static final long ALERT_TIMEOUT = 500;
+    
+//    private static <T> Predicate<T> logging(Predicate<T> predicate, String message) {
+//        return t -> {
+//            boolean result = predicate.test(t);
+//            logger.debug(message, result);
+//            return result;
+//        };
+//    }
 
     private static Predicate<PlayerWeaponInstance> readyToShootAccordingToFireRate = instance ->
         System.currentTimeMillis() - instance.getLastFireTimestamp() >= 50f / instance.getWeapon().builder.fireRate;
+        
+    private static Predicate<PlayerWeaponInstance> postBurstTimeoutExpired = instance ->
+        System.currentTimeMillis() - instance.getLastBurstEndTimestamp()
+            >= instance.getWeapon().builder.burstTimeoutMilliseconds;
 
     private static Predicate<PlayerWeaponInstance> readyToShootAccordingToFireMode =
             instance -> instance.getSeriesShotCount() < instance.getMaxShots();
+            
+    private static Predicate<PlayerWeaponInstance> oneClickBurstEnabled = PlayerWeaponInstance::isOneClickBurstAllowed;
+    
+    private static Predicate<PlayerWeaponInstance> seriesResetAllowed = PlayerWeaponInstance::isSeriesResetAllowed;
 
     private static Predicate<PlayerWeaponInstance> hasAmmo = instance -> instance.getAmmo() > 0;
 
@@ -42,7 +65,6 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
 
     private static Predicate<PlayerWeaponInstance> alertTimeoutExpired = instance ->
         System.currentTimeMillis() >= ALERT_TIMEOUT + instance.getStateUpdateTimestamp();
-
 
     private static Predicate<PlayerWeaponInstance> sprinting = instance -> instance.getPlayer().isSprinting();
 
@@ -103,28 +125,53 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
         .automatic() // on stop fire and eject animation completed
 
         .in(this).change(WeaponState.PAUSED).to(WeaponState.FIRING)
-        .when(hasAmmo.and(sprinting.negate()).and(readyToShootAccordingToFireMode).and(readyToShootAccordingToFireRate))
+        .when(hasAmmo
+                .and(sprinting.negate())
+                .and(readyToShootAccordingToFireMode)
+                .and(readyToShootAccordingToFireRate)
+                )
         .withAction(this::fire)
-        .manual() // on fire
-
+        .manual() // on fire, requires fire button to be down
+        
+        /// Applies 
+        .in(this).change(WeaponState.PAUSED).to(WeaponState.FIRING)
+        .when(hasAmmo.and(sprinting.negate())
+                .and(oneClickBurstEnabled)
+                .and(readyToShootAccordingToFireMode)
+                .and((readyToShootAccordingToFireRate))
+                )
+        .withAction(this::fire)
+        .automatic() // on update
+        
         .in(this).change(WeaponState.PAUSED).to(WeaponState.READY)
-        .when(ejectSpentRoundRequired.negate())
+        .when(ejectSpentRoundRequired.negate()
+                .and(oneClickBurstEnabled)
+                .and(readyToShootAccordingToFireMode.negate().or(hasAmmo.negate()))
+                .and(seriesResetAllowed)
+                .and(postBurstTimeoutExpired)
+                )
+        .withAction(PlayerWeaponInstance::resetCurrentSeries)
+        .automatic() // on update
+        
+        .in(this).change(WeaponState.PAUSED).to(WeaponState.READY)
+        .when(ejectSpentRoundRequired.negate().and(oneClickBurstEnabled.negate()))
         .withAction(PlayerWeaponInstance::resetCurrentSeries)
         .manual() // on stop
 
         ;
     }
 
-    void onFireButtonClick(EntityPlayer player) {
+    void onFireButtonDown(EntityPlayer player) {
         PlayerWeaponInstance weaponInstance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
         if(weaponInstance != null) {
-           stateManager.changeStateFromAnyOf(this, weaponInstance, allowedFireOrEjectFromStates, WeaponState.FIRING, WeaponState.EJECTING, WeaponState.ALERT);
+            stateManager.changeStateFromAnyOf(this, weaponInstance, allowedFireOrEjectFromStates, WeaponState.FIRING, WeaponState.EJECTING, WeaponState.ALERT);
         }
     }
 
     void onFireButtonRelease(EntityPlayer player) {
         PlayerWeaponInstance weaponInstance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
         if(weaponInstance != null) {
+            weaponInstance.setSeriesResetAllowed(true);
             stateManager.changeState(this, weaponInstance, WeaponState.EJECT_REQUIRED, WeaponState.READY);
         }
     }
@@ -132,7 +179,7 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
     void onUpdate(EntityPlayer player) {
         PlayerWeaponInstance weaponInstance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
         if(weaponInstance != null) {
-            stateManager.changeStateFromAnyOf(this, weaponInstance, allowedUpdateFromStates);
+            stateManager.changeStateFromAnyOf(this, weaponInstance, allowedUpdateFromStates); // triggers "auto" state transitions
         }
     }
 
@@ -160,9 +207,42 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
         modContext.getChannel().getChannel().sendToServer(new TryFireMessage(true));
 
         boolean silencerOn = modContext.getAttachmentAspect().isSilencerOn(weaponInstance);
-        compatibility.playSound(player, silencerOn ? weapon.getSilencedShootSound() : weapon.getShootSound(),
-                silencerOn ? weapon.getSilencedShootSoundVolume() : weapon.getShootSoundVolume(), 1F);
-
+        
+        CompatibleSound shootSound = null;
+        /*
+         * If oneClickBurstEnabled and it's a first shot and burst sound is defined, then play a burst sound
+         */
+        if(oneClickBurstEnabled.test(weaponInstance)) {
+            
+            CompatibleSound burstShootSound = null;
+            if(silencerOn) {
+                burstShootSound = weapon.getSilencedBurstShootSound();
+            }
+            if(burstShootSound == null) {
+                burstShootSound = weapon.getBurstShootSound();
+            }
+            if(burstShootSound != null) {
+                if(weaponInstance.getSeriesShotCount() == 0) {
+                    // Play burst sound only on start of the series
+                    shootSound = burstShootSound;
+                }
+            } else {
+                shootSound = silencerOn ? weapon.getSilencedShootSound() : weapon.getShootSound();
+            }
+        } else {
+            shootSound = silencerOn ? weapon.getSilencedShootSound() : weapon.getShootSound();
+        }
+        
+        if(shootSound != null) {
+            compatibility.playSound(player, shootSound,
+                    silencerOn ? weapon.getSilencedShootSoundVolume() : weapon.getShootSoundVolume(), 1F);
+        }
+        
+        int currentAmmo = weaponInstance.getAmmo();
+        if(currentAmmo == 1 && weapon.getEndOfShootSound() != null) {
+            compatibility.playSound(player, weapon.getEndOfShootSound(), 1F, 1F);
+        }
+        
         player.rotationPitch = player.rotationPitch - weaponInstance.getRecoil();
         float rotationYawFactor = -1.0f + random.nextFloat() * 2.0f;
         player.rotationYaw = player.rotationYaw + weaponInstance.getRecoil() * rotationYawFactor;
@@ -182,9 +262,17 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
                     compatibility.getEffectOffsetY() + weapon.builder.smokeOffsetY.get());
         }
 
-        weaponInstance.setSeriesShotCount(weaponInstance.getSeriesShotCount() + 1);
+        int seriesShotCount = weaponInstance.getSeriesShotCount();
+        if(seriesShotCount == 0) {
+            weaponInstance.setSeriesResetAllowed(false);
+        }
+
+        weaponInstance.setSeriesShotCount(seriesShotCount + 1);
+        if(currentAmmo == 1 || weaponInstance.getSeriesShotCount() == weaponInstance.getMaxShots()) {
+            weaponInstance.setLastBurstEndTimestamp(System.currentTimeMillis());
+        }
         weaponInstance.setLastFireTimestamp(System.currentTimeMillis());
-        weaponInstance.setAmmo(weaponInstance.getAmmo() - 1);
+        weaponInstance.setAmmo(currentAmmo - 1);
     }
 
     private void ejectSpentRound(PlayerWeaponInstance weaponInstance) {

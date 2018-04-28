@@ -304,6 +304,7 @@ public class AttachmentBuilder<T> {
 
 	private Object registerRenderer(ItemAttachment<T> attachment, ModContext modContext) {
 		return new StaticModelSourceRenderer.Builder()
+		.withHiddenInventory(tab == null)
 		.withEntityPositioning(entityPositioning)
 		.withFirstPersonPositioning(firstPersonPositioning)
 		.withThirdPersonPositioning(thirdPersonPositioning)

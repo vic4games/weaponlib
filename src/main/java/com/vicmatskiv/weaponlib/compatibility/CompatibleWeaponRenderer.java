@@ -2,12 +2,15 @@ package com.vicmatskiv.weaponlib.compatibility;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
+import javax.annotation.Nullable;
 import javax.vecmath.Matrix4f;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.opengl.GL11;
 
+import com.google.common.collect.Maps;
 import com.vicmatskiv.weaponlib.ClientModContext;
 import com.vicmatskiv.weaponlib.Part;
 import com.vicmatskiv.weaponlib.PlayerWeaponInstance;
@@ -29,7 +32,6 @@ import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.model.ModelPlayer;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.IBakedModel;
@@ -45,12 +47,14 @@ import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EnumPlayerModelParts;
+import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.EnumAction;
+import net.minecraft.item.ItemArmor;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHandSide;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -59,6 +63,8 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 
     private static final int INVENTORY_TEXTURE_WIDTH = 256;
     private static final int INVENTORY_TEXTURE_HEIGHT = 256;
+
+    private static final Map<String, ResourceLocation> ARMOR_TEXTURE_RES_MAP = Maps.<String, ResourceLocation>newHashMap();
 
     protected static class StateDescriptor {
 		protected MultipartRenderStateManager<RenderableState, Part, RenderContext<RenderableState>> stateManager;
@@ -114,7 +120,6 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
         this.playerBiped = new ModelBiped();
         this.playerBiped.textureWidth = 64;
         this.playerBiped.textureHeight = 64;
-
     }
 
     @Override
@@ -300,6 +305,10 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 
             positioner.position(Part.MAIN_ITEM, renderContext);
 
+            if(DebugPositioner.isDebugModeEnabled()) {
+                DebugPositioner.position(Part.MAIN_ITEM, renderContext);
+            }
+
             if(player != null && player.getHeldItemMainhand() != null && player.getHeldItemMainhand().getItem() instanceof Weapon) {
                 // Draw hands only if weapon is held in the main hand
                 renderLeftArm(player, renderContext, positioner);
@@ -392,18 +401,6 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
         GL11.glScalef(1.0F, -1.0F, 1F);
         GlStateManager.translate(-8.0F, -8.0F, 0.0F);
 
-//        GlStateManager.enableTexture2D();
-//        GlStateManager.disableLighting();
-
-//        GlStateManager.enableTexture2D();
-//        GlStateManager.disableLighting();
-
-//        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-////          GL11.glDepthMask(true);
-//        GL11.glEnable(GL11.GL_BLEND);
-//        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-//        GL11.glAlphaFunc(GL11.GL_GREATER, 0.003921569F);
-
         GlStateManager.bindTexture(inventoryTexture);
         //Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation(CALIBRATION_TEXTURE));
 
@@ -444,7 +441,20 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 
         renderContext.capturePartPosition(Part.RIGHT_HAND);
 
-        renderRightArm(render,(AbstractClientPlayer) player);
+        renderRightArm(render.getMainModel(),(AbstractClientPlayer) player);
+        
+        ItemStack itemstack = getItemStackFromSlot(player, EntityEquipmentSlot.CHEST);
+
+        if (itemstack != null && itemstack.getItem() instanceof ItemArmor) {
+            //ItemArmor itemarmor = (ItemArmor)itemstack.getItem();
+            render.bindTexture(getArmorResource(player, itemstack, EntityEquipmentSlot.CHEST, null));
+            
+            ModelBiped armorModel = getArmorModelHook(player, itemstack, EntityEquipmentSlot.CHEST, null);
+            if(armorModel != null) {
+                renderRightArm(armorModel,(AbstractClientPlayer) player);
+            }
+        }
+
         GL11.glPopMatrix();
     }
 
@@ -466,20 +476,31 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 
         renderContext.capturePartPosition(Part.LEFT_HAND);
 
+        renderLeftArm(render.getMainModel(),(AbstractClientPlayer) player);
 
-        render.renderLeftArm((AbstractClientPlayer)player);
+        ItemStack itemstack = getItemStackFromSlot(player, EntityEquipmentSlot.CHEST);
+
+        if (itemstack != null && itemstack.getItem() instanceof ItemArmor) {
+            //ItemArmor itemarmor = (ItemArmor)itemstack.getItem();
+            render.bindTexture(getArmorResource(player, itemstack, EntityEquipmentSlot.CHEST, null));
+            
+            ModelBiped armorModel = getArmorModelHook(player, itemstack, EntityEquipmentSlot.CHEST, null);
+            if(armorModel != null) {
+                renderLeftArm(armorModel,(AbstractClientPlayer) player);
+            }
+        }
         GL11.glPopMatrix();
     }
 
     protected abstract void renderItem(ItemStack weaponItemStack, RenderContext<RenderableState> renderContext,
             Positioner<Part, RenderContext<RenderableState>> positioner);
 
-    private static void renderRightArm(RenderPlayer renderPlayer, AbstractClientPlayer clientPlayer) {
+    private static void renderRightArm(ModelBiped modelplayer, AbstractClientPlayer clientPlayer) {
         float f = 1.0F;
         GlStateManager.color(f, f, f);
-        ModelPlayer modelplayer = renderPlayer.getMainModel();
+        //ModelPlayer modelplayer = renderPlayer.getMainModel();
         // Can ignore private method setModelVisibilities since it was already called earlier for left hand
-        setModelVisibilities(renderPlayer, clientPlayer);
+        setModelVisibilities(modelplayer, clientPlayer);
 
         GlStateManager.enableBlend();
         modelplayer.swingProgress = 0.0F;
@@ -488,30 +509,35 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
         modelplayer.bipedRightArm.rotateAngleX = -0.3F;
         modelplayer.bipedRightArm.rotateAngleY = 0.0F;
         modelplayer.bipedRightArm.render(0.0625F);
-        modelplayer.bipedRightArmwear.rotateAngleX = 0.0F;
-        modelplayer.bipedRightArmwear.render(0.0625F);
+        if(modelplayer instanceof ModelPlayer) {
+            ((ModelPlayer)modelplayer).bipedRightArmwear.rotateAngleX = 0.0F;
+            ((ModelPlayer)modelplayer).bipedRightArmwear.render(0.0625F);
+        }
+       
         GlStateManager.disableBlend();
+    }
+    
+    private static void renderLeftArm(ModelBiped modelplayer, AbstractClientPlayer clientPlayer) {
+        GlStateManager.color(1.0F, 1.0F, 1.0F);
+        setModelVisibilities(modelplayer, clientPlayer);
         
+        GlStateManager.enableBlend();
+        modelplayer.isSneak = false;
+        modelplayer.swingProgress = 0.0F;
+        modelplayer.setRotationAngles(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0625F, clientPlayer);
+        modelplayer.bipedLeftArm.rotateAngleX = 0.0F;
+        modelplayer.bipedLeftArm.render(0.0625F);
+        if(modelplayer instanceof ModelPlayer) {
+            ((ModelPlayer)modelplayer).bipedLeftArmwear.rotateAngleX = 0.0F;
+            ((ModelPlayer)modelplayer).bipedLeftArmwear.render(0.0625F);
+        }
         
-//        float f = 1.0F;
-//        GlStateManager.color(1.0F, 1.0F, 1.0F);
-//        float f1 = 0.0625F;
-//        ModelPlayer modelplayer = renderPlayer.getMainModel();
-//        setModelVisibilities(renderPlayer, clientPlayer);
-//        GlStateManager.enableBlend();
-//        modelplayer.swingProgress = 0.0F;
-//        modelplayer.isSneak = false;
-//        modelplayer.setRotationAngles(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0625F, clientPlayer);
-//        modelplayer.bipedRightArm.rotateAngleX = 0.0F;
-//        modelplayer.bipedRightArm.render(0.0625F);
-//        modelplayer.bipedRightArmwear.rotateAngleX = 0.0F;
-//        modelplayer.bipedRightArmwear.render(0.0625F);
-//        GlStateManager.disableBlend();
+        GlStateManager.disableBlend();
     }
 
-    private static void setModelVisibilities(RenderPlayer renderPlayer, AbstractClientPlayer clientPlayer)
+    private static void setModelVisibilities(ModelBiped modelplayer, AbstractClientPlayer clientPlayer)
     {
-        ModelPlayer modelplayer = renderPlayer.getMainModel();
+        //ModelPlayer modelplayer = renderPlayer.getMainModel();
 
         if (clientPlayer.isSpectator())
         {
@@ -524,14 +550,17 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
         {
             ItemStack itemstack = clientPlayer.getHeldItemMainhand();
             ItemStack itemstack1 = clientPlayer.getHeldItemOffhand();
-            //modelplayer.setInvisible(true);
             modelplayer.setVisible(true);
             modelplayer.bipedHeadwear.showModel = clientPlayer.isWearing(EnumPlayerModelParts.HAT);
-            modelplayer.bipedBodyWear.showModel = clientPlayer.isWearing(EnumPlayerModelParts.JACKET);
-            modelplayer.bipedLeftLegwear.showModel = clientPlayer.isWearing(EnumPlayerModelParts.LEFT_PANTS_LEG);
-            modelplayer.bipedRightLegwear.showModel = clientPlayer.isWearing(EnumPlayerModelParts.RIGHT_PANTS_LEG);
-            modelplayer.bipedLeftArmwear.showModel = clientPlayer.isWearing(EnumPlayerModelParts.LEFT_SLEEVE);
-            modelplayer.bipedRightArmwear.showModel = clientPlayer.isWearing(EnumPlayerModelParts.RIGHT_SLEEVE);
+
+            if(modelplayer instanceof ModelPlayer) {
+                ((ModelPlayer)modelplayer).bipedBodyWear.showModel = clientPlayer.isWearing(EnumPlayerModelParts.JACKET);
+                ((ModelPlayer)modelplayer).bipedLeftLegwear.showModel = clientPlayer.isWearing(EnumPlayerModelParts.LEFT_PANTS_LEG);
+                ((ModelPlayer)modelplayer).bipedRightLegwear.showModel = clientPlayer.isWearing(EnumPlayerModelParts.RIGHT_PANTS_LEG);
+                ((ModelPlayer)modelplayer).bipedLeftArmwear.showModel = clientPlayer.isWearing(EnumPlayerModelParts.LEFT_SLEEVE);
+                ((ModelPlayer)modelplayer).bipedRightArmwear.showModel = clientPlayer.isWearing(EnumPlayerModelParts.RIGHT_SLEEVE);
+            }
+            
             modelplayer.isSneak = clientPlayer.isSneaking();
             ModelBiped.ArmPose modelbiped$armpose = ModelBiped.ArmPose.EMPTY;
             ModelBiped.ArmPose modelbiped$armpose1 = ModelBiped.ArmPose.EMPTY;
@@ -597,4 +626,75 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
         return pair;
     }
 
+    protected static ModelBiped getArmorModelHook(net.minecraft.entity.EntityLivingBase entity, net.minecraft.item.ItemStack itemStack, EntityEquipmentSlot slot, ModelBiped model) {
+        return net.minecraftforge.client.ForgeHooksClient.getArmorModel(entity, itemStack, slot, model);
+    }
+    
+    protected void setModelVisible(ModelBiped model) {
+        model.setVisible(true);
+    }
+    
+    @SuppressWarnings("incomplete-switch")
+    protected void setModelSlotVisible(ModelBiped p_188359_1_, EntityEquipmentSlot slotIn) {
+        this.setModelVisible(p_188359_1_);
+
+        switch (slotIn)
+        {
+            case HEAD:
+                p_188359_1_.bipedHead.showModel = true;
+                p_188359_1_.bipedHeadwear.showModel = true;
+                break;
+            case CHEST:
+                p_188359_1_.bipedBody.showModel = true;
+                p_188359_1_.bipedRightArm.showModel = true;
+                p_188359_1_.bipedLeftArm.showModel = true;
+                break;
+            case LEGS:
+                p_188359_1_.bipedBody.showModel = true;
+                p_188359_1_.bipedRightLeg.showModel = true;
+                p_188359_1_.bipedLeftLeg.showModel = true;
+                break;
+            case FEET:
+                p_188359_1_.bipedRightLeg.showModel = true;
+                p_188359_1_.bipedLeftLeg.showModel = true;
+        }
+    }
+
+    @Nullable
+    public static ItemStack getItemStackFromSlot(EntityLivingBase living, EntityEquipmentSlot slotIn) {
+        return living.getItemStackFromSlot(slotIn);
+    }
+
+//    public static ModelBiped getModelFromSlot(EntityEquipmentSlot slotIn) {
+//        return (ModelBiped)(isLegSlot(slotIn) ? this.modelLeggings : this.modelArmor);
+//    }
+
+    private static boolean isLegSlot(EntityEquipmentSlot slotIn) {
+        return slotIn == EntityEquipmentSlot.LEGS;
+    }
+    
+    public static ResourceLocation getArmorResource(net.minecraft.entity.Entity entity, ItemStack stack, EntityEquipmentSlot slot, String type)
+    {
+        ItemArmor item = (ItemArmor)stack.getItem();
+        String texture = item.getArmorMaterial().getName();
+        String domain = "minecraft";
+        int idx = texture.indexOf(':');
+        if (idx != -1)
+        {
+            domain = texture.substring(0, idx);
+            texture = texture.substring(idx + 1);
+        }
+        String s1 = String.format("%s:textures/models/armor/%s_layer_%d%s.png", domain, texture, (isLegSlot(slot) ? 2 : 1), type == null ? "" : String.format("_%s", type));
+
+        s1 = net.minecraftforge.client.ForgeHooksClient.getArmorTexture(entity, stack, s1, slot, type);
+        ResourceLocation resourcelocation = (ResourceLocation)ARMOR_TEXTURE_RES_MAP.get(s1);
+
+        if (resourcelocation == null)
+        {
+            resourcelocation = new ResourceLocation(s1);
+            ARMOR_TEXTURE_RES_MAP.put(s1, resourcelocation);
+        }
+
+        return resourcelocation;
+    }
 }

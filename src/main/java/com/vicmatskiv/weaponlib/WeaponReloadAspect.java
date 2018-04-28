@@ -107,9 +107,6 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 	private static Predicate<PlayerWeaponInstance> alertTimeoutExpired = instance ->
 		System.currentTimeMillis() >= ALERT_TIMEOUT + instance.getStateUpdateTimestamp();
 
-	private Predicate<ItemStack> magazineNotEmpty = magazineStack -> Tags.getAmmo(magazineStack) > 0;
-
-
 	private ModContext modContext;
 
 	private PermitManager permitManager;
@@ -250,7 +247,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 		    if(existingMagazine == null) {
 		        ammo = 0;
 		        ItemStack magazineItemStack = compatibility.tryConsumingCompatibleItem(compatibleMagazines,
-		                1, player, magazineNotEmpty, magazineStack -> true);
+		                (stack1, stack2) -> Integer.compare(Tags.getAmmo(stack1), Tags.getAmmo(stack2)), player);
 		        if(magazineItemStack != null) {
 		            ammo = Tags.getAmmo(magazineItemStack);
 		            Tags.setAmmo(weaponItemStack, ammo);

@@ -14,12 +14,6 @@ import java.util.Random;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.model.ModelBase;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL11;
@@ -146,6 +140,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		private LinkedHashMap<Part, Consumer<RenderContext<RenderableState>>> firstPersonCustomPositioningZoomingShooting = new LinkedHashMap<>();
 	    private LinkedHashMap<Part, Consumer<RenderContext<RenderableState>>> firstPersonCustomPositioningLoadIterationCompleted = new LinkedHashMap<>();
 
+
+	    private LinkedHashMap<Part, Consumer<RenderContext<RenderableState>>> firstPersonCustomPositioningZooming = new LinkedHashMap<>();
 
 		private List<Transition<RenderContext<RenderableState>>> firstPersonPositioningEjectSpentRound;
 		private List<Transition<RenderContext<RenderableState>>> firstPersonLeftHandPositioningEjectSpentRound;
@@ -458,6 +454,16 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			}
 			return this;
 		}
+		
+		public Builder withFirstPersonCustomPositioningZooming(Part part, Consumer<RenderContext<RenderableState>> positioning) {
+            if(part instanceof DefaultPart) {
+                throw new IllegalArgumentException("Part " + part + " is not custom");
+            }
+            if(this.firstPersonCustomPositioningZooming.put(part, positioning) != null) {
+                throw new IllegalArgumentException("Part " + part + " already added");
+            }
+            return this;
+        }
 
 		public Builder withFirstPersonPositioningCustomRecoiled(Part part, Consumer<RenderContext<RenderableState>> positioning) {
 			if(part instanceof DefaultPart) {
@@ -789,6 +795,12 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 					firstPersonCustomPositioningRecoiled.put(part, pos);
 				});
 			}
+			
+	         if(!firstPersonCustomPositioning.isEmpty() && firstPersonCustomPositioningZooming.isEmpty()) {
+	                firstPersonCustomPositioning.forEach((part, pos) -> {
+	                    firstPersonCustomPositioningZooming.put(part, pos);
+	                });
+	            }
 
 			if(!firstPersonCustomPositioning.isEmpty() && firstPersonCustomPositioningZoomingRecoiled.isEmpty()) {
 				firstPersonCustomPositioning.forEach((part, pos) -> {
@@ -1018,7 +1030,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 
 		MultipartRenderStateManager<RenderableState, Part, RenderContext<RenderableState>> stateManager = firstPersonStateManagers.get(player);
 		if(stateManager == null) {
-			stateManager = new MultipartRenderStateManager<>(currentState, weaponTransitionProvider, Part.MAIN_ITEM);
+			stateManager = new MultipartRenderStateManager<>(currentState, weaponTransitionProvider);
 			firstPersonStateManagers.put(player, stateManager);
 		} else {
 			stateManager.setState(currentState, true, currentState == RenderableState.SHOOTING
@@ -1128,7 +1140,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 	private class WeaponPositionProvider implements MultipartTransitionProvider<RenderableState, Part, RenderContext<RenderableState>> {
 
 		@Override
-		public List<MultipartTransition<Part, RenderContext<RenderableState>>> getPositioning(RenderableState state) {
+		public List<MultipartTransition<Part, RenderContext<RenderableState>>> getTransitions(RenderableState state) {
 			switch(state) {
 			case MODIFYING:
 				return getSimpleTransition(builder.firstPersonPositioningModifying,
@@ -1200,7 +1212,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				return getSimpleTransition(builder.firstPersonPositioningZooming,
 						builder.firstPersonLeftHandPositioningZooming,
 						builder.firstPersonRightHandPositioningZooming,
-						builder.firstPersonCustomPositioning,
+						builder.firstPersonCustomPositioningZooming,
 						DEFAULT_ANIMATION_DURATION);
 			case ZOOMING_SHOOTING:
 				return getSimpleTransition(builder.firstPersonPositioningZoomingShooting,

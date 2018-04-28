@@ -23,4 +23,8 @@ public class CompatibleMathHelper {
     public static int floor_double(double d) {
         return MathHelper.floor(d);
     }
+    
+    public static double clamp_double(double num, double min, double max) {
+        return MathHelper.clamp(num, min, max);
+    }
 }

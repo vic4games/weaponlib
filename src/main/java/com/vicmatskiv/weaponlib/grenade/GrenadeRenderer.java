@@ -688,7 +688,7 @@ public class GrenadeRenderer extends CompatibleGrenadeRenderer {
 		        playerGrenadeInstance.getItemInventoryIndex() : -1);
 		MultipartRenderStateManager<RenderableState, Part, RenderContext<RenderableState>> stateManager = firstPersonStateManagers.get(key);
 		if(stateManager == null) {
-			stateManager = new MultipartRenderStateManager<>(currentState, weaponTransitionProvider, Part.MAIN_ITEM);
+			stateManager = new MultipartRenderStateManager<>(currentState, weaponTransitionProvider);
 			firstPersonStateManagers.put(key, stateManager);
 		} else {
 			stateManager.setState(currentState, true, currentState == RenderableState.THROWING);
@@ -806,7 +806,7 @@ public class GrenadeRenderer extends CompatibleGrenadeRenderer {
 	private class WeaponPositionProvider implements MultipartTransitionProvider<RenderableState, Part, RenderContext<RenderableState>> {
 
 		@Override
-		public List<MultipartTransition<Part, RenderContext<RenderableState>>> getPositioning(RenderableState state) {
+		public List<MultipartTransition<Part, RenderContext<RenderableState>>> getTransitions(RenderableState state) {
 			switch(state) {
 			case SAFETY_PIN_OFF:
 				return getComplexTransition(builder.firstPersonPositioningSafetyPinOff,

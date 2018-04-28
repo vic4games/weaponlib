@@ -29,10 +29,16 @@ public class StaticModelSourceRenderer extends CompatibleStaticModelSourceRender
 		
 		private String modId;
 		private ModContext modContext;
+		private boolean isHiddenInInventory;
 		
 		public Builder withModId(String modId) {
 			this.modId = modId;
 			return this;
+		}
+		
+		public Builder withHiddenInventory(boolean isHiddenInInventory) {
+		    this.isHiddenInInventory = isHiddenInInventory;
+		    return this;
 		}
 		
 		public Builder withModContext(ModContext modContext) {
@@ -95,7 +101,10 @@ public class StaticModelSourceRenderer extends CompatibleStaticModelSourceRender
 			}
 			
 			if(inventoryPositioning == null) {
-				inventoryPositioning = itemStack -> {GL11.glTranslatef(0,  0.12f, 0);};
+				inventoryPositioning = itemStack -> {
+				    if(isHiddenInInventory) GL11.glScalef(0f, 0f, 0f);
+				    else GL11.glTranslatef(0,  0.12f, 0);
+				};
 			}
 			
 			if(entityPositioning == null) {
@@ -117,7 +126,9 @@ public class StaticModelSourceRenderer extends CompatibleStaticModelSourceRender
 			}
 			
 			if(inventoryModelPositioning == null) {
-				inventoryModelPositioning = (m, i) -> {};
+				inventoryModelPositioning = (m, i) -> { 
+				    if(isHiddenInInventory) GL11.glScalef(0f, 0f, 0f);
+				 };
 			}
 			
 			if(entityModelPositioning == null) {

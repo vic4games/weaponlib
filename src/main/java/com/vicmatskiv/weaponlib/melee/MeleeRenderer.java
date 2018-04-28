@@ -554,7 +554,7 @@ public class MeleeRenderer extends CompatibleMeleeRenderer {
 
 		MultipartRenderStateManager<RenderableState, Part, RenderContext<RenderableState>> stateManager = firstPersonStateManagers.get(player);
 		if(stateManager == null) {
-			stateManager = new MultipartRenderStateManager<>(currentState, weaponTransitionProvider, Part.MAIN_ITEM);
+			stateManager = new MultipartRenderStateManager<>(currentState, weaponTransitionProvider);
 			firstPersonStateManagers.put(player, stateManager);
 		} else {
 			stateManager.setState(currentState, true, currentState == RenderableState.ATTACKING);
@@ -659,7 +659,7 @@ public class MeleeRenderer extends CompatibleMeleeRenderer {
 	private class WeaponPositionProvider implements MultipartTransitionProvider<RenderableState, Part, RenderContext<RenderableState>> {
 
 		@Override
-		public List<MultipartTransition<Part, RenderContext<RenderableState>>> getPositioning(RenderableState state) {
+		public List<MultipartTransition<Part, RenderContext<RenderableState>>> getTransitions(RenderableState state) {
 			switch(state) {
 			case MODIFYING:
 				return getSimpleTransition(builder.firstPersonPositioningModifying,

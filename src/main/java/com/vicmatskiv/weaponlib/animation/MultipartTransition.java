@@ -6,18 +6,18 @@ import java.util.function.Consumer;
 
 public class MultipartTransition<Part, Context> {
 
-    private static final Consumer<?> ANCHORED_POSITION = c -> {};
+    private static final Consumer<?> DEFAULT_POSITION = c -> {};
 
     @SuppressWarnings("unchecked")
     public static <Context> Consumer<Context> anchoredPosition() {
-        return (Consumer<Context>) ANCHORED_POSITION;
+        return (Consumer<Context>) DEFAULT_POSITION;
     }
 
     private Map<Part, Consumer<Context>> multipartPositionFunctions = new HashMap<>();
 	private Map<Part, Part> attachedTo = new HashMap<>();
 	private long duration;
 	private long pause;
-
+	
 	public MultipartTransition(Part part, Consumer<Context> positionFunction, long duration, long pause) {
 		this.duration = duration;
 		this.pause = pause;
@@ -50,7 +50,8 @@ public class MultipartTransition<Part, Context> {
 	public void position(Part part, Context context) {
 		Consumer<Context> positionFunction = multipartPositionFunctions.get(part);
 		if(positionFunction == null) {
-			throw new IllegalArgumentException("Don't know anything about part " + part);
+//			throw new IllegalArgumentException("Don't know anything about part " + part);
+			positionFunction = anchoredPosition();
 		}
 		positionFunction.accept(context);
 	}

@@ -14,7 +14,6 @@ import com.vicmatskiv.weaponlib.animation.PlayerRawPitchAnimationManager;
 import com.vicmatskiv.weaponlib.command.DebugCommand;
 import com.vicmatskiv.weaponlib.command.MainCommand;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
-import com.vicmatskiv.weaponlib.compatibility.CompatibleEntityRenderer;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderingRegistry;
 import com.vicmatskiv.weaponlib.config.ConfigurationManager;
@@ -32,7 +31,6 @@ import com.vicmatskiv.weaponlib.melee.PlayerMeleeInstance;
 import com.vicmatskiv.weaponlib.perspective.PerspectiveManager;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.entity.Entity;
@@ -45,6 +43,8 @@ public class ClientModContext extends CommonModContext {
 	private ClientEventHandler clientEventHandler;
 	private Lock mainLoopLock = new ReentrantLock();
 	private Queue<Runnable> runInClientThreadQueue = new LinkedBlockingQueue<>();
+	
+	protected static ThreadLocal<ClientModContext> currentContext = new ThreadLocal<>();
 
 	private CompatibleRenderingRegistry rendererRegistry;
 
@@ -62,6 +62,11 @@ public class ClientModContext extends CommonModContext {
     private EffectManager effectManager;
 
     private PlayerRawPitchAnimationManager playerRawPitchAnimationManager;
+    private PlayerTransitionProvider playerTransitionProvider;
+    
+    public static ClientModContext getContext() {
+        return currentContext.get();
+    }
 
 	@Override
     public void init(Object mod, String modId, ConfigurationManager configurationManager, CompatibleChannel channel) {
@@ -241,5 +246,14 @@ public class ClientModContext extends CommonModContext {
     @Override
     public void registerRenderableEntity(Class<? extends Entity> entityClass, Object renderer) {
         rendererRegistry.registerEntityRenderingHandler(entityClass, renderer);
+    }
+    
+    @Override
+    public void setPlayerTransitionProvider(PlayerTransitionProvider playerTransitionProvider) {
+        this.playerTransitionProvider = playerTransitionProvider;
+    }
+
+    PlayerTransitionProvider getPlayerTransitionProvider() {
+        return playerTransitionProvider;
     }
 }

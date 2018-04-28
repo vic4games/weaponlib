@@ -69,6 +69,8 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 	private boolean laserOn;
 	private long aimChangeTimestamp;
 	private boolean nightVisionOn;
+	private boolean seriesResetAllowed;
+	private long lastBurstEndTimestamp;
 	
 	private int loadIterationCount;
 
@@ -258,6 +260,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 	}
 
 	public int getSeriesShotCount() {
+	    System.out.println("Series shot count: " + seriesShotCount);
 		return seriesShotCount;
 	}
 
@@ -274,12 +277,42 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 	}
 
 	public void resetCurrentSeries() {
-		this.seriesShotCount = 0;
+		seriesShotCount = 0;
+		seriesResetAllowed = false;
 	}
+	
+	public void setLastBurstEndTimestamp(long lastBurstEndTimestamp) {
+        this.lastBurstEndTimestamp = lastBurstEndTimestamp;
+    }
+	
+	public long getLastBurstEndTimestamp() {
+	    return lastBurstEndTimestamp;
+	}
+	
+	public void setSeriesResetAllowed(boolean seriesResetAllowed) {
+	    this.seriesResetAllowed = seriesResetAllowed;
+	}
+	
+	public boolean isSeriesResetAllowed() {
+	    return seriesResetAllowed;
+	}
+	
+//	public void resetCurrentSeriesEventually() {
+//	    if(isOneClickBurstAllowed()) {
+//	        seriesResetAllowed = true;
+//	    } else {
+//	        seriesShotCount = 0;
+//	    }
+//    }
 
 	public float getFireRate() {
 		return getWeapon().builder.fireRate;
 	}
+	
+    public boolean isOneClickBurstAllowed() {
+        System.out.println("One click burst allowed: " + getWeapon().builder.isOneClickBurstAllowed);
+        return getWeapon().builder.isOneClickBurstAllowed;
+    }
 
 	public boolean isAutomaticModeEnabled() {
 		return maxShots > 1;
@@ -467,5 +500,10 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 	public String toString() {
 		return getWeapon().builder.name + "[" + getUuid() + "]";
 	}
+
+
+   
+
+
 
 }

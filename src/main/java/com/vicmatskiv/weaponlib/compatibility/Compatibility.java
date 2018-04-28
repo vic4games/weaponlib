@@ -1,5 +1,7 @@
 package com.vicmatskiv.weaponlib.compatibility;
 
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -324,18 +326,21 @@ public interface Compatibility {
     
     public <T> void setPrivateValue(Class<T> class1, T instance, Object value, String...fieldNames);
 
-    public ItemStack createItemStack(NBTTagCompound secondaryNbt);
+    public ItemStack createItemStack(NBTTagCompound tagCompound);
 
     public EntityAITarget createAINearestAttackableTarget(EntityLivingBase e, Class<? extends EntityLivingBase> targetClass, boolean checkSight);
     
     public EntityAIBase createAiAvoidEntity(EntityLivingBase e, Class<? extends EntityLivingBase> entityClassToAvoid,
             float avoidDistanceIn, double farSpeedIn, double nearSpeedIn);
 
+    public Entity getTrueDamageSource(DamageSource cause);
+
     public ShaderGroup getShaderGroup(EntityRenderer entityRenderer);
 
     public void setShaderGroup(EntityRenderer entityRenderer, ShaderGroup shaderGroup);
 
-    public Entity getTrueDamageSource(DamageSource cause);
-
     public WorldType getWorldType(World world);
+
+    ItemStack tryConsumingCompatibleItem(Collection<? extends Item> compatibleItems, Comparator<ItemStack> comparator,
+            EntityPlayer player);
 }

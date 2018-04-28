@@ -12,7 +12,6 @@ import com.vicmatskiv.weaponlib.melee.MeleeAttachmentAspect;
 import com.vicmatskiv.weaponlib.melee.MeleeAttackAspect;
 import com.vicmatskiv.weaponlib.melee.MeleeRenderer;
 
-import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
@@ -101,4 +100,6 @@ public interface ModContext {
     public Object getMod();
 
     public void registerRenderableEntity(Class<? extends Entity> entityClass, Object renderer);
+
+    public void setPlayerTransitionProvider(PlayerTransitionProvider playerTransitionProvider);
 }
