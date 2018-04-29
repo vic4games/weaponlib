@@ -163,6 +163,10 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
         compatibility.playSound(player, silencerOn ? weapon.getSilencedShootSound() : weapon.getShootSound(),
                 silencerOn ? weapon.getSilencedShootSoundVolume() : weapon.getShootSoundVolume(), 1F);
 
+        if(weaponInstance.getAmmo() == 1 && weapon.getEndOfShootSound() != null) {
+            compatibility.playSound(player, weapon.getEndOfShootSound(), 1F, 1F);
+        }
+        
         player.rotationPitch = player.rotationPitch - weaponInstance.getRecoil();
         float rotationYawFactor = -1.0f + random.nextFloat() * 2.0f;
         player.rotationYaw = player.rotationYaw + weaponInstance.getRecoil() * rotationYawFactor;

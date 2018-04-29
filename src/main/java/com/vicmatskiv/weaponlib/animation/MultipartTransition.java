@@ -50,9 +50,10 @@ public class MultipartTransition<Part, Context> {
 	public void position(Part part, Context context) {
 		Consumer<Context> positionFunction = multipartPositionFunctions.get(part);
 		if(positionFunction == null) {
-			throw new IllegalArgumentException("Don't know anything about part " + part);
+			//throw new IllegalArgumentException("Don't know anything about part " + part);
+		} else {
+		    positionFunction.accept(context);
 		}
-		positionFunction.accept(context);
 	}
 
 	public Consumer<Context> getPositioning(Part part) {

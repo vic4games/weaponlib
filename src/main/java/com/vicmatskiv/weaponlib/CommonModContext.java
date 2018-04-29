@@ -5,6 +5,11 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 import java.util.HashMap;
 import java.util.Map;
 
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
+import net.minecraft.util.ResourceLocation;
+
 import com.vicmatskiv.weaponlib.MagazineReloadAspect.LoadPermit;
 import com.vicmatskiv.weaponlib.WeaponAttachmentAspect.ChangeAttachmentPermit;
 import com.vicmatskiv.weaponlib.WeaponAttachmentAspect.EnterAttachmentModePermit;
@@ -19,6 +24,8 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 import com.vicmatskiv.weaponlib.config.ConfigurationManager;
 import com.vicmatskiv.weaponlib.crafting.RecipeManager;
 import com.vicmatskiv.weaponlib.electronics.EntityWirelessCamera;
+import com.vicmatskiv.weaponlib.electronics.HandheldState;
+import com.vicmatskiv.weaponlib.electronics.PlayerHandheldInstance;
 import com.vicmatskiv.weaponlib.electronics.PlayerTabletInstance;
 import com.vicmatskiv.weaponlib.electronics.TabletState;
 import com.vicmatskiv.weaponlib.grenade.EntityGasGrenade;
@@ -49,12 +56,6 @@ import com.vicmatskiv.weaponlib.state.StateManager;
 import com.vicmatskiv.weaponlib.tracking.SyncPlayerEntityTrackerMessage;
 import com.vicmatskiv.weaponlib.tracking.SyncPlayerEntityTrackerMessageMessageHandler;
 
-import net.minecraft.client.renderer.entity.Render;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.Item;
-import net.minecraft.util.ResourceLocation;
-
 public class CommonModContext implements ModContext {
 
     static {
@@ -75,8 +76,10 @@ public class CommonModContext implements ModContext {
         TypeRegistry.getInstance().register(PlayerMeleeInstance.class);
         TypeRegistry.getInstance().register(PlayerGrenadeInstance.class);
         TypeRegistry.getInstance().register(PlayerTabletInstance.class);
+        TypeRegistry.getInstance().register(PlayerHandheldInstance.class);
         TypeRegistry.getInstance().register(MeleeState.class);
         TypeRegistry.getInstance().register(TabletState.class);
+        TypeRegistry.getInstance().register(HandheldState.class);
         TypeRegistry.getInstance().register(SpreadableExposure.class);
     }
 

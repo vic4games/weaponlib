@@ -91,7 +91,7 @@ public class Compatibility1_12_2 implements Compatibility {
 
     private static final float DEFAULT_SHELL_CASING_FORWARD_OFFSET = 0.1f;
 
-    private static DamageSource GENERIC_DAMAGE_SOURCE = new DamageSource("thrown");
+    private static DamageSource GENERIC_DAMAGE_SOURCE = new DamageSource("generic");
 
     private static CompatibleMathHelper mathHelper = new CompatibleMathHelper();
 

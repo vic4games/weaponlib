@@ -65,6 +65,7 @@ public class Weapon extends CompatibleItem implements PlayerItemInstanceFactory<
         private String allReloadIterationsCompletedSound;
         private String unloadSound;
         private String ejectSpentRoundSound;
+        private String endOfShootSound;
 
         @SuppressWarnings("unused")
         private String exceededMaxShotsSound;
@@ -277,6 +278,14 @@ public class Weapon extends CompatibleItem implements PlayerItemInstanceFactory<
                 throw new IllegalStateException("ModId is not set");
             }
             this.shootSound = shootSound.toLowerCase(); //modId + ":" + shootSound;
+            return this;
+        }
+        
+        public Builder withEndOfShootSound(String endOfShootSound) {
+            if (modId == null) {
+                throw new IllegalStateException("ModId is not set");
+            }
+            this.endOfShootSound = endOfShootSound.toLowerCase(); //modId + ":" + shootSound;
             return this;
         }
 
@@ -639,6 +648,10 @@ public class Weapon extends CompatibleItem implements PlayerItemInstanceFactory<
             Weapon weapon = new Weapon(this, modContext);
 
             weapon.shootSound = modContext.registerSound(this.shootSound);
+            if(this.endOfShootSound != null) {
+                weapon.endOfShootSound = modContext.registerSound(this.endOfShootSound);
+            }
+
             weapon.reloadSound = modContext.registerSound(this.reloadSound);
             weapon.reloadIterationSound = modContext.registerSound(this.reloadIterationSound);
             weapon.allReloadIterationsCompletedSound = modContext.registerSound(this.allReloadIterationsCompletedSound);
@@ -718,6 +731,7 @@ public class Weapon extends CompatibleItem implements PlayerItemInstanceFactory<
     private ModContext modContext;
 
     private CompatibleSound shootSound;
+    private CompatibleSound endOfShootSound;
     private CompatibleSound silencedShootSound;
     private CompatibleSound reloadSound;
     private CompatibleSound reloadIterationSound;
@@ -739,6 +753,10 @@ public class Weapon extends CompatibleItem implements PlayerItemInstanceFactory<
 
     public CompatibleSound getShootSound() {
         return shootSound;
+    }
+    
+    public CompatibleSound getEndOfShootSound() {
+        return endOfShootSound;
     }
 
     public CompatibleSound getSilencedShootSound() {
