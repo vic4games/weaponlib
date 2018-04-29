@@ -18,6 +18,7 @@ public class KeyBindings {
 	public static KeyBinding rightArrowKey;
 	public static KeyBinding laserSwitchKey;
 	public static KeyBinding nightVisionSwitchKey;
+	public static KeyBinding proningSwitchKey;
 
 	public static KeyBinding addKey;
 
@@ -74,6 +75,9 @@ public class KeyBindings {
 
 		fireModeKey = new KeyBinding("key.fire_mode", Keyboard.KEY_RSHIFT,
 				"key.categories.weaponlib");
+		
+		proningSwitchKey = new KeyBinding("key.proning", Keyboard.KEY_Z,
+                "key.categories.weaponlib");
 
 
 		compatibility.registerKeyBinding(reloadKey);
@@ -87,6 +91,7 @@ public class KeyBindings {
 		compatibility.registerKeyBinding(addKey);
 		compatibility.registerKeyBinding(subtractKey);
 		compatibility.registerKeyBinding(fireModeKey);
+        compatibility.registerKeyBinding(proningSwitchKey);
 
 
 		if(DebugPositioner.isDebugModeEnabled()) {

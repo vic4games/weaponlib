@@ -34,8 +34,11 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 	private static final float SLOW_DOWN_WHEN_POISONED_DOSE_THRESHOLD = 0.4f;
 	
     private static final UUID SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER_UUID = UUID.fromString("8efa8469-0256-4f8e-bdd9-3e7b23970663");
-	private static final AttributeModifier SLOW_DOWN_WHILE_ZOOMING_OR_PRONING_ATTRIBUTE_MODIFIER = (new AttributeModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER_UUID, "Slow Down While Zooming", -0.5, 2)).setSaved(false);
+	private static final AttributeModifier SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER = (new AttributeModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER_UUID, "Slow Down While Zooming", -0.3, 2)).setSaved(false);
     
+	private static final UUID SLOW_DOWN_WHILE_PRONING_ATTRIBUTE_MODIFIER_UUID = UUID.fromString("a3fa1751-953d-4b6c-955b-6824a193d271");
+	private static final AttributeModifier SLOW_DOWN_WHILE_PRONING_ATTRIBUTE_MODIFIER = (new AttributeModifier(SLOW_DOWN_WHILE_PRONING_ATTRIBUTE_MODIFIER_UUID, "Slow Down While Proning", -0.7, 2)).setSaved(false);
+
 	private static final UUID SLOW_DOWN_WHILE_POISONED_ATTRIBUTE_MODIFIER_UUID = UUID.fromString("9d2eac95-9b9c-4942-8287-7952c6de353e");
     private static final AttributeModifier SLOW_DOWN_WHILE_POISONED_ATTRIBUTE_MODIFIER = (new AttributeModifier(SLOW_DOWN_WHILE_POISONED_ATTRIBUTE_MODIFIER_UUID, "Slow Down While Poisoned", -0.7, 2)).setSaved(false);
 
@@ -87,21 +90,26 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 		EntityPlayer player = compatibility.clientPlayer();
 		modContext.getPlayerItemInstanceRegistry().update(player);
 		PlayerWeaponInstance mainHandHeldWeaponInstance = modContext.getMainHeldWeapon();
-		if(isProning(player)) {
-		    slowPlayerDown(player, SLOW_DOWN_WHILE_ZOOMING_OR_PRONING_ATTRIBUTE_MODIFIER);
-		} else if(mainHandHeldWeaponInstance != null) {
+		if(player != null) {
+		    if(isProning(player)) {
+	            slowPlayerDown(player, SLOW_DOWN_WHILE_PRONING_ATTRIBUTE_MODIFIER);
+	        } else {
+	            restorePlayerSpeed(player, SLOW_DOWN_WHILE_PRONING_ATTRIBUTE_MODIFIER);
+	        }
+		}
+		
+		if(mainHandHeldWeaponInstance != null) {
 			if(player.isSprinting()) {
 				mainHandHeldWeaponInstance.setAimed(false);
 			}
 			if(mainHandHeldWeaponInstance.isAimed()) {
-				slowPlayerDown(player, SLOW_DOWN_WHILE_ZOOMING_OR_PRONING_ATTRIBUTE_MODIFIER);
+				slowPlayerDown(player, SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER);
 			} else {
-				restorePlayerSpeed(player, SLOW_DOWN_WHILE_ZOOMING_OR_PRONING_ATTRIBUTE_MODIFIER);
+				restorePlayerSpeed(player, SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER);
 			}
 		} else if(player != null){
-			restorePlayerSpeed(player, SLOW_DOWN_WHILE_ZOOMING_OR_PRONING_ATTRIBUTE_MODIFIER);
+			restorePlayerSpeed(player, SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER);
 		}
-		
 		
 		if(player != null) {
 		    ItemStack helmet = compatibility.getHelmet();

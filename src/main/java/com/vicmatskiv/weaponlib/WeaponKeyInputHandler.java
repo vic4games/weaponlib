@@ -131,9 +131,6 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
 	        PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
 	        if(instance != null && instance.getState() == WeaponState.MODIFYING) {
 	            modContext.getAttachmentAspect().changeAttachment(AttachmentCategory.GRIP, instance);
-	        } else {
-	            modContext.getChannel().getChannel().sendToServer(new EntityControlMessage(player, 
-	                    CompatibleExtraEntityFlags.PRONING | CompatibleExtraEntityFlags.FLIP, 0));
 	        }
 	    }
 
@@ -167,5 +164,10 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
 	            instance.getWeapon().decrementZoom(instance);
 	        }
 	    }
+	    
+	    else if(KeyBindings.proningSwitchKey.isPressed()) {
+	        modContext.getChannel().getChannel().sendToServer(new EntityControlMessage(player, 
+                    CompatibleExtraEntityFlags.PRONING | CompatibleExtraEntityFlags.FLIP, 0));
+        }
 	}
 }
