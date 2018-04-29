@@ -37,6 +37,7 @@ public class PlayerRenderer {
     private int currentFlags;
     private int newFlags;
     private long renderingStartTimestamp;
+    private long playerStopMovingTimestamp;
     private ClientModContext clientModContext;
     
     private MultipartRenderStateManager<RenderableState, Part, RenderContext<RenderableState>> stateManager;
@@ -51,11 +52,15 @@ public class PlayerRenderer {
         if(currentFlags != newFlags) {
             stateManager = null;
         }
-        
+                
         if(stateManager == null) {
             stateManager = new MultipartRenderStateManager<>(RenderableState.NORMAL, transitionProvider,
                   () -> currentTime(player));
+        } else if(player.distanceWalkedModified == player.prevDistanceWalkedModified) {
+            //System.out.println("Setting aiming state");
+            stateManager.setState(RenderableState.PRONING_AIMING, true, false);
         } else {
+            //System.out.println("Setting proning state");
             stateManager.setCycleState(RenderableState.PRONING, false);
         }
 
@@ -69,7 +74,17 @@ public class PlayerRenderer {
             //System.out.println("Elapsed: " + elapseRenderingStart);
             return elapseRenderingStart;
         }
-        return (long)(renderingStartThreshold + player.distanceWalkedModified * 300);
+        long afterStopMovingTimeout = 0;
+        if(player.distanceWalkedModified == player.prevDistanceWalkedModified) {
+            if(playerStopMovingTimestamp == 0) {
+                playerStopMovingTimestamp = System.currentTimeMillis();
+            } else if(afterStopMovingTimeout < 1000){
+                afterStopMovingTimeout = System.currentTimeMillis() - playerStopMovingTimestamp;
+            }
+        } else {
+            playerStopMovingTimestamp = 0;
+        }
+        return (long)(renderingStartThreshold + player.distanceWalkedModified * 300 + (afterStopMovingTimeout));
     }
 
     public void renderModel(ModelPlayer modelPlayer, EntityPlayer player, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scale) {
@@ -80,7 +95,7 @@ public class PlayerRenderer {
         if((newFlags & CompatibleExtraEntityFlags.PRONING) != 0) {
             renderProningModel2(modelPlayer, player, ageInTicks, netHeadYaw, headPitch, scale);
         } else {
-            currentPositioner.remove();
+            //currentPositioner.remove();
             modelPlayer.render(player, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
         }
         currentFlags = newFlags;

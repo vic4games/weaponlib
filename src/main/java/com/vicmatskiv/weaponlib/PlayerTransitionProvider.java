@@ -11,11 +11,17 @@ public class PlayerTransitionProvider implements MultipartTransitionProvider<Ren
 
     public static class Builder {
 
-        private List<MultipartTransition<Part, RenderContext<RenderableState>>> proningTransitions =
-                new ArrayList<>();
+        private List<MultipartTransition<Part, RenderContext<RenderableState>>> proningTransitions = new ArrayList<>();
+        
+        private List<MultipartTransition<Part, RenderContext<RenderableState>>> proningAimingTransitions = new ArrayList<>();
 
         public Builder withProningTransition(MultipartTransition<Part, RenderContext<RenderableState>> transition) {
             proningTransitions.add(transition);
+            return this;
+        }
+        
+        public Builder withProningAimingTransition(MultipartTransition<Part, RenderContext<RenderableState>> transition) {
+            proningAimingTransitions.add(transition);
             return this;
         }
 
@@ -23,52 +29,6 @@ public class PlayerTransitionProvider implements MultipartTransitionProvider<Ren
             return new PlayerTransitionProvider(this);
         }
     }
-
-    //    private List<MultipartTransition<Part, RenderContext<RenderableState>>> proningTransitions = 
-    //            Arrays.asList(
-    //
-    //                    new MultipartTransition<Part, RenderContext<RenderableState>>(
-    //                            Part.MAIN, renderContext -> {
-    //                                GL11.glTranslatef(0f, 1.3f, -0.5f);
-    //                                GL11.glRotatef(90.0F, 1.0F, 0.0F, 0F);
-    //                                GL11.glRotatef(-10.0F, 0.0F, 1.0F, 0F);
-    //
-    //                            }, 200, 0)
-    //                    .withPartPositionFunction(Part.LEFT_HAND, rc -> {
-    //                        GL11.glRotatef(20.0F, 1.0F, 1.0F, 0.0F);
-    //                    })
-    //                    .withPartPositionFunction(Part.RIGHT_HAND, rc -> {
-    //                        GL11.glRotatef(20.0F, 1.0F, 0.0F, 1.0F);
-    //                    })
-    //                    .withPartPositionFunction(Part.LEFT_LEG, rc -> {
-    //                        GL11.glRotatef(-10.0F, 0.0F, 1.0F, 1.0F);
-    //                    })
-    //                    .withPartPositionFunction(Part.RIGHT_LEG, rc -> {
-    //                        GL11.glRotatef(10.0F, 0.0F, 0.0F, 1.0F);
-    //                    })
-    //                    ,
-    //
-    //                    new MultipartTransition<Part, RenderContext<RenderableState>>(
-    //                            Part.MAIN, renderContext -> {
-    //
-    //                                GL11.glTranslatef(0f, 1.3f, -0.5f);
-    //                                GL11.glRotatef(90.0F, 1.0F, 0.0F, 0F);
-    //                                GL11.glRotatef(10.0F, 0.0F, 1.0F, 0F);
-    //                            }, 200, 0)
-    //                    .withPartPositionFunction(Part.LEFT_HAND, rc -> {
-    //                        GL11.glRotatef(-20.0F, 1.0F, 1.0F, 0.0F);
-    //                    })
-    //                    .withPartPositionFunction(Part.RIGHT_HAND, rc -> {
-    //                        GL11.glRotatef(-20.0F, 1.0F, 0.0F, 1.0F);
-    //                    })
-    //                    .withPartPositionFunction(Part.LEFT_LEG, rc -> {
-    //                        GL11.glRotatef(10.0F, 0.0F, 1.0F, 1.0F);
-    //                    })
-    //                    .withPartPositionFunction(Part.RIGHT_LEG, rc -> {
-    //                        GL11.glRotatef(-10.0F, 0.0F, 0.0F, 1.0F);
-    //                    })
-    //                    );
-    
     
     private List<MultipartTransition<Part, RenderContext<RenderableState>>> normalTransitions = 
             Arrays.asList(
@@ -90,6 +50,8 @@ public class PlayerTransitionProvider implements MultipartTransitionProvider<Ren
     public List<MultipartTransition<Part, RenderContext<RenderableState>>> getTransitions(RenderableState state) {
         if(state == RenderableState.PRONING) {
             return builder.proningTransitions;
+        } else if(state == RenderableState.PRONING_AIMING) {
+            return builder.proningAimingTransitions;
         } else {
             return normalTransitions;
         }
