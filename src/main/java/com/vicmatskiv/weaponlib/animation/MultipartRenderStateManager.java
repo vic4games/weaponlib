@@ -114,10 +114,12 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
 
 		private State fromState;
 		private State toState;
+		private boolean fromAnchored;
 
-		TransitionedPositioning(State fromState, State toState) {
+		TransitionedPositioning(State fromState, State toState, boolean fromAnchored) {
 			this.fromState = fromState;
 			this.toState = toState;
+			this.fromAnchored = fromAnchored;
 			fromPositioning = transitionProvider.getTransitions(fromState);
 			toPositioning = transitionProvider.getTransitions(toState);
 			segmentCount = toPositioning.size();
@@ -176,27 +178,39 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
 			try {
 				return partDataMap.computeIfAbsent(part, p -> {
 					PartData pd = new PartData();
-					MultipartTransition<Part, Context> fromMultipart = fromPositioning.get(fromPositioning.size() - 1);
+					Matrix4f fromMatrix = null;
+					if(fromAnchored) {
+					    fromMatrix = lastApplied.get(p);
+					}
+					
+					if(fromMatrix == null && fromPositioning != null) {
+					    MultipartTransition<Part, Context> fromMultipart = fromPositioning.get(fromPositioning.size() - 1);
 
-                    Matrix4f fromMatrix;
-                    if(fromMultipart.getPositioning(part) == (Object)MultipartTransition.anchoredPosition()) {
-                        fromMatrix = lastApplied.get(p);
-                        if(fromMatrix == null) {
-                            fromMatrix = new Matrix4f();
-                            fromMatrix.setIdentity();
-                        }
-                    } else {
-                        fromMatrix = getMatrixForPositioning(fromMultipart, p, context);
-                    }
+	                    if(fromMultipart.getPositioning(part) == (Object)MultipartTransition.anchoredPosition()) {
+	                        fromMatrix = lastApplied.get(p);
+	                        if(fromMatrix == null) {
+	                            fromMatrix = new Matrix4f();
+	                            fromMatrix.setIdentity();
+	                        }
+	                    } else {
+	                        logger.trace("Getting part data for {}", part);
+	                        fromMatrix = getMatrixForPositioning(fromMultipart, p, context);
+	                    }
 
-                    fromMatrix = adjustToAttached(fromMatrix, fromMultipart.getAttachedTo(p),
-                            toPositioning.get(0).getAttachedTo(p), context);
-
+	                    fromMatrix = adjustToAttached(fromMatrix, fromMultipart.getAttachedTo(p),
+	                            toPositioning.get(0).getAttachedTo(p), context);
+					} 
+					
+					if(fromMatrix == null){
+					    fromMatrix = new Matrix4f();
+					    fromMatrix.setIdentity();
+					}
+					
                     pd.matrices.add(fromMatrix);
                     pd.attachedTo = toPositioning.get(0).getAttachedTo(p);
 
                     Matrix4f previous = fromMatrix;
-					for(MultipartTransition<Part, Context> t: toPositioning) {
+                    for(MultipartTransition<Part, Context> t: toPositioning) {
 					    Matrix4f current;
 					    if(t.getPositioning(part) == (Object)MultipartTransition.anchoredPosition()) {
 					        current = previous;
@@ -403,7 +417,7 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
                  */
                 addedState = new StateContainer<>(cycleState, false);
                 
-                positioningQueue.add(new TransitionedPositioning(currentStateContainer.state, addedState.state));
+                positioningQueue.add(new TransitionedPositioning(currentStateContainer.state, addedState.state, false));
                 positioningQueue.add(new StaticPositioning(addedState.state));
             }
 
@@ -412,35 +426,42 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
 	}
 	
 	public void setState(State newState, boolean animated, boolean immediate) {
-		if(newState == null) {
-			throw new IllegalArgumentException("State cannot be null");
-		}
-
-		if(currentStateContainer != null && newState.equals(currentStateContainer.state)) {
-			return;
-		}
-
-		if(immediate) {
-			positioningQueue.clear();
-		}
-
-		if(animated) {
-			positioningQueue.add(new TransitionedPositioning(currentStateContainer != null ?
-			        currentStateContainer.state : null, newState));
-		}
-
-		positioningQueue.add(new StaticPositioning(newState));
-		currentStateContainer = new StateContainer<>(newState);
+		setState(newState, animated, immediate, false);
 	}
+	
+	public void setState(State newState, boolean animated, boolean immediate, boolean fromAnchored) {
+        if(newState == null) {
+            throw new IllegalArgumentException("State cannot be null");
+        }
 
+        if(currentStateContainer != null && newState.equals(currentStateContainer.state)) {
+            return;
+        }
+
+        if(immediate) {
+            positioningQueue.clear();
+        }
+
+        if(animated) {
+            positioningQueue.add(new TransitionedPositioning(currentStateContainer != null ?
+                    currentStateContainer.state : null, newState, fromAnchored));
+        }
+
+        positioningQueue.add(new StaticPositioning(newState));
+        currentStateContainer = new StateContainer<>(newState);
+    }
+	
 	public MultipartPositioning<Part, Context> nextPositioning() {
 		MultipartPositioning<Part, Context> result = null;
 		while(!positioningQueue.isEmpty()) {
 			MultipartPositioning<Part, Context> p = positioningQueue.poll();
 			if(!p.isExpired(positioningQueue)) { // TODO: this is rather a hack
+		        //logger.trace("Fetched next positioning from {} to {}", p.getFromState(Object.class), p.getToState(Object.class));
 				positioningQueue.addFirst(p); // add it back to the head of the queue
 				result = p;
 				break;
+			} else {
+			    //logger.trace("Fetched next expired positioning from {} to {}", p.getFromState(Object.class), p.getToState(Object.class));
 			}
 		}
 		if(result == null) {

@@ -1,5 +1,7 @@
 package com.vicmatskiv.weaponlib;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL11;
 
 import com.vicmatskiv.weaponlib.animation.MultipartPositioning;
@@ -18,6 +20,9 @@ import net.minecraft.util.EnumHandSide;
 
 public class PlayerRenderer {
     
+    @SuppressWarnings("unused")
+    private static final Logger logger = LogManager.getLogger(PlayerRenderer.class);
+
     protected static class StateDescriptor {
         protected MultipartRenderStateManager<RenderableState, Part, RenderContext<RenderableState>> stateManager;
         protected float rate;
@@ -54,13 +59,15 @@ public class PlayerRenderer {
         }
                 
         if(stateManager == null) {
+            //logger.trace("Creating state manager");
             stateManager = new MultipartRenderStateManager<>(RenderableState.NORMAL, transitionProvider,
                   () -> currentTime(player));
-        } else if(player.distanceWalkedModified == player.prevDistanceWalkedModified) {
-            //System.out.println("Setting aiming state");
-            stateManager.setState(RenderableState.PRONING_AIMING, true, false);
+        } else if(player.distanceWalkedModified == player.prevDistanceWalkedModified
+                /*|| player.motionX == 0 || player.motionZ == 0*/) {
+            //logger.trace("Setting aiming state");
+            stateManager.setState(RenderableState.PRONING_AIMING, true, true, true);
         } else {
-            //System.out.println("Setting proning state");
+            //logger.trace("Setting proning state");
             stateManager.setCycleState(RenderableState.PRONING, false);
         }
 
@@ -71,11 +78,11 @@ public class PlayerRenderer {
         long elapseRenderingStart = System.currentTimeMillis() - renderingStartTimestamp;
         int renderingStartThreshold = 400;
         if(elapseRenderingStart < renderingStartThreshold) {
-            //System.out.println("Elapsed: " + elapseRenderingStart);
             return elapseRenderingStart;
         }
         long afterStopMovingTimeout = 0;
         if(player.distanceWalkedModified == player.prevDistanceWalkedModified) {
+            //logger.trace("Player stopped moving");
             if(playerStopMovingTimestamp == 0) {
                 playerStopMovingTimestamp = System.currentTimeMillis();
             } else if(afterStopMovingTimeout < 1000){
