@@ -53,10 +53,18 @@ public class ClassInfo {
 
     private Map<MethodSignature, String> mcpMethodInfoMap = new HashMap<>();
 
+    private Map<String, String> notchFieldNameMap = new HashMap<>();
+    private Map<String, String> notchFieldTypeMap = new HashMap<>();
 
     public ClassInfo(String mcpClassName, String notchClassName) {
         this.mcpClassName = mcpClassName;
         this.notchClassName = notchClassName;
+    }
+    
+    public ClassInfo addFieldInfo(String mcpFieldName, String fieldType, String notchFieldName, String notchFieldType) {
+        notchFieldNameMap.put(mcpFieldName, notchFieldName);
+        notchFieldTypeMap.put(mcpFieldName, notchFieldType);
+        return this;
     }
 
     public ClassInfo addMethodInfo(String mcpMethodName, String signature, String notchName) {
@@ -117,4 +125,13 @@ public class ClassInfo {
     public String getNotchMethodName(String mcpMethodName, String signature) {
         return notchMethodInfoMap.get(new MethodSignature(mcpMethodName, signature));
     }
+    
+    public String getNotchFieldName(String mcpFieldName) {
+        return notchFieldNameMap.get(mcpFieldName);
+    }
+    
+    public String getNotchFieldType(String mcpFieldName) {
+        return notchFieldTypeMap.get(mcpFieldName);
+    }
+
 }

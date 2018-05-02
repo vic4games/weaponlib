@@ -214,15 +214,25 @@ public class WeaponlibClassTransformer implements IClassTransformer {
     
     private static class RenderHeldItemMethodVisitor extends MethodVisitor {
         
-        public RenderHeldItemMethodVisitor(MethodVisitor mv) {
+        private boolean notchMode;
+        
+        public RenderHeldItemMethodVisitor(MethodVisitor mv, boolean notchMode) {
             super(Opcodes.ASM4, mv);
+            this.notchMode = notchMode;   
         }
         
         @Override
         public void visitVarInsn(int opcode, int var) {
             super.visitVarInsn(opcode, var);
             if(opcode == Opcodes.ALOAD && var == 0) {
-                mv.visitFieldInsn(Opcodes.GETFIELD, "net/minecraft/client/renderer/entity/layers/LayerHeldItem", "livingEntityRenderer", "Lnet/minecraft/client/renderer/entity/RenderLivingBase;");
+                String fieldName = "livingEntityRenderer";
+                if(notchMode) {
+                    fieldName = layerHeldItemClassInfo.getNotchFieldName(fieldName);
+                    //String notchFieldType = layerHeldItemClassInfo.getNotchFieldType(mcpFieldName);
+                }
+                
+                mv.visitFieldInsn(Opcodes.GETFIELD, "net/minecraft/client/renderer/entity/layers/LayerHeldItem", 
+                        fieldName, "Lnet/minecraft/client/renderer/entity/RenderLivingBase;");
                 mv.visitVarInsn(Opcodes.ALOAD, 1);
                 mv.visitVarInsn(Opcodes.ALOAD, 2);
                 mv.visitVarInsn(Opcodes.ALOAD, 3);
@@ -324,7 +334,8 @@ public class WeaponlibClassTransformer implements IClassTransformer {
                 return new RenderArmorLayerMethodVisitor(cv.visitMethod(access, name, desc, signature, exceptions));
             } else if(layerHeldItemClassInfo != null 
                     && layerHeldItemClassInfo.methodMatches("renderHeldItem", "(Lnet/minecraft/entity/EntityLivingBase;Lnet/minecraft/item/ItemStack;Lnet/minecraft/client/renderer/block/model/ItemCameraTransforms$TransformType;Lnet/minecraft/util/EnumHandSide;)V", classname, name, desc)) {
-                return new RenderHeldItemMethodVisitor(cv.visitMethod(access, name, desc, signature, exceptions));
+                return new RenderHeldItemMethodVisitor(cv.visitMethod(access, name, desc, signature, exceptions),
+                        !name.equals("renderHeldItem"));
             } else if(entityPlayerSPClassInfo != null 
                     && entityPlayerSPClassInfo.methodMatches("isSneaking", "()Z", classname, name, desc)) {
                 return new IsSneakingMethodVisitor(cv.visitMethod(access, name, desc, signature, exceptions));

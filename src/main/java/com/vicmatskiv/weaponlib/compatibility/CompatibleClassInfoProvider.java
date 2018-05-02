@@ -48,6 +48,7 @@ public class CompatibleClassInfoProvider {
                 new ClassInfo("net/minecraft/client/renderer/entity/layers/LayerHeldItem", "ccc")
                 .addMethodInfo2("renderHeldItem", "(Lnet/minecraft/entity/EntityLivingBase;Lnet/minecraft/item/ItemStack;Lnet/minecraft/client/renderer/block/model/ItemCameraTransforms$TransformType;Lnet/minecraft/util/EnumHandSide;)V", "a", "(Lvp;Laip;Lbwc$b;Lvo;)V")
                 .addMethodInfo2("translateToHand", "(Lnet/minecraft/util/EnumHandSide;)V", "a", "(Lvo;)V")
+                .addFieldInfo("livingEntityRenderer", "Lnet/minecraft/client/renderer/entity/RenderLivingBase;", "b", "Lcaa;")
                 );
         
         classInfoMap.put("net/minecraft/client/entity/EntityPlayerSP", 
