@@ -91,7 +91,7 @@ public class PlayerRenderer {
         } else {
             playerStopMovingTimestamp = 0;
         }
-        return (long)(renderingStartThreshold + player.distanceWalkedModified * 300 + (afterStopMovingTimeout));
+        return (long)(renderingStartThreshold + player.distanceWalkedModified * 600 + (afterStopMovingTimeout));
     }
 
     public void renderModel(ModelPlayer modelPlayer, EntityPlayer player, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scale) {
