@@ -190,31 +190,31 @@ public class Interceptors {
 
     private static Map<Entity, PlayerRenderer> renderers = new HashMap<>();
     
-    public static void render2(ModelBase base, Entity entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scale) {
+    public static void render2(ModelBase modelBase, Entity entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scale) {
         
-        if(base instanceof ModelPlayer) {
+        if(entityIn instanceof EntityPlayer && modelBase instanceof ModelPlayer) {
             
-            ModelPlayer modelPlayer = (ModelPlayer) base;
+            ModelPlayer modelPlayer = (ModelPlayer) modelBase;
 
             PlayerRenderer playerRenderer = renderers.computeIfAbsent(entityIn, e -> new PlayerRenderer(ClientModContext.getContext()));
             
             EntityPlayer player = (EntityPlayer) entityIn;
             playerRenderer.renderModel(modelPlayer, player, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
         } else {
-            base.render(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
+            modelBase.render(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
         }
     }
     
-    public static void renderArmorLayer(ModelBase base, Entity entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scale) {
+    public static void renderArmorLayer(ModelBase modelBase, Entity entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scale) {
         
         if(entityIn instanceof EntityPlayer) { 
             PlayerRenderer playerRenderer = renderers.get(entityIn);
             EntityPlayer player = (EntityPlayer) entityIn;
-            if(playerRenderer == null || !playerRenderer.renderArmor((ModelBiped) base, player, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale)) {
-                base.render(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
+            if(playerRenderer == null || !playerRenderer.renderArmor((ModelBiped) modelBase, player, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale)) {
+                modelBase.render(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
             }
         } else {
-            base.render(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
+            modelBase.render(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
         }
     }
 
