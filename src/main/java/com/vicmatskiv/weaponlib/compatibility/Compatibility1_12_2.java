@@ -22,12 +22,15 @@ import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.model.ModelBiped;
+import net.minecraft.client.model.ModelPlayer;
 import net.minecraft.client.model.ModelBiped.ArmPose;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.client.shader.ShaderGroup;
 import net.minecraft.client.shader.ShaderManager;
 import net.minecraft.client.shader.ShaderUniform;
@@ -57,6 +60,7 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.translation.I18n;
@@ -1111,5 +1115,70 @@ public class Compatibility1_12_2 implements Compatibility {
     @Override
     public WorldType getWorldType(World world) {
         return world.getWorldType();
+    }
+    
+    @Override
+    public ItemStack getItemStackFromSlot(CompatibleEntityEquipmentSlot compatibleSlot) {
+        return clientPlayer().getItemStackFromSlot(compatibleSlot.getSlot());
+    }
+
+    @Override
+    public boolean isStencilEnabled(Framebuffer framebuffer) {
+        return framebuffer.isStencilEnabled();
+    }
+
+    @Override
+    public void enableStencil(Framebuffer framebuffer) {
+        framebuffer.enableStencil();
+    }
+
+    @Override
+    public void resizeEntityBoundingBox(Entity entity, double x, double y, double z) {
+        AxisAlignedBB axisalignedbb = entity.getEntityBoundingBox();
+        entity.setEntityBoundingBox(new AxisAlignedBB(axisalignedbb.minX, axisalignedbb.minY, axisalignedbb.minZ, 
+                axisalignedbb.minX + x, axisalignedbb.minY + y, axisalignedbb.minZ + z));
+
+    }
+
+    @Override
+    public void renderLeftLegwear(ModelBiped model, float scale) {
+        if(model instanceof ModelPlayer) {
+            ((ModelPlayer)model).bipedLeftLegwear.render(scale);
+        }
+    }
+    
+    @Override
+    public void renderRightLegwear(ModelBiped model, float scale) {
+        if(model instanceof ModelPlayer) {
+            ((ModelPlayer)model).bipedRightLegwear.render(scale);
+        }
+    }
+    
+    @Override
+    public void renderLeftArmwear(ModelBiped model, float scale) {
+        if(model instanceof ModelPlayer) {
+            ((ModelPlayer)model).bipedLeftArmwear.render(scale);
+        }
+    }
+    
+    @Override
+    public void renderRightArmwear(ModelBiped model, float scale) {
+        if(model instanceof ModelPlayer) {
+            ((ModelPlayer)model).bipedRightArmwear.render(scale);
+        }
+    }
+    
+    @Override
+    public void renderBodywear(ModelBiped model, float scale) {
+        if(model instanceof ModelPlayer) {
+            ((ModelPlayer)model).bipedBodyWear.render(scale);
+        }
+    }
+
+    @Override
+    public void renderHeadwear(ModelBiped model, float scale) {
+        if(model instanceof ModelPlayer) {
+            ((ModelPlayer)model).bipedHeadwear.render(scale);
+        }
     }
 }

@@ -5,6 +5,7 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 import com.vicmatskiv.weaponlib.compatibility.CompatibleEntityJoinWorldEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleExposureCapability;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponEventHandler;
+import com.vicmatskiv.weaponlib.compatibility.Interceptors;
 import com.vicmatskiv.weaponlib.grenade.PlayerGrenadeInstance;
 import com.vicmatskiv.weaponlib.melee.PlayerMeleeInstance;
 

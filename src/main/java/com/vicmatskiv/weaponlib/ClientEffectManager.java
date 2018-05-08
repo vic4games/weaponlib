@@ -3,6 +3,7 @@ package com.vicmatskiv.weaponlib;
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleVec3;
+import com.vicmatskiv.weaponlib.compatibility.Interceptors;
 import com.vicmatskiv.weaponlib.particle.ExplosionParticleFX;
 import com.vicmatskiv.weaponlib.particle.ExplosionSmokeFX;
 import com.vicmatskiv.weaponlib.particle.FlashFX;
