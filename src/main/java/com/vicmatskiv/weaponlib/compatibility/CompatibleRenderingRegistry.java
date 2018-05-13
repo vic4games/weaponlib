@@ -5,9 +5,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import com.vicmatskiv.weaponlib.SpawnEntityRenderer;
-import com.vicmatskiv.weaponlib.WeaponSpawnEntity;
+import java.util.function.Consumer;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ItemModelMesher;
@@ -31,15 +29,17 @@ public class CompatibleRenderingRegistry implements ICustomModelLoader {
 
 	private List<ModelSourceRenderer> renderers = new ArrayList<>();
 	private Set<String> modelSourceLocations = new HashSet<>();
-
+	private List<Consumer<RenderItem>> delayedRegistrations = new ArrayList<>();
+	
 	private String modId;
 
 	public CompatibleRenderingRegistry(String modId) {
 		this.modId = modId;
 		ModelLoaderRegistry.registerLoader(this);
-		{
-		    System.setProperty("fml.reloadResourcesOnStart", "true");
-		}
+//		{
+//          This is not required anymore after initializing items in pre-init and using delayed registration
+//		    System.setProperty("fml.reloadResourcesOnStart", "true");
+//		}
 	}
 
 	@SideOnly(Side.CLIENT)
@@ -55,9 +55,10 @@ public class CompatibleRenderingRegistry implements ICustomModelLoader {
 		modelSourceLocations.add(modId + ":models/item/" + name);
 		ModelResourceLocation modelID = new ModelResourceLocation(modId + ":" + name, "inventory");
 		((ModelSourceRenderer) renderer).setResourceLocation(modelID);
-		RenderItem renderItem = Minecraft.getMinecraft().getRenderItem();
-		ItemModelMesher itemModelMesher = renderItem.getItemModelMesher();
-		itemModelMesher.register(item, 0, modelID);
+		delayedRegistrations.add((renderItem) -> {
+	        ItemModelMesher itemModelMesher = renderItem.getItemModelMesher();
+	        itemModelMesher.register(item, 0, modelID);
+		});
 	}
 
 	@Override
@@ -82,4 +83,10 @@ public class CompatibleRenderingRegistry implements ICustomModelLoader {
 	        Object spawnEntityRenderer) {
 		RenderingRegistry.registerEntityRenderingHandler(class1, (Render<? extends Entity>) spawnEntityRenderer);
 	}
+	
+	public void processDelayedRegistrations() {
+        RenderItem renderItem = Minecraft.getMinecraft().getRenderItem();
+        delayedRegistrations.forEach(r -> { r.accept(renderItem);});
+        delayedRegistrations.clear();
+    }
 }

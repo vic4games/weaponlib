@@ -17,12 +17,14 @@ import net.minecraft.world.World;
 
 final class ClientEffectManager implements EffectManager {
 
-
 	ClientEffectManager() {}
-
 
 	@Override
     public void spawnSmokeParticle(EntityLivingBase player, float xOffset, float yOffset) {
+	       
+	    if(compatibility.isShadersModEnabled()) {
+	        return;
+	    }
 
 		double motionX = compatibility.world(player).rand.nextGaussian() * 0.003;
 		double motionY = compatibility.world(player).rand.nextGaussian() * 0.003;
@@ -58,12 +60,13 @@ final class ClientEffectManager implements EffectManager {
 		Minecraft.getMinecraft().effectRenderer.addEffect(smokeParticle);
 	}
 
-	/* (non-Javadoc)
-     * @see com.vicmatskiv.weaponlib.IEffectManager#spawnFlashParticle(net.minecraft.entity.player.EntityPlayer, float, float, float, float)
-     */
 	@Override
     public void spawnFlashParticle(EntityLivingBase player, float flashIntensity, float flashScale,
 			float xOffset, float yOffset) {
+	    
+	    if(compatibility.isShadersModEnabled()) {
+	        return;
+	    }
 
 		float distance = 0.5f;
 
@@ -94,7 +97,7 @@ final class ClientEffectManager implements EffectManager {
 				posY,
 				posZ,
 				scale,
-				flashIntensity,
+				flashIntensity * compatibility.getFlashIntencityFactor(),
 				motionX,
 				motionY,
 				motionZ);
@@ -109,6 +112,7 @@ final class ClientEffectManager implements EffectManager {
     public void spawnExplosionSmoke(double posX, double posY, double posZ,
             double motionX, double motionY, double motionZ, float scale,
             int maxAge, ExplosionSmokeFX.Behavior behavior, ResourceLocation textureResource) {
+	    
 	    World world = compatibility.world(compatibility.clientPlayer());
         ExplosionSmokeFX smokeParticle = new ExplosionSmokeFX(
                 world,

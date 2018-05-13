@@ -365,4 +365,8 @@ public interface Compatibility {
     public void renderBodywear(ModelBiped model, float scale);
     
     public void renderHeadwear(ModelBiped model, float scale);
+
+    public boolean isShadersModEnabled();
+
+    public float getFlashIntencityFactor();
 }

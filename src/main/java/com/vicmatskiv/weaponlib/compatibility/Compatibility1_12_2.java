@@ -2,10 +2,12 @@ package com.vicmatskiv.weaponlib.compatibility;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
+import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 
@@ -23,8 +25,8 @@ import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.model.ModelBiped;
-import net.minecraft.client.model.ModelPlayer;
 import net.minecraft.client.model.ModelBiped.ArmPose;
+import net.minecraft.client.model.ModelPlayer;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.renderer.RenderGlobal;
@@ -83,6 +85,7 @@ import net.minecraftforge.event.entity.item.ItemTossEvent;
 import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.registry.EntityRegistry;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
@@ -1180,5 +1183,36 @@ public class Compatibility1_12_2 implements Compatibility {
         if(model instanceof ModelPlayer) {
             ((ModelPlayer)model).bipedHeadwear.render(scale);
         }
+    }
+    
+private Optional<Field> shadersEnabledFieldOptional;
+    
+    @Override
+    public boolean isShadersModEnabled() {
+        boolean result = Loader.isModLoaded("shadersmod");
+        if(result) {
+            if(shadersEnabledFieldOptional == null) {
+                try {
+                    Class<?> shadersClass = Loader.instance().getModClassLoader().loadClass("shadersmodcore.client.Shaders");
+                    shadersEnabledFieldOptional = Optional.of(shadersClass.getField("isInitialized"));
+                } catch (Exception e) {
+                    shadersEnabledFieldOptional = Optional.empty();
+                }
+            }
+
+            if(shadersEnabledFieldOptional != null) {
+                try {
+                    Field field = shadersEnabledFieldOptional.orElse(null);
+                    result = field != null && field.getBoolean(null);
+                } catch (Exception e) {}
+            }
+        }
+        
+        return result;
+    }
+
+    @Override
+    public float getFlashIntencityFactor() {
+        return 1f;
     }
 }
