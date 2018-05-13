@@ -13,11 +13,13 @@ import net.minecraft.block.Block;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.client.shader.ShaderGroup;
 import net.minecraft.client.shader.ShaderManager;
 import net.minecraft.client.shader.ShaderUniform;
@@ -343,4 +345,28 @@ public interface Compatibility {
 
     ItemStack tryConsumingCompatibleItem(Collection<? extends Item> compatibleItems, Comparator<ItemStack> comparator,
             EntityPlayer player);
+
+    public ItemStack getItemStackFromSlot(CompatibleEntityEquipmentSlot compatibleSlot);
+
+    public boolean isStencilEnabled(Framebuffer framebuffer);
+
+    public void enableStencil(Framebuffer framebuffer);
+
+    public void resizeEntityBoundingBox(Entity entity, double x, double y, double z);
+
+    public void renderRightLegwear(ModelBiped modelPlayer, float scale);
+    
+    public void renderLeftLegwear(ModelBiped modelPlayer, float scale);
+    
+    public void renderRightArmwear(ModelBiped modelPlayer, float scale);
+    
+    public void renderLeftArmwear(ModelBiped modelPlayer, float scale);
+    
+    public void renderBodywear(ModelBiped model, float scale);
+    
+    public void renderHeadwear(ModelBiped model, float scale);
+
+    public boolean isShadersModEnabled();
+
+    public float getFlashIntencityFactor();
 }

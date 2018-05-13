@@ -1,4 +1,4 @@
-package com.vicmatskiv.weaponlib;
+package com.vicmatskiv.weaponlib.compatibility;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
@@ -7,10 +7,12 @@ import java.util.Map;
 
 import org.lwjgl.opengl.GL11;
 
+import com.vicmatskiv.weaponlib.ClientModContext;
+import com.vicmatskiv.weaponlib.PlayerRenderer;
+import com.vicmatskiv.weaponlib.PlayerWeaponInstance;
+import com.vicmatskiv.weaponlib.SpreadableExposure;
+import com.vicmatskiv.weaponlib.Weapon;
 import com.vicmatskiv.weaponlib.animation.PlayerRawPitchAnimationManager;
-import com.vicmatskiv.weaponlib.compatibility.CompatibleExposureCapability;
-import com.vicmatskiv.weaponlib.compatibility.CompatibleExtraEntityFlags;
-import com.vicmatskiv.weaponlib.compatibility.CompatibleMathHelper;
 
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelBiped;
@@ -32,31 +34,6 @@ public class Interceptors {
     }
 
     public static void setupCameraTransformAfterHurtCameraEffect(float partialTicks) {
-
-//        FloatBuffer lightAmbient = BufferUtils.createFloatBuffer(4).put(new float[] {0.7f, 0.7f, 0.7f, 1.0f });
-//        lightAmbient.flip();
-//
-//        FloatBuffer spotDirection = BufferUtils.createFloatBuffer(4).put(new float[] { -1.0f, 0.0f, 0.0f, 1.0f});
-//        spotDirection.flip();
-//
-//        GL11.glLightf(GL11.GL_LIGHT7, GL11.GL_SPOT_CUTOFF, 45.0f);
-//        GL11.glLight(GL11.GL_LIGHT7, GL11.GL_SPOT_DIRECTION, spotDirection);
-//        GL11.glLight(GL11.GL_LIGHT7, GL11.GL_AMBIENT, lightAmbient);
-//        GL11.glEnable(GL11.GL_LIGHT7);
-//        GL11.glEnable(GL11.GL_LIGHTING);
-//        GL11.glEnable(GL11.GL_DEPTH_TEST);
-
-//        EntityPlayer player = compatibility.getClientPlayer();
-//        ItemStack itemStack = compatibility.getHeldItemMainHand(player);
-//        if(itemStack != null) {
-//            Item item = itemStack.getItem();
-//            if(item != null && item instanceof Weapon) {
-//                Weapon weapon = (Weapon) item;
-//                ClientModContext context = (ClientModContext) weapon.getModContext();
-//                PlayerWeaponInstance weaponInstance = context.getMainHeldWeapon();
-//                
-//            }
-//        }
         
         PlayerWeaponInstance weaponInstance = getPlayerWeaponInstance();
         EntityPlayer player = compatibility.getClientPlayer();
@@ -190,31 +167,31 @@ public class Interceptors {
 
     private static Map<Entity, PlayerRenderer> renderers = new HashMap<>();
     
-    public static void render2(ModelBase base, Entity entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scale) {
+    public static void render2(ModelBase modelBase, Entity entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scale) {
         
-        if(base instanceof ModelPlayer) {
+        if(entityIn instanceof EntityPlayer && modelBase instanceof ModelPlayer) {
             
-            ModelPlayer modelPlayer = (ModelPlayer) base;
+            ModelPlayer modelPlayer = (ModelPlayer) modelBase;
 
             PlayerRenderer playerRenderer = renderers.computeIfAbsent(entityIn, e -> new PlayerRenderer(ClientModContext.getContext()));
             
             EntityPlayer player = (EntityPlayer) entityIn;
             playerRenderer.renderModel(modelPlayer, player, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
         } else {
-            base.render(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
+            modelBase.render(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
         }
     }
     
-    public static void renderArmorLayer(ModelBase base, Entity entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scale) {
+    public static void renderArmorLayer(ModelBase modelBase, Entity entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scale) {
         
         if(entityIn instanceof EntityPlayer) { 
             PlayerRenderer playerRenderer = renderers.get(entityIn);
             EntityPlayer player = (EntityPlayer) entityIn;
-            if(playerRenderer == null || !playerRenderer.renderArmor((ModelBiped) base, player, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale)) {
-                base.render(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
+            if(playerRenderer == null || !playerRenderer.renderArmor((ModelBiped) modelBase, player, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale)) {
+                modelBase.render(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
             }
         } else {
-            base.render(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
+            modelBase.render(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
         }
     }
 
@@ -223,7 +200,8 @@ public class Interceptors {
         if(entity instanceof EntityPlayer && isProning((EntityPlayer) entity)) { 
             PlayerRenderer playerRenderer = renderers.get(entity);
             EntityPlayer player = (EntityPlayer) entity;
-            if(playerRenderer == null || !playerRenderer.positionItemSide(player, itemStack, transformType, handSide)) {
+            if(playerRenderer == null || !playerRenderer.positionItemSide(player, itemStack, CompatibleTransformType.fromItemRenderType(transformType), 
+                    CompatibleEnumHandSide.fromEnumHandSide(handSide))) {
                 ((ModelBiped)livingEntityRenderer.getMainModel()).postRenderArm(0.0625F, handSide);
             }
         } else {

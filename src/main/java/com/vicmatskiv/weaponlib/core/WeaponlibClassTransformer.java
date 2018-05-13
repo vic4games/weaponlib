@@ -53,7 +53,7 @@ public class WeaponlibClassTransformer implements IClassTransformer {
             super.visitJumpInsn(opcode, label);
             if(opcode == Opcodes.IFEQ) {
                 mv.visitVarInsn(Opcodes.FLOAD, 1);
-                mv.visitMethodInsn(Opcodes.INVOKESTATIC, "com/vicmatskiv/weaponlib/Interceptors", "setupViewBobbing", "(F)Z", false);
+                mv.visitMethodInsn(Opcodes.INVOKESTATIC, "com/vicmatskiv/weaponlib/compatibility/Interceptors", "setupViewBobbing", "(F)Z", false);
                 mv.visitJumpInsn(Opcodes.IFEQ, label);
             }
         }
@@ -73,7 +73,7 @@ public class WeaponlibClassTransformer implements IClassTransformer {
             // There are other if statements, replace only the very first one
             if(!visited && opcode == Opcodes.IFEQ) {
                 mv.visitVarInsn(Opcodes.FLOAD, 1);
-                mv.visitMethodInsn(Opcodes.INVOKESTATIC, "com/vicmatskiv/weaponlib/Interceptors", "hurtCameraEffect", "(F)Z", false);
+                mv.visitMethodInsn(Opcodes.INVOKESTATIC, "com/vicmatskiv/weaponlib/compatibility/Interceptors", "hurtCameraEffect", "(F)Z", false);
                 mv.visitJumpInsn(Opcodes.IFEQ, label);
                 visited = true;
             }
@@ -91,7 +91,7 @@ public class WeaponlibClassTransformer implements IClassTransformer {
             if (entityRendererClassInfo.methodMatches("hurtCameraEffect", "(F)V", owner, name, desc)) {
                 super.visitMethodInsn(opcode, owner, name, desc);
                 mv.visitVarInsn(Opcodes.FLOAD, 1);
-                mv.visitMethodInsn(184, "com/vicmatskiv/weaponlib/Interceptors",
+                mv.visitMethodInsn(184, "com/vicmatskiv/weaponlib/compatibility/Interceptors",
                         "setupCameraTransformAfterHurtCameraEffect", "(F)V");
                 return;
             }
@@ -104,7 +104,7 @@ public class WeaponlibClassTransformer implements IClassTransformer {
             // There are other if statements, replace only the very first one
             if(opcode == Opcodes.IFLE) {
                 mv.visitVarInsn(Opcodes.FLOAD, 1);
-                mv.visitMethodInsn(Opcodes.INVOKESTATIC, "com/vicmatskiv/weaponlib/Interceptors", "nauseaCameraEffect", "(F)Z", false);
+                mv.visitMethodInsn(Opcodes.INVOKESTATIC, "com/vicmatskiv/weaponlib/compatibility/Interceptors", "nauseaCameraEffect", "(F)Z", false);
                 mv.visitJumpInsn(Opcodes.IFEQ, label);
             }
         }
@@ -140,7 +140,7 @@ public class WeaponlibClassTransformer implements IClassTransformer {
         @Override
         public void visitTypeInsn(int opcode, String type) {            
             if(opcode == Opcodes.INSTANCEOF && type.equals(itemBlockClassName)) {
-                mv.visitMethodInsn(Opcodes.INVOKESTATIC, "com/vicmatskiv/weaponlib/Interceptors", "is3dRenderableItem", "(Lnet/minecraft/item/Item;)Z", false);
+                mv.visitMethodInsn(Opcodes.INVOKESTATIC, "com/vicmatskiv/weaponlib/compatibility/Interceptors", "is3dRenderableItem", "(Lnet/minecraft/item/Item;)Z", false);
             } else {
                 super.visitTypeInsn(opcode, type);
             }
@@ -167,7 +167,7 @@ public class WeaponlibClassTransformer implements IClassTransformer {
             mv.visitVarInsn(Opcodes.FLOAD, 5);
             mv.visitVarInsn(Opcodes.FLOAD, 6);
             mv.visitVarInsn(Opcodes.FLOAD, 7);
-            mv.visitMethodInsn(Opcodes.INVOKESTATIC, "com/vicmatskiv/weaponlib/Interceptors", "render", "(Lnet/minecraft/client/model/ModelBase;Lnet/minecraft/entity/Entity;FFFFFF)Z", false);
+            mv.visitMethodInsn(Opcodes.INVOKESTATIC, "com/vicmatskiv/weaponlib/compatibility/Interceptors", "render", "(Lnet/minecraft/client/model/ModelBase;Lnet/minecraft/entity/Entity;FFFFFF)Z", false);
             Label l1 = new Label();
             mv.visitJumpInsn(Opcodes.IFNE, l1);
             Label l2 = new Label();
@@ -189,7 +189,7 @@ public class WeaponlibClassTransformer implements IClassTransformer {
         @Override
         public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
             if (modelBaseClassInfo.methodMatches("render", "(Lnet/minecraft/entity/Entity;FFFFFF)V", owner, name, desc)) {
-                mv.visitMethodInsn(Opcodes.INVOKESTATIC, "com/vicmatskiv/weaponlib/Interceptors", "render2", "(Lnet/minecraft/client/model/ModelBase;Lnet/minecraft/entity/Entity;FFFFFF)V", false);
+                mv.visitMethodInsn(Opcodes.INVOKESTATIC, "com/vicmatskiv/weaponlib/compatibility/Interceptors", "render2", "(Lnet/minecraft/client/model/ModelBase;Lnet/minecraft/entity/Entity;FFFFFF)V", false);
             } else {
                 super.visitMethodInsn(opcode, owner, name, desc, itf);
             }
@@ -205,7 +205,7 @@ public class WeaponlibClassTransformer implements IClassTransformer {
         @Override
         public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
             if (modelBaseClassInfo.methodMatches("render", "(Lnet/minecraft/entity/Entity;FFFFFF)V", owner, name, desc)) {
-                mv.visitMethodInsn(Opcodes.INVOKESTATIC, "com/vicmatskiv/weaponlib/Interceptors", "renderArmorLayer", "(Lnet/minecraft/client/model/ModelBase;Lnet/minecraft/entity/Entity;FFFFFF)V", false);
+                mv.visitMethodInsn(Opcodes.INVOKESTATIC, "com/vicmatskiv/weaponlib/compatibility/Interceptors", "renderArmorLayer", "(Lnet/minecraft/client/model/ModelBase;Lnet/minecraft/entity/Entity;FFFFFF)V", false);
             } else {
                 super.visitMethodInsn(opcode, owner, name, desc, itf);
             }
@@ -242,7 +242,7 @@ public class WeaponlibClassTransformer implements IClassTransformer {
         @Override
         public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
             if(layerHeldItemClassInfo.methodMatches("translateToHand", "(Lnet/minecraft/util/EnumHandSide;)V", owner, name, desc)) {
-                mv.visitMethodInsn(Opcodes.INVOKESTATIC, "com/vicmatskiv/weaponlib/Interceptors", "positionItemSide", "(Lnet/minecraft/client/renderer/entity/RenderLivingBase;Lnet/minecraft/entity/EntityLivingBase;Lnet/minecraft/item/ItemStack;Lnet/minecraft/client/renderer/block/model/ItemCameraTransforms$TransformType;Lnet/minecraft/util/EnumHandSide;)V", false);
+                mv.visitMethodInsn(Opcodes.INVOKESTATIC, "com/vicmatskiv/weaponlib/compatibility/Interceptors", "positionItemSide", "(Lnet/minecraft/client/renderer/entity/RenderLivingBase;Lnet/minecraft/entity/EntityLivingBase;Lnet/minecraft/item/ItemStack;Lnet/minecraft/client/renderer/block/model/ItemCameraTransforms$TransformType;Lnet/minecraft/util/EnumHandSide;)V", false);
             } else {
                 super.visitMethodInsn(opcode, owner, name, desc, itf);
             }
@@ -260,7 +260,7 @@ public class WeaponlibClassTransformer implements IClassTransformer {
             mv.visitJumpInsn(opcode, label);
             if(opcode == Opcodes.IFNE) {
                 mv.visitVarInsn(Opcodes.ALOAD, 0);
-                mv.visitMethodInsn(Opcodes.INVOKESTATIC, "com/vicmatskiv/weaponlib/Interceptors", "isProning", "(Lnet/minecraft/entity/player/EntityPlayer;)Z", false);
+                mv.visitMethodInsn(Opcodes.INVOKESTATIC, "com/vicmatskiv/weaponlib/compatibility/Interceptors", "isProning", "(Lnet/minecraft/entity/player/EntityPlayer;)Z", false);
                 mv.visitJumpInsn(Opcodes.IFNE, label);
             }
         }
@@ -281,7 +281,7 @@ public class WeaponlibClassTransformer implements IClassTransformer {
                 Label l6 = new Label();
                 mv.visitJumpInsn(Opcodes.IFEQ, l6);
                 mv.visitVarInsn(Opcodes.ALOAD, 0);
-                mv.visitMethodInsn(Opcodes.INVOKESTATIC, "com/vicmatskiv/weaponlib/Interceptors", "isProning", "(Lnet/minecraft/entity/player/EntityPlayer;)Z", false);
+                mv.visitMethodInsn(Opcodes.INVOKESTATIC, "com/vicmatskiv/weaponlib/compatibility/Interceptors", "isProning", "(Lnet/minecraft/entity/player/EntityPlayer;)Z", false);
                 mv.visitJumpInsn(Opcodes.IFNE, l6);
                 mv.visitInsn(Opcodes.ICONST_1);
                 Label l7 = new Label();

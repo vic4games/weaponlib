@@ -20,7 +20,7 @@ public interface ModContext {
     
     public boolean isClient();
 
-	public void init(Object mod, String modId, ConfigurationManager configurationManager, CompatibleChannel channel);
+	public void preInit(Object mod, String modId, ConfigurationManager configurationManager, CompatibleChannel channel);
 
 	public void registerWeapon(String name, Weapon weapon, WeaponRenderer renderer);
 
@@ -102,4 +102,6 @@ public interface ModContext {
     public void registerRenderableEntity(Class<? extends Entity> entityClass, Object renderer);
 
     public void setPlayerTransitionProvider(PlayerTransitionProvider playerTransitionProvider);
+
+    public void init(Object mod, String modid);
 }

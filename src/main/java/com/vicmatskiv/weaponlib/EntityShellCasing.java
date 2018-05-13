@@ -10,6 +10,7 @@ import org.apache.logging.log4j.Logger;
 import com.vicmatskiv.weaponlib.Weapon.ShellCasingEjectDirection;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMathHelper;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult;
+import com.vicmatskiv.weaponlib.compatibility.Interceptors;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;

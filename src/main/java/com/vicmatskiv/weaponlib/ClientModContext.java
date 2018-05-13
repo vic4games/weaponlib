@@ -69,8 +69,8 @@ public class ClientModContext extends CommonModContext {
     }
 
 	@Override
-    public void init(Object mod, String modId, ConfigurationManager configurationManager, CompatibleChannel channel) {
-		super.init(mod, modId, configurationManager, channel);
+    public void preInit(Object mod, String modId, ConfigurationManager configurationManager, CompatibleChannel channel) {
+		super.preInit(mod, modId, configurationManager, channel);
 
 		aspectRatio = (float)Minecraft.getMinecraft().displayWidth / Minecraft.getMinecraft().displayHeight;
 
@@ -103,26 +103,28 @@ public class ClientModContext extends CommonModContext {
 		
 		compatibility.registerWithEventBus(clientEventHandler); // TODO: what are the implications of registering the same class with 2 buses
 
-		compatibility.registerRenderingRegistry(rendererRegistry);
-
-		rendererRegistry.registerEntityRenderingHandler(WeaponSpawnEntity.class, new SpawnEntityRenderer());
-		rendererRegistry.registerEntityRenderingHandler(EntityWirelessCamera.class, new WirelessCameraRenderer(modId)); //new RenderSnowball(Items.snowball));
-	    rendererRegistry.registerEntityRenderingHandler(EntityShellCasing.class, new ShellCasingRenderer()); //new RenderSnowball(Items.snowball));
-        rendererRegistry.registerEntityRenderingHandler(EntityGrenade.class, new EntityGrenadeRenderer()); //new RenderSnowball(Items.snowball));
-        rendererRegistry.registerEntityRenderingHandler(EntitySmokeGrenade.class, new EntityGrenadeRenderer()); //new RenderSnowball(Items.snowball));
-        rendererRegistry.registerEntityRenderingHandler(EntityGasGrenade.class, new EntityGrenadeRenderer()); //new RenderSnowball(Items.snowball));
-
-//        rendererRegistry.registerEntityRenderingHandler(EntityCustomMob.class, new RenderCustomMob(Minecraft.getMinecraft().getRenderManager())); //new RenderSnowball(Items.snowball));
-
-        rendererRegistry.registerEntityRenderingHandler(EntitySpreadable.class, new InvisibleEntityRenderer());
-
 		this.viewManager = new PerspectiveManager(this);
 		this.inventoryTextureMap = new HashMap<>();
 
 		this.effectManager = new ClientEffectManager();
 
 		this.playerRawPitchAnimationManager = new PlayerRawPitchAnimationManager();
-		//ClientRegistry.registerEntityShader(EntityPlayer.class, new ResourceLocation("shaders/post/creeper.json"));
+	}
+	
+	@Override
+	public void init(Object mod, String modid) {
+	    super.init(mod, modid);
+	    
+	    compatibility.registerRenderingRegistry(rendererRegistry);
+
+	    rendererRegistry.registerEntityRenderingHandler(WeaponSpawnEntity.class, new SpawnEntityRenderer());
+	    rendererRegistry.registerEntityRenderingHandler(EntityWirelessCamera.class, new WirelessCameraRenderer(modId));
+	    rendererRegistry.registerEntityRenderingHandler(EntityShellCasing.class, new ShellCasingRenderer());
+	    rendererRegistry.registerEntityRenderingHandler(EntityGrenade.class, new EntityGrenadeRenderer());
+	    rendererRegistry.registerEntityRenderingHandler(EntitySmokeGrenade.class, new EntityGrenadeRenderer());
+	    rendererRegistry.registerEntityRenderingHandler(EntityGasGrenade.class, new EntityGrenadeRenderer());
+	    rendererRegistry.registerEntityRenderingHandler(EntitySpreadable.class, new InvisibleEntityRenderer());
+	    rendererRegistry.processDelayedRegistrations();
 	}
 	
 	@Override

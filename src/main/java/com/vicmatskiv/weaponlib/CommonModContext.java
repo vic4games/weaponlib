@@ -129,7 +129,7 @@ public class CommonModContext implements ModContext {
     protected ConfigurationManager configurationManager;
 
 	@Override
-    public void init(Object mod, String modId, ConfigurationManager configurationManager, CompatibleChannel channel) {
+    public void preInit(Object mod, String modId, ConfigurationManager configurationManager, CompatibleChannel channel) {
 		this.mod = mod;
 	    this.channel = channel;
 		this.modId = modId;
@@ -240,8 +240,11 @@ public class CommonModContext implements ModContext {
 //        EntityRegistry.addSpawn(EntityCustomMob.class, 1, 1, 3, EnumCreatureType.MONSTER, 
 //                BiomeDictionary.getBiomesForType(Type.PLAINS));
         
-       
 	}
+	
+
+    @Override
+    public void init(Object mod, String modid) {}
 	
 	@Override
 	public boolean isClient() {
@@ -470,4 +473,5 @@ public class CommonModContext implements ModContext {
 
     @Override
     public void setPlayerTransitionProvider(PlayerTransitionProvider playerTransitionProvider) {}
+
 }

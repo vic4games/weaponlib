@@ -10,7 +10,6 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleTargetPoint;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.math.AxisAlignedBB;
 
 public class EntityControlHandler implements CompatibleMessageHandler<EntityControlMessage, CompatibleMessage>  {
 
@@ -31,35 +30,26 @@ public class EntityControlHandler implements CompatibleMessageHandler<EntityCont
                 int updatedFlags = CompatibleExtraEntityFlags.getFlags(player);
                 if((updatedFlags & CompatibleExtraEntityFlags.PRONING) != 0) {
                     setSize(player, 0.6f, 0.6f); //player.width, player.width);
+                } else {
+                    setSize(player, 0.6F, 1.8F);
                 }
-                //System.out.println("Set flags to: " + updatedFlags + " for " + player);
                 modContext.getChannel().sendToAllAround(new EntityControlMessage(player, updatedFlags), point);
             });
         } else {
             compatibility.runInMainClientThread(() -> {
                 EntityPlayer player = compatibility.clientPlayer();
                 Entity targetEntity = message.getEntity(compatibility.world(player));
-                //System.out.println("Setting flags to: " + Integer.toBinaryString(message.getValues()) + " for " + targetEntity);
                 CompatibleExtraEntityFlags.setFlags(targetEntity, message.getFlags(), message.getValues());
             });
         }
         return null;
     }
     
-    protected void setSize(EntityPlayer entityPlayer, float width, float height)
-    {
-        if (width != entityPlayer.width || height != entityPlayer.height)
-        {
-            float f = entityPlayer.width;
+    protected void setSize(EntityPlayer entityPlayer, float width, float height) {
+        if (width != entityPlayer.width || height != entityPlayer.height) {
             entityPlayer.width = width;
             entityPlayer.height = height;
-            AxisAlignedBB axisalignedbb = entityPlayer.getEntityBoundingBox();
-            entityPlayer.setEntityBoundingBox(new AxisAlignedBB(axisalignedbb.minX, axisalignedbb.minY, axisalignedbb.minZ, axisalignedbb.minX + (double)entityPlayer.width, axisalignedbb.minY + (double)entityPlayer.height, axisalignedbb.minZ + (double)entityPlayer.width));
-
-//            if (entityPlayer.width > f && !entityPlayer.firstUpdate && !entityPlayer.worldObj.isRemote)
-//            {
-//                this.moveEntity((double)(f - this.width), 0.0D, (double)(f - this.width));
-//            }
+            compatibility.resizeEntityBoundingBox(entityPlayer, entityPlayer.width, entityPlayer.height, entityPlayer.width);
         }
     }
 }

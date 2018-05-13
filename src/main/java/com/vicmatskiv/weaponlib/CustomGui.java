@@ -6,6 +6,7 @@ import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
 import com.vicmatskiv.weaponlib.StatusMessageCenter.Message;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleEntityEquipmentSlot;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleGui;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMathHelper;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTessellator;
@@ -16,7 +17,6 @@ import com.vicmatskiv.weaponlib.grenade.ItemGrenade;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -55,8 +55,8 @@ public class CustomGui extends CompatibleGui {
 	                int screenWidth = scaledResolution.getScaledWidth();
 	                int screenHeight = scaledResolution.getScaledHeight();
 
-	                ItemStack chestStack = compatibility.clientPlayer().getItemStackFromSlot(EntityEquipmentSlot.CHEST);
-	                ItemStack feetStack = compatibility.clientPlayer().getItemStackFromSlot(EntityEquipmentSlot.FEET);
+	                ItemStack chestStack = compatibility.getItemStackFromSlot(CompatibleEntityEquipmentSlot.CHEST);
+	                ItemStack feetStack = compatibility.getItemStackFromSlot(CompatibleEntityEquipmentSlot.FEET);
 
 				    if (chestStack != null && helmetStack != null && feetStack != null
 	                        && chestStack.getItem() instanceof CustomArmor
@@ -314,8 +314,8 @@ public class CustomGui extends CompatibleGui {
 
     private void drawShieldIndicator(CustomArmor armor, double capacity, double screenWidth, double screenHeight) {
         
-        if(!this.mc.getFramebuffer().isStencilEnabled()) {
-            this.mc.getFramebuffer().enableStencil();
+        if(!compatibility.isStencilEnabled(this.mc.getFramebuffer())) {
+            compatibility.enableStencil(this.mc.getFramebuffer());
         }
         
         GL11.glEnable(GL11.GL_ALPHA_TEST);
