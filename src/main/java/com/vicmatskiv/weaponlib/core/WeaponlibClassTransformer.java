@@ -1,5 +1,8 @@
 package com.vicmatskiv.weaponlib.core;
 
+import net.minecraft.item.ItemBlock;
+import net.minecraft.launchwrapper.IClassTransformer;
+
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
@@ -9,9 +12,6 @@ import org.objectweb.asm.Opcodes;
 
 import com.vicmatskiv.weaponlib.ClassInfo;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClassInfoProvider;
-
-import net.minecraft.item.ItemBlock;
-import net.minecraft.launchwrapper.IClassTransformer;
 
 public class WeaponlibClassTransformer implements IClassTransformer {
 
@@ -307,8 +307,6 @@ public class WeaponlibClassTransformer implements IClassTransformer {
             this.classname = name;
             this.cv.visit(version, access, name, signature, superName, interfaces);
         }
-        //mv = cw.visitMethod(ACC_PUBLIC, "render", "(Lnet/minecraft/entity/Entity;FFFFFF)V", null, null);
-
 
         public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
             if(entityRendererClassInfo.methodMatches("setupCameraTransform", "(FI)V", classname, name, desc)) {
