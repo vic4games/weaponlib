@@ -81,6 +81,8 @@ public class ClientModContext extends CommonModContext {
 		this.statusMessageCenter = new StatusMessageCenter();
 
 		rendererRegistry = new CompatibleRenderingRegistry(modId);
+		
+		rendererRegistry.preInit();
 
 		List<IResourcePack> defaultResourcePacks = compatibility.getPrivateValue(
 				Minecraft.class, Minecraft.getMinecraft(), "defaultResourcePacks", "field_110449_ao") ;
@@ -115,7 +117,7 @@ public class ClientModContext extends CommonModContext {
 	public void init(Object mod, String modid) {
 	    super.init(mod, modid);
 	    
-	    compatibility.registerRenderingRegistry(rendererRegistry);
+	    //compatibility.registerRenderingRegistry(rendererRegistry);
 
 	    rendererRegistry.registerEntityRenderingHandler(WeaponSpawnEntity.class, new SpawnEntityRenderer());
 	    rendererRegistry.registerEntityRenderingHandler(EntityWirelessCamera.class, new WirelessCameraRenderer(modId));

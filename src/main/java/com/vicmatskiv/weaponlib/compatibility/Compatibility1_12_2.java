@@ -299,8 +299,8 @@ public class Compatibility1_12_2 implements Compatibility {
     @Override
     @SideOnly(Side.CLIENT)
     public void registerRenderingRegistry(CompatibleRenderingRegistry rendererRegistry) {
-        MinecraftForge.EVENT_BUS.register(rendererRegistry);
-        ModelLoaderRegistry.registerLoader(rendererRegistry);
+        //MinecraftForge.EVENT_BUS.register(rendererRegistry);
+        //ModelLoaderRegistry.registerLoader(rendererRegistry);
     }
 
     @Override

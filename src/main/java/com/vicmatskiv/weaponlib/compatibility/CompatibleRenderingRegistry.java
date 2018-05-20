@@ -20,6 +20,7 @@ import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.client.model.ICustomModelLoader;
 import net.minecraftforge.client.model.IModel;
 import net.minecraftforge.client.model.ModelLoaderRegistry;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
@@ -35,9 +36,9 @@ public class CompatibleRenderingRegistry implements ICustomModelLoader {
 
 	public CompatibleRenderingRegistry(String modId) {
 		this.modId = modId;
-		ModelLoaderRegistry.registerLoader(this);
+//		ModelLoaderRegistry.registerLoader(this);
 //		{
-//          This is not required anymore after initializing items in pre-init and using delayed registration
+//          Not needed anymore
 //		    System.setProperty("fml.reloadResourcesOnStart", "true");
 //		}
 	}
@@ -63,8 +64,6 @@ public class CompatibleRenderingRegistry implements ICustomModelLoader {
 
 	@Override
 	public void onResourceManagerReload(IResourceManager resourceManager) {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
@@ -88,5 +87,10 @@ public class CompatibleRenderingRegistry implements ICustomModelLoader {
         RenderItem renderItem = Minecraft.getMinecraft().getRenderItem();
         delayedRegistrations.forEach(r -> { r.accept(renderItem);});
         delayedRegistrations.clear();
+    }
+
+    public void preInit() {
+        MinecraftForge.EVENT_BUS.register(this);
+        ModelLoaderRegistry.registerLoader(this);
     }
 }
