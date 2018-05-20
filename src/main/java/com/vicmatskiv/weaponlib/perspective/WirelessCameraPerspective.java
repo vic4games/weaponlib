@@ -117,7 +117,7 @@ public class WirelessCameraPerspective extends RemoteFirstPersonPerspective {
     @Override
     protected void renderOverlay() {
         super.renderOverlay();
-
+        framebuffer.bindFramebuffer(true);
         int maxDistance = 120;
         int displayCameraIndex = activeWatchIndex + 1;
         String message = "Cam " + displayCameraIndex + "/" + totalTrackableEntities + ": " + displayName;
