@@ -31,7 +31,7 @@ public class EntityControlHandler implements CompatibleMessageHandler<EntityCont
                 if((updatedFlags & CompatibleExtraEntityFlags.PRONING) != 0) {
                     setSize(player, 0.6f, 0.6f); //player.width, player.width);
                 } else {
-                    setSize(player, 0.6F, 1.8F);
+                    setSize(player, 0.6f, 1.8f);
                 }
                 modContext.getChannel().sendToAllAround(new EntityControlMessage(player, updatedFlags), point);
             });
@@ -40,6 +40,14 @@ public class EntityControlHandler implements CompatibleMessageHandler<EntityCont
                 EntityPlayer player = compatibility.clientPlayer();
                 Entity targetEntity = message.getEntity(compatibility.world(player));
                 CompatibleExtraEntityFlags.setFlags(targetEntity, message.getFlags(), message.getValues());
+                
+                int updatedFlags = CompatibleExtraEntityFlags.getFlags(player);
+                if((updatedFlags & CompatibleExtraEntityFlags.PRONING) != 0) {
+                    setSize(player, 0.6f, 0.6f); //player.width, player.width);
+                } else {
+                    setSize(player, 0.6F, 1.8F);
+                }
+                
             });
         }
         return null;
@@ -47,9 +55,17 @@ public class EntityControlHandler implements CompatibleMessageHandler<EntityCont
     
     protected void setSize(EntityPlayer entityPlayer, float width, float height) {
         if (width != entityPlayer.width || height != entityPlayer.height) {
+
             entityPlayer.width = width;
             entityPlayer.height = height;
+            
             compatibility.resizeEntityBoundingBox(entityPlayer, entityPlayer.width, entityPlayer.height, entityPlayer.width);
+
+            if(height < 1.5) {
+                entityPlayer.eyeHeight = 0.6f;
+            } else {
+                entityPlayer.eyeHeight = entityPlayer.getDefaultEyeHeight();
+            }
         }
     }
 }
