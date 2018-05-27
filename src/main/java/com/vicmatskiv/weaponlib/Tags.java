@@ -15,6 +15,8 @@ public final class Tags {
 	private static final String DEFAULT_TIMER_TAG = "DefaultTimer";
 
 	private static final String INSTANCE_TAG = "Instance";
+	
+	private static final String ATTACHMENT_ID_TAG = "AtId";
 
 	static int getAmmo(ItemStack itemStack) {
 		if(itemStack == null || compatibility.getTagCompound(itemStack) == null) return 0;
@@ -26,6 +28,17 @@ public final class Tags {
 		compatibility.ensureTagCompound(itemStack);
 		compatibility.getTagCompound(itemStack).setInteger(AMMO_TAG, ammo);
 	}
+	
+	static int[] getAttachmentIds(ItemStack itemStack) {
+        if(itemStack == null || compatibility.getTagCompound(itemStack) == null) return new int[0];
+        return compatibility.getTagCompound(itemStack).getIntArray(ATTACHMENT_ID_TAG);
+    }
+
+    static void setAttachmentIds(ItemStack itemStack, int[] attachmentIds) {
+        if(itemStack == null) return;
+        compatibility.ensureTagCompound(itemStack);
+        compatibility.getTagCompound(itemStack).setIntArray(ATTACHMENT_ID_TAG, attachmentIds);
+    }
 
 	public static long getDefaultTimer(ItemStack itemStack) {
 		if(itemStack == null || compatibility.getTagCompound(itemStack) == null) return 0;

@@ -495,15 +495,28 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
    	public int getLoadIterationCount() {
         return loadIterationCount;
     }
+   	
+   	@Override
+   	protected void reconsileWithStack() {   	    
+        ItemStack itemStack = getItemStack();
+        if(itemStack != null) {
+            int expectedStackAmmo = Tags.getAmmo(itemStack);
+            if(this.ammo > expectedStackAmmo) {
+                logger.debug("Reconciling. Expected ammo: {}, actual: {}", expectedStackAmmo, this.ammo);
+                this.ammo = expectedStackAmmo;
+            }
+            
+            int[] expectedAttachmentIds = Tags.getAttachmentIds(itemStack);
+            if(!Arrays.equals(expectedAttachmentIds, this.activeAttachmentIds)) {
+                logger.debug("Reconciling. Expected attachments: {}, actual: {}", 
+                        Arrays.toString(expectedAttachmentIds), Arrays.toString(this.activeAttachmentIds));
+                //this.activeAttachmentIds = expectedAttachmentIds;
+            }
+        }
+   	}
 
 	@Override
 	public String toString() {
 		return getWeapon().builder.name + "[" + getUuid() + "]";
 	}
-
-
-   
-
-
-
 }

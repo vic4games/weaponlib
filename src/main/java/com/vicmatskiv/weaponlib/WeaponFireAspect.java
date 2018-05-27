@@ -56,7 +56,8 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
     
     private static Predicate<PlayerWeaponInstance> seriesResetAllowed = PlayerWeaponInstance::isSeriesResetAllowed;
 
-    private static Predicate<PlayerWeaponInstance> hasAmmo = instance -> instance.getAmmo() > 0;
+    private static Predicate<PlayerWeaponInstance> hasAmmo = instance -> instance.getAmmo() > 0
+            && Tags.getAmmo(instance.getItemStack()) > 0;
 
     private static Predicate<PlayerWeaponInstance> ejectSpentRoundRequired = instance -> instance.getWeapon().ejectSpentRoundRequired();
 
@@ -184,7 +185,7 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
     }
 
     private void cannotFire(PlayerWeaponInstance weaponInstance) {
-        if(weaponInstance.getAmmo() == 0) {
+        if(weaponInstance.getAmmo() == 0 || Tags.getAmmo(weaponInstance.getItemStack()) == 0) {
             String message;
             if(weaponInstance.getWeapon().getAmmoCapacity() == 0
                     && modContext.getAttachmentAspect().getActiveAttachment(weaponInstance, AttachmentCategory.MAGAZINE) == null) {
@@ -291,7 +292,16 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
         }
 
         Weapon weapon = (Weapon) itemStack.getItem();
-
+        
+        int currentServerAmmo = Tags.getAmmo(itemStack);
+        
+        if(currentServerAmmo <= 0) {
+            logger.error("No server ammo");
+            return;
+        }
+        
+        Tags.setAmmo(itemStack, --currentServerAmmo);
+        
         if(spawnEntityWith == null) {
             spawnEntityWith = weapon.builder.spawnEntityWith;
         }

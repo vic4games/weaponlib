@@ -173,6 +173,8 @@ public class PlayerItemInstance<S extends ManagedState<S>> extends UniversalObje
     public Class<? extends Perspective<?>> getRequiredPerspectiveType() {
         return null;
     }
+    
+    protected void reconsileWithStack() {}
 
 //    public View<?> createView() {
 //        return null;

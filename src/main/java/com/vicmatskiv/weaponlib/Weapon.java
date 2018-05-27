@@ -975,6 +975,13 @@ public class Weapon extends CompatibleItem implements PlayerItemInstanceFactory<
 
     @Override
     public void update(EntityPlayer player) {
+//        PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
+//
+//        if(instance != null && instance.getSyncStartTimestamp() == 0
+//                && instance.getLastFireTimestamp() + 1000 < System.currentTimeMillis()) {
+//            instance.reconsileWithStack();
+//        }
+        
         modContext.getWeaponReloadAspect().updateMainHeldItem(player);
         modContext.getWeaponFireAspect().onUpdate(player);
         modContext.getAttachmentAspect().updateMainHeldItem(player);

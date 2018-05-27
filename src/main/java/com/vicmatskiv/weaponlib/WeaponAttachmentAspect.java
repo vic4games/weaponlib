@@ -297,6 +297,7 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 			compatibility.addItemToPlayerInventory(player, currentAttachment, lookupResult.index);
 		}
 
+	    Tags.setAttachmentIds(weaponInstance.getItemStack(), activeAttachmentIds);
 		weaponInstance.setActiveAttachmentIds(activeAttachmentIds);
 	}
 
