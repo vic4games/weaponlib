@@ -31,7 +31,10 @@ import com.vicmatskiv.weaponlib.melee.PlayerMeleeInstance;
 import com.vicmatskiv.weaponlib.perspective.PerspectiveManager;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.IReloadableResourceManager;
+import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.client.resources.IResourcePack;
+import net.minecraft.client.resources.SimpleReloadableResourceManager;
 import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -86,7 +89,12 @@ public class ClientModContext extends CommonModContext {
 
 		List<IResourcePack> defaultResourcePacks = compatibility.getPrivateValue(
 				Minecraft.class, Minecraft.getMinecraft(), "defaultResourcePacks", "field_110449_ao") ;
-        defaultResourcePacks.add(new WeaponResourcePack()) ;
+        WeaponResourcePack weaponResourcePack = new WeaponResourcePack();
+        defaultResourcePacks.add(weaponResourcePack);
+        IResourceManager resourceManager = Minecraft.getMinecraft().getResourceManager();
+        if(resourceManager instanceof IReloadableResourceManager) {
+            ((SimpleReloadableResourceManager) resourceManager).reloadResourcePack(weaponResourcePack);
+        }
 
 		compatibility.registerWithEventBus(new CustomGui(Minecraft.getMinecraft(), this, weaponAttachmentAspect));
 		compatibility.registerWithEventBus(new WeaponEventHandler(this, safeGlobals));

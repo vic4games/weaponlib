@@ -506,12 +506,12 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
                 this.ammo = expectedStackAmmo;
             }
             
-            int[] expectedAttachmentIds = Tags.getAttachmentIds(itemStack);
-            if(!Arrays.equals(expectedAttachmentIds, this.activeAttachmentIds)) {
-                logger.debug("Reconciling. Expected attachments: {}, actual: {}", 
-                        Arrays.toString(expectedAttachmentIds), Arrays.toString(this.activeAttachmentIds));
-                this.activeAttachmentIds = expectedAttachmentIds;
-            }
+//            int[] expectedAttachmentIds = Tags.getAttachmentIds(itemStack);
+//            if(!Arrays.equals(expectedAttachmentIds, this.activeAttachmentIds)) {
+//                logger.debug("Reconciling. Expected attachments: {}, actual: {}", 
+//                        Arrays.toString(expectedAttachmentIds), Arrays.toString(this.activeAttachmentIds));
+//                this.activeAttachmentIds = expectedAttachmentIds;
+//            }
             updateTimestamp = System.currentTimeMillis();
         }
    	}
