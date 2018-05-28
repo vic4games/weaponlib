@@ -105,7 +105,7 @@ public class PlayerMeleeInstance extends PlayerItemInstance<MeleeState> {
 	protected void setAmmo(int ammo) {
 		if(ammo != this.ammo) {
 			this.ammo = ammo;
-			updateId++; //TODO: what's going on with this update id?
+			markDirty();
 		}
 	}
 
@@ -199,7 +199,7 @@ public class PlayerMeleeInstance extends PlayerItemInstance<MeleeState> {
 	void setActiveAttachmentIds(int[] activeAttachmentIds) {
 		if(!Arrays.equals(this.activeAttachmentIds, activeAttachmentIds)) {
 			this.activeAttachmentIds = activeAttachmentIds;
-			updateId++;
+			markDirty();
 		}
 	}
 
@@ -210,7 +210,7 @@ public class PlayerMeleeInstance extends PlayerItemInstance<MeleeState> {
 	void setSelectedAttachmentIndexes(byte[] selectedAttachmentIndexes) {
 		if(!Arrays.equals(this.selectedAttachmentIndexes, selectedAttachmentIndexes)) {
 			this.selectedAttachmentIndexes = selectedAttachmentIndexes;
-			updateId++;
+			markDirty();
 		}
 	}
 
@@ -233,7 +233,7 @@ public class PlayerMeleeInstance extends PlayerItemInstance<MeleeState> {
 				throw new IllegalArgumentException("activeTextureIndex must be less than " + Byte.MAX_VALUE);
 			}
 			this.activeTextureIndex = (byte)activeTextureIndex;
-			updateId++;
+			markDirty();
 		}
 
 	}

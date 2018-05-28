@@ -100,7 +100,7 @@ public class PlayerGrenadeInstance extends PlayerItemInstance<GrenadeState> {
 	protected void setAmmo(int ammo) {
 		if(ammo != this.ammo) {
 			this.ammo = ammo;
-			updateId++; //TODO: what's going on with this update id?
+			markDirty();
 		}
 	}
 
@@ -189,7 +189,7 @@ public class PlayerGrenadeInstance extends PlayerItemInstance<GrenadeState> {
 	void setActiveAttachmentIds(int[] activeAttachmentIds) {
 		if(!Arrays.equals(this.activeAttachmentIds, activeAttachmentIds)) {
 			this.activeAttachmentIds = activeAttachmentIds;
-			updateId++;
+			markDirty();
 		}
 	}
 
@@ -200,7 +200,7 @@ public class PlayerGrenadeInstance extends PlayerItemInstance<GrenadeState> {
 	void setSelectedAttachmentIndexes(byte[] selectedAttachmentIndexes) {
 		if(!Arrays.equals(this.selectedAttachmentIndexes, selectedAttachmentIndexes)) {
 			this.selectedAttachmentIndexes = selectedAttachmentIndexes;
-			updateId++;
+			markDirty();
 		}
 	}
 

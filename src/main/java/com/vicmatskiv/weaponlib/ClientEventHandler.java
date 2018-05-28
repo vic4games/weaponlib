@@ -27,11 +27,12 @@ import com.vicmatskiv.weaponlib.tracking.PlayerEntityTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
 
 public class ClientEventHandler extends CompatibleClientEventHandler {
 
-	private static final float SLOW_DOWN_WHEN_POISONED_DOSE_THRESHOLD = 0.4f;
+	private static final int DEFAULT_RECONCILE_TIMEOUT_MILLIS = 5000;
+
+    private static final float SLOW_DOWN_WHEN_POISONED_DOSE_THRESHOLD = 0.4f;
 	
     private static final UUID SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER_UUID = UUID.fromString("8efa8469-0256-4f8e-bdd9-3e7b23970663");
 	private static final AttributeModifier SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER = (new AttributeModifier(SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER_UUID, "Slow Down While Zooming", -0.3, 2)).setSaved(false);
@@ -107,12 +108,20 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 			} else {
 				restorePlayerSpeed(player, SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER);
 			}
+			
+			if(mainHandHeldWeaponInstance != null
+			        && mainHandHeldWeaponInstance.getState() == WeaponState.READY
+			        && mainHandHeldWeaponInstance.getStateUpdateTimestamp() + DEFAULT_RECONCILE_TIMEOUT_MILLIS < System.currentTimeMillis()
+			        && mainHandHeldWeaponInstance.getSyncStartTimestamp() == 0
+			        && mainHandHeldWeaponInstance.getUpdateTimestamp() + DEFAULT_RECONCILE_TIMEOUT_MILLIS < System.currentTimeMillis()) {
+			    mainHandHeldWeaponInstance.reconcile();
+			}
 		} else if(player != null){
 			restorePlayerSpeed(player, SLOW_DOWN_WHILE_ZOOMING_ATTRIBUTE_MODIFIER);
 		}
 		
 		if(player != null) {
-		    ItemStack helmet = compatibility.getHelmet();
+		    //ItemStack helmet = compatibility.getHelmet();
 		    
 		    SpreadableExposure spreadableExposure = CompatibleExposureCapability.getExposure(compatibility.clientPlayer(), SpreadableExposure.class);
 	        if(spreadableExposure != null && spreadableExposure.getTotalDose() > SLOW_DOWN_WHEN_POISONED_DOSE_THRESHOLD) {

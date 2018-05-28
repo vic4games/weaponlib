@@ -76,7 +76,7 @@ public class PlayerItemInstanceRegistry {
 			if(result != null) {
 				slotInstances.put(slot, result);
 				syncManager.watch(result);
-				if(result.updateId == 0) { // sync to server if newly created
+				if(result.getUpdateId() == 0) { // sync to server if newly created
 				    result.markDirty();
 				}
 			}
@@ -88,7 +88,7 @@ public class PlayerItemInstanceRegistry {
 				if(result != null) {
 					slotInstances.put(slot, result);
 					syncManager.watch(result);
-					if(result.updateId == 0) { // sync to server if newly created
+					if(result.getUpdateId() == 0) { // sync to server if newly created
 					    result.markDirty();
 					}
 				}
@@ -160,7 +160,7 @@ public class PlayerItemInstanceRegistry {
 			if(result == null) {
 			    logger.debug("Creating instance for slot {} from stack {}", slot, itemStack);
 				result = ((PlayerItemInstanceFactory<?, ?>) itemStack.getItem()).createItemInstance(player, itemStack, slot);
-				result.updateId = 0;
+				result.markClean();
 			}
 			result.setItemInventoryIndex(slot);
 			result.setPlayer(player);

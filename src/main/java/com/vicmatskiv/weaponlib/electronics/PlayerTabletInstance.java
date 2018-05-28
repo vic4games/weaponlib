@@ -52,7 +52,7 @@ public class PlayerTabletInstance extends PlayerItemInstance<TabletState> {
 	    if(this.activeWatchIndex != activeWatchIndex) {
 	        logger.debug("Changing active watch index to {}", activeWatchIndex);
 	        this.activeWatchIndex = activeWatchIndex;
-	        updateId++;
+	        markDirty();
 	    }
     }
 	

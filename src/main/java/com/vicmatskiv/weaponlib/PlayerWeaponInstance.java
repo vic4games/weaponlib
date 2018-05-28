@@ -149,7 +149,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 	public void setAmmo(int ammo) {
 		if(ammo != this.ammo) {
 			this.ammo = ammo;
-			updateId++;
+			markDirty();
 		}
 	}
 
@@ -244,7 +244,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 	public void setRecoil(float recoil) {
 		if(recoil != this.recoil) {
 			this.recoil = recoil;
-			updateId++;
+			markDirty();
 		}
 	}
 
@@ -255,7 +255,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 	void setMaxShots(int maxShots) {
 		if(this.maxShots != maxShots) {
 			this.maxShots = maxShots;
-			updateId++;
+			markDirty();
 		}
 	}
 
@@ -325,7 +325,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 	public void setAimed(boolean aimed) {
 		if(aimed != this.aimed) {
 			this.aimed = aimed;
-			updateId++;
+			markDirty();
 			aimChangeTimestamp = System.currentTimeMillis();
 		}
 	}
@@ -345,7 +345,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 	void setActiveAttachmentIds(int[] activeAttachmentIds) {
 		if(!Arrays.equals(this.activeAttachmentIds, activeAttachmentIds)) {
 			this.activeAttachmentIds = activeAttachmentIds;
-			updateId++;
+			markDirty();
 		}
 	}
 
@@ -356,7 +356,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 	void setSelectedAttachmentIndexes(byte[] selectedAttachmentIndexes) {
 		if(!Arrays.equals(this.selectedAttachmentIndexes, selectedAttachmentIndexes)) {
 			this.selectedAttachmentIndexes = selectedAttachmentIndexes;
-			updateId++;
+			markDirty();
 		}
 	}
 
@@ -384,7 +384,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 	public void setZoom(float zoom) {
 		if(this.zoom != zoom) {
 			this.zoom = zoom;
-			updateId++;
+			markDirty();
 		}
 	}
 
@@ -395,7 +395,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 	public void setLaserOn(boolean laserOn) {
 		if(this.laserOn != laserOn) {
 			this.laserOn = laserOn;
-			updateId++;
+			markDirty();
 		}
 	}
 
@@ -406,7 +406,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
     public void setNightVisionOn(boolean nightVisionOn) {
         if(this.nightVisionOn != nightVisionOn) {
             this.nightVisionOn = nightVisionOn;
-            updateId++;
+            markDirty();
         }
     }
 
@@ -420,7 +420,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 				throw new IllegalArgumentException("activeTextureIndex must be less than " + Byte.MAX_VALUE);
 			}
 			this.activeTextureIndex = (byte)activeTextureIndex;
-			updateId++;
+			markDirty();
 		}
 	}
 
@@ -497,7 +497,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
     }
    	
    	@Override
-   	protected void reconsileWithStack() {   	    
+   	protected void reconcile() {
         ItemStack itemStack = getItemStack();
         if(itemStack != null) {
             int expectedStackAmmo = Tags.getAmmo(itemStack);
@@ -510,8 +510,9 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
             if(!Arrays.equals(expectedAttachmentIds, this.activeAttachmentIds)) {
                 logger.debug("Reconciling. Expected attachments: {}, actual: {}", 
                         Arrays.toString(expectedAttachmentIds), Arrays.toString(this.activeAttachmentIds));
-                //this.activeAttachmentIds = expectedAttachmentIds;
+                this.activeAttachmentIds = expectedAttachmentIds;
             }
+            updateTimestamp = System.currentTimeMillis();
         }
    	}
 

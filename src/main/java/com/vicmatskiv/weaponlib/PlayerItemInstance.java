@@ -28,12 +28,13 @@ public class PlayerItemInstance<S extends ManagedState<S>> extends UniversalObje
 
 	protected S state;
 	protected long stateUpdateTimestamp = System.currentTimeMillis();
-	protected long updateId;
+	private long updateId;
 	protected EntityLivingBase player;
 	protected Item item;
 	protected int itemInventoryIndex;
 	private PlayerItemInstance<S> preparedState;
 	private long syncStartTimestamp;
+	protected long updateTimestamp;
 
 //	private Set<PlayerItemStateListener<S>> listeners = new HashSet<>();
 
@@ -111,7 +112,7 @@ public class PlayerItemInstance<S extends ManagedState<S>> extends UniversalObje
 	public boolean setState(S state) {
 		this.state = state;
 		stateUpdateTimestamp = System.currentTimeMillis();
-		updateId++;
+		markDirty();
 		if(preparedState != null) { // TODO: use comparator or equals?
 			if(preparedState.getState().commitPhase() == state) {
 				logger.debug("Committing state {} to {}", preparedState.getState(),
@@ -151,9 +152,18 @@ public class PlayerItemInstance<S extends ManagedState<S>> extends UniversalObje
 	public long getUpdateId() {
 		return updateId;
 	}
+	
+	public long getUpdateTimestamp() {
+        return updateTimestamp;
+    }
 
-	void markDirty() {
+	protected void markDirty() {
 		updateId++;
+		updateTimestamp = System.currentTimeMillis();
+	}
+	
+	protected void markClean() {
+	    updateId = 0;
 	}
 
 	@Override
@@ -173,8 +183,8 @@ public class PlayerItemInstance<S extends ManagedState<S>> extends UniversalObje
     public Class<? extends Perspective<?>> getRequiredPerspectiveType() {
         return null;
     }
-    
-    protected void reconsileWithStack() {}
+
+    protected void reconcile() {}
 
 //    public View<?> createView() {
 //        return null;

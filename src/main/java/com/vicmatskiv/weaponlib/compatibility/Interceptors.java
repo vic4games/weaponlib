@@ -40,7 +40,7 @@ public class Interceptors {
         if(weaponInstance != null ) {
             ClientModContext context = (ClientModContext) weaponInstance.getWeapon().getModContext();
             PlayerRawPitchAnimationManager yawPitchAnimationManager = context.getPlayerRawPitchAnimationManager();
-            if(weaponInstance.isAimed()) {
+            if(weaponInstance.isAimed() && !isProning(player)) {
                 yawPitchAnimationManager.update(player);
             } else {
                 yawPitchAnimationManager.reset(player);

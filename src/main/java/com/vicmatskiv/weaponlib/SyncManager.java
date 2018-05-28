@@ -36,7 +36,7 @@ public class SyncManager<S extends ManagedState<S>> {
         if(itemStack != null) {
             if(instance.getItem() == itemStack.getItem()) {
                 logger.debug("Stored instance {} of {} in stack {}", instance, instance.getItem(), itemStack);
-                instance.reconsileWithStack();
+                instance.reconcile();
                 Tags.setInstance(itemStack, instance);
             } else {
                 logger.debug("Item mismatch, expected: {}, actual: {}", instance.getItem().getUnlocalizedName(), 
