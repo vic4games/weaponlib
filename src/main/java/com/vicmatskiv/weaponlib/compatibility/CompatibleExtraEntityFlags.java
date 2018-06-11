@@ -3,6 +3,7 @@ package com.vicmatskiv.weaponlib.compatibility;
 import com.vicmatskiv.weaponlib.ModContext;
 
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagInt;
 import net.minecraft.util.EnumFacing;
@@ -119,7 +120,7 @@ public class CompatibleExtraEntityFlags implements ICapabilitySerializable<NBTBa
         capabilityContainer.getStorage().readNBT(capabilityContainer, instance, null, nbt);
     }
 
-   
-
-
+    public static boolean isProning(EntityPlayer player) {
+        return (CompatibleExtraEntityFlags.getFlags(player) & CompatibleExtraEntityFlags.PRONING) != 0;
+    }
 }

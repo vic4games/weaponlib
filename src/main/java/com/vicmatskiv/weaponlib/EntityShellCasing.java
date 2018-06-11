@@ -1,24 +1,24 @@
 package com.vicmatskiv.weaponlib;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+import io.netty.buffer.ByteBuf;
 
 import java.util.Random;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import com.vicmatskiv.weaponlib.Weapon.ShellCasingEjectDirection;
-import com.vicmatskiv.weaponlib.compatibility.CompatibleMathHelper;
-import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult;
-import com.vicmatskiv.weaponlib.compatibility.Interceptors;
-
-import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import com.vicmatskiv.weaponlib.Weapon.ShellCasingEjectDirection;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleExtraEntityFlags;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleMathHelper;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult;
 
 public class EntityShellCasing extends EntityProjectile {
 
@@ -78,7 +78,7 @@ public class EntityShellCasing extends EntityProjectile {
 		float yOffset = weapon.getShellCasingVerticalOffset();
 		if(thrower.isSneaking()) {
 		    yOffset -= 0.1f;
-		} else if(thrower instanceof EntityPlayer && Interceptors.isProning((EntityPlayer) thrower)) {
+		} else if(thrower instanceof EntityPlayer && CompatibleExtraEntityFlags.isProning((EntityPlayer) thrower)) {
 		    yOffset -= 0.0f;
 		}
 
