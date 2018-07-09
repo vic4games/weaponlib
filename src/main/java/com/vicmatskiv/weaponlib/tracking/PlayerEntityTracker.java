@@ -1,11 +1,14 @@
 package com.vicmatskiv.weaponlib.tracking;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,16 +29,16 @@ public class PlayerEntityTracker {
         return CompatiblePlayerEntityTrackerProvider.getTracker(player);
     }
 
-    private World world;
+    private Supplier<World> world;
     private Map<UUID, TrackableEntity> trackableEntities = new LinkedHashMap<>();
 
-    public PlayerEntityTracker(World world) {
+    public PlayerEntityTracker(Supplier<World> world) {
         this.world = world;
     }
 
     public PlayerEntityTracker() {}
 
-    void init(World world) {
+    void init(Supplier<World> world) {
         this.world = world;
     }
 
@@ -108,7 +111,7 @@ public class PlayerEntityTracker {
         return buf.array();
     }
 
-    public static PlayerEntityTracker fromByteArray(byte[] bytes, World world) {
+    public static PlayerEntityTracker fromByteArray(byte[] bytes, Supplier<World> world) {
         ByteBuf buf = Unpooled.wrappedBuffer(bytes);
         PlayerEntityTracker tracker = new PlayerEntityTracker(world);
         if(bytes != null && bytes.length > 0) {
@@ -119,8 +122,8 @@ public class PlayerEntityTracker {
         return tracker;
     }
 
-    public static PlayerEntityTracker fromBuf(ByteBuf buf, World world) {
-        PlayerEntityTracker tracker = new PlayerEntityTracker(world);
+    public static PlayerEntityTracker fromBuf(ByteBuf buf /*, World world*/) {
+        PlayerEntityTracker tracker = new PlayerEntityTracker(() -> compatibility.world(compatibility.clientPlayer()));
         tracker.init(buf);
         return tracker;
     }

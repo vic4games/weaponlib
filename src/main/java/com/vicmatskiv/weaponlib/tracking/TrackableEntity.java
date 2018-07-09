@@ -69,29 +69,37 @@ public class TrackableEntity {
     }
 
 
-    public static TrackableEntity fromBuf(ByteBuf buf, World world) {
+    public static TrackableEntity fromBuf(ByteBuf buf, Supplier<World> world) {
         TrackableEntity te = new TrackableEntity();
         te.init(buf, world);
         return te;
     }
 
-    public void init(ByteBuf buf, World world) {
+    public void init(ByteBuf buf, Supplier<World> world) {
         uuid = new UUID(buf.readLong(), buf.readLong());
         entityId = buf.readInt();
         startTimestamp = buf.readLong();
         trackingDuration = buf.readLong();
-        if(world.isRemote) {
-            // For clients, always use entity id. Remember: entity uuid on client and server don't match.
-            logger.debug("Initializing client entity uuid {}, id {}", uuid, entityId);
-            entitySupplier = () -> world.getEntityByID(entityId);
-        } else {
-            // For server, use persistent uuid
-            logger.debug("Initializing server entity uuid {}, id {}", uuid, entityId);
-            entitySupplier = () -> getEntityByUuid(uuid, world);
-        }
+//        if(world.isRemote) {
+//            // For clients, always use entity id. Remember: entity uuid on client and server don't match.
+//            logger.debug("Initializing client entity uuid {}, id {}", uuid, entityId);
+//            entitySupplier = () -> world.getEntityByID(entityId);
+//        } else {
+//            // For server, use persistent uuid
+//            logger.debug("Initializing server entity uuid {}, id {}", uuid, entityId);
+//            entitySupplier = () -> getEntityByUuid(uuid, world);
+//        }
+        
+        entitySupplier = () -> {
+            World w = world.get();
+            if(w.isRemote) {
+                return w.getEntityByID(entityId);
+            }
+            return getEntityByUuid(uuid, w);
+        };
     }
 
-    public void serialize(ByteBuf buf, World world) {
+    public void serialize(ByteBuf buf, Supplier<World> world) {
         buf.writeLong(uuid.getMostSignificantBits());
         buf.writeLong(uuid.getLeastSignificantBits());
         Entity entity = getEntity();

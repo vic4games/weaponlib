@@ -20,7 +20,7 @@ public class SyncPlayerEntityTrackerMessageMessageHandler implements CompatibleM
 	public <T extends CompatibleMessage> T onCompatibleMessage(SyncPlayerEntityTrackerMessage message, CompatibleMessageContext ctx) {
 		if(!ctx.isServerSide()) {
 		    compatibility.runInMainClientThread(() -> {
-		        CompatiblePlayerEntityTrackerProvider.setTracker(compatibility.clientPlayer(), message.getTracker().apply(compatibility.world(compatibility.clientPlayer())));
+		        CompatiblePlayerEntityTrackerProvider.setTracker(compatibility.clientPlayer(), message.getTracker());
 		        if(message.getStatusMessage() != null) {
 		            modContext.getStatusMessageCenter().addMessage(message.getStatusMessage(), 1000);
 		        }

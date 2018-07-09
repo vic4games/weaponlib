@@ -59,7 +59,7 @@ public class CompatiblePlayerEntityTrackerProvider implements ICapabilitySeriali
         @Override
         public PlayerEntityTracker getTracker(World world) {
             if(resolved == null) {
-                resolved = initializer != null ? initializer.apply(world) : new PlayerEntityTracker(world);
+                resolved = initializer != null ? initializer.apply(world) : new PlayerEntityTracker(() -> world);
             }
             return resolved;
         }
@@ -81,7 +81,7 @@ public class CompatiblePlayerEntityTrackerProvider implements ICapabilitySeriali
             byte[] bytes = content.getByteArray();
             if(bytes != null) {
                 instance.setBytes(bytes);
-                instance.setInitializer(w -> PlayerEntityTracker.fromByteArray(bytes, w));
+                instance.setInitializer(w -> PlayerEntityTracker.fromByteArray(bytes, () -> w));
             }
         }
     }

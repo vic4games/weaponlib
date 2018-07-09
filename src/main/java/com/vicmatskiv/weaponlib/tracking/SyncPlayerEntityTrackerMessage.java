@@ -1,21 +1,17 @@
 package com.vicmatskiv.weaponlib.tracking;
 
-import java.util.function.Function;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessage;
 
 import io.netty.buffer.ByteBuf;
-import net.minecraft.world.World;
 
 public class SyncPlayerEntityTrackerMessage implements CompatibleMessage {
 
     private static final Logger logger = LogManager.getLogger(SyncPlayerEntityTrackerMessage.class);
 
-
-	private Function<World, PlayerEntityTracker> playerEntityTracker;
+    private PlayerEntityTracker playerEntityTracker;
 	private String statusMessage;
 
 	public SyncPlayerEntityTrackerMessage() {}
@@ -25,7 +21,7 @@ public class SyncPlayerEntityTrackerMessage implements CompatibleMessage {
 	}
 
 	public SyncPlayerEntityTrackerMessage(PlayerEntityTracker playerEntityTracker, String statusMessage) {
-		this.playerEntityTracker = a -> playerEntityTracker;
+		this.playerEntityTracker = playerEntityTracker; //a -> playerEntityTracker;
 		this.statusMessage = statusMessage;
 	}
 
@@ -38,7 +34,7 @@ public class SyncPlayerEntityTrackerMessage implements CompatibleMessage {
 	            buf.readBytes(bytes);
 	            this.statusMessage = new String(bytes);
 	        }
-	        playerEntityTracker = w -> PlayerEntityTracker.fromBuf(buf, w);
+	        playerEntityTracker = PlayerEntityTracker.fromBuf(buf);
 	    } catch(Exception e) {
 	        logger.error("Failed to deserialize tracker {}", e);
 	    }
@@ -51,11 +47,11 @@ public class SyncPlayerEntityTrackerMessage implements CompatibleMessage {
 	    if(statusMessageBytes.length > 0) {
 	        buf.writeBytes(statusMessageBytes);
 	    }
-	    playerEntityTracker.apply(null).serialize(buf); // TODO: refactor
+	    playerEntityTracker.serialize(buf); // TODO: refactor
 
 	}
 
-    public Function<World, PlayerEntityTracker> getTracker() {
+    public PlayerEntityTracker getTracker() {
         return playerEntityTracker;
     }
 
