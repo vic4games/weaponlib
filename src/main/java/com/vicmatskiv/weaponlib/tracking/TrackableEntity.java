@@ -15,6 +15,7 @@ import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 
 public class TrackableEntity {
 
@@ -115,10 +116,13 @@ public class TrackableEntity {
     }
 
     private Entity getEntityByUuid(UUID uuid, World world) {
+        if(world instanceof WorldServer) {
+            return ((WorldServer)world).getEntityFromUuid(uuid);
+        }
         return (Entity)world.getLoadedEntityList()
                 .stream()
                 //.peek(e -> {System.out.println("Examining " + ((Entity)e).getPersistentID());})
-                .filter(e -> e.equals(((Entity)e).getPersistentID()))
+                .filter(e -> uuid.equals(((Entity)e).getPersistentID()))
                 .findAny().orElse(null);
     }
 
