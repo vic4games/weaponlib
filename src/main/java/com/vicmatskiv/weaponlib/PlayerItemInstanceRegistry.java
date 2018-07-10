@@ -71,9 +71,14 @@ public class PlayerItemInstanceRegistry {
 	public PlayerItemInstance<?> getItemInstance(EntityPlayer player, int slot) {
 		Map<Integer, PlayerItemInstance<?>> slotInstances = registry.computeIfAbsent(player.getPersistentID(), p -> new HashMap<>());
 		PlayerItemInstance<?> result = slotInstances.get(slot);
+		//logger.debug("Slot {} contains {}", slot, result);
 		if (result == null) {
 			result = createItemInstance(player, slot);
 			if(result != null) {
+			    ItemStack slotItemStack = compatibility.getInventoryItemStack(player, slot);
+			    if(slotItemStack != null) {
+			        Tags.setInstanceUuid(slotItemStack, result.getUuid());
+			    }
 				slotInstances.put(slot, result);
 				syncManager.watch(result);
 				if(result.getUpdateId() == 0) { // sync to server if newly created
@@ -82,10 +87,14 @@ public class PlayerItemInstanceRegistry {
 			}
 		} else {
 			ItemStack slotItemStack = compatibility.getInventoryItemStack(player, slot);
-			if(slotItemStack != null && slotItemStack.getItem() != result.getItem()) {
+			if(slotItemStack != null && (
+			        slotItemStack.getItem() != result.getItem() 
+			            || !result.getUuid().equals(Tags.getInstanceUuid(slotItemStack))
+			            )) {
 				syncManager.unwatch(result);
 				result = createItemInstance(player, slot);
 				if(result != null) {
+				    Tags.setInstanceUuid(slotItemStack, result.getUuid());
 					slotInstances.put(slot, result);
 					syncManager.watch(result);
 					if(result.getUpdateId() == 0) { // sync to server if newly created

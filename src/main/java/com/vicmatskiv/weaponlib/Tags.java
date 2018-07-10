@@ -2,11 +2,14 @@ package com.vicmatskiv.weaponlib;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
+import java.util.UUID;
+
 import com.vicmatskiv.weaponlib.network.TypeRegistry;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 
 public final class Tags {
 
@@ -17,6 +20,8 @@ public final class Tags {
 	private static final String INSTANCE_TAG = "Instance";
 	
 	private static final String ATTACHMENT_ID_TAG = "AtId";
+	
+	private static final String INSTANCE_UUID_TAG = "IUuid";
 
 	static int getAmmo(ItemStack itemStack) {
 		if(itemStack == null || compatibility.getTagCompound(itemStack) == null) return 0;
@@ -80,12 +85,33 @@ public final class Tags {
 		ByteBuf buf = Unpooled.buffer();
 		if(instance != null) {
 			TypeRegistry.getInstance().toBytes(instance, buf);
-			compatibility.getTagCompound(itemStack).setByteArray(INSTANCE_TAG, buf.array());
+			NBTTagCompound tagCompound = compatibility.getTagCompound(itemStack);
+            tagCompound.setByteArray(INSTANCE_TAG, buf.array());
+            tagCompound.setUniqueId(INSTANCE_UUID_TAG, instance.getUuid());
 		} else {
-			compatibility.getTagCompound(itemStack).removeTag(INSTANCE_TAG);
+			NBTTagCompound tagCompound = compatibility.getTagCompound(itemStack);
+            tagCompound.removeTag(INSTANCE_TAG);
+            tagCompound.removeTag(INSTANCE_UUID_TAG);
 		}
-
 	}
+	
+	public static UUID getInstanceUuid(ItemStack itemStack) {
+	    if(itemStack == null) return null;
+	    NBTTagCompound tagCompound = compatibility.getTagCompound(itemStack);
+	    if(tagCompound == null) return null;
+	    UUID uuid = tagCompound.getUniqueId(INSTANCE_UUID_TAG);
+	    if(uuid.getMostSignificantBits() == 0L && uuid.getLeastSignificantBits() == 0L) {
+	        return null;
+	    }
+	    return uuid;
+	}
+	
+	public static void setInstanceUuid(ItemStack itemStack, UUID uuid) {
+	    if(itemStack == null) return;
+        compatibility.ensureTagCompound(itemStack);
+        NBTTagCompound tagCompound = compatibility.getTagCompound(itemStack);
+        tagCompound.setUniqueId(INSTANCE_UUID_TAG, uuid);
+    }
 
 	public static byte[] getInstanceBytes(ItemStack itemStack) {
 		if(itemStack == null || compatibility.getTagCompound(itemStack) == null) return null;

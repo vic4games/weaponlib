@@ -78,7 +78,8 @@ public class WirelessCameraPerspective extends RemoteFirstPersonPerspective {
         } else {
             displayName = te.getDisplayName();
             watchableEntity = te.getEntity();
-            batteryLevel = 1f - ((float)(System.currentTimeMillis() - te.getStartTimestamp()) / te.getTrackingDuration());
+            batteryLevel = 1f - ((float)(compatibility.world(entityPlayer).getTotalWorldTime() 
+                    - te.getStartTimestamp()) / te.getTrackingDuration());
             if(batteryLevel > 1f) {
                 batteryLevel = 1f;
             } else if(batteryLevel < 0f) {

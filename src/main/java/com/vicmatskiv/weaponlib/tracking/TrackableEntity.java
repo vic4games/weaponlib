@@ -28,6 +28,7 @@ public class TrackableEntity {
     private long trackingDuration;
     private WeakReference<Entity> entityRef;
     private String displayName = "";
+    private Supplier<World> worldSupplier;
 
     private TrackableEntity() {}
 
@@ -37,6 +38,7 @@ public class TrackableEntity {
         this.entitySupplier = () -> entity;
         this.startTimestamp = startTimestamp;
         this.trackingDuration = trackingDuration;
+        this.worldSupplier = () -> compatibility.world(entity);
     }
 
     public UUID getUuid() {
@@ -76,7 +78,8 @@ public class TrackableEntity {
         return te;
     }
 
-    public void init(ByteBuf buf, Supplier<World> world) {
+    public void init(ByteBuf buf, Supplier<World> worldSupplier) {
+        this.worldSupplier = worldSupplier;
         uuid = new UUID(buf.readLong(), buf.readLong());
         entityId = buf.readInt();
         startTimestamp = buf.readLong();
@@ -92,7 +95,7 @@ public class TrackableEntity {
 //        }
         
         entitySupplier = () -> {
-            World w = world.get();
+            World w = worldSupplier.get();
             if(w.isRemote) {
                 return w.getEntityByID(entityId);
             }
@@ -127,8 +130,11 @@ public class TrackableEntity {
     }
 
     public boolean isExpired() {
+        if(worldSupplier == null) {
+            return true;
+        }
         //Entity entity = getEntity();
-        return /*(entity != null && entity.isDead) ||  */ startTimestamp + trackingDuration < System.currentTimeMillis();
+        return /*(entity != null && entity.isDead) ||  */ startTimestamp + trackingDuration < worldSupplier.get().getWorldTime();
     }
 
     public String getDisplayName() {
