@@ -49,6 +49,8 @@ public class EntityConfiguration {
     private static final float DEFAULT_SECONDARY_EQUIPMENT_DROP_CHANCE = 0.25f;
     private static final float DEFAULT_ARMOR_DROP_CHANCE = 0.25f;
     
+    private static final int DEFAULT_MAX_AMMO = 36000;
+    
     private static class AiTask {
         int priority;
         Function<EntityLiving, EntityAIBase> taskSupplier;
@@ -181,6 +183,8 @@ public class EntityConfiguration {
         private float primaryEquipmentDropChance = DEFAULT_PRIMARY_EQUIPMENT_DROP_CHANCE;
         private float secondaryEquipmentDropChance = DEFAULT_SECONDARY_EQUIPMENT_DROP_CHANCE;
         private float armorDropChance = DEFAULT_ARMOR_DROP_CHANCE;
+        
+        private int maxAmmo = DEFAULT_MAX_AMMO;
 
         
         public Builder withName(String name) {
@@ -341,6 +345,11 @@ public class EntityConfiguration {
             return this;
         }
         
+        public Builder withMaxAmmo(int maxAmmo) {
+            this.maxAmmo = maxAmmo;
+            return this;
+        }
+        
         public void register(ModContext context) {
             EntityConfiguration configuration = new EntityConfiguration();
             configuration.creatureAttribute = creatureAttribute;
@@ -415,6 +424,7 @@ public class EntityConfiguration {
             configuration.primaryEquipmentDropChance = primaryEquipmentDropChance;
             configuration.secondaryEquipmentDropChance = secondaryEquipmentDropChance;
             configuration.armorDropChance = armorDropChance;
+            configuration.maxAmmo = maxAmmo;
             
             Class<? extends Entity> entityClass = EntityClassFactory.getInstance()
                     .generateEntitySubclass(baseClass, modEntityId, configuration);
@@ -490,6 +500,7 @@ public class EntityConfiguration {
     private float primaryEquipmentDropChance;
     private float secondaryEquipmentDropChance;
     private float armorDropChance;
+    private int maxAmmo;
 
     protected EntityConfiguration() {}
     
@@ -575,5 +586,9 @@ public class EntityConfiguration {
 
     public float getArmorDropChance() {
         return armorDropChance;
+    }
+
+    public int getMaxAmmo() {
+        return maxAmmo;
     }
 }

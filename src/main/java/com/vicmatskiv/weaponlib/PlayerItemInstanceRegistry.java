@@ -237,7 +237,9 @@ public class PlayerItemInstanceRegistry {
 			for(Iterator<Entry<Integer, PlayerItemInstance<?>>> it = slotContexts.entrySet().iterator(); it.hasNext();) {
 				Entry<Integer, PlayerItemInstance<?>> e = it.next();
 				ItemStack slotStack = compatibility.getInventoryItemStack(player, e.getKey());
-				if(slotStack == null || slotStack.getItem() != e.getValue().getItem()) {
+				//logger.debug("Slot {} contains item {} stack {}", e.getKey(), e.getValue(), System.identityHashCode(slotStack));
+				if(slotStack == null || slotStack.getItem() != e.getValue().getItem() 
+				        || !e.getValue().getUuid().equals(Tags.getInstanceUuid(slotStack))) {
 					logger.debug("Removing {} from slot {}", e.getValue(), e.getKey());
 					syncManager.unwatch((PlayerItemInstance) e.getValue());
 					it.remove();

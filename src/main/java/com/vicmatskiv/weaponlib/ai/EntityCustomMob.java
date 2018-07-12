@@ -236,6 +236,7 @@ public class EntityCustomMob extends CompatibleEntityMob implements IRangedAttac
                 WeaponAttachmentAspect.addAttachment((ItemAttachment<Weapon>) attachment, weaponInstance);
             }
             Tags.setInstance(itemStack, weaponInstance);
+            Tags.setAmmo(itemStack, getConfiguration().getMaxAmmo());
         }
     }
     

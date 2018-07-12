@@ -8,7 +8,6 @@ import java.util.Set;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleEntityAIBase;
 
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.ai.EntityAIBase;
 
 public class EntityAIAttackRangedWeapon extends CompatibleEntityAIBase
 {

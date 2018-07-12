@@ -28,7 +28,7 @@ public final class Tags {
 		return compatibility.getTagCompound(itemStack).getInteger(AMMO_TAG);
 	}
 
-	static void setAmmo(ItemStack itemStack, int ammo) {
+	public static void setAmmo(ItemStack itemStack, int ammo) {
 		if(itemStack == null) return;
 		compatibility.ensureTagCompound(itemStack);
 		compatibility.getTagCompound(itemStack).setInteger(AMMO_TAG, ammo);
