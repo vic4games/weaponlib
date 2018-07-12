@@ -52,6 +52,7 @@ import net.minecraft.entity.ai.attributes.IAttribute;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.init.Blocks;
+import net.minecraft.init.Items;
 import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemArmor.ArmorMaterial;
@@ -437,7 +438,7 @@ public class Compatibility1_12_2 implements Compatibility {
         boolean result = false;
         if(slot == -1) {
             player.inventory.addItemStackToInventory(new ItemStack(item));
-        } else if(player.inventory.mainInventory.get(slot) == null) {
+        } else if(player.inventory.mainInventory.get(slot) == null || player.inventory.mainInventory.get(slot).getItem() == Items.AIR) {
             player.inventory.mainInventory.set(slot, new ItemStack(item));
         }
         return result;
