@@ -96,6 +96,10 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		private List<Transition<RenderContext<RenderableState>>> firstPersonPositioningReloading;
 		private List<Transition<RenderContext<RenderableState>>> firstPersonLeftHandPositioningReloading;
 		private List<Transition<RenderContext<RenderableState>>> firstPersonRightHandPositioningReloading;
+		
+	    private List<Transition<RenderContext<RenderableState>>> firstPersonPositioningInspecting;
+	    private List<Transition<RenderContext<RenderableState>>> firstPersonLeftHandPositioningInspecting;
+	    private List<Transition<RenderContext<RenderableState>>> firstPersonRightHandPositioningInspecting;
 
 		private List<Transition<RenderContext<RenderableState>>> firstPersonPositioningUnloading;
 		private List<Transition<RenderContext<RenderableState>>> firstPersonLeftHandPositioningUnloading;
@@ -134,12 +138,12 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		private LinkedHashMap<Part, List<Transition<RenderContext<RenderableState>>>> firstPersonCustomPositioningReloading = new LinkedHashMap<>();
 	    private LinkedHashMap<Part, List<Transition<RenderContext<RenderableState>>>> firstPersonCustomPositioningLoadIteration = new LinkedHashMap<>();
         private LinkedHashMap<Part, List<Transition<RenderContext<RenderableState>>>> firstPersonCustomPositioningLoadIterationsCompleted = new LinkedHashMap<>();
+        private LinkedHashMap<Part, List<Transition<RenderContext<RenderableState>>>> firstPersonCustomPositioningInspecting = new LinkedHashMap<>();
 
 		private LinkedHashMap<Part, Consumer<RenderContext<RenderableState>>> firstPersonCustomPositioningRecoiled = new LinkedHashMap<>();
 		private LinkedHashMap<Part, Consumer<RenderContext<RenderableState>>> firstPersonCustomPositioningZoomingRecoiled = new LinkedHashMap<>();
 		private LinkedHashMap<Part, Consumer<RenderContext<RenderableState>>> firstPersonCustomPositioningZoomingShooting = new LinkedHashMap<>();
 	    private LinkedHashMap<Part, Consumer<RenderContext<RenderableState>>> firstPersonCustomPositioningLoadIterationCompleted = new LinkedHashMap<>();
-
 
 	    private LinkedHashMap<Part, Consumer<RenderContext<RenderableState>>> firstPersonCustomPositioningZooming = new LinkedHashMap<>();
 
@@ -299,6 +303,12 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		}
 		
 		@SafeVarargs
+        public final Builder withFirstPersonPositioningInspecting(Transition<RenderContext<RenderableState>> ...transitions) {
+            this.firstPersonPositioningInspecting = Arrays.asList(transitions);
+            return this;
+        }
+		
+		@SafeVarargs
         public final Builder withFirstPersonPositioningLoadIteration(Transition<RenderContext<RenderableState>> ...transitions) {
             this.firstPersonPositioningLoadIteration = Arrays.asList(transitions);
             return this;
@@ -381,6 +391,12 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			this.firstPersonLeftHandPositioningReloading = Arrays.asList(transitions);
 			return this;
 		}
+		
+		@SafeVarargs
+        public final Builder withFirstPersonLeftHandPositioningInspecting(Transition<RenderContext<RenderableState>> ...transitions) {
+            this.firstPersonLeftHandPositioningInspecting = Arrays.asList(transitions);
+            return this;
+        }
 
 		@SafeVarargs
 		public final Builder withFirstPersonLeftHandPositioningEjectSpentRound(Transition<RenderContext<RenderableState>> ...transitions) {
@@ -417,6 +433,12 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			this.firstPersonRightHandPositioningUnloading = Arrays.asList(transitions);
 			return this;
 		}
+		
+		@SafeVarargs
+        public final Builder withFirstPersonRightHandPositioningInspecting(Transition<RenderContext<RenderableState>> ...transitions) {
+            this.firstPersonRightHandPositioningInspecting = Arrays.asList(transitions);
+            return this;
+        }
 
 		@SafeVarargs
 		public final Builder withFirstPersonRightHandPositioningEjectSpentRound(Transition<RenderContext<RenderableState>> ...transitions) {
@@ -504,6 +526,16 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			this.firstPersonCustomPositioningReloading.put(part, Arrays.asList(transitions));
 			return this;
 		}
+		
+		@SafeVarargs
+        public final Builder withFirstPersonCustomPositioningInspecting(Part part, Transition<RenderContext<RenderableState>> ...transitions) {
+            if(part instanceof DefaultPart) {
+                throw new IllegalArgumentException("Part " + part + " is not custom");
+            }
+
+            this.firstPersonCustomPositioningInspecting.put(part, Arrays.asList(transitions));
+            return this;
+        }
 		
 		public Builder withFirstPersonCustomPositioningLoadIterationCompleted(Part part, Consumer<RenderContext<RenderableState>> positioning) {
             if(part instanceof DefaultPart) {
@@ -595,6 +627,10 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			if(firstPersonPositioningReloading == null) {
 				firstPersonPositioningReloading = Collections.singletonList(new Transition<>(firstPersonPositioning, DEFAULT_ANIMATION_DURATION));
 			}
+			
+			if(firstPersonPositioningInspecting == null) {
+                firstPersonPositioningInspecting = Collections.singletonList(new Transition<>(firstPersonPositioning, DEFAULT_ANIMATION_DURATION));
+            }
 			
 			if(firstPersonPositioningLoadIteration == null) {
 			    firstPersonPositioningLoadIteration = Collections.singletonList(new Transition<>(firstPersonPositioning, DEFAULT_ANIMATION_DURATION));
@@ -702,6 +738,11 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				        t -> new Transition<RenderContext<RenderableState>>(c -> {}, 0)).collect(Collectors.toList());
 			}
 			
+			if(firstPersonLeftHandPositioningInspecting == null) {
+                firstPersonLeftHandPositioningInspecting = firstPersonPositioningInspecting.stream().map(
+                        t -> new Transition<RenderContext<RenderableState>>(c -> {}, 0)).collect(Collectors.toList());
+            }
+			
 			if(firstPersonLeftHandPositioningLoadIteration == null) {
 			    firstPersonLeftHandPositioningLoadIteration = firstPersonPositioningReloading.stream().map(
                         t -> new Transition<RenderContext<RenderableState>>(c -> {}, 0)).collect(Collectors.toList());
@@ -752,6 +793,11 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				firstPersonRightHandPositioningUnloading = firstPersonPositioningUnloading.stream().map(
 				        t -> new Transition<RenderContext<RenderableState>>(c -> {}, 0)).collect(Collectors.toList());
 			}
+			
+			if(firstPersonRightHandPositioningInspecting == null) {
+                firstPersonRightHandPositioningInspecting = firstPersonPositioningInspecting.stream().map(
+                        t -> new Transition<RenderContext<RenderableState>>(c -> {}, 0)).collect(Collectors.toList());
+            }
 			
 			if(firstPersonRightHandPositioningLoadIteration == null) {
                 firstPersonRightHandPositioningLoadIteration = firstPersonPositioningReloading.stream().map(
@@ -833,6 +879,13 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 					+ ", actual: " + t.size());
 				}
 			});
+			
+	         firstPersonCustomPositioningInspecting.forEach((p, t) -> {
+	                if(t.size() != firstPersonPositioningInspecting.size()) {
+	                    throw new IllegalStateException("Custom inspecting transition number mismatch. Expected " + firstPersonPositioningInspecting.size()
+	                    + ", actual: " + t.size());
+	                }
+	            });
 
 			firstPersonCustomPositioningLoadIteration.forEach((p, t) -> {
                 if(t.size() != firstPersonPositioningLoadIteration.size()) {
@@ -1009,6 +1062,10 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			case MODIFYING: case MODIFYING_REQUESTED: case NEXT_ATTACHMENT: case NEXT_ATTACHMENT_REQUESTED:
 				currentState = RenderableState.MODIFYING;
 				break;
+				
+			case INSPECTING:
+                currentState = RenderableState.INSPECTING;
+                break;
 
 			default:
 				if(player.isSprinting() && builder.firstPersonPositioningRunning != null) {
@@ -1171,6 +1228,12 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
                         builder.firstPersonLeftHandPositioningLoadIteration,
                         builder.firstPersonRightHandPositioningLoadIteration,
                         builder.firstPersonCustomPositioningLoadIteration
+                        );
+			case INSPECTING:
+                return getComplexTransition(builder.firstPersonPositioningInspecting,
+                        builder.firstPersonLeftHandPositioningInspecting,
+                        builder.firstPersonRightHandPositioningInspecting,
+                        builder.firstPersonCustomPositioningInspecting
                         );
 			case LOAD_ITERATION_COMPLETED:
                 return getSimpleTransition(builder.firstPersonPositioningLoadIterationCompleted,

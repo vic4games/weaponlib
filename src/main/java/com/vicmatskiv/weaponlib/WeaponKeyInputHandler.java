@@ -77,6 +77,15 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
 	            }
 	        }
 	    }
+	    
+	    else if(KeyBindings.inspectKey.isPressed()) {
+            if(itemStack != null) {
+                Item item = itemStack.getItem();
+                if(item instanceof Inspectable) {
+                    ((Inspectable) item).inspectMainHeldItemForPlayer(player);
+                }
+            }
+        }
 
 	    else if(KeyBindings.laserSwitchKey.isPressed()) {
 	        PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);

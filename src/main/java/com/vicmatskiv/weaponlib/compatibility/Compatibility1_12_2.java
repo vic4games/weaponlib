@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Predicate;
 
 import com.vicmatskiv.weaponlib.Explosion;
@@ -69,6 +70,7 @@ import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.EnumDifficulty;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldType;
 import net.minecraft.world.biome.Biome;
 import net.minecraftforge.client.event.FOVUpdateEvent;
@@ -77,7 +79,6 @@ import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.Pre;
 import net.minecraftforge.client.event.RenderLivingEvent;
-import net.minecraftforge.client.model.ModelLoaderRegistry;
 import net.minecraftforge.common.BiomeDictionary;
 import net.minecraftforge.common.BiomeDictionary.Type;
 import net.minecraftforge.common.MinecraftForge;
@@ -1215,5 +1216,24 @@ private Optional<Field> shadersEnabledFieldOptional;
     @Override
     public float getFlashIntencityFactor() {
         return 1f;
+    }
+    
+    @Override
+    public void setUniqueId(NBTTagCompound tagCompound, String tag, UUID uuid) {
+        tagCompound.setLong(tag + "Most", uuid.getMostSignificantBits());
+        tagCompound.setLong(tag + "Least", uuid.getLeastSignificantBits());
+    }
+    
+    @Override
+    public UUID getUniqueId(NBTTagCompound tagCompound, String tag) {
+        return new UUID(tagCompound.getLong(tag + "Most"), tagCompound.getLong(tag + "Least"));
+    }
+
+    @Override
+    public Entity getEntityByUuid(UUID uuid, World world) {
+        if(world instanceof WorldServer) {
+            return ((WorldServer)world).getEntityFromUuid(uuid);
+        }
+        return null;
     }
 }

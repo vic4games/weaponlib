@@ -38,7 +38,8 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
-public class Weapon extends CompatibleItem implements PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, AttachmentContainer, Reloadable, Modifiable, Updatable {
+public class Weapon extends CompatibleItem implements PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, 
+AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
 
     private static final Logger logger = LogManager.getLogger(Weapon.class);
 
@@ -971,6 +972,11 @@ public class Weapon extends CompatibleItem implements PlayerItemInstanceFactory<
     @Override
     public void reloadMainHeldItemForPlayer(EntityPlayer player) {
         modContext.getWeaponReloadAspect().reloadMainHeldItem(player);
+    }
+    
+    @Override
+    public void inspectMainHeldItemForPlayer(EntityPlayer player) {
+        modContext.getWeaponReloadAspect().inspectMainHeldItem(player);
     }
 
     @Override

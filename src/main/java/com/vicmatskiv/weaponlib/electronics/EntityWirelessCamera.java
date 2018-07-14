@@ -34,7 +34,7 @@ public class EntityWirelessCamera extends CompatibleThrowableEntity {
     public EntityWirelessCamera(ModContext modContext, World world, EntityPlayer player,
             ItemWirelessCamera itemWirelessCamera, long duration) {
         super(world, player);
-        this.timestamp = world.getTotalWorldTime(); //System.currentTimeMillis();
+        this.timestamp = world.getWorldTime(); //System.currentTimeMillis();
         this.duration = (long)((float)duration / 50f);
         this.modContext = modContext;
         this.itemWirelessCamera = itemWirelessCamera;

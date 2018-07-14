@@ -87,7 +87,7 @@ public final class Tags {
 			TypeRegistry.getInstance().toBytes(instance, buf);
 			NBTTagCompound tagCompound = compatibility.getTagCompound(itemStack);
             tagCompound.setByteArray(INSTANCE_TAG, buf.array());
-            tagCompound.setUniqueId(INSTANCE_UUID_TAG, instance.getUuid());
+            compatibility.setUniqueId(tagCompound, INSTANCE_UUID_TAG, instance.getUuid());
 		} else {
 			NBTTagCompound tagCompound = compatibility.getTagCompound(itemStack);
             tagCompound.removeTag(INSTANCE_TAG);
@@ -99,7 +99,7 @@ public final class Tags {
 	    if(itemStack == null) return null;
 	    NBTTagCompound tagCompound = compatibility.getTagCompound(itemStack);
 	    if(tagCompound == null) return null;
-	    UUID uuid = tagCompound.getUniqueId(INSTANCE_UUID_TAG);
+	    UUID uuid = compatibility.getUniqueId(tagCompound, INSTANCE_UUID_TAG);
 	    if(uuid.getMostSignificantBits() == 0L && uuid.getLeastSignificantBits() == 0L) {
 	        return null;
 	    }
@@ -110,7 +110,7 @@ public final class Tags {
 	    if(itemStack == null) return;
         compatibility.ensureTagCompound(itemStack);
         NBTTagCompound tagCompound = compatibility.getTagCompound(itemStack);
-        tagCompound.setUniqueId(INSTANCE_UUID_TAG, uuid);
+        compatibility.setUniqueId(tagCompound, INSTANCE_UUID_TAG, uuid);
     }
 
 	public static byte[] getInstanceBytes(ItemStack itemStack) {

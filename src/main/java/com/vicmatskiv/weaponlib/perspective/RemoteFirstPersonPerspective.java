@@ -37,7 +37,10 @@ public abstract class RemoteFirstPersonPerspective extends Perspective<Renderabl
 
     @Override
     public void update(CompatibleRenderTickEvent event) {
-
+        
+        if(Minecraft.getMinecraft().isGamePaused()) {
+            return;
+        }
 
         EntityPlayer origPlayer = compatibility.clientPlayer();
 

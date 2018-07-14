@@ -15,7 +15,6 @@ import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldServer;
 
 public class TrackableEntity {
 
@@ -82,24 +81,26 @@ public class TrackableEntity {
         this.worldSupplier = worldSupplier;
         uuid = new UUID(buf.readLong(), buf.readLong());
         entityId = buf.readInt();
+        logger.debug("Deserializing entity uuid {}, id {}", uuid, entityId);
+
         startTimestamp = buf.readLong();
         trackingDuration = buf.readLong();
-//        if(world.isRemote) {
-//            // For clients, always use entity id. Remember: entity uuid on client and server don't match.
-//            logger.debug("Initializing client entity uuid {}, id {}", uuid, entityId);
-//            entitySupplier = () -> world.getEntityByID(entityId);
-//        } else {
-//            // For server, use persistent uuid
-//            logger.debug("Initializing server entity uuid {}, id {}", uuid, entityId);
-//            entitySupplier = () -> getEntityByUuid(uuid, world);
-//        }
+        
+        World world = worldSupplier.get();
+        if(world != null) {
+            // This is the correction for older versions using milliseconds
+            if(startTimestamp > world.getWorldTime() + 1000) {
+                startTimestamp = world.getWorldTime();
+                trackingDuration /= 50;
+            }
+        }
         
         entitySupplier = () -> {
             World w = worldSupplier.get();
             if(w.isRemote) {
                 return w.getEntityByID(entityId);
             }
-            return getEntityByUuid(uuid, w);
+            return compatibility.getEntityByUuid(uuid, w);
         };
     }
 
@@ -116,17 +117,6 @@ public class TrackableEntity {
         buf.writeInt(entityId);
         buf.writeLong(startTimestamp);
         buf.writeLong(trackingDuration);
-    }
-
-    private Entity getEntityByUuid(UUID uuid, World world) {
-        if(world instanceof WorldServer) {
-            return ((WorldServer)world).getEntityFromUuid(uuid);
-        }
-        return (Entity)world.getLoadedEntityList()
-                .stream()
-                //.peek(e -> {System.out.println("Examining " + ((Entity)e).getPersistentID());})
-                .filter(e -> uuid.equals(((Entity)e).getPersistentID()))
-                .findAny().orElse(null);
     }
 
     public boolean isExpired() {

@@ -3,6 +3,7 @@ package com.vicmatskiv.weaponlib.compatibility;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 import java.util.function.Predicate;
 
 import com.vicmatskiv.weaponlib.Explosion;
@@ -369,4 +370,10 @@ public interface Compatibility {
     public boolean isShadersModEnabled();
 
     public float getFlashIntencityFactor();
+    
+    public void setUniqueId(NBTTagCompound tagCompound, String tag, UUID uuid);
+    
+    public UUID getUniqueId(NBTTagCompound tagCompound, String tag);
+
+    public Entity getEntityByUuid(UUID uuid, World world);
 }

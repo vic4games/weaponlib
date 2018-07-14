@@ -27,6 +27,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 	private static final Logger logger = LogManager.getLogger(WeaponReloadAspect.class);
 
 	private static final long ALERT_TIMEOUT = 500;
+	private static final long INSPECT_TIMEOUT = 500;
 
 	static {
 		TypeRegistry.getInstance().register(UnloadPermit.class);
@@ -44,7 +45,8 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 					WeaponState.UNLOAD_PREPARING,
 					WeaponState.UNLOAD_REQUESTED,
 					WeaponState.UNLOAD,
-					WeaponState.ALERT));
+					WeaponState.ALERT,
+					WeaponState.INSPECTING));
 
 	public static class UnloadPermit extends Permit<WeaponState> {
 
@@ -106,14 +108,15 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 
 	private static Predicate<PlayerWeaponInstance> alertTimeoutExpired = instance ->
 		System.currentTimeMillis() >= ALERT_TIMEOUT + instance.getStateUpdateTimestamp();
+		
+	private static Predicate<PlayerWeaponInstance> inspectTimeoutExpired = instance ->
+	    System.currentTimeMillis() >= INSPECT_TIMEOUT + instance.getStateUpdateTimestamp();
 
 	private ModContext modContext;
 
 	private PermitManager permitManager;
 
 	private StateManager<WeaponState, ? super PlayerWeaponInstance> stateManager;
-
-
 
 	public WeaponReloadAspect(ModContext modContext) {
 		this.modContext = modContext;
@@ -194,8 +197,16 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 
 		.in(this).change(WeaponState.ALERT).to(WeaponState.READY)
 			.when(alertTimeoutExpired)
-			.automatic() //
-		;
+			.automatic() 
+			
+	    .in(this)
+            .change(WeaponState.READY).to(WeaponState.INSPECTING)
+            .manual()
+		
+		.in(this).change(WeaponState.INSPECTING).to(WeaponState.READY)
+            .when(inspectTimeoutExpired)
+            .automatic() 
+        ;
 	}
 
 	@Override
@@ -218,6 +229,13 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 			stateManager.changeStateFromAnyOf(this, instance, allowedUpdateFromStates); // no target state specified, will trigger auto-transitions
 		}
 	}
+	
+	public void inspectMainHeldItem(EntityPlayer player) {
+        PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
+        if(instance != null) {
+            stateManager.changeState(this, instance, WeaponState.INSPECTING);
+        }
+    }
 
 	@SuppressWarnings("unchecked")
 	private void processLoadPermit(LoadPermit p, PlayerWeaponInstance weaponInstance) {

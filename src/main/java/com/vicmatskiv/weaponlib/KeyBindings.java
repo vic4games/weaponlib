@@ -11,6 +11,7 @@ import net.minecraft.client.settings.KeyBinding;
 public class KeyBindings {
 
 	public static KeyBinding reloadKey;
+	public static KeyBinding inspectKey;
 	public static KeyBinding attachmentKey;
 	public static KeyBinding upArrowKey;
 	public static KeyBinding downArrowKey;
@@ -45,6 +46,9 @@ public class KeyBindings {
 
 		reloadKey = new KeyBinding("key.reload", Keyboard.KEY_R,
 				"key.categories.weaponlib");
+		
+		inspectKey = new KeyBinding("key.inspect", Keyboard.KEY_P,
+                "key.categories.weaponlib");
 
 		laserSwitchKey = new KeyBinding("key.laser", Keyboard.KEY_L,
 				"key.categories.weaponlib");
@@ -81,6 +85,7 @@ public class KeyBindings {
 
 
 		compatibility.registerKeyBinding(reloadKey);
+		compatibility.registerKeyBinding(inspectKey);
 		compatibility.registerKeyBinding(attachmentKey);
 		compatibility.registerKeyBinding(upArrowKey);
 		compatibility.registerKeyBinding(downArrowKey);
