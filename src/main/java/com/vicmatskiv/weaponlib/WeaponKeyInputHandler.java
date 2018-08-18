@@ -142,6 +142,13 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
 	            modContext.getAttachmentAspect().changeAttachment(AttachmentCategory.GRIP, instance);
 	        }
 	    }
+	    
+	    else if(KeyBindings.laserAttachmentKey.isPressed()) {
+            PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
+            if(instance != null && instance.getState() == WeaponState.MODIFYING) {
+                modContext.getAttachmentAspect().changeAttachment(AttachmentCategory.LASER, instance);
+            }
+        }
 
 	    else if(KeyBindings.leftArrowKey.isPressed()) {
 	        PlayerItemInstance<?> instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player);

@@ -32,7 +32,7 @@ final class ClientEffectManager implements EffectManager {
 
 		CompatibleVec3 look = compatibility.getLookVec(player);
 		float distance = 0.3f;
-		float scale = 1f * compatibility.getEffectScaleFactor(); // TODO: check why scale was set to 2.0 in 1.7.10
+		float scale = 1f * compatibility.getSmokeEffectScaleFactor(); // TODO: check why scale was set to 2.0 in 1.7.10
 		float positionRandomizationFactor = 0.01f;
 
 		double posX = player.posX + (look.getXCoord() * distance) + (compatibility.world(player).rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor + (-look.getZCoord() * xOffset);

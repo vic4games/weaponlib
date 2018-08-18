@@ -1236,4 +1236,9 @@ private Optional<Field> shadersEnabledFieldOptional;
         }
         return null;
     }
+
+    @Override
+    public float getSmokeEffectScaleFactor() {
+        return getEffectScaleFactor();
+    }
 }

@@ -201,6 +201,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 			
 	    .in(this)
             .change(WeaponState.READY).to(WeaponState.INSPECTING)
+            .withAction(this::inspect)
             .manual()
 		
 		.in(this).change(WeaponState.INSPECTING).to(WeaponState.READY)
@@ -367,6 +368,10 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 	public void inventoryFullAlert(PlayerWeaponInstance weaponInstance) {
 		modContext.getStatusMessageCenter().addAlertMessage(compatibility.getLocalizedString("gui.inventoryFull"), 3, 250, 200);
 	}
+	
+	public void inspect(PlayerWeaponInstance weaponInstance) {
+        compatibility.playSound(weaponInstance.getPlayer(), weaponInstance.getWeapon().getInspectSound(), 1.0F, 1.0F);
+    }
 	
 	public void startLoadIteration(PlayerWeaponInstance weaponInstance) {
         compatibility.playSound(weaponInstance.getPlayer(), weaponInstance.getWeapon().getReloadIterationSound(), 1.0F, 1.0F);

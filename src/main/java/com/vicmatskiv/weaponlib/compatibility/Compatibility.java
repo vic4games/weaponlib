@@ -376,4 +376,6 @@ public interface Compatibility {
     public UUID getUniqueId(NBTTagCompound tagCompound, String tag);
 
     public Entity getEntityByUuid(UUID uuid, World world);
+
+    public float getSmokeEffectScaleFactor();
 }

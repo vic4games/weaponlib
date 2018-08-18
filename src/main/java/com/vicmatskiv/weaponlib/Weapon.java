@@ -64,6 +64,7 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         private String silencedShootSound;
         private String reloadSound;
         private String reloadIterationSound;
+        private String inspectSound;
         private String allReloadIterationsCompletedSound;
         private String unloadSound;
         private String ejectSpentRoundSound;
@@ -350,6 +351,14 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
                 throw new IllegalStateException("ModId is not set");
             }
             this.reloadIterationSound = reloadIterationSound.toLowerCase(); //modId + ":" + reloadSound;
+            return this;
+        }
+        
+        public Builder withInspectSound(String inspectSound) {
+            if (modId == null) {
+                throw new IllegalStateException("ModId is not set");
+            }
+            this.inspectSound = inspectSound.toLowerCase(); //modId + ":" + reloadSound;
             return this;
         }
         
@@ -689,6 +698,8 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
 
             weapon.reloadSound = modContext.registerSound(this.reloadSound);
             weapon.reloadIterationSound = modContext.registerSound(this.reloadIterationSound);
+            weapon.inspectSound = modContext.registerSound(this.inspectSound);
+
             weapon.allReloadIterationsCompletedSound = modContext.registerSound(this.allReloadIterationsCompletedSound);
             weapon.unloadSound = modContext.registerSound(this.unloadSound);
             weapon.silencedShootSound = modContext.registerSound(this.silencedShootSound);
@@ -771,6 +782,7 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
     private CompatibleSound silencedShootSound;
     private CompatibleSound reloadSound;
     private CompatibleSound reloadIterationSound;
+    private CompatibleSound inspectSound;
     private CompatibleSound allReloadIterationsCompletedSound;
     private CompatibleSound unloadSound;
     private CompatibleSound ejectSpentRoundSound;
@@ -816,6 +828,10 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
 
     public CompatibleSound getReloadIterationSound() {
         return reloadIterationSound;
+    }
+    
+    public CompatibleSound getInspectSound() {
+        return inspectSound;
     }
     
     public CompatibleSound getAllReloadIterationsCompletedSound() {

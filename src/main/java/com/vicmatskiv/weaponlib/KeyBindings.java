@@ -20,6 +20,7 @@ public class KeyBindings {
 	public static KeyBinding laserSwitchKey;
 	public static KeyBinding nightVisionSwitchKey;
 	public static KeyBinding proningSwitchKey;
+	public static KeyBinding laserAttachmentKey;
 
 	public static KeyBinding addKey;
 
@@ -77,10 +78,13 @@ public class KeyBindings {
 		subtractKey = new KeyBinding("key.subtract", Keyboard.KEY_O,
 				"key.categories.weaponlib");
 
-		fireModeKey = new KeyBinding("key.fire_mode", Keyboard.KEY_RSHIFT,
+		fireModeKey = new KeyBinding("key.fire_mode", Keyboard.KEY_B,
 				"key.categories.weaponlib");
 		
 		proningSwitchKey = new KeyBinding("key.proning", Keyboard.KEY_Z,
+                "key.categories.weaponlib");
+		
+		laserAttachmentKey = new KeyBinding("key.attach_laser", Keyboard.KEY_RSHIFT,
                 "key.categories.weaponlib");
 
 
@@ -97,6 +101,7 @@ public class KeyBindings {
 		compatibility.registerKeyBinding(subtractKey);
 		compatibility.registerKeyBinding(fireModeKey);
         compatibility.registerKeyBinding(proningSwitchKey);
+        compatibility.registerKeyBinding(laserAttachmentKey);
 
 
 		if(DebugPositioner.isDebugModeEnabled()) {

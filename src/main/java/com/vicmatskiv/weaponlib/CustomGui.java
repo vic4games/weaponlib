@@ -197,6 +197,11 @@ public class CustomGui extends CompatibleGui {
                             "gui.attachmentMode.changeUnderBarrelRig",
                             Keyboard.getKeyName(KeyBindings.downArrowKey.getKeyCode()));
 					fontRender.drawStringWithShadow(changeUnderBarrelRig, 10, height - 40, color);
+					
+					String applyLaser = compatibility.getLocalizedString(
+                            "gui.attachmentMode.applyLaser",
+                            Keyboard.getKeyName(KeyBindings.laserAttachmentKey.getKeyCode()));
+                    fontRender.drawStringWithShadow(applyLaser, 150, height - 100, color);
 
 				} else {
 					Message message = modContext.getStatusMessageCenter().nextMessage();
