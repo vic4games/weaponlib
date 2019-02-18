@@ -25,6 +25,10 @@ import com.vicmatskiv.weaponlib.grenade.EntityGrenadeRenderer;
 import com.vicmatskiv.weaponlib.grenade.EntitySmokeGrenade;
 import com.vicmatskiv.weaponlib.grenade.GrenadeRenderer;
 import com.vicmatskiv.weaponlib.grenade.ItemGrenade;
+import com.vicmatskiv.weaponlib.inventory.CustomPlayerInventoryTab;
+import com.vicmatskiv.weaponlib.inventory.BackpackInventoryTab;
+import com.vicmatskiv.weaponlib.inventory.StandardPlayerInventoryTab;
+import com.vicmatskiv.weaponlib.inventory.InventoryTabs;
 import com.vicmatskiv.weaponlib.melee.ItemMelee;
 import com.vicmatskiv.weaponlib.melee.MeleeRenderer;
 import com.vicmatskiv.weaponlib.melee.PlayerMeleeInstance;
@@ -40,6 +44,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraftforge.client.ClientCommandHandler;
+import net.minecraftforge.common.MinecraftForge;
 
 public class ClientModContext extends CommonModContext {
 
@@ -111,6 +116,8 @@ public class ClientModContext extends CommonModContext {
 		clientEventHandler = new ClientEventHandler(this, mainLoopLock, safeGlobals, runInClientThreadQueue);
 		compatibility.registerWithFmlEventBus(clientEventHandler);
 		
+		compatibility.registerWithEventBus(InventoryTabs.getInstance());
+		
 		compatibility.registerWithEventBus(clientEventHandler); // TODO: what are the implications of registering the same class with 2 buses
 
 		this.viewManager = new PerspectiveManager(this);
@@ -119,6 +126,8 @@ public class ClientModContext extends CommonModContext {
 		this.effectManager = new ClientEffectManager();
 
 		this.playerRawPitchAnimationManager = new PlayerRawPitchAnimationManager();
+		
+		
 	}
 	
 	@Override

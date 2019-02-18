@@ -11,6 +11,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.opengl.GL11;
 
 import com.vicmatskiv.weaponlib.CustomRenderer;
+import com.vicmatskiv.weaponlib.ItemStorage;
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.ModelSource;
 import com.vicmatskiv.weaponlib.RenderContext;
@@ -86,11 +87,16 @@ public abstract class CompatibleStaticModelSourceRenderer extends ModelSourceRen
 		this.builder = builder;
 		this.pair = Pair.of((IBakedModel) this, null);
 	}
+	
+	public void renderCustomEquipped(EntityPlayer player, ItemStack itemStack) {
+	}
+ 
 
 	@Override
 	public List<BakedQuad> getQuads(IBlockState state, EnumFacing side, long rand) {
 		if(itemStack == null) return Collections.emptyList();
-		if(transformType == TransformType.GROUND
+		if(transformType == null 
+		        || transformType == TransformType.GROUND
 				|| transformType == TransformType.GUI
 				|| transformType == TransformType.FIRST_PERSON_RIGHT_HAND
 				|| transformType == TransformType.THIRD_PERSON_RIGHT_HAND
@@ -112,7 +118,11 @@ public abstract class CompatibleStaticModelSourceRenderer extends ModelSourceRen
 			}
 
 			int currentTextureId = Framebuffers.getCurrentTexture();
-			renderItem();
+			if(transformType == null && owner instanceof EntityPlayer) {
+			    renderCustomEquipped((EntityPlayer)owner, itemStack);
+			} else {
+			    renderItem();
+			}
 			if(currentTextureId != 0) {
 			    GlStateManager.bindTexture(currentTextureId);
 			}
@@ -209,7 +219,7 @@ public abstract class CompatibleStaticModelSourceRenderer extends ModelSourceRen
 	}
 
 
-	private void renderModelSource(RenderContext<RenderableState> renderContext,
+	protected void renderModelSource(RenderContext<RenderableState> renderContext,
 			ItemStack itemStack, TransformType type, Entity entity,
 			float f, float f1, float f2, float f3, float f4, float f5) {
 
@@ -226,21 +236,23 @@ public abstract class CompatibleStaticModelSourceRenderer extends ModelSourceRen
 			GL11.glPushMatrix();
 			GL11.glPushAttrib(GL11.GL_ENABLE_BIT);
 			ModelBase model = texturedModel.getU();
-			switch (type)
-			{
-			case GROUND:
-				builder.getEntityModelPositioning().accept(model, itemStack);
-				break;
-			case GUI:
-				builder.getInventoryModelPositioning().accept(model, itemStack);
-				break;
-			case THIRD_PERSON_RIGHT_HAND: case THIRD_PERSON_LEFT_HAND:
-				builder.getThirdPersonModelPositioning().accept(model, itemStack);
-				break;
-			case FIRST_PERSON_RIGHT_HAND: case FIRST_PERSON_LEFT_HAND:
-				builder.getFirstPersonModelPositioning().accept(model, itemStack);
-				break;
-			default:
+			if(type != null) {
+			    switch (type)
+	            {
+	            case GROUND:
+	                builder.getEntityModelPositioning().accept(model, itemStack);
+	                break;
+	            case GUI:
+	                builder.getInventoryModelPositioning().accept(model, itemStack);
+	                break;
+	            case THIRD_PERSON_RIGHT_HAND: case THIRD_PERSON_LEFT_HAND:
+	                builder.getThirdPersonModelPositioning().accept(model, itemStack);
+	                break;
+	            case FIRST_PERSON_RIGHT_HAND: case FIRST_PERSON_LEFT_HAND:
+	                builder.getFirstPersonModelPositioning().accept(model, itemStack);
+	                break;
+	            default:
+	            }
 			}
 
 			model.render(entity, f, f1, f2, f3, f4, f5);

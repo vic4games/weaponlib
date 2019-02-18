@@ -5,23 +5,28 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.vicmatskiv.weaponlib.compatibility.CompatibleCustomPlayerInventoryCapability;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleEntityJoinWorldEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleExposureCapability;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleExtraEntityFlags;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleLivingDeathEvent;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleLivingHurtEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleLivingUpdateEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleServerEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleStartTrackingEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleStopTrackingEvent;
 import com.vicmatskiv.weaponlib.electronics.ItemHandheld;
+import com.vicmatskiv.weaponlib.inventory.CustomPlayerInventory;
+import com.vicmatskiv.weaponlib.inventory.EntityInventorySyncMessage;
 import com.vicmatskiv.weaponlib.tracking.PlayerEntityTracker;
 import com.vicmatskiv.weaponlib.tracking.SyncPlayerEntityTrackerMessage;
 
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
-import net.minecraftforge.event.entity.living.LivingDeathEvent;
 
 /**
  * TODO: rename to common event handler, since it's invoked on both sides
@@ -36,6 +41,11 @@ public class ServerEventHandler extends CompatibleServerEventHandler {
     public ServerEventHandler(ModContext modContext, String modId) {
         this.modContext = modContext;
         this.modId = modId;
+    }
+    
+    @Override
+    public ModContext getModContext() {
+        return modContext;
     }
     
     @Override
@@ -87,11 +97,23 @@ public class ServerEventHandler extends CompatibleServerEventHandler {
             modContext.getChannel().getChannel().sendTo(
                     new EntityControlMessage(player, CompatibleExtraEntityFlags.getFlags(player)),
                     (EntityPlayerMP)e.getEntity());
+                        
+            modContext.getChannel().getChannel().sendToAll(
+                    new EntityInventorySyncMessage(e.getEntity(), 
+                            CompatibleCustomPlayerInventoryCapability.getInventory(player), false));
         }
     }
 
     @Override
     protected void onCompatiblePlayerStartedTracking(CompatibleStartTrackingEvent e) {
+        if(e.getTarget() instanceof EntityPlayer && !compatibility.world(e.getTarget()).isRemote) {
+            modContext.getChannel().getChannel().sendTo(
+                    new EntityInventorySyncMessage(e.getTarget(), 
+                            CompatibleCustomPlayerInventoryCapability.getInventory((EntityLivingBase) e.getTarget()), false), 
+                            (EntityPlayerMP) e.getPlayer());
+            System.out.println("Player " + e.getPlayer() + " started tracking "  + e.getTarget());
+            return;
+        }
         if(e.getTarget() instanceof EntityProjectile || e.getTarget() instanceof EntityBounceable) {
             return;
         }
@@ -127,8 +149,20 @@ public class ServerEventHandler extends CompatibleServerEventHandler {
     }
 
     @Override
-    protected void onCompatibleLivingDeathEvent(LivingDeathEvent e) {
+    protected void onCompatibleLivingDeathEvent(CompatibleLivingDeathEvent event) {
 
+        final EntityLivingBase entity = event.getEntity();
+        if(entity instanceof EntityPlayer && !compatibility.world(entity).isRemote) {
+            CustomPlayerInventory inventory = CompatibleCustomPlayerInventoryCapability.getInventory(entity);
+         
+            for(int slotIndex = 0; slotIndex < inventory.getSizeInventory(); slotIndex++) {
+                ItemStack stackInSlot = inventory.getStackInSlot(slotIndex);
+                if(stackInSlot != null) {
+                    compatibility.dropItem((EntityPlayer)entity, stackInSlot, true, false);
+                    inventory.setInventorySlotContents(slotIndex, null);
+                }
+            }
+        }
     }
 
     @Override
@@ -136,5 +170,13 @@ public class ServerEventHandler extends CompatibleServerEventHandler {
         return modId;
     }
 
-
+    @Override
+    protected void onCompatibleLivingHurtEvent(CompatibleLivingHurtEvent e) {
+        CustomPlayerInventory inventory = CompatibleCustomPlayerInventoryCapability
+                .getInventory(e.getEntityLiving());
+        if (inventory != null && inventory.getStackInSlot(1) != null) {
+            compatibility.applyArmor(e, e.getEntityLiving(),
+                    new ItemStack[] { inventory.getStackInSlot(1) }, e.getDamageSource(), e.getAmount());
+        }
+    }
 }

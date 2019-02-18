@@ -293,6 +293,7 @@ public class AttachmentBuilder<T> {
 		        || attachment.getCategory() == AttachmentCategory.BULLET
 		        || attachment.getCategory() == AttachmentCategory.SILENCER
 		        || attachment.getCategory() == AttachmentCategory.SKIN
+		        || attachment.getCategory() == AttachmentCategory.LASER
 		        ){
 		    //throw new IllegalStateException("No recipe defined for attachment " + name);
 		    System.err.println("!!!No recipe defined for attachment " + name);

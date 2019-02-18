@@ -704,7 +704,7 @@ public class CustomArmor extends CompatibleCustomArmor implements ExposureProtec
             if(shieldCapacity < 0.0) {
                 shieldCapacity = 0.0;
             }
-            System.out.println("Shield capacity decreased to " + shieldCapacity + ", health: " + entity.getHealth());
+//            System.out.println("Shield capacity decreased to " + shieldCapacity + ", health: " + entity.getHealth());
             setShieldCapacity(stack, shieldCapacity);
             setShieldHitTimestamp(stack, System.currentTimeMillis());
         } else {

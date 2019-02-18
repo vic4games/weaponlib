@@ -1,11 +1,15 @@
 package com.vicmatskiv.weaponlib;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.lwjgl.opengl.GL11;
 
+import com.vicmatskiv.weaponlib.animation.MultipartPositioning.Positioner;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleStaticModelSourceRenderer;
+import com.vicmatskiv.weaponlib.compatibility.Interceptors;
 
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.entity.player.EntityPlayer;
@@ -18,14 +22,17 @@ public class StaticModelSourceRenderer extends CompatibleStaticModelSourceRender
 		private Consumer<ItemStack> inventoryPositioning;
 		private BiConsumer<EntityPlayer, ItemStack> thirdPersonPositioning;
 		private BiConsumer<EntityPlayer, ItemStack> firstPersonPositioning;
+		private BiConsumer<EntityPlayer, ItemStack> customEquippedPositioning;
 		
 		private BiConsumer<ModelBase, ItemStack> firstPersonModelPositioning;
 		private BiConsumer<ModelBase, ItemStack> thirdPersonModelPositioning;
+		
 		private BiConsumer<ModelBase, ItemStack> inventoryModelPositioning;
 		private BiConsumer<ModelBase, ItemStack> entityModelPositioning;
 		
 		private Consumer<RenderContext<RenderableState>> firstPersonLeftHandPositioning;
 		private Consumer<RenderContext<RenderableState>> firstPersonRightHandPositioning;
+		
 		
 		private String modId;
 		private ModContext modContext;
@@ -74,6 +81,11 @@ public class StaticModelSourceRenderer extends CompatibleStaticModelSourceRender
 			this.thirdPersonPositioning = thirdPersonPositioning;
 			return this;
 		}
+		
+		public Builder withCustomEquippedPositioning(BiConsumer<EntityPlayer, ItemStack> customEquippedPositioning) {
+            this.customEquippedPositioning = customEquippedPositioning;
+            return this;
+        }
 
 		public Builder withFirstPersonModelPositioning(BiConsumer<ModelBase, ItemStack> firstPersonModelPositioning) {
 			this.firstPersonModelPositioning = firstPersonModelPositioning;
@@ -193,6 +205,10 @@ public class StaticModelSourceRenderer extends CompatibleStaticModelSourceRender
 		public Consumer<RenderContext<RenderableState>> getFirstPersonRightHandPositioning() {
             return firstPersonRightHandPositioning;
         }
+		
+		public BiConsumer<EntityPlayer, ItemStack> getCustomEquippedPositioning() {
+            return customEquippedPositioning;
+        }
 
 		public String getModId() {
 			return modId;
@@ -206,5 +222,34 @@ public class StaticModelSourceRenderer extends CompatibleStaticModelSourceRender
     @Override
     protected ModContext getModContext() {
         return builder.modContext;
+    }
+    
+    public void renderCustomEquipped(EntityPlayer player, ItemStack itemStack) {
+        
+        RenderContext<RenderableState> renderContext = new RenderContext<>(getModContext(), player, itemStack);
+        
+        GL11.glPushMatrix();
+        
+        if(Interceptors.isProning(player)) {
+            PlayerRenderer playerRenderer = Interceptors.getPlayerRenderer(player);
+            
+            if(playerRenderer != null) {
+                Positioner<Part, RenderContext<RenderableState>> bodyPositioner = playerRenderer.getCurrentPositioner();
+                if(bodyPositioner != null) {
+                    bodyPositioner.position(Part.MAIN, renderContext);
+                }
+            }
+        }
+        
+        compatibility.adjustCustomEquippedPosition();
+        
+        BiConsumer<EntityPlayer, ItemStack> positioning = builder.getCustomEquippedPositioning();
+        
+        if(positioning != null) {
+            positioning.accept(player, itemStack);
+            renderModelSource(renderContext, itemStack, null, null,  0.0F, 0.0f, -0.4f, 0.0f, 0.0f, 0.08f);
+        }
+        
+        GL11.glPopMatrix();
     }
 }

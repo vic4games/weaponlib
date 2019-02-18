@@ -44,6 +44,8 @@ public abstract class CompatibleClientEventHandler {
 	        origRenderVeiwEntity = event.getRenderer().getRenderManager().renderViewEntity;
 	        event.getRenderer().getRenderManager().renderViewEntity = event.getEntityPlayer();
 	    }
+	    
+	    onCompatibleRenderPlayerPreEvent(new CompatibleRenderPlayerPreEvent(event));
 	}
 
 	protected abstract ModContext getModContext();
@@ -80,5 +82,7 @@ public abstract class CompatibleClientEventHandler {
 	protected abstract void onCompatibleClientTick(CompatibleClientTickEvent compatibleClientTickEvent);
 
 	protected abstract void onCompatibleRenderHand(CompatibleRenderHandEvent event);
+
+    protected abstract void onCompatibleRenderPlayerPreEvent(CompatibleRenderPlayerPreEvent event);
 
 }

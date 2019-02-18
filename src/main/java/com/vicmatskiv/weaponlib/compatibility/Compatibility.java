@@ -1,5 +1,6 @@
 package com.vicmatskiv.weaponlib.compatibility;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
@@ -9,6 +10,8 @@ import java.util.function.Predicate;
 import com.vicmatskiv.weaponlib.Explosion;
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.ai.EntityCustomMob;
+import com.vicmatskiv.weaponlib.inventory.GuiHandler;
+import com.vicmatskiv.weaponlib.tile.CustomTileEntityRenderer;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.gui.FontRenderer;
@@ -33,9 +36,12 @@ import net.minecraft.entity.ai.attributes.IAttribute;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemArmor;
 import net.minecraft.item.ItemArmor.ArmorMaterial;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.DamageSource;
 import net.minecraft.world.EnumDifficulty;
 import net.minecraft.world.World;
@@ -376,4 +382,42 @@ public interface Compatibility {
     public UUID getUniqueId(NBTTagCompound tagCompound, String tag);
 
     public Entity getEntityByUuid(UUID uuid, World world);
+
+    public TileEntity getTileEntity(World world, CompatibleBlockPos pos);
+
+    public void registerTileEntity(Class<? extends TileEntity> tileEntityClass, String name);
+
+//    public void bindTileEntitySpecialRenderer(Class<? extends TileEntity> tileEntityClass,
+//            CustomTileEntityRenderer customTileEntityRenderer);
+    
+    public <T extends TileEntity> void bindTileEntitySpecialRenderer(Class<? extends TileEntity> tileEntityClass,
+            CustomTileEntityRenderer customTileEntityRenderer);
+
+    public boolean isValidArmor(ItemStack itemstack, CompatibleEntityEquipmentSlot compatibleEntityEquipementSlot,
+            Entity entity);
+
+    public CompatibleEntityEquipmentSlot getArmorType(ItemArmor item);
+
+    public double getEntityYOffset(Entity entity);
+
+    public NBTTagCompound readTagCompound(PacketBuffer packetBuf) throws IOException;
+
+    public void writeTagCompound(PacketBuffer packetBuf, NBTTagCompound tagCompound) throws IOException;
+
+    public void closeScreen();
+
+    public void applyArmor(CompatibleLivingHurtEvent event, EntityLivingBase entityLiving, ItemStack[] itemStacks, DamageSource damageSource,
+            float amount);
+
+    public void dropItem(EntityPlayer player, ItemStack stack, boolean dropAround, boolean traceItem);
+
+    public void registerGuiHandler(Object mod, GuiHandler guiHandler);
+
+    public void renderItem(EntityPlayer player, ItemStack stack);
+
+    public float getSmokeEffectScaleFactor();
+
+    public void adjustCustomEquippedPosition();
+
+    public void markBlockForUpdate(World world, CompatibleBlockPos pos);
 }

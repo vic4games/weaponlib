@@ -13,7 +13,9 @@ import com.vicmatskiv.weaponlib.PlayerWeaponInstance;
 import com.vicmatskiv.weaponlib.SpreadableExposure;
 import com.vicmatskiv.weaponlib.Weapon;
 import com.vicmatskiv.weaponlib.animation.PlayerRawPitchAnimationManager;
+import com.vicmatskiv.weaponlib.inventory.CustomPlayerInventory;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.model.ModelPlayer;
@@ -167,16 +169,29 @@ public class Interceptors {
 
     private static Map<Entity, PlayerRenderer> renderers = new HashMap<>();
     
+    public static PlayerRenderer getPlayerRenderer(Entity entity) {
+        return renderers.get(entity);
+    }
+    
     public static void render2(ModelBase modelBase, Entity entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scale) {
         
         if(entityIn instanceof EntityPlayer && modelBase instanceof ModelPlayer) {
             
             ModelPlayer modelPlayer = (ModelPlayer) modelBase;
-
-            PlayerRenderer playerRenderer = renderers.computeIfAbsent(entityIn, e -> new PlayerRenderer(ClientModContext.getContext()));
-            
             EntityPlayer player = (EntityPlayer) entityIn;
+
+            PlayerRenderer playerRenderer = renderers.computeIfAbsent(entityIn, 
+                    e -> new PlayerRenderer((EntityPlayer) entityIn, ClientModContext.getContext()));
+            
             playerRenderer.renderModel(modelPlayer, player, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
+            
+            CustomPlayerInventory capability = CompatibleCustomPlayerInventoryCapability.getInventory(player);
+            if(capability != null) {
+                ItemStack backpackStack = capability.getStackInSlot(0); // TODO: replace 0 with constant for backpack slot 
+                if(backpackStack != null) {
+                    compatibility.renderItem(player, backpackStack);
+                }
+            }
         } else {
             modelBase.render(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
         }
@@ -211,5 +226,11 @@ public class Interceptors {
     
     public static boolean isProning(EntityPlayer player) {
         return (CompatibleExtraEntityFlags.getFlags(player) & CompatibleExtraEntityFlags.PRONING) != 0;
+    }
+    
+    public static float adjustCameraPosition(EntityLivingBase player, float position) {
+        return player instanceof EntityPlayer && isProning((EntityPlayer) player) 
+                && Minecraft.getMinecraft().gameSettings.thirdPersonView == 0 ? position 
+                + player.getEyeHeight() * 1.6f : position;
     }
 }

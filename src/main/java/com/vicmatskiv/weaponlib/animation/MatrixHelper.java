@@ -40,6 +40,13 @@ public class MatrixHelper {
         matrix.load(buf);
         return matrix;
     }
+    
+    public static FloatBuffer getModelViewMatrixBuffer() {
+        FloatBuffer buf = BufferUtils.createFloatBuffer(16);
+        GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, buf);
+        buf.rewind();
+        return buf;
+    }
 
     public static Matrix4f interpolateMatrix(Matrix4f m, float factor) {
         Matrix4f result = new Matrix4f();

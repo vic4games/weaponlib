@@ -13,10 +13,13 @@ import org.apache.logging.log4j.Logger;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientTickEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientTickEvent.Phase;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleCustomPlayerInventoryCapability;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleExposureCapability;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleExtraEntityFlags;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderHandEvent;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderPlayerPreEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderTickEvent;
+import com.vicmatskiv.weaponlib.inventory.CustomPlayerInventory;
 import com.vicmatskiv.weaponlib.perspective.Perspective;
 import com.vicmatskiv.weaponlib.shader.DynamicShaderContext;
 import com.vicmatskiv.weaponlib.shader.DynamicShaderGroupManager;
@@ -27,6 +30,8 @@ import com.vicmatskiv.weaponlib.tracking.PlayerEntityTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
+import net.minecraftforge.client.MinecraftForgeClient;
 
 public class ClientEventHandler extends CompatibleClientEventHandler {
 
@@ -54,6 +59,7 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
     private DynamicShaderGroupManager shaderGroupManager;
     private PipelineShaderGroupSourceProvider pipelineShaderGroupSourceProvider = new PipelineShaderGroupSourceProvider();
 
+    private int currentSlotIndex;
 
 	public ClientEventHandler(ClientModContext modContext, Lock mainLoopLock, SafeGlobals safeGlobals,
 			Queue<Runnable> runInClientThreadQueue /*, ReloadAspect reloadAspect*/) {
@@ -68,6 +74,7 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 	public void onCompatibleClientTick(CompatibleClientTickEvent event) {
 		if(event.getPhase() == Phase.START) {
 			mainLoopLock.lock();
+			updateOnStartTick();
 		} else if(event.getPhase() == Phase.END) {
 			update();
 			modContext.getSyncManager().run();
@@ -85,6 +92,19 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 				//reloadAspect.updateMainHeldItem(compatibility.clientPlayer());
 			}
 		}
+	}
+	
+	private void updateOnStartTick() {
+	    EntityPlayer player = compatibility.clientPlayer();
+	    if(player != null) {
+	        int newSlotIndex = compatibility.getCurrentInventoryItemIndex((EntityPlayer) player);
+	        if(currentSlotIndex != newSlotIndex) {
+	            //modContext.getWeaponReloadAspect().updateMainHeldItem(player);
+	            currentSlotIndex = newSlotIndex;
+	            System.out.println("Changed active slot to " + newSlotIndex);
+	            modContext.getWeaponReloadAspect().drawMainHeldItem(player);
+	        }
+	    }
 	}
 
     private void update() {
@@ -220,5 +240,30 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
     @Override
     protected ModContext getModContext() {
         return modContext;
+    }
+
+    @Override
+    protected void onCompatibleRenderPlayerPreEvent(CompatibleRenderPlayerPreEvent event) {
+        
+//        CustomPlayerInventory capability = CompatibleCustomPlayerInventoryCapability.getInventory(event.getPlayer());
+//        
+//        if(capability != null) {
+//            ItemStack vestStack = capability.getStackInSlot(1); 
+//            if(vestStack != null) {
+//                compatibility.renderItem(event.getPlayer(), vestStack);
+////                IItemRenderer customRenderer = MinecraftForgeClient.getItemRenderer(vestStack, null);
+////                if(customRenderer instanceof StaticModelSourceRenderer) {
+////                    ((StaticModelSourceRenderer) customRenderer).renderCustomEquipped(event.getPlayer(), vestStack);
+////                }
+//            }
+//            ItemStack backpackStack = capability.getStackInSlot(0); // TODO: replace 0 with constant for backpack slot 
+//            if(backpackStack != null) {
+////                IItemRenderer customRenderer = MinecraftForgeClient.getItemRenderer(backpackStack, null);
+////                if(customRenderer instanceof StaticModelSourceRenderer) {
+////                    ((StaticModelSourceRenderer) customRenderer).renderCustomEquipped(event.getPlayer(), backpackStack);
+////                }
+//                compatibility.renderItem(event.getPlayer(), backpackStack);
+//            }
+//        }
     }
 }

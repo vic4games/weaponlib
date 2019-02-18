@@ -2,6 +2,7 @@ package com.vicmatskiv.weaponlib.compatibility;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.Comparator;
@@ -12,10 +13,14 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Predicate;
 
+import org.lwjgl.opengl.GL11;
+
 import com.vicmatskiv.weaponlib.Explosion;
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.ai.EntityCustomMob;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleParticle.CompatibleParticleBreaking;
+import com.vicmatskiv.weaponlib.inventory.GuiHandler;
+import com.vicmatskiv.weaponlib.tile.CustomTileEntityRenderer;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -32,6 +37,7 @@ import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.entity.RenderPlayer;
+import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.client.shader.ShaderGroup;
@@ -56,12 +62,16 @@ import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemArmor;
 import net.minecraft.item.ItemArmor.ArmorMaterial;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumParticleTypes;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -81,6 +91,7 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent.Pre;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.common.BiomeDictionary;
 import net.minecraftforge.common.BiomeDictionary.Type;
+import net.minecraftforge.common.ISpecialArmor.ArmorProperties;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.EnumHelper;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
@@ -89,6 +100,7 @@ import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
+import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.registry.EntityRegistry;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import net.minecraftforge.fml.common.registry.GameRegistry;
@@ -1235,5 +1247,99 @@ private Optional<Field> shadersEnabledFieldOptional;
             return ((WorldServer)world).getEntityFromUuid(uuid);
         }
         return null;
+    }
+
+    @Override
+    public TileEntity getTileEntity(World world, CompatibleBlockPos pos) {
+        return world.getTileEntity(pos.getBlockPos());
+    }
+
+    @Override
+    public void registerTileEntity(Class<? extends TileEntity> tileEntityClass, String name) {
+        GameRegistry.registerTileEntity(tileEntityClass, name);
+    }
+
+    @Override
+    public boolean isValidArmor(ItemStack itemstack, CompatibleEntityEquipmentSlot compatibleEntityEquipementSlot, Entity entity) {
+        itemstack.getItem().isValidArmor(itemstack, compatibleEntityEquipementSlot.getSlot(), entity);
+        return false;
+    }
+
+    @Override
+    public CompatibleEntityEquipmentSlot getArmorType(ItemArmor item) {
+        return CompatibleEntityEquipmentSlot.valueOf(item.armorType);
+    }
+
+    @Override
+    public double getEntityYOffset(Entity entity) {
+        return entity.getYOffset() + 0.5;
+    }
+
+    @Override
+    public NBTTagCompound readTagCompound(PacketBuffer packetBuf) throws IOException {
+        return packetBuf.readCompoundTag();
+    }
+
+    @Override
+    public void writeTagCompound(PacketBuffer packetBuf, NBTTagCompound tagCompound) {
+        packetBuf.writeCompoundTag(tagCompound);
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void closeScreen() {
+        clientPlayer().closeScreen();
+    }
+
+    @Override
+    public void applyArmor(CompatibleLivingHurtEvent event, EntityLivingBase entityLiving, 
+            ItemStack[] itemStacks, DamageSource damageSource, float amount) {
+        NonNullList<ItemStack> stackList = NonNullList.create();
+        for(int i = 0; i < itemStacks.length; i++) {
+            stackList.add(itemStacks[i]);
+        }
+        ArmorProperties.applyArmor(entityLiving, stackList, damageSource, amount);
+    }
+
+    @Override
+    public void dropItem(EntityPlayer player, ItemStack stack, boolean dropAround, boolean traceItem) {
+        player.dropItem(stack, dropAround, traceItem);
+    }
+
+    @Override
+    public void registerGuiHandler(Object mod, GuiHandler guiHandler) {
+        NetworkRegistry.INSTANCE.registerGuiHandler(mod, guiHandler);
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void renderItem(EntityPlayer player, ItemStack stack) {
+        Minecraft.getMinecraft().getItemRenderer().renderItem(player, stack, null);
+    }
+
+    @Override
+    public float getSmokeEffectScaleFactor() {
+        return 1f;
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void adjustCustomEquippedPosition() {
+        GL11.glScaled(0.4F, 0.4F, 0.4F);
+        GL11.glTranslatef(-0.4f, -1f, -0.7f);
+        GL11.glRotatef(180F, 0f, 1f, 0f);
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @Override
+    public <T extends TileEntity> void bindTileEntitySpecialRenderer(Class<? extends TileEntity> tileEntityClass,
+            CustomTileEntityRenderer customTileEntityRenderer) {
+        ClientRegistry.bindTileEntitySpecialRenderer(tileEntityClass, (TileEntitySpecialRenderer)customTileEntityRenderer);
+    }
+
+    @Override
+    public void markBlockForUpdate(World world, CompatibleBlockPos pos) {
+        world.markBlockRangeForRenderUpdate(pos.getBlockPosX(), pos.getBlockPosY(), pos.getBlockPosZ(), 
+                pos.getBlockPosX(), pos.getBlockPosY(), pos.getBlockPosZ());
     }
 }

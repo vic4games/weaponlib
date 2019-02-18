@@ -23,6 +23,7 @@ public class CompatibleBlocks {
     public static final CompatibleBlocks WOOL = new CompatibleBlocks(Blocks.WOOL);
     public static final CompatibleBlocks SANDSTONE = new CompatibleBlocks(Blocks.SANDSTONE);
     public static final CompatibleBlocks STONE_BUTTON = new CompatibleBlocks(Blocks.STONE_BUTTON);
+    public static final CompatibleBlocks CRAFTING_TABLE = new CompatibleBlocks(Blocks.CRAFTING_TABLE);
 
     private Block block;
 

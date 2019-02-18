@@ -1,6 +1,8 @@
 package com.vicmatskiv.weaponlib;
 
+import com.vicmatskiv.weaponlib.compatibility.CompatibleBlockState;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleMaterial;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 import com.vicmatskiv.weaponlib.config.ConfigurationManager;
 import com.vicmatskiv.weaponlib.crafting.RecipeManager;
@@ -104,4 +106,18 @@ public interface ModContext {
     public void setPlayerTransitionProvider(PlayerTransitionProvider playerTransitionProvider);
 
     public void init(Object mod, String modid);
+
+    public MaterialImpactSound getMaterialImpactSound(CompatibleBlockState blockState, WeaponSpawnEntity entity);
+
+    public CommonModContext setMaterialsImpactSound(String sound, Item bulletItem, float volume,
+            CompatibleMaterial...materials);
+
+    public CommonModContext setMaterialImpactSound(String sound, float volume, CompatibleMaterial material);
+
+    public CommonModContext setMaterialsImpactSound(String sound, float volume, CompatibleMaterial... materials);
+
+    public CommonModContext setMaterialsImpactSound(String sound, CompatibleMaterial... materials);
+    
+    public CommonModContext setMaterialImpactSounds(CompatibleMaterial material, float volume, String... sounds);
+
 }

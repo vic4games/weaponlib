@@ -20,12 +20,15 @@ public class KeyBindings {
 	public static KeyBinding laserSwitchKey;
 	public static KeyBinding nightVisionSwitchKey;
 	public static KeyBinding proningSwitchKey;
+	public static KeyBinding laserAttachmentKey;
 
 	public static KeyBinding addKey;
 
 	public static KeyBinding subtractKey;
 
 	public static KeyBinding fireModeKey;
+	
+    public static KeyBinding customInventoryKey;
 
 	public static KeyBinding jDebugKey;
 	public static KeyBinding kDebugKey;
@@ -38,8 +41,7 @@ public class KeyBindings {
 
 	public static KeyBinding semicolonDebugKey;
     public static KeyBinding apostropheDebugKey;
-
-
+    
     public static KeyBinding deleteDebugKey;
 
 	public static void init() {
@@ -77,12 +79,17 @@ public class KeyBindings {
 		subtractKey = new KeyBinding("key.subtract", Keyboard.KEY_O,
 				"key.categories.weaponlib");
 
-		fireModeKey = new KeyBinding("key.fire_mode", Keyboard.KEY_RSHIFT,
+		fireModeKey = new KeyBinding("key.fire_mode", Keyboard.KEY_B,
 				"key.categories.weaponlib");
 		
 		proningSwitchKey = new KeyBinding("key.proning", Keyboard.KEY_Z,
                 "key.categories.weaponlib");
-
+		
+		laserAttachmentKey = new KeyBinding("key.attach_laser", Keyboard.KEY_RSHIFT,
+                "key.categories.weaponlib");
+		
+		customInventoryKey = new KeyBinding("key.custom_inventory", Keyboard.KEY_X,
+                "key.categories.weaponlib");
 
 		compatibility.registerKeyBinding(reloadKey);
 		compatibility.registerKeyBinding(inspectKey);
@@ -97,12 +104,12 @@ public class KeyBindings {
 		compatibility.registerKeyBinding(subtractKey);
 		compatibility.registerKeyBinding(fireModeKey);
         compatibility.registerKeyBinding(proningSwitchKey);
-
+        compatibility.registerKeyBinding(laserAttachmentKey);
+        compatibility.registerKeyBinding(customInventoryKey);
 
 		if(DebugPositioner.isDebugModeEnabled()) {
 		    bindDebugKeys();
 		}
-
 	}
 
     public static void bindDebugKeys() {

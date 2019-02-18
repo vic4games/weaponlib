@@ -46,7 +46,8 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 					WeaponState.UNLOAD_REQUESTED,
 					WeaponState.UNLOAD,
 					WeaponState.ALERT,
-					WeaponState.INSPECTING));
+					WeaponState.INSPECTING,
+					WeaponState.DRAWING));
 
 	public static class UnloadPermit extends Permit<WeaponState> {
 
@@ -111,13 +112,17 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 		
 	private static Predicate<PlayerWeaponInstance> inspectTimeoutExpired = instance ->
 	    System.currentTimeMillis() >= INSPECT_TIMEOUT + instance.getStateUpdateTimestamp();
+        
+    private static Predicate<PlayerWeaponInstance> drawingAnimationCompleted = weaponInstance ->
+        System.currentTimeMillis() >= weaponInstance.getStateUpdateTimestamp()
+            + weaponInstance.getWeapon().getTotalDrawingDuration() * 1.1;
 
 	private ModContext modContext;
 
 	private PermitManager permitManager;
 
 	private StateManager<WeaponState, ? super PlayerWeaponInstance> stateManager;
-
+	
 	public WeaponReloadAspect(ModContext modContext) {
 		this.modContext = modContext;
 	}
@@ -201,11 +206,23 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 			
 	    .in(this)
             .change(WeaponState.READY).to(WeaponState.INSPECTING)
+            .withAction(this::inspect)
             .manual()
 		
-		.in(this).change(WeaponState.INSPECTING).to(WeaponState.READY)
+		.in(this)
+		    .change(WeaponState.INSPECTING).to(WeaponState.READY)
             .when(inspectTimeoutExpired)
             .automatic() 
+            
+        .in(this)
+            .change(WeaponState.READY).to(WeaponState.DRAWING)
+            .withAction(this::draw)
+            .manual()
+            
+        .in(this)
+            .change(WeaponState.DRAWING).to(WeaponState.READY)
+            .when(drawingAnimationCompleted)
+            .automatic()
         ;
 	}
 
@@ -234,6 +251,13 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
         PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
         if(instance != null) {
             stateManager.changeState(this, instance, WeaponState.INSPECTING);
+        }
+    }
+	
+	public void drawMainHeldItem(EntityPlayer player) {
+        PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
+        if(instance != null) {
+            stateManager.changeState(this, instance, WeaponState.DRAWING);
         }
     }
 
@@ -366,6 +390,14 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 
 	public void inventoryFullAlert(PlayerWeaponInstance weaponInstance) {
 		modContext.getStatusMessageCenter().addAlertMessage(compatibility.getLocalizedString("gui.inventoryFull"), 3, 250, 200);
+	}
+	
+	public void inspect(PlayerWeaponInstance weaponInstance) {
+        compatibility.playSound(weaponInstance.getPlayer(), weaponInstance.getWeapon().getInspectSound(), 1.0F, 1.0F);
+    }
+	
+	public void draw(PlayerWeaponInstance weaponInstance) {
+	    compatibility.playSound(weaponInstance.getPlayer(), weaponInstance.getWeapon().getDrawSound(), 1.0F, 1.0F);
 	}
 	
 	public void startLoadIteration(PlayerWeaponInstance weaponInstance) {

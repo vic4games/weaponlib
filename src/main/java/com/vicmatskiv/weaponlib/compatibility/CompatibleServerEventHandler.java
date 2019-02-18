@@ -1,6 +1,8 @@
 package com.vicmatskiv.weaponlib.compatibility;
 
 
+import com.vicmatskiv.weaponlib.ModContext;
+
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
@@ -11,6 +13,7 @@ import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
+import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -64,6 +67,10 @@ public abstract class CompatibleServerEventHandler {
 	        
 	        ResourceLocation extraFlagsResourceLocation = new ResourceLocation(getModId(), "PLAYER_ENTITY_FLAGS");
             event.addCapability(extraFlagsResourceLocation, new CompatibleExtraEntityFlags());
+            
+            ResourceLocation customInventoryLocation = new ResourceLocation(getModId(), "PLAYER_CUSTOM_INVENTORY");
+
+            event.addCapability(customInventoryLocation, new CompatibleCustomPlayerInventoryCapability());
 	    }
 	    
         ResourceLocation exposureResourceLocation = new ResourceLocation(getModId(), "EXPOSURE");
@@ -94,19 +101,30 @@ public abstract class CompatibleServerEventHandler {
 
     @SubscribeEvent
     public void onEntityDeath(LivingDeathEvent e) {
-        onCompatibleLivingDeathEvent(e);
+        onCompatibleLivingDeathEvent(new CompatibleLivingDeathEvent(e));
     }
     
     @SubscribeEvent
     public void onEntityUpdate(LivingUpdateEvent e) {
         onCompatibleLivingUpdateEvent(new CompatibleLivingUpdateEvent(e));
     }
+    
+    @SubscribeEvent
+    public void onLivingHurt(LivingHurtEvent event) {
+        onCompatibleLivingHurtEvent(new CompatibleLivingHurtEvent(event));
+    }
 
-    protected abstract void onCompatibleLivingDeathEvent(LivingDeathEvent e);
+//    protected abstract void onCompatibleLivingDeathEvent(LivingDeathEvent e);
 
     protected abstract void onCompatiblePlayerStartedTracking(CompatibleStartTrackingEvent e);
 
     protected abstract void onCompatiblePlayerStoppedTracking(CompatibleStopTrackingEvent e);
     
     protected abstract void onCompatibleLivingUpdateEvent(CompatibleLivingUpdateEvent e);
+
+    protected abstract void onCompatibleLivingHurtEvent(CompatibleLivingHurtEvent e);
+
+    protected abstract void onCompatibleLivingDeathEvent(CompatibleLivingDeathEvent event);
+
+    public abstract ModContext getModContext();
 }

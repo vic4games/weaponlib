@@ -7,7 +7,8 @@ import io.netty.buffer.ByteBuf;
 
 public enum WeaponState implements ManagedState<WeaponState> {
 
-	READY(false), 
+	READY(false),
+	DRAWING,
 	LOAD_REQUESTED, 
 	LOAD(null, LOAD_REQUESTED, null, true),
 	LOAD_ITERATION,

@@ -10,6 +10,8 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleExtraEntityFlags;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponKeyInputHandler;
 import com.vicmatskiv.weaponlib.electronics.PlayerTabletInstance;
+import com.vicmatskiv.weaponlib.inventory.GuiHandler;
+import com.vicmatskiv.weaponlib.inventory.OpenCustomPlayerInventoryGuiMessage;
 import com.vicmatskiv.weaponlib.melee.MeleeState;
 import com.vicmatskiv.weaponlib.melee.PlayerMeleeInstance;
 
@@ -116,6 +118,10 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
 	            ((Modifiable) itemStack.getItem()).toggleClientAttachmentSelectionMode(player);
 	        }
 	    }
+	    
+	    else if(KeyBindings.customInventoryKey.isPressed()) {
+	        modContext.getChannel().getChannel().sendToServer(new OpenCustomPlayerInventoryGuiMessage(GuiHandler.CUSTOM_PLAYER_INVENTORY_GUI_ID));
+        }
 
 	    else if(KeyBindings.upArrowKey.isPressed()) {
 	        PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
@@ -142,6 +148,13 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
 	            modContext.getAttachmentAspect().changeAttachment(AttachmentCategory.GRIP, instance);
 	        }
 	    }
+	    
+	    else if(KeyBindings.laserAttachmentKey.isPressed()) {
+            PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
+            if(instance != null && instance.getState() == WeaponState.MODIFYING) {
+                modContext.getAttachmentAspect().changeAttachment(AttachmentCategory.LASER, instance);
+            }
+        }
 
 	    else if(KeyBindings.leftArrowKey.isPressed()) {
 	        PlayerItemInstance<?> instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player);

@@ -3,7 +3,11 @@ package com.vicmatskiv.weaponlib.animation;
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+
+import net.minecraft.entity.Entity;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,8 +19,6 @@ import com.vicmatskiv.weaponlib.Part;
 import com.vicmatskiv.weaponlib.RenderContext;
 import com.vicmatskiv.weaponlib.tracking.PlayerEntityTracker;
 
-import net.minecraft.entity.Entity;
-
 public class DebugPositioner {
 
     private static final Logger logger = LogManager.getLogger(DebugPositioner.class);
@@ -26,6 +28,8 @@ public class DebugPositioner {
     private static Boolean debugModeEnabled;
 
     private static Part currentPart;
+    
+    private static Set<Part> debugParts = new HashSet<>();
 
     private static Entity watchableEntity;
 
@@ -61,6 +65,10 @@ public class DebugPositioner {
 
     private static Position getCurrentPartPosition() {
         return partPositions.get(currentPart);
+    }
+    
+    private static Position getDebugPartPosition(Part part) {
+        return partPositions.get(part);
     }
 
     public static void incrementXRotation(float increment) {
@@ -159,21 +167,38 @@ public class DebugPositioner {
         return debugModeEnabled;
     }
 
+//    public static void reset() {
+//        Position partPosition = getCurrentPartPosition();
+//        if(partPosition == null) {
+//            compatibility.addChatMessage(compatibility.clientPlayer(), "Debug part not selected");
+//            return;
+//        }
+//        transitionConfigurations.clear();
+//        partPosition.x = partPosition.y = partPosition.z
+//                = partPosition.xRotation = partPosition.yRotation = partPosition.zRotation = 0f;
+//        partPosition.scale = 1f;
+//        partPosition.step = 0.025f;
+//    }
+    
     public static void reset() {
-        Position partPosition = getCurrentPartPosition();
-        if(partPosition == null) {
-            compatibility.addChatMessage(compatibility.clientPlayer(), "Debug part not selected");
-            return;
+        for(Part debugPart: debugParts) {
+            Position partPosition = getDebugPartPosition(debugPart);
+            if(partPosition == null) {
+                compatibility.addChatMessage(compatibility.clientPlayer(), "Debug part not selected");
+                return;
+            }
+            transitionConfigurations.clear();
+            partPosition.x = partPosition.y = partPosition.z
+                    = partPosition.xRotation = partPosition.yRotation = partPosition.zRotation = 0f;
+            partPosition.scale = 1f;
+            partPosition.step = 0.025f;
         }
-        transitionConfigurations.clear();
-        partPosition.x = partPosition.y = partPosition.z
-                = partPosition.xRotation = partPosition.yRotation = partPosition.zRotation = 0f;
-        partPosition.scale = 1f;
-        partPosition.step = 0.025f;
+        
     }
 
     public static void setDebugPart(Part part) {
         currentPart = part;
+        debugParts.add(part);
         partPositions.computeIfAbsent(part, p -> new Position());
     }
 
@@ -191,10 +216,13 @@ public class DebugPositioner {
     }
 
     public static void position(Part part, RenderContext<?> renderContext) {
-        if(part != currentPart) {
+//        if(part != currentPart) {
+//            return;
+//        }
+        if(!debugParts.contains(part)) {
             return;
         }
-        Position partPosition = getCurrentPartPosition();
+        Position partPosition = getDebugPartPosition(part);
         if(partPosition == null) {
             return;
         }

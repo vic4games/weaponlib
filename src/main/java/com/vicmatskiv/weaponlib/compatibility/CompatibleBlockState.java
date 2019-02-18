@@ -17,4 +17,8 @@ public class CompatibleBlockState {
     public IBlockState getBlockState() {
         return blockState;
     }
+
+    public CompatibleMaterial getMaterial() {
+        return new CompatibleMaterial(blockState.getMaterial());
+    }
 }

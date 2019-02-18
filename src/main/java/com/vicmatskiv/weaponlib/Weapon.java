@@ -64,6 +64,8 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         private String silencedShootSound;
         private String reloadSound;
         private String reloadIterationSound;
+        private String inspectSound;
+        private String drawSound;
         private String allReloadIterationsCompletedSound;
         private String unloadSound;
         private String ejectSpentRoundSound;
@@ -350,6 +352,22 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
                 throw new IllegalStateException("ModId is not set");
             }
             this.reloadIterationSound = reloadIterationSound.toLowerCase(); //modId + ":" + reloadSound;
+            return this;
+        }
+        
+        public Builder withInspectSound(String inspectSound) {
+            if (modId == null) {
+                throw new IllegalStateException("ModId is not set");
+            }
+            this.inspectSound = inspectSound.toLowerCase(); //modId + ":" + reloadSound;
+            return this;
+        }
+        
+        public Builder withDrawSound(String drawSound) {
+            if (modId == null) {
+                throw new IllegalStateException("ModId is not set");
+            }
+            this.drawSound = drawSound.toLowerCase(); //modId + ":" + reloadSound;
             return this;
         }
         
@@ -661,10 +679,17 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
                         compatibility.destroyBlock(world, position);
                     } else  {
                         //compatibility.addBlockHitEffect(position);
+                        //compatibility.playSound(world, posX, posY, posZ, explosionSound, volume, pitch);
                         CompatibleTargetPoint point = new CompatibleTargetPoint(entity.dimension,
                                 position.getBlockPosX(), position.getBlockPosY(), position.getBlockPosZ(), 100);
                         modContext.getChannel().sendToAllAround(
                                 new BlockHitMessage(position.getBlockPosX(), position.getBlockPosY(), position.getBlockPosZ(), position.getSideHit()), point);
+                        
+                        MaterialImpactSound materialImpactSound = modContext.getMaterialImpactSound(blockState, entity);
+                        if(materialImpactSound != null) {
+                            compatibility.playSound(world, position.getBlockPosX(), position.getBlockPosY(), position.getBlockPosZ(), 
+                                    materialImpactSound.getSound(), materialImpactSound.getVolume(), 1f);
+                        }
                     }
                 };
             }
@@ -689,6 +714,9 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
 
             weapon.reloadSound = modContext.registerSound(this.reloadSound);
             weapon.reloadIterationSound = modContext.registerSound(this.reloadIterationSound);
+            weapon.inspectSound = modContext.registerSound(this.inspectSound);
+            weapon.drawSound = modContext.registerSound(this.drawSound);
+
             weapon.allReloadIterationsCompletedSound = modContext.registerSound(this.allReloadIterationsCompletedSound);
             weapon.unloadSound = modContext.registerSound(this.unloadSound);
             weapon.silencedShootSound = modContext.registerSound(this.silencedShootSound);
@@ -771,6 +799,8 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
     private CompatibleSound silencedShootSound;
     private CompatibleSound reloadSound;
     private CompatibleSound reloadIterationSound;
+    private CompatibleSound inspectSound;
+    private CompatibleSound drawSound;
     private CompatibleSound allReloadIterationsCompletedSound;
     private CompatibleSound unloadSound;
     private CompatibleSound ejectSpentRoundSound;
@@ -816,6 +846,14 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
 
     public CompatibleSound getReloadIterationSound() {
         return reloadIterationSound;
+    }
+    
+    public CompatibleSound getInspectSound() {
+        return inspectSound;
+    }
+    
+    public CompatibleSound getDrawSound() {
+        return drawSound;
     }
     
     public CompatibleSound getAllReloadIterationsCompletedSound() {
@@ -1073,6 +1111,10 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
 
     public long getTotalUnloadingDuration() {
         return builder.renderer.getTotalUnloadingDuration();
+    }
+    
+    public long getTotalDrawingDuration() {
+        return builder.renderer.getTotalDrawingDuration();
     }
 
     public boolean hasRecoilPositioning() {

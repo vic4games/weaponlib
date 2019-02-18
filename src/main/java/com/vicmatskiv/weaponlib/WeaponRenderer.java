@@ -26,17 +26,18 @@ import com.vicmatskiv.weaponlib.animation.MultipartTransition;
 import com.vicmatskiv.weaponlib.animation.MultipartTransitionProvider;
 import com.vicmatskiv.weaponlib.animation.Transition;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponRenderer;
+import com.vicmatskiv.weaponlib.compatibility.Interceptors;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 
 public class WeaponRenderer extends CompatibleWeaponRenderer {
 
 	private static final Logger logger = LogManager.getLogger(WeaponRenderer.class);
-
 
 	private static final float DEFAULT_RANDOMIZING_RATE = 0.33f;
 	private static final float DEFAULT_RANDOMIZING_FIRING_RATE = 20;
@@ -68,43 +69,66 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		private Consumer<RenderContext<RenderableState>> thirdPersonPositioning;
 
 		private Consumer<RenderContext<RenderableState>> firstPersonPositioning;
+		private Consumer<RenderContext<RenderableState>> firstPersonPositioningProning;
 		private Consumer<RenderContext<RenderableState>> firstPersonPositioningZooming;
 		private Consumer<RenderContext<RenderableState>> firstPersonPositioningRunning;
 		private Consumer<RenderContext<RenderableState>> firstPersonPositioningModifying;
 		private Consumer<RenderContext<RenderableState>> firstPersonPositioningRecoiled;
+		private Consumer<RenderContext<RenderableState>> firstPersonPositioningProningRecoiled;
 		private Consumer<RenderContext<RenderableState>> firstPersonPositioningShooting;
+	    private Consumer<RenderContext<RenderableState>> firstPersonPositioningProningShooting;
+
 		private Consumer<RenderContext<RenderableState>> firstPersonPositioningZoomingRecoiled;
 		private Consumer<RenderContext<RenderableState>> firstPersonPositioningZoomingShooting;
 		private Consumer<RenderContext<RenderableState>> firstPersonPositioningLoadIterationCompleted;
 
 		private Consumer<RenderContext<RenderableState>> firstPersonLeftHandPositioning;
+		private Consumer<RenderContext<RenderableState>> firstPersonLeftHandPositioningProning;
 		private Consumer<RenderContext<RenderableState>> firstPersonLeftHandPositioningZooming;
 		private Consumer<RenderContext<RenderableState>> firstPersonLeftHandPositioningRunning;
 		private Consumer<RenderContext<RenderableState>> firstPersonLeftHandPositioningModifying;
 		private Consumer<RenderContext<RenderableState>> firstPersonLeftHandPositioningRecoiled;
+		private Consumer<RenderContext<RenderableState>> firstPersonLeftHandPositioningProningRecoiled;
 		private Consumer<RenderContext<RenderableState>> firstPersonLeftHandPositioningShooting;
+		private Consumer<RenderContext<RenderableState>> firstPersonLeftHandPositioningProningShooting;
 		private Consumer<RenderContext<RenderableState>> firstPersonLeftHandPositioningLoadIterationCompleted;
 
 		private Consumer<RenderContext<RenderableState>> firstPersonRightHandPositioning;
+		private Consumer<RenderContext<RenderableState>> firstPersonRightHandPositioningProning;
 		private Consumer<RenderContext<RenderableState>> firstPersonRightHandPositioningZooming;
 		private Consumer<RenderContext<RenderableState>> firstPersonRightHandPositioningRunning;
 		private Consumer<RenderContext<RenderableState>> firstPersonRightHandPositioningModifying;
 		private Consumer<RenderContext<RenderableState>> firstPersonRightHandPositioningRecoiled;
+		private Consumer<RenderContext<RenderableState>> firstPersonRightHandPositioningProningRecoiled;
 		private Consumer<RenderContext<RenderableState>> firstPersonRightHandPositioningShooting;
+	    private Consumer<RenderContext<RenderableState>> firstPersonRightHandPositioningProningShooting;
+
 	    private Consumer<RenderContext<RenderableState>> firstPersonRightHandPositioningLoadIterationCompleted;
 
 		private List<Transition<RenderContext<RenderableState>>> firstPersonPositioningReloading;
 		private List<Transition<RenderContext<RenderableState>>> firstPersonLeftHandPositioningReloading;
 		private List<Transition<RenderContext<RenderableState>>> firstPersonRightHandPositioningReloading;
 		
+	    private List<Transition<RenderContext<RenderableState>>> thirdPersonPositioningReloading;
+	    private List<Transition<RenderContext<RenderableState>>> thirdPersonLeftHandPositioningReloading;
+	    private List<Transition<RenderContext<RenderableState>>> thirdPersonRightHandPositioningReloading;
+	        
 	    private List<Transition<RenderContext<RenderableState>>> firstPersonPositioningInspecting;
 	    private List<Transition<RenderContext<RenderableState>>> firstPersonLeftHandPositioningInspecting;
 	    private List<Transition<RenderContext<RenderableState>>> firstPersonRightHandPositioningInspecting;
+	    
+	    private List<Transition<RenderContext<RenderableState>>> firstPersonPositioningDrawing;
+        private List<Transition<RenderContext<RenderableState>>> firstPersonLeftHandPositioningDrawing;
+        private List<Transition<RenderContext<RenderableState>>> firstPersonRightHandPositioningDrawing;
 
 		private List<Transition<RenderContext<RenderableState>>> firstPersonPositioningUnloading;
 		private List<Transition<RenderContext<RenderableState>>> firstPersonLeftHandPositioningUnloading;
 		private List<Transition<RenderContext<RenderableState>>> firstPersonRightHandPositioningUnloading;
 		
+	    private List<Transition<RenderContext<RenderableState>>> thirdPersonPositioningUnloading;
+	    private List<Transition<RenderContext<RenderableState>>> thirdPersonLeftHandPositioningUnloading;
+	    private List<Transition<RenderContext<RenderableState>>> thirdPersonRightHandPositioningUnloading;
+	        
 		private List<Transition<RenderContext<RenderableState>>> firstPersonPositioningLoadIteration;
         private List<Transition<RenderContext<RenderableState>>> firstPersonLeftHandPositioningLoadIteration;
         private List<Transition<RenderContext<RenderableState>>> firstPersonRightHandPositioningLoadIteration;
@@ -115,6 +139,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 
 		private long totalReloadingDuration;
 		private long totalUnloadingDuration;
+		private long totalDrawingDuration;
 		private long totalLoadIterationDuration;
 
 		private String modId;
@@ -134,14 +159,22 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		private float firingRandomizingAmplitude = DEFAULT_FIRING_RANDOMIZING_AMPLITUDE;
 
 		private LinkedHashMap<Part, Consumer<RenderContext<RenderableState>>> firstPersonCustomPositioning = new LinkedHashMap<>();
+	    private LinkedHashMap<Part, Consumer<RenderContext<RenderableState>>> firstPersonCustomPositioningProning = new LinkedHashMap<>();
+
 		private LinkedHashMap<Part, List<Transition<RenderContext<RenderableState>>>> firstPersonCustomPositioningUnloading = new LinkedHashMap<>();
 		private LinkedHashMap<Part, List<Transition<RenderContext<RenderableState>>>> firstPersonCustomPositioningReloading = new LinkedHashMap<>();
+
+	    private LinkedHashMap<Part, List<Transition<RenderContext<RenderableState>>>> thirdPersonCustomPositioningUnloading = new LinkedHashMap<>();
+	    private LinkedHashMap<Part, List<Transition<RenderContext<RenderableState>>>> thirdPersonCustomPositioningReloading = new LinkedHashMap<>();
+		
 	    private LinkedHashMap<Part, List<Transition<RenderContext<RenderableState>>>> firstPersonCustomPositioningLoadIteration = new LinkedHashMap<>();
         private LinkedHashMap<Part, List<Transition<RenderContext<RenderableState>>>> firstPersonCustomPositioningLoadIterationsCompleted = new LinkedHashMap<>();
         private LinkedHashMap<Part, List<Transition<RenderContext<RenderableState>>>> firstPersonCustomPositioningInspecting = new LinkedHashMap<>();
+        private LinkedHashMap<Part, List<Transition<RenderContext<RenderableState>>>> firstPersonCustomPositioningDrawing = new LinkedHashMap<>();
 
 		private LinkedHashMap<Part, Consumer<RenderContext<RenderableState>>> firstPersonCustomPositioningRecoiled = new LinkedHashMap<>();
-		private LinkedHashMap<Part, Consumer<RenderContext<RenderableState>>> firstPersonCustomPositioningZoomingRecoiled = new LinkedHashMap<>();
+		private LinkedHashMap<Part, Consumer<RenderContext<RenderableState>>> firstPersonCustomPositioningProningRecoiled = new LinkedHashMap<>();
+        private LinkedHashMap<Part, Consumer<RenderContext<RenderableState>>> firstPersonCustomPositioningZoomingRecoiled = new LinkedHashMap<>();
 		private LinkedHashMap<Part, Consumer<RenderContext<RenderableState>>> firstPersonCustomPositioningZoomingShooting = new LinkedHashMap<>();
 	    private LinkedHashMap<Part, Consumer<RenderContext<RenderableState>>> firstPersonCustomPositioningLoadIterationCompleted = new LinkedHashMap<>();
 
@@ -253,6 +286,11 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			this.firstPersonPositioning = firstPersonPositioning;
 			return this;
 		}
+		
+		public Builder withFirstPersonPositioningProning(Consumer<RenderContext<RenderableState>> firstPersonPositioningProning) {
+		    this.firstPersonPositioningProning = firstPersonPositioningProning;
+		    return this;
+		}
 
 		public Builder withFirstPersonPositioningRunning(Consumer<RenderContext<RenderableState>> firstPersonPositioningRunning) {
 			this.firstPersonPositioningRunning = firstPersonPositioningRunning;
@@ -269,10 +307,20 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			this.firstPersonPositioningRecoiled = firstPersonPositioningRecoiled;
 			return this;
 		}
+		
+		public Builder withFirstPersonPositioningProningRecoiled(Consumer<RenderContext<RenderableState>> firstPersonPositioningProningRecoiled) {
+		    this.firstPersonPositioningProningRecoiled = firstPersonPositioningProningRecoiled;
+		    return this;
+		}
 
 		public Builder withFirstPersonPositioningShooting(Consumer<RenderContext<RenderableState>> firstPersonPositioningShooting) {
 			this.firstPersonPositioningShooting = firstPersonPositioningShooting;
 			return this;
+		}
+
+		public Builder withFirstPersonPositioningProningShooting(Consumer<RenderContext<RenderableState>> firstPersonPositioningProningShooting) {
+		    this.firstPersonPositioningProningShooting = firstPersonPositioningProningShooting;
+		    return this;
 		}
 
 		public Builder withFirstPersonPositioningZoomingRecoiled(Consumer<RenderContext<RenderableState>> firstPersonPositioningZoomingRecoiled) {
@@ -303,8 +351,26 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		}
 		
 		@SafeVarargs
+        public final Builder withThirdPersonPositioningReloading(Transition<RenderContext<RenderableState>> ...transitions) {
+            this.thirdPersonPositioningReloading = Arrays.asList(transitions);
+            return this;
+        }
+
+        @SafeVarargs
+        public final Builder withThirdPersonPositioningUnloading(Transition<RenderContext<RenderableState>> ...transitions) {
+            this.thirdPersonPositioningUnloading = Arrays.asList(transitions);
+            return this;
+        }
+		
+		@SafeVarargs
         public final Builder withFirstPersonPositioningInspecting(Transition<RenderContext<RenderableState>> ...transitions) {
             this.firstPersonPositioningInspecting = Arrays.asList(transitions);
+            return this;
+        }
+		
+		@SafeVarargs
+        public final Builder withFirstPersonPositioningDrawing(Transition<RenderContext<RenderableState>> ...transitions) {
+            this.firstPersonPositioningDrawing = Arrays.asList(transitions);
             return this;
         }
 		
@@ -340,6 +406,15 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			this.firstPersonRightHandPositioning = rightHand;
 			return this;
 		}
+		
+		public Builder withFirstPersonHandPositioningProning(
+		        Consumer<RenderContext<RenderableState>> leftHand,
+		        Consumer<RenderContext<RenderableState>> rightHand)
+		{
+		    this.firstPersonLeftHandPositioningProning = leftHand;
+		    this.firstPersonRightHandPositioningProning = rightHand;
+		    return this;
+		}
 
 		public Builder withFirstPersonHandPositioningRunning(
 				Consumer<RenderContext<RenderableState>> leftHand,
@@ -367,6 +442,15 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			this.firstPersonRightHandPositioningRecoiled = rightHand;
 			return this;
 		}
+		
+		public Builder withFirstPersonHandPositioningProningRecoiled(
+		        Consumer<RenderContext<RenderableState>> leftHand,
+		        Consumer<RenderContext<RenderableState>> rightHand)
+		{
+		    this.firstPersonLeftHandPositioningProningRecoiled = leftHand;
+		    this.firstPersonRightHandPositioningProningRecoiled = rightHand;
+		    return this;
+		}
 
 		public Builder withFirstPersonHandPositioningShooting(
 				Consumer<RenderContext<RenderableState>> leftHand,
@@ -375,6 +459,15 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			this.firstPersonLeftHandPositioningShooting = leftHand;
 			this.firstPersonRightHandPositioningShooting = rightHand;
 			return this;
+		}
+		
+		public Builder withFirstPersonHandPositioningProningShooting(
+		        Consumer<RenderContext<RenderableState>> leftHand,
+		        Consumer<RenderContext<RenderableState>> rightHand)
+		{
+		    this.firstPersonLeftHandPositioningProningShooting = leftHand;
+		    this.firstPersonRightHandPositioningProningShooting = rightHand;
+		    return this;
 		}
 		
 		public Builder withFirstPersonHandPositioningLoadIterationCompleted(
@@ -393,10 +486,22 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		}
 		
 		@SafeVarargs
+		public final Builder withThirdPersonLeftHandPositioningReloading(Transition<RenderContext<RenderableState>> ...transitions) {
+		    this.thirdPersonLeftHandPositioningReloading = Arrays.asList(transitions);
+		    return this;
+		}
+		
+		@SafeVarargs
         public final Builder withFirstPersonLeftHandPositioningInspecting(Transition<RenderContext<RenderableState>> ...transitions) {
             this.firstPersonLeftHandPositioningInspecting = Arrays.asList(transitions);
             return this;
         }
+		
+	      @SafeVarargs
+	        public final Builder withFirstPersonLeftHandPositioningDrawing(Transition<RenderContext<RenderableState>> ...transitions) {
+	            this.firstPersonLeftHandPositioningDrawing = Arrays.asList(transitions);
+	            return this;
+	        }
 
 		@SafeVarargs
 		public final Builder withFirstPersonLeftHandPositioningEjectSpentRound(Transition<RenderContext<RenderableState>> ...transitions) {
@@ -408,6 +513,12 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		public final Builder withFirstPersonLeftHandPositioningUnloading(Transition<RenderContext<RenderableState>> ...transitions) {
 			this.firstPersonLeftHandPositioningUnloading = Arrays.asList(transitions);
 			return this;
+		}
+		
+		@SafeVarargs
+		public final Builder withThirdPersonLeftHandPositioningUnloading(Transition<RenderContext<RenderableState>> ...transitions) {
+		    this.thirdPersonLeftHandPositioningUnloading = Arrays.asList(transitions);
+		    return this;
 		}
 		
 		@SafeVarargs
@@ -427,6 +538,12 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			this.firstPersonRightHandPositioningReloading = Arrays.asList(transitions);
 			return this;
 		}
+		
+		@SafeVarargs
+		public final Builder withThirdPersonRightHandPositioningReloading(Transition<RenderContext<RenderableState>> ...transitions) {
+		    this.thirdPersonRightHandPositioningReloading = Arrays.asList(transitions);
+		    return this;
+		}
 
 		@SafeVarargs
 		public final Builder withFirstPersonRightHandPositioningUnloading(Transition<RenderContext<RenderableState>> ...transitions) {
@@ -435,10 +552,22 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		}
 		
 		@SafeVarargs
+		public final Builder withThirdPersonRightHandPositioningUnloading(Transition<RenderContext<RenderableState>> ...transitions) {
+		    this.thirdPersonRightHandPositioningUnloading = Arrays.asList(transitions);
+		    return this;
+		}
+		
+		@SafeVarargs
         public final Builder withFirstPersonRightHandPositioningInspecting(Transition<RenderContext<RenderableState>> ...transitions) {
             this.firstPersonRightHandPositioningInspecting = Arrays.asList(transitions);
             return this;
         }
+		
+		@SafeVarargs
+		public final Builder withFirstPersonRightHandPositioningDrawing(Transition<RenderContext<RenderableState>> ...transitions) {
+		    this.firstPersonRightHandPositioningDrawing = Arrays.asList(transitions);
+		    return this;
+		}
 
 		@SafeVarargs
 		public final Builder withFirstPersonRightHandPositioningEjectSpentRound(Transition<RenderContext<RenderableState>> ...transitions) {
@@ -477,6 +606,16 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			return this;
 		}
 		
+		public Builder withFirstPersonCustomPositioningProning(Part part, Consumer<RenderContext<RenderableState>> positioning) {
+		    if(part instanceof DefaultPart) {
+		        throw new IllegalArgumentException("Part " + part + " is not custom");
+		    }
+		    if(this.firstPersonCustomPositioningProning.put(part, positioning) != null) {
+		        throw new IllegalArgumentException("Part " + part + " already added");
+		    }
+		    return this;
+		}
+		
 		public Builder withFirstPersonCustomPositioningZooming(Part part, Consumer<RenderContext<RenderableState>> positioning) {
             if(part instanceof DefaultPart) {
                 throw new IllegalArgumentException("Part " + part + " is not custom");
@@ -495,6 +634,16 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				throw new IllegalArgumentException("Part " + part + " already added");
 			}
 			return this;
+		}
+		
+		public Builder withFirstPersonPositioningCustomProningRecoiled(Part part, Consumer<RenderContext<RenderableState>> positioning) {
+		    if(part instanceof DefaultPart) {
+		        throw new IllegalArgumentException("Part " + part + " is not custom");
+		    }
+		    if(this.firstPersonCustomPositioningProningRecoiled.put(part, positioning) != null) {
+		        throw new IllegalArgumentException("Part " + part + " already added");
+		    }
+		    return this;
 		}
 
 		public Builder withFirstPersonPositioningCustomZoomingShooting(Part part, Consumer<RenderContext<RenderableState>> positioning) {
@@ -527,6 +676,16 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			return this;
 		}
 		
+	      @SafeVarargs
+	      public final Builder withThirdPersonCustomPositioningReloading(Part part, Transition<RenderContext<RenderableState>> ...transitions) {
+	          if(part instanceof DefaultPart) {
+	              throw new IllegalArgumentException("Part " + part + " is not custom");
+	          }
+
+	          this.thirdPersonCustomPositioningReloading.put(part, Arrays.asList(transitions));
+	          return this;
+	      }
+	      
 		@SafeVarargs
         public final Builder withFirstPersonCustomPositioningInspecting(Part part, Transition<RenderContext<RenderableState>> ...transitions) {
             if(part instanceof DefaultPart) {
@@ -536,6 +695,16 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
             this.firstPersonCustomPositioningInspecting.put(part, Arrays.asList(transitions));
             return this;
         }
+		
+		@SafeVarargs
+		public final Builder withFirstPersonCustomPositioningDrawing(Part part, Transition<RenderContext<RenderableState>> ...transitions) {
+		    if(part instanceof DefaultPart) {
+		        throw new IllegalArgumentException("Part " + part + " is not custom");
+		    }
+
+		    this.firstPersonCustomPositioningDrawing.put(part, Arrays.asList(transitions));
+		    return this;
+		}
 		
 		public Builder withFirstPersonCustomPositioningLoadIterationCompleted(Part part, Consumer<RenderContext<RenderableState>> positioning) {
             if(part instanceof DefaultPart) {
@@ -555,6 +724,15 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			this.firstPersonCustomPositioningUnloading.put(part, Arrays.asList(transitions));
 			return this;
 		}
+		
+		@SafeVarargs
+        public final Builder withThirdPersonCustomPositioningUnloading(Part part, Transition<RenderContext<RenderableState>> ...transitions) {
+            if(part instanceof DefaultPart) {
+                throw new IllegalArgumentException("Part " + part + " is not custom");
+            }
+            this.thirdPersonCustomPositioningUnloading.put(part, Arrays.asList(transitions));
+            return this;
+        }
 
 		@SafeVarargs
 		public final Builder withFirstPersonCustomPositioningEjectSpentRound(Part part, Transition<RenderContext<RenderableState>> ...transitions) {
@@ -619,6 +797,10 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 
 				};
 			}
+			
+			if(firstPersonPositioningProning == null) {
+			    firstPersonPositioningProning = firstPersonPositioning;
+			}
 
 			if(firstPersonPositioningZooming == null) {
 				firstPersonPositioningZooming = firstPersonPositioning;
@@ -628,9 +810,18 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				firstPersonPositioningReloading = Collections.singletonList(new Transition<>(firstPersonPositioning, DEFAULT_ANIMATION_DURATION));
 			}
 			
+	        if(thirdPersonPositioningReloading == null) {
+	            // TODO: verify
+	            thirdPersonPositioningReloading = Collections.singletonList(new Transition<>(thirdPersonPositioning, DEFAULT_ANIMATION_DURATION));
+	        }
+			
 			if(firstPersonPositioningInspecting == null) {
                 firstPersonPositioningInspecting = Collections.singletonList(new Transition<>(firstPersonPositioning, DEFAULT_ANIMATION_DURATION));
             }
+			
+			if(firstPersonPositioningDrawing == null) {
+			    firstPersonPositioningDrawing = Collections.singletonList(new Transition<>(firstPersonPositioning, DEFAULT_ANIMATION_DURATION));
+			}
 			
 			if(firstPersonPositioningLoadIteration == null) {
 			    firstPersonPositioningLoadIteration = Collections.singletonList(new Transition<>(firstPersonPositioning, DEFAULT_ANIMATION_DURATION));
@@ -650,10 +841,19 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			if(firstPersonPositioningUnloading == null) {
 				firstPersonPositioningUnloading = Collections.singletonList(new Transition<>(firstPersonPositioning, DEFAULT_ANIMATION_DURATION));
 			}
+			
+	        if(thirdPersonPositioningUnloading == null) {
+	            thirdPersonPositioningUnloading = Collections.singletonList(new Transition<>(thirdPersonPositioning, DEFAULT_ANIMATION_DURATION));
+	        }
 
 			for(Transition<RenderContext<RenderableState>> t: firstPersonPositioningUnloading) {
 				totalUnloadingDuration += t.getDuration();
 				totalUnloadingDuration += t.getPause();
+			}
+			
+			for(Transition<RenderContext<RenderableState>> t: firstPersonPositioningDrawing) {
+			    totalDrawingDuration += t.getDuration();
+			    totalDrawingDuration += t.getPause();
 			}
 			
 			if(firstPersonPositioningLoadIteration == null) {
@@ -689,6 +889,10 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		            firstPersonPositioningRecoiledOrig.accept(renderContext);
 			    };
 			}
+			
+			if(firstPersonPositioningProningRecoiled == null) {
+			    firstPersonPositioningProningRecoiled = firstPersonPositioningRecoiled;
+			}
 
 			if(firstPersonPositioningRunning == null) {
 				firstPersonPositioningRunning = firstPersonPositioning;
@@ -700,6 +904,10 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 
 			if(firstPersonPositioningShooting == null) {
 				firstPersonPositioningShooting = firstPersonPositioning;
+			}
+			
+			if(firstPersonPositioningProningShooting == null) {
+			    firstPersonPositioningProningShooting = firstPersonPositioningProning;
 			}
 
 			if(firstPersonPositioningZoomingRecoiled == null) {
@@ -727,6 +935,10 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			if(firstPersonLeftHandPositioning == null) {
 				firstPersonLeftHandPositioning = (context) -> {};
 			}
+			
+			if(firstPersonLeftHandPositioningProning == null) {
+                firstPersonLeftHandPositioningProning = firstPersonLeftHandPositioning;
+            }
 
 			if(firstPersonLeftHandPositioningReloading == null) {
 				firstPersonLeftHandPositioningReloading = firstPersonPositioningReloading.stream().map(
@@ -738,10 +950,25 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				        t -> new Transition<RenderContext<RenderableState>>(c -> {}, 0)).collect(Collectors.toList());
 			}
 			
+			if(thirdPersonLeftHandPositioningReloading == null) {
+			    thirdPersonLeftHandPositioningReloading = thirdPersonPositioningReloading.stream().map(
+			            t -> new Transition<RenderContext<RenderableState>>(c -> {}, 0)).collect(Collectors.toList());
+			}
+
+			if(thirdPersonLeftHandPositioningUnloading == null) {
+			    thirdPersonLeftHandPositioningUnloading = thirdPersonPositioningUnloading.stream().map(
+			            t -> new Transition<RenderContext<RenderableState>>(c -> {}, 0)).collect(Collectors.toList());
+			}
+			
 			if(firstPersonLeftHandPositioningInspecting == null) {
                 firstPersonLeftHandPositioningInspecting = firstPersonPositioningInspecting.stream().map(
                         t -> new Transition<RenderContext<RenderableState>>(c -> {}, 0)).collect(Collectors.toList());
             }
+			
+			if(firstPersonLeftHandPositioningDrawing == null) {
+			    firstPersonLeftHandPositioningDrawing = firstPersonPositioningDrawing.stream().map(
+			            t -> new Transition<RenderContext<RenderableState>>(c -> {}, 0)).collect(Collectors.toList());
+			}
 			
 			if(firstPersonLeftHandPositioningLoadIteration == null) {
 			    firstPersonLeftHandPositioningLoadIteration = firstPersonPositioningReloading.stream().map(
@@ -756,9 +983,17 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			if(firstPersonLeftHandPositioningRecoiled == null) {
 				firstPersonLeftHandPositioningRecoiled = firstPersonLeftHandPositioning;
 			}
+			
+			if(firstPersonLeftHandPositioningProningRecoiled == null) {
+			    firstPersonLeftHandPositioningProningRecoiled = firstPersonLeftHandPositioningProning;
+            }
 
 			if(firstPersonLeftHandPositioningShooting == null) {
 				firstPersonLeftHandPositioningShooting = firstPersonLeftHandPositioning;
+			}
+			
+			if(firstPersonLeftHandPositioningProningShooting == null) {
+			    firstPersonLeftHandPositioningProningShooting = firstPersonLeftHandPositioningProning;
 			}
 
 			if(firstPersonLeftHandPositioningZooming == null) {
@@ -782,6 +1017,10 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			if(firstPersonRightHandPositioning == null) {
 				firstPersonRightHandPositioning = (context) -> {};
 			}
+			
+			if(firstPersonRightHandPositioningProning == null) {
+			    firstPersonRightHandPositioningProning = firstPersonRightHandPositioning;
+			}
 
 			if(firstPersonRightHandPositioningReloading == null) {
 				//firstPersonRightHandPositioningReloading = Collections.singletonList(new Transition(firstPersonRightHandPositioning, DEFAULT_ANIMATION_DURATION));
@@ -794,10 +1033,26 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				        t -> new Transition<RenderContext<RenderableState>>(c -> {}, 0)).collect(Collectors.toList());
 			}
 			
+			if(thirdPersonRightHandPositioningReloading == null) {
+			    //thirdPersonRightHandPositioningReloading = Collections.singletonList(new Transition(thirdPersonRightHandPositioning, DEFAULT_ANIMATION_DURATION));
+			    thirdPersonRightHandPositioningReloading = thirdPersonPositioningReloading.stream().map(
+			            t -> new Transition<RenderContext<RenderableState>>(c -> {}, 0)).collect(Collectors.toList());
+			}
+
+			if(thirdPersonRightHandPositioningUnloading == null) {
+			    thirdPersonRightHandPositioningUnloading = thirdPersonPositioningUnloading.stream().map(
+			            t -> new Transition<RenderContext<RenderableState>>(c -> {}, 0)).collect(Collectors.toList());
+			}
+			
 			if(firstPersonRightHandPositioningInspecting == null) {
                 firstPersonRightHandPositioningInspecting = firstPersonPositioningInspecting.stream().map(
                         t -> new Transition<RenderContext<RenderableState>>(c -> {}, 0)).collect(Collectors.toList());
             }
+			
+			if(firstPersonRightHandPositioningDrawing == null) {
+			    firstPersonRightHandPositioningDrawing = firstPersonPositioningDrawing.stream().map(
+			            t -> new Transition<RenderContext<RenderableState>>(c -> {}, 0)).collect(Collectors.toList());
+			}
 			
 			if(firstPersonRightHandPositioningLoadIteration == null) {
                 firstPersonRightHandPositioningLoadIteration = firstPersonPositioningReloading.stream().map(
@@ -812,9 +1067,17 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			if(firstPersonRightHandPositioningRecoiled == null) {
 				firstPersonRightHandPositioningRecoiled = firstPersonRightHandPositioning;
 			}
+			
+			if(firstPersonRightHandPositioningProningRecoiled == null) {
+			    firstPersonRightHandPositioningProningRecoiled = firstPersonRightHandPositioningProning;
+            }
 
 			if(firstPersonRightHandPositioningShooting == null) {
 				firstPersonRightHandPositioningShooting = firstPersonRightHandPositioning;
+			}
+			
+			if(firstPersonRightHandPositioningProningShooting == null) {
+			    firstPersonRightHandPositioningProningShooting = firstPersonRightHandPositioningProning;
 			}
 
 			if(firstPersonRightHandPositioningZooming == null) {
@@ -842,17 +1105,29 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				});
 			}
 			
-	         if(!firstPersonCustomPositioning.isEmpty() && firstPersonCustomPositioningZooming.isEmpty()) {
-	                firstPersonCustomPositioning.forEach((part, pos) -> {
-	                    firstPersonCustomPositioningZooming.put(part, pos);
-	                });
-	            }
+			if(!firstPersonCustomPositioning.isEmpty() && firstPersonCustomPositioningProning.isEmpty()) {
+                firstPersonCustomPositioning.forEach((part, pos) -> {
+                    firstPersonCustomPositioningProning.put(part, pos);
+                });
+             }
+			
+			if(!firstPersonCustomPositioning.isEmpty() && firstPersonCustomPositioningZooming.isEmpty()) {
+			    firstPersonCustomPositioning.forEach((part, pos) -> {
+			        firstPersonCustomPositioningZooming.put(part, pos);
+			    });
+			}
 
 			if(!firstPersonCustomPositioning.isEmpty() && firstPersonCustomPositioningZoomingRecoiled.isEmpty()) {
 				firstPersonCustomPositioning.forEach((part, pos) -> {
 					firstPersonCustomPositioningZoomingRecoiled.put(part, pos);
 				});
 			}
+			
+			if(!firstPersonCustomPositioning.isEmpty() && firstPersonCustomPositioningProningRecoiled.isEmpty()) {
+			    firstPersonCustomPositioningRecoiled.forEach((part, pos) -> {
+                    firstPersonCustomPositioningProningRecoiled.put(part, pos);
+                });
+            }
 
 			if(!firstPersonCustomPositioning.isEmpty() && firstPersonCustomPositioningZoomingShooting.isEmpty()) {
 				firstPersonCustomPositioning.forEach((part, pos) -> {
@@ -872,6 +1147,13 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 					+ ", actual: " + t.size());
 				}
 			});
+			
+			thirdPersonCustomPositioningReloading.forEach((p, t) -> {
+			    if(t.size() != thirdPersonPositioningReloading.size()) {
+			        throw new IllegalStateException("Custom reloading transition number mismatch. Expected " + thirdPersonPositioningReloading.size()
+			        + ", actual: " + t.size());
+			    }
+			});
 
 			firstPersonCustomPositioningUnloading.forEach((p, t) -> {
 				if(t.size() != firstPersonPositioningUnloading.size()) {
@@ -880,12 +1162,26 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				}
 			});
 			
-	         firstPersonCustomPositioningInspecting.forEach((p, t) -> {
-	                if(t.size() != firstPersonPositioningInspecting.size()) {
-	                    throw new IllegalStateException("Custom inspecting transition number mismatch. Expected " + firstPersonPositioningInspecting.size()
-	                    + ", actual: " + t.size());
-	                }
-	            });
+			thirdPersonCustomPositioningUnloading.forEach((p, t) -> {
+                if(t.size() != thirdPersonPositioningUnloading.size()) {
+                    throw new IllegalStateException("Custom unloading transition number mismatch. Expected " + thirdPersonPositioningUnloading.size()
+                    + ", actual: " + t.size());
+                }
+            });
+			
+			firstPersonCustomPositioningInspecting.forEach((p, t) -> {
+			    if(t.size() != firstPersonPositioningInspecting.size()) {
+			        throw new IllegalStateException("Custom inspecting transition number mismatch. Expected " + firstPersonPositioningInspecting.size()
+			        + ", actual: " + t.size());
+			    }
+			});
+			
+			firstPersonCustomPositioningDrawing.forEach((p, t) -> {
+			    if(t.size() != firstPersonPositioningDrawing.size()) {
+			        throw new IllegalStateException("Custom Drawing transition number mismatch. Expected " + firstPersonPositioningDrawing.size()
+			        + ", actual: " + t.size());
+			    }
+			});
 
 			firstPersonCustomPositioningLoadIteration.forEach((p, t) -> {
                 if(t.size() != firstPersonPositioningLoadIteration.size()) {
@@ -927,25 +1223,26 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		public String getModId() {
 			return modId;
 		}
-
-
 	}
 
 	private Builder builder;
 
 	private Map<EntityLivingBase, MultipartRenderStateManager<RenderableState, Part, RenderContext<RenderableState>>> firstPersonStateManagers;
+    private Map<EntityLivingBase, MultipartRenderStateManager<RenderableState, Part, RenderContext<RenderableState>>> thirdPersonStateManagers;
 
-	private MultipartTransitionProvider<RenderableState, Part, RenderContext<RenderableState>> weaponTransitionProvider;
+	private MultipartTransitionProvider<RenderableState, Part, RenderContext<RenderableState>> firstPersonTransitionProvider;
+	private MultipartTransitionProvider<RenderableState, Part, RenderContext<RenderableState>> thirdPersonTransitionProvider;
+
 
 	protected ClientModContext clientModContext;
-
-
 
 	private WeaponRenderer(Builder builder) {
 		super(builder);
 		this.builder = builder;
 		this.firstPersonStateManagers = new HashMap<>();
-		this.weaponTransitionProvider = new WeaponPositionProvider();
+		this.thirdPersonStateManagers = new HashMap<>();
+		this.firstPersonTransitionProvider = new FirstPersonWeaponTransitionProvider();
+		this.thirdPersonTransitionProvider = new ThirdPersonWeaponTransitionProvider();
 	}
 
 	protected long getTotalReloadingDuration() {
@@ -955,6 +1252,10 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 	protected long getTotalUnloadingDuration() {
 		return builder.totalUnloadingDuration;
 	}
+	
+	protected long getTotalDrawingDuration() {
+        return builder.totalDrawingDuration;
+    }
 
 	protected ClientModContext getClientModContext() {
 		return clientModContext;
@@ -965,7 +1266,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 	}
 
 	@Override
-	protected StateDescriptor getStateDescriptor(EntityLivingBase player, ItemStack itemStack) {
+	protected StateDescriptor getFirstPersonStateDescriptor(EntityLivingBase player, ItemStack itemStack) {
 		float amplitude = builder.normalRandomizingAmplitude;
 		float rate = builder.normalRandomizingRate;
 		RenderableState currentState = null;
@@ -1066,6 +1367,10 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			case INSPECTING:
                 currentState = RenderableState.INSPECTING;
                 break;
+                
+			case DRAWING:
+                currentState = RenderableState.DRAWING;
+                break;
 
 			default:
 				if(player.isSprinting() && builder.firstPersonPositioningRunning != null) {
@@ -1084,20 +1389,174 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		if(currentState == null) {
 			currentState = RenderableState.NORMAL;
 		}
+		
+        
+        if(player instanceof EntityPlayer && Interceptors.isProning((EntityPlayer) player)) {
+            switch(currentState) {
+            case NORMAL:
+                currentState = RenderableState.PRONING;
+                break;
+            case RECOILED:
+                currentState = RenderableState.PRONING_RECOILED;
+                break;
+            case SHOOTING:
+                currentState = RenderableState.PRONING_SHOOTING;
+                break;
+            default:
+                break;
+            }
+        }
+
 
 		MultipartRenderStateManager<RenderableState, Part, RenderContext<RenderableState>> stateManager = firstPersonStateManagers.get(player);
 		if(stateManager == null) {
-			stateManager = new MultipartRenderStateManager<>(currentState, weaponTransitionProvider);
+			stateManager = new MultipartRenderStateManager<>(currentState, firstPersonTransitionProvider);
 			firstPersonStateManagers.put(player, stateManager);
 		} else {
 			stateManager.setState(currentState, true, currentState == RenderableState.SHOOTING
+			        || currentState == RenderableState.PRONING_SHOOTING
 					|| currentState == RenderableState.ZOOMING_SHOOTING
 					|| currentState == RenderableState.RUNNING
-					|| currentState == RenderableState.ZOOMING);
+					|| currentState == RenderableState.ZOOMING
+					|| currentState == RenderableState.DRAWING);
 		}
 
 		return new StateDescriptor(playerWeaponInstance, stateManager, rate, amplitude);
 	}
+	
+    protected StateDescriptor getThirdPersonStateDescriptor(EntityLivingBase player, ItemStack itemStack) {
+        float amplitude = builder.normalRandomizingAmplitude;
+        float rate = builder.normalRandomizingRate;
+        RenderableState currentState = null;
+
+        PlayerItemInstance<?> playerItemInstance = clientModContext.getPlayerItemInstanceRegistry().getItemInstance(player, itemStack);
+                //.getMainHandItemInstance(player, PlayerWeaponInstance.class); // TODO: cannot be always main hand, need to which hand from context
+
+        PlayerWeaponInstance playerWeaponInstance = null;
+        if(playerItemInstance == null || !(playerItemInstance instanceof PlayerWeaponInstance)
+                || playerItemInstance.getItem() != itemStack.getItem()) {
+            logger.error("Invalid or mismatching item. Player item instance: {}. Item stack: {}", playerItemInstance, itemStack);
+        } else {
+            playerWeaponInstance = (PlayerWeaponInstance) playerItemInstance;
+        }
+
+        if(playerWeaponInstance != null) {
+            AsyncWeaponState asyncWeaponState = getNextNonExpiredState(playerWeaponInstance);
+
+            switch(asyncWeaponState.getState()) {
+
+            case RECOILED:
+                if(playerWeaponInstance.isAutomaticModeEnabled() && !hasRecoilPositioning()) {
+                    if(playerWeaponInstance.isAimed()) {
+                        currentState = RenderableState.ZOOMING;
+                        rate = builder.firingRandomizingRate;
+                        amplitude = builder.zoomRandomizingAmplitude;
+                    } else {
+                        currentState = RenderableState.NORMAL;
+                        rate = builder.firingRandomizingRate;
+                        amplitude = builder.firingRandomizingAmplitude;
+                    }
+                } else if(playerWeaponInstance.isAimed()) {
+                    currentState = RenderableState.ZOOMING_RECOILED;
+                    amplitude = builder.zoomRandomizingAmplitude;
+                } else {
+                    currentState = RenderableState.RECOILED;
+                }
+
+                break;
+
+            case PAUSED:
+                if(playerWeaponInstance.isAutomaticModeEnabled() && !hasRecoilPositioning()) {
+
+                    boolean isLongPaused = System.currentTimeMillis() - asyncWeaponState.getTimestamp() > (50f / playerWeaponInstance.getFireRate())
+                            && asyncWeaponState.isInfinite();
+
+                    if(playerWeaponInstance.isAimed()) {
+                        currentState = RenderableState.ZOOMING;
+                        if(!isLongPaused) {
+                            rate = builder.firingRandomizingRate;
+                        }
+                        amplitude = builder.zoomRandomizingAmplitude;
+                    } else {
+                        currentState = RenderableState.NORMAL;
+                        if(!isLongPaused) {
+                            rate = builder.firingRandomizingRate;
+                            amplitude = builder.firingRandomizingAmplitude;
+                        }
+                    }
+                } else if(playerWeaponInstance.isAimed()) {
+                    currentState = RenderableState.ZOOMING_SHOOTING;
+                    //rate = builder.firingRandomizingRate;
+                    amplitude = builder.zoomRandomizingAmplitude;
+                } else {
+                    currentState = RenderableState.SHOOTING;
+                }
+
+                break;
+
+            case UNLOAD_PREPARING: case UNLOAD_REQUESTED: case UNLOAD:
+                currentState = RenderableState.UNLOADING;
+                break;
+
+            case LOAD:
+                currentState = RenderableState.RELOADING;
+                break;
+
+            case LOAD_ITERATION:
+                currentState = RenderableState.LOAD_ITERATION;
+                break;
+                
+            case LOAD_ITERATION_COMPLETED:
+                currentState = RenderableState.LOAD_ITERATION_COMPLETED;
+                break;
+                
+            case ALL_LOAD_ITERATIONS_COMPLETED:
+                currentState = RenderableState.ALL_LOAD_ITERATIONS_COMPLETED;
+                break;
+                
+            case EJECTING:
+                currentState = RenderableState.EJECT_SPENT_ROUND;
+                break;
+
+            case MODIFYING: case MODIFYING_REQUESTED: case NEXT_ATTACHMENT: case NEXT_ATTACHMENT_REQUESTED:
+                currentState = RenderableState.MODIFYING;
+                break;
+                
+            case INSPECTING:
+                currentState = RenderableState.INSPECTING;
+                break;
+
+            default:
+                if(player.isSprinting() && builder.firstPersonPositioningRunning != null) {
+                    currentState = RenderableState.RUNNING;
+                } else if(playerWeaponInstance.isAimed()) {
+                    currentState = RenderableState.ZOOMING;
+                    rate = builder.zoomRandomizingRate;
+                    amplitude = builder.zoomRandomizingAmplitude;
+                }
+            }
+
+
+            //logger.trace("Rendering state {} created from {}", currentState, asyncWeaponState.getState());
+        }
+
+        if(currentState == null) {
+            currentState = RenderableState.NORMAL;
+        }
+
+        MultipartRenderStateManager<RenderableState, Part, RenderContext<RenderableState>> stateManager = thirdPersonStateManagers.get(player);
+        if(stateManager == null) {
+            stateManager = new MultipartRenderStateManager<>(currentState, thirdPersonTransitionProvider);
+            thirdPersonStateManagers.put(player, stateManager);
+        } else {
+            stateManager.setState(currentState, true, currentState == RenderableState.SHOOTING
+                    || currentState == RenderableState.ZOOMING_SHOOTING
+                    || currentState == RenderableState.RUNNING
+                    || currentState == RenderableState.ZOOMING);
+        }
+
+        return new StateDescriptor(playerWeaponInstance, stateManager, rate, amplitude);
+    }
 
 	private AsyncWeaponState getNextNonExpiredState(PlayerWeaponInstance playerWeaponState) {
 		AsyncWeaponState asyncWeaponState = null;
@@ -1194,7 +1653,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		return Collections.singletonList(mt);
 	}
 
-	private class WeaponPositionProvider implements MultipartTransitionProvider<RenderableState, Part, RenderContext<RenderableState>> {
+	private class FirstPersonWeaponTransitionProvider implements MultipartTransitionProvider<RenderableState, Part, RenderContext<RenderableState>> {
 
 		@Override
 		public List<MultipartTransition<Part, RenderContext<RenderableState>>> getTransitions(RenderableState state) {
@@ -1235,6 +1694,12 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
                         builder.firstPersonRightHandPositioningInspecting,
                         builder.firstPersonCustomPositioningInspecting
                         );
+            case DRAWING:
+                return getComplexTransition(builder.firstPersonPositioningDrawing,
+                        builder.firstPersonLeftHandPositioningDrawing,
+                        builder.firstPersonRightHandPositioningDrawing,
+                        builder.firstPersonCustomPositioningDrawing
+                        );
 			case LOAD_ITERATION_COMPLETED:
                 return getSimpleTransition(builder.firstPersonPositioningLoadIterationCompleted,
                         builder.firstPersonLeftHandPositioningLoadIterationCompleted,
@@ -1253,12 +1718,24 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 						builder.firstPersonRightHandPositioningRecoiled,
 						builder.firstPersonCustomPositioningRecoiled,
 						builder.recoilAnimationDuration);
+            case PRONING_RECOILED:
+                return getSimpleTransition(builder.firstPersonPositioningProningRecoiled,
+                        builder.firstPersonLeftHandPositioningProningRecoiled,
+                        builder.firstPersonRightHandPositioningProningRecoiled,
+                        builder.firstPersonCustomPositioningProningRecoiled,
+                        builder.recoilAnimationDuration);
 			case SHOOTING:
 				return getSimpleTransition(builder.firstPersonPositioningShooting,
 						builder.firstPersonLeftHandPositioningShooting,
 						builder.firstPersonRightHandPositioningShooting,
 						builder.firstPersonCustomPositioning,
 						builder.shootingAnimationDuration);
+            case PRONING_SHOOTING:
+                return getSimpleTransition(builder.firstPersonPositioningProningShooting,
+                        builder.firstPersonLeftHandPositioningProningShooting,
+                        builder.firstPersonRightHandPositioningProningShooting,
+                        builder.firstPersonCustomPositioning,
+                        builder.shootingAnimationDuration);
 			case EJECT_SPENT_ROUND:
 				return getComplexTransition(builder.firstPersonPositioningEjectSpentRound,
 						builder.firstPersonLeftHandPositioningEjectSpentRound,
@@ -1271,6 +1748,12 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 						builder.firstPersonRightHandPositioning,
 						builder.firstPersonCustomPositioning,
 						DEFAULT_ANIMATION_DURATION);
+            case PRONING:
+                return getSimpleTransition(builder.firstPersonPositioningProning,
+                        builder.firstPersonLeftHandPositioningProning,
+                        builder.firstPersonRightHandPositioningProning,
+                        builder.firstPersonCustomPositioningProning,
+                        DEFAULT_ANIMATION_DURATION);
 			case ZOOMING:
 				return getSimpleTransition(builder.firstPersonPositioningZooming,
 						builder.firstPersonLeftHandPositioningZooming,
@@ -1295,6 +1778,45 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			return null;
 		}
 	}
+	
+	private class ThirdPersonWeaponTransitionProvider implements MultipartTransitionProvider<RenderableState, Part, RenderContext<RenderableState>> {
+
+        @Override
+        public List<MultipartTransition<Part, RenderContext<RenderableState>>> getTransitions(RenderableState state) {
+            switch(state) {
+            case UNLOADING:
+                return getComplexTransition(builder.thirdPersonPositioningUnloading,
+                        builder.thirdPersonLeftHandPositioningUnloading,
+                        builder.thirdPersonRightHandPositioningUnloading,
+                        builder.thirdPersonCustomPositioningUnloading
+                        );
+            case RELOADING:
+                return getComplexTransition(builder.thirdPersonPositioningReloading,
+                        builder.thirdPersonLeftHandPositioningReloading,
+                        builder.thirdPersonRightHandPositioningReloading,
+                        builder.thirdPersonCustomPositioningReloading
+                        );
+            case NORMAL: default:
+                return getSimpleTransition(builder.thirdPersonPositioning,
+                        context -> {},
+                        context -> {},
+                        new LinkedHashMap<>(),
+                        DEFAULT_ANIMATION_DURATION);
+//            default:
+//                return getSimpleTransition(context -> {},
+//                        context -> {
+//                            //
+//                        },
+//                        context -> {
+////                            GL11.glTranslatef(0f, 0.5f, 0f);
+////                            GL11.glRotatef(30f, 0f, 0f, 1f);
+//                        },
+//                        new LinkedHashMap<>(),
+//                        DEFAULT_ANIMATION_DURATION);
+            }
+            //return null;
+        }
+    }
 
 	@Override
 	public void renderItem(ItemStack weaponItemStack, RenderContext<RenderableState> renderContext,
@@ -1417,10 +1939,10 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		GL11.glPopAttrib();
 		GL11.glPopMatrix();
 	}
-
+	
 	public boolean hasRecoilPositioning() {
-		return builder.hasRecoilPositioningDefined;
-	}
+        return builder.hasRecoilPositioningDefined;
+    }
 
     public long getTotalLoadIterationDuration() {
         return builder.totalLoadIterationDuration;

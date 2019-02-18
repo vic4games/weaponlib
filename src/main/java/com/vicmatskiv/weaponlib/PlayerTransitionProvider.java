@@ -42,9 +42,11 @@ public class PlayerTransitionProvider implements MultipartTransitionProvider<Ren
 
     private Builder builder;
 
-    public PlayerTransitionProvider(Builder builder) {
+    private PlayerTransitionProvider(Builder builder) {
         this.builder = builder;
     }
+    
+    protected PlayerTransitionProvider() {}
 
     @Override
     public List<MultipartTransition<Part, RenderContext<RenderableState>>> getTransitions(RenderableState state) {

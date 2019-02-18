@@ -21,5 +21,22 @@ public enum CompatibleEntityEquipmentSlot {
         }
         return result;
     }
+
+    public static CompatibleEntityEquipmentSlot valueOf(int i) {
+        return CompatibleEntityEquipmentSlot.values()[i];
+    }
+    
+    static CompatibleEntityEquipmentSlot valueOf(EntityEquipmentSlot slot) {
+ 
+        CompatibleEntityEquipmentSlot result = null;
+        switch(slot) {
+        case CHEST: result = CompatibleEntityEquipmentSlot.CHEST; break;
+        case HEAD: result = CompatibleEntityEquipmentSlot.HEAD; break;
+        case LEGS: result = CompatibleEntityEquipmentSlot.FEET; break;
+        default:
+            
+        }
+        return result;
+    }
 }
 

@@ -21,7 +21,9 @@ import com.vicmatskiv.weaponlib.WeaponRenderer;
 import com.vicmatskiv.weaponlib.WeaponRenderer.Builder;
 import com.vicmatskiv.weaponlib.animation.DebugPositioner;
 import com.vicmatskiv.weaponlib.animation.MultipartPositioning;
+import com.vicmatskiv.weaponlib.animation.MultipartRenderStateDescriptor;
 import com.vicmatskiv.weaponlib.animation.MultipartPositioning.Positioner;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponRenderer.StateDescriptor;
 import com.vicmatskiv.weaponlib.animation.MultipartRenderStateManager;
 
 import net.minecraft.block.state.IBlockState;
@@ -66,7 +68,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 
     private static final Map<String, ResourceLocation> ARMOR_TEXTURE_RES_MAP = Maps.<String, ResourceLocation>newHashMap();
 
-    protected static class StateDescriptor {
+    protected static class StateDescriptor implements MultipartRenderStateDescriptor<RenderableState, Part, RenderContext<RenderableState>>{
 		protected MultipartRenderStateManager<RenderableState, Part, RenderContext<RenderableState>> stateManager;
         protected float rate;
         protected float amplitude = 0.04f;
@@ -77,6 +79,10 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
             this.stateManager = stateManager;
             this.rate = rate;
             this.amplitude = amplitude;
+        }
+        @Override
+        public MultipartRenderStateManager<RenderableState, Part, RenderContext<RenderableState>> getStateManager() {
+            return stateManager;
         }
     }
 
@@ -196,7 +202,11 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 
     protected abstract ClientModContext getClientModContext();
 
-    protected abstract StateDescriptor getStateDescriptor(EntityLivingBase player, ItemStack itemStack);
+//    protected abstract StateDescriptor getStateDescriptor(EntityLivingBase player, ItemStack itemStack);
+    
+    protected abstract StateDescriptor getFirstPersonStateDescriptor(EntityLivingBase player, ItemStack itemStack);
+
+    protected abstract StateDescriptor getThirdPersonStateDescriptor(EntityLivingBase player, ItemStack itemStack);
 
     @SideOnly(Side.CLIENT)
     public void renderItem()
@@ -289,7 +299,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 
             GL11.glScaled(-1F, -1F, 1F);
 
-            StateDescriptor stateDescriptor = getStateDescriptor(player, itemStack);
+            StateDescriptor stateDescriptor = getFirstPersonStateDescriptor(player, itemStack);
             renderContext.setPlayerItemInstance(stateDescriptor.instance);
             MultipartPositioning<Part, RenderContext<RenderableState>> multipartPositioning = stateDescriptor.stateManager.nextPositioning();
 

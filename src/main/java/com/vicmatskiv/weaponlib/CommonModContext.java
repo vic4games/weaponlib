@@ -5,19 +5,17 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 import java.util.HashMap;
 import java.util.Map;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.Item;
-import net.minecraft.util.ResourceLocation;
-
 import com.vicmatskiv.weaponlib.MagazineReloadAspect.LoadPermit;
 import com.vicmatskiv.weaponlib.WeaponAttachmentAspect.ChangeAttachmentPermit;
 import com.vicmatskiv.weaponlib.WeaponAttachmentAspect.EnterAttachmentModePermit;
 import com.vicmatskiv.weaponlib.WeaponAttachmentAspect.ExitAttachmentModePermit;
 import com.vicmatskiv.weaponlib.WeaponReloadAspect.UnloadPermit;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleBlockState;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleCustomPlayerInventoryCapability;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleExposureCapability;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleExtraEntityFlags;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleMaterial;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatiblePlayerEntityTrackerProvider;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSide;
@@ -39,6 +37,11 @@ import com.vicmatskiv.weaponlib.grenade.GrenadeRenderer;
 import com.vicmatskiv.weaponlib.grenade.GrenadeState;
 import com.vicmatskiv.weaponlib.grenade.ItemGrenade;
 import com.vicmatskiv.weaponlib.grenade.PlayerGrenadeInstance;
+import com.vicmatskiv.weaponlib.inventory.EntityInventorySyncHandler;
+import com.vicmatskiv.weaponlib.inventory.EntityInventorySyncMessage;
+import com.vicmatskiv.weaponlib.inventory.GuiHandler;
+import com.vicmatskiv.weaponlib.inventory.OpenCustomInventoryGuiHandler;
+import com.vicmatskiv.weaponlib.inventory.OpenCustomPlayerInventoryGuiMessage;
 import com.vicmatskiv.weaponlib.melee.ItemMelee;
 import com.vicmatskiv.weaponlib.melee.MeleeAttachmentAspect;
 import com.vicmatskiv.weaponlib.melee.MeleeAttackAspect;
@@ -56,6 +59,11 @@ import com.vicmatskiv.weaponlib.state.Permit;
 import com.vicmatskiv.weaponlib.state.StateManager;
 import com.vicmatskiv.weaponlib.tracking.SyncPlayerEntityTrackerMessage;
 import com.vicmatskiv.weaponlib.tracking.SyncPlayerEntityTrackerMessageMessageHandler;
+
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
+import net.minecraft.util.ResourceLocation;
 
 public class CommonModContext implements ModContext {
 
@@ -84,7 +92,44 @@ public class CommonModContext implements ModContext {
         TypeRegistry.getInstance().register(SpreadableExposure.class);
     }
 
-	protected String modId;
+    static class BulletImpactSoundKey {
+        private CompatibleMaterial material;
+        private Item bulletItem;
+        
+        public BulletImpactSoundKey(CompatibleMaterial material, Item bulletItem) {
+            this.material = material;
+            this.bulletItem = bulletItem;
+        }
+        
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + ((bulletItem == null) ? 0 : bulletItem.hashCode());
+            result = prime * result + ((material == null) ? 0 : material.hashCode());
+            return result;
+        }
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            BulletImpactSoundKey other = (BulletImpactSoundKey) obj;
+            if (bulletItem != other.bulletItem) {
+                return false;
+            } if (material == null) {
+                if (other.material != null)
+                    return false;
+            } else if (!material.equals(other.material))
+                return false;
+            return true;
+        }
+    }
+    
+    protected String modId;
 
 	protected Object mod;
 	
@@ -105,7 +150,6 @@ public class CommonModContext implements ModContext {
 
 	protected PlayerItemInstanceRegistry playerItemInstanceRegistry;
 
-
 	private Map<ResourceLocation, CompatibleSound> registeredSounds = new HashMap<>();
 
 	private RecipeManager recipeManager;
@@ -121,6 +165,8 @@ public class CommonModContext implements ModContext {
     private CompatibleSound nightVisionOnSound;
     
     private CompatibleSound nightVisionOffSound;
+    
+    private Map<BulletImpactSoundKey, MaterialImpactSound> bulletImpactSoundEntries = new HashMap<>();
 
 	private int modEntityID = 256;
 
@@ -214,7 +260,13 @@ public class CommonModContext implements ModContext {
 		
 		channel.registerMessage(new EntityControlHandler(this),
                 EntityControlMessage.class, 25, CompatibleSide.SERVER);
+		
+		channel.registerMessage(new EntityInventorySyncHandler(this),
+		        EntityInventorySyncMessage.class, 26, CompatibleSide.CLIENT);
 
+		channel.registerMessage(new OpenCustomInventoryGuiHandler(this),
+		        OpenCustomPlayerInventoryGuiMessage.class, 27, CompatibleSide.SERVER);
+		
 		ServerEventHandler serverHandler = new ServerEventHandler(this, modId);
         compatibility.registerWithFmlEventBus(serverHandler);
         compatibility.registerWithEventBus(serverHandler);
@@ -226,6 +278,7 @@ public class CommonModContext implements ModContext {
 		//CompatibleEntityPropertyProvider.register(this);
 		CompatibleExposureCapability.register(this);
 		CompatibleExtraEntityFlags.register(this);
+		CompatibleCustomPlayerInventoryCapability.register(this);
 
         compatibility.registerModEntity(WeaponSpawnEntity.class, "Ammo" + modEntityID, modEntityID++, mod, modId, 64, 3, true);
         compatibility.registerModEntity(EntityWirelessCamera.class, "wcam" + modEntityID, modEntityID++, mod, modId, 200, 3, true);
@@ -244,7 +297,10 @@ public class CommonModContext implements ModContext {
 	
 
     @Override
-    public void init(Object mod, String modid) {}
+    public void init(Object mod, String modid) {
+    
+        compatibility.registerGuiHandler(mod, new GuiHandler());
+    }
 	
 	@Override
 	public boolean isClient() {
@@ -474,4 +530,61 @@ public class CommonModContext implements ModContext {
     @Override
     public void setPlayerTransitionProvider(PlayerTransitionProvider playerTransitionProvider) {}
 
+    @Override
+    public CommonModContext setMaterialsImpactSound(String sound, Item bulletItem, float volume, CompatibleMaterial...materials) {
+        for(CompatibleMaterial material: materials) {
+            MaterialImpactSound materialImpactSound = bulletImpactSoundEntries.computeIfAbsent(
+                    new BulletImpactSoundKey(material, bulletItem), key -> new MaterialImpactSound(volume));
+            materialImpactSound.addSound(registerSound(sound.toLowerCase()));
+        }
+        return this;
+    }
+    
+    @Override
+    public CommonModContext setMaterialImpactSound(String sound, float volume, CompatibleMaterial material) {
+        MaterialImpactSound materialImpactSound = bulletImpactSoundEntries.computeIfAbsent(
+                new BulletImpactSoundKey(material, null), key -> new MaterialImpactSound(volume));
+        materialImpactSound.addSound(registerSound(sound.toLowerCase()));
+        return this;
+    }
+    
+    @Override
+    public CommonModContext setMaterialsImpactSound(String sound, float volume, CompatibleMaterial...materials) {
+        for(CompatibleMaterial material: materials) {
+            MaterialImpactSound materialImpactSound = bulletImpactSoundEntries.computeIfAbsent(
+                    new BulletImpactSoundKey(material, null), key -> new MaterialImpactSound(volume));
+            materialImpactSound.addSound(registerSound(sound.toLowerCase()));
+        }
+        return this;
+    }
+    
+    @Override
+    public CommonModContext setMaterialsImpactSound(String sound, CompatibleMaterial...materials) {
+        for(CompatibleMaterial material: materials) {
+            MaterialImpactSound materialImpactSound = bulletImpactSoundEntries.computeIfAbsent(
+                    new BulletImpactSoundKey(material, null), key -> new MaterialImpactSound(1f));
+            materialImpactSound.addSound(registerSound(sound.toLowerCase()));
+        }
+        return this;
+    }
+
+    @Override
+    public MaterialImpactSound getMaterialImpactSound(CompatibleBlockState blockState, WeaponSpawnEntity entity) {
+        MaterialImpactSound materialImpactSound = bulletImpactSoundEntries.get(
+                new BulletImpactSoundKey(blockState.getMaterial(), entity.getSpawnedItem()));
+        if(materialImpactSound == null) {
+            bulletImpactSoundEntries.get(
+                    new BulletImpactSoundKey(blockState.getMaterial(), null));
+        }
+        return materialImpactSound;
+    }
+
+
+    @Override
+    public CommonModContext setMaterialImpactSounds(CompatibleMaterial material, float volume, String... sounds) {
+        for(String sound: sounds) {
+            setMaterialImpactSound(sound, volume, material);
+        }
+        return this;
+    }
 }

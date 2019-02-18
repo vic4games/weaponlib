@@ -168,4 +168,9 @@ public class WeaponSpawnEntity extends EntityProjectile {
 	public boolean canCollideWithBlock(Block block, CompatibleBlockState metadata) {
 	    return !compatibility.isBlockPenetratableByBullets(block) && super.canCollideWithBlock(block, metadata);
 	}
+
+    public Item getSpawnedItem() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }
