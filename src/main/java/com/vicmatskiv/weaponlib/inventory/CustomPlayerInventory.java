@@ -83,8 +83,8 @@ public class CustomPlayerInventory extends CompatibleInventory implements Contex
 
         if (itemstack != null && compatibility.getStackSize(itemstack) > this.getInventoryStackLimit()) {
             if(itemstack.getItem() instanceof ItemStorage) {
-                System.out.println("Setting inventory slot " + slot + " with tag compound "
-                        + itemstack.getTagCompound());
+//                System.out.println("Setting inventory slot " + slot + " with tag compound "
+//                        + itemstack.getTagCompound());
             }
             compatibility.setStackSize(itemstack, getInventoryStackLimit());
         }
@@ -170,7 +170,7 @@ public class CustomPlayerInventory extends CompatibleInventory implements Contex
             if (slot >= 0 && slot < getSizeInventory()) {
                 inventory[slot] = compatibility.createItemStack(item);
             } else {
-                System.out.println("Could not find slot " + slot);
+//                System.out.println("Could not find slot " + slot);
             }
         }
     }

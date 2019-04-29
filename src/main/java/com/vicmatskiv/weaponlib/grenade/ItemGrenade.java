@@ -104,6 +104,7 @@ PlayerItemInstanceFactory<PlayerGrenadeInstance, GrenadeState>, AttachmentContai
         private Type type = Type.REGULAR;
         private long activeDuration;
         private Object[] craftingRecipe;
+        private boolean isDestroyingBlocks = true;
 
 
         public Builder withName(String name) {
@@ -158,6 +159,11 @@ PlayerItemInstanceFactory<PlayerGrenadeInstance, GrenadeState>, AttachmentContai
 
         public Builder withExplosionOnImpact() {
             this.explosionTimeout = EXPLODE_ON_IMPACT;
+            return this;
+        }
+        
+        public Builder withDestroyingBlocks(boolean isDestroyingBlocks) {
+            this.isDestroyingBlocks = isDestroyingBlocks;
             return this;
         }
 
@@ -532,9 +538,9 @@ PlayerItemInstanceFactory<PlayerGrenadeInstance, GrenadeState>, AttachmentContai
         return builder.fragmentCount;
     }
 
-//    public boolean isSmokeOnly() {
-//        return builder.smokeOnly;
-//    }
+    public boolean isDestroyingBlocks() {
+        return builder.isDestroyingBlocks;
+    }
     
     public Type getType() {
         return builder.type;
@@ -551,5 +557,4 @@ PlayerItemInstanceFactory<PlayerGrenadeInstance, GrenadeState>, AttachmentContai
         List<AttachmentCategory> inputCategoryList = Arrays.asList(categories);
         return c.stream().filter(e -> inputCategoryList.contains(e)).collect(Collectors.toList());
     }
-
 }

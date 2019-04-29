@@ -88,6 +88,7 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         BiFunction<PlayerWeaponInstance, EntityLivingBase, ? extends EntityShellCasing> spawnShellWith;
         private float spawnEntityDamage;
         private float spawnEntityExplosionRadius;
+        private boolean isDestroyingBlocks = true;
         private float spawnEntityGravityVelocity;
         long reloadingTimeout = Weapon.DEFAULT_RELOADING_TIMEOUT_TICKS;
         long loadIterationTimeout = Weapon.DEFAULT_LOAD_ITERATION_TIMEOUT_TICKS;
@@ -155,8 +156,8 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         private float shootSoundVolume = Weapon.DEFAULT_SHOOT_SOUND_VOLUME;
         private Object[] craftingRecipe;
         public boolean isOneClickBurstAllowed;
+        String flashTexture;
         
-
         public Builder withModId(String modId) {
             this.modId = modId;
             return this;
@@ -424,6 +425,11 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
             this.spawnEntityExplosionRadius = spawnEntityExplosionRadius;
             return this;
         }
+        
+        public Builder withDestroyingBlocks(boolean isDestroyingBlocks) {
+            this.isDestroyingBlocks = isDestroyingBlocks;
+            return this;
+        }
 
         public Builder withSpawnEntityGravityVelocity(float spawnEntityGravityVelocity) {
             this.spawnEntityGravityVelocity = spawnEntityGravityVelocity;
@@ -574,6 +580,14 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
             this.flashOffsetY = flashOffsetY;
             return this;
         }
+        
+        public Builder withFlashTexture(String flashTexture) {
+            if (modId == null) {
+                throw new IllegalStateException("ModId is not set");
+            }
+            this.flashTexture = modId + ":" + "textures/particle/" + flashTexture.toLowerCase() + ".png";
+            return this;
+        }
 
         public Builder withSmokeOffsetX(Supplier<Float> smokeOffsetX) {
             this.smokeOffsetX = smokeOffsetX;
@@ -640,7 +654,7 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
             if (spawnEntityWith == null) {
                 spawnEntityWith = (weapon, player) -> {
                     WeaponSpawnEntity bullet = new WeaponSpawnEntity(weapon, compatibility.world(player), player, spawnEntitySpeed,
-                            spawnEntityGravityVelocity, inaccuracy, spawnEntityDamage, spawnEntityExplosionRadius);
+                            spawnEntityGravityVelocity, inaccuracy, spawnEntityDamage, spawnEntityExplosionRadius, isDestroyingBlocks);
                     bullet.setPositionAndDirection();
                     return bullet;
                 };

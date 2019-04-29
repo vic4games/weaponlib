@@ -28,9 +28,11 @@ public class WeaponSpawnEntity extends EntityProjectile {
     private static final String TAG_ENTITY_ITEM = "entityItem";
     private static final String TAG_DAMAGE = "damage";
     private static final String TAG_EXPLOSION_RADIUS = "explosionRadius";
+    private static final String TAG_EXPLOSION_IS_DESTROYING_BLOCKS = "destroyBlocks";
 
 	private float explosionRadius;
 	private float damage = 6f;
+	private boolean isDestroyingBlocks;
 	private Weapon weapon;
 
 	public WeaponSpawnEntity(World world) {
@@ -45,12 +47,14 @@ public class WeaponSpawnEntity extends EntityProjectile {
 			float inaccuracy,
 			float damage,
 			float explosionRadius,
+			boolean isDestroyingBlocks,
 			Material...damageableBlockMaterials)
 	{
 		super(world, player, speed, gravityVelocity, inaccuracy);
 		this.weapon = weapon;
 		this.damage = damage;
 		this.explosionRadius = explosionRadius;
+		this.isDestroyingBlocks = isDestroyingBlocks;
 	}
 
 	@Override
@@ -75,7 +79,7 @@ public class WeaponSpawnEntity extends EntityProjectile {
 	    if(explosionRadius > 0) {
 	        Explosion.createServerSideExplosion(weapon.getModContext(), compatibility.world(this), this,
 	                position.getHitVec().getXCoord(), position.getHitVec().getYCoord(), position.getHitVec().getZCoord(),
-	                explosionRadius, false, true);
+	                explosionRadius, false, true, isDestroyingBlocks);
 	    } else if(position.getEntityHit() != null) {
 
             Projectiles projectilesConfig = weapon.getModContext().getConfigurationManager().getProjectiles();
@@ -123,6 +127,7 @@ public class WeaponSpawnEntity extends EntityProjectile {
 		buffer.writeInt(Item.getIdFromItem(weapon));
 		buffer.writeFloat(damage);
 		buffer.writeFloat(explosionRadius);
+		buffer.writeBoolean(isDestroyingBlocks);
 	}
 
 	@Override
@@ -131,6 +136,7 @@ public class WeaponSpawnEntity extends EntityProjectile {
 		weapon = (Weapon) Item.getItemById(buffer.readInt());
 		damage = buffer.readFloat();
 		explosionRadius = buffer.readFloat();
+		isDestroyingBlocks = buffer.readBoolean();
 	}
 
 	@Override
@@ -142,6 +148,7 @@ public class WeaponSpawnEntity extends EntityProjectile {
         }
         damage = tagCompound.getFloat(TAG_DAMAGE);
         explosionRadius = tagCompound.getFloat(TAG_EXPLOSION_RADIUS);
+        isDestroyingBlocks = tagCompound.getBoolean(TAG_EXPLOSION_IS_DESTROYING_BLOCKS);
     }
 
     @Override
@@ -150,6 +157,7 @@ public class WeaponSpawnEntity extends EntityProjectile {
         tagCompound.setInteger(TAG_ENTITY_ITEM, Item.getIdFromItem(weapon));
         tagCompound.setFloat(TAG_DAMAGE, damage);
         tagCompound.setFloat(TAG_EXPLOSION_RADIUS, explosionRadius);
+        tagCompound.setBoolean(TAG_EXPLOSION_IS_DESTROYING_BLOCKS, isDestroyingBlocks);
     }
 
 	Weapon getWeapon() {
@@ -161,7 +169,7 @@ public class WeaponSpawnEntity extends EntityProjectile {
 	}
 
 	int getParticleCount(float damage) {
-        return (int) (-0.11 * (damage - 30) * (damage - 30) + 100);
+        return (int) (damage - 1);
     }
 
 	@Override

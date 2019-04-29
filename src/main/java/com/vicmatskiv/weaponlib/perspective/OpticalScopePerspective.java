@@ -1,5 +1,7 @@
 package com.vicmatskiv.weaponlib.perspective;
 
+import com.vicmatskiv.weaponlib.ClientModContext;
+import com.vicmatskiv.weaponlib.ItemScope;
 import com.vicmatskiv.weaponlib.PlayerWeaponInstance;
 import com.vicmatskiv.weaponlib.RenderContext;
 import com.vicmatskiv.weaponlib.RenderableState;
@@ -15,6 +17,18 @@ public class OpticalScopePerspective extends FirstPersonPerspective<RenderableSt
     public OpticalScopePerspective() {
         this.width = DEFAULT_WIDTH;
         this.height = DEFAULT_HEIGHT;
+    }
+    
+    @Override
+    public void activate(ClientModContext modContext, PerspectiveManager manager) {
+        PlayerWeaponInstance instance = modContext.getMainHeldWeapon();
+        if(instance != null) {
+            ItemScope scope = instance.getScope();
+            if(scope.isOptical()) {
+                setSize(scope.getWidth(), scope.getHeight());
+            }
+        }
+        super.activate(modContext, manager);
     }
 
     @Override
@@ -48,6 +62,10 @@ public class OpticalScopePerspective extends FirstPersonPerspective<RenderableSt
     public void update(CompatibleRenderTickEvent event) {
         PlayerWeaponInstance instance = modContext.getMainHeldWeapon();
         if(instance != null && instance.isAimed()) {
+            ItemScope scope = instance.getScope();
+            if(scope.isOptical()) {
+                setSize(scope.getWidth(), scope.getHeight());
+            }
             super.update(event);
         }
     }

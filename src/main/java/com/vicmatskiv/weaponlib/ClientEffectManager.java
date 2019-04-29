@@ -62,7 +62,7 @@ final class ClientEffectManager implements EffectManager {
 
 	@Override
     public void spawnFlashParticle(EntityLivingBase player, float flashIntensity, float flashScale,
-			float xOffset, float yOffset) {
+			float xOffset, float yOffset, String texture) {
 	    
 	    if(compatibility.isShadersModEnabled()) {
 	        return;
@@ -100,7 +100,8 @@ final class ClientEffectManager implements EffectManager {
 				flashIntensity * compatibility.getFlashIntencityFactor(),
 				motionX,
 				motionY,
-				motionZ);
+				motionZ,
+				texture);
 
 		Minecraft.getMinecraft().effectRenderer.addEffect(flashParticle);
 	}

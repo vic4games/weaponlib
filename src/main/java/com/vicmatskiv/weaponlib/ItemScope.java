@@ -11,7 +11,9 @@ import net.minecraft.item.ItemStack;
 
 public class ItemScope extends ItemAttachment<Weapon> {
 
-    private final int DEFAULT_MAX_STACK_SIZE = 1;
+    private static final int DEFAULT_MAX_STACK_SIZE = 1;
+    private static final int DEFAULT_WIDTH = 400;
+    private static final int DEFAULT_HEIGHT = 400;
 
     public static final class Builder extends AttachmentBuilder<Weapon> {
 
@@ -20,6 +22,8 @@ public class ItemScope extends ItemAttachment<Weapon> {
         private boolean isOpticalZoom;
         private boolean hasNightVision;
         private BiConsumer<EntityLivingBase, ItemStack> viewfinderPositioning;
+        private int width = DEFAULT_WIDTH;
+        private int height = DEFAULT_HEIGHT;
 
         public Builder withZoomRange(float minZoom, float maxZoom) {
             this.minZoom = minZoom;
@@ -29,6 +33,12 @@ public class ItemScope extends ItemAttachment<Weapon> {
 
         public Builder withOpticalZoom() {
             this.isOpticalZoom = true;
+            return this;
+        }
+        
+        public Builder withViewfinderSize(int width, int height) {
+            this.width = width;
+            this.height = height;
             return this;
         }
         
@@ -99,5 +109,13 @@ public class ItemScope extends ItemAttachment<Weapon> {
 
     public boolean hasNightVision() {
         return builder.hasNightVision;
+    }
+
+    public int getWidth() {
+        return builder.width;
+    }
+    
+    public int getHeight() {
+        return builder.height;
     }
 }

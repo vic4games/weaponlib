@@ -20,16 +20,18 @@ public class ExplosionMessage implements CompatibleMessage {
     private float motionX;
     private float motionY;
     private float motionZ;
+    private boolean isDestroyingBlocks;
 
     public ExplosionMessage() {
     }
 
-    public ExplosionMessage(double xIn, double yIn, double zIn, float strengthIn,
+    public ExplosionMessage(double xIn, double yIn, double zIn, float strengthIn, boolean isDestroyingBlocks,
             List<CompatibleBlockPos> affectedBlockPositionsIn, CompatibleVec3 motion) {
         this.posX = xIn;
         this.posY = yIn;
         this.posZ = zIn;
         this.strength = strengthIn;
+        this.isDestroyingBlocks = isDestroyingBlocks;
         this.affectedBlockPositions = Lists.newArrayList(affectedBlockPositionsIn);
 
         if (motion != null) {
@@ -66,6 +68,10 @@ public class ExplosionMessage implements CompatibleMessage {
     public float getStrength() {
         return strength;
     }
+    
+    public boolean isDestroyingBlocks() {
+        return isDestroyingBlocks;
+    }
 
     public List<CompatibleBlockPos> getAffectedBlockPositions() {
         return affectedBlockPositions;
@@ -77,6 +83,7 @@ public class ExplosionMessage implements CompatibleMessage {
         this.posY = (double) buf.readFloat();
         this.posZ = (double) buf.readFloat();
         this.strength = buf.readFloat();
+        this.isDestroyingBlocks = buf.readBoolean();
         int i = buf.readInt();
         this.affectedBlockPositions = new ArrayList<>(i);
         int j = (int) this.posX;
@@ -101,6 +108,7 @@ public class ExplosionMessage implements CompatibleMessage {
         buf.writeFloat((float) this.posY);
         buf.writeFloat((float) this.posZ);
         buf.writeFloat(this.strength);
+        buf.writeBoolean(this.isDestroyingBlocks);
         buf.writeInt(this.affectedBlockPositions.size());
         int i = (int) this.posX;
         int j = (int) this.posY;

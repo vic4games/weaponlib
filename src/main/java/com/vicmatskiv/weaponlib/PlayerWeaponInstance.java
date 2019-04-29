@@ -441,7 +441,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
         return scope instanceof ItemScope && ((ItemScope) scope).isOptical();
     }
 
-    private ItemScope getScope() {
+    public ItemScope getScope() {
         ItemAttachment<Weapon> scope = getAttachmentItemWithCategory(AttachmentCategory.SCOPE);
         return scope instanceof ItemScope ? (ItemScope) scope : null;
     }

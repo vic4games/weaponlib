@@ -209,7 +209,8 @@ public class GrenadeAttackAspect implements Aspect<GrenadeState, PlayerGrenadeIn
             // explode immediately
 
             Explosion.createServerSideExplosion(modContext, compatibility.world(player), null,
-                    player.posX, player.posY, player.posZ, instance.getWeapon().getExplosionStrength(), false, true);
+                    player.posX, player.posY, player.posZ, instance.getWeapon().getExplosionStrength(), false, true,
+                    instance.getWeapon().isDestroyingBlocks());
 
         } else if(instance.getWeapon().getType() == Type.SMOKE) {
             float velocity = instance.isThrowingFar() ? instance.getWeapon().getFarVelocity() : instance.getWeapon().getVelocity();
@@ -252,6 +253,7 @@ public class GrenadeAttackAspect implements Aspect<GrenadeState, PlayerGrenadeIn
                     .withVelocity(velocity)
                     .withGravityVelocity(instance.getWeapon().getGravityVelocity())
                     .withRotationSlowdownFactor(instance.getWeapon().getRotationSlowdownFactor())
+                    .withDestroyingBlocks(instance.getWeapon().isDestroyingBlocks())
                     .build(modContext);
             logger.debug("Throwing velocity {} ", velocity);
             compatibility.spawnEntity(player, entityGrenade);

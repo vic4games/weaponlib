@@ -31,7 +31,7 @@ public class ExplosionMessageHandler implements CompatibleMessageHandler<Explosi
                         message.getStrength(),
                         message.getAffectedBlockPositions());
 
-                explosion.doExplosionB(true);
+                explosion.doExplosionB(true, message.isDestroyingBlocks());
                 player.motionX += message.getMotionX();
                 player.motionY += message.getMotionY();
                 player.motionZ += message.getMotionZ();

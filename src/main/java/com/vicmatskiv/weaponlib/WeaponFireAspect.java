@@ -205,7 +205,8 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
         Weapon weapon = (Weapon) weaponInstance.getItem();
         Random random = player.getRNG();
 
-        modContext.getChannel().getChannel().sendToServer(new TryFireMessage(true));
+        modContext.getChannel().getChannel().sendToServer(new TryFireMessage(true, 
+                oneClickBurstEnabled.test(weaponInstance) && weaponInstance.getSeriesShotCount() ==  0));
 
         boolean silencerOn = modContext.getAttachmentAspect().isSilencerOn(weaponInstance);
         
@@ -255,7 +256,8 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
                         weapon.builder.flashScale.get(),
                         weaponInstance.isAimed() ? FLASH_X_OFFSET_ZOOMED : compatibility.getEffectOffsetX()
                                 + weapon.builder.flashOffsetX.get(),
-                                compatibility.getEffectOffsetY() + weapon.builder.flashOffsetY.get());
+                                compatibility.getEffectOffsetY() + weapon.builder.flashOffsetY.get(),
+                        weapon.builder.flashTexture);
             }
 
             modContext.getEffectManager().spawnSmokeParticle(player, compatibility.getEffectOffsetX()
@@ -282,11 +284,11 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
     }
 
     //(weapon, player) 
-    public void serverFire(EntityLivingBase player, ItemStack itemStack) {
-        serverFire(player, itemStack, null);
+    public void serverFire(EntityLivingBase player, ItemStack itemStack, boolean isBurst) {
+        serverFire(player, itemStack, null, isBurst);
     }
     
-    public void serverFire(EntityLivingBase player, ItemStack itemStack, BiFunction<Weapon, EntityLivingBase, ? extends WeaponSpawnEntity> spawnEntityWith) {
+    public void serverFire(EntityLivingBase player, ItemStack itemStack, BiFunction<Weapon, EntityLivingBase, ? extends WeaponSpawnEntity> spawnEntityWith, boolean isBurst) {
         if(!(itemStack.getItem() instanceof Weapon)) {
             return;
         }
@@ -319,11 +321,30 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
                 compatibility.spawnEntity(player, entityShellCasing);
             }
         }
-
+        
+        CompatibleSound shootSound = null;
+        
         boolean silencerOn = playerWeaponInstance != null && modContext.getAttachmentAspect().isSilencerOn(playerWeaponInstance);
-        compatibility.playSoundToNearExcept(player,
-                silencerOn ? weapon.getSilencedShootSound() : weapon.getShootSound(),
-                        silencerOn ? weapon.getSilencedShootSoundVolume() : weapon.getShootSoundVolume(), 1.0F);
+        if(isBurst && weapon.builder.isOneClickBurstAllowed) {
+            
+            CompatibleSound burstShootSound = null;
+            if(silencerOn) {
+                burstShootSound = weapon.getSilencedBurstShootSound();
+            }
+            if(burstShootSound == null) {
+                burstShootSound = weapon.getBurstShootSound();
+            }
+            if(burstShootSound != null) {
+                shootSound = burstShootSound;
+            } else {
+                shootSound = silencerOn ? weapon.getSilencedShootSound() : weapon.getShootSound();
+            }
+        } else {
+            shootSound = silencerOn ? weapon.getSilencedShootSound() : weapon.getShootSound();
+        }
+
+        compatibility.playSoundToNearExcept(player, shootSound, 
+                silencerOn ? weapon.getSilencedShootSoundVolume() : weapon.getShootSoundVolume(), 1.0F);
 
     }
 

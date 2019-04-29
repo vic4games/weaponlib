@@ -15,6 +15,11 @@ public class FirstPersonPerspective<S> extends Perspective<S> {
         this.width = Minecraft.getMinecraft().displayWidth;
         this.height = Minecraft.getMinecraft().displayHeight;
     }
+    
+    protected void setSize(int width, int height) {
+        this.width = width;
+        this.height = height;
+    }
 
     @Override
     public void update(CompatibleRenderTickEvent event) {

@@ -23,10 +23,12 @@ public class FlashFX extends CompatibleParticle {
 	private int imageIndex;
 
     private static final int imagesPerRow = 8;
+    
+    private String texture;
 
 	public FlashFX(World par1World, double positionX, double positionY, double positionZ,
 			float scale, float alpha,
-			float motionX, float motionY, float motionZ)
+			float motionX, float motionY, float motionZ, String texture)
 	{
 		super(par1World, positionX, positionY, positionZ, 0.0D, 0.0D, 0.0D);
 		this.motionX = motionX;
@@ -56,6 +58,8 @@ public class FlashFX extends CompatibleParticle {
 		this.particleMaxAge = 1;
 
 		this.imageIndex = this.rand.nextInt() % imagesPerRow;
+		
+		this.texture = texture != null ? texture : FLASH_TEXTURE;
 	}
 
 	@Override
@@ -88,7 +92,7 @@ public class FlashFX extends CompatibleParticle {
     public void renderParticle(CompatibleTessellator tessellator, float partialTicks, float par3, float par4, float par5, float par6, float par7)
     {
 
-		Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation(FLASH_TEXTURE));
+		Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation(texture));
 
 		GL11.glPushMatrix();
 		GL11.glPushAttrib(GL11.GL_ENABLE_BIT);

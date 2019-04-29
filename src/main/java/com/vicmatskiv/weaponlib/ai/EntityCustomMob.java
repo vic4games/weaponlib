@@ -301,12 +301,13 @@ public class EntityCustomMob extends CompatibleEntityMob implements IRangedAttac
                         weapon.getSpawnEntityGravityVelocity(), 
                         inaccuracy, 
                         weapon.getSpawnEntityDamage(), 
-                        weapon.getSpawnEntityExplosionRadius());
+                        weapon.getSpawnEntityExplosionRadius(),
+                        false);
                 bullet.setPositionAndDirection();
                 return bullet;
             };
             
-            fireAspect.serverFire(this, itemStack, spawnEntityWith);
+            fireAspect.serverFire(this, itemStack, spawnEntityWith, false);
         } else if(itemStack.getItem() instanceof ItemGrenade) {
             float rotationPitchAdjustment = 20f;
             this.rotationPitch -= rotationPitchAdjustment;

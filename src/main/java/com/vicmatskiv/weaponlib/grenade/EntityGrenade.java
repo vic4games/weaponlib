@@ -29,12 +29,14 @@ public class EntityGrenade extends AbstractEntityGrenade {
 
     private long explosionTimeout;
     private float explosionStrength;
+    private boolean destroyBlocks;
     private long activationTimestamp;
 
     public static class Builder {
 
         private long explosionTimeout;
         private float explosionStrength;
+        private boolean isDestroyingBlocks = true;
         private long activationTimestamp;
         private EntityLivingBase thrower;
         private ItemGrenade itemGrenade;
@@ -82,6 +84,11 @@ public class EntityGrenade extends AbstractEntityGrenade {
             this.rotationSlowdownFactor = rotationSlowdownFactor;
             return this;
         }
+        
+        public Builder withDestroyingBlocks(boolean isDestroyingBlocks) {
+            this.isDestroyingBlocks = isDestroyingBlocks;
+            return this;
+        }
 
         public EntityGrenade build(ModContext modContext) {
             EntityGrenade entityGrenade = new EntityGrenade(modContext, itemGrenade, thrower, velocity,
@@ -90,6 +97,7 @@ public class EntityGrenade extends AbstractEntityGrenade {
             entityGrenade.explosionTimeout = explosionTimeout;
             entityGrenade.explosionStrength = explosionStrength;
             entityGrenade.itemGrenade = itemGrenade;
+            entityGrenade.destroyBlocks = isDestroyingBlocks;
 
             return entityGrenade;
         }
@@ -110,6 +118,7 @@ public class EntityGrenade extends AbstractEntityGrenade {
         buffer.writeLong(activationTimestamp);
         buffer.writeLong(explosionTimeout);
         buffer.writeFloat(explosionStrength);
+        buffer.writeBoolean(destroyBlocks);
     }
 
     @Override
@@ -118,6 +127,7 @@ public class EntityGrenade extends AbstractEntityGrenade {
         activationTimestamp = buffer.readLong();
         explosionTimeout = buffer.readLong();
         explosionStrength = buffer.readFloat();
+        destroyBlocks = buffer.readBoolean();
     }
 
     @Override
@@ -143,7 +153,7 @@ public class EntityGrenade extends AbstractEntityGrenade {
         logger.debug("Exploding {}", this);
 
         Explosion.createServerSideExplosion(modContext, compatibility.world(this), this,
-                this.posX, this.posY, this.posZ, explosionStrength, false, true);
+                this.posX, this.posY, this.posZ, explosionStrength, false, true, destroyBlocks);
 
         List<?> nearbyEntities = compatibility.getEntitiesWithinAABBExcludingEntity(compatibility.world(this), this,
                 compatibility.getBoundingBox(this).expand(5, 5, 5));

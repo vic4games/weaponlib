@@ -48,7 +48,7 @@ public class Explosion {
     private final CompatibleVec3 position;
 
     public static void createServerSideExplosion(ModContext modContext, World world, Entity entity, double posX, double posY, double posZ,
-            float explosionStrength, boolean isFlaming, boolean isSmoking) {
+            float explosionStrength, boolean isFlaming, boolean isSmoking, boolean isDestroyingBlocks) {
 
         Float damageCoefficient = modContext.getConfigurationManager().getExplosions().getDamage();
         explosionStrength *= damageCoefficient;
@@ -56,7 +56,7 @@ public class Explosion {
         Explosion explosion = new Explosion(modContext, world, entity, posX, posY, posZ, explosionStrength, isFlaming, isSmoking);
 
         explosion.doExplosionA();
-        explosion.doExplosionB(false);
+        explosion.doExplosionB(false, isDestroyingBlocks);
 
         if (!isSmoking) {
             explosion.clearAffectedBlockPositions();
@@ -67,6 +67,7 @@ public class Explosion {
             EntityPlayer player = (EntityPlayer) o;
             if (player.getDistanceSq(posX, posY, posZ) < 4096.0D) {
                 modContext.getChannel().getChannel().sendTo(new ExplosionMessage(posX, posY, posZ, explosionStrength,
+                        isDestroyingBlocks,
                         explosion.getAffectedBlockPositions(), explosion.getPlayerKnockbackMap().get(player)),
                         (EntityPlayerMP) player);
             }
@@ -242,17 +243,9 @@ public class Explosion {
     /**
      * Does the second part of the explosion (sound, particles, drop spawn)
      */
-    public void doExplosionB(boolean spawnParticles) {
+    public void doExplosionB(boolean spawnParticles, boolean destroyBlocks) {
         compatibility.playSound(world, explosionX, explosionY, explosionZ, modContext.getExplosionSound(), 4f,
                 (1.0F + (world.rand.nextFloat() - world.rand.nextFloat()) * 0.2F) * 0.7f);
-
-//        if (this.explosionSize >= 2.0F && this.isSmoking) {
-//            compatibility.spawnParticle(world, "hugeexplosion", this.explosionX, this.explosionY, this.explosionZ,
-//                    1.0D, 0.0D, 0.0D);
-//        } else {
-//            compatibility.spawnParticle(world, "largeexplode", this.explosionX, this.explosionY, this.explosionZ,
-//                    1.0D, 0.0D, 0.0D);
-//        }
 
         if (this.isSmoking) {
             for (CompatibleBlockPos blockpos : this.affectedBlockPositions) {
@@ -288,7 +281,7 @@ public class Explosion {
 
                 }
 
-                if (!compatibility.isAirBlock(blockState)) {
+                if (destroyBlocks && !compatibility.isAirBlock(blockState)) {
                     if (compatibility.canDropBlockFromExplosion(blockState, this)) {
                         compatibility.dropBlockAsItemWithChance(this.world, blockState, blockpos,
                                 modContext.getConfigurationManager().getExplosions().getDropBlockChance() * (1.0F / this.explosionSize), 0);
@@ -318,7 +311,7 @@ public class Explosion {
             }
         }
 
-        if (this.isFlaming) {
+        if (this.isFlaming && destroyBlocks) {
             for (CompatibleBlockPos blockpos1 : this.affectedBlockPositions) {
                 if (compatibility.isAirBlock(world, blockpos1)
                         && compatibility.isFullBlock(compatibility.getBlockBelow(world, blockpos1))
