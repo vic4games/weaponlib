@@ -913,7 +913,7 @@ public class Compatibility1_12_2 implements Compatibility {
     public void playSound(World world, double posX, double posY, double posZ, CompatibleSound sound,
             float volume, float pitch) {
         if(sound != null) {
-            world.playSound(posX, posY, posZ, sound.getSound(), SoundCategory.BLOCKS, volume, pitch, false);
+            world.playSound(null, posX, posY, posZ, sound.getSound(), SoundCategory.BLOCKS, volume, pitch);
         }
     }
 
