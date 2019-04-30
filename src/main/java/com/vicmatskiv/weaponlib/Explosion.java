@@ -244,8 +244,10 @@ public class Explosion {
      * Does the second part of the explosion (sound, particles, drop spawn)
      */
     public void doExplosionB(boolean spawnParticles, boolean destroyBlocks) {
-        compatibility.playSound(world, explosionX, explosionY, explosionZ, modContext.getExplosionSound(), 4f,
+        if(!world.isRemote) {
+            compatibility.playSound(world, explosionX, explosionY, explosionZ, modContext.getExplosionSound(), 4f,
                 (1.0F + (world.rand.nextFloat() - world.rand.nextFloat()) * 0.2F) * 0.7f);
+        }
 
         if (this.isSmoking) {
             for (CompatibleBlockPos blockpos : this.affectedBlockPositions) {
