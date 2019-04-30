@@ -1332,6 +1332,7 @@ private Optional<Field> shadersEnabledFieldOptional;
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
+    @SideOnly(Side.CLIENT)
     public <T extends TileEntity> void bindTileEntitySpecialRenderer(Class<? extends TileEntity> tileEntityClass,
             CustomTileEntityRenderer customTileEntityRenderer) {
         ClientRegistry.bindTileEntitySpecialRenderer(tileEntityClass, (TileEntitySpecialRenderer)customTileEntityRenderer);
