@@ -218,7 +218,7 @@ public class Interceptors {
 
     public static void positionItemSide(RenderLivingBase<?> livingEntityRenderer, EntityLivingBase entity,
             ItemStack itemStack, TransformType transformType, EnumHandSide handSide) {
-        if(entity instanceof EntityPlayer && isProning((EntityPlayer) entity)) { 
+        if(entity instanceof EntityPlayer /* && isProning((EntityPlayer) entity)*/) { 
             PlayerRenderer playerRenderer = renderers.get(entity);
             EntityPlayer player = (EntityPlayer) entity;
             if(playerRenderer == null || !playerRenderer.positionItemSide(player, itemStack, CompatibleTransformType.fromItemRenderType(transformType), 
