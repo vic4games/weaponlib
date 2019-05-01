@@ -8,6 +8,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.vicmatskiv.weaponlib.Weapon.ShellCasingEjectDirection;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleExtraEntityFlags;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMathHelper;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult;
 import com.vicmatskiv.weaponlib.compatibility.Interceptors;
@@ -75,7 +76,8 @@ public class EntityShellCasing extends EntityProjectile {
         float yOffset = weapon.getShellCasingVerticalOffset();
         if (thrower.isSneaking()) {
             yOffset -= 0.1f;
-        } else if (thrower instanceof EntityPlayer && Interceptors.isProning((EntityPlayer) thrower)) {
+        } else if (thrower instanceof EntityPlayer && 
+                (CompatibleExtraEntityFlags.getFlags(thrower) & CompatibleExtraEntityFlags.PRONING) != 0) {
             yOffset -= 0.0f;
         }
 

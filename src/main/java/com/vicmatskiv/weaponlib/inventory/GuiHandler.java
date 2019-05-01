@@ -7,6 +7,8 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleGuiHandler;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class GuiHandler extends CompatibleGuiHandler {
 
@@ -35,6 +37,7 @@ public class GuiHandler extends CompatibleGuiHandler {
     }
 
     @Override
+    @SideOnly(Side.CLIENT)
     public Object getClientGuiElement(int guiId, EntityPlayer player, World world, int x, int y, int z) {
         Object guiContainer = null;
         switch (guiId) {

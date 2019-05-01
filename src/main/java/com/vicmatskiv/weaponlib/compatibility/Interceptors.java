@@ -189,13 +189,21 @@ public class Interceptors {
             if(capability != null) {
                 ItemStack backpackStack = capability.getStackInSlot(0); // TODO: replace 0 with constant for backpack slot 
                 if(backpackStack != null) {
-                    GL11.glTranslatef(0f, 0f, 0f);
+                    GL11.glPushMatrix();
+                    GL11.glScalef(0.8f, 0.8f, 0.8f);
+                    GL11.glTranslatef(-0.02f, 0.69f, -0.35f);
+                    GL11.glRotatef(180f, 0, 0, 1);
                     compatibility.renderItem(player, backpackStack);
+                    GL11.glPopMatrix();
                 }
                 ItemStack vestStack = capability.getStackInSlot(1); // TODO: replace 0 with constant for backpack slot 
                 if(vestStack != null) {
-                    GL11.glTranslatef(0f, 0.15f, -0.3f);
+                    GL11.glPushMatrix();
+                    GL11.glScalef(0.8f, 0.8f, 0.8f);
+                    GL11.glTranslatef(-0.02f, 0.69f, -0.35f);
+                    GL11.glRotatef(180f, 0, 0, 1);
                     compatibility.renderItem(player, vestStack);
+                    GL11.glPopMatrix();
                 }
             }
         } else {
