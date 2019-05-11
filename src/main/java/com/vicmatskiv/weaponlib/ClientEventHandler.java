@@ -13,13 +13,11 @@ import org.apache.logging.log4j.Logger;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientTickEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientTickEvent.Phase;
-import com.vicmatskiv.weaponlib.compatibility.CompatibleCustomPlayerInventoryCapability;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleExposureCapability;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleExtraEntityFlags;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderHandEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderPlayerPreEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderTickEvent;
-import com.vicmatskiv.weaponlib.inventory.CustomPlayerInventory;
 import com.vicmatskiv.weaponlib.perspective.Perspective;
 import com.vicmatskiv.weaponlib.shader.DynamicShaderContext;
 import com.vicmatskiv.weaponlib.shader.DynamicShaderGroupManager;
@@ -30,8 +28,6 @@ import com.vicmatskiv.weaponlib.tracking.PlayerEntityTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
-import net.minecraftforge.client.MinecraftForgeClient;
 
 public class ClientEventHandler extends CompatibleClientEventHandler {
 

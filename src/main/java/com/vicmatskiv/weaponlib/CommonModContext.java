@@ -280,7 +280,7 @@ public class CommonModContext implements ModContext {
 		CompatibleExtraEntityFlags.register(this);
 		CompatibleCustomPlayerInventoryCapability.register(this);
 
-        compatibility.registerModEntity(WeaponSpawnEntity.class, "Ammo" + modEntityID, modEntityID++, mod, modId, 64, 3, true);
+        compatibility.registerModEntity(WeaponSpawnEntity.class, "Ammo" + modEntityID, modEntityID++, mod, modId, 64, 1, true);
         compatibility.registerModEntity(EntityWirelessCamera.class, "wcam" + modEntityID, modEntityID++, mod, modId, 200, 3, true);
         compatibility.registerModEntity(EntityShellCasing.class, "ShellCasing" + modEntityID, modEntityID++, mod, modId, 64, 500, true);
         compatibility.registerModEntity(EntityGrenade.class, "Grenade" + modEntityID, modEntityID++, mod, modId, 64, 10000, false);
