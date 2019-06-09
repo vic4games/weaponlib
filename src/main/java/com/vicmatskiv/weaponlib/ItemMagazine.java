@@ -150,5 +150,10 @@ Reloadable, Updatable, Part {
 	public void reloadMainHeldItemForPlayer(EntityPlayer player) {
 		modContext.getMagazineReloadAspect().reloadMainHeldItem(player);
 	}
+
+    @Override
+    public void unloadMainHeldItemForPlayer(EntityPlayer player) {
+        // TODO Auto-generated method stub
+    }
 	
 }

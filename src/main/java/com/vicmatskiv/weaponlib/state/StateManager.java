@@ -81,6 +81,11 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 //			return this;
 //		}
 		
+		public RuleBuilder<EE> withAction(PostAction<S, EE> action) {
+            this.action = (context, from, to, permit) -> action.execute(context, from, to, permit);
+            return this;
+        }
+		
 		public RuleBuilder<EE> withAction(VoidPostAction<S, EE> action) {
 			this.action = (context, from, to, permit) -> { action.execute(context, from, to, permit); return null;};
 			return this;
@@ -128,7 +133,7 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 			 * 
 			 * for example
 			 * 	rule could be auto-transitioned state
-			 * 
+			 *
 			 */
 			
 			final S effectiveFromState;

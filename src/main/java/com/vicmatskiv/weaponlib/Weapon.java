@@ -1027,6 +1027,11 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
     }
     
     @Override
+    public void unloadMainHeldItemForPlayer(EntityPlayer player) {
+        modContext.getWeaponReloadAspect().unloadMainHeldItem(player);
+    }
+    
+    @Override
     public void inspectMainHeldItemForPlayer(EntityPlayer player) {
         modContext.getWeaponReloadAspect().inspectMainHeldItem(player);
     }

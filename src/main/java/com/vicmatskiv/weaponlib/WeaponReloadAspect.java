@@ -28,6 +28,9 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 
 	private static final long ALERT_TIMEOUT = 500;
 	private static final long INSPECT_TIMEOUT = 500;
+	
+	private static final long UNLOAD_TIMEOUT = 1000;
+	private static final long AWAIT_FURTHER_LOAD_INSTRUCTIONS_TIMEOUT = 400;
 
 	static {
 		TypeRegistry.getInstance().register(UnloadPermit.class);
@@ -37,6 +40,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 
 	private static final Set<WeaponState> allowedUpdateFromStates = new HashSet<>(
 			Arrays.asList(
+			        WeaponState.AWAIT_FURTHER_LOAD_INSTRUCTIONS,
 					WeaponState.LOAD_REQUESTED,
 					WeaponState.LOAD,
 					WeaponState.LOAD_ITERATION,
@@ -93,7 +97,15 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 		System.currentTimeMillis() >= weaponInstance.getStateUpdateTimestamp()
 			+ Math.max(weaponInstance.getWeapon().builder.reloadingTimeout,
 					weaponInstance.getWeapon().getTotalReloadingDuration() * 1.1);
-
+	
+	private static Predicate<PlayerWeaponInstance> unloadTimeoutExpired = weaponInstance ->
+	    System.currentTimeMillis() >= weaponInstance.getStateUpdateTimestamp() + UNLOAD_TIMEOUT;
+	    
+	private static Predicate<PlayerWeaponInstance> awaitFurtherLoadInstructionCompleted = weaponInstance ->
+        System.currentTimeMillis() >= weaponInstance.getStateUpdateTimestamp() + AWAIT_FURTHER_LOAD_INSTRUCTIONS_TIMEOUT;
+		
+    private static Predicate<PlayerWeaponInstance> loadAfterUnloadEnabled = PlayerWeaponInstance::isLoadAfterUnloadEnabled;
+		
 	private static Predicate<PlayerWeaponInstance> unloadAnimationCompleted = weaponInstance ->
 		System.currentTimeMillis() >= weaponInstance.getStateUpdateTimestamp()
 			+ weaponInstance.getWeapon().getTotalUnloadingDuration() * 1.1;
@@ -135,7 +147,22 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 		}
 
 		this.stateManager = stateManager
-
+		        
+		.in(this)
+	         .change(WeaponState.READY).to(WeaponState.AWAIT_FURTHER_LOAD_INSTRUCTIONS)
+	         .manual()
+	         
+	    .in(this)
+             .change(WeaponState.AWAIT_FURTHER_LOAD_INSTRUCTIONS).to(WeaponState.READY)
+             .when(awaitFurtherLoadInstructionCompleted)
+             .withAction(this::noFurtherLoadInstructionsReceived)
+             .automatic()
+             
+        .in(this)
+             .change(WeaponState.AWAIT_FURTHER_LOAD_INSTRUCTIONS).to(WeaponState.READY)
+             .withAction(this::furtherLoadInstructionsReceived)
+             .manual()
+            
 		.in(this)
 			.change(WeaponState.READY).to(WeaponState.LOAD)
 			.when(supportsDirectBulletLoad.or(magazineAttached.negate()))
@@ -144,6 +171,15 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 					permitManager)
 			.withAction((c, f, t, p) -> completeClientLoad(c, (LoadPermit)p))
 			.manual()
+			
+	     .in(this)
+            .change(WeaponState.UNLOAD).to(WeaponState.LOAD)
+            .when(loadAfterUnloadEnabled.and(supportsDirectBulletLoad.or(magazineAttached.negate())))
+            .withPermit((s, es) -> new LoadPermit(s),
+                    modContext.getPlayerItemInstanceRegistry()::update,
+                    permitManager)
+            .withAction((c, f, t, p) -> completeClientLoad(c, (LoadPermit)p))
+            .manual()
 			
 	    .in(this)
             .change(WeaponState.LOAD).to(WeaponState.READY)
@@ -191,7 +227,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 
 		.in(this)
 			.change(WeaponState.UNLOAD).to(WeaponState.READY)
-			//.when(unloadAnimationCompleted)
+		    .when(loadAfterUnloadEnabled.negate().or(unloadTimeoutExpired))
 			.automatic()
 
 		.in(this)
@@ -236,9 +272,18 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 	public void reloadMainHeldItem(EntityPlayer player) {
 		PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
 		if(instance != null) {
-			stateManager.changeState(this, instance, WeaponState.LOAD, WeaponState.UNLOAD, WeaponState.ALERT);
+//			stateManager.changeState(this, instance, WeaponState.LOAD, WeaponState.ALERT);
+		    stateManager.changeState(this, instance, WeaponState.AWAIT_FURTHER_LOAD_INSTRUCTIONS, WeaponState.READY);
 		}
 	}
+	
+	public void unloadMainHeldItem(EntityPlayer player) {
+        PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
+        if(instance != null) {
+            instance.setLoadAfterUnloadEnabled(false);
+            stateManager.changeState(this, instance, WeaponState.UNLOAD, WeaponState.ALERT);
+        }
+    }
 
 	void updateMainHeldItem(EntityPlayer player) {
 		PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
@@ -375,6 +420,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 	}
 
 	private void completeClientLoad(PlayerWeaponInstance weaponInstance, LoadPermit permit) {
+	    weaponInstance.setLoadAfterUnloadEnabled(false);
 		if(permit == null) {
 			logger.error("Permit is null, something went wrong");
 			return;
@@ -386,6 +432,10 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 	}
 
 	private void completeClientUnload(PlayerWeaponInstance weaponInstance, UnloadPermit p) {
+	    if(weaponInstance.isLoadAfterUnloadEnabled()) {
+	        stateManager.changeState(this, weaponInstance, WeaponState.LOAD, WeaponState.ALERT);
+	        weaponInstance.setLoadAfterUnloadEnabled(false);
+	    }
 	}
 
 	public void inventoryFullAlert(PlayerWeaponInstance weaponInstance) {
@@ -411,4 +461,16 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 	public void completeAllLoadIterations(PlayerWeaponInstance weaponInstance) {
         compatibility.playSound(weaponInstance.getPlayer(), weaponInstance.getWeapon().getAllReloadIterationsCompletedSound(), 1.0F, 1.0F);
     }
+	
+	public void noFurtherLoadInstructionsReceived(PlayerWeaponInstance weaponInstance) {
+	    //System.out.println("-------No further load instructions received");
+	    stateManager.changeState(this, weaponInstance, WeaponState.LOAD, WeaponState.ALERT);
+	}
+	
+	public void furtherLoadInstructionsReceived(PlayerWeaponInstance weaponInstance) {
+        //System.out.println("\nFurther load instructions received!\n");
+        weaponInstance.setLoadAfterUnloadEnabled(true);
+        stateManager.changeState(this, weaponInstance, WeaponState.UNLOAD, WeaponState.LOAD, WeaponState.ALERT);
+    }
+	
 }

@@ -73,6 +73,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 	private long lastBurstEndTimestamp;
 	
 	private int loadIterationCount;
+	private boolean loadAfterUnloadEnabled;
 
 	/*
 	 * Upon adding an element to the head of the queue, all existing elements with lower priority are removed
@@ -167,6 +168,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 		laserOn = buf.readBoolean();
 		nightVisionOn = buf.readBoolean();
 		loadIterationCount = buf.readInt();
+		loadAfterUnloadEnabled = buf.readBoolean();
 	}
 
 	@Override
@@ -183,6 +185,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 		buf.writeBoolean(laserOn);
 		buf.writeBoolean(nightVisionOn);
 		buf.writeInt(loadIterationCount);
+		buf.writeBoolean(loadAfterUnloadEnabled);
 	}
 
 	private static void serializeIntArray(ByteBuf buf, int a[]) {
@@ -231,6 +234,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 		setLaserOn(otherWeaponInstance.laserOn);
 		setMaxShots(otherWeaponInstance.maxShots);
 		setLoadIterationCount(otherWeaponInstance.loadIterationCount);
+		setLoadAfterUnloadEnabled(otherWeaponInstance.loadAfterUnloadEnabled);
 	}
 
 	public Weapon getWeapon() {
@@ -247,6 +251,14 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 			markDirty();
 		}
 	}
+	
+	public boolean isLoadAfterUnloadEnabled() {
+        return loadAfterUnloadEnabled;
+    }
+	
+	public void setLoadAfterUnloadEnabled(boolean loadAfterUnloadEnabled) {
+        this.loadAfterUnloadEnabled = loadAfterUnloadEnabled;
+    }
 
 	public int getMaxShots() {
 		return maxShots;

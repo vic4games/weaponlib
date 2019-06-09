@@ -11,6 +11,7 @@ import net.minecraft.client.settings.KeyBinding;
 public class KeyBindings {
 
 	public static KeyBinding reloadKey;
+	public static KeyBinding unloadKey;
 	public static KeyBinding inspectKey;
 	public static KeyBinding attachmentKey;
 	public static KeyBinding upArrowKey;
@@ -48,6 +49,9 @@ public class KeyBindings {
 
 		reloadKey = new KeyBinding("key.reload", Keyboard.KEY_R,
 				"key.categories.weaponlib");
+		
+		unloadKey = new KeyBinding("key.unload", Keyboard.KEY_U,
+	                "key.categories.weaponlib");
 		
 		inspectKey = new KeyBinding("key.inspect", Keyboard.KEY_P,
                 "key.categories.weaponlib");
@@ -92,6 +96,7 @@ public class KeyBindings {
                 "key.categories.weaponlib");
 
 		compatibility.registerKeyBinding(reloadKey);
+		compatibility.registerKeyBinding(unloadKey);
 		compatibility.registerKeyBinding(inspectKey);
 		compatibility.registerKeyBinding(attachmentKey);
 		compatibility.registerKeyBinding(upArrowKey);

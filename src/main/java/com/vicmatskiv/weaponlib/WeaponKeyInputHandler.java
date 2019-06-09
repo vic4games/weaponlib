@@ -80,6 +80,15 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
 	        }
 	    }
 	    
+	    else if(KeyBindings.unloadKey.isPressed()) {
+            if(itemStack != null) {
+                Item item = itemStack.getItem();
+                if(item instanceof Reloadable) {
+                    ((Reloadable) item).unloadMainHeldItemForPlayer(player);
+                }
+            }
+        }
+	    
 	    else if(KeyBindings.inspectKey.isPressed()) {
             if(itemStack != null) {
                 Item item = itemStack.getItem();
