@@ -34,6 +34,8 @@ public class ItemAttachment<T> extends CompatibleItem implements ModelSource {
 	private List<CompatibleAttachment<T>> attachments = new ArrayList<>();
 
 	private List<Weapon> compatibleWeapons = new ArrayList<>();
+	
+	private List<ItemAttachment<T>> requiredAttachments = new ArrayList<>();
 
 	protected String textureName;
 
@@ -96,6 +98,14 @@ public class ItemAttachment<T> extends CompatibleItem implements ModelSource {
 			Function<ItemStack, String> informationProvider) {
 		this.informationProvider = informationProvider;
 	}
+	
+	protected void setRequiredAttachments(List<ItemAttachment<T>> requiredAttachments) {
+        this.requiredAttachments = Collections.unmodifiableList(requiredAttachments);
+    }
+	
+	public List<ItemAttachment<T>> getRequiredAttachments() {
+        return requiredAttachments;
+    }
 
 	@Deprecated
 	public ItemAttachment<T> addModel(ModelBase model, String textureName) {

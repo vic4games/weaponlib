@@ -395,6 +395,13 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 		Weapon weapon = (Weapon) weaponItemStack.getItem();
 		if (compatibility.getTagCompound(weaponItemStack) != null /* && !player.isSprinting()*/) {
 			ItemAttachment<Weapon> attachment = modContext.getAttachmentAspect().removeAttachment(AttachmentCategory.MAGAZINE, weaponInstance);
+			
+			if(attachment == null) {
+			    // Attachment can be null if it's in use and cannot be removed
+			    p.setStatus(Status.DENIED);
+			    return;
+			} 
+			
 			if(attachment instanceof ItemMagazine) {
 				ItemStack attachmentItemStack = ((ItemMagazine) attachment).createItemStack();
 				Tags.setAmmo(attachmentItemStack, weaponInstance.getAmmo());

@@ -90,7 +90,10 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
         }
 	    
 	    else if(KeyBindings.inspectKey.isPressed()) {
-            if(itemStack != null) {
+	        PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
+	        if(instance != null && instance.getState() == WeaponState.MODIFYING) {
+	            instance.setAltModificationModeEnabled(!instance.isAltMofificationModeEnabled());
+            } else if(itemStack != null) {
                 Item item = itemStack.getItem();
                 if(item instanceof Inspectable) {
                     ((Inspectable) item).inspectMainHeldItemForPlayer(player);
@@ -135,7 +138,9 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
 	    else if(KeyBindings.upArrowKey.isPressed()) {
 	        PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
 	        if(instance != null && instance.getState() == WeaponState.MODIFYING) {
-	            modContext.getAttachmentAspect().changeAttachment(AttachmentCategory.SCOPE, instance);
+	            AttachmentCategory category = instance.isAltMofificationModeEnabled() 
+	                    ? AttachmentCategory.RAILING: AttachmentCategory.SCOPE;
+	            modContext.getAttachmentAspect().changeAttachment(category, instance);
 	        }
 	    }
 

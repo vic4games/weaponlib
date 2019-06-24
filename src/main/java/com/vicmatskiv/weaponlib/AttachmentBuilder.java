@@ -58,6 +58,8 @@ public class AttachmentBuilder<T> {
 	Map<ItemAttachment<T>, CompatibleAttachment<T>> compatibleAttachments = new HashMap<>();
     private int craftingCount = 1;
     private Object[] craftingRecipe;
+    
+    private List<ItemAttachment<T>> requiredAttachments = new ArrayList<>();
 
 	public AttachmentBuilder<T> withCategory(AttachmentCategory attachmentCategory) {
 		this.attachmentCategory = attachmentCategory;
@@ -83,6 +85,14 @@ public class AttachmentBuilder<T> {
 		compatibleAttachments.put(attachment, new CompatibleAttachment<>(attachment, positioner));
 		return this;
 	}
+	
+	@SafeVarargs
+    public final AttachmentBuilder<T> withRequiredAttachments(ItemAttachment<T>...requiredAttachments) {
+        for(int i = 0; i < requiredAttachments.length; i++) {
+            this.requiredAttachments.add(requiredAttachments[i]);
+        }
+        return this;
+    }
 
 	public AttachmentBuilder<T> withModel(ModelBase model) {
 		this.model = model;
@@ -236,6 +246,7 @@ public class AttachmentBuilder<T> {
 		attachment.apply2 = apply2;
 		attachment.remove2 = remove2;
 		attachment.maxStackSize = maxStackSize;
+		attachment.setRequiredAttachments(requiredAttachments);
 		if(attachment.getInformationProvider() == null) {
 		    attachment.setInformationProvider(informationProvider);
 		}

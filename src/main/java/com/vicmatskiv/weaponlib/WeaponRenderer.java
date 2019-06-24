@@ -73,6 +73,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		private Consumer<RenderContext<RenderableState>> firstPersonPositioningZooming;
 		private Consumer<RenderContext<RenderableState>> firstPersonPositioningRunning;
 		private Consumer<RenderContext<RenderableState>> firstPersonPositioningModifying;
+		private Consumer<RenderContext<RenderableState>> firstPersonPositioningModifyingAlt;
 		private Consumer<RenderContext<RenderableState>> firstPersonPositioningRecoiled;
 		private Consumer<RenderContext<RenderableState>> firstPersonPositioningProningRecoiled;
 		private Consumer<RenderContext<RenderableState>> firstPersonPositioningShooting;
@@ -87,6 +88,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		private Consumer<RenderContext<RenderableState>> firstPersonLeftHandPositioningZooming;
 		private Consumer<RenderContext<RenderableState>> firstPersonLeftHandPositioningRunning;
 		private Consumer<RenderContext<RenderableState>> firstPersonLeftHandPositioningModifying;
+		private Consumer<RenderContext<RenderableState>> firstPersonLeftHandPositioningModifyingAlt;
 		private Consumer<RenderContext<RenderableState>> firstPersonLeftHandPositioningRecoiled;
 		private Consumer<RenderContext<RenderableState>> firstPersonLeftHandPositioningProningRecoiled;
 		private Consumer<RenderContext<RenderableState>> firstPersonLeftHandPositioningShooting;
@@ -98,6 +100,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		private Consumer<RenderContext<RenderableState>> firstPersonRightHandPositioningZooming;
 		private Consumer<RenderContext<RenderableState>> firstPersonRightHandPositioningRunning;
 		private Consumer<RenderContext<RenderableState>> firstPersonRightHandPositioningModifying;
+		private Consumer<RenderContext<RenderableState>> firstPersonRightHandPositioningModifyingAlt;
 		private Consumer<RenderContext<RenderableState>> firstPersonRightHandPositioningRecoiled;
 		private Consumer<RenderContext<RenderableState>> firstPersonRightHandPositioningProningRecoiled;
 		private Consumer<RenderContext<RenderableState>> firstPersonRightHandPositioningShooting;
@@ -396,6 +399,11 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			this.firstPersonPositioningModifying = firstPersonPositioningModifying;
 			return this;
 		}
+		
+		public Builder withFirstPersonPositioningModifyingAlt(Consumer<RenderContext<RenderableState>> firstPersonPositioningModifyingAlt) {
+            this.firstPersonPositioningModifyingAlt = firstPersonPositioningModifyingAlt;
+            return this;
+        }
 
 
 		public Builder withFirstPersonHandPositioning(
@@ -595,6 +603,15 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			this.firstPersonRightHandPositioningModifying = rightHand;
 			return this;
 		}
+		
+		public Builder withFirstPersonHandPositioningModifyingAlt(
+                Consumer<RenderContext<RenderableState>> leftHand,
+                Consumer<RenderContext<RenderableState>> rightHand)
+        {
+            this.firstPersonLeftHandPositioningModifyingAlt = leftHand;
+            this.firstPersonRightHandPositioningModifyingAlt = rightHand;
+            return this;
+        }
 
 		public Builder withFirstPersonCustomPositioning(Part part, Consumer<RenderContext<RenderableState>> positioning) {
 			if(part instanceof DefaultPart) {
@@ -902,6 +919,10 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				firstPersonPositioningModifying = firstPersonPositioning;
 			}
 
+			if(firstPersonPositioningModifyingAlt == null) {
+                firstPersonPositioningModifyingAlt = firstPersonPositioning;
+            }
+
 			if(firstPersonPositioningShooting == null) {
 				firstPersonPositioningShooting = firstPersonPositioning;
 			}
@@ -1008,6 +1029,10 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				firstPersonLeftHandPositioningModifying = firstPersonLeftHandPositioning;
 			}
 			
+			if(firstPersonLeftHandPositioningModifyingAlt == null) {
+                firstPersonLeftHandPositioningModifyingAlt = firstPersonLeftHandPositioning;
+            }
+			
 			if(firstPersonLeftHandPositioningLoadIterationCompleted == null) {
 			    firstPersonLeftHandPositioningLoadIterationCompleted = firstPersonLeftHandPositioning;
             }
@@ -1091,6 +1116,10 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			if(firstPersonRightHandPositioningModifying == null) {
 				firstPersonRightHandPositioningModifying = firstPersonRightHandPositioning;
 			}
+			
+			if(firstPersonRightHandPositioningModifyingAlt == null) {
+                firstPersonRightHandPositioningModifyingAlt = firstPersonRightHandPositioning;
+            }
 			
 			if(firstPersonRightHandPositioningLoadIterationCompleted == null) {
 			    firstPersonRightHandPositioningLoadIterationCompleted = firstPersonLeftHandPositioning;
@@ -1361,7 +1390,12 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				break;
 
 			case MODIFYING: case MODIFYING_REQUESTED: case NEXT_ATTACHMENT: case NEXT_ATTACHMENT_REQUESTED:
-				currentState = RenderableState.MODIFYING;
+			    if(playerWeaponInstance.isAltMofificationModeEnabled()) {
+			        currentState = RenderableState.MODIFYING_ALT;
+			    } else {
+			        currentState = RenderableState.MODIFYING;
+			    }
+				
 				break;
 				
 			case INSPECTING:
@@ -1664,6 +1698,12 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 						builder.firstPersonRightHandPositioningModifying,
 						builder.firstPersonCustomPositioning,
 						DEFAULT_ANIMATION_DURATION);
+			case MODIFYING_ALT:
+                return getSimpleTransition(builder.firstPersonPositioningModifyingAlt,
+                        builder.firstPersonLeftHandPositioningModifyingAlt,
+                        builder.firstPersonRightHandPositioningModifyingAlt,
+                        builder.firstPersonCustomPositioning,
+                        DEFAULT_ANIMATION_DURATION);
 			case RUNNING:
 				return getSimpleTransition(builder.firstPersonPositioningRunning,
 						builder.firstPersonLeftHandPositioningRunning,

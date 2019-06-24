@@ -71,6 +71,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 	private boolean nightVisionOn;
 	private boolean seriesResetAllowed;
 	private long lastBurstEndTimestamp;
+	private boolean altModificationModeEnabled;
 	
 	private int loadIterationCount;
 	private boolean loadAfterUnloadEnabled;
@@ -169,6 +170,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 		nightVisionOn = buf.readBoolean();
 		loadIterationCount = buf.readInt();
 		loadAfterUnloadEnabled = buf.readBoolean();
+		altModificationModeEnabled = buf.readBoolean();
 	}
 
 	@Override
@@ -186,6 +188,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 		buf.writeBoolean(nightVisionOn);
 		buf.writeInt(loadIterationCount);
 		buf.writeBoolean(loadAfterUnloadEnabled);
+		buf.writeBoolean(altModificationModeEnabled);
 	}
 
 	private static void serializeIntArray(ByteBuf buf, int a[]) {
@@ -532,4 +535,13 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 	public String toString() {
 		return getWeapon().builder.name + "[" + getUuid() + "]";
 	}
+
+
+    public boolean isAltMofificationModeEnabled() {
+        return altModificationModeEnabled;
+    }
+    
+    public void setAltModificationModeEnabled(boolean altModificationModeEnabled) {
+        this.altModificationModeEnabled = altModificationModeEnabled;
+    }
 }

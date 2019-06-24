@@ -119,9 +119,6 @@ public class CustomGui extends CompatibleGui {
 				int width = scaledResolution.getScaledWidth();
 			    int height = scaledResolution.getScaledHeight();
 
-//			    int xPos = width / 2 - BUFF_ICON_SIZE / 2;
-//				int yPos = height / 2 - BUFF_ICON_SIZE / 2;
-
 			    FontRenderer fontRender = compatibility.getFontRenderer();
 
 				mc.entityRenderer.setupOverlayRendering();
@@ -129,54 +126,42 @@ public class CustomGui extends CompatibleGui {
 				int color = 0xFFFFFF;
 				
 
-				
-//				GL11.glEnable(GL11.GL_ALPHA_TEST);
-//				GL11.glEnable(GL11.GL_STENCIL_TEST);
-//                
-//                String shieldIndicatorTexture = "weaponlib:/com/vicmatskiv/weaponlib/resources/shield-indicator.png";
-//                this.mc.renderEngine.bindTexture(new ResourceLocation(shieldIndicatorTexture));
-//                
-//                GL11.glStencilFunc(GL11.GL_ALWAYS, 1, 0xFF);
-//                GL11.glStencilOp(GL11.GL_KEEP, GL11.GL_KEEP, GL11.GL_REPLACE);
-//                GL11.glStencilMask(0xFF);
-//                GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-//                GL11.glEnable(GL11.GL_BLEND);
-//
-//                GL11.glColorMask(false, false, false, false);
-//                GL11.glDepthMask(false);
-//                GL11.glClear(GL11.GL_STENCIL_BUFFER_BIT); // Clear stencil buffer (0 by default)
-//                
-////                GL11.glColor4f(0.0F, 0.0F, 0.0F, 1.0F);
-//                drawTexturedQuadFit(15, 20, 100, 15, 0);
-//
-//                GL11.glStencilFunc(GL11.GL_EQUAL, 1, 0xFF);
-//                GL11.glStencilMask(0x00);
-//                GL11.glDepthMask(true);
-//                GL11.glColorMask(true, true, true, true);
-//
 				GL11.glPushAttrib(GL11.GL_ENABLE_BIT);
 				GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 				GL11.glDisable(GL11.GL_LIGHTING);
 		        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 				GL11.glDisable(GL11.GL_BLEND);
-//				
-//				GL11.glDisable(GL11.GL_ALPHA_TEST);
-//				drawTexturedQuadFit(15, 20, 50, 15, 0);
-
-//                GL11.glEnable(GL11.GL_ALPHA_TEST);
-//                GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-//                GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-//                GL11.glEnable(GL11.GL_BLEND);
                 
                 this.mc.renderEngine.bindTexture(new ResourceLocation(crosshair));
 
-//				if(weaponItem.isCrosshairFullScreen(itemStack))	 {
-//					drawTexturedQuadFit(0, 0, width, height, 0);
-//				} else {
-//					drawTexturedModalRect(xPos, yPos, 0, 0, BUFF_ICON_SIZE, BUFF_ICON_SIZE);
-//				}
+                if (isInAltModifyingState(weaponInstance)) {
 
-				if(isInModifyingState(weaponInstance) /*Weapon.isModifying(itemStack)*/ /*weaponItem.getState(weapon) == Weapon.STATE_MODIFYING*/) {
+                    String changeScopeMessage = compatibility.getLocalizedString(
+                            "gui.attachmentMode.changeRailing",
+                            Keyboard.getKeyName(KeyBindings.upArrowKey.getKeyCode()));
+                    fontRender.drawStringWithShadow(changeScopeMessage, width / 2 - 40, 60, color);
+
+//                    String changeBarrelRigMessage = compatibility.getLocalizedString(
+//                            "gui.attachmentMode.changeBarrelRig",
+//                            Keyboard.getKeyName(KeyBindings.leftArrowKey.getKeyCode()));
+//                    fontRender.drawStringWithShadow(changeBarrelRigMessage, 10, height / 2 - 10, color);
+//
+//                    String changeCamoMessage = compatibility.getLocalizedString(
+//                            "gui.attachmentMode.changeCamo",
+//                            Keyboard.getKeyName(KeyBindings.rightArrowKey.getKeyCode()));
+//                    fontRender.drawStringWithShadow(changeCamoMessage, width / 2 + 60, height / 2 - 20, color);
+//
+//                    String changeUnderBarrelRig = compatibility.getLocalizedString(
+//                            "gui.attachmentMode.changeUnderBarrelRig",
+//                            Keyboard.getKeyName(KeyBindings.downArrowKey.getKeyCode()));
+//                    fontRender.drawStringWithShadow(changeUnderBarrelRig, 10, height - 40, color);
+//                    
+//                    String applyLaser = compatibility.getLocalizedString(
+//                            "gui.attachmentMode.applyLaser",
+//                            Keyboard.getKeyName(KeyBindings.laserAttachmentKey.getKeyCode()));
+//                    fontRender.drawStringWithShadow(applyLaser, 150, height - 100, color);
+
+                } else if(isInModifyingState(weaponInstance) /*Weapon.isModifying(itemStack)*/ /*weaponItem.getState(weapon) == Weapon.STATE_MODIFYING*/) {
 
 				    String changeScopeMessage = compatibility.getLocalizedString(
 				            "gui.attachmentMode.changeScope",
@@ -218,16 +203,10 @@ public class CustomGui extends CompatibleGui {
 					int x = getStatusBarXPosition(width, messageText, fontRender);
 					int y = getStatusBarYPosition(height);
 
-//
-//					int stringWidth = fontRender.getStringWidth(messageText);
-//					if(stringWidth > 80 ) {
-//						x = width - stringWidth - 5;
-//					}
 
 					fontRender.drawStringWithShadow(messageText, x, y, color);
 				}
 				GL11.glPopAttrib();
-//				GL11.glDisable(GL11.GL_STENCIL_TEST);
 				event.setCanceled(true);
 			}
 		} else if(itemStack.getItem() instanceof ItemMagazine) {
@@ -251,11 +230,6 @@ public class CustomGui extends CompatibleGui {
 
 			int x = getStatusBarXPosition(width, messageText, fontRender);
 			int y = getStatusBarYPosition(height);
-
-//			int stringWidth = fontRender.getStringWidth(messageText);
-//			if(stringWidth > 80 ) {
-//				x = width - stringWidth - 5;
-//			}
 
 			fontRender.drawStringWithShadow(messageText, x, y, color);
 			event.setCanceled(true);
@@ -432,11 +406,18 @@ public class CustomGui extends CompatibleGui {
 
 
 	private boolean isInModifyingState(PlayerWeaponInstance weaponInstance) {
-		return weaponInstance.getState() == WeaponState.MODIFYING
+		return (weaponInstance.getState() == WeaponState.MODIFYING && !weaponInstance.isAltMofificationModeEnabled())
 				|| weaponInstance.getState() == WeaponState.MODIFYING_REQUESTED
 				|| weaponInstance.getState() == WeaponState.NEXT_ATTACHMENT
 				|| weaponInstance.getState() == WeaponState.NEXT_ATTACHMENT_REQUESTED;
 	}
+	
+	private boolean isInAltModifyingState(PlayerWeaponInstance weaponInstance) {
+        return (weaponInstance.getState() == WeaponState.MODIFYING && weaponInstance.isAltMofificationModeEnabled())
+                || weaponInstance.getState() == WeaponState.MODIFYING_REQUESTED
+                || weaponInstance.getState() == WeaponState.NEXT_ATTACHMENT
+                || weaponInstance.getState() == WeaponState.NEXT_ATTACHMENT_REQUESTED;
+    }
 
 	private static void drawTexturedQuadFit(double x, double y, double width, double height, double zLevel){
 		CompatibleTessellator tessellator = CompatibleTessellator.getInstance();
