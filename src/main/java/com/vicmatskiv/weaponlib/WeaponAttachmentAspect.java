@@ -96,6 +96,7 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
         System.currentTimeMillis() >= es.getStateUpdateTimestamp() + clickSpammingTimeout * 2;
 
 	private Collection<WeaponState> allowedUpdateFromStates = Arrays.asList(WeaponState.MODIFYING_REQUESTED);
+    private static final int INVENTORY_SIZE = 36;
 
 	WeaponAttachmentAspect(ModContext modContext) {
 		this.modContext = modContext;
@@ -250,6 +251,10 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 		    if(currentCompatibleAttachment.isPermanent()) {
 		        return;
 		    }
+		    
+		    if(isAttachmentInUse(currentCompatibleAttachment.getAttachment(), weaponInstance)) {
+		        return;
+		    }
 		}
 		
 
@@ -335,14 +340,18 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 		int activeIndex = selectedAttachmentIndexes[category.ordinal()];
 
 
+		boolean isCategoryRemovable = weaponInstance.getWeapon().isCategoryRemovable(category);
 		result.index = -1;
 		int offset = activeIndex + 1;
-		for(int i = 0; i < 37; i++) {
-			// i = 36 corresponds to "no attachment"
+		
+		int endIndex = isCategoryRemovable ? (INVENTORY_SIZE + 1): INVENTORY_SIZE;
+		
+		for(int i = 0; i < endIndex; i++) {
+			// i = inventorySize corresponds to "no attachment"
 			int currentIndex = i + offset;
 
-			if(currentIndex >= 36) {
-				currentIndex -= 37;
+			if(currentIndex >= INVENTORY_SIZE) {
+				currentIndex -= INVENTORY_SIZE + 1;
 			}
 
 			logger.debug("Searching for an attachment in slot {}", currentIndex);
@@ -359,7 +368,8 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 				CompatibleAttachment<Weapon> compatibleAttachment;
 				if(attachmentItemFromInventory.getCategory() == category
 						&& (compatibleAttachment = weaponInstance.getWeapon().getCompatibleAttachments().get(attachmentItemFromInventory)) != null
-						&& attachmentItemFromInventory != currentAttachment) {
+						&& attachmentItemFromInventory != currentAttachment
+						&& hasRequiredAttachments(compatibleAttachment.getAttachment(), weaponInstance)) {
 
 					result.index = currentIndex;
 					result.compatibleAttachment = compatibleAttachment;
@@ -373,6 +383,42 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 
 		return result;
 	}
+	
+	private static boolean hasRequiredAttachments(ItemAttachment<Weapon> attachmentItemFromInventory, PlayerWeaponInstance weaponInstance) {
+	    List<ItemAttachment<Weapon>> requiredAttachments = attachmentItemFromInventory.getRequiredAttachments();
+	    if(requiredAttachments.isEmpty()) {
+	        return true;
+	    }
+	    boolean result = false;
+	    for(int currentAttachmentId: weaponInstance.getActiveAttachmentIds()) {
+	        Item attachmentItem = Item.getItemById(currentAttachmentId);
+	        result = attachmentItem != null 
+	                && requiredAttachments.contains(attachmentItem);
+	        if(result) {
+	            break;
+	        }
+	    }
+	    return result;
+	}
+	
+	private static boolean isAttachmentInUse(ItemAttachment<Weapon> attachmentItem, PlayerWeaponInstance weaponInstance) {
+	    return isRequired(attachmentItem, weaponInstance);
+	}
+	
+	private static boolean isRequired(ItemAttachment<Weapon> attachmentItem, PlayerWeaponInstance weaponInstance) {
+	    boolean result = false;
+	    for(int currentAttachmentId: weaponInstance.getActiveAttachmentIds()) {
+	        Item otherAttachmentItem = Item.getItemById(currentAttachmentId);
+	        if(otherAttachmentItem instanceof ItemAttachment) {
+	            result = ((ItemAttachment<?>)otherAttachmentItem).getRequiredAttachments().contains(attachmentItem);
+	            if(result) {
+	                break;
+	            }
+	        }
+	    }
+	    return result;
+	}
+
 
 	@SuppressWarnings("unchecked")
 	/**
@@ -421,6 +467,10 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 		ItemAttachment<Weapon> currentAttachment = null;
 		if(activeAttachmentIdForThisCategory > 0) {
 			currentAttachment = (ItemAttachment<Weapon>) Item.getItemById(activeAttachmentIdForThisCategory);
+			
+			if(isAttachmentInUse(currentAttachment, weaponInstance)) {
+			    return null;
+			}
 		}
 
 		if(currentAttachment != null && currentAttachment.getRemove() != null) {

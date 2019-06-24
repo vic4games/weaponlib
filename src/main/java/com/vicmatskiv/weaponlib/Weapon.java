@@ -6,9 +6,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -157,6 +159,8 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         private Object[] craftingRecipe;
         public boolean isOneClickBurstAllowed;
         String flashTexture;
+        
+        private Set<AttachmentCategory> unremovableAttachmentCategories = new HashSet<>();
         
         public Builder withModId(String modId) {
             this.modId = modId;
@@ -448,6 +452,13 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
 
         public Builder withCompatibleBullet(ItemBullet bullet, Consumer<ModelBase> positioner) {
             compatibleAttachments.put(bullet, new CompatibleAttachment<>(bullet, positioner));
+            return this;
+        }
+        
+        public Builder withUnremovableAttachmentCategories(AttachmentCategory...categories) {
+            for(AttachmentCategory category: categories) {
+                unremovableAttachmentCategories.add(category);
+            }
             return this;
         }
 
@@ -1273,5 +1284,9 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
     
     public float getInaccuracy() {
         return builder.inaccuracy;
+    }
+
+    public boolean isCategoryRemovable(AttachmentCategory category) {
+        return !builder.unremovableAttachmentCategories.contains(category);
     }
 }
