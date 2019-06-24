@@ -49,6 +49,7 @@ import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EnumPlayerModelParts;
 import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.EnumAction;
@@ -290,8 +291,29 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
             GL11.glRotatef(110F, 1f, 0f, 0f);
             GL11.glRotatef(135F, 0f, 1f, 0f);
             GL11.glRotatef(-180F, 0f, 0f, 1f);
+            if(player instanceof EntityPlayer && !Interceptors.isProning((EntityPlayer) player)){
+                StateDescriptor thirdPersonStateDescriptor = getThirdPersonStateDescriptor(player, itemStack);
 
-            builder.getThirdPersonPositioning().accept(renderContext);
+                renderContext.setPlayerItemInstance(thirdPersonStateDescriptor.instance);
+
+                MultipartPositioning<Part, RenderContext<RenderableState>> thirdPersonMultipartPositioning = thirdPersonStateDescriptor.stateManager.nextPositioning();
+
+                renderContext.setTransitionProgress(thirdPersonMultipartPositioning.getProgress());
+
+                renderContext.setFromState(thirdPersonMultipartPositioning.getFromState(RenderableState.class));
+
+                renderContext.setToState(thirdPersonMultipartPositioning.getToState(RenderableState.class));
+
+                positioner = thirdPersonMultipartPositioning.getPositioner();
+                
+                positioner.position(Part.MAIN_ITEM, renderContext);
+                
+                if(DebugPositioner.isDebugModeEnabled()) {
+                    DebugPositioner.position(Part.MAIN_ITEM, renderContext);
+                }
+            } else {
+                builder.getThirdPersonPositioning().accept(renderContext);
+            }
             break;
         case FIRST_PERSON_RIGHT_HAND: case FIRST_PERSON_LEFT_HAND:
 

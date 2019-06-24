@@ -523,11 +523,15 @@ public class PlayerRenderer {
             RenderContext<RenderableState> renderContext = new RenderContext<>(clientModContext, player, null);
 
             positioner.position(Part.MAIN, renderContext);
-            
+            // Gun position
+//            GL11.glTranslatef(0f, 0.1f, -0f);
+//            GL11.glRotatef(5f, 1f, 0f, 0f);
             if(handSide == CompatibleEnumHandSide.LEFT) {
                 positioner.position(Part.LEFT_HAND, renderContext);
             } else if(handSide == null || handSide == CompatibleEnumHandSide.RIGHT) {
+                // Right hand position
                 positioner.position(Part.RIGHT_HAND, renderContext);
+//                GL11.glRotatef(-5f, 1f, 0f, 0f);
             }
             
             GL11.glTranslatef(-0.35f, 0.1f, -0f);

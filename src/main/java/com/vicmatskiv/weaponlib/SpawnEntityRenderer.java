@@ -46,7 +46,7 @@ public class SpawnEntityRenderer extends CompatibleEntityRenderer {
             		GL11.glRotatef(0f, 1f, 0f, 0f);
             		GL11.glRotatef(entity.rotationYaw - 90 + (float)(angle * 180 / Math.PI), 0f, 1f, 0f);
             		GL11.glRotatef(90f + entity.rotationPitch, 0f, 0f, 1f);
-            		GL11.glScalef(1f, 1f, 1f);
+            		GL11.glScalef(2f, 2f, 2f);
             		model.render(entity, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0625F);
             		GL11.glPopMatrix();
             	}
