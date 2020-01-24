@@ -98,8 +98,24 @@ public class SpreadableExposure extends UniversalObject {
     
     private Collection<Listener> listeners = new LinkedHashSet<>();
     
+    private float colorImpairmentR = 1.2f;
+    private float colorImpairmentG = 1.0f;
+    private float colorImpairmentB = 0.8f;
+    
     public SpreadableExposure() {
+        this(DEFAULT_IMPACT_DELAY);
+    }
+    
+    public SpreadableExposure(long firstExposureImpactDelay) {
+        this.firstExposureImpactDelay = firstExposureImpactDelay;
         this.firstExposureTimestamp = System.currentTimeMillis();
+    }
+    
+    public SpreadableExposure withColorImpairment(float r, float g, float b) {
+        this.colorImpairmentR = r;
+        this.colorImpairmentG = g;
+        this.colorImpairmentB = b;
+        return this;
     }
     
     public long getFirstExposureTimestamp() {
@@ -125,15 +141,12 @@ public class SpreadableExposure extends UniversalObject {
     /*
      * Spreadable can be applied to an entity only once per cycle
      */
-    public void apply(EntitySpreadable spreadable, Entity entity, float dose) {
-//        if(System.currentTimeMillis() - startCycleTimestamp > cycleLengthMillis) {
-//            startCycleTimestamp = System.currentTimeMillis();
-//            cycleDoseMap.clear();
-//        }
-        Float currentSourceDose = cycleDoseMap.get(spreadable.getUniqueID());
+    public void apply(Spreadable spreadable, Entity entity, float dose) {
+
+        Float currentSourceDose = cycleDoseMap.get(spreadable.getId());
         if(currentSourceDose == null) {
             //Proceed with updates only if the source was not applied in the current cycle
-            cycleDoseMap.put(spreadable.getUniqueID(), dose);
+            cycleDoseMap.put(spreadable.getId(), dose);
             lastDose = 0f;
             cycleDoseMap.forEach((k, v) -> lastDose += v);
             
@@ -162,25 +175,37 @@ public class SpreadableExposure extends UniversalObject {
     }
     
     public void updateFrom(SpreadableExposure other) {
+        this.firstExposureImpactDelay = other.firstExposureImpactDelay;
         this.firstExposureTimestamp = other.firstExposureTimestamp;
         this.totalDose = other.totalDose;
         this.lastDose = other.lastDose;
+        this.colorImpairmentR = other.colorImpairmentR;
+        this.colorImpairmentG = other.colorImpairmentG;
+        this.colorImpairmentB = other.colorImpairmentB;
     }
 
     @Override
     public void init(ByteBuf buf) {
         super.init(buf);
+        firstExposureImpactDelay = buf.readLong();
         firstExposureTimestamp = buf.readLong();
         totalDose = buf.readFloat();
         lastDose = buf.readFloat();
+        colorImpairmentR = buf.readFloat();
+        colorImpairmentG = buf.readFloat();
+        colorImpairmentB = buf.readFloat();
     }
     
     @Override
     public void serialize(ByteBuf buf) {
         super.serialize(buf);
+        buf.writeLong(firstExposureImpactDelay);
         buf.writeLong(firstExposureTimestamp);
         buf.writeFloat(totalDose);
         buf.writeFloat(lastDose);
+        buf.writeFloat(colorImpairmentR);
+        buf.writeFloat(colorImpairmentG);
+        buf.writeFloat(colorImpairmentB);
     }
 
     public void update(Entity entity) {
@@ -250,5 +275,17 @@ public class SpreadableExposure extends UniversalObject {
 
     public boolean isEffective() {
         return getLastDose() > 0f || getTotalDose() > MIN_EFFECTIVE_TOTAL_DOSE;
+    }
+    
+    public float getColorImpairmentR() {
+        return colorImpairmentR;
+    }
+    
+    public float getColorImpairmentG() {
+        return colorImpairmentG;
+    }
+    
+    public float getColorImpairmentB() {
+        return colorImpairmentB;
     }
 }

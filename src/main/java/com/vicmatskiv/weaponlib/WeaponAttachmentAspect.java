@@ -289,12 +289,14 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 			compatibility.consumeInventoryItemFromSlot(player, lookupResult.index);
 
 			activeAttachmentIds[attachmentCategory.ordinal()] = Item.getIdFromItem(nextAttachment);
-		} else {
+		} else if(weaponInstance.getWeapon().isCategoryRemovable(attachmentCategory)){
 			activeAttachmentIds[attachmentCategory.ordinal()] = -1;
 			ApplyHandler2<Weapon> handler = weaponInstance.getWeapon().getEquivalentHandler(attachmentCategory);
 			if(handler != null) {
 				handler.apply(null, weaponInstance);
 			}
+		} else {
+		    return;
 		}
 
 		if(currentAttachment != null) {
@@ -351,7 +353,7 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 			int currentIndex = i + offset;
 
 			if(currentIndex >= INVENTORY_SIZE) {
-				currentIndex -= INVENTORY_SIZE + 1;
+				currentIndex -= INVENTORY_SIZE + (isCategoryRemovable ? 1 : 0);
 			}
 
 			logger.debug("Searching for an attachment in slot {}", currentIndex);
@@ -384,7 +386,7 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 		return result;
 	}
 	
-	private static boolean hasRequiredAttachments(ItemAttachment<Weapon> attachmentItemFromInventory, PlayerWeaponInstance weaponInstance) {
+	public static boolean hasRequiredAttachments(ItemAttachment<Weapon> attachmentItemFromInventory, PlayerWeaponInstance weaponInstance) {
 	    List<ItemAttachment<Weapon>> requiredAttachments = attachmentItemFromInventory.getRequiredAttachments();
 	    if(requiredAttachments.isEmpty()) {
 	        return true;

@@ -92,6 +92,10 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         private float spawnEntityExplosionRadius;
         private boolean isDestroyingBlocks = true;
         private float spawnEntityGravityVelocity;
+        private float spawnEntityParticleAgeCoefficient = 1f;
+        private float spawnEntitySmokeParticleAgeCoefficient = 1f;
+        private float spawnEntityExplosionParticleScaleCoefficient = 1.5f;
+        private float spawnEntitySmokeParticleScaleCoefficient = 1f;
         long reloadingTimeout = Weapon.DEFAULT_RELOADING_TIMEOUT_TICKS;
         long loadIterationTimeout = Weapon.DEFAULT_LOAD_ITERATION_TIMEOUT_TICKS;
 
@@ -115,6 +119,14 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         private float inaccuracy = DEFAULT_INACCURACY;
 
         int pellets = 1;
+        
+        boolean smokeEnabled = true;
+        
+        float bleedingCoefficient = 1f;
+        
+        String explosionParticleTexture;
+        
+        String smokeParticleTexture;
 
         float flashIntensity = 0.2f;
 
@@ -439,6 +451,26 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
             this.spawnEntityGravityVelocity = spawnEntityGravityVelocity;
             return this;
         }
+        
+        public Builder withSpawnEntityParticleAgeCoefficient(float spawnEntityParticleAgeCoefficient) {
+            this.spawnEntityParticleAgeCoefficient = spawnEntityParticleAgeCoefficient;
+            return this;
+        }
+        
+        public Builder withSpawnEntitySmokeParticleAgeCoefficient(float spawnEntitySmokeParticleAgeCoefficient) {
+            this.spawnEntitySmokeParticleAgeCoefficient = spawnEntitySmokeParticleAgeCoefficient;
+            return this;
+        }
+        
+        public Builder withSpawnEntityExplosionParticleScaleCoefficient(float spawnEntityExplosionParticleScaleCoefficient) {
+            this.spawnEntityExplosionParticleScaleCoefficient = spawnEntityExplosionParticleScaleCoefficient;
+            return this;
+        }
+        
+        public Builder withSpawnEntitySmokeParticleScaleCoefficient(float spawnEntitySmokeParticleScaleCoefficient) {
+            this.spawnEntitySmokeParticleScaleCoefficient = spawnEntitySmokeParticleScaleCoefficient;
+            return this;
+        }
 
         public Builder withInaccuracy(float inaccuracy) {
             this.inaccuracy = inaccuracy;
@@ -470,6 +502,11 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
 
         public Builder withCompatibleAttachment(ItemAttachment<Weapon> attachment, BiConsumer<EntityLivingBase, ItemStack> positioning, Consumer<ModelBase> modelPositioning) {
             compatibleAttachments.put(attachment, new CompatibleAttachment<>(attachment, positioning, modelPositioning, false));
+            return this;
+        }
+        
+        public Builder withCompatibleAttachment(ItemAttachment<Weapon> attachment, Consumer<RenderContext<RenderableState>> positioning, Consumer<ModelBase> modelPositioning, boolean isDefault, boolean isPermanent) {
+            compatibleAttachments.put(attachment, new CompatibleAttachment<>(attachment, positioning, modelPositioning, isDefault, isPermanent));
             return this;
         }
 
@@ -568,6 +605,11 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
             this.pellets = pellets;
             return this;
         }
+        
+        public Builder withSmoke(boolean smokeEnabled) {
+            this.smokeEnabled = smokeEnabled;
+            return this;
+        }
 
         public Builder withFlashIntensity(float flashIntensity) {
             if (flashIntensity < 0f || flashIntensity > 1f) {
@@ -626,6 +668,33 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
             this.craftingRecipe = craftingRecipe;
             return this;
         }
+        
+        public Builder withBleedingCoefficient(float bleedingCoefficient) {
+            this.bleedingCoefficient = bleedingCoefficient;
+            return this;
+        }
+        
+        public Builder withExplosionParticleTexture(String explosionParticleTexture) {
+            if (modId == null) {
+                throw new IllegalStateException("ModId is not set");
+            }
+            if(explosionParticleTexture.endsWith(".png") && explosionParticleTexture.length() > 4) {
+                explosionParticleTexture = explosionParticleTexture.substring(0, explosionParticleTexture.length() - 4);
+            }
+            this.explosionParticleTexture = modId + ":" + "textures/particle/" + explosionParticleTexture.toLowerCase() + ".png";
+            return this;
+        }
+        
+        public Builder withSmokeParticleTexture(String smokeParticleTexture) {
+            if (modId == null) {
+                throw new IllegalStateException("ModId is not set");
+            }
+            if(smokeParticleTexture.endsWith(".png") && smokeParticleTexture.length() > 4) {
+                smokeParticleTexture = smokeParticleTexture.substring(0, smokeParticleTexture.length() - 4);
+            }
+            this.smokeParticleTexture = modId + ":" + "textures/particle/" + smokeParticleTexture.toLowerCase() + ".png";
+            return this;
+        }
 
         public Weapon build(ModContext modContext) {
             if (modId == null) {
@@ -663,9 +732,17 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
             }
 
             if (spawnEntityWith == null) {
+                
+
+                int explosionParticleTextureId = modContext.registerTexture(explosionParticleTexture);
+                int smokeParticleTextureId = modContext.registerTexture(smokeParticleTexture);
                 spawnEntityWith = (weapon, player) -> {
                     WeaponSpawnEntity bullet = new WeaponSpawnEntity(weapon, compatibility.world(player), player, spawnEntitySpeed,
-                            spawnEntityGravityVelocity, inaccuracy, spawnEntityDamage, spawnEntityExplosionRadius, isDestroyingBlocks);
+                            spawnEntityGravityVelocity, inaccuracy, spawnEntityDamage, spawnEntityExplosionRadius, 
+                            isDestroyingBlocks, spawnEntityParticleAgeCoefficient, spawnEntitySmokeParticleAgeCoefficient,
+                            spawnEntityExplosionParticleScaleCoefficient, spawnEntitySmokeParticleScaleCoefficient,
+                            explosionParticleTextureId, 
+                            smokeParticleTextureId);
                     bullet.setPositionAndDirection();
                     return bullet;
                 };
@@ -1288,5 +1365,13 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
 
     public boolean isCategoryRemovable(AttachmentCategory category) {
         return !builder.unremovableAttachmentCategories.contains(category);
+    }
+
+    public boolean isSmokeEnabled() {
+        return builder.smokeEnabled;
+    }
+
+    public float getBleedingCoefficient() {
+        return builder.bleedingCoefficient;
     }
 }

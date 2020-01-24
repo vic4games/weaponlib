@@ -56,6 +56,7 @@ import net.minecraft.entity.ai.EntityAIBase;
 import net.minecraft.entity.ai.EntityAINearestAttackableTarget;
 import net.minecraft.entity.ai.EntityAITarget;
 import net.minecraft.entity.ai.attributes.IAttribute;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.init.Blocks;
@@ -79,6 +80,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.EnumDifficulty;
+import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldType;
@@ -1342,5 +1344,20 @@ private Optional<Field> shadersEnabledFieldOptional;
     public void markBlockForUpdate(World world, CompatibleBlockPos pos) {
         world.markBlockRangeForRenderUpdate(pos.getBlockPosX(), pos.getBlockPosY(), pos.getBlockPosZ(), 
                 pos.getBlockPosX(), pos.getBlockPosY(), pos.getBlockPosZ());
+    }
+
+    @Override
+    public boolean getGameRulesBooleanValue(GameRules rules, String ruleName) {
+        return rules.getBoolean(ruleName);
+    }
+
+    @Override
+    public ItemStack getEntityItem(EntityItem entityItem) {
+        return entityItem.getItem();
+    }
+
+    @Override
+    public DamageSource mobDamageSource(EntityLivingBase thrower) {
+        return DamageSource.causeMobDamage(thrower);
     }
 }

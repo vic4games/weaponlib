@@ -17,6 +17,8 @@ public class CompatibleItems {
     public static final CompatibleItems WATER_BUCKET = new CompatibleItems(Items.WATER_BUCKET) {};
     public static final CompatibleItems STICK = new CompatibleItems(Items.STICK) {};
     public static final CompatibleItems FLINT_AND_STEEL = new CompatibleItems(Items.FLINT_AND_STEEL) {};
+    public static final CompatibleItems SLIME_BALL = new CompatibleItems(Items.SLIME_BALL) {};
+
 
     private Item item;
 

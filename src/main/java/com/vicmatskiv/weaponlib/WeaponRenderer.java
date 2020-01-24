@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -187,6 +188,12 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		private List<Transition<RenderContext<RenderableState>>> firstPersonLeftHandPositioningEjectSpentRound;
 		private List<Transition<RenderContext<RenderableState>>> firstPersonRightHandPositioningEjectSpentRound;
 		private LinkedHashMap<Part, List<Transition<RenderContext<RenderableState>>>> firstPersonCustomPositioningEjectSpentRound = new LinkedHashMap<>();
+
+		private List<Transition<RenderContext<RenderableState>>> firstPersonPositioningEjectSpentRoundAimed;
+        private List<Transition<RenderContext<RenderableState>>> firstPersonLeftHandPositioningEjectSpentRoundAimed;
+        private List<Transition<RenderContext<RenderableState>>> firstPersonRightHandPositioningEjectSpentRoundAimed;
+        private LinkedHashMap<Part, List<Transition<RenderContext<RenderableState>>>> firstPersonCustomPositioningEjectSpentRoundAimed = new LinkedHashMap<>();
+
 		private boolean hasRecoilPositioningDefined;
 
 		public Builder withModId(String modId) {
@@ -394,6 +401,12 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			this.firstPersonPositioningEjectSpentRound = Arrays.asList(transitions);
 			return this;
 		}
+		
+		@SafeVarargs
+        public final Builder withFirstPersonPositioningEjectSpentRoundAimed(Transition<RenderContext<RenderableState>> ...transitions) {
+            this.firstPersonPositioningEjectSpentRoundAimed = Arrays.asList(transitions);
+            return this;
+        }
 
 		public Builder withFirstPersonPositioningModifying(Consumer<RenderContext<RenderableState>> firstPersonPositioningModifying) {
 			this.firstPersonPositioningModifying = firstPersonPositioningModifying;
@@ -516,6 +529,12 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			this.firstPersonLeftHandPositioningEjectSpentRound = Arrays.asList(transitions);
 			return this;
 		}
+		
+		@SafeVarargs
+        public final Builder withFirstPersonLeftHandPositioningEjectSpentRoundAimed(Transition<RenderContext<RenderableState>> ...transitions) {
+            this.firstPersonLeftHandPositioningEjectSpentRoundAimed = Arrays.asList(transitions);
+            return this;
+        }
 
 		@SafeVarargs
 		public final Builder withFirstPersonLeftHandPositioningUnloading(Transition<RenderContext<RenderableState>> ...transitions) {
@@ -582,6 +601,12 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			this.firstPersonRightHandPositioningEjectSpentRound = Arrays.asList(transitions);
 			return this;
 		}
+		
+		@SafeVarargs
+        public final Builder withFirstPersonRightHandPositioningEjectSpentRoundAimed(Transition<RenderContext<RenderableState>> ...transitions) {
+            this.firstPersonRightHandPositioningEjectSpentRoundAimed = Arrays.asList(transitions);
+            return this;
+        }
 		
 		@SafeVarargs
         public final Builder withFirstPersonRightHandPositioningLoadIteration(Transition<RenderContext<RenderableState>> ...transitions) {
@@ -760,6 +785,16 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			this.firstPersonCustomPositioningEjectSpentRound.put(part, Arrays.asList(transitions));
 			return this;
 		}
+		
+		@SafeVarargs
+        public final Builder withFirstPersonCustomPositioningEjectSpentRoundAimed(Part part, Transition<RenderContext<RenderableState>> ...transitions) {
+            if(part instanceof DefaultPart) {
+                throw new IllegalArgumentException("Part " + part + " is not custom");
+            }
+
+            this.firstPersonCustomPositioningEjectSpentRoundAimed.put(part, Arrays.asList(transitions));
+            return this;
+        }
 		
 		@SafeVarargs
         public final Builder withFirstPersonCustomPositioningLoadIteration(Part part, Transition<RenderContext<RenderableState>> ...transitions) {
@@ -1386,7 +1421,12 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			    break;
 			    
 			case EJECTING:
-				currentState = RenderableState.EJECT_SPENT_ROUND;
+			    if(playerWeaponInstance.isAimed()) {
+			        currentState = RenderableState.EJECT_SPENT_ROUND_AIMED;
+			    } else {
+			        currentState = RenderableState.EJECT_SPENT_ROUND;
+			    }
+				
 				break;
 
 			case MODIFYING: case MODIFYING_REQUESTED: case NEXT_ATTACHMENT: case NEXT_ATTACHMENT_REQUESTED:
@@ -1549,7 +1589,12 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
                 break;
                 
             case EJECTING:
-                currentState = RenderableState.EJECT_SPENT_ROUND;
+                if(playerWeaponInstance.isAimed()) {
+                    currentState = RenderableState.EJECT_SPENT_ROUND_AIMED;
+                } else {
+                    currentState = RenderableState.EJECT_SPENT_ROUND;
+                }
+                
                 break;
 
             case MODIFYING: case MODIFYING_REQUESTED: case NEXT_ATTACHMENT: case NEXT_ATTACHMENT_REQUESTED:
@@ -1782,6 +1827,12 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 						builder.firstPersonRightHandPositioningEjectSpentRound,
 						builder.firstPersonCustomPositioningEjectSpentRound
 						);
+			case EJECT_SPENT_ROUND_AIMED:
+                return getComplexTransition(builder.firstPersonPositioningEjectSpentRoundAimed,
+                        builder.firstPersonLeftHandPositioningEjectSpentRoundAimed,
+                        builder.firstPersonRightHandPositioningEjectSpentRoundAimed,
+                        builder.firstPersonCustomPositioningEjectSpentRoundAimed
+                        );
 			case NORMAL:
 				return getSimpleTransition(builder.firstPersonPositioning,
 						builder.firstPersonLeftHandPositioning,
@@ -1921,15 +1972,18 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		}
 	}
 
-	private void renderCompatibleAttachment(CompatibleAttachment<?> compatibleAttachment,
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+    private void renderCompatibleAttachment(CompatibleAttachment<?> compatibleAttachment,
 			Positioner<Part, RenderContext<RenderableState>> positioner, RenderContext<RenderableState> renderContext) {
 
 		GL11.glPushMatrix();
 		GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_CURRENT_BIT);
 
-		if(compatibleAttachment.getPositioning() != null) {
-			compatibleAttachment.getPositioning().accept(renderContext.getPlayer(), renderContext.getWeapon());
-		}
+		if(compatibleAttachment.getPositioning() instanceof BiConsumer) {
+			((BiConsumer) compatibleAttachment.getPositioning()).accept(renderContext.getPlayer(), renderContext.getWeapon());
+		} else if(compatibleAttachment.getPositioning() instanceof Consumer) {
+            ((Consumer) compatibleAttachment.getPositioning()).accept(renderContext);
+        }
 
 		ItemAttachment<?> itemAttachment = compatibleAttachment.getAttachment();
 

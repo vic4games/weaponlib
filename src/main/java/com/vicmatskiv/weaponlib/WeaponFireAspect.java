@@ -258,8 +258,10 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
                                 + weapon.builder.flashOffsetX.get(),
                                 compatibility.getEffectOffsetY() + weapon.builder.flashOffsetY.get(),
                         weapon.builder.flashTexture);
-            }
-
+            }  
+        }
+        
+        if(weapon.isSmokeEnabled()) {
             modContext.getEffectManager().spawnSmokeParticle(player, compatibility.getEffectOffsetX()
                     + weapon.builder.smokeOffsetX.get(),
                     compatibility.getEffectOffsetY() + weapon.builder.smokeOffsetY.get());

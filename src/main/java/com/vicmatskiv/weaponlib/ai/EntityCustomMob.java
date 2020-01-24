@@ -57,12 +57,16 @@ public class EntityCustomMob extends CompatibleEntityMob implements IRangedAttac
     private static final float FLAT_WORLD_SPAWN_CHANCE = 0.01f;
     private static final CompatibleDataManager.Key VARIANT = CompatibleDataManager.createKey(EntityCustomMob.class, int.class);
     private static final CompatibleDataManager.Key SWINGING_ARMS = CompatibleDataManager.createKey(EntityCustomMob.class, boolean.class);
+    private static final CompatibleDataManager.Key DELAYED_ATTACK_TIMER_INCREMENT = CompatibleDataManager.createKey(EntityCustomMob.class, int.class);
+    private static final CompatibleDataManager.Key DELAYED_ATTACK_STARTED = CompatibleDataManager.createKey(EntityCustomMob.class, boolean.class);
 
     private ModContext modContext;
     
     private EntityConfiguration configuration;
     
     private ItemStack secondaryEquipment;
+    
+    private int delayedAttackTimer;
 
     public EntityCustomMob(World worldIn)
     {
@@ -90,12 +94,15 @@ public class EntityCustomMob extends CompatibleEntityMob implements IRangedAttac
         compatibility.setEntityAttribute(this, CompatibleSharedMonsterAttributes.FOLLOW_RANGE, getConfiguration().getFollowRange());
         compatibility.setEntityAttribute(this, CompatibleSharedMonsterAttributes.MOVEMENT_SPEED, getConfiguration().getMaxSpeed());
         compatibility.setEntityAttribute(this, CompatibleSharedMonsterAttributes.MAX_HEALTH, getConfiguration().getMaxHealth());
+        compatibility.setEntityAttribute(this, CompatibleSharedMonsterAttributes.ATTACK_DAMAGE, getConfiguration().getCollisionAttackDamage());
     }
 
     protected void entityInit() {
         super.entityInit();
         compatibleDataManager.register(VARIANT, Integer.valueOf(0));
         compatibleDataManager.register(SWINGING_ARMS, Boolean.valueOf(false));
+        compatibleDataManager.register(DELAYED_ATTACK_TIMER_INCREMENT, Integer.valueOf(0));
+        compatibleDataManager.register(DELAYED_ATTACK_STARTED, Boolean.valueOf(false));
     }
     
     @Override
@@ -128,7 +135,35 @@ public class EntityCustomMob extends CompatibleEntityMob implements IRangedAttac
      * use this to react to sunlight and start to burn.
      */
     public void onLivingUpdate() {
+        
+        if (this.isEntityAlive() && getConfiguration().getDelayedAttack() != null) {
+
+            if (isDelayedAttackStarted()) {
+                setDelayedAttackTimerIncrement(1);
+            }
+
+            int delayedAttackTimerIncrement = getDelayedAttackTimerIncrement();
+
+            delayedAttackTimer += delayedAttackTimerIncrement;
+
+            if (delayedAttackTimer < 0) {
+                delayedAttackTimer = 0;
+            }
+
+            if (delayedAttackTimer >= ((Timeable) getConfiguration().getDelayedAttack()).getDuration()) {
+//                delayedAttacekTimer = delayedAttackDuration;
+                completeDelayedAttack();
+            }
+        }
+        
         super.onLivingUpdate();
+    }
+
+    private void completeDelayedAttack() {
+        CustomMobAttack delayedAttack = configuration.getDelayedAttack();
+        if(delayedAttack != null) {
+            delayedAttack.attackEntity(this, getAttackTarget());
+        }
     }
 
     @Override
@@ -265,13 +300,24 @@ public class EntityCustomMob extends CompatibleEntityMob implements IRangedAttac
             variant = this.rand.nextInt(variants.size());
         }
         setVariant(variant);
-
+        
         this.setEquipmentBasedOnDifficulty(difficulty);
         this.setEnchantmentBasedOnDifficulty(difficulty);
         
         this.setCanPickUpLoot(this.rand.nextFloat() < 0.55F * difficulty.getClampedAdditionalDifficulty());
 
         return livingdata;
+    }
+    
+    @Override
+    public boolean attackEntityAsMob(Entity target) {
+        EntityConfiguration configuration = getConfiguration();
+        
+        CustomMobAttack collisionAttack = configuration.getCollisionAttack();
+        if(collisionAttack != null) {
+            return collisionAttack.attackEntity(this, target);
+        }
+        return super.attackEntityAsMob(target);
     }
 
     /**
@@ -302,7 +348,13 @@ public class EntityCustomMob extends CompatibleEntityMob implements IRangedAttac
                         inaccuracy, 
                         weapon.getSpawnEntityDamage(), 
                         weapon.getSpawnEntityExplosionRadius(),
-                        false);
+                        false,
+                        1f,
+                        1f,
+                        1.5f,
+                        1f,
+                        -1,
+                        -1);
                 bullet.setPositionAndDirection();
                 return bullet;
             };
@@ -340,6 +392,8 @@ public class EntityCustomMob extends CompatibleEntityMob implements IRangedAttac
         super.readEntityFromNBT(compound);
         int variant = compound.getInteger("Variant");
         setVariant(variant);
+        int delayedAttackTimerIncrement = compound.getInteger("DATI");
+        setDelayedAttackTimerIncrement(delayedAttackTimerIncrement);
                 
         NBTTagCompound secondaryNbt = compound.getCompoundTag("Secondary");
         if(secondaryNbt != null) {
@@ -350,6 +404,7 @@ public class EntityCustomMob extends CompatibleEntityMob implements IRangedAttac
     public void writeEntityToNBT(NBTTagCompound compound) {
         super.writeEntityToNBT(compound);
         compound.setInteger("Variant", getVariant());
+        compound.setInteger("DATI", getDelayedAttackTimerIncrement());
         
         if(secondaryEquipment != null) {
             compound.setTag("Secondary", secondaryEquipment.writeToNBT(new NBTTagCompound()));
@@ -411,5 +466,21 @@ public class EntityCustomMob extends CompatibleEntityMob implements IRangedAttac
     
     public ItemStack getSecondaryEquipment() {
         return secondaryEquipment;
+    }
+
+    public void setDelayedAttackTimerIncrement(int increment) {
+        this.compatibleDataManager.set(DELAYED_ATTACK_TIMER_INCREMENT, Integer.valueOf(increment));
+    }
+
+    public int getDelayedAttackTimerIncrement() {
+        return this.compatibleDataManager.get(DELAYED_ATTACK_TIMER_INCREMENT).intValue();
+    }
+    
+    public boolean isDelayedAttackStarted() {
+        return this.compatibleDataManager.get(DELAYED_ATTACK_STARTED).booleanValue();
+    }
+
+    public void startDelayedAttack() {
+        this.compatibleDataManager.set(DELAYED_ATTACK_STARTED, Boolean.valueOf(true));
     }
 }

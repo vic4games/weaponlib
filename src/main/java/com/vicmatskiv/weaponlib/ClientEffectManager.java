@@ -112,7 +112,7 @@ final class ClientEffectManager implements EffectManager {
 	@Override
     public void spawnExplosionSmoke(double posX, double posY, double posZ,
             double motionX, double motionY, double motionZ, float scale,
-            int maxAge, ExplosionSmokeFX.Behavior behavior, ResourceLocation textureResource) {
+            int maxAge, ExplosionSmokeFX.Behavior behavior, String particleTexture) {
 	    
 	    World world = compatibility.world(compatibility.clientPlayer());
         ExplosionSmokeFX smokeParticle = new ExplosionSmokeFX(
@@ -126,14 +126,14 @@ final class ClientEffectManager implements EffectManager {
                 (float)motionZ,
                 maxAge,
                 ExplosionSmokeFX.Behavior.SMOKE_GRENADE,
-                textureResource);
+                particleTexture);
 
         Minecraft.getMinecraft().effectRenderer.addEffect(smokeParticle);
 	}
 
 	@Override
 	public void spawnExplosionParticle(double posX, double posY, double posZ,
-	        double motionX, double motionY, double motionZ, float scale, int maxAge) {
+	        double motionX, double motionY, double motionZ, float scale, int maxAge, String particleTexture) {
 	    World world = compatibility.world(compatibility.clientPlayer());
 	    ExplosionParticleFX explosionParticle = new ExplosionParticleFX(
                 world,
@@ -142,7 +142,8 @@ final class ClientEffectManager implements EffectManager {
                 posZ,
                 scale,
                 motionX, motionY, motionZ,
-                maxAge);
+                maxAge,
+                particleTexture);
 
         Minecraft.getMinecraft().effectRenderer.addEffect(explosionParticle);
 	}

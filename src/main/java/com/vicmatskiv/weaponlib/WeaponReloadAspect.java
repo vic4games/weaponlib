@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -325,7 +326,10 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 		    compatibility.setTagCompound(weaponItemStack, new NBTTagCompound());
 		}
 		//if (!player.isSprinting()) {
-		List<ItemMagazine> compatibleMagazines = weapon.getCompatibleMagazines();
+		List<ItemMagazine> compatibleMagazines = weapon.getCompatibleMagazines()
+		        .stream()
+		        .filter(compatibleMagazine -> WeaponAttachmentAspect.hasRequiredAttachments(
+		                compatibleMagazine, weaponInstance)).collect(Collectors.toList());
 		List<ItemAttachment<Weapon>> compatibleBullets = weapon.getCompatibleAttachments(ItemBullet.class);
 		ItemStack consumedStack;
 		if(!compatibleMagazines.isEmpty()) {

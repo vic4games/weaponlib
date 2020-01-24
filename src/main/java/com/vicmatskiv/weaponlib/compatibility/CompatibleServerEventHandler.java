@@ -14,8 +14,10 @@ import net.minecraftforge.event.entity.item.ItemTossEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
+import net.minecraftforge.event.entity.player.PlayerDropsEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerRespawnEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 
@@ -88,6 +90,11 @@ public abstract class CompatibleServerEventHandler {
     }
 
     protected abstract void onCompatibleEntityJoinWorld(CompatibleEntityJoinWorldEvent e);
+    
+    @SubscribeEvent
+    public void playerDroppedItem(PlayerDropsEvent e) {
+        onCompatiblePlayerDropsEvent(new CompatiblePlayerDropsEvent(e));
+    }
 
     @SubscribeEvent
     public void playerStartedTracking(PlayerEvent.StartTracking e) {
@@ -113,6 +120,16 @@ public abstract class CompatibleServerEventHandler {
     public void onLivingHurt(LivingHurtEvent event) {
         onCompatibleLivingHurtEvent(new CompatibleLivingHurtEvent(event));
     }
+    
+    @SubscribeEvent
+    public void onPlayerClone(PlayerEvent.Clone e) {
+        onCompatiblePlayerCloneEvent(new CompatiblePlayerCloneEvent(e));
+    }
+    
+    @SubscribeEvent
+    public void onPlayerRespawn(PlayerRespawnEvent e) {
+        onCompatiblePlayerRespawnEvent(new CompatiblePlayerRespawnEvent(e));
+    }
 
 //    protected abstract void onCompatibleLivingDeathEvent(LivingDeathEvent e);
 
@@ -123,6 +140,12 @@ public abstract class CompatibleServerEventHandler {
     protected abstract void onCompatibleLivingUpdateEvent(CompatibleLivingUpdateEvent e);
 
     protected abstract void onCompatibleLivingHurtEvent(CompatibleLivingHurtEvent e);
+
+    protected abstract void onCompatiblePlayerDropsEvent(CompatiblePlayerDropsEvent e);
+    
+    protected abstract void onCompatiblePlayerCloneEvent(CompatiblePlayerCloneEvent compatiblePlayerCloneEvent);
+
+    protected abstract void onCompatiblePlayerRespawnEvent(CompatiblePlayerRespawnEvent compatiblePlayerRespawnEvent);
 
     protected abstract void onCompatibleLivingDeathEvent(CompatibleLivingDeathEvent event);
 

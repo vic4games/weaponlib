@@ -14,20 +14,22 @@ import net.minecraft.world.World;
 
 public class ExplosionParticleFX extends CompatibleParticle {
 
-	private static final String TEXTURE = "weaponlib:/com/vicmatskiv/weaponlib/resources/explosion-particles.png";
+	private static final String DEFAULT_TEXTURE = "weaponlib:/com/vicmatskiv/weaponlib/resources/explosion-particles.png";
 
 	private int imageIndex;
 
     private static final int columnCount = 5;
     private static final int rowCount = 5; //4;
+    
+    private String particleTexture;
 
     public ExplosionParticleFX(World par1World, double positionX, double positionY, double positionZ, float scale,
             float motionX, float motionY, float motionZ) {
-        this(par1World, positionY, positionY, positionZ, scale, motionX, motionY, motionZ, 0);
+        this(par1World, positionY, positionY, positionZ, scale, motionX, motionY, motionZ, 0, DEFAULT_TEXTURE);
     }
 
 	public ExplosionParticleFX(World par1World, double positionX, double positionY, double positionZ, float scale,
-			double motionX, double motionY, double motionZ, int particleMaxAge)
+			double motionX, double motionY, double motionZ, int particleMaxAge, String particleTexture)
 	{
 		super(par1World, positionX, positionY, positionZ, 0.0D, 0.0D, 0.0D);
 
@@ -50,6 +52,8 @@ public class ExplosionParticleFX extends CompatibleParticle {
 		this.particleMaxAge = particleMaxAge == 0 ?  50 + (int)(rand.nextFloat() * 30) : particleMaxAge;
 
         this.imageIndex = this.rand.nextInt(columnCount * rowCount); // % columnCount;
+        
+        this.particleTexture = particleTexture != null ? particleTexture : DEFAULT_TEXTURE;
 	}
 
 	@Override
@@ -90,7 +94,7 @@ public class ExplosionParticleFX extends CompatibleParticle {
     @Override
     public void renderParticle(CompatibleTessellator tessellator, float partialTicks, float par3, float par4, float par5, float par6, float par7) {
 
-    	Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation(TEXTURE));
+    	Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation(particleTexture));
 
 		GL11.glPushMatrix();
 		GL11.glPushAttrib(GL11.GL_ENABLE_BIT);

@@ -25,6 +25,9 @@ class PipelineShaderGroupSourceProvider implements DynamicShaderGroupSourceProvi
     private float vignetteRadius;
     private float brightness;
     private SpreadableExposure spreadableExposure;
+    private float colorImpairmentR;
+    private float colorImpairmentG;
+    private float colorImpairmentB;
     	    
     final DynamicShaderGroupSource source = new DynamicShaderGroupSource(UUID.randomUUID(),
             new ResourceLocation("weaponlib:/com/vicmatskiv/weaponlib/resources/post-processing-pipeline.json"))
@@ -37,6 +40,7 @@ class PipelineShaderGroupSourceProvider implements DynamicShaderGroupSourceProvi
                 .withUniform("VignetteRadius", context -> vignetteRadius)
                 .withUniform("Brightness", context -> brightness)
                 .withUniform("SepiaRatio", context -> sepiaRatio)
+                .withUniform("SepiaColor", context -> new float[] {colorImpairmentR, colorImpairmentG, colorImpairmentB})
                 .withUniform("IntensityAdjust", context -> 40f - Minecraft.getMinecraft().gameSettings.gammaSetting * 38)
                 .withUniform("NoiseAmplification", context ->  2f + 3f * Minecraft.getMinecraft().gameSettings.gammaSetting);
     
@@ -107,6 +111,11 @@ class PipelineShaderGroupSourceProvider implements DynamicShaderGroupSourceProvi
     
     private void updateSepia() {
         sepiaRatio = exposureProgress;
+        if(spreadableExposure != null) {
+            colorImpairmentR = spreadableExposure.getColorImpairmentR();
+            colorImpairmentG = spreadableExposure.getColorImpairmentG();
+            colorImpairmentB = spreadableExposure.getColorImpairmentB();
+        }
     }
 
 }

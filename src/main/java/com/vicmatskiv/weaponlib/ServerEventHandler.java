@@ -2,6 +2,8 @@ package com.vicmatskiv.weaponlib;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
+import java.util.Iterator;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -12,6 +14,9 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleExtraEntityFlags;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleLivingDeathEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleLivingHurtEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleLivingUpdateEvent;
+import com.vicmatskiv.weaponlib.compatibility.CompatiblePlayerCloneEvent;
+import com.vicmatskiv.weaponlib.compatibility.CompatiblePlayerDropsEvent;
+import com.vicmatskiv.weaponlib.compatibility.CompatiblePlayerRespawnEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleServerEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleStartTrackingEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleStopTrackingEvent;
@@ -22,6 +27,7 @@ import com.vicmatskiv.weaponlib.tracking.PlayerEntityTracker;
 import com.vicmatskiv.weaponlib.tracking.SyncPlayerEntityTrackerMessage;
 
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
@@ -153,13 +159,15 @@ public class ServerEventHandler extends CompatibleServerEventHandler {
 
         final EntityLivingBase entity = event.getEntity();
         if(entity instanceof EntityPlayer && !compatibility.world(entity).isRemote) {
-            CustomPlayerInventory inventory = CompatibleCustomPlayerInventoryCapability.getInventory(entity);
-         
-            for(int slotIndex = 0; slotIndex < inventory.getSizeInventory(); slotIndex++) {
-                ItemStack stackInSlot = inventory.getStackInSlot(slotIndex);
-                if(stackInSlot != null) {
-                    compatibility.dropItem((EntityPlayer)entity, stackInSlot, true, false);
-                    inventory.setInventorySlotContents(slotIndex, null);
+            if(!compatibility.getGameRulesBooleanValue(compatibility.world(entity).getGameRules(), "keepInventory")) {
+                CustomPlayerInventory inventory = CompatibleCustomPlayerInventoryCapability.getInventory(entity);
+                
+                for(int slotIndex = 0; slotIndex < inventory.getSizeInventory(); slotIndex++) {
+                    ItemStack stackInSlot = inventory.getStackInSlot(slotIndex);
+                    if(stackInSlot != null) {
+                        compatibility.dropItem((EntityPlayer)entity, stackInSlot, true, false);
+                        inventory.setInventorySlotContents(slotIndex, null);
+                    }
                 }
             }
         }
@@ -178,5 +186,36 @@ public class ServerEventHandler extends CompatibleServerEventHandler {
             compatibility.applyArmor(e, e.getEntityLiving(),
                     new ItemStack[] { inventory.getStackInSlot(1) }, e.getDamageSource(), e.getAmount());
         }
+    }
+
+    @Override
+    protected void onCompatiblePlayerDropsEvent(CompatiblePlayerDropsEvent e) {
+        for(Iterator<EntityItem> it = e.getDrops().iterator(); it.hasNext();) {
+            EntityItem entityItem = it.next();
+            // TODO: check if this item is item storage and prevent dropping if necessary, add it back to player inventory
+            if(compatibility.getEntityItem(entityItem).getItem() instanceof ItemStorage) {
+                it.remove();
+            }
+        }
+    }
+
+    @Override
+    protected void onCompatiblePlayerCloneEvent(CompatiblePlayerCloneEvent compatiblePlayerCloneEvent) {
+        CustomPlayerInventory originalInventory = CompatibleCustomPlayerInventoryCapability.getInventory(compatiblePlayerCloneEvent.getOriginalPlayer());
+        if(originalInventory != null) {
+            CompatibleCustomPlayerInventoryCapability.setInventory(compatiblePlayerCloneEvent.getPlayer(), originalInventory);
+            originalInventory.setContext(modContext);
+            originalInventory.setOwner(compatiblePlayerCloneEvent.getPlayer());
+//            modContext.getChannel().getChannel().sendToAll(
+//                    new EntityInventorySyncMessage(compatiblePlayerCloneEvent.getPlayer(), originalInventory, false));
+        }       
+        
+    }
+
+    @Override
+    protected void onCompatiblePlayerRespawnEvent(CompatiblePlayerRespawnEvent compatiblePlayerRespawnEvent) {
+        modContext.getChannel().getChannel().sendToAll(
+                new EntityInventorySyncMessage(compatiblePlayerRespawnEvent.getPlayer(), 
+                        CompatibleCustomPlayerInventoryCapability.getInventory(compatiblePlayerRespawnEvent.getPlayer()), false));
     }
 }

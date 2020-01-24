@@ -14,6 +14,9 @@ public class CompatibleSharedMonsterAttributes {
     public static final CompatibleSharedMonsterAttributes MAX_HEALTH = new CompatibleSharedMonsterAttributes(
             SharedMonsterAttributes.MAX_HEALTH);
     
+    public static final CompatibleSharedMonsterAttributes ATTACK_DAMAGE = new CompatibleSharedMonsterAttributes(
+            SharedMonsterAttributes.ATTACK_DAMAGE);
+    
     private IAttribute attributes;
 
     public CompatibleSharedMonsterAttributes(IAttribute attributes) {

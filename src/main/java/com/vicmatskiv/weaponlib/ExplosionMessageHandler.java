@@ -29,7 +29,13 @@ public class ExplosionMessageHandler implements CompatibleMessageHandler<Explosi
                         message.getPosY(),
                         message.getPosZ(),
                         message.getStrength(),
-                        message.getAffectedBlockPositions());
+                        message.getAffectedBlockPositions(),
+                        message.getExplosionParticleAgeCoefficient(),
+                        message.getSmokeParticleAgeCoefficient(),
+                        message.getExplosionParticleScaleCoefficient(),
+                        message.getSmokeParticleScaleCoefficient(),
+                        modContext.getRegisteredTexture(message.getExplosionParticleTextureId()),
+                        modContext.getRegisteredTexture(message.getSmokeParticleTextureId()));
 
                 explosion.doExplosionB(true, message.isDestroyingBlocks());
                 player.motionX += message.getMotionX();

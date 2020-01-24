@@ -15,6 +15,10 @@ import net.minecraft.world.World;
 public class ExplosionSmokeFX extends CompatibleParticle {
 
 	//private static final String SMOKE_TEXTURE = "weaponlib:/com/vicmatskiv/weaponlib/resources/large-yellow-smoke.png";
+    private static final String DEFAULT_SMOKE_TEXTURE = "weaponlib:/com/vicmatskiv/weaponlib/resources/large-smoke.png";
+
+    private String particleTexture;
+    private float scale;
 
 	private int imageIndex;
 
@@ -88,14 +92,11 @@ public class ExplosionSmokeFX extends CompatibleParticle {
     }
 
     private Behavior behavior;
-    private ResourceLocation smokeTexture;
 
 	public ExplosionSmokeFX(World par1World, double positionX, double positionY, double positionZ, float scale,
-			float motionX, float motionY, float motionZ, int particleMaxAge, Behavior behavior, ResourceLocation smokeTexture)
+			float motionX, float motionY, float motionZ, int particleMaxAge, Behavior behavior, String particleTexture)
 	{
 		super(par1World, positionX, positionY, positionZ, 0.0D, 0.0D, 0.0D);
-		
-		this.smokeTexture = smokeTexture;
 
 		this.motionX = motionX;
 		this.motionY = motionY;
@@ -111,10 +112,13 @@ public class ExplosionSmokeFX extends CompatibleParticle {
 		this.particleGreen = 1.0F;
 		this.particleBlue = 1.0F;
 		this.particleAlpha = 0.0F;
-		this.particleScale *= scale;
+//		this.particleScale *= scale;
+		this.scale = scale;
 		this.particleMaxAge = particleMaxAge == 0 ?  50 + (int)(rand.nextFloat() * 30) : particleMaxAge;
 
         this.imageIndex = this.rand.nextInt(columnCount * rowCount); // % columnCount;
+        
+        this.particleTexture = particleTexture != null ? particleTexture : DEFAULT_SMOKE_TEXTURE;
 	}
 
 	@Override
@@ -149,7 +153,7 @@ public class ExplosionSmokeFX extends CompatibleParticle {
     @Override
     public void renderParticle(CompatibleTessellator tessellator, float partialTicks, float par3, float par4, float par5, float par6, float par7) {
 
-    	    Minecraft.getMinecraft().getTextureManager().bindTexture(smokeTexture);
+        Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation(particleTexture));
 
 		GL11.glPushMatrix();
 		GL11.glPushAttrib(GL11.GL_ENABLE_BIT);
@@ -164,7 +168,7 @@ public class ExplosionSmokeFX extends CompatibleParticle {
 
         tessellator.startDrawingParticles();
 
-        float f10 = 0.1F * this.particleScale;
+        float f10 = 0.1F * this.particleScale * this.scale;
 
         float f11 = (float)(this.prevPosX + (this.posX - this.prevPosX) * (double)partialTicks - interpPosX);
         float f12 = (float)(this.prevPosY + (this.posY - this.prevPosY) * (double)partialTicks - interpPosY);
