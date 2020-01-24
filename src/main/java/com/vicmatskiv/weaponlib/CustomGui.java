@@ -413,10 +413,11 @@ public class CustomGui extends CompatibleGui {
 	}
 	
 	private boolean isInAltModifyingState(PlayerWeaponInstance weaponInstance) {
-        return (weaponInstance.getState() == WeaponState.MODIFYING && weaponInstance.isAltMofificationModeEnabled())
+        return weaponInstance.isAltMofificationModeEnabled()
+                && (weaponInstance.getState() == WeaponState.MODIFYING
                 || weaponInstance.getState() == WeaponState.MODIFYING_REQUESTED
                 || weaponInstance.getState() == WeaponState.NEXT_ATTACHMENT
-                || weaponInstance.getState() == WeaponState.NEXT_ATTACHMENT_REQUESTED;
+                || weaponInstance.getState() == WeaponState.NEXT_ATTACHMENT_REQUESTED);
     }
 
 	private static void drawTexturedQuadFit(double x, double y, double width, double height, double zLevel){

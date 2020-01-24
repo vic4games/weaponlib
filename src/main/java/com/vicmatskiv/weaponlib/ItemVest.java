@@ -193,8 +193,6 @@ public class ItemVest extends CompatibleItem implements ISpecialArmor, ModelSour
     }
     
     
-    @SuppressWarnings("unused")
-    private ModContext context;
     private List<Tuple<ModelBase, String>> texturedModels = new ArrayList<>();
     private int size;
     private final int damageReduceAmount;
@@ -202,7 +200,6 @@ public class ItemVest extends CompatibleItem implements ISpecialArmor, ModelSour
     private int durability;
     
     public ItemVest(ModContext context, int damageReduceAmount, int durability) {
-        this.context = context;
         this.damageReduceAmount = damageReduceAmount;
         this.durability = durability;
     }

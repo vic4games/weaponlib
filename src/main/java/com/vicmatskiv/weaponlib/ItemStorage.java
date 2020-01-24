@@ -199,7 +199,6 @@ public class ItemStorage extends CompatibleItem implements ModelSource {
     }
     
     
-    private ModContext context;
     private List<Tuple<ModelBase, String>> texturedModels = new ArrayList<>();
     private int size;
     private ResourceLocation guiTextureLocation;
@@ -210,7 +209,6 @@ public class ItemStorage extends CompatibleItem implements ModelSource {
             Predicate<Item> validItemPredicate,
             ResourceLocation guiTextureLocation, 
             int guiTextureWidth) {
-        this.context = context;
         this.validItemPredicate = validItemPredicate;
         this.size = size;
         this.guiTextureLocation = guiTextureLocation;

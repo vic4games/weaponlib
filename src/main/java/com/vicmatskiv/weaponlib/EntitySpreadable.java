@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.UUID;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleAxisAlignedBB;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleBlockPos;
@@ -21,7 +22,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
-public class EntitySpreadable extends Entity implements Contextual {
+public class EntitySpreadable extends Entity implements Contextual, Spreadable {
     
     private static final String TAG_SPREAD_MAP = "spreadMap";
     
@@ -29,7 +30,7 @@ public class EntitySpreadable extends Entity implements Contextual {
     private static final float DEFAULT_MIN_CONCENTRATION_THRESHOLD = 0.01f;
     private static final float DEFAULT_SPREAD_RATE = 0.5f; // 0.2 blocks per second, or one block in 4 seconds
     
-    private static final float DEFAULT_ENTITY_UPDATE_RATE = 2f; // 2 times per secondw
+//    private static final float DEFAULT_ENTITY_UPDATE_RATE = 2f; // 2 times per secondw
 
     private static final float DEFAULT_CONCENTRATION_DECAY_FACTOR = 0.99f; // 
     
@@ -53,7 +54,7 @@ public class EntitySpreadable extends Entity implements Contextual {
     
     private float spreadRate = DEFAULT_SPREAD_RATE;
     
-    private float entityUpdateRate = DEFAULT_ENTITY_UPDATE_RATE;
+//    private float entityUpdateRate = DEFAULT_ENTITY_UPDATE_RATE;
     
     private long lastSpreadTimestamp;
     
@@ -334,6 +335,11 @@ public class EntitySpreadable extends Entity implements Contextual {
             }
         }
         return result;
+    }
+
+    @Override
+    public UUID getId() {
+        return getUniqueID();
     }
     
 }

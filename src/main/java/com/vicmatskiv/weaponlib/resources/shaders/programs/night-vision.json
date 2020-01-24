@@ -18,6 +18,7 @@
         { "name": "VignetteRadius",     "type": "float",     "count": 1,  "values": [0.55] },
         { "name": "Brightness",         "type": "float",     "count": 1,  "values": [1.0] },
         { "name": "SepiaRatio",         "type": "float",     "count": 1,  "values": [0.0] },
+        { "name": "SepiaColor",         "type": "float",     "count": 3,  "values": [1.2, 1.0, 0.8] },
         { "name": "ProjMat",            "type": "matrix4x4", "count": 16, "values": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },
         { "name": "InSize",             "type": "float",     "count": 2,  "values": [ 1.0, 1.0 ] },
         { "name": "OutSize",            "type": "float",     "count": 2,  "values": [ 1.0, 1.0 ] },

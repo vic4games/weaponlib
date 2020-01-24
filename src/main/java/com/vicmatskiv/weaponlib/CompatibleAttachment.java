@@ -14,7 +14,8 @@ public class CompatibleAttachment<T> {
 
 	private ItemAttachment<T> attachment;
 	private Consumer<ModelBase> modelPositioning;
-	private BiConsumer<EntityLivingBase, ItemStack> positioning;
+//	private BiConsumer<EntityLivingBase, ItemStack> positioning;
+	private Object positioning;
 	private boolean isDefault;
 	private boolean isPermanent;
 	private ItemAttachment.ApplyHandler2<T> applyHandler;
@@ -23,7 +24,7 @@ public class CompatibleAttachment<T> {
     ItemAttachment.MeleeWeaponApplyHandler<ItemMelee> meleeRemoveHandler;
 
 	public CompatibleAttachment(ItemAttachment<T> attachment,
-	        BiConsumer<EntityLivingBase, ItemStack> positioning,
+	        Object positioning,
 	        Consumer<ModelBase> modelPositioning,
 	        boolean isDefault,
 	        boolean isPermanent) {
@@ -39,6 +40,14 @@ public class CompatibleAttachment<T> {
             Consumer<ModelBase> modelPositioning,
             boolean isDefault) {
 	    this(attachment, positioning, modelPositioning, isDefault, false);
+    }
+	
+	//
+	
+	public CompatibleAttachment(ItemAttachment<T> attachment,
+	        Consumer<RenderContext<RenderableState>> positioning,
+            boolean isDefault, boolean isPermanent) {
+        this(attachment, positioning, null, isDefault, false);
     }
 
 	public CompatibleAttachment(ItemAttachment<T> attachment, ItemAttachment.ApplyHandler2<T> applyHandler, ItemAttachment.ApplyHandler2<T> removeHandler) {
@@ -73,9 +82,13 @@ public class CompatibleAttachment<T> {
 		return modelPositioning;
 	}
 
-	public BiConsumer<EntityLivingBase, ItemStack> getPositioning() {
-		return positioning;
-	}
+//	public BiConsumer<EntityLivingBase, ItemStack> getPositioning() {
+//		return positioning;
+//	}
+	
+	public Object getPositioning() {
+        return positioning;
+    }
 
 	public boolean isDefault() {
 		return isDefault;

@@ -141,7 +141,7 @@ public class StorageInventory extends CompatibleInventory {
         NBTTagList items = compound.getTagList("ItemInventory", Constants.NBT.TAG_COMPOUND);
 
         int size = compound.getInteger(TAG_SIZE);
-        if(size >= 0 && items.tagCount() == size) {
+        if(size >= 0 && items.tagCount() >= 0) {
             inventory = new ItemStack[size];
             for (int i = 0; i < size && i < items.tagCount(); ++i) {
                 NBTTagCompound item = (NBTTagCompound) items.getCompoundTagAt(i);

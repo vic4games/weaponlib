@@ -756,15 +756,18 @@ public class MeleeRenderer extends CompatibleMeleeRenderer {
 		}
 	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private void renderCompatibleAttachment(CompatibleAttachment<?> compatibleAttachment,
 			Positioner<Part, RenderContext<RenderableState>> positioner, RenderContext<RenderableState> renderContext) {
 
 		GL11.glPushMatrix();
 		GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_CURRENT_BIT);
 
-		if(compatibleAttachment.getPositioning() != null) {
-			compatibleAttachment.getPositioning().accept(renderContext.getPlayer(), renderContext.getWeapon());
-		}
+		if(compatibleAttachment.getPositioning() instanceof BiConsumer) {
+            ((BiConsumer) compatibleAttachment.getPositioning()).accept(renderContext.getPlayer(), renderContext.getWeapon());
+        } else if(compatibleAttachment.getPositioning() instanceof Consumer) {
+            ((Consumer) compatibleAttachment.getPositioning()).accept(renderContext);
+        }
 
 		ItemAttachment<?> itemAttachment = compatibleAttachment.getAttachment();
 

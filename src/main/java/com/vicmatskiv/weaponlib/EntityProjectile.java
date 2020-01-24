@@ -22,7 +22,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.IProjectile;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.math.RayTraceResult;
+//import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
 
 public abstract class EntityProjectile extends Entity implements IProjectile, CompatibleIEntityAdditionalSpawnData {
@@ -71,16 +71,16 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
         this.gravityVelocity = gravityVelocity;
         this.inaccuracy = inaccuracy;
         
-        if(thrower != null) {
-            RayTraceResult rayTraceResult = thrower.rayTrace(50, 0);
-            if(rayTraceResult != null && rayTraceResult.hitVec != null) {
-                double dx = compatibility.clientPlayer().posX - rayTraceResult.hitVec.x;
-                double dy = compatibility.clientPlayer().posY - rayTraceResult.hitVec.y;
-                double dz = compatibility.clientPlayer().posZ - rayTraceResult.hitVec.z;
-                double distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
-                this.aimTan = 0.4 / distance;
-            }
-        }
+//        if(thrower != null) {
+//            RayTraceResult rayTraceResult = thrower.rayTrace(50, 0);
+//            if(rayTraceResult != null && rayTraceResult.hitVec != null) {
+//                double dx = compatibility.clientPlayer().posX - rayTraceResult.hitVec.x;
+//                double dy = compatibility.clientPlayer().posY - rayTraceResult.hitVec.y;
+//                double dz = compatibility.clientPlayer().posZ - rayTraceResult.hitVec.z;
+//                double distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+//                this.aimTan = 0.4 / distance;
+//            }
+//        }
     }
 
     public void setPositionAndDirection() {

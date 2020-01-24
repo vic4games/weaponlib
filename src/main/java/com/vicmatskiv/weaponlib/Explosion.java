@@ -46,14 +46,28 @@ public class Explosion {
     private final List<CompatibleBlockPos> affectedBlockPositions;
     private final Map<EntityPlayer, CompatibleVec3> playerKnockbackMap;
     private final CompatibleVec3 position;
+    private final float explosionParticleAgeCoefficient;
+    private final float smokeParticleAgeCoefficient;
+    private final float explosionParticleScaleCoefficient;
+    private final float smokeParticleScaleCoefficient;
+    private String explosionParticleTextureName;
+    private String smokeParticleTextureName;
 
     public static void createServerSideExplosion(ModContext modContext, World world, Entity entity, double posX, double posY, double posZ,
-            float explosionStrength, boolean isFlaming, boolean isSmoking, boolean isDestroyingBlocks) {
+            float explosionStrength, boolean isFlaming, boolean isSmoking, boolean isDestroyingBlocks, 
+            float particleAgeCoefficient,
+            float smokeParticleAgeCoefficient,
+            float explosionParticleScaleCoefficient,
+            float smokeParticleScaleCoefficient,
+            String explosionParticleTextureName,
+            String smokeParticleTextureName) {
 
         Float damageCoefficient = modContext.getConfigurationManager().getExplosions().getDamage();
         explosionStrength *= damageCoefficient;
 
-        Explosion explosion = new Explosion(modContext, world, entity, posX, posY, posZ, explosionStrength, isFlaming, isSmoking);
+        Explosion explosion = new Explosion(modContext, world, entity, posX, posY, posZ, explosionStrength, isFlaming, 
+                isSmoking, particleAgeCoefficient, smokeParticleAgeCoefficient, explosionParticleScaleCoefficient, smokeParticleScaleCoefficient,
+                explosionParticleTextureName, smokeParticleTextureName);
 
         explosion.doExplosionA();
         explosion.doExplosionB(false, isDestroyingBlocks);
@@ -68,7 +82,11 @@ public class Explosion {
             if (player.getDistanceSq(posX, posY, posZ) < 4096.0D) {
                 modContext.getChannel().getChannel().sendTo(new ExplosionMessage(posX, posY, posZ, explosionStrength,
                         isDestroyingBlocks,
-                        explosion.getAffectedBlockPositions(), explosion.getPlayerKnockbackMap().get(player)),
+                        explosion.getAffectedBlockPositions(), explosion.getPlayerKnockbackMap().get(player), 
+                        particleAgeCoefficient, smokeParticleAgeCoefficient, explosionParticleScaleCoefficient,
+                        smokeParticleScaleCoefficient,
+                        modContext.getRegisteredTextureId(explosionParticleTextureName),
+                        modContext.getRegisteredTextureId(smokeParticleTextureName)),
                         (EntityPlayerMP) player);
             }
         }
@@ -76,19 +94,26 @@ public class Explosion {
 
     // @SideOnly(Side.CLIENT)
     public Explosion(ModContext modContext, World worldIn, Entity entityIn, double x, double y, double z, float size,
-            List<CompatibleBlockPos> affectedPositions) {
-        this(modContext, worldIn, entityIn, x, y, z, size, false, true, affectedPositions);
+            List<CompatibleBlockPos> affectedPositions, float particleAgeCoefficient, float smokeParticleAgeCoefficient, 
+            float explosionParticleScaleCoefficient, float smokeParticleScaleCoefficient, String explosionParticleTextureName, String smokeParticleTextureName) {
+        this(modContext, worldIn, entityIn, x, y, z, size, false, true, affectedPositions, particleAgeCoefficient, 
+                smokeParticleAgeCoefficient, explosionParticleScaleCoefficient, smokeParticleScaleCoefficient,
+                explosionParticleTextureName, smokeParticleTextureName);
     }
 
     // @SideOnly(Side.CLIENT)
     public Explosion(ModContext modContext, World worldIn, Entity entityIn, double x, double y, double z, float size, boolean flaming,
-            boolean smoking, List<CompatibleBlockPos> affectedPositions) {
-        this(modContext, worldIn, entityIn, x, y, z, size, flaming, smoking);
+            boolean smoking, List<CompatibleBlockPos> affectedPositions, float particleAgeCoefficient, float smokeParticleAgeCoefficient,
+            float explosionParticleScaleCoefficient, float smokeParticleScaleCoefficient,
+            String explosionParticleTextureName, String smokeParticleTextureName) {
+        this(modContext, worldIn, entityIn, x, y, z, size, flaming, smoking, particleAgeCoefficient, smokeParticleAgeCoefficient,
+        explosionParticleScaleCoefficient, smokeParticleScaleCoefficient, explosionParticleTextureName, smokeParticleTextureName);
         this.affectedBlockPositions.addAll(affectedPositions);
     }
 
     public Explosion(ModContext modContext, World worldIn, Entity entityIn, double x, double y, double z, float size, boolean flaming,
-            boolean smoking) {
+            boolean smoking, float particleAgeCoefficient, float smokeParticleAgeCoefficient, float explosionParticleScaleCoefficient,
+            float smokeParticleScaleCoefficient, String explosionParticleTextureName, String smokeParticleTextureName) {
         this.modContext = modContext;
         this.explosionRNG = new Random();
         this.affectedBlockPositions = Lists.<CompatibleBlockPos>newArrayList();
@@ -102,6 +127,12 @@ public class Explosion {
         this.isFlaming = flaming;
         this.isSmoking = smoking;
         this.position = new CompatibleVec3(explosionX, explosionY, explosionZ);
+        this.explosionParticleAgeCoefficient = particleAgeCoefficient;
+        this.smokeParticleAgeCoefficient = smokeParticleAgeCoefficient;
+        this.explosionParticleScaleCoefficient = explosionParticleScaleCoefficient;
+        this.smokeParticleScaleCoefficient = smokeParticleScaleCoefficient;
+        this.explosionParticleTextureName = explosionParticleTextureName;
+        this.smokeParticleTextureName = smokeParticleTextureName;
     }
 
     public double getExplosionX() {
@@ -250,12 +281,17 @@ public class Explosion {
         }
 
         if (this.isSmoking) {
+            int counter = 0;
             for (CompatibleBlockPos blockpos : this.affectedBlockPositions) {
+                
+                if(counter++ % 2 != 0) {
+                    continue;
+                }
 
                 CompatibleBlockState blockState = compatibility.getBlockAtPosition(world, blockpos);
 
                 if (spawnParticles) {
-                    for(int i = 0; i < 3; i++) {
+                    for(int i = 0; i < 1; i++) {
                         double d0 = (double) ((float) blockpos.getBlockPosX() + this.world.rand.nextFloat());
                         double d1 = (double) ((float) blockpos.getBlockPosY() + this.world.rand.nextFloat());
                         double d2 = (double) ((float) blockpos.getBlockPosZ() + this.world.rand.nextFloat());
@@ -277,8 +313,9 @@ public class Explosion {
                                 (d1 + this.explosionY) / 2.0D,
                                 (d2 + this.explosionZ) / 2.0D,
                                 d3 / 2, d4 * 2, d5 / 2,
-                                1.5f * world.rand.nextFloat(),
-                                15 + (int)(world.rand.nextFloat() * 10));
+                                explosionParticleScaleCoefficient * world.rand.nextFloat(),
+                                (int)((15 + (int)(world.rand.nextFloat() * 10)) * explosionParticleAgeCoefficient),
+                                explosionParticleTextureName);
                     }
 
                 }
@@ -305,10 +342,10 @@ public class Explosion {
 
                     modContext.getEffectManager().spawnExplosionSmoke(
                             pX, pY, pZ, motionX, motionY, motionZ,
-                            1f,
-                            250 + (int)(world.rand.nextFloat() * 30),
+                            smokeParticleScaleCoefficient,
+                            (int)((250 + (int)(world.rand.nextFloat() * 30)) * smokeParticleAgeCoefficient),
                             ExplosionSmokeFX.Behavior.EXPLOSION,
-                            SMOKE_TEXTURE);
+                            smokeParticleTextureName);
                 }
             }
         }

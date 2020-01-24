@@ -33,6 +33,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.ai.EntityAIBase;
 import net.minecraft.entity.ai.EntityAITarget;
 import net.minecraft.entity.ai.attributes.IAttribute;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.Item;
@@ -44,6 +45,7 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.DamageSource;
 import net.minecraft.world.EnumDifficulty;
+import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldType;
 import net.minecraftforge.client.event.FOVUpdateEvent;
@@ -420,4 +422,10 @@ public interface Compatibility {
     public void adjustCustomEquippedPosition();
 
     public void markBlockForUpdate(World world, CompatibleBlockPos pos);
+    
+    public boolean getGameRulesBooleanValue(GameRules rules, String ruleName);
+
+    public ItemStack getEntityItem(EntityItem entityItem);
+
+    public DamageSource mobDamageSource(EntityLivingBase thrower);
 }

@@ -44,6 +44,7 @@ public class EntityConfiguration {
     private static final int DEFAULT_MAX_HEALTH = 20;
     private static final double DEFAULT_MAX_SPEED = 0.25;
     private static final double DEFAULT_FOLLOW_RANGE = 35;
+    private static final double DEFAULT_COLLISION_ATTACK_DAMAGE = 3.0;
     private static final float DEFAULT_MAX_TOLERABLE_LIGHT_BRIGHTNESS = 1f;
     private static final float DEFAULT_PRIMARY_EQUIPMENT_DROP_CHANCE = 0.5f;
     private static final float DEFAULT_SECONDARY_EQUIPMENT_DROP_CHANCE = 0.25f;
@@ -175,6 +176,8 @@ public class EntityConfiguration {
         
         private double followRange = DEFAULT_FOLLOW_RANGE;
         
+        private double collisionAttackDamage = DEFAULT_COLLISION_ATTACK_DAMAGE;
+        
         private boolean spawnEgg;
         private int primaryEggColor;
         private int secondaryEggColor;
@@ -185,6 +188,9 @@ public class EntityConfiguration {
         private float armorDropChance = DEFAULT_ARMOR_DROP_CHANCE;
         
         private int maxAmmo = DEFAULT_MAX_AMMO;
+        
+        private CustomMobAttack collisionAttack;
+        private CustomMobAttack delayedAttack;
 
         
         public Builder withName(String name) {
@@ -328,6 +334,11 @@ public class EntityConfiguration {
             return this;
         }
         
+        public Builder withCollisionAttackDamage(double collisionAttackDamage) {
+            this.collisionAttackDamage = collisionAttackDamage;
+            return this;
+        }
+        
         public Builder withSpawnLocationPredicate(Predicate<Entity> canSpawnHere) {
             this.canSpawnHere = canSpawnHere;
             return this;
@@ -350,11 +361,23 @@ public class EntityConfiguration {
             return this;
         }
         
+        public Builder withCollisionAttack(CustomMobAttack collisionAttack) {
+            this.collisionAttack = collisionAttack;
+            return this;
+        }
+        
+        public Builder withDelayedAttack(CustomMobAttack delayedAttack) {
+            this.delayedAttack = delayedAttack;
+            return this;
+        }
+        
         public void register(ModContext context) {
             EntityConfiguration configuration = new EntityConfiguration();
             configuration.creatureAttribute = creatureAttribute;
             configuration.aiTasks = aiTasks;
             configuration.aiTargetTasks = aiTargetTasks;
+            configuration.collisionAttack = collisionAttack;
+            configuration.delayedAttack = delayedAttack;
             
             int modEntityId = entityIdSupplier.get();
             String entityName = name != null ? name : baseClass.getSimpleName() + "Ext" + modEntityId;
@@ -425,6 +448,7 @@ public class EntityConfiguration {
             configuration.secondaryEquipmentDropChance = secondaryEquipmentDropChance;
             configuration.armorDropChance = armorDropChance;
             configuration.maxAmmo = maxAmmo;
+            configuration.collisionAttackDamage = collisionAttackDamage;
             
             Class<? extends Entity> entityClass = EntityClassFactory.getInstance()
                     .generateEntitySubclass(baseClass, modEntityId, configuration);
@@ -496,11 +520,16 @@ public class EntityConfiguration {
     private double maxSpeed;
     private List<TexturedModel> texturedModelVariants;
     private double followRange;
+    private double collisionAttackDamage;
+
     private Map<CompatibleEntityEquipmentSlot, CustomArmor> armor;
     private float primaryEquipmentDropChance;
     private float secondaryEquipmentDropChance;
     private float armorDropChance;
     private int maxAmmo;
+
+    private CustomMobAttack collisionAttack;
+    private CustomMobAttack delayedAttack;
 
     protected EntityConfiguration() {}
     
@@ -590,5 +619,17 @@ public class EntityConfiguration {
 
     public int getMaxAmmo() {
         return maxAmmo;
+    }
+
+    public CustomMobAttack getCollisionAttack() {
+        return collisionAttack;
+    }
+    
+    public CustomMobAttack getDelayedAttack() {
+        return delayedAttack;
+    }
+
+    public double getCollisionAttackDamage() {
+        return collisionAttackDamage;
     }
 }

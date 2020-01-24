@@ -120,4 +120,10 @@ public interface ModContext {
     
     public CommonModContext setMaterialImpactSounds(CompatibleMaterial material, float volume, String... sounds);
 
+    public int getRegisteredTextureId(String textureName);
+
+    public int registerTexture(String explosionParticleTextureName);
+
+    public String getRegisteredTexture(int particleTextureId);
+
 }

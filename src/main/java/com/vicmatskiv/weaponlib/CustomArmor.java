@@ -584,7 +584,7 @@ public class CustomArmor extends CompatibleCustomArmor implements ExposureProtec
     }
 
     @Override
-    public Function<Float, Float> getAbsorbFunction(EntitySpreadable spreadable) {
+    public Function<Float, Float> getAbsorbFunction(Spreadable spreadable) {
         return dose -> dose * (1f - exposureReductionFactor);
     }
     

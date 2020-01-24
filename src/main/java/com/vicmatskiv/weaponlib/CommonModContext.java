@@ -4,6 +4,8 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
 
 import com.vicmatskiv.weaponlib.MagazineReloadAspect.LoadPermit;
 import com.vicmatskiv.weaponlib.WeaponAttachmentAspect.ChangeAttachmentPermit;
@@ -173,6 +175,10 @@ public class CommonModContext implements ModContext {
     private GrenadeAttackAspect grenadeAttackAspect;
 
     protected ConfigurationManager configurationManager;
+    
+    private Map<Integer, String> registeredTextureNames = new HashMap<>();
+    
+    private int registeredTextureCounter;
 
 	@Override
     public void preInit(Object mod, String modId, ConfigurationManager configurationManager, CompatibleChannel channel) {
@@ -280,7 +286,7 @@ public class CommonModContext implements ModContext {
 		CompatibleExtraEntityFlags.register(this);
 		CompatibleCustomPlayerInventoryCapability.register(this);
 
-        compatibility.registerModEntity(WeaponSpawnEntity.class, "Ammo" + modEntityID, modEntityID++, mod, modId, 64, 1, true);
+        compatibility.registerModEntity(WeaponSpawnEntity.class, "Ammo" + modEntityID, modEntityID++, mod, modId, 64, 3, true);
         compatibility.registerModEntity(EntityWirelessCamera.class, "wcam" + modEntityID, modEntityID++, mod, modId, 200, 3, true);
         compatibility.registerModEntity(EntityShellCasing.class, "ShellCasing" + modEntityID, modEntityID++, mod, modId, 64, 500, true);
         compatibility.registerModEntity(EntityGrenade.class, "Grenade" + modEntityID, modEntityID++, mod, modId, 64, 10000, false);
@@ -586,5 +592,41 @@ public class CommonModContext implements ModContext {
             setMaterialImpactSound(sound, volume, material);
         }
         return this;
+    }
+
+    @Override
+    public int getRegisteredTextureId(String textureName) {
+        if(textureName == null) {
+            return -1;
+        }
+        Optional<Entry<Integer, String>> existingEntry = registeredTextureNames
+                .entrySet()
+                .stream()
+                .filter(e -> textureName.equals(e.getValue()))
+                .findFirst();
+        return existingEntry.isPresent() ? existingEntry.get().getKey() : -1;
+    }
+
+    @Override
+    public String getRegisteredTexture(int textureId) {
+        return registeredTextureNames.get(textureId);
+    }
+
+    @Override
+    public int registerTexture(String textureName) {
+        if(textureName == null) {
+            return -1;
+        }
+        Optional<Entry<Integer, String>> existingEntry = registeredTextureNames.entrySet().stream().filter(e -> textureName.equals(e.getValue()))
+            .findFirst();
+        int id;
+        if(existingEntry.isPresent()) {
+            id = existingEntry.get().getKey();
+        } else {
+            id = registeredTextureCounter++;
+            registeredTextureNames.put(id, textureName);
+        }
+        
+        return id;
     }
 }

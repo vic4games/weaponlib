@@ -28,6 +28,8 @@ uniform float NoiseAmplification;
 
 uniform float IntensityAdjust;
 
+uniform vec3 SepiaColor;
+
 //const float RADIUS = 0.55;
 
 const float SOFTNESS = 0.25;
@@ -77,8 +79,8 @@ void main() {
     
     if(SepiaRatio > 0) {
         float gray = dot(texColor.rgb, vec3(0.299, 0.587, 0.114));
-        vec4 sepiaColor = vec4(vec3(gray) * SEPIA, 1.0);
-        texColor = mix(texColor, sepiaColor, SepiaRatio);
+        vec4 sepiaColorMixed = vec4(vec3(gray) * SepiaColor, 1.0);
+        texColor = mix(texColor, sepiaColorMixed, SepiaRatio);
     }
     
     

@@ -11,11 +11,9 @@ import net.minecraft.util.ResourceLocation;
 
 public class SpawnParticleMessageHandler implements CompatibleMessageHandler<SpawnParticleMessage, CompatibleMessage>  {
 
-    private static final ResourceLocation REGULAR_SMOKE_TEXTURE = new ResourceLocation(
-            "weaponlib:/com/vicmatskiv/weaponlib/resources/large-smoke.png");
+    private static final String REGULAR_SMOKE_TEXTURE = "weaponlib:/com/vicmatskiv/weaponlib/resources/large-smoke.png";
     
-    private static final ResourceLocation YELLOW_SMOKE_TEXTURE = new ResourceLocation(
-            "weaponlib:/com/vicmatskiv/weaponlib/resources/large-yellow-smoke.png");
+    private static final String YELLOW_SMOKE_TEXTURE = "weaponlib:/com/vicmatskiv/weaponlib/resources/large-yellow-smoke.png";
     
     private ModContext modContext;
 
