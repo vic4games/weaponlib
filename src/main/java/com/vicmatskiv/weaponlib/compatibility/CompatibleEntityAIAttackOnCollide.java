@@ -1,8 +1,7 @@
 package com.vicmatskiv.weaponlib.compatibility;
 
-import com.vicmatskiv.weaponlib.ai.EntityCustomMob;
-
-import net.minecraft.entity.ai.EntityAIBase;
+import net.minecraft.entity.EntityCreature;
+import net.minecraft.entity.ai.EntityAIAttackMelee;
 import net.minecraft.entity.player.EntityPlayer;
 
 //
@@ -14,18 +13,11 @@ import net.minecraft.entity.player.EntityPlayer;
 //import net.minecraft.util.math.MathHelper;
 //import net.minecraft.world.World;
 
-public class CompatibleEntityAIAttackOnCollide extends EntityAIBase {
+public class CompatibleEntityAIAttackOnCollide extends EntityAIAttackMelee {
 
-    public CompatibleEntityAIAttackOnCollide(EntityCustomMob e, Class<EntityPlayer> class1, double d, boolean b) {
-        // TODO Auto-generated constructor stub
+
+    public CompatibleEntityAIAttackOnCollide(EntityCreature creature, Class<EntityPlayer> class1, double speedIn, boolean useLongMemory) {
+        super(creature, speedIn, useLongMemory);
     }
-
-    @Override
-    public boolean shouldExecute() {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-
 
 }
