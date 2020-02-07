@@ -79,7 +79,7 @@ public class CustomPlayerInventory extends CompatibleInventory implements Contex
 
     @Override
     public void setInventorySlotContents(int slot, ItemStack itemstack) {
-        this.inventory[slot] = itemstack;
+        this.inventory[slot] = itemstack != null ? itemstack : stackForEmptySlot();
 
         if (itemstack != null && compatibility.getStackSize(itemstack) > this.getInventoryStackLimit()) {
             if(itemstack.getItem() instanceof ItemStorage) {

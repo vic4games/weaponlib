@@ -230,6 +230,20 @@ public class StaticModelSourceRenderer extends CompatibleStaticModelSourceRender
         
         GL11.glPushMatrix();
         
+        compatibility.adjustCustomEquippedPosition();
+        
+        GL11.glScalef(0.33f, 0.33f, 0.33f);
+        
+//        float pivotOffsetX = 0f;
+//        float pivotOffsetY = 0f;
+//        float pivotOffsetZ = 0f;
+//        GL11.glTranslatef(pivotOffsetX, pivotOffsetY, pivotOffsetZ);
+        GL11.glRotatef(180f, 0f, 0f, 0f);
+//        GL11.glTranslatef(-pivotOffsetX, -pivotOffsetY, -pivotOffsetZ);
+        
+        
+        GL11.glTranslatef(-0.5f, 0.5f, 0.5f);
+        
         if(Interceptors.isProning(player)) {
             PlayerRenderer playerRenderer = Interceptors.getPlayerRenderer(player);
             
@@ -241,7 +255,7 @@ public class StaticModelSourceRenderer extends CompatibleStaticModelSourceRender
             }
         }
         
-        compatibility.adjustCustomEquippedPosition();
+        
         
         BiConsumer<EntityPlayer, ItemStack> positioning = builder.getCustomEquippedPositioning();
         

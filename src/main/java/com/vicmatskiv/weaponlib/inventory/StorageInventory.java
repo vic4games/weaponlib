@@ -85,7 +85,7 @@ public class StorageInventory extends CompatibleInventory {
 
     @Override
     public void setInventorySlotContents(int slot, ItemStack stack) {
-        inventory[slot] = stack;
+        this.inventory[slot] = stack != null ? stack : stackForEmptySlot();
 
         if (stack != null && compatibility.getStackSize(stack) > getInventoryStackLimit()) {
             compatibility.setStackSize(stack, getInventoryStackLimit());
@@ -143,6 +143,9 @@ public class StorageInventory extends CompatibleInventory {
         int size = compound.getInteger(TAG_SIZE);
         if(size >= 0 && items.tagCount() >= 0) {
             inventory = new ItemStack[size];
+            for(int i = 0; i < size; i++) {
+                inventory[i] = stackForEmptySlot();
+            }
             for (int i = 0; i < size && i < items.tagCount(); ++i) {
                 NBTTagCompound item = (NBTTagCompound) items.getCompoundTagAt(i);
                 int slot = item.getInteger(TAG_SLOT_INDEX);

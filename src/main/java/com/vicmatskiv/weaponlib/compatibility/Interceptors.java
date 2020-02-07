@@ -190,18 +190,14 @@ public class Interceptors {
                 ItemStack backpackStack = capability.getStackInSlot(0); // TODO: replace 0 with constant for backpack slot 
                 if(backpackStack != null) {
                     GL11.glPushMatrix();
-                    GL11.glScalef(0.8f, 0.8f, 0.8f);
-                    GL11.glTranslatef(-0.02f, 0.69f, -0.35f);
-                    GL11.glRotatef(180f, 0, 0, 1);
+                    adjustBodyWearablePosition(player);
                     compatibility.renderItem(player, backpackStack);
                     GL11.glPopMatrix();
                 }
                 ItemStack vestStack = capability.getStackInSlot(1); // TODO: replace 0 with constant for backpack slot 
                 if(vestStack != null) {
                     GL11.glPushMatrix();
-                    GL11.glScalef(0.8f, 0.8f, 0.8f);
-                    GL11.glTranslatef(-0.02f, 0.69f, -0.35f);
-                    GL11.glRotatef(180f, 0, 0, 1);
+                    adjustBodyWearablePosition(player);
                     compatibility.renderItem(player, vestStack);
                     GL11.glPopMatrix();
                 }
@@ -211,6 +207,22 @@ public class Interceptors {
         }
     }
     
+    private static void adjustBodyWearablePosition(EntityPlayer player) {
+//        GL11.glScalef(0.8f, 0.8f, 0.8f);
+//        GL11.glTranslatef(-0.02f, 0.69f, -0.35f);
+//        GL11.glRotatef(180f, 0, 0, 1);
+//        if(isProning(player)) {
+//            GL11.glScalef(0.8f, 0.8f, 0.8f);
+//            GL11.glTranslatef(-0.02f, -3f, -0.35f);
+//            GL11.glRotatef(180f, 0, 0, 1);
+//        } else {
+//            GL11.glScalef(0.8f, 0.8f, 0.8f);
+//            GL11.glTranslatef(-0.02f, 0.69f, -0.35f);
+//            GL11.glRotatef(180f, 0, 0, 1);
+//        }
+        
+    }
+
     public static void renderArmorLayer(ModelBase modelBase, Entity entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scale) {
         
         if(entityIn instanceof EntityPlayer) { 

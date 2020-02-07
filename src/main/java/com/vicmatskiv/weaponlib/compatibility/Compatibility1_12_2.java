@@ -1327,9 +1327,12 @@ private Optional<Field> shadersEnabledFieldOptional;
     @Override
     @SideOnly(Side.CLIENT)
     public void adjustCustomEquippedPosition() {
-        GL11.glScaled(0.4F, 0.4F, 0.4F);
-        GL11.glTranslatef(-0.4f, -1f, -0.7f);
-        GL11.glRotatef(180F, 0f, 1f, 0f);
+//        GL11.glScalef(0.4f, 0.4f, 0.4f);
+//        GL11.glTranslatef(-0.4f, -1f, -1f);
+//        GL11.glRotatef(180f, 0, 0, 1);
+//        GL11.glScaled(0.4F, 0.4F, 0.4F);
+//        GL11.glTranslatef(-0.4f, -1f, -0.7f);
+//        GL11.glRotatef(180F, 0f, 1f, 0f);
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })

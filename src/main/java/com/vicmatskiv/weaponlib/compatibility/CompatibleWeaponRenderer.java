@@ -543,6 +543,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
         modelplayer.bipedRightArm.render(0.0625F);
         if(modelplayer instanceof ModelPlayer) {
             ((ModelPlayer)modelplayer).bipedRightArmwear.rotateAngleX = 0.0F;
+            ((ModelPlayer)modelplayer).bipedRightArmwear.rotateAngleX = -0.3F;
             ((ModelPlayer)modelplayer).bipedRightArmwear.render(0.0625F);
         }
        
