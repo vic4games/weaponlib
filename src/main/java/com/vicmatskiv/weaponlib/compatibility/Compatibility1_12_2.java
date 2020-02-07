@@ -1263,8 +1263,7 @@ private Optional<Field> shadersEnabledFieldOptional;
 
     @Override
     public boolean isValidArmor(ItemStack itemstack, CompatibleEntityEquipmentSlot compatibleEntityEquipementSlot, Entity entity) {
-        itemstack.getItem().isValidArmor(itemstack, compatibleEntityEquipementSlot.getSlot(), entity);
-        return false;
+        return itemstack.getItem().isValidArmor(itemstack, compatibleEntityEquipementSlot.getSlot(), entity);
     }
 
     @Override
@@ -1362,5 +1361,10 @@ private Optional<Field> shadersEnabledFieldOptional;
     @Override
     public DamageSource mobDamageSource(EntityLivingBase thrower) {
         return DamageSource.causeMobDamage(thrower);
+    }
+
+    @Override
+    public ItemStack stackForEmptySlot() {
+        return new ItemStack(Items.AIR);
     }
 }

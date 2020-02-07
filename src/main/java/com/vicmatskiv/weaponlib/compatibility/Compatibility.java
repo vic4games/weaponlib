@@ -428,4 +428,6 @@ public interface Compatibility {
     public ItemStack getEntityItem(EntityItem entityItem);
 
     public DamageSource mobDamageSource(EntityLivingBase thrower);
+
+    public ItemStack stackForEmptySlot();
 }

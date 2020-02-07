@@ -1,7 +1,6 @@
 package com.vicmatskiv.weaponlib.compatibility;
 
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Items;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.ITextComponent;
@@ -58,9 +57,5 @@ public abstract class CompatibleInventory implements IInventory {
 
     @Override
     public void clear() {
-    }
-    
-    protected static ItemStack stackForEmptySlot() {
-        return new ItemStack(Items.AIR);
     }
 }

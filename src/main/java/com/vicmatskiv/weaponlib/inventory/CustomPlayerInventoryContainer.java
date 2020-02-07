@@ -140,7 +140,7 @@ public class CustomPlayerInventoryContainer extends CompatibleContainer {
                 }
                 // if item is armor
                 else if (itemstack1.getItem() instanceof ItemArmor) {
-                     CompatibleEntityEquipmentSlot type = compatibility.getArmorType((ItemArmor) itemstack1.getItem());//((ItemArmor) itemstack1.getItem()).armorType;
+                    CompatibleEntityEquipmentSlot type = compatibility.getArmorType((ItemArmor) itemstack1.getItem());//((ItemArmor) itemstack1.getItem()).armorType;
                     
                     if (!this.mergeItemStack(itemstack1, armorSlotStartIndex + type.ordinal(), armorSlotStartIndex + type.ordinal() + 1, false)) {
                         return null;
@@ -162,12 +162,12 @@ public class CustomPlayerInventoryContainer extends CompatibleContainer {
             }
 
             if (compatibility.getStackSize(itemstack1) == 0) {
-                slot.putStack((ItemStack) null);
+                slot.putStack(compatibility.stackForEmptySlot());
             } else {
                 slot.onSlotChanged();
             }
 
-            if (compatibility.getStackSize(itemstack1) == compatibility.getStackSize(itemstack1)) {
+            if (compatibility.getStackSize(itemstack1) == compatibility.getStackSize(itemstack)) {
                 return null;
             }
 

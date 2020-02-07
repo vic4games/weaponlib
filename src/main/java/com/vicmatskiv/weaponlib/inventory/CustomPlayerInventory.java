@@ -33,7 +33,7 @@ public class CustomPlayerInventory extends CompatibleInventory implements Contex
     public CustomPlayerInventory(/*ModContext modContext*/) {
         inventory = new ItemStack[INV_SIZE];
         for(int i = 0; i < inventory.length; i++) {
-            inventory[i] = stackForEmptySlot();
+            inventory[i] = compatibility.stackForEmptySlot();
         }
     }
     
@@ -59,7 +59,7 @@ public class CustomPlayerInventory extends CompatibleInventory implements Contex
                 stack = stack.splitStack(amount);
                 markDirty();
             } else {
-                setInventorySlotContents(slot, stackForEmptySlot());
+                setInventorySlotContents(slot, compatibility.stackForEmptySlot());
             }
         }
         return stack;
@@ -79,7 +79,7 @@ public class CustomPlayerInventory extends CompatibleInventory implements Contex
 
     @Override
     public void setInventorySlotContents(int slot, ItemStack itemstack) {
-        this.inventory[slot] = itemstack != null ? itemstack : stackForEmptySlot();
+        this.inventory[slot] = itemstack != null ? itemstack : compatibility.stackForEmptySlot();
 
         if (itemstack != null && compatibility.getStackSize(itemstack) > this.getInventoryStackLimit()) {
             if(itemstack.getItem() instanceof ItemStorage) {
@@ -109,7 +109,7 @@ public class CustomPlayerInventory extends CompatibleInventory implements Contex
     public void markDirty() {
         for (int i = 0; i < getSizeInventory(); ++i) {
             if (getStackInSlot(i) != null && compatibility.getStackSize(getStackInSlot(i)) == 0) {
-                inventory[i] = stackForEmptySlot();
+                inventory[i] = compatibility.stackForEmptySlot();
             }
         }
         

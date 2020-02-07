@@ -40,7 +40,7 @@ public class StorageInventory extends CompatibleInventory {
         }
         this.inventory = new ItemStack[size];
         for(int i = 0; i < this.inventory.length; i++) {
-            this.inventory[i] = stackForEmptySlot();
+            this.inventory[i] = compatibility.stackForEmptySlot();
         }
         
         if (!storageItemStack.hasTagCompound()) {
@@ -77,7 +77,7 @@ public class StorageInventory extends CompatibleInventory {
             } else {
                 // this method also calls onInventoryChanged, so we don't need
                 // to call it again
-                setInventorySlotContents(slot, stackForEmptySlot());
+                setInventorySlotContents(slot, compatibility.stackForEmptySlot());
             }
         }
         return stack;
@@ -85,7 +85,7 @@ public class StorageInventory extends CompatibleInventory {
 
     @Override
     public void setInventorySlotContents(int slot, ItemStack stack) {
-        this.inventory[slot] = stack != null ? stack : stackForEmptySlot();
+        this.inventory[slot] = stack != null ? stack : compatibility.stackForEmptySlot();
 
         if (stack != null && compatibility.getStackSize(stack) > getInventoryStackLimit()) {
             compatibility.setStackSize(stack, getInventoryStackLimit());
@@ -120,7 +120,7 @@ public class StorageInventory extends CompatibleInventory {
     public void markDirty() {
         for (int i = 0; i < getSizeInventory(); ++i) {
             if (getStackInSlot(i) != null && compatibility.getStackSize(getStackInSlot(i)) == 0) {
-                inventory[i] = stackForEmptySlot();
+                inventory[i] = compatibility.stackForEmptySlot();
             }
         }
 
@@ -144,7 +144,7 @@ public class StorageInventory extends CompatibleInventory {
         if(size >= 0 && items.tagCount() >= 0) {
             inventory = new ItemStack[size];
             for(int i = 0; i < size; i++) {
-                inventory[i] = stackForEmptySlot();
+                inventory[i] = compatibility.stackForEmptySlot();
             }
             for (int i = 0; i < size && i < items.tagCount(); ++i) {
                 NBTTagCompound item = (NBTTagCompound) items.getCompoundTagAt(i);
