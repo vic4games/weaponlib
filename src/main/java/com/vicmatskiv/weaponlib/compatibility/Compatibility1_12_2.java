@@ -283,6 +283,13 @@ public class Compatibility1_12_2 implements Compatibility {
         ForgeRegistries.ITEMS.register(item);
         //GameRegistry.register(item, new ResourceLocation("mw", name)); // temporary hack
     }
+    
+    @Override
+    public void registerItem(Item item, ResourceLocation name) {
+        item.setRegistryName(name); // temporary hack
+        ForgeRegistries.ITEMS.register(item);
+        //GameRegistry.register(item, new ResourceLocation("mw", name)); // temporary hack
+    }
 
     @Override
     public void registerItem(String modId, Item item, String name) {
@@ -520,7 +527,8 @@ public class Compatibility1_12_2 implements Compatibility {
     }
 
     @Override
-    public void registerBlock(String modId, Block block, String name) {
+    public void registerBlock(ModContext context, Block block, String name) {
+        String modId = context.getModId();
         if(block.getRegistryName() == null) {
             if(block.getUnlocalizedName().length() < modId.length() + 2 + 5) {
                 throw new IllegalArgumentException("Unlocalize block name too short " + block.getUnlocalizedName());
@@ -533,9 +541,11 @@ public class Compatibility1_12_2 implements Compatibility {
         //GameRegistry.register(block);
         ForgeRegistries.BLOCKS.register(block);
         ItemBlock itemBlock = new ItemBlock(block);
+        // TODO: introduce registerItem()
+        context.registerRenderableItem(block.getRegistryName(), itemBlock, null);
         //GameRegistry.register(itemBlock.setRegistryName(block.getRegistryName()));
-        itemBlock.setRegistryName(block.getRegistryName());
-        ForgeRegistries.ITEMS.register(itemBlock);
+//        itemBlock.setRegistryName(block.getRegistryName());
+//        ForgeRegistries.ITEMS.register(itemBlock);
     }
 
     @Override

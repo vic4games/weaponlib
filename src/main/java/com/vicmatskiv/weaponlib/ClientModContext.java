@@ -25,9 +25,6 @@ import com.vicmatskiv.weaponlib.grenade.EntityGrenadeRenderer;
 import com.vicmatskiv.weaponlib.grenade.EntitySmokeGrenade;
 import com.vicmatskiv.weaponlib.grenade.GrenadeRenderer;
 import com.vicmatskiv.weaponlib.grenade.ItemGrenade;
-import com.vicmatskiv.weaponlib.inventory.CustomPlayerInventoryTab;
-import com.vicmatskiv.weaponlib.inventory.BackpackInventoryTab;
-import com.vicmatskiv.weaponlib.inventory.StandardPlayerInventoryTab;
 import com.vicmatskiv.weaponlib.inventory.InventoryTabs;
 import com.vicmatskiv.weaponlib.melee.ItemMelee;
 import com.vicmatskiv.weaponlib.melee.MeleeRenderer;
@@ -43,8 +40,8 @@ import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.ClientCommandHandler;
-import net.minecraftforge.common.MinecraftForge;
 
 public class ClientModContext extends CommonModContext {
 
@@ -174,6 +171,12 @@ public class ClientModContext extends CommonModContext {
 		super.registerRenderableItem(name, item, renderer);
 		rendererRegistry.register(item, name, renderer);
 	}
+	
+	@Override
+    public void registerRenderableItem(ResourceLocation name, Item item, Object renderer) {
+        super.registerRenderableItem(name, item, renderer);
+        rendererRegistry.register(item, name, renderer);
+    }
 
 	@Override
 	protected EntityPlayer getPlayer(CompatibleMessageContext ctx) {

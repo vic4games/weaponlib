@@ -9,10 +9,14 @@ import java.util.function.Supplier;
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMaterial;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
+import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.item.Item;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.client.model.ModelLoader;
 
 public class CustomTileEntityConfiguration<T extends CustomTileEntityConfiguration<T>> {
     
@@ -96,24 +100,34 @@ public class CustomTileEntityConfiguration<T extends CustomTileEntityConfigurati
         tileEntityBlock.setBlockTextureName(textureResource.toString());
         compatibility.registerTileEntity(tileEntityClass, "tile" + name);
                     
-        compatibility.registerBlock(modContext.getModId(), tileEntityBlock, name);
+        compatibility.registerBlock(modContext, tileEntityBlock, name);
         
         if(compatibility.isClientSide()) {
-            RendererRegistration.registerRenderableEntity(modContext, tileEntityClass, modelClassName, 
-                    textureResource, positioning);
-        }            
+            RendererRegistration.registerRenderableEntity(modContext, name, tileEntityClass, modelClassName, 
+                    textureResource, positioning, tileEntityBlock);
+        }
     }
     
     private static class RendererRegistration {
         /*
          * This method is wrapped into a static class to facilitate conditional client-side only loading
          */
-        private static <T extends CustomTileEntityConfiguration<T>> void registerRenderableEntity(ModContext context, Class<? extends TileEntity> tileEntityClass, String modelClassName, 
-                ResourceLocation textureResource, Consumer<TileEntity> positioning) {
+        private static <T extends CustomTileEntityConfiguration<T>> void registerRenderableEntity(
+                ModContext context, String name, Class<? extends TileEntity> tileEntityClass, String modelClassName, 
+                ResourceLocation textureResource, Consumer<TileEntity> positioning, CustomTileEntityBlock tileEntityBlock) {
             try {
+
+//                Minecraft.getMinecraft().getRenderItem().getItemModelMesher()
+//                    .register(Item.getItemFromBlock(tileEntityBlock), 0,
+//                        new ModelResourceLocation(context.getModId() + ":" + name, "inventory"));
+                
+//                ModelResourceLocation itemModelResourceLocation = new ModelResourceLocation(context.getModId() + ":" + name, "inventory");
+//                ModelLoader.setCustomModelResourceLocation(Item.getItemFromBlock(tileEntityBlock), 0, itemModelResourceLocation);
+                
                 ModelBase model = (ModelBase) Class.forName(modelClassName).newInstance();
                 compatibility.bindTileEntitySpecialRenderer(tileEntityClass, 
                         new CustomTileEntityRenderer(model, textureResource, positioning));
+                
             } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
                 e.printStackTrace();
             }

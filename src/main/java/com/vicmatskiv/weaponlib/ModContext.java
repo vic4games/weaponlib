@@ -31,6 +31,8 @@ public interface ModContext {
 	public void runSyncTick(Runnable runnable);
 
 	public void registerRenderableItem(String name, Item weapon, Object renderer);
+	
+	public void registerRenderableItem(ResourceLocation name, Item weapon, Object renderer);
 
 	//TODO: append mod id in 1.7.10
 	public CompatibleSound registerSound(String sound);

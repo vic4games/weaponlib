@@ -44,6 +44,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.EnumDifficulty;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
@@ -113,6 +114,8 @@ public interface Compatibility {
 	public void registerSound(CompatibleSound sound);
 
 	public void registerItem(Item item, String name);
+	
+	public void registerItem(Item item, ResourceLocation name);
 
 	public void registerItem(String modId, Item item, String name);
 
@@ -181,7 +184,7 @@ public interface Compatibility {
 
 	public void enableLightMap();
 
-	public void registerBlock(String modId, Block block, String name);
+	public void registerBlock(ModContext context, Block block, String name);
 
 	public void registerWorldGenerator(CompatibleWorldGenerator worldGeneratorEventHandler, int i);
 

@@ -368,6 +368,11 @@ public class CommonModContext implements ModContext {
 	public void registerRenderableItem(String name, Item item, Object renderer) {
 		compatibility.registerItem(item, name);
 	}
+	
+	@Override
+    public void registerRenderableItem(ResourceLocation name, Item item, Object renderer) {
+        compatibility.registerItem(item, name);
+    }
 
 	@Override
 	public PlayerItemInstanceRegistry getPlayerItemInstanceRegistry() {

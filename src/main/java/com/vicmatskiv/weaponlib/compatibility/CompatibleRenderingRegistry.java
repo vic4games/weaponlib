@@ -52,15 +52,39 @@ public class CompatibleRenderingRegistry implements ICustomModelLoader {
 	}
 
 	public void register(Item item, String name, Object renderer) {
-		renderers.add((ModelSourceRenderer) renderer);
+	    if(renderer != null) {
+	        renderers.add((ModelSourceRenderer) renderer);
+	    }
+		
 		modelSourceLocations.add(modId + ":models/item/" + name);
 		ModelResourceLocation modelID = new ModelResourceLocation(modId + ":" + name, "inventory");
-		((ModelSourceRenderer) renderer).setResourceLocation(modelID);
+		if(renderer != null) {
+		    ((ModelSourceRenderer) renderer).setResourceLocation(modelID);
+		}
+		
 		delayedRegistrations.add((renderItem) -> {
 	        ItemModelMesher itemModelMesher = renderItem.getItemModelMesher();
 	        itemModelMesher.register(item, 0, modelID);
 		});
 	}
+	
+	public void register(Item item, ResourceLocation name, Object renderer) {
+	    // TODO: figure out what's going on with this name
+        if(renderer != null) {
+            renderers.add((ModelSourceRenderer) renderer);
+            modelSourceLocations.add(modId + ":models/item/" + name);
+        }
+        
+        ModelResourceLocation modelID = new ModelResourceLocation(name, "inventory");
+        if(renderer != null) {
+            ((ModelSourceRenderer) renderer).setResourceLocation(modelID);
+        }
+        
+        delayedRegistrations.add((renderItem) -> {
+            ItemModelMesher itemModelMesher = renderItem.getItemModelMesher();
+            itemModelMesher.register(item, 0, modelID);
+        });
+    }
 
 	@Override
 	public void onResourceManagerReload(IResourceManager resourceManager) {
