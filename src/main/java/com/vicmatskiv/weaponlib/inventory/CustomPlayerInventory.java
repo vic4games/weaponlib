@@ -3,8 +3,10 @@ package com.vicmatskiv.weaponlib.inventory;
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
 import com.vicmatskiv.weaponlib.Contextual;
+import com.vicmatskiv.weaponlib.EntityControlMessage;
 import com.vicmatskiv.weaponlib.ItemStorage;
 import com.vicmatskiv.weaponlib.ModContext;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleExtraEntityFlags;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleInventory;
 
 import net.minecraft.entity.player.EntityPlayer;
@@ -113,9 +115,11 @@ public class CustomPlayerInventory extends CompatibleInventory implements Contex
             }
         }
         
-        if(modContext != null && owner != null && !compatibility.world(owner).isRemote) {
-            modContext.getChannel().getChannel().sendToAll(
-                    new EntityInventorySyncMessage(owner, this, true));
+        if(modContext != null && owner != null && compatibility.world(owner).isRemote) {
+            modContext.getChannel().getChannel().sendToServer(new EntityInventorySyncMessage(owner, 
+                    this, true));
+//            modContext.getChannel().getChannel().sendToAll(
+//                    new EntityInventorySyncMessage(owner, this, true));
         }
     }
     
