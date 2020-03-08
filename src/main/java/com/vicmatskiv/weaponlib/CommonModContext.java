@@ -269,9 +269,12 @@ public class CommonModContext implements ModContext {
 		
 		channel.registerMessage(new EntityInventorySyncHandler(this),
 		        EntityInventorySyncMessage.class, 26, CompatibleSide.CLIENT);
+		
+		channel.registerMessage(new EntityInventorySyncHandler(this),
+                EntityInventorySyncMessage.class, 27, CompatibleSide.SERVER);
 
 		channel.registerMessage(new OpenCustomInventoryGuiHandler(this),
-		        OpenCustomPlayerInventoryGuiMessage.class, 27, CompatibleSide.SERVER);
+		        OpenCustomPlayerInventoryGuiMessage.class, 28, CompatibleSide.SERVER);
 		
 		ServerEventHandler serverHandler = new ServerEventHandler(this, modId);
         compatibility.registerWithFmlEventBus(serverHandler);

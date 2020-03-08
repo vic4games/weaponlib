@@ -7,6 +7,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleCustomPlayerInventoryCap
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessage;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageHandler;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleTargetPoint;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -24,6 +25,15 @@ public class EntityInventorySyncHandler implements CompatibleMessageHandler<Enti
     public <T extends CompatibleMessage> T onCompatibleMessage(EntityInventorySyncMessage message, CompatibleMessageContext ctx) {
         if(ctx.isServerSide()) {
             ctx.runInMainThread(() -> {
+                EntityPlayer player = ctx.getPlayer();
+                CustomPlayerInventory inventory = message.getInventory();
+                inventory.setContext(modContext);
+                inventory.setOwner((EntityPlayer) player);
+                CompatibleCustomPlayerInventoryCapability.setInventory((EntityLivingBase) player, inventory);
+                CompatibleTargetPoint point = new CompatibleTargetPoint(player.dimension, 
+                        player.posX, player.posY, player.posZ, 1000);
+                modContext.getChannel().sendToAllAround(new EntityInventorySyncMessage(player, inventory, true), point);
+                
             });
         } else {
             compatibility.runInMainClientThread(() -> {
