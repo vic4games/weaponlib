@@ -17,6 +17,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleMathHelper;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleVec3;
 import com.vicmatskiv.weaponlib.particle.ExplosionSmokeFX;
 
+import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityTNTPrimed;
@@ -186,7 +187,8 @@ public class Explosion {
                             // this.worldObj.getBlockState(blockpos);
                             CompatibleBlockState blockState = compatibility.getBlockAtPosition(world, blockpos);
 
-                            if (!compatibility.isAirBlock(blockState)) {
+                            if (!(compatibility.isAirBlock(blockState) 
+                                    || compatibility.isBlockPenetratableByBullets(blockState))) {
                                 float f2 = this.exploder != null
                                         ? compatibility.getExplosionResistance(this.world, this.exploder, this,
                                                 blockpos, blockState)
@@ -210,7 +212,7 @@ public class Explosion {
         }
 
         this.affectedBlockPositions.addAll(set);
-        float f3 = this.explosionSize * 2.0F;
+        float f3 = this.explosionSize * 4.0F;
         int k1 = CompatibleMathHelper.floor_double(this.explosionX - (double) f3 - 1.0D);
         int l1 = CompatibleMathHelper.floor_double(this.explosionX + (double) f3 + 1.0D);
         int i2 = CompatibleMathHelper.floor_double(this.explosionY - (double) f3 - 1.0D);
@@ -242,7 +244,8 @@ public class Explosion {
                         d7 = d7 / d13;
                         d9 = d9 / d13;
                         double d14 = (double) compatibility.getBlockDensity(world, vec3d,
-                                compatibility.getBoundingBox(entity));
+                                compatibility.getBoundingBox(entity), 
+                                (block, blockMetadata) -> canCollideWithBlock(block, blockMetadata));
                         double d10 = (1.0D - d12) * d14;
                         entity.attackEntityFrom(compatibility.getDamageSource(this),
                                 (float) ((int) ((d10 * d10 + d10) / 2.0D * 7.0D * (double) f3 + 1.0D)));
@@ -269,6 +272,11 @@ public class Explosion {
                 }
             }
         }
+    }
+    
+    public boolean canCollideWithBlock(Block block, CompatibleBlockState metadata) {
+        return !compatibility.isBlockPenetratableByBullets(block) 
+                && compatibility.canCollideCheck(block, metadata, false);
     }
 
     /**

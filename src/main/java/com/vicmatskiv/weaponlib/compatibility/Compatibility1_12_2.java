@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
 import org.lwjgl.opengl.GL11;
@@ -77,6 +78,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.EnumDifficulty;
@@ -800,6 +802,11 @@ public class Compatibility1_12_2 implements Compatibility {
                 || block == Blocks.WEB
                 || block == Blocks.WHEAT;
     }
+    
+    @Override
+    public boolean isBlockPenetratableByBullets(CompatibleBlockState blockState) {
+        return isBlockPenetratableByBullets(blockState.getBlockState().getBlock());
+    }
 
     @Override
     public boolean canCollideCheck(Block block, CompatibleBlockState metadata, boolean hitIfLiquid) {
@@ -832,6 +839,54 @@ public class Compatibility1_12_2 implements Compatibility {
     @Override
     public double getBlockDensity(World world, CompatibleVec3 vec3, CompatibleAxisAlignedBB boundingBox) {
         return world.getBlockDensity(vec3.getVec(), boundingBox.getBoundingBox());
+    }
+    
+    @Override
+    public float getBlockDensity(World world, CompatibleVec3 vec, CompatibleAxisAlignedBB boundingBox, 
+            BiPredicate<Block, CompatibleBlockState> isCollidable) {
+        AxisAlignedBB bb = boundingBox.getBoundingBox();
+        double d0 = 1.0D / ((bb.maxX - bb.minX) * 2.0D + 1.0D);
+        double d1 = 1.0D / ((bb.maxY - bb.minY) * 2.0D + 1.0D);
+        double d2 = 1.0D / ((bb.maxZ - bb.minZ) * 2.0D + 1.0D);
+        double d3 = (1.0D - Math.floor(1.0D / d0) * d0) / 2.0D;
+        double d4 = (1.0D - Math.floor(1.0D / d2) * d2) / 2.0D;
+
+        if (d0 >= 0.0D && d1 >= 0.0D && d2 >= 0.0D)
+        {
+            int j2 = 0;
+            int k2 = 0;
+
+            for (float f = 0.0F; f <= 1.0F; f = (float)((double)f + d0))
+            {
+                for (float f1 = 0.0F; f1 <= 1.0F; f1 = (float)((double)f1 + d1))
+                {
+                    for (float f2 = 0.0F; f2 <= 1.0F; f2 = (float)((double)f2 + d2))
+                    {
+                        double d5 = bb.minX + (bb.maxX - bb.minX) * (double)f;
+                        double d6 = bb.minY + (bb.maxY - bb.minY) * (double)f1;
+                        double d7 = bb.minZ + (bb.maxZ - bb.minZ) * (double)f2;
+                        if(CompatibleRayTracing.rayTraceBlocks(world, 
+                                new CompatibleVec3(d5 + d3, d6, d7 + d4), 
+                                vec, 
+                                isCollidable) == null) {
+                            ++j2;
+                        }
+//                        if (this.rayTraceBlocks(new Vec3d(d5 + d3, d6, d7 + d4), vec) == null)
+//                        {
+//                            ++j2;
+//                        }
+
+                        ++k2;
+                    }
+                }
+            }
+
+            return (float)j2 / (float)k2;
+        }
+        else
+        {
+            return 0.0F;
+        }
     }
 
     @Override
@@ -942,7 +997,7 @@ public class Compatibility1_12_2 implements Compatibility {
                 || block == Blocks.WHEAT;
 
     }
-
+    
     @Override
     public DamageSource genericDamageSource() {
         return GENERIC_DAMAGE_SOURCE;

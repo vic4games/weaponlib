@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
 import com.vicmatskiv.weaponlib.Explosion;
@@ -239,6 +240,8 @@ public interface Compatibility {
     public CompatibleBlockState getBlockAtPosition(World world, CompatibleBlockPos blockPos);
 
     public boolean isBlockPenetratableByBullets(Block block);
+    
+    public boolean isBlockPenetratableByBullets(CompatibleBlockState blockState);
 
     public boolean canCollideCheck(Block block, CompatibleBlockState metadata, boolean hitIfLiquid);
 
@@ -433,4 +436,7 @@ public interface Compatibility {
     public DamageSource mobDamageSource(EntityLivingBase thrower);
 
     public ItemStack stackForEmptySlot();
+
+    public float getBlockDensity(World world, CompatibleVec3 vec, CompatibleAxisAlignedBB boundingBox,
+            BiPredicate<Block, CompatibleBlockState> isCollidable);
 }
