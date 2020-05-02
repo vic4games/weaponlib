@@ -119,7 +119,7 @@ public class StorageItemContainer extends CompatibleContainer {
             if (index < standardInventorySlotStartIndex) {
                 // try to place in player inventory / action bar
                 if (!this.mergeItemStack(itemstack1, standardInventorySlotStartIndex, hotbarSlotEndIndex + 1, true)) {
-                    return null;
+                    return compatibility.stackForEmptySlot();
                 }
 
                 slot.onSlotChange(itemstack1, itemstack);
@@ -134,7 +134,7 @@ public class StorageItemContainer extends CompatibleContainer {
                 if (index >= standardInventorySlotStartIndex) {
                     // place in custom inventory
                     if (!this.mergeItemStack(itemstack1, 0, standardInventorySlotStartIndex, false)) {
-                        return null;
+                        return compatibility.stackForEmptySlot();
                     }
                 }
 
@@ -142,7 +142,7 @@ public class StorageItemContainer extends CompatibleContainer {
                 else if (index >= armorSlotStartIndex && index <= armorSlotEndIndex) {
                     CompatibleEntityEquipmentSlot type = compatibility.getArmorType((ItemArmor) itemstack1.getItem());//((ItemArmor) itemstack1.getItem()).armorType;
                     if (!this.mergeItemStack(itemstack1, armorSlotStartIndex + type.ordinal(), armorSlotStartIndex + type.ordinal() + 1, false)) {
-                        return null;
+                        return compatibility.stackForEmptySlot();
                     }
                 }
                 
@@ -154,13 +154,13 @@ public class StorageItemContainer extends CompatibleContainer {
                 if (index >= standardInventorySlotStartIndex && index <= standardInventorySlotEndIndex) {
                     // place in action bar
                     if (!this.mergeItemStack(itemstack1, hotbarSlotStartIndex, hotbarSlotEndIndex + 1, false)) {
-                        return null;
+                        return compatibility.stackForEmptySlot();
                     }
                 }
                 // item in action bar - place in player inventory
                 else if (index >= hotbarSlotStartIndex && index <= hotbarSlotEndIndex) {
                     if (!this.mergeItemStack(itemstack1, standardInventorySlotStartIndex, standardInventorySlotEndIndex + 1, false)) {
-                        return null;
+                        return compatibility.stackForEmptySlot();
                     }
                 }
             }
@@ -178,7 +178,7 @@ public class StorageItemContainer extends CompatibleContainer {
             onTakeFromSlot(slot, par1EntityPlayer, itemstack1);
         }
 
-        return itemstack;
+        return itemstack != null ? itemstack : compatibility.stackForEmptySlot();
     }
 
     StorageInventory getStorageInventory() {

@@ -238,7 +238,7 @@ public class StaticModelSourceRenderer extends CompatibleStaticModelSourceRender
 //        float pivotOffsetY = 0f;
 //        float pivotOffsetZ = 0f;
 //        GL11.glTranslatef(pivotOffsetX, pivotOffsetY, pivotOffsetZ);
-        GL11.glRotatef(180f, 0f, 0f, 0f);
+        GL11.glRotatef(180f, 0.001f, 0.0f, 0.0f);
 //        GL11.glTranslatef(-pivotOffsetX, -pivotOffsetY, -pivotOffsetZ);
         
         
