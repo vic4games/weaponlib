@@ -439,4 +439,8 @@ public interface Compatibility {
 
     public float getBlockDensity(World world, CompatibleVec3 vec, CompatibleAxisAlignedBB boundingBox,
             BiPredicate<Block, CompatibleBlockState> isCollidable);
+
+    public int removeMatchingInventoryItemStacks(EntityPlayer player, Item item, int quantity);
+
+    public int getMatchingInventoryItemStack(EntityPlayer player, Item item);
 }

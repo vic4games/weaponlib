@@ -14,8 +14,6 @@ import java.util.UUID;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
-import org.lwjgl.opengl.GL11;
-
 import com.vicmatskiv.weaponlib.Explosion;
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.ai.EntityCustomMob;
@@ -78,7 +76,6 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.EnumDifficulty;
@@ -495,6 +492,24 @@ public class Compatibility1_12_2 implements Compatibility {
             player.inventory.removeStackFromSlot(slot);
         }
         return true;
+    }
+    
+    @Override
+    public int removeMatchingInventoryItemStacks(EntityPlayer player, Item item, int quantity) {
+        return player.inventory.clearMatchingItems(item, -1, quantity, null);
+    }
+    
+    @Override
+    public int getMatchingInventoryItemStack(EntityPlayer player, Item item) {
+        int count = 0;
+        int inventorySize = player.inventory.getSizeInventory();
+        for(int i = 0; i < inventorySize; i++) {
+            ItemStack itemStack = player.inventory.getStackInSlot(i);
+            if(itemStack.getItem() == item) {
+                count++;
+            }
+        }
+        return count;
     }
 
     @Override

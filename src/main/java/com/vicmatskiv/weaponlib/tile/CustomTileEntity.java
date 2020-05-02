@@ -59,6 +59,7 @@ public class CustomTileEntity<T extends CustomTileEntityConfiguration<T>> extend
         this.readFromNBT(tagCompound);
     }
     
+    
 //    @Override
 //    public Packet<?> getCompatibleUpdatePacket() {
 //        NBTTagCompound tagCompound = new NBTTagCompound();

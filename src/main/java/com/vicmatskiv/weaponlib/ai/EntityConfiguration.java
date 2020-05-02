@@ -5,9 +5,12 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -24,6 +27,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleBiomeType;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleEntityEquipmentSlot;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 import com.vicmatskiv.weaponlib.config.AIEntity;
+import com.vicmatskiv.weaponlib.mission.MissionOffering;
 
 import net.minecraft.client.model.ModelBiped;
 import net.minecraft.entity.Entity;
@@ -191,6 +195,16 @@ public class EntityConfiguration {
         
         private CustomMobAttack collisionAttack;
         private CustomMobAttack delayedAttack;
+        
+        private boolean isPushable = true;
+        private boolean isInvulnerable = true;
+        private boolean isCollidable = true;
+        private boolean isDespawnable = true;
+        private List<MissionOffering> missionOfferings = new ArrayList<>();
+        private List<String> introDialogs = new ArrayList<>();
+        private String introImage;
+        private String dialogBackground;
+        private String rewardsBackground;
 
         
         public Builder withName(String name) {
@@ -371,6 +385,60 @@ public class EntityConfiguration {
             return this;
         }
         
+        public Builder withPushability(boolean isPushable) {
+            this.isPushable = isPushable;
+            return this;
+        }
+        
+        public Builder withCollidability(boolean isCollidable) {
+            this.isCollidable = isCollidable;
+            return this;
+        }
+        
+        public Builder withDespawnability(boolean isDespawnable) {
+            this.isDespawnable = isDespawnable;
+            return this;
+        }
+        
+        public Builder withInvulnerability() {
+            this.isInvulnerable = true;
+            return this;
+        }
+        
+        public Builder withMissionOffering(MissionOffering missionOffering) {
+            this.missionOfferings.add(missionOffering);
+            return this;
+        }
+        
+        public Builder withIntroDialog(String dialog) {
+            this.introDialogs.add(dialog);
+            return this;
+        }
+        
+        public Builder withIntroImage(String introImage) {
+            this.introImage = introImage.toLowerCase();
+            if(!this.introImage.endsWith(".png")) {
+                this.introImage += ".png";
+            }
+            return this;
+        }
+        
+        public Builder withDialogBackground(String dialogBackground) {
+            this.dialogBackground = dialogBackground.toLowerCase();
+            if(!this.dialogBackground.endsWith(".png")) {
+                this.dialogBackground += ".png";
+            }
+            return this;
+        }
+        
+        public Builder withRewardsBackground(String rewardsBackground) {
+            this.rewardsBackground = rewardsBackground.toLowerCase();
+            if(!this.rewardsBackground.endsWith(".png")) {
+                this.rewardsBackground += ".png";
+            }
+            return this;
+        }
+        
         public void register(ModContext context) {
             EntityConfiguration configuration = new EntityConfiguration();
             configuration.creatureAttribute = creatureAttribute;
@@ -449,6 +517,32 @@ public class EntityConfiguration {
             configuration.armorDropChance = armorDropChance;
             configuration.maxAmmo = maxAmmo;
             configuration.collisionAttackDamage = collisionAttackDamage;
+            configuration.isPushable = isPushable;
+            configuration.isInvulnerable = isInvulnerable;
+            configuration.isCollidable = isCollidable;
+            configuration.isDespawnable = isDespawnable;
+            HashMap<UUID, MissionOffering> tmpMap = new LinkedHashMap<>();
+            for(MissionOffering missionOffering: missionOfferings) {
+                tmpMap.put(missionOffering.getId(), missionOffering);
+            }
+            configuration.missionOfferings = Collections.unmodifiableMap(tmpMap);
+            
+            configuration.dialogContent = Collections.unmodifiableList(introDialogs);
+            
+            if(introImage != null) {
+                configuration.introImage = new ResourceLocation(context.getModId(), 
+                        "textures/gui/" + introImage);
+            }
+            
+            if(dialogBackground != null) {
+                configuration.dialogBackground = new ResourceLocation(context.getModId(), 
+                        "textures/gui/" + dialogBackground);
+            }
+            
+            if(rewardsBackground != null) {
+                configuration.rewardsBackground = new ResourceLocation(context.getModId(), 
+                        "textures/gui/" + rewardsBackground);
+            }
             
             Class<? extends Entity> entityClass = EntityClassFactory.getInstance()
                     .generateEntitySubclass(baseClass, modEntityId, configuration);
@@ -521,6 +615,13 @@ public class EntityConfiguration {
     private List<TexturedModel> texturedModelVariants;
     private double followRange;
     private double collisionAttackDamage;
+    
+    private boolean isPushable;
+    private boolean isInvulnerable;
+    private boolean isCollidable;
+    private boolean isDespawnable;
+    
+    private Map<UUID, MissionOffering> missionOfferings;
 
     private Map<CompatibleEntityEquipmentSlot, CustomArmor> armor;
     private float primaryEquipmentDropChance;
@@ -530,6 +631,12 @@ public class EntityConfiguration {
 
     private CustomMobAttack collisionAttack;
     private CustomMobAttack delayedAttack;
+
+    private List<String> dialogContent;
+    
+    private ResourceLocation introImage;
+    private ResourceLocation dialogBackground;
+    private ResourceLocation rewardsBackground;
 
     protected EntityConfiguration() {}
     
@@ -631,5 +738,41 @@ public class EntityConfiguration {
 
     public double getCollisionAttackDamage() {
         return collisionAttackDamage;
+    }
+
+    public boolean isPushable() {
+        return isPushable;
+    }
+
+    public boolean isInvulnerable() {
+        return isInvulnerable;
+    }
+
+    public boolean isCollidable() {
+        return isCollidable;
+    }
+    
+    public Map<UUID, MissionOffering> getMissionOfferings() {
+        return missionOfferings;
+    }
+
+    public List<String> getDialogContent() {
+        return dialogContent;
+    }
+
+    public ResourceLocation getIntroImage() {
+        return introImage;
+    }
+
+    public ResourceLocation getDialogBackground() {
+        return dialogBackground;
+    }
+    
+    public ResourceLocation getRewardsBackground() {
+        return rewardsBackground;
+    }
+
+    public boolean isDespawnable() {
+        return isDespawnable;
     }
 }

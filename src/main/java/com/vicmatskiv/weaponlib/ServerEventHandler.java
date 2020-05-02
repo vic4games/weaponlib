@@ -3,6 +3,7 @@ package com.vicmatskiv.weaponlib;
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
 import java.util.Iterator;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -14,15 +15,23 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleExtraEntityFlags;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleLivingDeathEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleLivingHurtEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleLivingUpdateEvent;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleMissionCapability;
 import com.vicmatskiv.weaponlib.compatibility.CompatiblePlayerCloneEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatiblePlayerDropsEvent;
+import com.vicmatskiv.weaponlib.compatibility.CompatiblePlayerEntityInteractEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatiblePlayerRespawnEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleServerEventHandler;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleServerTickEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleStartTrackingEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleStopTrackingEvent;
 import com.vicmatskiv.weaponlib.electronics.ItemHandheld;
 import com.vicmatskiv.weaponlib.inventory.CustomPlayerInventory;
 import com.vicmatskiv.weaponlib.inventory.EntityInventorySyncMessage;
+import com.vicmatskiv.weaponlib.mission.GoToLocationAction;
+import com.vicmatskiv.weaponlib.mission.KillEntityAction;
+import com.vicmatskiv.weaponlib.mission.Mission;
+import com.vicmatskiv.weaponlib.mission.Missions;
+import com.vicmatskiv.weaponlib.mission.PlayerMissionSyncMessage;
 import com.vicmatskiv.weaponlib.tracking.PlayerEntityTracker;
 import com.vicmatskiv.weaponlib.tracking.SyncPlayerEntityTrackerMessage;
 
@@ -32,6 +41,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.DamageSource;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
 
 /**
@@ -52,6 +62,11 @@ public class ServerEventHandler extends CompatibleServerEventHandler {
     @Override
     public ModContext getModContext() {
         return modContext;
+    }
+
+    @Override
+    protected void onCompatibleServerTickEvent(CompatibleServerTickEvent e) {
+        CommonModContext.currentContext.set(modContext);
     }
     
     @Override
@@ -81,6 +96,12 @@ public class ServerEventHandler extends CompatibleServerEventHandler {
                     nbt.setFloat("dose", exposure.getLastDose());
                 }
             }
+            if(e.getEntity() instanceof EntityPlayer) {
+                Missions.update((EntityPlayer)e.getEntity(), 
+                        new GoToLocationAction(e.getEntity().posX, e.getEntity().posY, e.getEntity().posZ, 0), 
+                        modContext);
+            }
+            
         }
     }
 
@@ -107,6 +128,10 @@ public class ServerEventHandler extends CompatibleServerEventHandler {
             modContext.getChannel().getChannel().sendToAll(
                     new EntityInventorySyncMessage(e.getEntity(), 
                             CompatibleCustomPlayerInventoryCapability.getInventory(player), false));
+            
+            modContext.getChannel().getChannel().sendTo(
+                    new PlayerMissionSyncMessage(CompatibleMissionCapability.getMissions(player)),
+                    (EntityPlayerMP)e.getEntity());
         }
     }
 
@@ -133,6 +158,10 @@ public class ServerEventHandler extends CompatibleServerEventHandler {
             modContext.getChannel().getChannel().sendTo(
                     new EntityControlMessage(player, CompatibleExtraEntityFlags.getFlags(player)),
                     (EntityPlayerMP)e.getEntity());
+            
+            modContext.getChannel().getChannel().sendTo(
+                    new PlayerMissionSyncMessage(CompatibleMissionCapability.getMissions(player)),
+                    (EntityPlayerMP)e.getEntity());
         }
     }
 
@@ -151,6 +180,10 @@ public class ServerEventHandler extends CompatibleServerEventHandler {
             modContext.getChannel().getChannel().sendTo(
                     new EntityControlMessage(player, CompatibleExtraEntityFlags.getFlags(player)),
                     (EntityPlayerMP)e.getEntity());
+            
+            modContext.getChannel().getChannel().sendTo(
+                    new PlayerMissionSyncMessage(CompatibleMissionCapability.getMissions(player)),
+                    (EntityPlayerMP)e.getEntity());
         }
     }
 
@@ -158,6 +191,12 @@ public class ServerEventHandler extends CompatibleServerEventHandler {
     protected void onCompatibleLivingDeathEvent(CompatibleLivingDeathEvent event) {
 
         final EntityLivingBase entity = event.getEntity();
+        if(!compatibility.world(entity).isRemote) {
+            DamageSource damageSource = event.getDamageSource();
+            if(damageSource.getTrueSource() instanceof EntityPlayer) {
+                Missions.update((EntityPlayer)damageSource.getTrueSource(), new KillEntityAction(entity), modContext);
+            }
+        }
         if(entity instanceof EntityPlayer && !compatibility.world(entity).isRemote) {
             if(!compatibility.getGameRulesBooleanValue(compatibility.world(entity).getGameRules(), "keepInventory")) {
                 CustomPlayerInventory inventory = CompatibleCustomPlayerInventoryCapability.getInventory(entity);
@@ -217,5 +256,10 @@ public class ServerEventHandler extends CompatibleServerEventHandler {
         modContext.getChannel().getChannel().sendToAll(
                 new EntityInventorySyncMessage(compatiblePlayerRespawnEvent.getPlayer(), 
                         CompatibleCustomPlayerInventoryCapability.getInventory(compatiblePlayerRespawnEvent.getPlayer()), false));
+    }
+
+    @Override
+    protected void onCompatiblePlayerInteractInteractEvent(CompatiblePlayerEntityInteractEvent compatiblePlayerInteractEvent) {
+        //
     }
 }

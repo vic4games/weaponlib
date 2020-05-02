@@ -23,7 +23,8 @@ public abstract class UniversalObject implements UniversallySerializable {
 	@Override
 	public void init(ByteBuf buf) {
 		if(getSerialVersion() != buf.readInt()) {
-			throw new IndexOutOfBoundsException("Serial version mismatch"); // TODO: create custom exception
+		 // TODO: create custom exception
+			throw new IndexOutOfBoundsException("Serial version mismatch"); 
 		}
 		this.uuid = new UUID(buf.readLong(), buf.readLong()); // TODO: default constructor initializes UUID, init overrides it. Not very elegant.
 	}
@@ -34,9 +35,36 @@ public abstract class UniversalObject implements UniversallySerializable {
 		buf.writeLong(uuid.getLeastSignificantBits());
 		//typeRegistry.serialize(this, buf);
 	}
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((uuid == null) ? 0 : uuid.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        UniversalObject other = (UniversalObject) obj;
+        if (uuid == null) {
+            if (other.uuid != null)
+                return false;
+        } else if (!uuid.equals(other.uuid))
+            return false;
+        return true;
+    }
 	
 //    public static <T extends UniversalObject> T fromBytes(ByteBuf buf, TypeRegistry typeRegistry) {
 //    	return typeRegistry.fromBytes(buf);
 //    }
+	
+	
 
 }

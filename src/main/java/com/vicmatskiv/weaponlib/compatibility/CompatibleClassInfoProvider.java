@@ -56,6 +56,17 @@ public class CompatibleClassInfoProvider {
                 .addMethodInfo2("isSneaking", "()Z", "aM", "()Z")
                 .addMethodInfo2("updateEntityActionState", "()V", "cr", "()V")
                 );
+        
+        classInfoMap.put("net/minecraft/entity/player/EntityPlayerMP", 
+                new ClassInfo("net/minecraft/entity/player/EntityPlayerMP", "oq")
+                .addMethodInfo2("sendSlotContents", "(Lnet/minecraft/inventory/Container;ILnet/minecraft/item/ItemStack;)V", "a", "(Lafr;ILaip;)V")
+                );
+        
+        classInfoMap.put("net/minecraft/advancements/critereon/InventoryChangeTrigger", 
+                new ClassInfo("net/minecraft/advancements/critereon/InventoryChangeTrigger", "al")
+                .addMethodInfo2("trigger", "(Lnet/minecraft/entity/player/EntityPlayerMP;Lnet/minecraft/entity/player/InventoryPlayer;)V", "a", "(Loq;Laec;)V")
+                );
+        
     }
 
     private static CompatibleClassInfoProvider instance = new CompatibleClassInfoProvider();
