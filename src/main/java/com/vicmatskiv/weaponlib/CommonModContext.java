@@ -19,6 +19,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleExposureCapability;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleExtraEntityFlags;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMaterial;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleMissionCapability;
 import com.vicmatskiv.weaponlib.compatibility.CompatiblePlayerEntityTrackerProvider;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSide;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
@@ -52,6 +53,17 @@ import com.vicmatskiv.weaponlib.melee.MeleeState;
 import com.vicmatskiv.weaponlib.melee.PlayerMeleeInstance;
 import com.vicmatskiv.weaponlib.melee.TryAttackMessage;
 import com.vicmatskiv.weaponlib.melee.TryAttackMessageHandler;
+import com.vicmatskiv.weaponlib.mission.AcceptMissionHandler;
+import com.vicmatskiv.weaponlib.mission.AcceptMissionMessage;
+import com.vicmatskiv.weaponlib.mission.GoToLocationAction;
+import com.vicmatskiv.weaponlib.mission.Goal;
+import com.vicmatskiv.weaponlib.mission.KillEntityAction;
+import com.vicmatskiv.weaponlib.mission.Mission;
+import com.vicmatskiv.weaponlib.mission.ObtainItemAction;
+import com.vicmatskiv.weaponlib.mission.OpenMissionGuiHandler;
+import com.vicmatskiv.weaponlib.mission.OpenMissionGuiMessage;
+import com.vicmatskiv.weaponlib.mission.PlayerMissionSyncHandler;
+import com.vicmatskiv.weaponlib.mission.PlayerMissionSyncMessage;
 import com.vicmatskiv.weaponlib.network.NetworkPermitManager;
 import com.vicmatskiv.weaponlib.network.PermitMessage;
 import com.vicmatskiv.weaponlib.network.TypeRegistry;
@@ -62,8 +74,17 @@ import com.vicmatskiv.weaponlib.state.StateManager;
 import com.vicmatskiv.weaponlib.tracking.SyncPlayerEntityTrackerMessage;
 import com.vicmatskiv.weaponlib.tracking.SyncPlayerEntityTrackerMessageMessageHandler;
 
+import net.minecraft.advancements.CriteriaTriggers;
+import net.minecraft.advancements.ICriterionTrigger;
+import net.minecraft.advancements.critereon.EnchantmentPredicate;
+import net.minecraft.advancements.critereon.InventoryChangeTrigger;
+import net.minecraft.advancements.critereon.InventoryChangeTrigger.Instance;
+import net.minecraft.advancements.critereon.ItemPredicate;
+import net.minecraft.advancements.critereon.MinMaxBounds;
+import net.minecraft.advancements.critereon.NBTPredicate;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
 
@@ -92,6 +113,11 @@ public class CommonModContext implements ModContext {
         TypeRegistry.getInstance().register(TabletState.class);
         TypeRegistry.getInstance().register(HandheldState.class);
         TypeRegistry.getInstance().register(SpreadableExposure.class);
+        TypeRegistry.getInstance().register(Mission.class);
+        TypeRegistry.getInstance().register(Goal.class);
+        TypeRegistry.getInstance().register(KillEntityAction.class);
+        TypeRegistry.getInstance().register(ObtainItemAction.class);
+        TypeRegistry.getInstance().register(GoToLocationAction.class);
     }
 
     static class BulletImpactSoundKey {
@@ -179,6 +205,8 @@ public class CommonModContext implements ModContext {
     private Map<Integer, String> registeredTextureNames = new HashMap<>();
     
     private int registeredTextureCounter;
+    
+    protected static ThreadLocal<ModContext> currentContext = new ThreadLocal<>();
 
 	@Override
     public void preInit(Object mod, String modId, ConfigurationManager configurationManager, CompatibleChannel channel) {
@@ -276,6 +304,15 @@ public class CommonModContext implements ModContext {
 		channel.registerMessage(new OpenCustomInventoryGuiHandler(this),
 		        OpenCustomPlayerInventoryGuiMessage.class, 28, CompatibleSide.SERVER);
 		
+		channel.registerMessage(new OpenMissionGuiHandler(this),
+                OpenMissionGuiMessage.class, 29, CompatibleSide.CLIENT);
+		
+		channel.registerMessage(new PlayerMissionSyncHandler(this),
+                PlayerMissionSyncMessage.class, 30, CompatibleSide.CLIENT);
+		
+		channel.registerMessage(new AcceptMissionHandler(this),
+                AcceptMissionMessage.class, 31, CompatibleSide.SERVER);
+		
 		ServerEventHandler serverHandler = new ServerEventHandler(this, modId);
         compatibility.registerWithFmlEventBus(serverHandler);
         compatibility.registerWithEventBus(serverHandler);
@@ -288,6 +325,7 @@ public class CommonModContext implements ModContext {
 		CompatibleExposureCapability.register(this);
 		CompatibleExtraEntityFlags.register(this);
 		CompatibleCustomPlayerInventoryCapability.register(this);
+		CompatibleMissionCapability.register(this);
 
         compatibility.registerModEntity(WeaponSpawnEntity.class, "Ammo" + modEntityID, modEntityID++, mod, modId, 64, 3, true);
         compatibility.registerModEntity(EntityWirelessCamera.class, "wcam" + modEntityID, modEntityID++, mod, modId, 200, 3, true);
@@ -302,6 +340,21 @@ public class CommonModContext implements ModContext {
 //        EntityRegistry.addSpawn(EntityCustomMob.class, 1, 1, 3, EnumCreatureType.MONSTER, 
 //                BiomeDictionary.getBiomesForType(Type.PLAINS));
         
+//        Instance inventoryChangeTriggerInstance = new InventoryChangeTrigger.Instance(
+//                MinMaxBounds.UNBOUNDED, 
+//                MinMaxBounds.UNBOUNDED, 
+//                MinMaxBounds.UNBOUNDED, 
+//                new ItemPredicate[] {new ItemPredicate(
+//                        Items.APPLE, 
+//                        null, 
+//                        MinMaxBounds.UNBOUNDED,
+//                        MinMaxBounds.UNBOUNDED,
+//                        new EnchantmentPredicate[0],
+//                        null,
+//                        NBTPredicate.ANY)});
+//
+//        CriteriaTriggers.INVENTORY_CHANGED.addListener(
+//                null, new ICriterionTrigger.Listener(inventoryChangeTriggerInstance, null, "Custom inventory change"));
 	}
 	
 
@@ -309,6 +362,10 @@ public class CommonModContext implements ModContext {
     public void init(Object mod, String modid) {
     
         compatibility.registerGuiHandler(mod, new GuiHandler());
+    }
+    
+    public static ModContext getContext() {
+        return currentContext.get();
     }
 	
 	@Override

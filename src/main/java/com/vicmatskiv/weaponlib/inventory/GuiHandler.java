@@ -14,6 +14,7 @@ public class GuiHandler extends CompatibleGuiHandler {
 
     public static final int STORAGE_ITEM_INVENTORY_GUI_ID = 1;
     public static final int CUSTOM_PLAYER_INVENTORY_GUI_ID = 2;
+//    public static final int MISSIONS_MENU_GUI_ID = 3;
 
     @Override
     public Object getServerGuiElement(int guiId, EntityPlayer player, World world, int x, int y, int z) {
@@ -53,7 +54,11 @@ public class GuiHandler extends CompatibleGuiHandler {
             guiContainer = new CustomPlayerInventoryGuiContainer(player, player.inventory,
                     CompatibleCustomPlayerInventoryCapability.getInventory(player));
             break;
+//        case MISSIONS_MENU_GUI_ID:
+//            guiContainer = new MissionsMenuGui();
+//            break;
         }
+        
         return guiContainer;
     }
 

@@ -16,6 +16,7 @@ import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerDropsEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerRespawnEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -56,9 +57,12 @@ public abstract class CompatibleServerEventHandler {
 	@SubscribeEvent
     public void onTick(TickEvent.ServerTickEvent event) {
         if(event.phase == Phase.START) {
+            onCompatibleServerTickEvent(new CompatibleServerTickEvent(event));
         }
-        //return ObfuscationReflectionHelper.setPrivateValue(EntityTracker.class, entityTracker, 10, "entityViewDistance", "field_72792_");
     }
+	
+    protected abstract void onCompatibleServerTickEvent(CompatibleServerTickEvent e);
+
 
 	@SubscribeEvent
 	public void attachCapability(AttachCapabilitiesEvent<Entity> event)
@@ -73,6 +77,9 @@ public abstract class CompatibleServerEventHandler {
             ResourceLocation customInventoryLocation = new ResourceLocation(getModId(), "PLAYER_CUSTOM_INVENTORY");
 
             event.addCapability(customInventoryLocation, new CompatibleCustomPlayerInventoryCapability());
+            
+            ResourceLocation playerMissionsResourceLocation = new ResourceLocation(getModId(), "PLAYER_MISSIONS");
+            event.addCapability(playerMissionsResourceLocation, new CompatibleMissionCapability());
 	    }
 	    
         ResourceLocation exposureResourceLocation = new ResourceLocation(getModId(), "EXPOSURE");
@@ -130,8 +137,16 @@ public abstract class CompatibleServerEventHandler {
     public void onPlayerRespawn(PlayerRespawnEvent e) {
         onCompatiblePlayerRespawnEvent(new CompatiblePlayerRespawnEvent(e));
     }
+    
+    @SubscribeEvent
+    public void onPlayerInteract(PlayerInteractEvent.EntityInteract e) {
+        onCompatiblePlayerInteractInteractEvent(new CompatiblePlayerEntityInteractEvent(e));
+    }
 
 //    protected abstract void onCompatibleLivingDeathEvent(LivingDeathEvent e);
+
+    protected abstract void onCompatiblePlayerInteractInteractEvent(
+            CompatiblePlayerEntityInteractEvent compatiblePlayerInteractEvent);
 
     protected abstract void onCompatiblePlayerStartedTracking(CompatibleStartTrackingEvent e);
 
