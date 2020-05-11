@@ -3,7 +3,6 @@ package com.vicmatskiv.weaponlib;
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
 import java.util.Iterator;
-import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,9 +26,11 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleStopTrackingEvent;
 import com.vicmatskiv.weaponlib.electronics.ItemHandheld;
 import com.vicmatskiv.weaponlib.inventory.CustomPlayerInventory;
 import com.vicmatskiv.weaponlib.inventory.EntityInventorySyncMessage;
+import com.vicmatskiv.weaponlib.mission.EntityMissionOfferingSyncMessage;
 import com.vicmatskiv.weaponlib.mission.GoToLocationAction;
 import com.vicmatskiv.weaponlib.mission.KillEntityAction;
-import com.vicmatskiv.weaponlib.mission.Mission;
+import com.vicmatskiv.weaponlib.mission.MissionManager;
+import com.vicmatskiv.weaponlib.mission.MissionOfferingSyncMessage;
 import com.vicmatskiv.weaponlib.mission.Missions;
 import com.vicmatskiv.weaponlib.mission.PlayerMissionSyncMessage;
 import com.vicmatskiv.weaponlib.tracking.PlayerEntityTracker;
@@ -43,6 +44,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 
 /**
  * TODO: rename to common event handler, since it's invoked on both sides
@@ -98,7 +100,7 @@ public class ServerEventHandler extends CompatibleServerEventHandler {
             }
             if(e.getEntity() instanceof EntityPlayer) {
                 Missions.update((EntityPlayer)e.getEntity(), 
-                        new GoToLocationAction(e.getEntity().posX, e.getEntity().posY, e.getEntity().posZ, 0), 
+                        new GoToLocationAction((float)(e.getEntity().posX), (float)(e.getEntity().posY), (float)(e.getEntity().posZ), 0), 
                         modContext);
             }
             
@@ -261,5 +263,16 @@ public class ServerEventHandler extends CompatibleServerEventHandler {
     @Override
     protected void onCompatiblePlayerInteractInteractEvent(CompatiblePlayerEntityInteractEvent compatiblePlayerInteractEvent) {
         //
+    }
+
+    @Override
+    protected void onCompatiblePlayerLoggedIn(PlayerLoggedInEvent e) {
+        MissionManager missionManager = modContext.getMissionManager();
+        if(missionManager != null ) {
+            modContext.getChannel().getChannel().sendTo(
+                    new MissionOfferingSyncMessage(missionManager.getOfferings()), (EntityPlayerMP)e.player);
+            modContext.getChannel().getChannel().sendTo(
+                    new EntityMissionOfferingSyncMessage(missionManager.getEntityMissionOfferings()), (EntityPlayerMP)e.player);
+        }
     }
 }

@@ -5,7 +5,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import com.vicmatskiv.weaponlib.ModContext;
-import com.vicmatskiv.weaponlib.mission.Mission;
+import com.vicmatskiv.weaponlib.mission.MissionOffering;
 import com.vicmatskiv.weaponlib.network.TypeRegistry;
 
 import io.netty.buffer.ByteBuf;
@@ -21,39 +21,39 @@ import net.minecraftforge.common.capabilities.CapabilityInject;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 
-public class CompatibleMissionCapability implements ICapabilitySerializable<NBTBase> {
+public class CompatibleMissionOfferingCapability implements ICapabilitySerializable<NBTBase> {
 
     public static void register(ModContext modContext) {
-        CapabilityManager.INSTANCE.register(MissionContainer.class, new MissionContainerStorage(), 
+        CapabilityManager.INSTANCE.register(MissionOfferingContainer.class, new MissionOfferingContainerStorage(), 
                 MissionContainerImpl.class);
     }
 
-    public static interface MissionContainer {
-        public Set<Mission> getMissions();
-        public void setMissions(Set<Mission> missions);
+    public static interface MissionOfferingContainer {
+        public Set<MissionOffering> getMissions();
+        public void setMissions(Set<MissionOffering> missions);
     }
     
-    public static class MissionContainerImpl implements MissionContainer {
+    public static class MissionContainerImpl implements MissionOfferingContainer {
         
-        Set<Mission> missions = new LinkedHashSet<>();
+        Set<MissionOffering> missions = new LinkedHashSet<>();
 
         @Override
-        public Set<Mission> getMissions() {
+        public Set<MissionOffering> getMissions() {
             return missions;
         }
         
         @Override
-        public void setMissions(Set<Mission> missions) {
+        public void setMissions(Set<MissionOffering> missions) {
             this.missions = new LinkedHashSet<>(missions); 
         }
     }
     
-    public static class MissionContainerStorage implements IStorage<MissionContainer> {
+    public static class MissionOfferingContainerStorage implements IStorage<MissionOfferingContainer> {
 
         @Override
-        public NBTBase writeNBT(Capability<MissionContainer> capability, MissionContainer instance, EnumFacing side) {
+        public NBTBase writeNBT(Capability<MissionOfferingContainer> capability, MissionOfferingContainer instance, EnumFacing side) {
             NBTTagList tagList = new NBTTagList();
-            for(Mission mission: instance.getMissions()) {
+            for(MissionOffering mission: instance.getMissions()) {
                 ByteBuf buf = Unpooled.buffer();
                 TypeRegistry.getInstance().toBytes(mission, buf);
                 tagList.appendTag(new NBTTagByteArray(buf.array()));
@@ -62,47 +62,39 @@ public class CompatibleMissionCapability implements ICapabilitySerializable<NBTB
         }
 
         @Override
-        public void readNBT(Capability<MissionContainer> capability, MissionContainer instance, EnumFacing side, NBTBase nbt) {
+        public void readNBT(Capability<MissionOfferingContainer> capability, MissionOfferingContainer instance, EnumFacing side, NBTBase nbt) {
             NBTTagList tagList = (NBTTagList) nbt;
             for(int i = 0; i < tagList.tagCount(); i++) {
                 NBTTagByteArray byteArray = (NBTTagByteArray) tagList.get(i);
                 ByteBuf buf = Unpooled.wrappedBuffer(byteArray.getByteArray());
-                Mission mission = TypeRegistry.getInstance().fromBytes(buf);
+                MissionOffering mission = TypeRegistry.getInstance().fromBytes(buf);
                 instance.getMissions().add(mission);
             }
         }
     }
     
-    @CapabilityInject(MissionContainer.class)
-    static Capability<MissionContainer> capabilityContainer = null;
+    @CapabilityInject(MissionOfferingContainer.class)
+    static Capability<MissionOfferingContainer> capabilityContainer = null;
     
-    private MissionContainer instance = capabilityContainer.getDefaultInstance(); // doesn't this trigger null pointer exception if capability is not registered?
+    private MissionOfferingContainer instance = capabilityContainer.getDefaultInstance(); // doesn't this trigger null pointer exception if capability is not registered?
 
-    public static Set<Mission> getMissions(Entity entity) {
+    public static Set<MissionOffering> getMissions(Entity entity) {
         if(entity == null) return null;
-        MissionContainer container = entity.getCapability(capabilityContainer, null);
+        MissionOfferingContainer container = entity.getCapability(capabilityContainer, null);
         return container != null ? container.getMissions() : Collections.emptySet();
     }
 
-    public static void removeMission(Entity entity, Mission mission) {
-        if(entity == null) return;
-        MissionContainer container = entity.getCapability(capabilityContainer, null);
-        if(container != null) {
-            container.getMissions().remove(mission);
-        }
-    }
-    
-    public static void updateMission(Entity entity, Mission mission) {
+    public static void updateMissionOffering(Entity entity, MissionOffering mission) {
         if(entity == null) return ;
-        MissionContainer container = entity.getCapability(capabilityContainer, null);
+        MissionOfferingContainer container = entity.getCapability(capabilityContainer, null);
         if(container != null) {
             container.getMissions().add(mission);
         }
     }
     
-    public static void updateMissions(Entity entity, Set<Mission> missions) {
+    public static void updateMissionOfferings(Entity entity, Set<MissionOffering> missions) {
         if(entity == null) return ;
-        MissionContainer container = entity.getCapability(capabilityContainer, null);
+        MissionOfferingContainer container = entity.getCapability(capabilityContainer, null);
         if(container != null) {
             container.setMissions(missions);
         }

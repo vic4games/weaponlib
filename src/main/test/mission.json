@@ -1,0 +1,23 @@
+{
+    "name": "Kill 3 zombies",
+    "description": "Mission to kill 3 zombies",
+    "level": "hard",
+    "requiresAll": ["Kill 2 zombies"],
+    
+    "goals": [
+        {
+            "action": {
+                "type": "KillEntityAction",
+                "entity": "zombie"
+            },
+            "quantity": 4
+        }
+        ],
+        
+     "rewards": [
+         {
+             "type": "ItemReward",
+             "item": "minecraft:diamond_axe"
+         }
+     ]
+}

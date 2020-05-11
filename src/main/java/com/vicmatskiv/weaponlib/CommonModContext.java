@@ -2,6 +2,7 @@ package com.vicmatskiv.weaponlib;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -17,6 +18,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleCustomPlayerInventoryCapability;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleExposureCapability;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleExtraEntityFlags;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleFmlPreInitializationEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMaterial;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMissionCapability;
@@ -55,10 +57,17 @@ import com.vicmatskiv.weaponlib.melee.TryAttackMessage;
 import com.vicmatskiv.weaponlib.melee.TryAttackMessageHandler;
 import com.vicmatskiv.weaponlib.mission.AcceptMissionHandler;
 import com.vicmatskiv.weaponlib.mission.AcceptMissionMessage;
+import com.vicmatskiv.weaponlib.mission.EntityMissionOfferingSyncHandler;
+import com.vicmatskiv.weaponlib.mission.EntityMissionOfferingSyncMessage;
 import com.vicmatskiv.weaponlib.mission.GoToLocationAction;
 import com.vicmatskiv.weaponlib.mission.Goal;
 import com.vicmatskiv.weaponlib.mission.KillEntityAction;
 import com.vicmatskiv.weaponlib.mission.Mission;
+import com.vicmatskiv.weaponlib.mission.MissionManager;
+import com.vicmatskiv.weaponlib.mission.MissionOffering;
+import com.vicmatskiv.weaponlib.mission.MissionOfferingSyncHandler;
+import com.vicmatskiv.weaponlib.mission.MissionOfferingSyncMessage;
+import com.vicmatskiv.weaponlib.mission.MissionReward;
 import com.vicmatskiv.weaponlib.mission.ObtainItemAction;
 import com.vicmatskiv.weaponlib.mission.OpenMissionGuiHandler;
 import com.vicmatskiv.weaponlib.mission.OpenMissionGuiMessage;
@@ -74,17 +83,8 @@ import com.vicmatskiv.weaponlib.state.StateManager;
 import com.vicmatskiv.weaponlib.tracking.SyncPlayerEntityTrackerMessage;
 import com.vicmatskiv.weaponlib.tracking.SyncPlayerEntityTrackerMessageMessageHandler;
 
-import net.minecraft.advancements.CriteriaTriggers;
-import net.minecraft.advancements.ICriterionTrigger;
-import net.minecraft.advancements.critereon.EnchantmentPredicate;
-import net.minecraft.advancements.critereon.InventoryChangeTrigger;
-import net.minecraft.advancements.critereon.InventoryChangeTrigger.Instance;
-import net.minecraft.advancements.critereon.ItemPredicate;
-import net.minecraft.advancements.critereon.MinMaxBounds;
-import net.minecraft.advancements.critereon.NBTPredicate;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
 
@@ -118,6 +118,13 @@ public class CommonModContext implements ModContext {
         TypeRegistry.getInstance().register(KillEntityAction.class);
         TypeRegistry.getInstance().register(ObtainItemAction.class);
         TypeRegistry.getInstance().register(GoToLocationAction.class);
+        TypeRegistry.getInstance().register(MissionReward.ItemReward.class);
+        TypeRegistry.getInstance().register(MissionOffering.class);
+        TypeRegistry.getInstance().register(MissionOffering.NoMissionsInProgressRequirement.class);
+        TypeRegistry.getInstance().register(MissionOffering.CompletedMissionRequirement.class);
+        TypeRegistry.getInstance().register(MissionOffering.CooldownMissionRequirement.class);
+        TypeRegistry.getInstance().register(MissionOffering.CompositeRequirement.class);
+        TypeRegistry.getInstance().register(MissionOffering.NoRequirement.class);
     }
 
     static class BulletImpactSoundKey {
@@ -205,11 +212,14 @@ public class CommonModContext implements ModContext {
     private Map<Integer, String> registeredTextureNames = new HashMap<>();
     
     private int registeredTextureCounter;
+
+    private MissionManager missionManager;
     
     protected static ThreadLocal<ModContext> currentContext = new ThreadLocal<>();
 
 	@Override
-    public void preInit(Object mod, String modId, ConfigurationManager configurationManager, CompatibleChannel channel) {
+    public void preInit(Object mod, String modId, ConfigurationManager configurationManager,
+            CompatibleFmlPreInitializationEvent event, CompatibleChannel channel) {
 		this.mod = mod;
 	    this.channel = channel;
 		this.modId = modId;
@@ -313,6 +323,12 @@ public class CommonModContext implements ModContext {
 		channel.registerMessage(new AcceptMissionHandler(this),
                 AcceptMissionMessage.class, 31, CompatibleSide.SERVER);
 		
+        channel.registerMessage(new MissionOfferingSyncHandler(this),
+                MissionOfferingSyncMessage.class, 32, CompatibleSide.CLIENT);
+        
+        channel.registerMessage(new EntityMissionOfferingSyncHandler(this),
+                EntityMissionOfferingSyncMessage.class, 33, CompatibleSide.CLIENT);
+		
 		ServerEventHandler serverHandler = new ServerEventHandler(this, modId);
         compatibility.registerWithFmlEventBus(serverHandler);
         compatibility.registerWithEventBus(serverHandler);
@@ -355,8 +371,17 @@ public class CommonModContext implements ModContext {
 //
 //        CriteriaTriggers.INVENTORY_CHANGED.addListener(
 //                null, new ICriterionTrigger.Listener(inventoryChangeTriggerInstance, null, "Custom inventory change"));
+        
+        File missionsDir = new File(new File(event.getEvent().getSuggestedConfigurationFile().getParent(), "mw"), "missions");
+        File entityMissionFile = new File(new File(event.getEvent().getSuggestedConfigurationFile().getParent(), "mw"), "entity_mission_offerings.json");
+
+        this.missionManager = new MissionManager(modId, missionsDir, entityMissionFile);
 	}
 	
+	@Override
+	public MissionManager getMissionManager() {
+	    return this.missionManager;
+	}
 
     @Override
     public void init(Object mod, String modid) {

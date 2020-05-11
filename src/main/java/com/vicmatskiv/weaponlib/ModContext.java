@@ -2,6 +2,7 @@ package com.vicmatskiv.weaponlib;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleBlockState;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleFmlPreInitializationEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMaterial;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 import com.vicmatskiv.weaponlib.config.ConfigurationManager;
@@ -13,6 +14,7 @@ import com.vicmatskiv.weaponlib.melee.ItemMelee;
 import com.vicmatskiv.weaponlib.melee.MeleeAttachmentAspect;
 import com.vicmatskiv.weaponlib.melee.MeleeAttackAspect;
 import com.vicmatskiv.weaponlib.melee.MeleeRenderer;
+import com.vicmatskiv.weaponlib.mission.MissionManager;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.item.Item;
@@ -22,7 +24,8 @@ public interface ModContext {
     
     public boolean isClient();
 
-	public void preInit(Object mod, String modId, ConfigurationManager configurationManager, CompatibleChannel channel);
+	public void preInit(Object mod, String modId, ConfigurationManager configurationManager, 
+	        CompatibleFmlPreInitializationEvent event, CompatibleChannel channel);
 
 	public void registerWeapon(String name, Weapon weapon, WeaponRenderer renderer);
 
@@ -127,5 +130,7 @@ public interface ModContext {
     public int registerTexture(String explosionParticleTextureName);
 
     public String getRegisteredTexture(int particleTextureId);
+
+    public MissionManager getMissionManager();
 
 }

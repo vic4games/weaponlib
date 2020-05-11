@@ -14,6 +14,7 @@ import com.vicmatskiv.weaponlib.animation.PlayerRawPitchAnimationManager;
 import com.vicmatskiv.weaponlib.command.DebugCommand;
 import com.vicmatskiv.weaponlib.command.MainCommand;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleFmlPreInitializationEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderingRegistry;
 import com.vicmatskiv.weaponlib.config.ConfigurationManager;
@@ -29,6 +30,7 @@ import com.vicmatskiv.weaponlib.inventory.InventoryTabs;
 import com.vicmatskiv.weaponlib.melee.ItemMelee;
 import com.vicmatskiv.weaponlib.melee.MeleeRenderer;
 import com.vicmatskiv.weaponlib.melee.PlayerMeleeInstance;
+import com.vicmatskiv.weaponlib.mission.MissionManager;
 import com.vicmatskiv.weaponlib.perspective.PerspectiveManager;
 
 import net.minecraft.client.Minecraft;
@@ -74,8 +76,9 @@ public class ClientModContext extends CommonModContext {
     }
 
 	@Override
-    public void preInit(Object mod, String modId, ConfigurationManager configurationManager, CompatibleChannel channel) {
-		super.preInit(mod, modId, configurationManager, channel);
+    public void preInit(Object mod, String modId, ConfigurationManager configurationManager, 
+            CompatibleFmlPreInitializationEvent event, CompatibleChannel channel) {
+		super.preInit(mod, modId, configurationManager, event, channel);
 
 		aspectRatio = (float)Minecraft.getMinecraft().displayWidth / Minecraft.getMinecraft().displayHeight;
 
@@ -280,4 +283,8 @@ public class ClientModContext extends CommonModContext {
     PlayerTransitionProvider getPlayerTransitionProvider() {
         return playerTransitionProvider;
     }
+    
+//    public MissionManager getMissionManager() {
+//        return null;
+//    }
 }

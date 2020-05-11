@@ -1,14 +1,32 @@
 package com.vicmatskiv.weaponlib.mission;
 
+import java.lang.reflect.Type;
 import java.util.function.Supplier;
+
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.JsonUtils;
 import net.minecraft.util.ResourceLocation;
 
 public class KillEntityAction extends Action {
+    
+    public static class Deserializer implements JsonDeserializer<KillEntityAction> {
+        @Override
+        public KillEntityAction deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context)
+                throws JsonParseException {
+            JsonObject jsonObject = element.getAsJsonObject();
+            String entityName = JsonUtils.getString(jsonObject, "entity");
+            return new KillEntityAction(entityName);
+        }
+    }
     
     private Supplier<Integer> registrationIdSupplier;
     
@@ -52,13 +70,11 @@ public class KillEntityAction extends Action {
 
     @Override
     public void init(ByteBuf buf) {
-        super.init(buf);
         setTargetEntityRegistrationId(buf.readInt());
     }
     
     @Override
     public void serialize(ByteBuf buf) {
-        super.serialize(buf);
         buf.writeInt(getTargetEntityRegistrationId());
     }
 }

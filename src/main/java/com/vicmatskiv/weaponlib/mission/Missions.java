@@ -1,19 +1,53 @@
 package com.vicmatskiv.weaponlib.mission;
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Set;
 import java.util.function.Predicate;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMissionCapability;
+import com.vicmatskiv.weaponlib.mission.MissionReward.ItemReward;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 
 public class Missions {
+    
+    public static MissionOffering parse(String fileName) throws FileNotFoundException {
+        
+        Gson gson = new GsonBuilder()
+                .registerTypeAdapter(MissionOffering.class, new MissionOffering.Deserializer())
+                
+                .registerTypeAdapter(Goal.class, new Goal.Deserializer())
+                
+                .registerTypeAdapter(KillEntityAction.class, new KillEntityAction.Deserializer())
+                .registerTypeAdapter(ObtainItemAction.class, new ObtainItemAction.Deserializer())
+                .registerTypeAdapter(GoToLocationAction.class, new GoToLocationAction.Deserializer())
+                
+                .registerTypeAdapter(ItemReward.class, new ItemReward.Deserializer())
+                
+                .registerTypeHierarchyAdapter(Action.class, new TypeHierarchyDeserializer<>()
+                        .registerType(KillEntityAction.class)
+                        .registerType(ObtainItemAction.class)
+                        .registerType(GoToLocationAction.class))
+                
+                .registerTypeAdapter(MissionReward.class, new TypeHierarchyDeserializer<>()
+                        .registerType(ItemReward.class)
+                        )
+        .create();
+        
+        Reader reader = new FileReader(fileName);
+        MissionOffering offering = gson.fromJson(reader, MissionOffering.class);
+        return offering;
+    }
 
     public static void update(EntityPlayer player, Action action, ModContext modContext) {
         Set<Mission> missions = CompatibleMissionCapability.getMissions(player);
