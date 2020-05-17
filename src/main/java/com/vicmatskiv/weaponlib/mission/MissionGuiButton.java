@@ -48,16 +48,20 @@ public class MissionGuiButton extends GuiButton {
 
             int textureV = textureSegmentHeight * i;
 
-            drawModalRectWithCustomSizedTexture(this.x, this.y, 
+            drawModalRectWithCustomSizedTexture(
+                    this.x, this.y, 
                     0, // u
                     textureV, // v
-                    this.width >> 1, this.height, textureWidth, textureHeight);
-
-            drawModalRectWithCustomSizedTexture(this.x + (this.width >> 1)  , this.y, 
-                    textureWidth >> 1, // u
+                    this.width >> 1, this.height, 
+                    textureWidth, textureHeight);
+            
+            drawModalRectWithCustomSizedTexture(
+                    this.x + (this.width >> 1), this.y, 
+                    textureWidth - (this.width >> 1), // u
                     textureV, // v
-                    this.width >> 1, this.height, textureWidth, textureHeight);
-
+                    this.width >> 1, this.height, 
+                    textureWidth, textureHeight);
+            
             this.mouseDragged(mc, mouseX, mouseY);
             int j = 14737632;
 

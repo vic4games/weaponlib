@@ -48,6 +48,7 @@ public class MissionIntroGui extends GuiScreen {
     private ResourceLocation contentBackground;
 //    private ResourceLocation missionSelectionItemBackground;
     private ResourceLocation rewardsBackground;
+    private ResourceLocation missionSelectionBackground;
     
     private MissionAssigner missionAssigner;
     private EntityPlayer player;
@@ -60,7 +61,8 @@ public class MissionIntroGui extends GuiScreen {
             List<String> contentPages, 
             ResourceLocation contentBackground, 
             ResourceLocation introImage,
-            ResourceLocation rewardsBackground 
+            ResourceLocation rewardsBackground,
+            ResourceLocation missionSelectionBackground
             ) {
         
         this.missionAssigner = missionAssigner;
@@ -71,6 +73,7 @@ public class MissionIntroGui extends GuiScreen {
         this.contentBackground = contentBackground;
         this.introImage = introImage;
         this.rewardsBackground = rewardsBackground;
+        this.missionSelectionBackground = missionSelectionBackground;
     }
 
     /**
@@ -126,11 +129,20 @@ public class MissionIntroGui extends GuiScreen {
         
         if(contentBackground != null) {
             mc.getTextureManager().bindTexture(contentBackground);
+            
+            GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
+            GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+            GL11.glDisable(GL11.GL_LIGHTING);
+            GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+            GL11.glEnable(GL11.GL_BLEND);
+            
             drawScaledCustomSizeModalRect(
                     leftMargin, topMargin, 0, 0, 
                     contentBackgroundTextureWidth, contentBackgroundTextureHeight, 
                     scaledContentBackgroundWidth, scaledContentBackgroundHeight, 
                     contentBackgroundTextureWidth, contentBackgroundTextureHeight);
+            
+            GL11.glPopAttrib();
         }
         
         int leftContentPadding = (int)(normalizedLeftContentPadding * height);
@@ -145,12 +157,20 @@ public class MissionIntroGui extends GuiScreen {
 
             int scaledIntroImageWidth = (int)(width * normalizedIntroImageWidth);
             int scaledIntroImageHeight = (int)(scaledIntroImageWidth/introImageAspectRatio);
+
+            GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
+            GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+            GL11.glDisable(GL11.GL_LIGHTING);
+            GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+            GL11.glEnable(GL11.GL_BLEND);
             
             drawScaledCustomSizeModalRect(
                     width - leftMargin - scaledIntroImageWidth, topMargin, 0, 0, 
                     introImageTextureWidth, introImageTextureHeight, 
                     scaledIntroImageWidth, scaledIntroImageHeight, 
                     introImageTextureWidth, introImageTextureHeight);
+            
+            GL11.glPopAttrib();
 
         }
 
@@ -180,7 +200,7 @@ public class MissionIntroGui extends GuiScreen {
                         player, 
                         modContext, 
                         this,
-                        contentBackground, 
+                        missionSelectionBackground, 
                         introImage, 
 //                        missionSelectionItemBackground, 
                         rewardsBackground));

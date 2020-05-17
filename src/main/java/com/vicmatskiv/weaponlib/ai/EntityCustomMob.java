@@ -596,7 +596,8 @@ public class EntityCustomMob extends CompatibleEntityMob
                             getConfiguration().getDialogContent(), 
                             getConfiguration().getDialogBackground(),
                             getConfiguration().getIntroImage(),
-                            getConfiguration().getRewardsBackground()
+                            getConfiguration().getRewardsBackground(),
+                            getConfiguration().getMissionSelectionBackground()
                             ));
         }
         

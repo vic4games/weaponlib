@@ -197,7 +197,7 @@ public class EntityConfiguration {
         private CustomMobAttack delayedAttack;
         
         private boolean isPushable = true;
-        private boolean isInvulnerable = true;
+        private boolean isInvulnerable = false;
         private boolean isCollidable = true;
         private boolean isDespawnable = true;
         private List<MissionOffering> missionOfferings = new ArrayList<>();
@@ -205,6 +205,7 @@ public class EntityConfiguration {
         private String introImage;
         private String dialogBackground;
         private String rewardsBackground;
+        private String missionSelectionBackground;
 
         
         public Builder withName(String name) {
@@ -439,6 +440,14 @@ public class EntityConfiguration {
             return this;
         }
         
+        public Builder withMissionSelectionBackground(String missionSelectionBackground) {
+            this.missionSelectionBackground = missionSelectionBackground.toLowerCase();
+            if(!this.missionSelectionBackground.endsWith(".png")) {
+                this.missionSelectionBackground += ".png";
+            }
+            return this;
+        }
+        
         public void register(ModContext context) {
             EntityConfiguration configuration = new EntityConfiguration();
             configuration.creatureAttribute = creatureAttribute;
@@ -544,6 +553,11 @@ public class EntityConfiguration {
                         "textures/gui/" + rewardsBackground);
             }
             
+            if(missionSelectionBackground != null) {
+                configuration.missionSelectionBackground = new ResourceLocation(context.getModId(), 
+                        "textures/gui/" + missionSelectionBackground);
+            }
+            
             Class<? extends Entity> entityClass = EntityClassFactory.getInstance()
                     .generateEntitySubclass(baseClass, modEntityId, configuration);
             
@@ -637,6 +651,7 @@ public class EntityConfiguration {
     private ResourceLocation introImage;
     private ResourceLocation dialogBackground;
     private ResourceLocation rewardsBackground;
+    private ResourceLocation missionSelectionBackground;
 
     protected EntityConfiguration() {}
     
@@ -770,6 +785,10 @@ public class EntityConfiguration {
     
     public ResourceLocation getRewardsBackground() {
         return rewardsBackground;
+    }
+
+    public ResourceLocation getMissionSelectionBackground() {
+        return missionSelectionBackground;
     }
 
     public boolean isDespawnable() {

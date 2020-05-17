@@ -4,6 +4,8 @@ import java.io.IOException;
 
 import javax.annotation.Nullable;
 
+import org.lwjgl.opengl.GL11;
+
 import com.vicmatskiv.weaponlib.ModContext;
 
 import net.minecraft.client.gui.GuiButton;
@@ -42,7 +44,7 @@ public class MissionSelectionGui extends GuiScreen {
     private float normalizedMissionListLeft = 0.09f;
     private float normalizedMissionListTop = 0.1f;
     private float normalizedMissionListContentLeftPadding = 0.01f;
-    private float normalizedMissionListContentTopPadding = 0.01f;
+    private float normalizedMissionListContentTopPadding = 0.03f;
 
     public MissionSelectionGui(MissionAssigner missionAssigner, EntityPlayer player, ModContext modContext,
             GuiScreen screenIn, 
@@ -168,6 +170,12 @@ public class MissionSelectionGui extends GuiScreen {
         int missionListLeft = (int)(width * (normalizedMissionListLeft));
         int missionListTop = (int)(height * (normalizedMissionListTop));
         
+        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
+        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+        GL11.glDisable(GL11.GL_LIGHTING);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        GL11.glEnable(GL11.GL_BLEND);
+        
         drawScaledCustomSizeModalRect(
                 missionListLeft, missionListTop, 0, 0, 
                 contentBackgroundTextureWidth, contentBackgroundTextureHeight, 
@@ -187,6 +195,8 @@ public class MissionSelectionGui extends GuiScreen {
                     introImageWidth, introImageHeight, introImageWidth, introImageHeight);
 
         }
+        
+        GL11.glPopAttrib();
         
         this.selectionList.drawScreen(mouseX, mouseY, partialTicks);
         

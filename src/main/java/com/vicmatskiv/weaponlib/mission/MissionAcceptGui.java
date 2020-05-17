@@ -148,12 +148,18 @@ public class MissionAcceptGui extends GuiScreen {
         
         if(contentBackground != null) {
             mc.getTextureManager().bindTexture(contentBackground);
-            
+            GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
+            GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+            GL11.glDisable(GL11.GL_LIGHTING);
+            GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+            GL11.glEnable(GL11.GL_BLEND);
             drawScaledCustomSizeModalRect(
                     leftMargin, topMargin, 0, 0, 
                     contentBackgroundTextureWidth, contentBackgroundTextureHeight, 
                     scaledContentBackgroundWidth, scaledContentBackgroundHeight, 
                     contentBackgroundTextureWidth, contentBackgroundTextureHeight);
+            
+            GL11.glPopAttrib();
         }
         
         int leftContentPadding = (int)(normalizedLeftContentPadding * width);
@@ -178,11 +184,16 @@ public class MissionAcceptGui extends GuiScreen {
         int rewardsLeftMargin = width - leftMargin - scaledRewardsBackgroundWidth;
         if(rewardsBackground != null) {
             mc.getTextureManager().bindTexture(rewardsBackground);
-            
+            GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
+            GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+            GL11.glDisable(GL11.GL_LIGHTING);
+            GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+            GL11.glEnable(GL11.GL_BLEND);
             drawScaledCustomSizeModalRect(rewardsLeftMargin, topMargin, 0, 0, 
                     rewardsTextureWidth, rewardsTextureHeight, 
                     scaledRewardsBackgroundWidth, scaledRewardsBackgroundHeight, 
                     rewardsTextureWidth, rewardsTextureHeight);
+            GL11.glPopAttrib();
         }
         
         int rewardsTitleWidth = fontRenderer.getStringWidth(I18n.format("Rewards"));
