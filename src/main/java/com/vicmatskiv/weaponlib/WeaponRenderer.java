@@ -2049,4 +2049,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
     public long getAllLoadIterationAnimationsCompletedDuration() {
         return builder.allLoadIterationAnimationsCompletedDuration;
     }
+
+    public MultipartRenderStateManager<RenderableState, Part, RenderContext<RenderableState>> getStateManager(EntityPlayer player) {
+        return firstPersonStateManagers.get(player);
+    }
 }

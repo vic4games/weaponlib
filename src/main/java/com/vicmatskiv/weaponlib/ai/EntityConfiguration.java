@@ -405,10 +405,10 @@ public class EntityConfiguration {
             return this;
         }
         
-        public Builder withMissionOffering(MissionOffering missionOffering) {
-            this.missionOfferings.add(missionOffering);
-            return this;
-        }
+//        public Builder withMissionOffering(MissionOffering missionOffering) {
+//            this.missionOfferings.add(missionOffering);
+//            return this;
+//        }
         
         public Builder withIntroDialog(String dialog) {
             this.introDialogs.add(dialog);
