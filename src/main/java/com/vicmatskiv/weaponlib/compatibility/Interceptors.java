@@ -10,10 +10,14 @@ import org.lwjgl.opengl.GL11;
 import com.vicmatskiv.weaponlib.ClientModContext;
 import com.vicmatskiv.weaponlib.CommonModContext;
 import com.vicmatskiv.weaponlib.ModContext;
+import com.vicmatskiv.weaponlib.Part;
 import com.vicmatskiv.weaponlib.PlayerRenderer;
 import com.vicmatskiv.weaponlib.PlayerWeaponInstance;
+import com.vicmatskiv.weaponlib.RenderContext;
+import com.vicmatskiv.weaponlib.RenderableState;
 import com.vicmatskiv.weaponlib.SpreadableExposure;
 import com.vicmatskiv.weaponlib.Weapon;
+import com.vicmatskiv.weaponlib.animation.MultipartRenderStateManager;
 import com.vicmatskiv.weaponlib.animation.PlayerRawPitchAnimationManager;
 import com.vicmatskiv.weaponlib.inventory.CustomPlayerInventory;
 import com.vicmatskiv.weaponlib.mission.Missions;
@@ -47,12 +51,21 @@ public class Interceptors {
         EntityPlayer player = compatibility.getClientPlayer();
         if(weaponInstance != null ) {
             ClientModContext context = (ClientModContext) weaponInstance.getWeapon().getModContext();
+            MultipartRenderStateManager<RenderableState, Part, RenderContext<RenderableState>> stateManager = weaponInstance.getWeapon().getRenderer().getStateManager(player);
+//            if(stateManager != null) {
+//                RenderableState lastState = stateManager.getLastState();
+//                if(lastState != RenderableState.NORMAL && lastState != RenderableState.ZOOMING) {
+//                    System.out.println("Last state " + lastState);
+//                }
+//            }
             PlayerRawPitchAnimationManager yawPitchAnimationManager = context.getPlayerRawPitchAnimationManager();
-            if(weaponInstance.isAimed() && !isProning(player)) {
-                yawPitchAnimationManager.update(player);
-            } else {
-                yawPitchAnimationManager.reset(player);
-            }
+            yawPitchAnimationManager.update(player, stateManager != null ? stateManager.getLastState() : null);
+//            if(weaponInstance.isAimed() && !isProning(player)) {
+//                yawPitchAnimationManager.update(player, stateManager != null ? stateManager.getLastState() : null);
+////                GL11.glRotatef(5f * partialTicks, 1.0F, 0.0F, 1.0F);
+//            } else {
+//                yawPitchAnimationManager.reset(player, stateManager != null ? stateManager.getLastState() : null);
+//            }
         }
     }
     

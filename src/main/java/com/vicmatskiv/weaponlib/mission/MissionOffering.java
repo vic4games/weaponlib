@@ -2,6 +2,8 @@ package com.vicmatskiv.weaponlib.mission;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
+import java.lang.reflect.Type;
+import java.nio.charset.Charset;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -13,19 +15,93 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMissionCapability;
+import com.vicmatskiv.weaponlib.network.TypeRegistry;
+import com.vicmatskiv.weaponlib.network.UniversallySerializable;
 
+import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
+import net.minecraft.util.JsonUtils;
 
-public class MissionOffering {
+public class MissionOffering implements UniversallySerializable {
     
-    public static final long DEFAULT_MAX_DURATION = 24000 * 30;
-    public static final long DEFAULT_COOLDOWN_TIME = 24000 * 1000;
+    public static class Deserializer implements JsonDeserializer<MissionOffering> {
+        
+        
+        public Deserializer() {
+        }
+
+        @Override
+        public MissionOffering deserialize(JsonElement jsonElement, Type typeOfT, JsonDeserializationContext context)
+                throws JsonParseException {
+            
+            JsonObject jsonObject = jsonElement.getAsJsonObject();
+            String missionName = JsonUtils.getString(jsonObject, "name");  
+            Builder builder = new Builder(missionName);
+            
+            
+            String missionDescription = JsonUtils.getString(jsonObject, "description");
+            builder.withMissionDescription(missionDescription);
+            String levelName = JsonUtils.getString(jsonObject, "level");            
+            builder.withLevel(Level.valueOf(levelName.toUpperCase()));
+            
+            JsonArray requiresAllArray = JsonUtils.getJsonArray(jsonObject, "requiresAll", new JsonArray());
+            List<String> requiresAll = new ArrayList<>();
+            for (JsonElement requiresAllElement : requiresAllArray) {
+                requiresAll.add(requiresAllElement.getAsString());
+                
+            }
+            builder.requiresAll(requiresAll.toArray(new String[0]));
+            
+            JsonArray requiresAnyArray = JsonUtils.getJsonArray(jsonObject, "requiresAny", new JsonArray());
+            if(requiresAnyArray.size() > 0 && requiresAllArray.size() > 0) {
+                throw new IllegalArgumentException("Cannot use both requiresAll and requiresAny at the same time");
+            }
+            
+            List<String> requiresAny = new ArrayList<>();
+            for (JsonElement requiresAnyElement : requiresAnyArray) {
+                requiresAny.add(requiresAnyElement.getAsString());
+            }
+            builder.requiresAny(requiresAny.toArray(new String[0]));
+            
+            int cooldownTime = JsonUtils.getInt(jsonObject, "cooldownTime", DEFAULT_COOLDOWN_TIME);
+            builder.withCooldownTime(cooldownTime);
+            
+            int maxDuration = JsonUtils.getInt(jsonObject, "maxDuration", DEFAULT_MAX_DURATION);
+            builder.withMaxDuration(maxDuration);
+            
+            boolean allowConcurrent = JsonUtils.getBoolean(jsonObject, "allowConcurrent", false);
+            if(allowConcurrent) {
+                builder.allowConcurrent();
+            }
+            
+            JsonArray goalsArray = JsonUtils.getJsonArray(jsonObject, "goals", new JsonArray());
+            for (JsonElement goalElement : goalsArray) {
+                Goal goal = context.deserialize(goalElement, Goal.class);
+                builder.withGoal(goal.getRequiredAction(), goal.getQuantity());
+            }
+            
+            JsonArray rewardsArray = JsonUtils.getJsonArray(jsonObject, "rewards", new JsonArray());
+            for (JsonElement rewardElement : rewardsArray) {
+                MissionReward reward = context.deserialize(rewardElement, MissionReward.class);
+                builder.withReward(reward);
+            }
+            
+            return builder.build();
+        }
+    }
+    
+    public static final int DEFAULT_MAX_DURATION = 24000 * 30;
+    public static final int DEFAULT_COOLDOWN_TIME = 24000 * 1000;
     
     private static Map<String, MissionOffering> allOfferings = new HashMap<>();
     private static Map<UUID, MissionOffering> allOfferingsById = new HashMap<>();
@@ -45,7 +121,7 @@ public class MissionOffering {
         HARD
     }
     
-    public static interface Requirement {
+    public static interface Requirement extends UniversallySerializable {
         public boolean isSatisfied(EntityPlayer player);
     }
     
@@ -55,30 +131,50 @@ public class MissionOffering {
         public boolean isSatisfied(EntityPlayer player) {
             return true;
         }
+
+        @Override
+        public void init(ByteBuf buf) {
+        }
+
+        @Override
+        public void serialize(ByteBuf buf) {
+        }
     }
     
-    public class CooldownMissionRequirement implements Requirement {
+    public static class CooldownMissionRequirement implements Requirement {
+        
+        private long cooldownTime;
+        private UUID parentMissionOfferingId;
+        
+        public CooldownMissionRequirement() {}
+        
+        public CooldownMissionRequirement(UUID parentMissionOfferingId, long cooldownTime) {
+            this.cooldownTime = cooldownTime;
+            this.parentMissionOfferingId = parentMissionOfferingId;
+        }
 
         @Override
         public boolean isSatisfied(EntityPlayer player) {
             Set<Mission> missions = CompatibleMissionCapability.getMissions(player);
             
             boolean isSatisfied = true;
-//            System.out.println("Total world time: " + compatibility.world(player).getTotalWorldTime());
-//            for(Mission m: missions) {
-//                if(m.getMissionOfferingId().equals(MissionOffering.this.getId())) {
-//                    if(m.getEndTime() + MissionOffering.this.getCooldownTime() < compatibility.world(player).getTotalWorldTime()) {
-////                        System.out.println("Mission " + m + " with goal" + m.getGoals().get(0) + " meets cooldown requirement");
-//                    } else {
-//                        long timeLeft = m.getEndTime() + MissionOffering.this.getCooldownTime() - compatibility.world(player).getTotalWorldTime();
-////                        System.out.println("Mission " + m + " does not meet cooldown requirement, time left: " + timeLeft);
-//                    }
-//                }
-//            }
             isSatisfied &= missions.stream().allMatch(m -> 
-                !m.getMissionOfferingId().equals(MissionOffering.this.getId())
-                ||(m.getEndTime() + MissionOffering.this.getCooldownTime() < compatibility.world(player).getTotalWorldTime()));
+                !m.getMissionOfferingId().equals(this.parentMissionOfferingId)
+                ||(m.getEndTime() + this.cooldownTime < compatibility.world(player).getTotalWorldTime()));
             return isSatisfied;
+        }
+
+        @Override
+        public void init(ByteBuf buf) {
+            parentMissionOfferingId = new UUID(buf.readLong(), buf.readLong());
+            cooldownTime = buf.readLong();
+        }
+
+        @Override
+        public void serialize(ByteBuf buf) {
+            buf.writeLong(parentMissionOfferingId.getMostSignificantBits());
+            buf.writeLong(parentMissionOfferingId.getLeastSignificantBits());
+            buf.writeLong(cooldownTime);
         }
     }
     
@@ -90,10 +186,20 @@ public class MissionOffering {
             return missions.stream().allMatch(m -> m.isCompleted(player) 
                     || m.isExpired(compatibility.world(player).getTotalWorldTime()));
         }
+
+        @Override
+        public void init(ByteBuf buf) {
+            
+        }
+
+        @Override
+        public void serialize(ByteBuf buf) {
+            
+        }
         
     }
     
-    private static class CompositeRequirement implements Requirement {
+    public static class CompositeRequirement implements Requirement {
         
         private Collection<Requirement> requirements;
         
@@ -106,11 +212,28 @@ public class MissionOffering {
             return requirements.stream().allMatch(r -> r.isSatisfied(player));
         }
         
+        public void init(ByteBuf buf) {
+            int count = buf.readInt();
+            for(int i = 0; i < count; i++) {
+                requirements.add(TypeRegistry.getInstance().fromBytes(buf));
+            }
+        }
+        
+        public void serialize(ByteBuf buf) {
+            buf.writeInt(requirements.size());
+            for(Requirement requirement: requirements) {
+                TypeRegistry.getInstance().toBytes(requirement, buf);
+            }
+        }
     }
     
     public static class CompletedMissionRequirement implements Requirement {
         private boolean all;
         private Collection<String> requiredMissionNames;
+        
+        public CompletedMissionRequirement() {
+            this.requiredMissionNames = new ArrayList<>();
+        }
         
         private CompletedMissionRequirement(Collection<String> requiredMissionNames, boolean all) {
             this.all = all;
@@ -144,6 +267,30 @@ public class MissionOffering {
             }
             return completed;
         }
+
+        @Override
+        public void init(ByteBuf buf) {
+            all = buf.readBoolean();
+            int count = buf.readInt();
+            for(int i = 0; i < count; i++) {
+                int strLen = buf.readInt();
+                byte[] nameBytes = new byte[strLen];
+                buf.readBytes(nameBytes);
+                requiredMissionNames.add(new String(nameBytes));
+            }
+        }
+
+        @Override
+        public void serialize(ByteBuf buf) {
+            buf.writeBoolean(all);
+            buf.writeInt(requiredMissionNames.size());
+            for(String missionName: requiredMissionNames) {
+                byte[] nameBytes = missionName.getBytes(Charset.defaultCharset());
+                buf.writeInt(nameBytes.length);
+                buf.writeBytes(nameBytes);
+            }
+            
+        }
     }
 
     public static class Builder {
@@ -154,10 +301,9 @@ public class MissionOffering {
         private String missionName;
         private String missionDescription = "";
         private Level level = Level.EASY;
-        private List<Supplier<Goal>> goals = new ArrayList<>();
-        private List<Supplier<ItemStack>> rewardSuppliers = new ArrayList<>();
+        private List<Goal> goals = new ArrayList<>();
+        private List<MissionReward> rewards = new ArrayList<>();
 
-        private List<ItemStack> sampleRewards;
         private long cooldownTime = DEFAULT_COOLDOWN_TIME;
         private boolean isConcurrent;
         private CompositeRequirement requirement = new CompositeRequirement();
@@ -188,17 +334,22 @@ public class MissionOffering {
         }
         
         public Builder withGoal(Action action, int quantity) {
-            goals.add(() -> new Goal(action, quantity));
+            goals.add(new Goal(action, quantity));
             return this;
         }
         
-        public Builder withReward(Item reward) {
-            rewardSuppliers.add(() -> new ItemStack(reward));
+        public Builder withReward(MissionReward reward) {
+            rewards.add(reward);
             return this;
         }
         
-        public Builder withReward(Item reward, int count) {
-            rewardSuppliers.add(() -> new ItemStack(reward, count));
+        public Builder withReward(Item item) {
+            rewards.add(new MissionReward.ItemReward(item, 1));
+            return this;
+        }
+        
+        public Builder withReward(Item item, int count) {
+            rewards.add(new MissionReward.ItemReward(item, count));
             return this;
         }
         
@@ -227,53 +378,70 @@ public class MissionOffering {
             return this;
         }
         
-        public MissionOffering build(String modId) {
-            id = getUuid(modId + ":" + missionName);
-            sampleRewards = rewardSuppliers.stream().map(s -> s.get()).collect(Collectors.toList());
-
+        public MissionOffering build() {
+            id = getUuid(missionName);
             if(!isConcurrent) {
                 this.requirement.requirements.add(new NoMissionsInProgressRequirement());
             }
             
-            MissionOffering offering = new MissionOffering(this);
-            this.requirement.requirements.add(offering.new CooldownMissionRequirement());
+            MissionOffering offering = new MissionOffering();
+            offering.id = id;
+            offering.missionName = missionName;
+            offering.missionDescription = missionDescription;
+            offering.level = level;
+            offering.goals = goals;
+            offering.rewards = rewards;
+
+            offering.cooldownTime = cooldownTime;
+//            offering.isConcurrent = isConcurrent;
+            offering.requirement = requirement;
+            offering.maxDuration = maxDuration;
+            
+            this.requirement.requirements.add(new CooldownMissionRequirement(offering.getId(), cooldownTime));
             registerOffering(offering);
             return offering;
         }
     }
     
-    private Builder builder;
+//    private Builder builder;
     
-    private MissionOffering(Builder builder) {
-        this.builder = builder;
+    private UUID id;
+    private String missionName;
+    private String missionDescription = "";
+    private Level level = Level.EASY;
+    private List<Goal> goals = new ArrayList<>();
+    private List<MissionReward> rewards = new ArrayList<>();
+
+    private long cooldownTime = DEFAULT_COOLDOWN_TIME;
+//    private boolean isConcurrent;
+    private CompositeRequirement requirement = new CompositeRequirement();
+    private long maxDuration = DEFAULT_MAX_DURATION;
+    
+    public MissionOffering() {
     }
     
     public UUID getId() {
-        return builder.id;
+        return id;
     }
     
     public String getMissionName() {
-        return builder.missionName;
+        return missionName;
     }
 
     public String getMissionDescription() {
-        return builder.missionDescription;
+        return missionDescription;
     }
 
     public Level getLevel() {
-        return builder.level;
+        return level;
     }
-    
-    public List<ItemStack> createRewards() {
-        return builder.rewardSuppliers.stream().map(s -> s.get()).collect(Collectors.toList());
-    }
-    
-    List<ItemStack> getSampleRewards() {
-        return builder.sampleRewards;
+
+    public List<MissionReward> getRewards() {
+        return rewards;
     }
 
     public List<Goal> createGoals() {
-        return builder.goals.stream().map(s -> s.get()).collect(Collectors.toList());
+        return goals.stream().map(s -> new Goal(s.getRequiredAction(), s.getQuantity())).collect(Collectors.toList());
     }
     
 //    public Requirement getRequirement() {
@@ -281,14 +449,74 @@ public class MissionOffering {
 //    }
     
     public boolean isAvailableFor(EntityPlayer player) {
-        return builder.requirement.isSatisfied(player);
+        return requirement.isSatisfied(player);
     }
 
     public long getMaxDuration() {
-        return builder.maxDuration;
+        return maxDuration;
     }
     
     public long getCooldownTime() {
-        return builder.cooldownTime;
+        return cooldownTime;
+    }
+    
+    @Override
+    public void init(ByteBuf buf) {
+        id = new UUID(buf.readLong(), buf.readLong());
+
+        int nameBytesLen = buf.readInt();
+        byte[] nameBytes = new byte[nameBytesLen];
+        buf.readBytes(nameBytes);
+        missionName = new String(nameBytes);
+        
+        int descriptionBytesLen = buf.readInt();
+        byte[] descriptionBytes = new byte[descriptionBytesLen];
+        buf.readBytes(descriptionBytes);
+        missionDescription = new String(descriptionBytes);
+        
+        level = Level.values()[buf.readInt()];
+        
+        TypeRegistry typeRegistry = TypeRegistry.getInstance();
+        requirement = typeRegistry.fromBytes(buf);
+        
+        int goalCount = buf.readInt();
+        for(int i = 0; i < goalCount; i++) {
+            goals.add(typeRegistry.fromBytes(buf));
+        }
+        
+        int rewardCount = buf.readInt();
+        for(int i = 0; i < rewardCount; i++) {
+            rewards.add(typeRegistry.fromBytes(buf));
+        }
+    }
+
+    @Override
+    public void serialize(ByteBuf buf) {
+        
+        buf.writeLong(id.getMostSignificantBits());
+        buf.writeLong(id.getLeastSignificantBits());
+        
+        byte[] nameBytes = missionName.getBytes(Charset.defaultCharset());
+        buf.writeInt(nameBytes.length);
+        buf.writeBytes(nameBytes);
+        
+        byte[] descriptionBytes = missionDescription.getBytes(Charset.defaultCharset());
+        buf.writeInt(descriptionBytes.length);
+        buf.writeBytes(descriptionBytes);
+        
+        buf.writeInt(level.ordinal());
+        
+        TypeRegistry typeRegistry = TypeRegistry.getInstance();
+        typeRegistry.toBytes(requirement, buf);
+        
+        buf.writeInt(goals.size());
+        for(Goal goal: goals) {
+            typeRegistry.toBytes(goal, buf);
+        }
+        
+        buf.writeInt(rewards.size());
+        for(MissionReward reward: rewards) {
+            typeRegistry.toBytes(reward, buf);
+        }
     }
 }

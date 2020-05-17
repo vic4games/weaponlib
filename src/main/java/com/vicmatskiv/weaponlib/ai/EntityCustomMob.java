@@ -3,6 +3,7 @@ package com.vicmatskiv.weaponlib.ai;
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -46,6 +47,7 @@ import com.vicmatskiv.weaponlib.mission.Mission;
 import com.vicmatskiv.weaponlib.mission.MissionAcceptGui;
 import com.vicmatskiv.weaponlib.mission.MissionAssigner;
 import com.vicmatskiv.weaponlib.mission.MissionIntroGui;
+import com.vicmatskiv.weaponlib.mission.MissionManager;
 import com.vicmatskiv.weaponlib.mission.MissionOffering;
 import com.vicmatskiv.weaponlib.mission.Missions;
 import com.vicmatskiv.weaponlib.mission.ObtainItemAction;
@@ -54,6 +56,7 @@ import com.vicmatskiv.weaponlib.mission.PlayerMissionSyncMessage;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.EnumCreatureAttribute;
 import net.minecraft.entity.IEntityLivingData;
@@ -543,7 +546,11 @@ public class EntityCustomMob extends CompatibleEntityMob
     }
     
     public Map<UUID, MissionOffering> getMissionOfferings() {
-        return getConfiguration().getMissionOfferings();
+        MissionManager missionManager = modContext.getMissionManager();
+        if(missionManager != null) {
+            return missionManager.getEntityMissionOfferings(EntityList.getEntityString(this));
+        }
+        return Collections.emptyMap(); //getConfiguration().getMissionOfferings();
     }
 
     @Override
@@ -636,7 +643,7 @@ public class EntityCustomMob extends CompatibleEntityMob
             }
             if(goalsMet) {
                 mission.setRedeemed(compatibility.world(player).getTotalWorldTime());
-                missionOffering.createRewards().forEach(reward -> player.inventory.addItemStackToInventory(reward));
+                missionOffering.getRewards().forEach(reward -> reward.redeem(player));
                 CompatibleMissionCapability.updateMission(player, mission);
                 modContext.getChannel().getChannel().sendTo(
                         new PlayerMissionSyncMessage(CompatibleMissionCapability.getMissions(player)),

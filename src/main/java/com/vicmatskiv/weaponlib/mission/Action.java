@@ -1,10 +1,10 @@
 package com.vicmatskiv.weaponlib.mission;
 
-import com.vicmatskiv.weaponlib.network.UniversalObject;
+import com.vicmatskiv.weaponlib.network.UniversallySerializable;
 
 import net.minecraft.entity.player.EntityPlayer;
 
-public abstract class Action extends UniversalObject {
+public abstract class Action implements UniversallySerializable {
 
     public abstract int matches(Action anotherAction, EntityPlayer player);
     

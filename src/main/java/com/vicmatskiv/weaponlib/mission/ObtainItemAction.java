@@ -1,13 +1,34 @@
 package com.vicmatskiv.weaponlib.mission;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
+import java.lang.reflect.Type;
+
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-
-import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+import net.minecraft.util.JsonUtils;
 
 public class ObtainItemAction extends Action {
+    
+    public static class Deserializer implements JsonDeserializer<ObtainItemAction> {
+        @Override
+        public ObtainItemAction deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context)
+                throws JsonParseException {
+            JsonObject jsonObject = element.getAsJsonObject();
+            String itemName = JsonUtils.getString(jsonObject, "item");
+            boolean isForTrade = JsonUtils.getBoolean(jsonObject, "isForTrade");
+            Item item = Item.getByNameOrId(itemName);
+            return new ObtainItemAction(item, isForTrade);
+        }
+    }
     
     private int itemId;
     private boolean isForTrade;
@@ -58,14 +79,12 @@ public class ObtainItemAction extends Action {
 
     @Override
     public void init(ByteBuf buf) {
-        super.init(buf);
         itemId = buf.readInt();
         isForTrade = buf.readBoolean();
     }
     
     @Override
     public void serialize(ByteBuf buf) {
-        super.serialize(buf);
         buf.writeInt(itemId);
         buf.writeBoolean(isForTrade);
     }

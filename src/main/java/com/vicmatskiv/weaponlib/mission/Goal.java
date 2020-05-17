@@ -1,12 +1,33 @@
 package com.vicmatskiv.weaponlib.mission;
 
+import java.lang.reflect.Type;
+
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import com.vicmatskiv.weaponlib.network.TypeRegistry;
-import com.vicmatskiv.weaponlib.network.UniversalObject;
+import com.vicmatskiv.weaponlib.network.UniversallySerializable;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.JsonUtils;
 
-public class Goal extends UniversalObject {
+public class Goal implements UniversallySerializable {
+    
+    public static class Deserializer implements JsonDeserializer<Goal> {
+                
+        @Override
+        public Goal deserialize(JsonElement jsonElement, Type typeOfT, JsonDeserializationContext context)
+                throws JsonParseException {
+            JsonObject goalObject = jsonElement.getAsJsonObject();
+            JsonObject actionObject = JsonUtils.getJsonObject(goalObject, "action");
+            Action action = context.deserialize(actionObject, Action.class);
+            int quantity = JsonUtils.getInt(goalObject, "quantity", 1);
+            return new Goal(action, quantity);
+        }
+    }
 
     private Action requiredAction;
     private int quantity;
@@ -48,14 +69,12 @@ public class Goal extends UniversalObject {
     
     @Override
     public void init(ByteBuf buf) {
-        super.init(buf);
         requiredAction = TypeRegistry.getInstance().fromBytes(buf);
         quantity = buf.readInt();
     }
 
     @Override
     public void serialize(ByteBuf buf) {
-        super.serialize(buf);
         TypeRegistry.getInstance().toBytes(requiredAction, buf);
         buf.writeInt(quantity);
     }

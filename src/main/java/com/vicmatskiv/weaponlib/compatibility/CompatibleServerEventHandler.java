@@ -18,9 +18,11 @@ import net.minecraftforge.event.entity.player.PlayerDropsEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerRespawnEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
+import net.minecraftforge.fml.common.network.FMLNetworkEvent.ServerConnectionFromClientEvent;
 
 public abstract class CompatibleServerEventHandler {
 
@@ -61,7 +63,14 @@ public abstract class CompatibleServerEventHandler {
         }
     }
 	
+	@SubscribeEvent
+	public void onPlayerLoggedIn(PlayerLoggedInEvent event) {
+	    onCompatiblePlayerLoggedIn(event);
+	}
+	
     protected abstract void onCompatibleServerTickEvent(CompatibleServerTickEvent e);
+    
+    protected abstract void onCompatiblePlayerLoggedIn(PlayerLoggedInEvent e);
 
 
 	@SubscribeEvent

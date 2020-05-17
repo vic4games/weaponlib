@@ -8,6 +8,7 @@ import org.lwjgl.opengl.GL11;
 
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMissionCapability;
+import com.vicmatskiv.weaponlib.mission.MissionReward.ItemReward;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -202,7 +203,7 @@ public class MissionAcceptGui extends GuiScreen {
                 rewardsLeftMargin + ((scaledRewardsBackgroundWidth - rewardsTitleWidth) >> 1), 
                 topMargin + topContentPadding, contentTextColor);
         
-        List<ItemStack> rewards = missionOffering.getSampleRewards();
+        List<MissionReward> rewards = missionOffering.getRewards();
         
         GlStateManager.pushMatrix();
         RenderHelper.enableGUIStandardItemLighting();
@@ -232,17 +233,21 @@ public class MissionAcceptGui extends GuiScreen {
         
         for(int i = 0; i < rewards.size(); i++) {
 
-            itemRender.zLevel = 0.0F;
+            MissionReward reward = rewards.get(i);
+            if(reward instanceof ItemReward) {
+                itemRender.zLevel = 0.0F;
+                
+                ItemStack itemStack = ((ItemReward) reward).getReward();
+                itemRender.renderItemAndEffectIntoGUI(
+                        itemStack,
+                        itemsLeftMargin,
+                        i * itemSlotHeight + itemsTopMargin);
+                
+                itemRender.renderItemOverlays(this.fontRenderer, itemStack, 
+                        itemsLeftMargin,
+                        i * itemSlotHeight + itemsTopMargin);
+            }
             
-            ItemStack itemStack = rewards.get(i);
-            itemRender.renderItemAndEffectIntoGUI(
-                    itemStack,
-                    itemsLeftMargin,
-                    i * itemSlotHeight + itemsTopMargin);
-            
-            itemRender.renderItemOverlays(this.fontRenderer, itemStack, 
-                    itemsLeftMargin,
-                    i * itemSlotHeight + itemsTopMargin);
         }
         
         this.itemRender.zLevel = 0.0F;
@@ -256,8 +261,11 @@ public class MissionAcceptGui extends GuiScreen {
                     itemSlotWidth, itemSlotHeight, 
                     mouseX, mouseY))
             {
-                ItemStack itemStack = rewards.get(i);
-                this.renderToolTip(itemStack, mouseX, mouseY);
+                MissionReward reward = rewards.get(i);
+                if(reward instanceof ItemReward) {
+                    ItemStack itemStack = ((ItemReward) reward).getReward();
+                    this.renderToolTip(itemStack, mouseX, mouseY);
+                }
             }
         }
         

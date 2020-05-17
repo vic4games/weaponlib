@@ -1,20 +1,43 @@
 package com.vicmatskiv.weaponlib.mission;
 
+import java.lang.reflect.Type;
+
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.JsonUtils;
 
 public class GoToLocationAction extends Action {
     
-    private double x;
-    private double y;
-    private double z;
-    private double sqDistance;
+    public static class Deserializer implements JsonDeserializer<GoToLocationAction> {
+        @Override
+        public GoToLocationAction deserialize(JsonElement element, Type typeOfT, JsonDeserializationContext context)
+                throws JsonParseException {
+            JsonObject jsonObject = element.getAsJsonObject();
+            float x = JsonUtils.getFloat(jsonObject, "x");
+            float y = JsonUtils.getFloat(jsonObject, "y");
+            float z = JsonUtils.getFloat(jsonObject, "z");
+            float minDistance = JsonUtils.getFloat(jsonObject, "minDistance");
+            
+            return new GoToLocationAction(x, y, z, minDistance);
+        }
+    }
     
-    public GoToLocationAction(double x, double y, double z, double distance) {
+    private float x;
+    private float y;
+    private float z;
+    private float minSqDistance;
+    
+    public GoToLocationAction(float x, float y, float z, float minDistance) {
         this.x = x;
         this.y = y;
         this.z = z;
-        this.sqDistance = distance * distance;
+        this.minSqDistance = minDistance * minDistance;
     }
     
     public GoToLocationAction() {}
@@ -25,24 +48,22 @@ public class GoToLocationAction extends Action {
                 && (    (x - ((GoToLocationAction)anotherAction).x) * (x - ((GoToLocationAction)anotherAction).x)
                       + (y - ((GoToLocationAction)anotherAction).y) * (y - ((GoToLocationAction)anotherAction).y)
                       + (z - ((GoToLocationAction)anotherAction).z) * (z - ((GoToLocationAction)anotherAction).z))
-                <= sqDistance ? 1 : 0;
+                <= minSqDistance ? 1 : 0;
     }
 
     @Override
     public void init(ByteBuf buf) {
-        super.init(buf);
-        x = buf.readDouble();
-        y = buf.readDouble();
-        z = buf.readDouble();
-        sqDistance = buf.readDouble();
+        x = buf.readFloat();
+        y = buf.readFloat();
+        z = buf.readFloat();
+        minSqDistance = buf.readFloat();
     }
     
     @Override
     public void serialize(ByteBuf buf) {
-        super.serialize(buf);
-        buf.writeDouble(x);
-        buf.writeDouble(y);
-        buf.writeDouble(z);
-        buf.writeDouble(sqDistance);
+        buf.writeFloat(x);
+        buf.writeFloat(y);
+        buf.writeFloat(z);
+        buf.writeFloat(minSqDistance);
     }
 }

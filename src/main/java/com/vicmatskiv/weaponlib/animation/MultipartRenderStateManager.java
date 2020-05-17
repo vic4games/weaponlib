@@ -451,6 +451,10 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
         currentStateContainer = new StateContainer<>(newState);
     }
 	
+	public State getLastState() {
+	    return currentStateContainer != null ? currentStateContainer.state : null; 
+	}
+	
 	public MultipartPositioning<Part, Context> nextPositioning() {
 		MultipartPositioning<Part, Context> result = null;
 		while(!positioningQueue.isEmpty()) {
