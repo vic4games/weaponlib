@@ -1,5 +1,7 @@
 package com.vicmatskiv.weaponlib.animation;
 
+import com.vicmatskiv.weaponlib.animation.PlayerRawPitchAnimationManager.State;
+
 import net.minecraft.entity.player.EntityPlayer;
 
 public interface PlayerAnimation {
@@ -9,34 +11,34 @@ public interface PlayerAnimation {
      * @param player
      * @return
      */
-    public void update(EntityPlayer player);
+    public void update(EntityPlayer player, boolean fadeOut);
     
-    public void reset(EntityPlayer player);
+    public void reset(EntityPlayer player, boolean force);
     
-    public boolean cycleCompleted();
+    public boolean isCompleted();
     
     public static PlayerAnimation NO_ANIMATION = new PlayerAnimation() {
 
         @Override
-        public void update(EntityPlayer player) {
+        public void update(EntityPlayer player, boolean fadeOut) {
  
         }
 
         @Override
-        public void reset(EntityPlayer player) {            
+        public void reset(EntityPlayer player, boolean force) {            
         }
 
         @Override
-        public int getPriority() {
-            return Integer.MIN_VALUE;
-        }
-
-        @Override
-        public boolean cycleCompleted() {
+        public boolean isCompleted() {
             return true;
         }
-    };
 
-    public int getPriority();
+        @Override
+        public State getState() {
+            return State.DEFAULT;
+        }
+    };
+    
+    public State getState();
     
 }

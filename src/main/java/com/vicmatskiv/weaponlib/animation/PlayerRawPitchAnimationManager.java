@@ -2,31 +2,56 @@ package com.vicmatskiv.weaponlib.animation;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
+import com.vicmatskiv.weaponlib.PlayerWeaponInstance;
 import com.vicmatskiv.weaponlib.RenderableState;
+import com.vicmatskiv.weaponlib.Weapon;
+import com.vicmatskiv.weaponlib.Weapon.ScreenShaking;
 
 import net.minecraft.entity.player.EntityPlayer;
 
 public class PlayerRawPitchAnimationManager {
     
-    private static enum State { SHOOTING, AIMING, DEFAULT }
+    public static enum State { 
+        SHOOTING(0, 0.1f), RELOADING(-5, 0f), AIMING(-10, 0f), DEFAULT(Integer.MIN_VALUE, 0f);
+        
+        private int priority;
+        private float stepAdjustement;
+        State(int priority, float stepAdjustement) {
+            this.priority = priority;
+        }
+        
+        int getPriority() {
+            return priority;
+        }
+        
+        public float getStepAdjustement() {
+            return stepAdjustement;
+        }
+    }
     
     private static class Key {
-        EntityPlayer player;
+        UUID playerId;
         State state;
+        Weapon weapon;
         
-        public Key(EntityPlayer player, State state) {
-            this.player = player;
+        public Key(EntityPlayer player, State state, Weapon weapon) {
+            this.playerId = player.getPersistentID();
             this.state = state;
+            this.weapon = weapon;
         }
+
         @Override
         public int hashCode() {
             final int prime = 31;
             int result = 1;
-            result = prime * result + ((player == null) ? 0 : player.hashCode());
+            result = prime * result + ((playerId == null) ? 0 : playerId.hashCode());
             result = prime * result + ((state == null) ? 0 : state.hashCode());
+            result = prime * result + ((weapon == null) ? 0 : weapon.hashCode());
             return result;
         }
+
         @Override
         public boolean equals(Object obj) {
             if (this == obj)
@@ -36,15 +61,21 @@ public class PlayerRawPitchAnimationManager {
             if (getClass() != obj.getClass())
                 return false;
             Key other = (Key) obj;
-            if (player == null) {
-                if (other.player != null)
+            if (playerId == null) {
+                if (other.playerId != null)
                     return false;
-            } else if (!player.equals(other.player))
+            } else if (!playerId.equals(other.playerId))
                 return false;
             if (state != other.state)
                 return false;
+            if (weapon == null) {
+                if (other.weapon != null)
+                    return false;
+            } else if (!weapon.equals(other.weapon))
+                return false;
             return true;
         }
+        
         
     }
 
@@ -68,50 +99,33 @@ public class PlayerRawPitchAnimationManager {
         this.transitionDuration = transitionDuration;
         return this;
     }
-
-    protected PlayerAnimation getActiveAnimation(EntityPlayer player, RenderableState weaponState) {
-        State managedState = toManagedState(weaponState);
-        PlayerAnimation activeAnimation = activeAnimations.get(player);
-        if(activeAnimation == null) {
-            activeAnimation = getAnimationForManagedState(player, managedState);
-            activeAnimations.put(player, activeAnimation);
-        } else if (activeAnimation.getPriority() < getManagedStatePriority(managedState)){
-            activeAnimation = getAnimationForManagedState(player, managedState);
-            activeAnimations.put(player, activeAnimation);
-        } else if (activeAnimation.getPriority() > getManagedStatePriority(managedState) && activeAnimation.cycleCompleted()) {
-            activeAnimation = getAnimationForManagedState(player, managedState);
-            activeAnimations.put(player, activeAnimation);
-        }
-        return activeAnimation;
-    }
-
-    private int getManagedStatePriority(State managedState) {
-        int priority;
-        switch(managedState) {
-        case SHOOTING:
-            priority = 0;
-            break;
-        case AIMING:
-            priority = -1;
-            break;
-        default:
-            priority = Integer.MIN_VALUE;
-        }
-        return priority;
-    }
     
-    public void update(EntityPlayer player, RenderableState weaponState) {
-        /*
-         * Activate animation can be remove only if there is a higher priority state 
-         * or a lower priority state AND the current animation completed
-         */
-        PlayerAnimation activeAnimation = getActiveAnimation(player, weaponState);
-        activeAnimation.update(player);
+    public void update(EntityPlayer player, PlayerWeaponInstance weaponInstance, RenderableState weaponState) {
+        State targetState = toManagedState(weaponState);
+        PlayerAnimation activeAnimation = activeAnimations.get(player);
+        activeAnimations.clear();
+        boolean fadeOut = true;
+        if(activeAnimation == null) {
+            activeAnimation = getAnimationForManagedState(player, weaponInstance, targetState);
+            activeAnimations.put(player, activeAnimation);
+        } else {
+            State currentState = activeAnimation.getState();
+//            System.out.println("Current state: " + currentState);
+            if(currentState == targetState) {
+                activeAnimation.reset(player, false);
+            } else if(currentState.getPriority() < targetState.getPriority() || activeAnimation.isCompleted()) {
+                activeAnimation = getAnimationForManagedState(player, weaponInstance, targetState);
+                activeAnimation.reset(player, true);
+                activeAnimations.put(player, activeAnimation);
+            }
+        }
+        
+        activeAnimation.update(player, fadeOut);
     }
 
     public void reset(EntityPlayer player, RenderableState weaponState) {
-        PlayerAnimation activeAnimation = getActiveAnimation(player, weaponState);
-        activeAnimation.reset(player);
+//        PlayerAnimation activeAnimation = getActiveAnimation(player, weaponState);
+//        activeAnimation.reset(player);
     }
     
     private State toManagedState(RenderableState weaponState) {
@@ -123,6 +137,9 @@ public class PlayerRawPitchAnimationManager {
         case SHOOTING: case RECOILED: case ZOOMING_SHOOTING: case ZOOMING_RECOILED:
             managedState = State.SHOOTING;
             break;
+        case RELOADING:
+            managedState = State.RELOADING;
+            break;
         case ZOOMING:
             managedState = State.AIMING;
             break;
@@ -132,25 +149,25 @@ public class PlayerRawPitchAnimationManager {
         return managedState;
     }
     
-    private PlayerAnimation createAnimationForManagedState(EntityPlayer player, State managedState) {
+    private PlayerAnimation createAnimationForManagedState(EntityPlayer player, State managedState, Weapon weapon) {
         PlayerAnimation animation;
-        int priority = getManagedStatePriority(managedState);
         switch(managedState) {
         case AIMING:
-            animation = new PlayerRawPitchAnimation()
-                    .setPriority(priority)
+            animation = new PlayerRawPitchAnimation(managedState)
                     .setMaxPitch(maxPitch)
                     .setMaxYaw(maxYaw)
                     .setPlayer(player)
                     .setTransitionDuration(transitionDuration);
             break;
         case SHOOTING:
-            animation = new PlayerRawPitchAnimation()
-                    .setPriority(priority)
-                    .setMaxPitch(maxPitch * 3)
-                    .setMaxYaw(maxYaw * 3)
-                    .setPlayer(player)
-                    .setTransitionDuration(150);
+            ScreenShaking weaponScreenShaking = weapon.getScreenShaking(RenderableState.SHOOTING);
+            animation = new ScreenShakeAnimation.Builder()
+                    .withState(managedState)
+                    .withRotationAttenuation(0.65f)
+                    .withTranslationAttenuation(0.05f)
+                    .withZRotationCoefficient(weaponScreenShaking != null ? weaponScreenShaking.getZRotationCoefficient(): 2f)
+                    .withTransitionDuration(50)
+                    .build();
             break;
         case DEFAULT: default:
             animation = PlayerAnimation.NO_ANIMATION;
@@ -159,9 +176,9 @@ public class PlayerRawPitchAnimationManager {
         return animation;
     }
 
-    private PlayerAnimation getAnimationForManagedState(EntityPlayer player, State managedState) {
-        return allPlayerAnimations.computeIfAbsent(new Key(player, managedState), 
-                k -> createAnimationForManagedState(k.player, k.state));
+    private PlayerAnimation getAnimationForManagedState(EntityPlayer player, PlayerWeaponInstance instance, State managedState) {
+        return allPlayerAnimations.computeIfAbsent(new Key(player, managedState, instance.getWeapon()), 
+                k -> createAnimationForManagedState(player, k.state, instance.getWeapon()));
     }
 
 }

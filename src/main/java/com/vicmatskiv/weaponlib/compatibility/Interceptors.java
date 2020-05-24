@@ -59,7 +59,7 @@ public class Interceptors {
 //                }
 //            }
             PlayerRawPitchAnimationManager yawPitchAnimationManager = context.getPlayerRawPitchAnimationManager();
-            yawPitchAnimationManager.update(player, stateManager != null ? stateManager.getLastState() : null);
+            yawPitchAnimationManager.update(player, weaponInstance, stateManager != null ? stateManager.getLastState() : null);
 //            if(weaponInstance.isAimed() && !isProning(player)) {
 //                yawPitchAnimationManager.update(player, stateManager != null ? stateManager.getLastState() : null);
 ////                GL11.glRotatef(5f * partialTicks, 1.0F, 0.0F, 1.0F);
