@@ -103,7 +103,8 @@ public class PlayerRawPitchAnimationManager {
     public void update(EntityPlayer player, PlayerWeaponInstance weaponInstance, RenderableState weaponState) {
         State targetState = toManagedState(weaponState);
         PlayerAnimation activeAnimation = activeAnimations.get(player);
-        activeAnimations.clear();
+//        activeAnimations.clear();
+//        allPlayerAnimations.clear();
         boolean fadeOut = true;
         if(activeAnimation == null) {
             activeAnimation = getAnimationForManagedState(player, weaponInstance, targetState);
@@ -163,7 +164,7 @@ public class PlayerRawPitchAnimationManager {
             ScreenShaking weaponScreenShaking = weapon.getScreenShaking(RenderableState.SHOOTING);
             animation = new ScreenShakeAnimation.Builder()
                     .withState(managedState)
-                    .withRotationAttenuation(0.65f)
+                    .withRotationAttenuation(0.5f)
                     .withTranslationAttenuation(0.05f)
                     .withZRotationCoefficient(weaponScreenShaking != null ? weaponScreenShaking.getZRotationCoefficient(): 2f)
                     .withTransitionDuration(50)

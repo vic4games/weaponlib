@@ -53,9 +53,9 @@ public class ScreenShakeAnimation implements PlayerAnimation {
     private float startY = 0f;
     private float startZ = 0f;
     
-    private float targetX = 1f;
-    private float targetY = 1f;
-    private float targetZ = 0.5f;
+    private float targetX = 0f;
+    private float targetY = 0f;
+    private float targetZ = 0f;
     
     private float xTranslateCoefficient = 0.05f;
     private float yTranslateCoefficient = 0.05f;
@@ -153,18 +153,14 @@ public class ScreenShakeAnimation implements PlayerAnimation {
     
     public void update(EntityPlayer player, boolean fadeOut) {
         float progress = (float)(System.currentTimeMillis() - startTime) / transitionDuration;
-        
-//        System.out.println("Progress: " + progress);
-        
+                
         if(progress >= 1f) {
             progress = 0f;
             startTime = System.currentTimeMillis();
         }
         
         if(progress == 0f) {
-//            System.out.println("Reset progress");
             float[] next = circlePointGenerator.next();
-//            float nextR = next[0];
             startX = targetX;
             startY = targetY;
             startZ = targetZ;
@@ -176,16 +172,15 @@ public class ScreenShakeAnimation implements PlayerAnimation {
             targetZ = targetZ * rotationAttenuation * zTranslateCoefficient;
             
             if(targetRotateZ == 0f) {
-                targetRotateZ = 1f * rotationAttenuation;
+                targetRotateZ = 1f;
+            } else {
+                targetRotateZ = -targetRotateZ * rotationAttenuation ;
             }
-                
-            targetRotateZ = -targetRotateZ /** rand.nextFloat()*/ * rotationAttenuation ;
 
             totalAdjustment += state.getStepAdjustement();       
         }
         
         float adjustedProgress = MathHelper.sin(progress * (float)Math.PI / 2f);
-//        System.out.println("Adjusted progress: " + adjustedProgress);
         float currentX = startX + (targetX - startX) * adjustedProgress;
         float currentY = startY + (targetY - startY) * adjustedProgress;
         float currentZ = startZ + (targetZ - startZ) * adjustedProgress;
@@ -193,7 +188,6 @@ public class ScreenShakeAnimation implements PlayerAnimation {
         GL11.glTranslatef(currentX, currentY, currentZ);
         
         float currentRotateZ = startRotateZ + (targetRotateZ - startRotateZ) * adjustedProgress;
-//        System.out.println("Progress: " + progress + ", current rotate z: " + currentRotateZ + ", target rotate z: " + targetRotateZ);
         GL11.glRotatef(currentRotateZ * zRotationCoefficient, 0f, 0f, 1f);
         
         cumulativeAttenuation *= rotationAttenuation;
