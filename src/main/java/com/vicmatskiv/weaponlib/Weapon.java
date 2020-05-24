@@ -46,6 +46,19 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
     private static final Logger logger = LogManager.getLogger(Weapon.class);
 
     public static enum ShellCasingEjectDirection { LEFT, RIGHT };
+    
+    public static class ScreenShaking {
+        
+        private float zRotationCoefficient;
+
+        public ScreenShaking(float zRotationCoefficient) {
+            this.zRotationCoefficient = zRotationCoefficient;
+        }
+        
+        public float getZRotationCoefficient() {
+            return zRotationCoefficient;
+        }
+    }
 
     public static class Builder {
 
@@ -173,6 +186,7 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         String flashTexture;
         
         private Set<AttachmentCategory> unremovableAttachmentCategories = new HashSet<>();
+        private Map<RenderableState, ScreenShaking> screenShakings = new HashMap<>();
         
         public Builder withModId(String modId) {
             this.modId = modId;
@@ -693,6 +707,11 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
                 smokeParticleTexture = smokeParticleTexture.substring(0, smokeParticleTexture.length() - 4);
             }
             this.smokeParticleTexture = modId + ":" + "textures/particle/" + smokeParticleTexture.toLowerCase() + ".png";
+            return this;
+        }
+        
+        public Builder withScreenShaking(RenderableState state, float zRotationCoefficient) {
+            this.screenShakings.put(state, new ScreenShaking(zRotationCoefficient));
             return this;
         }
 
@@ -1373,5 +1392,9 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
 
     public float getBleedingCoefficient() {
         return builder.bleedingCoefficient;
+    }
+    
+    public ScreenShaking getScreenShaking(RenderableState state) {
+        return builder.screenShakings.get(state);
     }
 }
