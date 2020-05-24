@@ -90,6 +90,9 @@ public class MissionManager {
     }
     
     private void loadEntityMissionsMappings() {
+        if(!entityMissionsFile.exists()) {
+            return;
+        }
         try(Reader reader = new FileReader(entityMissionsFile)) {
             Map<?, ?> result = gson.fromJson(reader, Map.class);
             for(Entry<?, ?> entry: result.entrySet()) {
@@ -158,7 +161,11 @@ public class MissionManager {
                 Path path;
 
                 if ("file".equals(uri.getScheme())) {
-                    path = Paths.get(CraftingManager.class.getResource("/assets/" + modId + "/missions").toURI());
+                    URL resource = CraftingManager.class.getResource("/assets/" + modId + "/missions");
+                    if(resource == null) {
+                        return;
+                    }
+                    path = Paths.get(resource.toURI());
                 } else {
                     if (!"jar".equals(uri.getScheme())) {
                         logger.error("Unsupported scheme " + uri + " trying to list all built-in missions");
