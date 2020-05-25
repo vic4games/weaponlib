@@ -1,10 +1,10 @@
 package com.vicmatskiv.weaponlib.animation;
 
-import com.vicmatskiv.weaponlib.animation.PlayerRawPitchAnimationManager.State;
+import com.vicmatskiv.weaponlib.animation.ScreenShakeAnimationManager.State;
 
 import net.minecraft.entity.player.EntityPlayer;
 
-public interface PlayerAnimation {
+public interface ScreenShakingAnimation {
     
     /**
      * Returns true if the animation cycle is in progress, otherwise false
@@ -17,7 +17,7 @@ public interface PlayerAnimation {
     
     public boolean isCompleted();
     
-    public static PlayerAnimation NO_ANIMATION = new PlayerAnimation() {
+    public static ScreenShakingAnimation NO_ANIMATION = new ScreenShakingAnimation() {
 
         @Override
         public void update(EntityPlayer player, boolean fadeOut) {

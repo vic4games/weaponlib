@@ -18,7 +18,7 @@ import com.vicmatskiv.weaponlib.RenderableState;
 import com.vicmatskiv.weaponlib.SpreadableExposure;
 import com.vicmatskiv.weaponlib.Weapon;
 import com.vicmatskiv.weaponlib.animation.MultipartRenderStateManager;
-import com.vicmatskiv.weaponlib.animation.PlayerRawPitchAnimationManager;
+import com.vicmatskiv.weaponlib.animation.ScreenShakeAnimationManager;
 import com.vicmatskiv.weaponlib.inventory.CustomPlayerInventory;
 import com.vicmatskiv.weaponlib.mission.Missions;
 import com.vicmatskiv.weaponlib.mission.ObtainItemAction;
@@ -58,8 +58,9 @@ public class Interceptors {
 //                    System.out.println("Last state " + lastState);
 //                }
 //            }
-            PlayerRawPitchAnimationManager yawPitchAnimationManager = context.getPlayerRawPitchAnimationManager();
-            yawPitchAnimationManager.update(player, weaponInstance, stateManager != null ? stateManager.getLastState() : null);
+            ScreenShakeAnimationManager screenShakeAnimationManager = context.getPlayerRawPitchAnimationManager();
+//            System.out.println("Weapon state" + weaponInstance.getState());
+            screenShakeAnimationManager.update(player, weaponInstance, stateManager != null ? stateManager.getLastState(RenderableState.class) : null);
 //            if(weaponInstance.isAimed() && !isProning(player)) {
 //                yawPitchAnimationManager.update(player, stateManager != null ? stateManager.getLastState() : null);
 ////                GL11.glRotatef(5f * partialTicks, 1.0F, 0.0F, 1.0F);

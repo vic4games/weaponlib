@@ -10,7 +10,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import com.vicmatskiv.weaponlib.animation.PlayerRawPitchAnimationManager;
+import com.vicmatskiv.weaponlib.animation.ScreenShakeAnimationManager;
 import com.vicmatskiv.weaponlib.command.DebugCommand;
 import com.vicmatskiv.weaponlib.command.MainCommand;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
@@ -68,7 +68,7 @@ public class ClientModContext extends CommonModContext {
 
     private EffectManager effectManager;
 
-    private PlayerRawPitchAnimationManager playerRawPitchAnimationManager;
+    private ScreenShakeAnimationManager playerRawPitchAnimationManager;
     private PlayerTransitionProvider playerTransitionProvider;
     
     public static ClientModContext getContext() {
@@ -125,7 +125,7 @@ public class ClientModContext extends CommonModContext {
 
 		this.effectManager = new ClientEffectManager();
 
-		this.playerRawPitchAnimationManager = new PlayerRawPitchAnimationManager();
+		this.playerRawPitchAnimationManager = new ScreenShakeAnimationManager();
 		
 		
 	}
@@ -266,7 +266,7 @@ public class ClientModContext extends CommonModContext {
         return effectManager;
     }
 
-    public PlayerRawPitchAnimationManager getPlayerRawPitchAnimationManager() {
+    public ScreenShakeAnimationManager getPlayerRawPitchAnimationManager() {
         return playerRawPitchAnimationManager;
     }
     

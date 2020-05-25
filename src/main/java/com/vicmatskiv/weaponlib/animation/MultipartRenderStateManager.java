@@ -380,6 +380,8 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
 
 	private Deque<MultipartPositioning<Part, Context>> positioningQueue;
 	
+	private MultipartPositioning<Part, Context> currentPositioning;
+	
 	public MultipartRenderStateManager(State initialState, MultipartTransitionProvider<State, Part, Context> transitionProvider) {
         this(initialState, transitionProvider, System::currentTimeMillis);
     }
@@ -451,8 +453,8 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
         currentStateContainer = new StateContainer<>(newState);
     }
 	
-	public State getLastState() {
-	    return currentStateContainer != null ? currentStateContainer.state : null; 
+	public State getLastState(Class<State> stateClass) {
+	    return currentPositioning != null ? currentPositioning.getToState(stateClass) : null; //currentStateContainer != null ? currentStateContainer.state : null; 
 	}
 	
 	public MultipartPositioning<Part, Context> nextPositioning() {
@@ -471,6 +473,7 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
 		if(result == null) {
 			throw new IllegalStateException("Position cannot be null");
 		}
+		currentPositioning = result;
 		return result;
 	}
 }

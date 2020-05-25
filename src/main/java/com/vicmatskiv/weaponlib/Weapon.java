@@ -21,6 +21,10 @@ import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.vicmatskiv.weaponlib.animation.PlayerRawPitchAnimation;
+import com.vicmatskiv.weaponlib.animation.ScreenShakeAnimation;
+import com.vicmatskiv.weaponlib.animation.ScreenShakeAnimationManager;
+import com.vicmatskiv.weaponlib.animation.ScreenShakingAnimation;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleBlockState;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleItem;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult;
@@ -46,19 +50,6 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
     private static final Logger logger = LogManager.getLogger(Weapon.class);
 
     public static enum ShellCasingEjectDirection { LEFT, RIGHT };
-    
-    public static class ScreenShaking {
-        
-        private float zRotationCoefficient;
-
-        public ScreenShaking(float zRotationCoefficient) {
-            this.zRotationCoefficient = zRotationCoefficient;
-        }
-        
-        public float getZRotationCoefficient() {
-            return zRotationCoefficient;
-        }
-    }
 
     public static class Builder {
 
@@ -186,7 +177,34 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         String flashTexture;
         
         private Set<AttachmentCategory> unremovableAttachmentCategories = new HashSet<>();
-        private Map<RenderableState, ScreenShaking> screenShakings = new HashMap<>();
+        private Map<ScreenShakeAnimationManager.State, ScreenShakingAnimation> screenShakings = new HashMap<>();
+        
+        public Builder() {
+            ScreenShakingAnimation shootingAnimation = new ScreenShakeAnimation.Builder()
+                    .withState(RenderableState.SHOOTING)
+                    .withTransitionDuration(50)
+                    .withZRotateCoefficient(2f)
+                    .build();
+            
+            this.screenShakings.put(shootingAnimation.getState(), shootingAnimation);
+            
+            ScreenShakingAnimation reloadingAnimation = new ScreenShakeAnimation.Builder()
+                    .withState(RenderableState.RELOADING)
+                    .withTransitionDuration(100)
+                    .withYRotateCoefficient(1f)
+                    .withZRotateCoefficient(0.5f)
+                    .withXTranslateCoefficient(1f)
+                    .build();
+            
+            this.screenShakings.put(reloadingAnimation.getState(), reloadingAnimation);
+            
+            ScreenShakingAnimation aimingAnimation = new PlayerRawPitchAnimation(ScreenShakeAnimationManager.State.AIMING)
+                    .setMaxPitch(2f)
+                    .setMaxYaw(2f)
+                    .setTransitionDuration(2000);
+            
+            this.screenShakings.put(ScreenShakeAnimationManager.State.AIMING, aimingAnimation);
+        }
         
         public Builder withModId(String modId) {
             this.modId = modId;
@@ -710,8 +728,35 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
             return this;
         }
         
-        public Builder withScreenShaking(RenderableState state, float zRotationCoefficient) {
-            this.screenShakings.put(state, new ScreenShaking(zRotationCoefficient));
+        public Builder withScreenShaking(RenderableState state, float zRotateCoefficient) {
+            ScreenShakingAnimation animation = new ScreenShakeAnimation.Builder()
+                    .withState(state)
+                    .withTransitionDuration(50)
+                    .withZRotateCoefficient(zRotateCoefficient)
+                    .build();
+            this.screenShakings.put(animation.getState(), animation);
+            return this;
+        }
+        
+        public Builder withScreenShaking(RenderableState state, long transitionDuration,
+                float rotationAttenuation, float translationAttenuation,
+                float xRotateCoefficient, float yRotateCoefficient, float zRotateCoefficient,
+                float xTranslateCoefficient, float yTranslateCoefficient, float zTranslateCoefficient) {
+            
+            ScreenShakingAnimation animation = new ScreenShakeAnimation.Builder()
+                .withState(state)
+                .withTransitionDuration(transitionDuration)
+                .withRotationAttenuation(rotationAttenuation)
+                .withTranslationAttenuation(translationAttenuation)
+                .withXRotateCoefficient(xRotateCoefficient)
+                .withYRotateCoefficient(yRotateCoefficient)
+                .withZRotateCoefficient(zRotateCoefficient)
+                .withXTranslateCoefficient(xTranslateCoefficient)
+                .withYTranslateCoefficient(yTranslateCoefficient)
+                .withZTranslateCoefficient(zTranslateCoefficient)
+                .build();
+            
+            this.screenShakings.put(animation.getState(), animation);
             return this;
         }
 
@@ -1394,7 +1439,8 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         return builder.bleedingCoefficient;
     }
     
-    public ScreenShaking getScreenShaking(RenderableState state) {
-        return builder.screenShakings.get(state);
+    public ScreenShakingAnimation getScreenShakingAnimation(ScreenShakeAnimationManager.State state) {
+        ScreenShakingAnimation animation = builder.screenShakings.get(state);
+        return animation != null ? animation : ScreenShakingAnimation.NO_ANIMATION;
     }
 }
