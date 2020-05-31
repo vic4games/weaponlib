@@ -7,11 +7,11 @@ import java.util.UUID;
 import com.vicmatskiv.weaponlib.PlayerWeaponInstance;
 import com.vicmatskiv.weaponlib.RenderableState;
 import com.vicmatskiv.weaponlib.Weapon;
-import com.vicmatskiv.weaponlib.Weapon.ScreenShaking;
+import com.vicmatskiv.weaponlib.animation.ScreenShakeAnimation.Builder;
 
 import net.minecraft.entity.player.EntityPlayer;
 
-public class PlayerRawPitchAnimationManager {
+public class ScreenShakingAnimationManager {
     
     public static enum State { 
         SHOOTING(0, 0.1f), RELOADING(-5, 0f), AIMING(-10, 0f), DEFAULT(Integer.MIN_VALUE, 0f);
@@ -85,17 +85,17 @@ public class PlayerRawPitchAnimationManager {
     private float maxPitch = 2f;
     private long transitionDuration = 2000;
 
-    public PlayerRawPitchAnimationManager setMaxYaw(float maxYaw) {
+    public ScreenShakingAnimationManager setMaxYaw(float maxYaw) {
         this.maxYaw = maxYaw;
         return this;
     }
 
-    public PlayerRawPitchAnimationManager setMaxPitch(float maxPitch) {
+    public ScreenShakingAnimationManager setMaxPitch(float maxPitch) {
         this.maxPitch = maxPitch;
         return this;
     }
 
-    public PlayerRawPitchAnimationManager setTransitionDuration(long transitionDuration) {
+    public ScreenShakingAnimationManager setTransitionDuration(long transitionDuration) {
         this.transitionDuration = transitionDuration;
         return this;
     }
@@ -129,7 +129,7 @@ public class PlayerRawPitchAnimationManager {
 //        activeAnimation.reset(player);
     }
     
-    private State toManagedState(RenderableState weaponState) {
+    public static State toManagedState(RenderableState weaponState) {
         if(weaponState == null) {
             return State.DEFAULT;
         }
@@ -161,14 +161,16 @@ public class PlayerRawPitchAnimationManager {
                     .setTransitionDuration(transitionDuration);
             break;
         case SHOOTING:
-            ScreenShaking weaponScreenShaking = weapon.getScreenShaking(RenderableState.SHOOTING);
-            animation = new ScreenShakeAnimation.Builder()
-                    .withState(managedState)
-                    .withRotationAttenuation(0.5f)
-                    .withTranslationAttenuation(0.05f)
-                    .withZRotationCoefficient(weaponScreenShaking != null ? weaponScreenShaking.getZRotationCoefficient(): 2f)
-                    .withTransitionDuration(50)
-                    .build();
+            Builder builder = weapon.getScreenShakeAnimationBuilder(RenderableState.SHOOTING);
+//            ScreenShaking weaponScreenShaking = weapon.getScreenShaking(RenderableState.SHOOTING);
+//            animation = new ScreenShakeAnimation.Builder()
+//                    .withState(managedState)
+//                    .withRotationAttenuation(0.5f)
+//                    .withTranslationAttenuation(0.05f)
+//                    .withZRotationCoefficient(weaponScreenShaking != null ? weaponScreenShaking.getZRotationCoefficient(): 2f)
+//                    .withTransitionDuration(50)
+//                    .build();
+            animation = builder.build();
             break;
         case DEFAULT: default:
             animation = PlayerAnimation.NO_ANIMATION;

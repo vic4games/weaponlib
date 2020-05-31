@@ -1,6 +1,6 @@
 package com.vicmatskiv.weaponlib.animation;
 
-import com.vicmatskiv.weaponlib.animation.PlayerRawPitchAnimationManager.State;
+import com.vicmatskiv.weaponlib.animation.ScreenShakingAnimationManager.State;
 
 import net.minecraft.entity.player.EntityPlayer;
 

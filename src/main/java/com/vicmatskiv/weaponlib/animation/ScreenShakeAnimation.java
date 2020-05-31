@@ -2,7 +2,8 @@ package com.vicmatskiv.weaponlib.animation;
 
 import org.lwjgl.opengl.GL11;
 
-import com.vicmatskiv.weaponlib.animation.PlayerRawPitchAnimationManager.State;
+import com.vicmatskiv.weaponlib.RenderableState;
+import com.vicmatskiv.weaponlib.animation.ScreenShakingAnimationManager.State;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.MathHelper;
@@ -45,8 +46,12 @@ public class ScreenShakeAnimation implements PlayerAnimation {
         }
     }
     
+    private float startRotateX = 0f;
+    private float startRotateY = 0f;
     private float startRotateZ = 0f;
     
+    private float targetRotateX = 0f;
+    private float targetRotateY = 0f;
     private float targetRotateZ = 0f;
     
     private float startX = 0f;
@@ -61,6 +66,8 @@ public class ScreenShakeAnimation implements PlayerAnimation {
     private float yTranslateCoefficient = 0.05f;
     private float zTranslateCoefficient = 0.1f;
     
+    private float xRotationCoefficient = 0.01f;
+    private float yRotationCoefficient = 0.01f;
     private float zRotationCoefficient = 0.5f;
     
     private float rotationAttenuation = 0.5f;// = ATTENUATION_COEFFICIENT;
@@ -69,13 +76,15 @@ public class ScreenShakeAnimation implements PlayerAnimation {
 
     private long startTime;
     
-    private PlayerRawPitchAnimationManager.State state;
+    private ScreenShakingAnimationManager.State state;
     
     private CirclePointGenerator circlePointGenerator;
 
     private float totalAdjustment;
     
     private float cumulativeAttenuation = 1f;
+    
+    private boolean initialized;
     
     public static class Builder {
         
@@ -85,47 +94,65 @@ public class ScreenShakeAnimation implements PlayerAnimation {
         private float xTranslateCoefficient = 0.05f;
         private float yTranslateCoefficient = 0.05f;
         private float zTranslateCoefficient = 0.1f;
+        
+        private float xRotationCoefficient = 0.01f;
+        private float yRotationCoefficient = 0.01f;
         private float zRotationCoefficient = 0.5f;
         
-        private PlayerRawPitchAnimationManager.State state;
+        private ScreenShakingAnimationManager.State state;
         
-        Builder withRotationAttenuation(float rotationAttenuation) {
+        public Builder withRotationAttenuation(float rotationAttenuation) {
             this.rotationAttenuation = rotationAttenuation;
             return this;
         }
         
-        Builder withTranslationAttenuation(float translationAttenuation) {
+        public Builder withTranslationAttenuation(float translationAttenuation) {
             this.translationAttenuation = translationAttenuation;
             return this;
         }
         
-        Builder withTransitionDuration(long transitionDuration) {
+        public Builder withTransitionDuration(long transitionDuration) {
             this.transitionDuration = transitionDuration;
             return this;
         }
         
-        Builder withXTranslateCoefficient(float xTranslateCoefficient) {
+        public Builder withXTranslateCoefficient(float xTranslateCoefficient) {
             this.xTranslateCoefficient = xTranslateCoefficient;
             return this;
         }
         
-        Builder withYTranslateCoefficient(float yTranslateCoefficient) {
+        public Builder withYTranslateCoefficient(float yTranslateCoefficient) {
             this.yTranslateCoefficient = yTranslateCoefficient;
             return this;
         }
         
-        Builder withZTranslateCoefficient(float zTranslateCoefficient) {
+        public Builder withZTranslateCoefficient(float zTranslateCoefficient) {
             this.zTranslateCoefficient = zTranslateCoefficient;
             return this;
         }
         
-        Builder withZRotationCoefficient(float zRotationCoefficient) {
+        public Builder withXRotationCoefficient(float xRotationCoefficient) {
+            this.xRotationCoefficient = xRotationCoefficient;
+            return this;
+        }
+        
+        public Builder withYRotationCoefficient(float yRotationCoefficient) {
+            this.yRotationCoefficient = yRotationCoefficient;
+            return this;
+        }
+        
+        public Builder withZRotationCoefficient(float zRotationCoefficient) {
             this.zRotationCoefficient = zRotationCoefficient;
             return this;
         }
         
-        Builder withState(PlayerRawPitchAnimationManager.State state) {
+        public Builder withState(ScreenShakingAnimationManager.State state) {
             this.state = state;
+            return this;
+        }
+        
+        public Builder withState(RenderableState state) {
+            this.state = ScreenShakingAnimationManager.toManagedState(state);
             return this;
         }
         
@@ -139,6 +166,8 @@ public class ScreenShakeAnimation implements PlayerAnimation {
             animation.xTranslateCoefficient = xTranslateCoefficient;
             animation.yTranslateCoefficient = yTranslateCoefficient;
             animation.zTranslateCoefficient = zTranslateCoefficient;
+            animation.xRotationCoefficient = xRotationCoefficient;
+            animation.yRotationCoefficient = yRotationCoefficient;
             animation.zRotationCoefficient = zRotationCoefficient;
             animation.transitionDuration = transitionDuration;
             animation.state = state;
@@ -147,37 +176,66 @@ public class ScreenShakeAnimation implements PlayerAnimation {
         }
     }
     
-    private ScreenShakeAnimation(PlayerRawPitchAnimationManager.State state) {
+    private ScreenShakeAnimation(ScreenShakingAnimationManager.State state) {
         this.state = state;
     }
     
     public void update(EntityPlayer player, boolean fadeOut) {
+        transitionDuration = 50;
+        xRotationCoefficient = 1f;
+        yRotationCoefficient = 1f;
+        zRotationCoefficient = 2f;
         float progress = (float)(System.currentTimeMillis() - startTime) / transitionDuration;
-                
+        
         if(progress >= 1f) {
             progress = 0f;
             startTime = System.currentTimeMillis();
         }
         
-        if(progress == 0f) {
+        if(!initialized) {
             float[] next = circlePointGenerator.next();
             startX = targetX;
             startY = targetY;
             startZ = targetZ;
             
+            startRotateX = targetRotateX;
+            startRotateY = targetRotateY;
+            startRotateZ = targetRotateZ;
+            
+            targetX = next[1] * xTranslateCoefficient;
+            targetY = next[2] * yTranslateCoefficient;
+            targetZ = zTranslateCoefficient;
+            
+            targetRotateX = 1f;
+            targetRotateY = 1f;
+            targetRotateZ = 1f;
+            totalAdjustment += state.getStepAdjustement();
+            
+            initialized = true;
+        } else if(progress == 0f) {
+            float[] next = circlePointGenerator.next();
+            startX = targetX;
+            startY = targetY;
+            startZ = targetZ;
+            
+            startRotateX = targetRotateX;
+            startRotateY = targetRotateY;
             startRotateZ = targetRotateZ;
                     
             targetX = next[1] * xTranslateCoefficient;
             targetY = next[2] * yTranslateCoefficient;
             targetZ = targetZ * rotationAttenuation * zTranslateCoefficient;
             
-            if(targetRotateZ == 0f) {
-                targetRotateZ = 1f;
-            } else {
-                targetRotateZ = -targetRotateZ * rotationAttenuation ;
-            }
+//            if(targetRotateZ == 0f) {
+//                targetRotateZ = 1f;
+//            } else {
+//                targetRotateZ = -targetRotateZ * rotationAttenuation;
+//            }
+            targetRotateX = -targetRotateX * rotationAttenuation;
+            targetRotateY = -targetRotateY * rotationAttenuation;
+            targetRotateZ = -targetRotateZ * rotationAttenuation;
 
-            totalAdjustment += state.getStepAdjustement();       
+            totalAdjustment += state.getStepAdjustement();
         }
         
         float adjustedProgress = MathHelper.sin(progress * (float)Math.PI / 2f);
@@ -186,6 +244,12 @@ public class ScreenShakeAnimation implements PlayerAnimation {
         float currentZ = startZ + (targetZ - startZ) * adjustedProgress;
         
         GL11.glTranslatef(currentX, currentY, currentZ);
+        
+        float currentRotateX = startRotateX + (targetRotateX - startRotateX) * adjustedProgress;
+        GL11.glRotatef(currentRotateX * xRotationCoefficient, 1f, 0f, 0f);
+        
+        float currentRotateY = startRotateY + (targetRotateY - startRotateY) * adjustedProgress;
+        GL11.glRotatef(currentRotateY * yRotationCoefficient, 0f, 1f, 0f);
         
         float currentRotateZ = startRotateZ + (targetRotateZ - startRotateZ) * adjustedProgress;
         GL11.glRotatef(currentRotateZ * zRotationCoefficient, 0f, 0f, 1f);
@@ -201,6 +265,8 @@ public class ScreenShakeAnimation implements PlayerAnimation {
             cumulativeAttenuation = 1f;
             circlePointGenerator.reset();
             targetZ = Math.signum(targetZ) * zTranslateCoefficient;
+            targetRotateX = -Math.signum(targetRotateX) /** rand.nextFloat()*/ * rotationAttenuation;
+            targetRotateY = -Math.signum(targetRotateY) /** rand.nextFloat()*/ * rotationAttenuation;
             targetRotateZ = -Math.signum(targetRotateZ) /** rand.nextFloat()*/ * rotationAttenuation;
         }
     }
