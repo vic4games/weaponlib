@@ -181,10 +181,10 @@ public class ScreenShakeAnimation implements PlayerAnimation {
     }
     
     public void update(EntityPlayer player, boolean fadeOut) {
-        transitionDuration = 50;
-        xRotationCoefficient = 1f;
-        yRotationCoefficient = 1f;
-        zRotationCoefficient = 2f;
+//        transitionDuration = 50;
+//        xRotationCoefficient = 1f;
+//        yRotationCoefficient = 1f;
+//        zRotationCoefficient = 2f;
         float progress = (float)(System.currentTimeMillis() - startTime) / transitionDuration;
         
         if(progress >= 1f) {
@@ -259,15 +259,21 @@ public class ScreenShakeAnimation implements PlayerAnimation {
 
     public void reset(EntityPlayer player, boolean force) {
         if(force || totalAdjustment != 0f) {
-            System.out.println("Force reset");
             totalAdjustment = 0f;
-//            attenuation = ATTENUATION_COEFFICIENT;
             cumulativeAttenuation = 1f;
             circlePointGenerator.reset();
-            targetZ = Math.signum(targetZ) * zTranslateCoefficient;
-            targetRotateX = -Math.signum(targetRotateX) /** rand.nextFloat()*/ * rotationAttenuation;
-            targetRotateY = -Math.signum(targetRotateY) /** rand.nextFloat()*/ * rotationAttenuation;
-            targetRotateZ = -Math.signum(targetRotateZ) /** rand.nextFloat()*/ * rotationAttenuation;
+            targetZ = Math.signum(targetZ);
+            targetRotateX = -Math.signum(targetRotateX);
+            targetRotateY = -Math.signum(targetRotateY);
+            targetRotateZ = -Math.signum(targetRotateZ);
+        } else {
+            totalAdjustment = 0f;
+            cumulativeAttenuation = 1f;
+            circlePointGenerator.reset();
+            targetZ = Math.signum(targetZ);
+            targetRotateX = Math.signum(targetRotateX);
+            targetRotateY = Math.signum(targetRotateY);
+            targetRotateZ = Math.signum(targetRotateZ);
         }
     }
 
