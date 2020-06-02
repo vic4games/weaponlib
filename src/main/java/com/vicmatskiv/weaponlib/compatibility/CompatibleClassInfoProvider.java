@@ -51,11 +51,17 @@ public class CompatibleClassInfoProvider {
                 .addFieldInfo("livingEntityRenderer", "Lnet/minecraft/client/renderer/entity/RenderLivingBase;", "field_177206_a", "Lcaa;")
                 );
         
+        classInfoMap.put("net/minecraft/entity/player/EntityPlayer", 
+                new ClassInfo("net/minecraft/entity/player/EntityPlayer", "aed")
+                .addFieldInfo("inventory", "Lnet/minecraft/entity/player/InventoryPlayer;", "field_71071_by", "Laec;")
+                );
+        
         classInfoMap.put("net/minecraft/client/entity/EntityPlayerSP", 
                 new ClassInfo("net/minecraft/client/entity/EntityPlayerSP", "bnn")
                 .addMethodInfo2("isSneaking", "()Z", "aM", "()Z")
                 .addMethodInfo2("updateEntityActionState", "()V", "cr", "()V")
                 );
+        //
         
         classInfoMap.put("net/minecraft/entity/player/EntityPlayerMP", 
                 new ClassInfo("net/minecraft/entity/player/EntityPlayerMP", "oq")

@@ -48,6 +48,9 @@ public class WeaponlibClassTransformer implements IClassTransformer {
     private static ClassInfo inventoryChangeTriggerClassInfo = CompatibleClassInfoProvider.getInstance()
             .getClassInfo("net/minecraft/advancements/critereon/InventoryChangeTrigger");
     
+    private static ClassInfo entityPlayerClassInfo = CompatibleClassInfoProvider.getInstance()
+            .getClassInfo("net/minecraft/entity/player/EntityPlayer");
+    
     private static class SetupViewBobbingMethodVisitor extends MethodVisitor {
 
         public SetupViewBobbingMethodVisitor(MethodVisitor mv) {
@@ -225,7 +228,7 @@ public class WeaponlibClassTransformer implements IClassTransformer {
         
         public RenderHeldItemMethodVisitor(MethodVisitor mv, boolean notchMode) {
             super(Opcodes.ASM4, mv);
-            this.notchMode = notchMode;   
+            this.notchMode = notchMode;
         }
         
         @Override
@@ -303,9 +306,11 @@ public class WeaponlibClassTransformer implements IClassTransformer {
     }
         
     private static class SendSlotContentsMethodVisitor extends MethodVisitor {
+        private boolean notchMode;
         
-        public SendSlotContentsMethodVisitor(MethodVisitor mv) {
+        public SendSlotContentsMethodVisitor(MethodVisitor mv, boolean notchMode) {
             super(Opcodes.ASM4, mv);
+            this.notchMode = notchMode;
         }
         
         @Override
@@ -315,7 +320,12 @@ public class WeaponlibClassTransformer implements IClassTransformer {
             if (inventoryChangeTriggerClassInfo.methodMatches("trigger", "(Lnet/minecraft/entity/player/EntityPlayerMP;Lnet/minecraft/entity/player/InventoryPlayer;)V", owner, name, desc)) {
                 mv.visitVarInsn(Opcodes.ALOAD, 0);
                 mv.visitVarInsn(Opcodes.ALOAD, 0);
-                mv.visitFieldInsn(Opcodes.GETFIELD, "net/minecraft/entity/player/EntityPlayerMP", "inventory", "Lnet/minecraft/entity/player/InventoryPlayer;");
+                String fieldName = "inventory";
+                if(notchMode) {
+                    fieldName = entityPlayerClassInfo.getNotchFieldName(fieldName);
+                }
+                
+                mv.visitFieldInsn(Opcodes.GETFIELD, "net/minecraft/entity/player/EntityPlayerMP", fieldName, "Lnet/minecraft/entity/player/InventoryPlayer;");
                 mv.visitMethodInsn(Opcodes.INVOKESTATIC, "com/vicmatskiv/weaponlib/compatibility/Interceptors", "onSlotContentChange", "(Lnet/minecraft/entity/player/EntityPlayerMP;Lnet/minecraft/entity/player/InventoryPlayer;)V", false);
             }
         }
@@ -368,7 +378,8 @@ public class WeaponlibClassTransformer implements IClassTransformer {
                 return new UpdateEntityActionStateMethodVisitor(cv.visitMethod(access, name, desc, signature, exceptions));
             } else if(entityPlayerMPClassInfo != null 
                     && entityPlayerMPClassInfo.methodMatches("sendSlotContents", "(Lnet/minecraft/inventory/Container;ILnet/minecraft/item/ItemStack;)V", classname, name, desc)) {
-                return new SendSlotContentsMethodVisitor(cv.visitMethod(access, name, desc, signature, exceptions));
+                return new SendSlotContentsMethodVisitor(cv.visitMethod(access, name, desc, signature, exceptions), 
+                        !name.equals("sendSlotContents"));
             }
 
             return this.cv.visitMethod(access, name, desc, signature, exceptions);
