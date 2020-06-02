@@ -84,7 +84,8 @@ public class ScreenShakingAnimationManager {
     private float maxYaw = 2f;
     private float maxPitch = 2f;
     private long transitionDuration = 2000;
-
+    private State lastTargetState;
+    
     public ScreenShakingAnimationManager setMaxYaw(float maxYaw) {
         this.maxYaw = maxYaw;
         return this;
@@ -110,11 +111,11 @@ public class ScreenShakingAnimationManager {
             activeAnimation = getAnimationForManagedState(player, weaponInstance, targetState);
             activeAnimations.put(player, activeAnimation);
         } else {
-            State currentState = activeAnimation.getState();
+            State currentAnimationState = activeAnimation.getState();
 //            System.out.println("Current state: " + currentState);
-            if(currentState == targetState) {
+            if(currentAnimationState == targetState && currentAnimationState != lastTargetState) {
                 activeAnimation.reset(player, false);
-            } else if(currentState.getPriority() < targetState.getPriority() || activeAnimation.isCompleted()) {
+            } else if(currentAnimationState.getPriority() < targetState.getPriority() || activeAnimation.isCompleted()) {
                 activeAnimation = getAnimationForManagedState(player, weaponInstance, targetState);
                 activeAnimation.reset(player, true);
                 activeAnimations.put(player, activeAnimation);
@@ -122,6 +123,7 @@ public class ScreenShakingAnimationManager {
         }
         
         activeAnimation.update(player, fadeOut);
+        lastTargetState = targetState;
     }
 
     public void reset(EntityPlayer player, RenderableState weaponState) {
