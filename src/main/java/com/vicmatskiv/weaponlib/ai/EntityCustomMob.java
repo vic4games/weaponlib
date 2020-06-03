@@ -71,6 +71,8 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldType;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class EntityCustomMob extends CompatibleEntityMob
         implements IRangedAttackMob, Contextual, MissionAssigner, Configurable<EntityConfiguration> {
@@ -586,6 +588,7 @@ public class EntityCustomMob extends CompatibleEntityMob
         }
     }
 
+    @SideOnly(Side.CLIENT)
     protected void displayTradeGui(EntityPlayer player) {
         Collection<MissionOffering> redeemableMissionOfferings = Missions.getRedeemableMissionOfferings(this, player);
         if(!redeemableMissionOfferings.isEmpty()) {
