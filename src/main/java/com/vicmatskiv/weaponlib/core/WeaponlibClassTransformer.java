@@ -330,7 +330,7 @@ public class WeaponlibClassTransformer implements IClassTransformer {
                 }
                 
                 mv.visitFieldInsn(Opcodes.GETFIELD, "net/minecraft/entity/player/EntityPlayerMP", fieldName, "Lnet/minecraft/entity/player/InventoryPlayer;");
-                mv.visitMethodInsn(Opcodes.INVOKESTATIC, "com/vicmatskiv/weaponlib/compatibility/Interceptors", "onSlotContentChange", "(Lnet/minecraft/entity/player/EntityPlayerMP;Lnet/minecraft/entity/player/InventoryPlayer;)V", false);
+                mv.visitMethodInsn(Opcodes.INVOKESTATIC, "com/vicmatskiv/weaponlib/compatibility/ServerInterceptors", "onSlotContentChange", "(Lnet/minecraft/entity/player/EntityPlayerMP;Lnet/minecraft/entity/player/InventoryPlayer;)V", false);
             }
         }
     }
@@ -345,7 +345,7 @@ public class WeaponlibClassTransformer implements IClassTransformer {
         public void visitLdcInsn(Object cst) {
             if(cst instanceof Float && cst.equals(0.4f)) {
                 mv.visitVarInsn(Opcodes.ALOAD, 1);
-                mv.visitMethodInsn(Opcodes.INVOKESTATIC, "com/vicmatskiv/weaponlib/compatibility/Interceptors", "getKnockback", "(Lnet/minecraft/util/DamageSource;)F", false);
+                mv.visitMethodInsn(Opcodes.INVOKESTATIC, "com/vicmatskiv/weaponlib/compatibility/ServerInterceptors", "getKnockback", "(Lnet/minecraft/util/DamageSource;)F", false);
             } else {
                 super.visitLdcInsn(cst);
             }

@@ -8,8 +8,6 @@ import java.util.Map;
 import org.lwjgl.opengl.GL11;
 
 import com.vicmatskiv.weaponlib.ClientModContext;
-import com.vicmatskiv.weaponlib.CommonModContext;
-import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.Part;
 import com.vicmatskiv.weaponlib.PlayerRenderer;
 import com.vicmatskiv.weaponlib.PlayerWeaponInstance;
@@ -17,12 +15,9 @@ import com.vicmatskiv.weaponlib.RenderContext;
 import com.vicmatskiv.weaponlib.RenderableState;
 import com.vicmatskiv.weaponlib.SpreadableExposure;
 import com.vicmatskiv.weaponlib.Weapon;
-import com.vicmatskiv.weaponlib.WeaponSpawnEntity;
 import com.vicmatskiv.weaponlib.animation.MultipartRenderStateManager;
 import com.vicmatskiv.weaponlib.animation.ScreenShakingAnimationManager;
 import com.vicmatskiv.weaponlib.inventory.CustomPlayerInventory;
-import com.vicmatskiv.weaponlib.mission.Missions;
-import com.vicmatskiv.weaponlib.mission.ObtainItemAction;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
@@ -33,12 +28,8 @@ import net.minecraft.client.renderer.entity.RenderLivingBase;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.EntityDamageSourceIndirect;
 //import net.minecraft.util.MathHelper;
 import net.minecraft.util.EnumHandSide;
 
@@ -280,29 +271,5 @@ public class Interceptors {
         return player instanceof EntityPlayer && isProning((EntityPlayer) player) 
                 && Minecraft.getMinecraft().gameSettings.thirdPersonView == 0 ? position 
                 + player.getEyeHeight() * 1.6f : position;
-    }
-    
-    public static void onSlotContentChange(EntityPlayerMP player, InventoryPlayer inventory) {
-        System.out.println("Slot content changed!");
-        ModContext modContext = CommonModContext.getContext();
-        if(modContext != null) {
-            Missions.update(player, new ObtainItemAction(), modContext);
-        }
-    }
-
-    public static boolean isKnockbackEnabled(DamageSource source) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    public static float getKnockback(DamageSource source) {
-        float strength = 0.4f;
-        if(source instanceof EntityDamageSourceIndirect) {
-            EntityDamageSourceIndirect indirectSource = (EntityDamageSourceIndirect) source;
-            if(indirectSource.getImmediateSource() instanceof WeaponSpawnEntity) {
-                strength = 0.1f;
-            }
-        }
-        return strength;
     }
 }

@@ -21,7 +21,7 @@ public class MaterialImpactSound {
     
     public CompatibleSound getSound() {
         int soundIndex = rand.nextInt(sounds.size());
-        System.out.println("Playing sound " + soundIndex + " out of " + sounds.size());
+//        System.out.println("Playing sound " + soundIndex + " out of " + sounds.size());
         return sounds.get(soundIndex);
     }
     
