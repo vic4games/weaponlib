@@ -73,6 +73,12 @@ public class CompatibleClassInfoProvider {
                 .addMethodInfo2("trigger", "(Lnet/minecraft/entity/player/EntityPlayerMP;Lnet/minecraft/entity/player/InventoryPlayer;)V", "a", "(Loq;Laec;)V")
                 );
         
+        classInfoMap.put("net/minecraft/entity/EntityLivingBase", 
+                new ClassInfo("net/minecraft/entity/EntityLivingBase", "vp")
+                .addMethodInfo2("attackEntityFrom", "(Lnet/minecraft/util/DamageSource;F)Z", "a", "(Lur;F)Z")
+                .addMethodInfo2("knockBack", "(Lnet/minecraft/entity/Entity;FDD)V", "a", "(Lvg;FDD)V")
+                );
+        
     }
 
     private static CompatibleClassInfoProvider instance = new CompatibleClassInfoProvider();

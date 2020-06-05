@@ -17,6 +17,7 @@ import com.vicmatskiv.weaponlib.RenderContext;
 import com.vicmatskiv.weaponlib.RenderableState;
 import com.vicmatskiv.weaponlib.SpreadableExposure;
 import com.vicmatskiv.weaponlib.Weapon;
+import com.vicmatskiv.weaponlib.WeaponSpawnEntity;
 import com.vicmatskiv.weaponlib.animation.MultipartRenderStateManager;
 import com.vicmatskiv.weaponlib.animation.ScreenShakingAnimationManager;
 import com.vicmatskiv.weaponlib.inventory.CustomPlayerInventory;
@@ -36,6 +37,8 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.DamageSource;
+import net.minecraft.util.EntityDamageSourceIndirect;
 //import net.minecraft.util.MathHelper;
 import net.minecraft.util.EnumHandSide;
 
@@ -285,5 +288,21 @@ public class Interceptors {
         if(modContext != null) {
             Missions.update(player, new ObtainItemAction(), modContext);
         }
+    }
+
+    public static boolean isKnockbackEnabled(DamageSource source) {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    public static float getKnockback(DamageSource source) {
+        float strength = 0.4f;
+        if(source instanceof EntityDamageSourceIndirect) {
+            EntityDamageSourceIndirect indirectSource = (EntityDamageSourceIndirect) source;
+            if(indirectSource.getImmediateSource() instanceof WeaponSpawnEntity) {
+                strength = 0.1f;
+            }
+        }
+        return strength;
     }
 }

@@ -51,6 +51,9 @@ public class WeaponlibClassTransformer implements IClassTransformer {
     private static ClassInfo entityPlayerClassInfo = CompatibleClassInfoProvider.getInstance()
             .getClassInfo("net/minecraft/entity/player/EntityPlayer");
     
+    private static ClassInfo entityLivingBaseClassInfo = CompatibleClassInfoProvider.getInstance()
+            .getClassInfo("net/minecraft/entity/EntityLivingBase");
+    
     private static class SetupViewBobbingMethodVisitor extends MethodVisitor {
 
         public SetupViewBobbingMethodVisitor(MethodVisitor mv) {
@@ -128,7 +131,8 @@ public class WeaponlibClassTransformer implements IClassTransformer {
                 (layerArmorBaseClassInfo != null && layerArmorBaseClassInfo.classMatches(className)) ||
                 (layerHeldItemClassInfo != null && layerHeldItemClassInfo.classMatches(className)) ||
                 (entityPlayerSPClassInfo != null && entityPlayerSPClassInfo.classMatches(className)) ||
-                (entityPlayerMPClassInfo != null && entityPlayerMPClassInfo.classMatches(className))
+                (entityPlayerMPClassInfo != null && entityPlayerMPClassInfo.classMatches(className)) ||
+                (entityLivingBaseClassInfo != null && entityLivingBaseClassInfo.classMatches(className))
                 ) {
             ClassReader cr = new ClassReader(bytecode);
             ClassWriter cw = new ClassWriter(cr, 1);
@@ -330,6 +334,45 @@ public class WeaponlibClassTransformer implements IClassTransformer {
             }
         }
     }
+    
+    private static class AttackEntityFromMethodVisitor extends MethodVisitor {
+        
+        public AttackEntityFromMethodVisitor(MethodVisitor mv) {
+            super(Opcodes.ASM4, mv);
+        }
+        
+        @Override
+        public void visitLdcInsn(Object cst) {
+            if(cst instanceof Float && cst.equals(0.4f)) {
+                mv.visitVarInsn(Opcodes.ALOAD, 1);
+                mv.visitMethodInsn(Opcodes.INVOKESTATIC, "com/vicmatskiv/weaponlib/compatibility/Interceptors", "getKnockback", "(Lnet/minecraft/util/DamageSource;)F", false);
+            } else {
+                super.visitLdcInsn(cst);
+            }
+        }
+        
+        @Override
+        public void visitFieldInsn(int opcode, String owner, String name, String desc) {
+            
+            super.visitFieldInsn(opcode, owner, name, desc);
+            if(opcode == Opcodes.GETFIELD && (owner.equals("bnl") || owner.equals("net/minecraft/util/MovementInput"))
+                    && (name.equals("jump") || name.equals("g"))) {
+                Label l6 = new Label();
+                mv.visitJumpInsn(Opcodes.IFEQ, l6);
+                mv.visitVarInsn(Opcodes.ALOAD, 0);
+                mv.visitMethodInsn(Opcodes.INVOKESTATIC, "com/vicmatskiv/weaponlib/compatibility/Interceptors", "isProning", "(Lnet/minecraft/entity/player/EntityPlayer;)Z", false);
+                mv.visitJumpInsn(Opcodes.IFNE, l6);
+                mv.visitInsn(Opcodes.ICONST_1);
+                Label l7 = new Label();
+                mv.visitJumpInsn(Opcodes.GOTO, l7);
+                mv.visitLabel(l6);
+                mv.visitFrame(Opcodes.F_SAME1, 0, null, 1, new Object[] {owner});
+                mv.visitInsn(Opcodes.ICONST_0);
+                mv.visitLabel(l7);
+                mv.visitFrame(Opcodes.F_FULL, 1, new Object[] {owner}, 2, new Object[] {owner, Opcodes.INTEGER});
+            }
+        }
+    }
 
     private static class CVTransform extends ClassVisitor {
         String classname;
@@ -380,6 +423,9 @@ public class WeaponlibClassTransformer implements IClassTransformer {
                     && entityPlayerMPClassInfo.methodMatches("sendSlotContents", "(Lnet/minecraft/inventory/Container;ILnet/minecraft/item/ItemStack;)V", classname, name, desc)) {
                 return new SendSlotContentsMethodVisitor(cv.visitMethod(access, name, desc, signature, exceptions), 
                         !name.equals("sendSlotContents"));
+            } else if(entityLivingBaseClassInfo != null 
+                    && entityLivingBaseClassInfo.methodMatches("attackEntityFrom", "(Lnet/minecraft/util/DamageSource;F)Z", classname, name, desc)) {
+                return new AttackEntityFromMethodVisitor(cv.visitMethod(access, name, desc, signature, exceptions));
             }
 
             return this.cv.visitMethod(access, name, desc, signature, exceptions);
