@@ -262,18 +262,18 @@ public class ScreenShakeAnimation implements PlayerAnimation {
             totalAdjustment = 0f;
             cumulativeAttenuation = 1f;
             circlePointGenerator.reset();
-            targetZ = Math.signum(targetZ);
+            targetZ = zTranslateCoefficient; //Math.signum(targetZ);
             targetRotateX = -Math.signum(targetRotateX);
             targetRotateY = -Math.signum(targetRotateY);
             targetRotateZ = -Math.signum(targetRotateZ);
         } else {
             totalAdjustment = 0f;
             cumulativeAttenuation = 1f;
-            circlePointGenerator.reset();
-            targetZ = Math.signum(targetZ);
-            targetRotateX = Math.signum(targetRotateX);
-            targetRotateY = Math.signum(targetRotateY);
-            targetRotateZ = Math.signum(targetRotateZ);
+//            circlePointGenerator.reset();
+            targetZ = zTranslateCoefficient; //Math.signum(targetZ);
+            targetRotateX = Math.signum(targetRotateX) * rotationAttenuation;
+            targetRotateY = Math.signum(targetRotateY) * rotationAttenuation;
+            targetRotateZ = Math.signum(targetRotateZ) * rotationAttenuation;
         }
     }
 

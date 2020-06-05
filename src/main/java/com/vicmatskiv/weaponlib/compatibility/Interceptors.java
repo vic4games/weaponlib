@@ -278,12 +278,4 @@ public class Interceptors {
                 && Minecraft.getMinecraft().gameSettings.thirdPersonView == 0 ? position 
                 + player.getEyeHeight() * 1.6f : position;
     }
-    
-    public static void onSlotContentChange(EntityPlayerMP player, InventoryPlayer inventory) {
-        System.out.println("Slot content changed!");
-        ModContext modContext = CommonModContext.getContext();
-        if(modContext != null) {
-            Missions.update(player, new ObtainItemAction(), modContext);
-        }
-    }
 }

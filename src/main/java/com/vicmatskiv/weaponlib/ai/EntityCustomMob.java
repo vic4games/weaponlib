@@ -573,7 +573,7 @@ public class EntityCustomMob extends CompatibleEntityMob
             // player.addStat(StatList.TALKED_TO_VILLAGER);
             // }
             Map<UUID, MissionOffering> missionOfferings = getMissionOfferings();
-            if (!missionOfferings.isEmpty()) {
+            if (!missionOfferings.isEmpty() || !getConfiguration().getDialogContent().isEmpty()) {
                 setCustomer(player);
                 if(this.world.isRemote) {
                     displayTradeGui(player);

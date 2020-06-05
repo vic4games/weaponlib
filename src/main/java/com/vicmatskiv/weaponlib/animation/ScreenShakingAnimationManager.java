@@ -103,6 +103,7 @@ public class ScreenShakingAnimationManager {
     
     public void update(EntityPlayer player, PlayerWeaponInstance weaponInstance, RenderableState weaponState) {
         State targetState = toManagedState(weaponState);
+//        System.out.println("Target state: " + targetState + ", render state: " + weaponState);
         PlayerAnimation activeAnimation = activeAnimations.get(player);
 //        activeAnimations.clear();
 //        allPlayerAnimations.clear();
@@ -113,8 +114,11 @@ public class ScreenShakingAnimationManager {
         } else {
             State currentAnimationState = activeAnimation.getState();
 //            System.out.println("Current state: " + currentState);
-            if(currentAnimationState == targetState && currentAnimationState != lastTargetState) {
-                activeAnimation.reset(player, false);
+            if(currentAnimationState == targetState) {
+                if(targetState != lastTargetState) {
+//                    System.out.println("Target state: " + targetState + ", last: " + lastTargetState + ", resetting...");
+                    activeAnimation.reset(player, false);
+                }
             } else if(currentAnimationState.getPriority() < targetState.getPriority() || activeAnimation.isCompleted()) {
                 activeAnimation = getAnimationForManagedState(player, weaponInstance, targetState);
                 activeAnimation.reset(player, true);
@@ -137,7 +141,7 @@ public class ScreenShakingAnimationManager {
         }
         State managedState;
         switch(weaponState) {
-        case SHOOTING: case RECOILED: case ZOOMING_SHOOTING: case ZOOMING_RECOILED:
+        case SHOOTING: case ZOOMING_SHOOTING: //case RECOILED: case ZOOMING_RECOILED:
             managedState = State.SHOOTING;
             break;
         case RELOADING:
