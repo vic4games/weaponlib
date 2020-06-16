@@ -22,6 +22,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.IProjectile;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.math.MathHelper;
 //import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
 
@@ -70,6 +71,10 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
         this.velocity = velocity;
         this.gravityVelocity = gravityVelocity;
         this.inaccuracy = inaccuracy;
+//        
+//        this.posX = thrower.posX;
+//        this.posY = thrower.posY + (double)thrower.getEyeHeight() - 0.10000000149011612D;
+//        this.posZ = thrower.posZ;
         
 //        if(thrower != null) {
 //            RayTraceResult rayTraceResult = thrower.rayTrace(50, 0);
@@ -82,6 +87,48 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
 //            }
 //        }
     }
+    
+//    public void setAim(Entity shooter, float pitch, float yaw, float p_184547_4_, float velocity, float inaccuracy)
+//    {
+//        float f = -MathHelper.sin(yaw * 0.017453292F) * MathHelper.cos(pitch * 0.017453292F);
+//        float f1 = -MathHelper.sin(pitch * 0.017453292F);
+//        float f2 = MathHelper.cos(yaw * 0.017453292F) * MathHelper.cos(pitch * 0.017453292F);
+//        this.setThrowableHeading((double)f, (double)f1, (double)f2, velocity, inaccuracy);
+//        this.motionX += shooter.motionX;
+//        this.motionZ += shooter.motionZ;
+//
+//        if (!shooter.onGround)
+//        {
+//            this.motionY += shooter.motionY;
+//        }
+//    }
+//
+//    /**
+//     * Similar to setArrowHeading, it's point the throwable entity to a x, y, z direction.
+//     */
+//    public void setThrowableHeading(double x, double y, double z, float velocity, float inaccuracy)
+//    {
+//        float f = MathHelper.sqrt(x * x + y * y + z * z);
+//        x = x / (double)f;
+//        y = y / (double)f;
+//        z = z / (double)f;
+//        x = x + this.rand.nextGaussian() * 0.007499999832361937D * (double)inaccuracy;
+//        y = y + this.rand.nextGaussian() * 0.007499999832361937D * (double)inaccuracy;
+//        z = z + this.rand.nextGaussian() * 0.007499999832361937D * (double)inaccuracy;
+//        x = x * (double)velocity;
+//        y = y * (double)velocity;
+//        z = z * (double)velocity;
+//        this.motionX = x;
+//        this.motionY = y;
+//        this.motionZ = z;
+//        float f1 = MathHelper.sqrt(x * x + z * z);
+//        this.rotationYaw = (float)(MathHelper.atan2(x, z) * (180D / Math.PI));
+//        this.rotationPitch = (float)(MathHelper.atan2(y, (double)f1) * (180D / Math.PI));
+//        this.prevRotationYaw = this.rotationYaw;
+//        this.prevRotationPitch = this.rotationPitch;
+////        this.ticksInGround = 0;
+//    }
+
 
     public void setPositionAndDirection() {
 
@@ -90,6 +137,7 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
 
         this.posX -= (double) (CompatibleMathHelper.cos(this.rotationYaw / 180.0F * (float) Math.PI) * 0.16F);
         this.posY -= 0.10000000149011612D;
+        this.posY = thrower.posY + (double)thrower.getEyeHeight() - 0.10000000149011612D;
         this.posZ -= (double) (CompatibleMathHelper.sin(this.rotationYaw / 180.0F * (float) Math.PI) * 0.16F);
         this.setPosition(this.posX, this.posY, this.posZ);
 
@@ -109,7 +157,8 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
         this.setLocationAndAngles(x, y + (double) thrower.getEyeHeight(), z, rotationYaw, rotationPitch);
 
         this.posX -= (double) (CompatibleMathHelper.cos(this.rotationYaw / 180.0F * (float) Math.PI) * 0.16F);
-        this.posY -= 0.10000000149011612D;
+//        this.posY -= 0.10000000149011612D;
+        this.posY = thrower.posY + (double)thrower.getEyeHeight() - 0.10000000149011612D;
         this.posZ -= (double) (CompatibleMathHelper.sin(this.rotationYaw / 180.0F * (float) Math.PI) * 0.16F);
         this.setPosition(this.posX, this.posY, this.posZ);
 

@@ -25,7 +25,7 @@ public class ServerInterceptors {
         if(source instanceof EntityDamageSourceIndirect) {
             EntityDamageSourceIndirect indirectSource = (EntityDamageSourceIndirect) source;
             if(indirectSource.getImmediateSource() instanceof WeaponSpawnEntity) {
-                strength = 0.05f;
+                strength = 0f;
             }
         }
         return strength;

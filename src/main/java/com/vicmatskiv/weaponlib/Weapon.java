@@ -795,6 +795,7 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
                             explosionParticleTextureId, 
                             smokeParticleTextureId);
                     bullet.setPositionAndDirection();
+//                    bullet.setAim(p, player.rotationPitch, player.rotationYaw, 0f, spawnEntityGravityVelocity, smokeParticleTextureId);
                     return bullet;
                 };
             }
