@@ -32,6 +32,7 @@ import com.vicmatskiv.weaponlib.electronics.HandheldState;
 import com.vicmatskiv.weaponlib.electronics.PlayerHandheldInstance;
 import com.vicmatskiv.weaponlib.electronics.PlayerTabletInstance;
 import com.vicmatskiv.weaponlib.electronics.TabletState;
+import com.vicmatskiv.weaponlib.grenade.EntityFlashGrenade;
 import com.vicmatskiv.weaponlib.grenade.EntityGasGrenade;
 import com.vicmatskiv.weaponlib.grenade.EntityGrenade;
 import com.vicmatskiv.weaponlib.grenade.EntitySmokeGrenade;
@@ -113,6 +114,7 @@ public class CommonModContext implements ModContext {
         TypeRegistry.getInstance().register(TabletState.class);
         TypeRegistry.getInstance().register(HandheldState.class);
         TypeRegistry.getInstance().register(SpreadableExposure.class);
+        TypeRegistry.getInstance().register(LightExposure.class);
         TypeRegistry.getInstance().register(Mission.class);
         TypeRegistry.getInstance().register(Goal.class);
         TypeRegistry.getInstance().register(KillEntityAction.class);
@@ -196,6 +198,8 @@ public class CommonModContext implements ModContext {
 	private CompatibleSound noAmmoSound;
 	
     private CompatibleSound explosionSound;
+    
+    private CompatibleSound flashExplosionSound;
     
     private CompatibleSound nightVisionOnSound;
     
@@ -296,8 +300,11 @@ public class CommonModContext implements ModContext {
 		channel.registerMessage(new ArmorControlHandler(this),
                 ArmorControlMessage.class, 22, CompatibleSide.SERVER);
 		
-		channel.registerMessage(new SpreadableExposureMessageHandler(this),
-		        SpreadableExposureMessage.class, 23, CompatibleSide.CLIENT);
+//		channel.registerMessage(new SpreadableExposureMessageHandler(this),
+//		        SpreadableExposureMessage.class, 23, CompatibleSide.CLIENT);
+		
+	    channel.registerMessage(new ExposureMessageHandler(this),
+	            ExposureMessage.class, 23, CompatibleSide.CLIENT);
 		
 		channel.registerMessage(new EntityControlHandler(this),
                 EntityControlMessage.class, 24, CompatibleSide.CLIENT);
@@ -349,6 +356,8 @@ public class CommonModContext implements ModContext {
         compatibility.registerModEntity(EntityGrenade.class, "Grenade" + modEntityID, modEntityID++, mod, modId, 64, 10000, false);
         compatibility.registerModEntity(EntitySmokeGrenade.class, "SmokeGrenade" + modEntityID, modEntityID++, mod, modId, 64, 10000, false);
         compatibility.registerModEntity(EntityGasGrenade.class, "GasGrenade" + modEntityID, modEntityID++, mod, modId, 64, 10000, false);
+        compatibility.registerModEntity(EntityFlashGrenade.class, "FlashGrenade" + modEntityID, modEntityID++, mod, modId, 64, 10000, false);
+
         compatibility.registerModEntity(EntitySpreadable.class, "EntitySpreadable" + modEntityID, modEntityID++, mod, modId, 64, 3, false);
 
 //        compatibility.registerModEntity(EntityCustomMob.class, "CustomMob" + modEntityID, modEntityID++, mod, modId, 64, 3, true);
@@ -548,6 +557,16 @@ public class CommonModContext implements ModContext {
 	@Override
 	public CompatibleSound getExplosionSound() {
 	    return explosionSound;
+	}
+	
+	@Override
+	public CompatibleSound getFlashExplosionSound() {
+	    return flashExplosionSound;
+	}
+	
+	@Override
+	public void setFlashExplosionSound(String sound) {
+	    this.flashExplosionSound = registerSound(sound.toLowerCase());
 	}
 	
 	@Override

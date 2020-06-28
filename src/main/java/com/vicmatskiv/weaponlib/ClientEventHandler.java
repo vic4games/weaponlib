@@ -145,6 +145,11 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 	        } else {
 	            restorePlayerSpeed(player, SLOW_DOWN_WHILE_POISONED_ATTRIBUTE_MODIFIER);
 	        }
+	        
+	        LightExposure lightExposure = CompatibleExposureCapability.getExposure(compatibility.clientPlayer(), LightExposure.class);
+	        if(lightExposure != null) {
+	            lightExposure.update(compatibility.clientPlayer());
+	        }
 		}
 	}
     

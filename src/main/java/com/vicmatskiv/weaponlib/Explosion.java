@@ -14,6 +14,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleAxisAlignedBB;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleBlockPos;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleBlockState;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMathHelper;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleVec3;
 import com.vicmatskiv.weaponlib.particle.ExplosionSmokeFX;
 
@@ -53,6 +54,7 @@ public class Explosion {
     private final float smokeParticleScaleCoefficient;
     private String explosionParticleTextureName;
     private String smokeParticleTextureName;
+    private CompatibleSound explosionSound;
 
     public static void createServerSideExplosion(ModContext modContext, World world, Entity entity, double posX, double posY, double posZ,
             float explosionStrength, boolean isFlaming, boolean isSmoking, boolean isDestroyingBlocks, 
@@ -61,14 +63,15 @@ public class Explosion {
             float explosionParticleScaleCoefficient,
             float smokeParticleScaleCoefficient,
             String explosionParticleTextureName,
-            String smokeParticleTextureName) {
+            String smokeParticleTextureName,
+            CompatibleSound explosionSound) {
 
         Float damageCoefficient = modContext.getConfigurationManager().getExplosions().getDamage();
         explosionStrength *= damageCoefficient;
 
         Explosion explosion = new Explosion(modContext, world, entity, posX, posY, posZ, explosionStrength, isFlaming, 
                 isSmoking, particleAgeCoefficient, smokeParticleAgeCoefficient, explosionParticleScaleCoefficient, smokeParticleScaleCoefficient,
-                explosionParticleTextureName, smokeParticleTextureName);
+                explosionParticleTextureName, smokeParticleTextureName, explosionSound);
 
         explosion.doExplosionA();
         explosion.doExplosionB(false, isDestroyingBlocks);
@@ -96,25 +99,26 @@ public class Explosion {
     // @SideOnly(Side.CLIENT)
     public Explosion(ModContext modContext, World worldIn, Entity entityIn, double x, double y, double z, float size,
             List<CompatibleBlockPos> affectedPositions, float particleAgeCoefficient, float smokeParticleAgeCoefficient, 
-            float explosionParticleScaleCoefficient, float smokeParticleScaleCoefficient, String explosionParticleTextureName, String smokeParticleTextureName) {
+            float explosionParticleScaleCoefficient, float smokeParticleScaleCoefficient, 
+            String explosionParticleTextureName, String smokeParticleTextureName, CompatibleSound explosionSound) {
         this(modContext, worldIn, entityIn, x, y, z, size, false, true, affectedPositions, particleAgeCoefficient, 
                 smokeParticleAgeCoefficient, explosionParticleScaleCoefficient, smokeParticleScaleCoefficient,
-                explosionParticleTextureName, smokeParticleTextureName);
+                explosionParticleTextureName, smokeParticleTextureName, explosionSound);
     }
 
     // @SideOnly(Side.CLIENT)
     public Explosion(ModContext modContext, World worldIn, Entity entityIn, double x, double y, double z, float size, boolean flaming,
             boolean smoking, List<CompatibleBlockPos> affectedPositions, float particleAgeCoefficient, float smokeParticleAgeCoefficient,
             float explosionParticleScaleCoefficient, float smokeParticleScaleCoefficient,
-            String explosionParticleTextureName, String smokeParticleTextureName) {
+            String explosionParticleTextureName, String smokeParticleTextureName, CompatibleSound explosionSound) {
         this(modContext, worldIn, entityIn, x, y, z, size, flaming, smoking, particleAgeCoefficient, smokeParticleAgeCoefficient,
-        explosionParticleScaleCoefficient, smokeParticleScaleCoefficient, explosionParticleTextureName, smokeParticleTextureName);
+        explosionParticleScaleCoefficient, smokeParticleScaleCoefficient, explosionParticleTextureName, smokeParticleTextureName, explosionSound);
         this.affectedBlockPositions.addAll(affectedPositions);
     }
 
     public Explosion(ModContext modContext, World worldIn, Entity entityIn, double x, double y, double z, float size, boolean flaming,
             boolean smoking, float particleAgeCoefficient, float smokeParticleAgeCoefficient, float explosionParticleScaleCoefficient,
-            float smokeParticleScaleCoefficient, String explosionParticleTextureName, String smokeParticleTextureName) {
+            float smokeParticleScaleCoefficient, String explosionParticleTextureName, String smokeParticleTextureName, CompatibleSound explosionSound) {
         this.modContext = modContext;
         this.explosionRNG = new Random();
         this.affectedBlockPositions = Lists.<CompatibleBlockPos>newArrayList();
@@ -134,6 +138,7 @@ public class Explosion {
         this.smokeParticleScaleCoefficient = smokeParticleScaleCoefficient;
         this.explosionParticleTextureName = explosionParticleTextureName;
         this.smokeParticleTextureName = smokeParticleTextureName;
+        this.explosionSound = explosionSound;
     }
 
     public double getExplosionX() {
@@ -283,8 +288,8 @@ public class Explosion {
      * Does the second part of the explosion (sound, particles, drop spawn)
      */
     public void doExplosionB(boolean spawnParticles, boolean destroyBlocks) {
-        if(!world.isRemote) {
-            compatibility.playSound(world, explosionX, explosionY, explosionZ, modContext.getExplosionSound(), 4f,
+        if(!world.isRemote && explosionSound != null) {
+            compatibility.playSound(world, explosionX, explosionY, explosionZ, explosionSound, 4f,
                 (1.0F + (world.rand.nextFloat() - world.rand.nextFloat()) * 0.2F) * 0.7f);
         }
 

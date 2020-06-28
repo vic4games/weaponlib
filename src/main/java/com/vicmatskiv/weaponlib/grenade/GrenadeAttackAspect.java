@@ -210,7 +210,7 @@ public class GrenadeAttackAspect implements Aspect<GrenadeState, PlayerGrenadeIn
 
             Explosion.createServerSideExplosion(modContext, compatibility.world(player), null,
                     player.posX, player.posY, player.posZ, instance.getWeapon().getExplosionStrength(), false, true,
-                    instance.getWeapon().isDestroyingBlocks(), 1f, 1f, 1.5f, 1f, null, null);
+                    instance.getWeapon().isDestroyingBlocks(), 1f, 1f, 1.5f, 1f, null, null, modContext.getExplosionSound());
 
         } else if(instance.getWeapon().getType() == Type.SMOKE) {
             float velocity = instance.isThrowingFar() ? instance.getWeapon().getFarVelocity() : instance.getWeapon().getVelocity();
@@ -239,6 +239,21 @@ public class GrenadeAttackAspect implements Aspect<GrenadeState, PlayerGrenadeIn
                     .withVelocity(velocity)
                     .withGravityVelocity(instance.getWeapon().getGravityVelocity())
                     .withRotationSlowdownFactor(instance.getWeapon().getRotationSlowdownFactor())
+                    .build(modContext);
+            logger.debug("Throwing velocity {} ", velocity);
+            compatibility.spawnEntity(player, entityGrenade);
+        } else if (instance.getWeapon().getType() == Type.FLASH) {
+            float velocity = instance.isThrowingFar() ? instance.getWeapon().getFarVelocity() : instance.getWeapon().getVelocity();
+            EntityFlashGrenade entityGrenade = new EntityFlashGrenade.Builder()
+                    .withThrower(player)
+                    .withActivationTimestamp(activationTimestamp)
+                    .withGrenade(instance.getWeapon())
+                    .withExplosionStrength(instance.getWeapon().getExplosionStrength())
+                    .withExplosionTimeout(instance.getWeapon().getExplosionTimeout())
+                    .withVelocity(velocity)
+                    .withGravityVelocity(instance.getWeapon().getGravityVelocity())
+                    .withRotationSlowdownFactor(instance.getWeapon().getRotationSlowdownFactor())
+                    .withDestroyingBlocks(false)
                     .build(modContext);
             logger.debug("Throwing velocity {} ", velocity);
             compatibility.spawnEntity(player, entityGrenade);

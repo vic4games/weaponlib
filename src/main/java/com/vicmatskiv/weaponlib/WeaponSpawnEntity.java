@@ -107,7 +107,8 @@ public class WeaponSpawnEntity extends EntityProjectile {
 	                explosionRadius, false, true, isDestroyingBlocks, explosionParticleAgeCoefficient,
 	                smokeParticleAgeCoefficient, explosionParticleScaleCoefficient, smokeParticleScaleCoefficient,
 	                weapon.getModContext().getRegisteredTexture(explosionParticleTextureId), 
-	                weapon.getModContext().getRegisteredTexture(smokeParticleTextureId));
+	                weapon.getModContext().getRegisteredTexture(smokeParticleTextureId), 
+	                weapon.getModContext().getExplosionSound());
 	    } else if(position.getEntityHit() != null) {
 
             Projectiles projectilesConfig = weapon.getModContext().getConfigurationManager().getProjectiles();

@@ -398,7 +398,7 @@ public class CompatibleWorldRenderer extends EntityRenderer
                 this.mc.pointedEntity = null;
                 double d0 = (double)this.mc.playerController.getBlockReachDistance();
                 this.mc.objectMouseOver = entity.rayTrace(d0, partialTicks);
-                Vec3d vec3d = entity.getPositionEyes(partialTicks);
+                Vec3d eyePosition = entity.getPositionEyes(partialTicks);
                 boolean flag = false;
                 int i = 3;
                 double d1 = d0;
@@ -418,15 +418,15 @@ public class CompatibleWorldRenderer extends EntityRenderer
 
                 if (this.mc.objectMouseOver != null)
                 {
-                    d1 = this.mc.objectMouseOver.hitVec.distanceTo(vec3d);
+                    d1 = this.mc.objectMouseOver.hitVec.distanceTo(eyePosition);
                 }
 
-                Vec3d vec3d1 = entity.getLook(1.0F);
-                Vec3d vec3d2 = vec3d.addVector(vec3d1.x * d0, vec3d1.y * d0, vec3d1.z * d0);
+                Vec3d entityLookVec = entity.getLook(1.0F);
+                Vec3d targetPos = eyePosition.addVector(entityLookVec.x * d0, entityLookVec.y * d0, entityLookVec.z * d0);
                 this.pointedEntity = null;
                 Vec3d vec3d3 = null;
                 float f = 1.0F;
-                List<Entity> list = this.mc.world.getEntitiesInAABBexcluding(entity, entity.getEntityBoundingBox().expand(vec3d1.x * d0, vec3d1.y * d0, vec3d1.z * d0).grow(1.0D, 1.0D, 1.0D), Predicates.and(EntitySelectors.NOT_SPECTATING, new Predicate<Entity>()
+                List<Entity> list = this.mc.world.getEntitiesInAABBexcluding(entity, entity.getEntityBoundingBox().expand(entityLookVec.x * d0, entityLookVec.y * d0, entityLookVec.z * d0).grow(1.0D, 1.0D, 1.0D), Predicates.and(EntitySelectors.NOT_SPECTATING, new Predicate<Entity>()
                 {
                     public boolean apply(@Nullable Entity p_apply_1_)
                     {
@@ -439,20 +439,20 @@ public class CompatibleWorldRenderer extends EntityRenderer
                 {
                     Entity entity1 = list.get(j);
                     AxisAlignedBB axisalignedbb = entity1.getEntityBoundingBox().grow((double)entity1.getCollisionBorderSize());
-                    RayTraceResult raytraceresult = axisalignedbb.calculateIntercept(vec3d, vec3d2);
+                    RayTraceResult raytraceresult = axisalignedbb.calculateIntercept(eyePosition, targetPos);
 
-                    if (axisalignedbb.contains(vec3d))
+                    if (axisalignedbb.contains(eyePosition))
                     {
                         if (d2 >= 0.0D)
                         {
                             this.pointedEntity = entity1;
-                            vec3d3 = raytraceresult == null ? vec3d : raytraceresult.hitVec;
+                            vec3d3 = raytraceresult == null ? eyePosition : raytraceresult.hitVec;
                             d2 = 0.0D;
                         }
                     }
                     else if (raytraceresult != null)
                     {
-                        double d3 = vec3d.distanceTo(raytraceresult.hitVec);
+                        double d3 = eyePosition.distanceTo(raytraceresult.hitVec);
 
                         if (d3 < d2 || d2 == 0.0D)
                         {
@@ -474,7 +474,7 @@ public class CompatibleWorldRenderer extends EntityRenderer
                     }
                 }
 
-                if (this.pointedEntity != null && flag && vec3d.distanceTo(vec3d3) > 3.0D)
+                if (this.pointedEntity != null && flag && eyePosition.distanceTo(vec3d3) > 3.0D)
                 {
                     this.pointedEntity = null;
                     this.mc.objectMouseOver = new RayTraceResult(RayTraceResult.Type.MISS, vec3d3, (EnumFacing)null, new BlockPos(vec3d3));

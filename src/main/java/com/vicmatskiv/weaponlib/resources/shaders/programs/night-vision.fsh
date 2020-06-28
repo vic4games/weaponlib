@@ -1,5 +1,7 @@
 #version 120
 
+uniform float FlashEnabled;
+
 uniform float NightVisionEnabled;
 
 uniform float VignetteEnabled;

@@ -17,14 +17,16 @@ import net.minecraft.util.ResourceLocation;
 
 class PipelineShaderGroupSourceProvider implements DynamicShaderGroupSourceProvider {
     
+    private boolean flashEnabled;
     private boolean nightVisionEnabled;
     private boolean blurEnabled;
     private boolean vignetteEnabled;
     private float sepiaRatio;
-    private float exposureProgress;
+    private float spreadableExposureProgress;
     private float vignetteRadius;
     private float brightness;
     private SpreadableExposure spreadableExposure;
+    private LightExposure lightExposure;
     private float colorImpairmentR;
     private float colorImpairmentG;
     private float colorImpairmentB;
@@ -35,7 +37,7 @@ class PipelineShaderGroupSourceProvider implements DynamicShaderGroupSourceProvi
                 .withUniform("BlurEnabled", context -> blurEnabled ? 1.0f : 0.0f)
                 .withUniform("BlurVignetteRadius", context -> 0.0f)
                 .withUniform("Radius", context -> 10f)
-                .withUniform("Progress", context -> exposureProgress)
+                .withUniform("Progress", context -> spreadableExposureProgress)
                 .withUniform("VignetteEnabled", context -> vignetteEnabled ? 1.0f : 0.0f)
                 .withUniform("VignetteRadius", context -> vignetteRadius)
                 .withUniform("Brightness", context -> brightness)
@@ -46,20 +48,28 @@ class PipelineShaderGroupSourceProvider implements DynamicShaderGroupSourceProvi
     
     @Override
     public DynamicShaderGroupSource getShaderSource(DynamicShaderPhase phase) {
+        lightExposure = CompatibleExposureCapability.getExposure(compatibility.clientPlayer(), LightExposure.class);
         spreadableExposure = CompatibleExposureCapability.getExposure(compatibility.clientPlayer(), SpreadableExposure.class);
-        exposureProgress = MiscUtils.smoothstep(0, 1, spreadableExposure != null ? spreadableExposure.getTotalDose() : 0f);
+        spreadableExposureProgress = MiscUtils.smoothstep(0, 1, spreadableExposure != null ? spreadableExposure.getTotalDose() : 0f);
         updateNightVision();
         updateVignette();
         updateBlur();
         updateSepia();
         updateBrightness();
         spreadableExposure = null;
-        return nightVisionEnabled || blurEnabled || vignetteEnabled || sepiaRatio > 0 ?
+        lightExposure = null;
+        return nightVisionEnabled || blurEnabled || vignetteEnabled || sepiaRatio > 0 || flashEnabled ?
                 source : null;
     }
     
     private void updateBrightness() {
         brightness = 1f;
+
+        if(lightExposure != null && lightExposure.getTotalDose() > 0.01f) {
+            flashEnabled = true;
+            brightness = 1f + 10f * lightExposure.getTotalDose();
+//            System.out.println("Brightness: " + brightness);
+        }
         
         if(spreadableExposure != null && !compatibility.clientPlayer().isDead) {
             Blackout blackout = spreadableExposure.getBlackout();
@@ -82,7 +92,7 @@ class PipelineShaderGroupSourceProvider implements DynamicShaderGroupSourceProvi
     }
 
     private void updateBlur() {
-        blurEnabled = exposureProgress > 0.01f; // TODO: set min
+        blurEnabled = spreadableExposureProgress > 0.01f; // TODO: set min
     }
 
     private void updateVignette() {
@@ -110,7 +120,7 @@ class PipelineShaderGroupSourceProvider implements DynamicShaderGroupSourceProvi
     }
     
     private void updateSepia() {
-        sepiaRatio = exposureProgress;
+        sepiaRatio = spreadableExposureProgress;
         if(spreadableExposure != null) {
             colorImpairmentR = spreadableExposure.getColorImpairmentR();
             colorImpairmentG = spreadableExposure.getColorImpairmentG();

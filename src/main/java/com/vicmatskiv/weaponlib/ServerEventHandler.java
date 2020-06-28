@@ -2,6 +2,7 @@ package com.vicmatskiv.weaponlib;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
+import java.util.Collection;
 import java.util.Iterator;
 
 import org.apache.logging.log4j.LogManager;
@@ -75,29 +76,65 @@ public class ServerEventHandler extends CompatibleServerEventHandler {
     protected void onCompatibleLivingUpdateEvent(CompatibleLivingUpdateEvent e) {
         
         if(!compatibility.world(e.getEntity()).isRemote) {
-            SpreadableExposure exposure = CompatibleExposureCapability.getExposure(e.getEntity(), SpreadableExposure.class);
-            if(exposure != null) {
-                
-                boolean stillEffective = exposure.isEffective();
+//            if(e.getEntity() instanceof EntityPlayer) {
+//                System.out.println(System.currentTimeMillis() + ": " + compatibility.world(e.getEntity()).getTotalWorldTime());
+//            }
+            
+            NBTTagCompound doseNbt = null;
+            ItemStack itemStack = compatibility.getHeldItemMainHand(e.getEntityLiving());
+            if(itemStack != null && itemStack.getItem() instanceof ItemHandheld) {
+                compatibility.ensureTagCompound(itemStack);
+                doseNbt = compatibility.getTagCompound(itemStack);
+            }
+            
+            boolean effectiveUpdate = false;
+            Collection<? extends Exposure> exposures = CompatibleExposureCapability.getExposures(e.getEntity());
+            for(Iterator<? extends Exposure> iterator = exposures.iterator(); iterator.hasNext();) {
+                Exposure exposure = iterator.next();
                 exposure.update(e.getEntity());
-                if(e.getEntity() instanceof EntityPlayerMP && 
-                        System.currentTimeMillis() - exposure.getLastSyncTimestamp() > 500) {
-                    modContext.getChannel().getChannel().sendTo(
-                            new SpreadableExposureMessage(stillEffective ? exposure : null),
-                            (EntityPlayerMP) e.getEntity());
-                    exposure.setLastSyncTimestamp(System.currentTimeMillis()); 
+                if(doseNbt != null && exposure instanceof SpreadableExposure) {
+                    doseNbt.setFloat("dose", ((SpreadableExposure) exposure).getLastDose());
                 }
-                if(!stillEffective) {
-                    CompatibleExposureCapability.removeExposure(e.getEntity(), SpreadableExposure.class);
-                }
-                
-                ItemStack itemStack = compatibility.getHeldItemMainHand(e.getEntityLiving());
-                if(itemStack != null && itemStack.getItem() instanceof ItemHandheld) {
-                    compatibility.ensureTagCompound(itemStack);
-                    NBTTagCompound nbt = compatibility.getTagCompound(itemStack);
-                    nbt.setFloat("dose", exposure.getLastDose());
+                if(!exposure.isEffective(compatibility.world(e.getEntity()))) {
+                    System.out.println("Removing expired exposure " + exposure);
+                    iterator.remove();
+                    effectiveUpdate = true;
                 }
             }
+            if(effectiveUpdate) {
+                CompatibleExposureCapability.updateExposures(e.getEntity(), exposures);
+            }
+            
+            long lastExposuresUpdateTimestamp = CompatibleExposureCapability.getLastUpdateTimestamp(e.getEntity());
+            long lastSyncTimestamp = CompatibleExposureCapability.getLastSyncTimestamp(e.getEntity());
+            if(lastSyncTimestamp + 5 < compatibility.world(e.getEntity()).getTotalWorldTime() 
+                    /*&& lastExposuresUpdateTimestamp > lastSyncTimestamp */ && e.getEntity() instanceof EntityPlayerMP) {
+                modContext.getChannel().getChannel().sendTo(new ExposureMessage(exposures), (EntityPlayerMP) e.getEntity());
+                CompatibleExposureCapability.setLastSyncTimestamp(e.getEntity(), compatibility.world(e.getEntity()).getTotalWorldTime());
+            }
+            
+//            SpreadableExposure exposure = CompatibleExposureCapability.getExposure(e.getEntity(), SpreadableExposure.class);
+//            if(exposure != null) {
+//                boolean stillEffective = exposure.isEffective(compatibility.world(e.getEntity()));
+//                exposure.update(e.getEntity());
+//                if(e.getEntity() instanceof EntityPlayerMP && 
+//                        System.currentTimeMillis() - exposure.getLastSyncTimestamp() > 500) {
+//                    modContext.getChannel().getChannel().sendTo(
+//                            new SpreadableExposureMessage(stillEffective ? exposure : null),
+//                            (EntityPlayerMP) e.getEntity());
+//                    exposure.setLastSyncTimestamp(System.currentTimeMillis()); 
+//                }
+//                if(!stillEffective) {
+//                    CompatibleExposureCapability.removeExposure(e.getEntity(), SpreadableExposure.class);
+//                }
+//                
+//                ItemStack itemStack = compatibility.getHeldItemMainHand(e.getEntityLiving());
+//                if(itemStack != null && itemStack.getItem() instanceof ItemHandheld) {
+//                    compatibility.ensureTagCompound(itemStack);
+//                    NBTTagCompound nbt = compatibility.getTagCompound(itemStack);
+//                    nbt.setFloat("dose", exposure.getLastDose());
+//                }
+//            }
             if(e.getEntity() instanceof EntityPlayer) {
                 Missions.update((EntityPlayer)e.getEntity(), 
                         new GoToLocationAction((float)(e.getEntity().posX), (float)(e.getEntity().posY), (float)(e.getEntity().posZ), 0), 

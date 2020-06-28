@@ -49,7 +49,7 @@ PlayerItemInstanceFactory<PlayerGrenadeInstance, GrenadeState>, AttachmentContai
     public static final int DEFAULT_FRAGMENT_COUNT = 100;
     
     public static enum Type {
-        REGULAR, SMOKE, GAS
+        REGULAR, SMOKE, GAS, FLASH
     }
 
     public static class Builder {

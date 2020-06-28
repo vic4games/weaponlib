@@ -17,8 +17,9 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.world.World;
 
-public class SpreadableExposure extends UniversalObject {
+public class SpreadableExposure extends UniversalObject implements Exposure {
     
     public static interface Listener {
         public void onUpdate(SpreadableExposure exposure);
@@ -75,7 +76,7 @@ public class SpreadableExposure extends UniversalObject {
         }
     }
 
-    private static final int DEFAULT_IMPACT_DELAY = 5000;
+    public static final int DEFAULT_IMPACT_DELAY = 5000;
     private static final float DEFAULT_DECAY_FACTOR = 0.999f;
 
     private long firstExposureTimestamp;
@@ -90,7 +91,7 @@ public class SpreadableExposure extends UniversalObject {
     private long lastSyncTimestamp;
     private long lastApplyTimestamp;
     private float entityImpactRate = 0.5f;
-    private long cycleLengthMillis = 500;
+    private long cycleLengthMillis = 10; //500;
     private int tickCount;
     private Function<Float, Float> absorbFunction = dose -> dose * Math.min(0.2f, 0.2f / totalDose);
     
@@ -103,12 +104,12 @@ public class SpreadableExposure extends UniversalObject {
     private float colorImpairmentB = 0.8f;
     
     public SpreadableExposure() {
-        this(DEFAULT_IMPACT_DELAY);
+        this(DEFAULT_IMPACT_DELAY, 0L);
     }
     
-    public SpreadableExposure(long firstExposureImpactDelay) {
+    public SpreadableExposure(long firstExposureImpactDelay, long firstExposureTimestamp) {
         this.firstExposureImpactDelay = firstExposureImpactDelay;
-        this.firstExposureTimestamp = System.currentTimeMillis();
+        this.firstExposureTimestamp = firstExposureTimestamp;
     }
     
     public SpreadableExposure withColorImpairment(float r, float g, float b) {
@@ -174,14 +175,17 @@ public class SpreadableExposure extends UniversalObject {
         return lastSyncTimestamp;
     }
     
-    public void updateFrom(SpreadableExposure other) {
-        this.firstExposureImpactDelay = other.firstExposureImpactDelay;
-        this.firstExposureTimestamp = other.firstExposureTimestamp;
-        this.totalDose = other.totalDose;
-        this.lastDose = other.lastDose;
-        this.colorImpairmentR = other.colorImpairmentR;
-        this.colorImpairmentG = other.colorImpairmentG;
-        this.colorImpairmentB = other.colorImpairmentB;
+    public void updateFrom(Exposure otherExposure) {
+        if(otherExposure instanceof SpreadableExposure) {
+            SpreadableExposure other = (SpreadableExposure)otherExposure;
+            this.firstExposureImpactDelay = other.firstExposureImpactDelay;
+            this.firstExposureTimestamp = other.firstExposureTimestamp;
+            this.totalDose = other.totalDose;
+            this.lastDose = other.lastDose;
+            this.colorImpairmentR = other.colorImpairmentR;
+            this.colorImpairmentG = other.colorImpairmentG;
+            this.colorImpairmentB = other.colorImpairmentB;
+        }
     }
 
     @Override
@@ -210,15 +214,31 @@ public class SpreadableExposure extends UniversalObject {
 
     public void update(Entity entity) {
         
-        if(System.currentTimeMillis() - startCycleTimestamp > cycleLengthMillis) {
-            startCycleTimestamp = System.currentTimeMillis();
+//        if(entity instanceof EntityPlayer) {
+//            System.out.println("Total dose for entity " + entity + ": " + totalDose);
+//        }
+        
+//        if(System.currentTimeMillis() - startCycleTimestamp > cycleLengthMillis) {
+//            startCycleTimestamp = System.currentTimeMillis();
+//            cycleDoseMap.clear();
+//        }
+        
+        long worldTime = compatibility.world(entity).getTotalWorldTime();
+        if(firstExposureTimestamp > worldTime) {
+            firstExposureTimestamp = worldTime;
+        }
+        if(firstExposureImpactDelay >= 1000) {
+            firstExposureImpactDelay = 20;
+        }
+        if(worldTime - startCycleTimestamp > cycleLengthMillis) {
+            startCycleTimestamp = compatibility.world(entity).getTotalWorldTime();
             cycleDoseMap.clear();
         }
         
 //        boolean result = true;
 
         if(firstExposureTimestamp > 0) {
-            if(firstExposureTimestamp + firstExposureImpactDelay < System.currentTimeMillis()) {
+            if(firstExposureTimestamp + firstExposureImpactDelay < worldTime) {
                 if(entity instanceof EntityLivingBase) {
                     EntityLivingBase entityLiving = (EntityLivingBase)entity;
                     applyToEntity(entityLiving);
@@ -226,6 +246,7 @@ public class SpreadableExposure extends UniversalObject {
             }
             
             totalDose *= decayFactor;
+//            System.out.println("Total dose: " + totalDose);
             
 //            if(totalDose < 0.01f) {
 //                result = false;
@@ -235,7 +256,9 @@ public class SpreadableExposure extends UniversalObject {
     
     public void applyToEntity(EntityLivingBase entityLiving) {
         
-        if(totalDose > MIN_EFFECTIVE_TOTAL_DOSE && System.currentTimeMillis() - lastApplyTimestamp >= 1000f / entityImpactRate) { 
+        long worldTime = compatibility.world(entityLiving).getTotalWorldTime();
+        
+        if(totalDose > MIN_EFFECTIVE_TOTAL_DOSE && worldTime - lastApplyTimestamp >= /*TODO: convert to world time? */20f / entityImpactRate) { 
             // TODO: configure min total dose, possibly per entity?
             //TODO: is it possible to control health per entity type?
             boolean isCreative = false;
@@ -252,14 +275,14 @@ public class SpreadableExposure extends UniversalObject {
                 
             }
             
-            lastApplyTimestamp = System.currentTimeMillis();
+            lastApplyTimestamp = worldTime;
         }
     }
     
-    public void nextCycle() {
-        startCycleTimestamp = System.currentTimeMillis();
-        cycleDoseMap.clear();
-    }
+//    public void nextCycle() {
+//        startCycleTimestamp = System.currentTimeMillis();
+//        cycleDoseMap.clear();
+//    }
     
     public void incrementTickCount() {
         tickCount++;
@@ -273,7 +296,7 @@ public class SpreadableExposure extends UniversalObject {
         return blackout;
     }
 
-    public boolean isEffective() {
+    public boolean isEffective(World world) {
         return getLastDose() > 0f || getTotalDose() > MIN_EFFECTIVE_TOTAL_DOSE;
     }
     

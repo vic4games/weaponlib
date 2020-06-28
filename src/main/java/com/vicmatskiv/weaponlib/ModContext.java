@@ -74,6 +74,10 @@ public interface ModContext {
 
 	public void setExplosionSound(String sound);
 	
+    public CompatibleSound getFlashExplosionSound();
+
+    public void setFlashExplosionSound(String sound);
+	
 	public void setNightVisionOnSound(String sound);
 
     public CompatibleSound getNightVisionOnSound();

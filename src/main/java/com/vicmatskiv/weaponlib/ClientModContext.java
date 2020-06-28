@@ -20,6 +20,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderingRegistry;
 import com.vicmatskiv.weaponlib.config.ConfigurationManager;
 import com.vicmatskiv.weaponlib.electronics.EntityWirelessCamera;
 import com.vicmatskiv.weaponlib.electronics.WirelessCameraRenderer;
+import com.vicmatskiv.weaponlib.grenade.EntityFlashGrenade;
 import com.vicmatskiv.weaponlib.grenade.EntityGasGrenade;
 import com.vicmatskiv.weaponlib.grenade.EntityGrenade;
 import com.vicmatskiv.weaponlib.grenade.EntityGrenadeRenderer;
@@ -142,6 +143,7 @@ public class ClientModContext extends CommonModContext {
 	    rendererRegistry.registerEntityRenderingHandler(EntityGrenade.class, new EntityGrenadeRenderer());
 	    rendererRegistry.registerEntityRenderingHandler(EntitySmokeGrenade.class, new EntityGrenadeRenderer());
 	    rendererRegistry.registerEntityRenderingHandler(EntityGasGrenade.class, new EntityGrenadeRenderer());
+	    rendererRegistry.registerEntityRenderingHandler(EntityFlashGrenade.class, new EntityGrenadeRenderer());
 	    rendererRegistry.registerEntityRenderingHandler(EntitySpreadable.class, new InvisibleEntityRenderer());
 	    rendererRegistry.processDelayedRegistrations();
 	}

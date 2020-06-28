@@ -13,6 +13,7 @@
         { "name": "GogglesOverlaySampler" }
     ],
     "uniforms": [
+        { "name": "FlashEnabled",       "type": "float",     "count": 1,  "values": [1.0] },
         { "name": "NightVisionEnabled", "type": "float",     "count": 1,  "values": [1.0] },
         { "name": "VignetteEnabled",    "type": "float",     "count": 1,  "values": [1.0] },
         { "name": "VignetteRadius",     "type": "float",     "count": 1,  "values": [0.55] },

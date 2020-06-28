@@ -243,16 +243,21 @@ public class EntitySpreadable extends Entity implements Contextual, Spreadable {
      * Override this method in subclasses to support non-default exposures
      */
     protected SpreadableExposure createSpreadableExposure() {
-        return new SpreadableExposure();
+        return new SpreadableExposure(SpreadableExposure.DEFAULT_IMPACT_DELAY, compatibility.world(this).getTotalWorldTime());
     }
 
     private void spread() {
         
-        if(System.currentTimeMillis() - lastSpreadTimestamp <= 1000f / spreadRate) {
+//        if(System.currentTimeMillis() - lastSpreadTimestamp <= 1000f / spreadRate) {
+//            return;
+//        }
+        
+        long currentWorldTime = compatibility.world(this).getTotalWorldTime();
+        if(currentWorldTime - lastSpreadTimestamp <= 20f / spreadRate) {
             return;
         }
         
-        lastSpreadTimestamp = System.currentTimeMillis();
+        lastSpreadTimestamp = currentWorldTime; //System.currentTimeMillis();
         
         if(currentSpread == null) {
             currentSpread = new ArrayList<>();

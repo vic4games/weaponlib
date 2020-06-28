@@ -153,7 +153,8 @@ public class EntityGrenade extends AbstractEntityGrenade {
         logger.debug("Exploding {}", this);
 
         Explosion.createServerSideExplosion(modContext, compatibility.world(this), this,
-                this.posX, this.posY, this.posZ, explosionStrength, false, true, destroyBlocks, 1f, 1f, 1.5f, 1f, null, null);
+                this.posX, this.posY, this.posZ, explosionStrength, false, true, destroyBlocks, 1f, 1f, 1.5f, 1f, null, null, 
+                modContext.getExplosionSound());
 
         List<?> nearbyEntities = compatibility.getEntitiesWithinAABBExcludingEntity(compatibility.world(this), this,
                 compatibility.getBoundingBox(this).expand(5, 5, 5));

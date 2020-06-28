@@ -130,6 +130,9 @@ public class EntityShellCasing extends EntityProjectile {
 
     @Override
     public void onUpdate() {
+//        if(true) {
+//            this.setDead();
+//        }
         super.onUpdate();
         // /*
         // logger.trace("Before {} {} {}, velocity: {}, {}, {}, gravity: {}",

@@ -1,5 +1,6 @@
 package com.vicmatskiv.weaponlib.ai;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 import java.util.UUID;
 
 import com.vicmatskiv.weaponlib.Spreadable;
@@ -33,7 +34,7 @@ public class InfectionAttack implements CustomMobAttack, Spreadable {
         if(target instanceof EntityLivingBase) {
             SpreadableExposure exposure = CompatibleExposureCapability.getExposure(target, SpreadableExposure.class);
             if(exposure == null) {
-                exposure = new SpreadableExposure(firstExposureImpactDelay)
+                exposure = new SpreadableExposure(firstExposureImpactDelay, compatibility.world(entityMob).getTotalWorldTime())
                         .withColorImpairment(colorImpairmentR, colorImpairmentG, colorImpairmentB);
                 CompatibleExposureCapability.updateExposure((EntityLivingBase) target, exposure);
             }
