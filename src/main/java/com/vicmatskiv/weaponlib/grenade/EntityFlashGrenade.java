@@ -3,36 +3,60 @@ package com.vicmatskiv.weaponlib.grenade;
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
 import java.util.List;
+import java.util.Set;
 import java.util.function.BiPredicate;
-
-import javax.annotation.Nullable;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.vicmatskiv.weaponlib.Explosion;
 import com.vicmatskiv.weaponlib.LightExposure;
 import com.vicmatskiv.weaponlib.ModContext;
-import com.vicmatskiv.weaponlib.compatibility.CompatibleAxisAlignedBB;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleBlockState;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleExposureCapability;
-import com.vicmatskiv.weaponlib.compatibility.CompatibleMathHelper;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTracing;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleVec3;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockBeacon;
+import net.minecraft.block.BlockBush;
+import net.minecraft.block.BlockCactus;
+import net.minecraft.block.BlockCauldron;
+import net.minecraft.block.BlockChest;
+import net.minecraft.block.BlockDaylightDetector;
+import net.minecraft.block.BlockDeadBush;
+import net.minecraft.block.BlockDoor;
+import net.minecraft.block.BlockDoublePlant;
+import net.minecraft.block.BlockDynamicLiquid;
+import net.minecraft.block.BlockFire;
+import net.minecraft.block.BlockFlower;
+import net.minecraft.block.BlockGrass;
+import net.minecraft.block.BlockHopper;
+import net.minecraft.block.BlockLeaves;
+import net.minecraft.block.BlockMycelium;
+import net.minecraft.block.BlockPistonBase;
+import net.minecraft.block.BlockPistonExtension;
+import net.minecraft.block.BlockPistonMoving;
+import net.minecraft.block.BlockPortal;
+import net.minecraft.block.BlockRedstoneComparator;
+import net.minecraft.block.BlockRedstoneRepeater;
+import net.minecraft.block.BlockRedstoneWire;
+import net.minecraft.block.BlockReed;
+import net.minecraft.block.BlockSand;
+import net.minecraft.block.BlockSkull;
+import net.minecraft.block.BlockSlab;
+import net.minecraft.block.BlockStainedGlass;
+import net.minecraft.block.BlockStainedGlassPane;
+import net.minecraft.block.BlockStaticLiquid;
+import net.minecraft.block.BlockTallGrass;
+import net.minecraft.block.BlockTripWireHook;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
-import net.minecraft.util.EntitySelectors;
-import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
@@ -175,9 +199,9 @@ public class EntityFlashGrenade extends AbstractEntityGrenade {
 
         logger.debug("Exploding {}", this);
         
-        explosionStrength = 0.1f;
+//        explosionStrength = 0.1f;
         Explosion.createServerSideExplosion(modContext, compatibility.world(this), this,
-                this.posX, this.posY, this.posZ, explosionStrength, false, true, false, 1f, 1f, 1.5f, 1f, null, null, 
+                this.posX, this.posY, this.posZ, explosionStrength, false, false, false, 1f, 1f, 1.5f, 1f, null, null, 
                 modContext.getFlashExplosionSound());
 
 
@@ -191,9 +215,11 @@ public class EntityFlashGrenade extends AbstractEntityGrenade {
         for(Object nearbyEntityObject: nearbyEntities) {
             Entity nearbyEntity = (Entity)nearbyEntityObject;
             if(nearbyEntity instanceof EntityPlayer) {
+
                 final CompatibleVec3 grenadePos = new CompatibleVec3(this.posX, this.posY, this.posZ);
                 BiPredicate<Block, CompatibleBlockState> isCollidable = (block, blockMetadata) -> 
-                    block != Blocks.GLASS && block != Blocks.GLASS_PANE && compatibility.canCollideCheck(block, blockMetadata, false);
+                    !isTransparentBlock(block)
+                    && compatibility.canCollideCheck(block, blockMetadata, false);
                 
                 EntityPlayer player = (EntityPlayer) nearbyEntity;
                 Vec3d playerLookVec = player.getLook(1f);
@@ -245,5 +271,116 @@ public class EntityFlashGrenade extends AbstractEntityGrenade {
 
     public ItemGrenade getItemGrenade() {
         return itemGrenade;
+    }
+    
+    private boolean isTransparentBlock(Block block) {
+    	return block == Blocks.SAPLING
+        || block == Blocks.LEAVES
+        || block == Blocks.LEAVES2
+        || block == Blocks.GLASS
+        || block == Blocks.BED
+        || block == Blocks.GOLDEN_RAIL
+        || block == Blocks.DETECTOR_RAIL
+        || block == Blocks.WEB
+        || block == Blocks.TALLGRASS
+        || block == Blocks.DEADBUSH
+        || block == Blocks.PISTON_HEAD
+        || block == Blocks.PISTON_EXTENSION
+        || block == Blocks.YELLOW_FLOWER
+        || block == Blocks.RED_FLOWER
+        || block == Blocks.BROWN_MUSHROOM
+        || block == Blocks.RED_MUSHROOM
+        || block == Blocks.STONE_SLAB
+        || block == Blocks.TORCH
+        || block == Blocks.FIRE
+        || block == Blocks.MOB_SPAWNER
+        || block == Blocks.OAK_STAIRS
+        || block == Blocks.REDSTONE_WIRE
+        || block == Blocks.WHEAT
+        || block == Blocks.STANDING_SIGN
+        || block == Blocks.LADDER
+        || block == Blocks.RAIL
+        || block == Blocks.STONE_STAIRS
+        || block == Blocks.WALL_SIGN
+        || block == Blocks.LEVER
+        || block == Blocks.STONE_PRESSURE_PLATE
+        || block == Blocks.WOODEN_PRESSURE_PLATE
+        || block == Blocks.UNLIT_REDSTONE_TORCH
+        || block == Blocks.REDSTONE_TORCH
+        || block == Blocks.STONE_BUTTON
+        || block == Blocks.SNOW_LAYER
+        || block == Blocks.REEDS
+        || block == Blocks.OAK_FENCE
+        || block == Blocks.SPRUCE_FENCE
+        || block == Blocks.BIRCH_FENCE
+        || block == Blocks.JUNGLE_FENCE
+        || block == Blocks.DARK_OAK_FENCE
+        || block == Blocks.ACACIA_FENCE
+        || block == Blocks.PORTAL
+        || block == Blocks.CAKE
+        || block == Blocks.UNPOWERED_REPEATER
+        || block == Blocks.POWERED_REPEATER
+        || block == Blocks.MONSTER_EGG
+        || block == Blocks.IRON_BARS
+        || block == Blocks.GLASS_PANE
+        || block == Blocks.PUMPKIN_STEM
+        || block == Blocks.MELON_STEM
+        || block == Blocks.VINE
+        || block == Blocks.OAK_FENCE_GATE
+        || block == Blocks.SPRUCE_FENCE_GATE
+        || block == Blocks.BIRCH_FENCE_GATE
+        || block == Blocks.JUNGLE_FENCE_GATE
+        || block == Blocks.DARK_OAK_FENCE_GATE
+        || block == Blocks.ACACIA_FENCE_GATE
+        || block == Blocks.BRICK_STAIRS
+        || block == Blocks.STONE_BRICK_STAIRS
+        || block == Blocks.WATERLILY
+        || block == Blocks.NETHER_BRICK_FENCE
+        || block == Blocks.NETHER_BRICK_STAIRS
+        || block == Blocks.NETHER_WART
+        || block == Blocks.ENCHANTING_TABLE
+        || block == Blocks.BREWING_STAND
+        || block == Blocks.DRAGON_EGG
+        || block == Blocks.REDSTONE_LAMP
+        || block == Blocks.LIT_REDSTONE_LAMP
+        || block == Blocks.WOODEN_SLAB
+        || block == Blocks.COCOA
+        || block == Blocks.SANDSTONE_STAIRS
+        || block == Blocks.TRIPWIRE_HOOK
+        || block == Blocks.TRIPWIRE
+        || block == Blocks.SPRUCE_STAIRS
+        || block == Blocks.BIRCH_STAIRS
+        || block == Blocks.JUNGLE_STAIRS
+        || block == Blocks.FLOWER_POT
+        || block == Blocks.CARROTS
+        || block == Blocks.POTATOES
+        || block == Blocks.WOODEN_BUTTON
+        || block == Blocks.SKULL
+        || block == Blocks.ANVIL
+        || block == Blocks.LIGHT_WEIGHTED_PRESSURE_PLATE
+        || block == Blocks.HEAVY_WEIGHTED_PRESSURE_PLATE
+        || block == Blocks.UNPOWERED_COMPARATOR
+        || block == Blocks.POWERED_COMPARATOR
+        || block == Blocks.DAYLIGHT_DETECTOR
+        || block == Blocks.DAYLIGHT_DETECTOR_INVERTED
+        || block == Blocks.HOPPER
+        || block == Blocks.QUARTZ_STAIRS
+        || block == Blocks.ACTIVATOR_RAIL
+        || block == Blocks.DROPPER
+        || block == Blocks.BARRIER
+        || block == Blocks.CARPET
+        || block == Blocks.ACACIA_STAIRS
+        || block == Blocks.DARK_OAK_STAIRS
+        || block == Blocks.DOUBLE_PLANT
+        || block == Blocks.STAINED_GLASS
+        || block == Blocks.STAINED_GLASS_PANE
+        || block == Blocks.STANDING_BANNER
+        || block == Blocks.WALL_BANNER
+        || block == Blocks.RED_SANDSTONE_STAIRS
+        || block == Blocks.STONE_SLAB2
+        || block == Blocks.END_ROD
+        || block == Blocks.BEETROOTS
+        || block == Blocks.STRUCTURE_VOID
+        || block == Blocks.STRUCTURE_BLOCK;
     }
 }

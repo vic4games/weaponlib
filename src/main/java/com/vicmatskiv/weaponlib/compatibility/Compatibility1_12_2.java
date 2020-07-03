@@ -22,6 +22,7 @@ import com.vicmatskiv.weaponlib.inventory.GuiHandler;
 import com.vicmatskiv.weaponlib.tile.CustomTileEntityRenderer;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockDoor;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
@@ -815,7 +816,95 @@ public class Compatibility1_12_2 implements Compatibility {
                 || block == Blocks.HAY_BLOCK
                 || block == Blocks.DOUBLE_PLANT
                 || block == Blocks.WEB
-                || block == Blocks.WHEAT;
+                || block == Blocks.WHEAT
+        		|| block == Blocks.SAPLING
+                || block == Blocks.GLASS
+                || block == Blocks.BED
+                || block == Blocks.GOLDEN_RAIL
+                || block == Blocks.DETECTOR_RAIL
+                || block == Blocks.DEADBUSH
+                || block == Blocks.YELLOW_FLOWER
+                || block == Blocks.RED_FLOWER
+                || block == Blocks.BROWN_MUSHROOM
+                || block == Blocks.RED_MUSHROOM
+                || block == Blocks.TORCH
+                || block == Blocks.MOB_SPAWNER
+                || block == Blocks.REDSTONE_WIRE
+                || block == Blocks.WHEAT
+                || block == Blocks.STANDING_SIGN
+                || block == Blocks.LADDER
+                || block == Blocks.RAIL
+                || block == Blocks.WALL_SIGN
+                || block == Blocks.LEVER
+                || block == Blocks.WOODEN_PRESSURE_PLATE
+                || block == Blocks.UNLIT_REDSTONE_TORCH
+                || block == Blocks.REDSTONE_TORCH
+                || block == Blocks.STONE_BUTTON
+                || block == Blocks.SNOW_LAYER
+                || block == Blocks.REEDS
+                || block == Blocks.OAK_FENCE
+                || block == Blocks.SPRUCE_FENCE
+                || block == Blocks.BIRCH_FENCE
+                || block == Blocks.JUNGLE_FENCE
+                || block == Blocks.DARK_OAK_FENCE
+                || block == Blocks.ACACIA_FENCE
+                || block == Blocks.PORTAL
+                || block == Blocks.CAKE
+                || block == Blocks.UNPOWERED_REPEATER
+                || block == Blocks.POWERED_REPEATER
+                || block == Blocks.IRON_BARS
+                || block == Blocks.GLASS_PANE
+                || block == Blocks.PUMPKIN_STEM
+                || block == Blocks.MELON_STEM
+                || block == Blocks.VINE
+                || block == Blocks.OAK_FENCE_GATE
+                || block == Blocks.SPRUCE_FENCE_GATE
+                || block == Blocks.BIRCH_FENCE_GATE
+                || block == Blocks.JUNGLE_FENCE_GATE
+                || block == Blocks.DARK_OAK_FENCE_GATE
+                || block == Blocks.ACACIA_FENCE_GATE
+                || block == Blocks.WATERLILY
+                || block == Blocks.NETHER_BRICK_FENCE
+                || block == Blocks.NETHER_WART
+                || block == Blocks.BREWING_STAND
+                || block == Blocks.WOODEN_SLAB
+                || block == Blocks.COCOA
+                || block == Blocks.TRIPWIRE_HOOK
+                || block == Blocks.TRIPWIRE
+                || block == Blocks.SPRUCE_STAIRS
+                || block == Blocks.BIRCH_STAIRS
+                || block == Blocks.JUNGLE_STAIRS
+                || block == Blocks.FLOWER_POT
+                || block == Blocks.CARROTS
+                || block == Blocks.POTATOES
+                || block == Blocks.WOODEN_BUTTON
+                || block == Blocks.SKULL
+                || block == Blocks.UNPOWERED_COMPARATOR
+                || block == Blocks.POWERED_COMPARATOR
+                || block == Blocks.ACTIVATOR_RAIL
+                || block == Blocks.BARRIER
+                || block == Blocks.CARPET
+                || block == Blocks.ACACIA_STAIRS
+                || block == Blocks.DARK_OAK_STAIRS
+                || block == Blocks.DOUBLE_PLANT
+                || block == Blocks.STAINED_GLASS
+                || block == Blocks.STAINED_GLASS_PANE
+                || block == Blocks.STANDING_BANNER
+                || block == Blocks.WALL_BANNER
+                || block == Blocks.END_ROD
+                || block == Blocks.SPONGE
+                || block == Blocks.WOOL
+                || block == Blocks.SPONGE
+                || block == Blocks.OAK_DOOR
+                || block == Blocks.SPRUCE_DOOR
+                || block == Blocks.BIRCH_DOOR
+                || block == Blocks.JUNGLE_DOOR
+                || block == Blocks.ACACIA_DOOR
+                || block == Blocks.DARK_OAK_DOOR
+                || block == Blocks.CRAFTING_TABLE
+                || block == Blocks.PLANKS
+                || block == Blocks.CACTUS
+                || block == Blocks.BEETROOTS;
     }
     
     @Override
