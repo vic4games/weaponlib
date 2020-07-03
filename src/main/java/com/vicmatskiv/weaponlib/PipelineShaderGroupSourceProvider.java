@@ -14,6 +14,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.MathHelper;
 
 class PipelineShaderGroupSourceProvider implements DynamicShaderGroupSourceProvider {
     
@@ -65,9 +66,14 @@ class PipelineShaderGroupSourceProvider implements DynamicShaderGroupSourceProvi
     private void updateBrightness() {
         brightness = 1f;
 
-        if(lightExposure != null && lightExposure.getTotalDose() > 0.01f) {
+//        System.out.println("Hello");
+        long worldTime = compatibility.world(compatibility.clientPlayer()).getWorldTime();
+//        System.out.println("Day brightness: " + dayBrightness + ", time: " + (worldTime % 24000));
+        if(lightExposure != null && lightExposure.getTotalDose() > 0.0003f) { //lightExposure.isEffective(compatibility.world(compatibility.clientPlayer()))) {
             flashEnabled = true;
-            brightness = 1f + 10f * lightExposure.getTotalDose();
+            float dayBrightness = (MathHelper.sin( (float)Math.PI * 2 * (float)(worldTime % 24000 - 24000f) / 24000f) + 1f) / 2f;
+//            dayBrightness *= dayBrightness;
+            brightness = 1f + (100f + (1 - dayBrightness) * 100f) * lightExposure.getTotalDose() ;
 //            System.out.println("Brightness: " + brightness);
         }
         

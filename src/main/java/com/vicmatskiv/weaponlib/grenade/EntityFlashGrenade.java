@@ -208,65 +208,100 @@ public class EntityFlashGrenade extends AbstractEntityGrenade {
         List<?> nearbyEntities = compatibility.getEntitiesWithinAABBExcludingEntity(compatibility.world(this), this,
                 compatibility.getBoundingBox(this).expand(effectiveDistance, effectiveDistance, effectiveDistance));
 
-        Float damageCoefficient = modContext.getConfigurationManager().getExplosions().getDamage();
-
-//        float effectiveRadius = itemGrenade.getEffectiveRadius() * damageCoefficient; // 5 block sphere with this entity as a center
-
         for(Object nearbyEntityObject: nearbyEntities) {
             Entity nearbyEntity = (Entity)nearbyEntityObject;
             if(nearbyEntity instanceof EntityPlayer) {
-
-                final CompatibleVec3 grenadePos = new CompatibleVec3(this.posX, this.posY, this.posZ);
-                BiPredicate<Block, CompatibleBlockState> isCollidable = (block, blockMetadata) -> 
-                    !isTransparentBlock(block)
-                    && compatibility.canCollideCheck(block, blockMetadata, false);
-                
-                EntityPlayer player = (EntityPlayer) nearbyEntity;
-                Vec3d playerLookVec = player.getLook(1f);
-                Vec3d playerEyePosition = player.getPositionEyes(1f);
-                Vec3d playerGrenadeVector = playerEyePosition.subtractReverse(new Vec3d(this.posX, this.posY, this.posZ));
-                
-                double dotProduct = playerLookVec.dotProduct(playerGrenadeVector);
-                double cos = dotProduct / 
-                        (MathHelper.sqrt(playerLookVec.lengthSquared()) * MathHelper.sqrt(playerGrenadeVector.lengthSquared()));
-                
-                System.out.println("Cos: " + cos);
-                
-                float exposureFactor = (float) ((cos + 1f)/ 2f);
-                exposureFactor *= exposureFactor;
-                
-                System.out.println("Exposure factor: " + exposureFactor);
-                
-                final CompatibleVec3 compatiblePlayerEyePos = new CompatibleVec3(playerEyePosition.x, playerEyePosition.y, playerEyePosition.z);
-                CompatibleRayTraceResult rayTraceResult = CompatibleRayTracing.rayTraceBlocks(compatibility.world(this), grenadePos, compatiblePlayerEyePos, isCollidable);
-
-                if(rayTraceResult == null) {
-                    float dose = exposureFactor * (1f - (float)playerGrenadeVector.lengthSquared() / (effectiveDistance * effectiveDistance));
-                    if(dose < 0) {
-                        dose = 0f;
-                    }
-                    LightExposure exposure = CompatibleExposureCapability.getExposure(nearbyEntity, LightExposure.class);
-                    if(exposure == null) {
-                        System.out.println("Entity " + nearbyEntity + " exposed to light dose " + dose);
-                        exposure = new LightExposure(compatibility.world(nearbyEntity).getTotalWorldTime(), 400, dose);
-                        CompatibleExposureCapability.updateExposure(nearbyEntity, exposure);
-                    } else {
-                        float totalDose = exposure.getTotalDose() + dose;
-                        if(totalDose > 1f) {
-                            totalDose = 1f;
-                        }
-                        System.out.println("Entity " + nearbyEntity + " exposed to light dose " + totalDose);
-                        exposure.setTotalDose(totalDose);
-                        CompatibleExposureCapability.updateExposure(nearbyEntity, exposure);
-                    }
+                float dose = getMaxDose(nearbyEntity);                
+                if(dose < 0) {
+                    dose = 0f;
+                }
+                LightExposure exposure = CompatibleExposureCapability.getExposure(nearbyEntity, LightExposure.class);
+                if(exposure == null) {
+//                    System.out.println("Entity " + nearbyEntity + " exposed to light dose " + dose);
+                    exposure = new LightExposure(compatibility.world(nearbyEntity).getTotalWorldTime(), 4000, dose);
+                    CompatibleExposureCapability.updateExposure(nearbyEntity, exposure);
                 } else {
-                    CompatibleVec3 hitVec = rayTraceResult.getHitVec();
-                    System.out.println("Hit vec: " + hitVec);
+                    float totalDose = exposure.getTotalDose() + dose;
+                    if(totalDose > 1f) {
+                        totalDose = 1f;
+                    }
+//                    System.out.println("Entity " + nearbyEntity + " exposed to light dose " + totalDose);
+                    exposure.setTotalDose(totalDose);
+                    CompatibleExposureCapability.updateExposure(nearbyEntity, exposure);
                 }
             }
         }
         
         this.setDead();
+    }
+
+    float offset = 0.3f;
+    float[][] offsets = new float [][] {
+        {0, 0, 0},
+        {offset, 0, 0},
+        {-offset, 0, 0},
+        {0, offset, 0},
+        {0, -offset, 0},
+        {0, 0, offset},
+        {0, 0, -offset},
+    };
+    
+    private float getMaxDose(Entity nearbyEntity) {
+        float dose = 0f;
+        for(int i = 0; i < offsets.length; i++) {
+            float offsetDose = getDoseWithOffset(nearbyEntity, offsets[i][0], offsets[i][1], offsets[i][2]);
+            float coefficient = (offset * 3f - Math.abs(offsets[i][0]) - Math.abs(offsets[i][1]) - Math.abs(offsets[i][2])) / (offset * 3f);
+            offsetDose *= coefficient;
+            if(offsetDose > dose) {
+                dose = offsetDose;
+            }
+            if(dose > 0.97f) {
+                break;
+            }
+        }
+        return dose;
+    }
+    
+    private float getDoseWithOffset(Entity nearbyEntity, double xOffset, double yOffset, double zOffset) {
+        double posX = this.posX + xOffset;
+        double posY = this.posY + yOffset;
+        double posZ = this.posZ + zOffset;
+        final CompatibleVec3 grenadePos = new CompatibleVec3(posX, posY, posZ);
+//        BiPredicate<Block, CompatibleBlockState> isCollidable = (block, blockMetadata) -> 
+//            block != Blocks.GLASS && block != Blocks.GLASS_PANE && compatibility.canCollideCheck(block, blockMetadata, false);
+            
+        BiPredicate<Block, CompatibleBlockState> isCollidable = (block, blockMetadata) -> 
+            !isTransparentBlock(block)
+            && compatibility.canCollideCheck(block, blockMetadata, false);
+        
+        EntityPlayer player = (EntityPlayer) nearbyEntity;
+        Vec3d playerLookVec = player.getLook(1f);
+        Vec3d playerEyePosition = player.getPositionEyes(1f);
+        Vec3d playerGrenadeVector = playerEyePosition.subtractReverse(new Vec3d(posX, posY, posZ));
+        
+        double dotProduct = playerLookVec.dotProduct(playerGrenadeVector);
+        double cos = dotProduct / 
+                (MathHelper.sqrt(playerLookVec.lengthSquared()) * MathHelper.sqrt(playerGrenadeVector.lengthSquared()));
+        
+//        System.out.println("Cos: " + cos);
+        
+        float exposureFactor = (float) ((cos + 1f)/ 2f);
+        exposureFactor *= exposureFactor;
+        
+//        System.out.println("Exposure factor: " + exposureFactor);
+        
+        final CompatibleVec3 compatiblePlayerEyePos = new CompatibleVec3(playerEyePosition.x, playerEyePosition.y, playerEyePosition.z);
+        CompatibleRayTraceResult rayTraceResult = CompatibleRayTracing.rayTraceBlocks(compatibility.world(this), grenadePos, compatiblePlayerEyePos, isCollidable);
+
+        float dose = 0f;
+        if(rayTraceResult == null) {
+            dose = exposureFactor * (1f - (float)playerGrenadeVector.lengthSquared() / (effectiveDistance * effectiveDistance)); 
+        } else {
+            CompatibleVec3 hitVec = rayTraceResult.getHitVec();
+//            System.out.println("Hit vec: " + hitVec);
+        }
+        
+        return dose;
     }
 
     public ItemGrenade getItemGrenade() {

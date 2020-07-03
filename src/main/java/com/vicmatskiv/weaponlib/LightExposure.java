@@ -32,7 +32,8 @@ public class LightExposure extends UniversalObject implements Exposure {
 
     @Override
     public boolean isEffective(World world) {
-        return totalDose > 0.01f && world.getTotalWorldTime() - lastExposureTimestamp <= 3000; // maxDuration;
+//        System.out.println("Total dose: " + totalDose);
+        return totalDose > 0.0003f && world.getTotalWorldTime() - lastExposureTimestamp <= maxDuration;
     }
 
 

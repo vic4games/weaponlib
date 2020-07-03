@@ -43,7 +43,15 @@ const vec3 SEPIA = vec3(1.2, 1.0, 0.8);
 void main() {
     vec4 texColor = texture2D(DiffuseSampler, texCoord.xy);
     
-    texColor.rgb *= Brightness;
+    if(FlashEnabled > 0) {
+        const vec3 white = vec3(1.0, 1.0, 1.0);
+        //texColor.rgb = mix(white, texColor.rgb * Brightness, 0.5);
+        float clampedBrightness = clamp(Brightness / 100, 0.0, 1.0);
+        float whiteBalance = 1.0 - clampedBrightness;
+        texColor.rgb = mix(white * 3, texColor.rgb * Brightness, whiteBalance);
+    } else {
+        texColor.rgb *= Brightness;
+    }
     
     if(NightVisionEnabled > 0) {
         vec2 uv;

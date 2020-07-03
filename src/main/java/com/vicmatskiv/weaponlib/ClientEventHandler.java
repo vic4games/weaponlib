@@ -219,6 +219,7 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
                     DynamicShaderGroupSource source = pipelineShaderGroupSourceProvider.getShaderSource(shaderContext.getPhase());
                     if(source != null) {
                         shaderGroupManager.loadFromSource(shaderContext, source);
+//                        shaderGroupManager.removeAllShaders(shaderContext);
                     }
                 }
 
