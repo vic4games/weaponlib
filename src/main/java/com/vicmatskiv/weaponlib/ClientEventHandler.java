@@ -215,13 +215,13 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
                 PlayerItemInstance<?> instance = modContext.getPlayerItemInstanceRegistry()
                         .getMainHandItemInstance(clientPlayer);
 
-                if(minecraft.gameSettings.thirdPersonView == 0) {
+                //if(minecraft.gameSettings.thirdPersonView == 0) {
                     DynamicShaderGroupSource source = pipelineShaderGroupSourceProvider.getShaderSource(shaderContext.getPhase());
                     if(source != null) {
                         shaderGroupManager.loadFromSource(shaderContext, source);
 //                        shaderGroupManager.removeAllShaders(shaderContext);
                     }
-                }
+                //}
 
                 if(instance != null) {
                     Perspective<?> view = modContext.getViewManager().getPerspective(instance, true);

@@ -22,6 +22,7 @@ import net.minecraft.util.ResourceLocation;
 public class DynamicShaderGroup extends CompatibleShaderGroup {
 
     private Map<String, Object> uniforms = new HashMap<>();
+    private boolean deleted;
 
     public DynamicShaderGroup(TextureManager textureManager, IResourceManager resourceManager,
             Framebuffer mainFramebufferIn, ResourceLocation resourceLocation)
@@ -43,6 +44,16 @@ public class DynamicShaderGroup extends CompatibleShaderGroup {
         }
         
         return shader;
+    }
+    
+    @Override
+    public void deleteShaderGroup() {
+        super.deleteShaderGroup();
+        deleted = true;
+    }
+    
+    public boolean isDeleted() {
+        return deleted;
     }
 
     public void setUniform(String name, Object value) {

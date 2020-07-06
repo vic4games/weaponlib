@@ -102,7 +102,7 @@ public class DynamicShaderGroupManager {
         }
 
         LoadedShaderGroup l = loaded.compute(source.getSourceId(), (s, currentLoaded) -> {
-            if(currentLoaded != null) {
+            if(currentLoaded != null && !currentLoaded.group.isDeleted()) {
                 currentLoaded.confirmed = true;
                 return currentLoaded;
             } else {
