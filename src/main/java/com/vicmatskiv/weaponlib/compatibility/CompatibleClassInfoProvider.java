@@ -10,11 +10,13 @@ public class CompatibleClassInfoProvider {
     private static Map<String, ClassInfo> classInfoMap = new HashMap<>();
 
     static {
+        
         classInfoMap.put("net/minecraft/client/renderer/EntityRenderer",
                 new ClassInfo("net/minecraft/client/renderer/EntityRenderer", "buq")
                 .addMethodInfo("hurtCameraEffect", "(F)V", "d")
                 .addMethodInfo("setupCameraTransform", "(FI)V", "a")
                 .addMethodInfo("setupViewBobbing", "applyBobbing", "(F)V", "e")
+                .addMethodInfo2("updateCameraAndRender", "(FJ)V", "a", "(FJ)V")
                 );
                 
         classInfoMap.put("net/minecraft/client/model/ModelBiped", 
@@ -60,6 +62,7 @@ public class CompatibleClassInfoProvider {
                 new ClassInfo("net/minecraft/client/entity/EntityPlayerSP", "bnn")
                 .addMethodInfo2("isSneaking", "()Z", "aM", "()Z")
                 .addMethodInfo2("updateEntityActionState", "()V", "cr", "()V")
+                .addMethodInfo2("turn", "(FF)V", "c", "(FF)V")
                 );
         //
         

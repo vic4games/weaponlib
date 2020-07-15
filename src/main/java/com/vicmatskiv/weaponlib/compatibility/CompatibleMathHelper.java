@@ -27,4 +27,28 @@ public class CompatibleMathHelper {
     public static double clamp_double(double num, double min, double max) {
         return MathHelper.clamp(num, min, max);
     }
+
+    public static double wrapAngleTo180Double(double angle) {
+        angle %= 360.0;
+
+        if (angle >= 180.0) {
+            angle -= 360.0;
+        } else if (angle < -180.0) {
+            angle += 360.0;
+        }
+
+        return angle;
+    }
+    
+    public static float wrapAngleTo180Float(float angle) {
+        angle %= 360f;
+
+        if (angle >= 180f) {
+            angle -= 360f;
+        } else if (angle < -180f) {
+            angle += 360f;
+        }
+
+        return angle;
+    }
 }

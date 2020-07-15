@@ -44,6 +44,8 @@ public class KeyBindings {
     public static KeyBinding semicolonDebugKey;
     public static KeyBinding apostropheDebugKey;
     
+    public static KeyBinding altModeDebugKey;
+    
     public static KeyBinding deleteDebugKey;
 
     public static void init() {
@@ -151,6 +153,9 @@ public class KeyBindings {
         deleteDebugKey = new KeyBinding("key.deleteDebugKey", Keyboard.KEY_BACK,
                 "key.categories.weaponlib");
 
+        altModeDebugKey = new KeyBinding("key.altModeDebugKey", Keyboard.KEY_LMETA,
+                "key.categories.weaponlib");
+        
         compatibility.registerKeyBinding(jDebugKey);
         compatibility.registerKeyBinding(kDebugKey);
 
@@ -164,5 +169,7 @@ public class KeyBindings {
         compatibility.registerKeyBinding(equalsDebugKey);
 
         compatibility.registerKeyBinding(deleteDebugKey);
+        
+        compatibility.registerKeyBinding(altModeDebugKey);
     }
 }

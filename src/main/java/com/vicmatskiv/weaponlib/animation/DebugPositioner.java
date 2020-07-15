@@ -3,11 +3,7 @@ package com.vicmatskiv.weaponlib.animation;
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
-
-import net.minecraft.entity.Entity;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,9 +11,9 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Matrix4f;
 
 import com.vicmatskiv.weaponlib.KeyBindings;
-import com.vicmatskiv.weaponlib.Part;
-import com.vicmatskiv.weaponlib.RenderContext;
 import com.vicmatskiv.weaponlib.tracking.PlayerEntityTracker;
+
+import net.minecraft.entity.Entity;
 
 public class DebugPositioner {
 
@@ -27,11 +23,11 @@ public class DebugPositioner {
 
     private static Boolean debugModeEnabled;
 
-    private static Part currentPart;
-    
-    private static Set<Part> debugParts = new HashSet<>();
+    private static Object currentPart;
 
     private static Entity watchableEntity;
+    
+    private static boolean isAdjustRotationMode;
 
     public static final class TransitionConfiguration {
         private long pause;
@@ -53,22 +49,27 @@ public class DebugPositioner {
         private float x;
         private float y;
         private float z;
+        
+        private float rOffsetX;
+        private float rOffsetY;
+        private float rOffsetZ;
 
         private float scale = 1f;
         private float step = 0.025f;
-
+        
+        private float xrpm;
+        private float yrpm;
+        private float zrpm;
+        
+        private long lastAutorotationTimestamp = System.currentTimeMillis();
     }
 
-    private static Map<Part, Position> partPositions = new HashMap<>();
+    private static Map<Object, Position> partPositions = new HashMap<>();
 
     private static Map<Integer, TransitionConfiguration> transitionConfigurations = new HashMap<>();
 
     private static Position getCurrentPartPosition() {
         return partPositions.get(currentPart);
-    }
-    
-    private static Position getDebugPartPosition(Part part) {
-        return partPositions.get(part);
     }
 
     public static void incrementXRotation(float increment) {
@@ -102,34 +103,49 @@ public class DebugPositioner {
         logger.debug("Debug rotations: ({}, {}, {}) ", partPosition.xRotation, partPosition.yRotation, partPosition.zRotation);
     }
 
-    public static void incrementXPosition(float increment) {
+    public static void incrementXPosition(float increment, boolean altMode) {
         Position partPosition = getCurrentPartPosition();
         if(partPosition == null) {
             compatibility.addChatMessage(compatibility.clientPlayer(), "Debug part not selected");
             return;
         }
-        partPosition.x += partPosition.step * increment;
-        logger.debug("Debug position: ({}, {}, {}) ", partPosition.x, partPosition.y, partPosition.z);
+        if(altMode) {
+            partPosition.rOffsetX += partPosition.step * increment;
+            logger.debug("Debug roffset: ({}, {}, {}) ", partPosition.rOffsetX, partPosition.rOffsetY, partPosition.rOffsetZ);
+        } else {
+            partPosition.x += partPosition.step * increment;
+            logger.debug("Debug position: ({}, {}, {}) ", partPosition.x, partPosition.y, partPosition.z);
+        }
     }
 
-    public static void incrementYPosition(float increment) {
+    public static void incrementYPosition(float increment, boolean altMode) {
         Position partPosition = getCurrentPartPosition();
         if(partPosition == null) {
             compatibility.addChatMessage(compatibility.clientPlayer(), "Debug part not selected");
             return;
         }
-        partPosition.y += partPosition.step * increment;
-        logger.debug("Debug position: ({}, {}, {}) ", partPosition.x, partPosition.y, partPosition.z);
+        if(altMode) {
+            partPosition.rOffsetY += partPosition.step * increment;
+            logger.debug("Debug roffset: ({}, {}, {}) ", partPosition.rOffsetX, partPosition.rOffsetY, partPosition.rOffsetZ);
+        } else {
+            partPosition.y += partPosition.step * increment;
+            logger.debug("Debug position: ({}, {}, {}) ", partPosition.x, partPosition.y, partPosition.z);
+        }
     }
 
-    public static void incrementZPosition(float increment) {
+    public static void incrementZPosition(float increment, boolean altMode) {
         Position partPosition = getCurrentPartPosition();
         if(partPosition == null) {
             compatibility.addChatMessage(compatibility.clientPlayer(), "Debug part not selected");
             return;
         }
-        partPosition.z += partPosition.step * increment;
-        logger.debug("Debug position: ({}, {}, {}) ", partPosition.x, partPosition.y, partPosition.z);
+        if(altMode) {
+            partPosition.rOffsetZ += partPosition.step * increment;
+            logger.debug("Debug roffset: ({}, {}, {}) ", partPosition.rOffsetX, partPosition.rOffsetY, partPosition.rOffsetZ);
+        } else {
+            partPosition.z += partPosition.step * increment;
+            logger.debug("Debug position: ({}, {}, {}) ", partPosition.x, partPosition.y, partPosition.z);
+        }
     }
 
     public static void setScale(float scale) {
@@ -167,42 +183,28 @@ public class DebugPositioner {
         return debugModeEnabled;
     }
 
-//    public static void reset() {
-//        Position partPosition = getCurrentPartPosition();
-//        if(partPosition == null) {
-//            compatibility.addChatMessage(compatibility.clientPlayer(), "Debug part not selected");
-//            return;
-//        }
-//        transitionConfigurations.clear();
-//        partPosition.x = partPosition.y = partPosition.z
-//                = partPosition.xRotation = partPosition.yRotation = partPosition.zRotation = 0f;
-//        partPosition.scale = 1f;
-//        partPosition.step = 0.025f;
-//    }
-    
     public static void reset() {
-        for(Part debugPart: debugParts) {
-            Position partPosition = getDebugPartPosition(debugPart);
-            if(partPosition == null) {
-                compatibility.addChatMessage(compatibility.clientPlayer(), "Debug part not selected");
-                return;
-            }
-            transitionConfigurations.clear();
-            partPosition.x = partPosition.y = partPosition.z
-                    = partPosition.xRotation = partPosition.yRotation = partPosition.zRotation = 0f;
-            partPosition.scale = 1f;
-            partPosition.step = 0.025f;
+        Position partPosition = getCurrentPartPosition();
+        if(partPosition == null) {
+            compatibility.addChatMessage(compatibility.clientPlayer(), "Debug part not selected");
+            return;
         }
-        
+        transitionConfigurations.clear();
+        partPosition.x = partPosition.y = partPosition.z
+                = partPosition.xRotation = partPosition.yRotation = partPosition.zRotation 
+                = partPosition.xrpm = partPosition.yrpm = partPosition.zrpm 
+                = partPosition.rOffsetX = partPosition.rOffsetY = partPosition.rOffsetZ 
+                = 0f;
+        partPosition.scale = 1f;
+        partPosition.step = 0.025f;
     }
 
-    public static void setDebugPart(Part part) {
+    public static void setDebugPart(Object part) {
         currentPart = part;
-        debugParts.add(part);
         partPositions.computeIfAbsent(part, p -> new Position());
     }
 
-    public static Part getDebugPart() {
+    public static Object getDebugPart() {
         return currentPart;
     }
 
@@ -215,23 +217,59 @@ public class DebugPositioner {
         return transitionConfigurations.computeIfAbsent(transitionNumber, k -> init ? new TransitionConfiguration() : null);
     }
 
-    public static void position(Part part, RenderContext<?> renderContext) {
-//        if(part != currentPart) {
-//            return;
-//        }
-        if(!debugParts.contains(part)) {
+    public static void position(Object part, Object renderContext) {
+        if(part != currentPart) {
             return;
         }
-        Position partPosition = getDebugPartPosition(part);
+        Position partPosition = getCurrentPartPosition();
         if(partPosition == null) {
             return;
         }
 
+        updateAutoIncrements(partPosition);
         GL11.glScalef(partPosition.scale, partPosition.scale, partPosition.scale);
-        GL11.glRotatef(partPosition.xRotation, 1f, 0f, 0f);
-        GL11.glRotatef(partPosition.yRotation, 0f, 1f, 0f);
-        GL11.glRotatef(partPosition.zRotation, 0f, 0f, 1f);
-        GL11.glTranslatef(partPosition.x, partPosition.y, partPosition.z);
+        
+        if(isAdjustRotationMode) {
+            GL11.glTranslatef(partPosition.rOffsetX, partPosition.rOffsetY, partPosition.rOffsetZ);
+            GL11.glTranslatef(partPosition.x, partPosition.y, partPosition.z);
+            GL11.glRotatef(partPosition.zRotation, 0f, 0f, 1f);
+            GL11.glRotatef(partPosition.yRotation, 0f, 1f, 0f);
+            GL11.glRotatef(partPosition.xRotation, 1f, 0f, 0f);
+            GL11.glTranslatef(-partPosition.rOffsetX, -partPosition.rOffsetY, -partPosition.rOffsetZ);
+        } else {
+            GL11.glRotatef(partPosition.xRotation, 1f, 0f, 0f);
+            GL11.glRotatef(partPosition.yRotation, 0f, 1f, 0f);
+            GL11.glRotatef(partPosition.zRotation, 0f, 0f, 1f);
+            GL11.glTranslatef(partPosition.x, partPosition.y, partPosition.z);
+        }
+        
+    }
+    
+    private static void updateAutoIncrements(Position partPosition) {
+        if(partPosition.xrpm > 0 || partPosition.yrpm > 0 || partPosition.zrpm > 0) {
+            long timeSinceLastIncrement = System.currentTimeMillis() - partPosition.lastAutorotationTimestamp;
+            
+            if(partPosition.xrpm > 0) {
+                float rpms = partPosition.xrpm / 60000f;
+                float expectedRotations = (float)timeSinceLastIncrement * rpms;
+                float expectedDegrees = expectedRotations * 360f;
+                partPosition.xRotation += expectedDegrees;
+                partPosition.xRotation %= 360f;
+            } else if(partPosition.yrpm > 0) {
+                float rpms = partPosition.yrpm / 60000f;
+                float expectedRotations = (float)timeSinceLastIncrement * rpms;
+                float expectedDegrees = expectedRotations * 360f;
+                partPosition.yRotation += expectedDegrees;
+                partPosition.yRotation %= 360f;
+            } else if(partPosition.zrpm > 0) {
+                float rpms = partPosition.zrpm / 60000f;
+                float expectedRotations = (float)timeSinceLastIncrement * rpms;
+                float expectedDegrees = expectedRotations * 360f;
+                partPosition.zRotation += expectedDegrees;
+                partPosition.zRotation %= 360f;
+            }
+            partPosition.lastAutorotationTimestamp = System.currentTimeMillis();
+        }
     }
 
     public static void showCode() {
@@ -239,14 +277,27 @@ public class DebugPositioner {
         if(partPosition == null) {
             return;
         }
-        StringBuilder result = new StringBuilder();
-        result.append(String.format("GL11.glScalef(%ff, %ff, %ff);\n", partPosition.scale, partPosition.scale, partPosition.scale));
-        result.append(String.format("GL11.glRotatef(%ff, 1f, 0f, 0f);\n", partPosition.xRotation));
-        result.append(String.format("GL11.glRotatef(%ff, 0f, 1f, 0f);\n", partPosition.yRotation));
-        result.append(String.format("GL11.glRotatef(%ff, 0f, 0f, 1f);\n", partPosition.zRotation));
-        result.append(String.format("GL11.glTranslatef(%ff, %ff, %ff);", partPosition.x, partPosition.y, partPosition.z));
-        logger.debug("Generated positioning code: \n" + result);
-        System.out.println("\n" + result);
+        if(isAdjustRotationMode) {
+            StringBuilder result = new StringBuilder();
+            result.append("Positioners.position(\n");
+            result.append(String.format("    %ff, %ff, %ff,\n", partPosition.x, partPosition.y, partPosition.z));
+            result.append(String.format("    %ff, %ff, %ff,\n", partPosition.xRotation, partPosition.yRotation, partPosition.zRotation));
+            result.append(String.format("    %ff, %ff, %ff,\n", partPosition.rOffsetX, partPosition.rOffsetY, partPosition.rOffsetZ));
+            result.append(String.format("    %ff, %ff, %ff\n",  partPosition.scale, partPosition.scale, partPosition.scale));
+            result.append(");\n");
+            logger.debug("Generated positioning code: \n" + result);
+            System.out.println("\n" + result);
+        } else {
+            StringBuilder result = new StringBuilder();
+            result.append(String.format("GL11.glScalef(%ff, %ff, %ff);\n", partPosition.scale, partPosition.scale, partPosition.scale));
+            result.append(String.format("GL11.glRotatef(%ff, 1f, 0f, 0f);\n", partPosition.xRotation));
+            result.append(String.format("GL11.glRotatef(%ff, 0f, 1f, 0f);\n", partPosition.yRotation));
+            result.append(String.format("GL11.glRotatef(%ff, 0f, 0f, 1f);\n", partPosition.zRotation));
+            result.append(String.format("GL11.glTranslatef(%ff, %ff, %ff);", partPosition.x, partPosition.y, partPosition.z));
+            logger.debug("Generated positioning code: \n" + result);
+            System.out.println("\n" + result);
+        }
+        
     }
 
     public static void watch() {
@@ -278,6 +329,28 @@ public class DebugPositioner {
         buf.append(String.format("%4.2f %4.2f %4.2f %4.2f\n", m.m02, m.m12, m.m22, m.m32));
         buf.append(String.format("%4.2f %4.2f %4.2f %4.2f\n", m.m03, m.m13, m.m23, m.m33));
         return buf.toString();
+    }
+
+    public static void setAutorotate(float xrpm, float yrpm, float zrpm) {
+        Position partPosition = getCurrentPartPosition();
+        if(partPosition == null) {
+            compatibility.addChatMessage(compatibility.clientPlayer(), "Debug part not selected");
+            return;
+        }
+        
+        isAdjustRotationMode = xrpm > 0f || yrpm > 0f || zrpm > 0f;
+        partPosition.xrpm = xrpm;
+        if(xrpm > 0) {
+            partPosition.yRotation = partPosition.zRotation = 0f;
+        }
+        partPosition.yrpm = yrpm;
+        if(yrpm > 0) {
+            partPosition.xRotation = partPosition.zRotation = 0f;
+        }
+        partPosition.zrpm = zrpm;
+        if(zrpm > 0) {
+            partPosition.xRotation = partPosition.yRotation = 0f;
+        }
     }
 
 }

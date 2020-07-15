@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.util.vector.Matrix4f;
 
 import com.vicmatskiv.weaponlib.ClientModContext;
 import com.vicmatskiv.weaponlib.Part;
@@ -18,6 +19,9 @@ import com.vicmatskiv.weaponlib.Weapon;
 import com.vicmatskiv.weaponlib.animation.MultipartRenderStateManager;
 import com.vicmatskiv.weaponlib.animation.ScreenShakingAnimationManager;
 import com.vicmatskiv.weaponlib.inventory.CustomPlayerInventory;
+import com.vicmatskiv.weaponlib.vehicle.EntityVehicle;
+import com.vicmatskiv.weaponlib.vehicle.RenderVehicle2;
+import com.vicmatskiv.weaponlib.vehicle.VehicleSuspensionStrategy;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
@@ -117,6 +121,25 @@ public class Interceptors {
                 GL11.glRotatef(-((float)spreadableExposure.getTickCount() + partialTicks) * speed, 0.0F, 1.0F, 1.0F);
                 spreadableExposure.incrementTickCount();
             }
+        }
+        
+        if(entityplayer.getRidingEntity() instanceof EntityVehicle) {
+            EntityVehicle vehicle = (EntityVehicle) entityplayer.getRidingEntity();
+            double lastYawDelta = vehicle.getLastYawDelta();
+            double speed = vehicle.getSpeed();
+
+            VehicleSuspensionStrategy suspensionStrategy = vehicle.getSuspensionStrategy();
+            //System.out.printf("Rate: %.5f, amp: %.5f\n", suspensionStrategy.getRate(), suspensionStrategy.getAmplitude());
+            Matrix4f transformMatrix = vehicle.getRandomizer().update(suspensionStrategy.getRate(), 
+                    suspensionStrategy.getAmplitude());
+            RenderVehicle2.captureCameraTransform(transformMatrix);
+            //System.out.printf("Yaw delta: %.5f, speed: %.5f\n", lastYawDelta, speed);
+            
+            if(Math.abs(lastYawDelta) > 0.3) {
+                GL11.glRotatef(-(float)lastYawDelta * 2f, 0.0F, 1.0f, 0.0f);
+            }
+        } else {
+            RenderVehicle2.captureCameraTransform(null);
         }
         
         return false;
@@ -271,5 +294,60 @@ public class Interceptors {
         return player instanceof EntityPlayer && isProning((EntityPlayer) player) 
                 && Minecraft.getMinecraft().gameSettings.thirdPersonView == 0 ? position 
                 + player.getEyeHeight() * 1.6f : position;
+    }
+    
+    public static void turn(EntityPlayer player, float yawDelta, float pitchDelta) {
+        float originalPitch = player.rotationPitch;
+        float originalYaw = player.rotationYaw;
+        //System.out.println("Yaw delta: " + yawDelta);
+        
+        float maxPitch = 90f;
+        float maxYawDelta = 40f;
+        
+        yawDelta *= 0.15;
+        
+        boolean canChangeRotationYaw = true;
+        if(player.getRidingEntity() instanceof EntityVehicle && Minecraft.getMinecraft().gameSettings.thirdPersonView == 0) {
+            maxPitch = 30f;
+//            EntityVehicle entityVehicle = (EntityVehicle) player.ridingEntity;
+////            maxYawDelta = 10f + 200f * (float)entityVehicle.getSpeed();
+////            if(maxYawDelta > 35f) {
+////                maxYawDelta = 35f;
+////            }
+////            System.out.println("Speed: " + entityVehicle.getSpeed() + ", maxYawD: " + maxYawDelta);
+//            //canChangeRotationYaw = entityVehicle.getState() != VehicleState.STOPPING;
+//            float vehicleRiderYawDelta = CompatibleMathHelper.wrapAngleTo180Float(player.ridingEntity.rotationYaw - player.rotationYaw);
+//            if(vehicleRiderYawDelta > maxYawDelta) {
+//                vehicleRiderYawDelta = maxYawDelta;
+//                yawDelta = 1f;
+//            }
+            
+            player.rotationYaw = (float) ((double) player.rotationYaw + (double) yawDelta);
+            float vehicleRiderYawDelta = CompatibleMathHelper.wrapAngleTo180Float(player.getRidingEntity().rotationYaw - player.rotationYaw);
+            //System.out.println("Proposed delta: " + yawDelta + ", allowed: " + vehicleRiderYawDelta);
+
+            if(vehicleRiderYawDelta > maxYawDelta) {
+                player.rotationYaw = player.getRidingEntity().rotationYaw - maxYawDelta;
+            } 
+            else if(-vehicleRiderYawDelta > maxYawDelta) {
+                player.rotationYaw = player.getRidingEntity().rotationYaw + maxYawDelta;
+            }
+
+        } else {
+            player.rotationYaw = (float) ((double) player.rotationYaw + (double) yawDelta);
+        }
+        
+        player.rotationPitch = (float) ((double) player.rotationPitch - (double) pitchDelta * 0.15);
+
+        if (player.rotationPitch < -maxPitch) {
+            player.rotationPitch = -maxPitch;
+        }
+
+        if (player.rotationPitch > maxPitch) {
+            player.rotationPitch = maxPitch;
+        }
+
+        player.prevRotationPitch += player.rotationPitch - originalPitch;
+        player.prevRotationYaw += player.rotationYaw - originalYaw;
     }
 }

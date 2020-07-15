@@ -83,6 +83,7 @@ import com.vicmatskiv.weaponlib.state.Permit;
 import com.vicmatskiv.weaponlib.state.StateManager;
 import com.vicmatskiv.weaponlib.tracking.SyncPlayerEntityTrackerMessage;
 import com.vicmatskiv.weaponlib.tracking.SyncPlayerEntityTrackerMessageMessageHandler;
+import com.vicmatskiv.weaponlib.vehicle.EntityVehicle;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -359,6 +360,8 @@ public class CommonModContext implements ModContext {
         compatibility.registerModEntity(EntityFlashGrenade.class, "FlashGrenade" + modEntityID, modEntityID++, mod, modId, 64, 10000, false);
 
         compatibility.registerModEntity(EntitySpreadable.class, "EntitySpreadable" + modEntityID, modEntityID++, mod, modId, 64, 3, false);
+
+        compatibility.registerModEntity(EntityVehicle.class, "EntityVehicle" + modEntityID, modEntityID++, mod, modId, 64, 3, false);
 
 //        compatibility.registerModEntity(EntityCustomMob.class, "CustomMob" + modEntityID, modEntityID++, mod, modId, 64, 3, true);
 //

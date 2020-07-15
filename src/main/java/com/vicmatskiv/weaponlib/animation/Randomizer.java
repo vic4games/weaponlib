@@ -94,11 +94,11 @@ public final class Randomizer {
 		return matrix;
 	}
 
-	public void update(float rate, float amplitude) {
+	public Matrix4f update(float rate, float amplitude) {
 		reconfigure(rate, amplitude);
 
 		if(rate == 0f || amplitude == 0f) {
-			return;
+			return null;
 		}
 
 		long currentTime = System.currentTimeMillis();
@@ -130,5 +130,7 @@ public final class Randomizer {
 		Matrix4f composite = Matrix4f.mul(currentTransformMatrix, currentMatrix, null);
 
 		MatrixHelper.loadMatrix(composite);
+		
+		return currentMatrix;
 	}
 }

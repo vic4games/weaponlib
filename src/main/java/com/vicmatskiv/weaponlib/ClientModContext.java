@@ -31,8 +31,9 @@ import com.vicmatskiv.weaponlib.inventory.InventoryTabs;
 import com.vicmatskiv.weaponlib.melee.ItemMelee;
 import com.vicmatskiv.weaponlib.melee.MeleeRenderer;
 import com.vicmatskiv.weaponlib.melee.PlayerMeleeInstance;
-import com.vicmatskiv.weaponlib.mission.MissionManager;
 import com.vicmatskiv.weaponlib.perspective.PerspectiveManager;
+import com.vicmatskiv.weaponlib.vehicle.EntityVehicle;
+import com.vicmatskiv.weaponlib.vehicle.RenderVehicle;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.IReloadableResourceManager;
@@ -145,6 +146,8 @@ public class ClientModContext extends CommonModContext {
 	    rendererRegistry.registerEntityRenderingHandler(EntityGasGrenade.class, new EntityGrenadeRenderer());
 	    rendererRegistry.registerEntityRenderingHandler(EntityFlashGrenade.class, new EntityGrenadeRenderer());
 	    rendererRegistry.registerEntityRenderingHandler(EntitySpreadable.class, new InvisibleEntityRenderer());
+	    rendererRegistry.registerEntityRenderingHandler(EntityVehicle.class, new RenderVehicle());
+
 	    rendererRegistry.processDelayedRegistrations();
 	}
 	

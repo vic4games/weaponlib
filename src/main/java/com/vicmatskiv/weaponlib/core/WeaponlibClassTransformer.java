@@ -1,8 +1,5 @@
 package com.vicmatskiv.weaponlib.core;
 
-import net.minecraft.item.ItemBlock;
-import net.minecraft.launchwrapper.IClassTransformer;
-
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
@@ -12,6 +9,9 @@ import org.objectweb.asm.Opcodes;
 
 import com.vicmatskiv.weaponlib.ClassInfo;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClassInfoProvider;
+
+import net.minecraft.item.ItemBlock;
+import net.minecraft.launchwrapper.IClassTransformer;
 
 public class WeaponlibClassTransformer implements IClassTransformer {
 
@@ -53,6 +53,24 @@ public class WeaponlibClassTransformer implements IClassTransformer {
     
     private static ClassInfo entityLivingBaseClassInfo = CompatibleClassInfoProvider.getInstance()
             .getClassInfo("net/minecraft/entity/EntityLivingBase");
+    
+    private static class UpdateCameraAndRenderMethodVisitor extends MethodVisitor {
+
+        public UpdateCameraAndRenderMethodVisitor(MethodVisitor mv) {
+            super(Opcodes.ASM4, mv);
+        }
+        
+        @Override
+        public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
+            if (entityPlayerSPClassInfo.methodMatches("turn", "(FF)V", owner, name, desc)) {
+                mv.visitMethodInsn(Opcodes.INVOKESTATIC, 
+                        "com/vicmatskiv/weaponlib/compatibility/Interceptors", "turn", 
+                        "(Lnet/minecraft/entity/player/EntityPlayer;FF)V", false);
+            } else {
+                super.visitMethodInsn(opcode, owner, name, desc, itf);
+            }
+        }
+    }
     
     private static class SetupViewBobbingMethodVisitor extends MethodVisitor {
 
@@ -394,6 +412,8 @@ public class WeaponlibClassTransformer implements IClassTransformer {
                 return new SetupViewBobbingMethodVisitor(cv.visitMethod(access, name, desc, signature, exceptions));
             } else if(entityRendererClassInfo.methodMatches("hurtCameraEffect", "(F)V", classname, name, desc)) {
                 return new HurtCameraEffectMethodVisitor(cv.visitMethod(access, name, desc, signature, exceptions));
+            } else if(entityRendererClassInfo.methodMatches("updateCameraAndRender", "(FJ)V", classname, name, desc)) {
+                return new UpdateCameraAndRenderMethodVisitor(cv.visitMethod(access, name, desc, signature, exceptions));
             } else if(renderBipedClassInfo != null 
                     && renderBipedClassInfo.methodMatches("renderEquippedItems", "(Lnet/minecraft/entity/EntityLiving;F)V", classname, name, desc)) {
                 return new RenderEquippedItemsMethodVisitor(cv.visitMethod(access, name, desc, signature, exceptions));

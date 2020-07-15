@@ -24,9 +24,12 @@ import com.vicmatskiv.weaponlib.shader.DynamicShaderGroupManager;
 import com.vicmatskiv.weaponlib.shader.DynamicShaderGroupSource;
 import com.vicmatskiv.weaponlib.shader.DynamicShaderPhase;
 import com.vicmatskiv.weaponlib.tracking.PlayerEntityTracker;
+import com.vicmatskiv.weaponlib.vehicle.EntityVehicle;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
+import net.minecraft.entity.item.EntityBoat;
 import net.minecraft.entity.player.EntityPlayer;
 
 public class ClientEventHandler extends CompatibleClientEventHandler {
@@ -80,6 +83,17 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 			    tracker.update();
 			}
 			
+			EntityPlayer player = compatibility.clientPlayer();
+	        if (player instanceof EntityPlayerSP && player.getRidingEntity() instanceof EntityVehicle)
+	        {
+	            EntityPlayerSP clientPlayer = (EntityPlayerSP) player;
+	            EntityVehicle entityboat = (EntityVehicle)clientPlayer.getRidingEntity();
+	            entityboat.updateInputs(clientPlayer.movementInput.leftKeyDown, 
+	                    clientPlayer.movementInput.rightKeyDown, 
+	                    clientPlayer.movementInput.forwardKeyDown, 
+	                    clientPlayer.movementInput.backKeyDown);
+	        }
+	        
 			mainLoopLock.unlock();
 			processRunInClientThreadQueue();
 			safeGlobals.objectMouseOver.set(compatibility.getObjectMouseOver());

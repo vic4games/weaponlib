@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.WeakHashMap;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.apache.logging.log4j.LogManager;
@@ -17,80 +18,18 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Matrix4f;
 
+
 public class MultipartRenderStateManager<State, Part, Context extends PartPositionProvider> {
 
 	private static final Logger logger = LogManager.getLogger(MultipartRenderStateManager.class);
 
-	private Randomizer randomizer;
+	Randomizer randomizer;
 	
 	private Supplier<Long> currentTimeProvider; // = System::currentTimeMillis;
 
-	private WeakHashMap<Part, Matrix4f> lastApplied = new WeakHashMap<>(); // TODO: replace with cache?
+	private Function<Context, Float> currentProgressProvider;
 
-	private class StaticPositioning implements MultipartPositioning<Part, Context> {
-
-		private State state;
-
-		public StaticPositioning(State state) {
-			this.state = state;
-		}
-
-
-		@Override
-		public float getProgress() {
-			return 1f;
-		}
-
-		@Override
-		public boolean isExpired(Queue<MultipartPositioning<Part, Context>> positioningQueue) {
-			return !positioningQueue.isEmpty();
-		}
-
-		@Override
-		public Positioner<Part, Context> getPositioner() {
-			List<MultipartTransition<Part, Context>> transitions = transitionProvider.getTransitions(state);
-			return new Positioner<Part, Context>() {
-
-				@Override
-				public void position(Part part, Context context) {
-					try {
-						MultipartTransition<Part, Context> multipartTransition = transitions.get(transitions.size() - 1);
-						Part attachedTo = multipartTransition.getAttachedTo(part);
-						if(attachedTo != null) {
-						    MatrixHelper.loadMatrix(context.getPartPosition(attachedTo));
-						}
-						if(multipartTransition.getPositioning(part) == (Object)MultipartTransition.anchoredPosition()) {
-						    Matrix4f m = lastApplied.get(part);
-						    MatrixHelper.applyMatrix(m);
-						} else {
-						    multipartTransition.position(part, context);
-						}
-
-					} catch(Exception e) {
-						System.err.println("Failed to find static position for " + part + " in " + state);
-						throw e;
-					}
-				}
-
-
-
-				@Override
-				public void randomize(float rate, float amplitude) {
-					randomizer.update(rate, amplitude);
-				}
-			};
-		}
-
-		@Override
-		public <T> T getFromState(Class<T> stateClass) {
-			return stateClass.cast(state);
-		}
-
-		@Override
-		public <T> T getToState(Class<T> stateClass) {
-			return stateClass.cast(state);
-		}
-	}
+	WeakHashMap<Part, Matrix4f> lastApplied = new WeakHashMap<>(); // TODO: replace with cache?
 
 	private class TransitionedPositioning implements MultipartPositioning<Part, Context> {
 
@@ -374,9 +313,11 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
         } 
 	}
 	
+	private String name;
+	
 	private StateContainer<State> currentStateContainer;
 
-	private MultipartTransitionProvider<State, Part, Context> transitionProvider;
+	MultipartTransitionProvider<State, Part, Context> transitionProvider;
 
 	private Deque<MultipartPositioning<Part, Context>> positioningQueue;
 	
@@ -386,11 +327,23 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
 
 	public MultipartRenderStateManager(State initialState, MultipartTransitionProvider<State, Part, Context> transitionProvider,
 	        Supplier<Long> currentTimeProvider) {
-		this.transitionProvider = transitionProvider;
-		this.positioningQueue = new LinkedList<>();
-		this.randomizer = new Randomizer();
-		this.currentTimeProvider = currentTimeProvider;
-		setState(initialState, false, true);
+//		this.transitionProvider = transitionProvider;
+//		this.positioningQueue = new LinkedList<>();
+//		this.randomizer = new Randomizer();
+//		this.currentTimeProvider = currentTimeProvider;
+//		setState(initialState, false, true);
+	    this("anonymous", initialState, transitionProvider, currentTimeProvider, null);
+	}
+	
+	public MultipartRenderStateManager(String name, State initialState, MultipartTransitionProvider<State, Part, Context> transitionProvider,
+	        Supplier<Long> currentTimeProvider, Function<Context, Float> currentProgressProvider) {
+	    this.name = name;
+	    this.transitionProvider = transitionProvider;
+	    this.positioningQueue = new LinkedList<>();
+	    this.randomizer = new Randomizer();
+	    this.currentTimeProvider = currentTimeProvider;
+	    this.currentProgressProvider = currentProgressProvider;
+	    setState(initialState, false, true);
 	}
 
 	public void setCycleState(State cycleState, /*, State endState, */ boolean immediate) {
@@ -418,7 +371,7 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
                 addedState = new StateContainer<>(cycleState, false);
                 
                 positioningQueue.add(new TransitionedPositioning(currentStateContainer.state, addedState.state, false));
-                positioningQueue.add(new StaticPositioning(addedState.state));
+                positioningQueue.add(new StaticPositioning<State, Part, Context>(transitionProvider, randomizer, addedState.state, lastApplied));
             }
 
             currentStateContainer = addedState; //new StateContainer<>(addedState.state);
@@ -447,10 +400,33 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
                     currentStateContainer.state : null, newState, fromAnchored));
         }
 
-        positioningQueue.add(new StaticPositioning(newState));
+        positioningQueue.add(new StaticPositioning<State, Part, Context>(transitionProvider, randomizer, newState, lastApplied));
         currentStateContainer = new StateContainer<>(newState);
     }
 	
+	public void setContinousState(State newState, boolean animated, boolean immediate, boolean fromAnchored) {
+	    if(newState == null) {
+	        throw new IllegalArgumentException("State cannot be null");
+	    }
+
+	    if(currentStateContainer != null && newState.equals(currentStateContainer.state)) {
+	        return;
+	    }
+
+	    if(immediate) {
+	        positioningQueue.clear();
+	    }
+
+	    if(animated) {
+	        positioningQueue.add(new ContinousPositioning2<State, Part, Context>(transitionProvider, 
+	                currentProgressProvider, randomizer, currentStateContainer != null ?
+	                        currentStateContainer.state : null, newState, fromAnchored, lastApplied));
+	    }
+
+	    positioningQueue.add(new StaticPositioning<State, Part, Context>(transitionProvider, randomizer, newState, lastApplied));
+	    currentStateContainer = new StateContainer<>(newState);
+	}
+	   
 	public State getLastState() {
 	    return currentStateContainer != null ? currentStateContainer.state : null; 
 	}

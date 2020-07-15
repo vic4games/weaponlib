@@ -8,6 +8,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.Interceptors;
 import com.vicmatskiv.weaponlib.grenade.PlayerGrenadeInstance;
 import com.vicmatskiv.weaponlib.melee.PlayerMeleeInstance;
+import com.vicmatskiv.weaponlib.vehicle.EntityVehicle;
 
 import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.entity.player.EntityPlayer;
@@ -15,7 +16,12 @@ import net.minecraft.item.ItemStack;
 import net.minecraftforge.client.event.FOVUpdateEvent;
 import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.client.event.MouseEvent;
+import net.minecraftforge.client.event.RenderHandEvent;
 import net.minecraftforge.client.event.RenderLivingEvent;
+import net.minecraftforge.client.event.RenderPlayerEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 
@@ -110,6 +116,15 @@ public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 			    }
 			}
 		}
+	}
+	
+    @SideOnly(Side.CLIENT)
+	@SubscribeEvent
+	public final void onRenderItemEvent(RenderHandEvent event) {
+	    if(compatibility.clientPlayer().getRidingEntity() instanceof EntityVehicle) {
+	        event.setCanceled(true);
+	    }
+	    //System.out.println("Render player");
 	}
 
 	@Override
