@@ -67,6 +67,7 @@ public class EntityFlashGrenade extends AbstractEntityGrenade {
     public static int MAX_EFFECTIVE_DISTANCE = 15;
     private long explosionTimeout;
     private float explosionStrength;
+    private float decayFactor;
     private boolean destroyBlocks;
     private long activationTimestamp;
 
@@ -84,6 +85,7 @@ public class EntityFlashGrenade extends AbstractEntityGrenade {
         private float gravityVelocity = ItemGrenade.DEFAULT_GRAVITY_VELOCITY;
         private float rotationSlowdownFactor = ItemGrenade.DEFAULT_ROTATION_SLOWDOWN_FACTOR;
         private int effectiveDistance = MAX_EFFECTIVE_DISTANCE;
+        private float decayFactor = 0.99f;
 
         public Builder withActivationTimestamp(long activationTimestamp) {
             this.activationTimestamp = activationTimestamp;
@@ -103,6 +105,11 @@ public class EntityFlashGrenade extends AbstractEntityGrenade {
         public Builder withExplosionStrength(float explosionStrength) {
             this.explosionStrength = explosionStrength;
             return this;
+        }
+        
+        public Builder withDecayFactor(float decayFactor) {
+        	this.decayFactor = decayFactor;
+        	return this;
         }
         
         public Builder withEffectiveDistance(int effectiveDistance) {
@@ -144,6 +151,7 @@ public class EntityFlashGrenade extends AbstractEntityGrenade {
             entityGrenade.itemGrenade = itemGrenade;
             entityGrenade.destroyBlocks = isDestroyingBlocks;
             entityGrenade.effectiveDistance = effectiveDistance;
+            entityGrenade.decayFactor = decayFactor;
 
             return entityGrenade;
         }
@@ -165,6 +173,7 @@ public class EntityFlashGrenade extends AbstractEntityGrenade {
         buffer.writeLong(explosionTimeout);
         buffer.writeFloat(explosionStrength);
         buffer.writeBoolean(destroyBlocks);
+        buffer.writeFloat(decayFactor);
     }
 
     @Override
@@ -174,6 +183,7 @@ public class EntityFlashGrenade extends AbstractEntityGrenade {
         explosionTimeout = buffer.readLong();
         explosionStrength = buffer.readFloat();
         destroyBlocks = buffer.readBoolean();
+        decayFactor = buffer.readFloat();
     }
 
     @Override
@@ -218,7 +228,7 @@ public class EntityFlashGrenade extends AbstractEntityGrenade {
                 LightExposure exposure = CompatibleExposureCapability.getExposure(nearbyEntity, LightExposure.class);
                 if(exposure == null) {
 //                    System.out.println("Entity " + nearbyEntity + " exposed to light dose " + dose);
-                    exposure = new LightExposure(compatibility.world(nearbyEntity).getTotalWorldTime(), 4000, dose);
+                    exposure = new LightExposure(compatibility.world(nearbyEntity).getTotalWorldTime(), 4000, dose, decayFactor);
                     CompatibleExposureCapability.updateExposure(nearbyEntity, exposure);
                 } else {
                     float totalDose = exposure.getTotalDose() + dose;
