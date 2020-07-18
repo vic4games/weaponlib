@@ -31,10 +31,13 @@ import com.vicmatskiv.weaponlib.compatibility.Interceptors;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
+import net.minecraft.client.renderer.ActiveRenderInfo;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.Vec3d;
 
 public class WeaponRenderer extends CompatibleWeaponRenderer {
 
@@ -1950,18 +1953,36 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 					+ ":textures/models/" + textureName));
 		}
 
-		//limbSwing, float flimbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scale
-		builder.getModel().render(null,
-				renderContext.getLimbSwing(),
-				renderContext.getFlimbSwingAmount(),
-				renderContext.getAgeInTicks(),
-				renderContext.getNetHeadYaw(),
-				renderContext.getHeadPitch(),
-				renderContext.getScale());
 
-		if(attachments != null) {
-			renderAttachments(positioner, renderContext, attachments);
+		double sqDistance = 0.0;
+		
+		if(player != null) {
+		    Vec3d projectView = net.minecraft.client.renderer.ActiveRenderInfo.projectViewFromEntity(
+		            Minecraft.getMinecraft().player, 
+		            renderContext.getAgeInTicks());
+		    sqDistance = projectView.squareDistanceTo(player.posX, player.posY, player.posZ);
 		}
+		
+//		System.out.println("Distance sq: " + sqDistance);
+		
+		Interceptors.setSquareDistanceToEntity(sqDistance);
+		try {
+		    builder.getModel().render(this.player,
+	                renderContext.getLimbSwing(),
+	                renderContext.getFlimbSwingAmount(),
+	                renderContext.getAgeInTicks(),
+	                renderContext.getNetHeadYaw(),
+	                renderContext.getHeadPitch(),
+	                renderContext.getScale());
+
+		    Interceptors.setSquareDistanceToEntity(sqDistance * 5);
+	        if(attachments != null) {
+	            renderAttachments(positioner, renderContext, attachments);
+	        }
+		} finally {
+		    Interceptors.setSquareDistanceToEntity(0.0);
+		}
+		
 	}
 
 	public void renderAttachments(Positioner<Part, RenderContext<RenderableState>> positioner, RenderContext<RenderableState> renderContext,List<CompatibleAttachment<? extends AttachmentContainer>> attachments) {
@@ -1995,6 +2016,12 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				positioner.position(itemAttachment.getRenderablePart(), renderContext);
 			}
 		}
+		
+		Entity renderViewEntity = Minecraft.getMinecraft().getRenderViewEntity();
+	    if(renderViewEntity == null) {
+	        renderViewEntity = Minecraft.getMinecraft().player;
+	    }
+	    double distanceSq = this.player != null ? renderViewEntity.getDistanceSqToEntity(this.player) : 0;
 
 		for(Tuple<ModelBase, String> texturedModel: compatibleAttachment.getAttachment().getTexturedModels()) {
 			Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(builder.getModId()
@@ -2004,13 +2031,16 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			if(compatibleAttachment.getModelPositioning() != null) {
 				compatibleAttachment.getModelPositioning().accept(texturedModel.getU());
 			}
-			texturedModel.getU().render(renderContext.getPlayer(),
-					renderContext.getLimbSwing(),
-					renderContext.getFlimbSwingAmount(),
-					renderContext.getAgeInTicks(),
-					renderContext.getNetHeadYaw(),
-					renderContext.getHeadPitch(),
-					renderContext.getScale());
+			//if(distanceSq < 49) {
+		         texturedModel.getU().render(renderContext.getPlayer(),
+		                    renderContext.getLimbSwing(),
+		                    renderContext.getFlimbSwingAmount(),
+		                    renderContext.getAgeInTicks(),
+		                    renderContext.getNetHeadYaw(),
+		                    renderContext.getHeadPitch(),
+		                    renderContext.getScale());
+			//}
+
 
 			GL11.glPopAttrib();
 			GL11.glPopMatrix();

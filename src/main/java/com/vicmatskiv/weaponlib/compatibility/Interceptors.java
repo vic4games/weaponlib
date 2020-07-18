@@ -3,10 +3,12 @@ package com.vicmatskiv.weaponlib.compatibility;
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.lwjgl.opengl.GL11;
 
+import com.vicmatskiv.weaponlib.OptimizedCubeList;
 import com.vicmatskiv.weaponlib.ClientModContext;
 import com.vicmatskiv.weaponlib.Part;
 import com.vicmatskiv.weaponlib.PlayerRenderer;
@@ -22,6 +24,7 @@ import com.vicmatskiv.weaponlib.inventory.CustomPlayerInventory;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelBiped;
+import net.minecraft.client.model.ModelBox;
 import net.minecraft.client.model.ModelPlayer;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms.TransformType;
 import net.minecraft.client.renderer.entity.RenderLivingBase;
@@ -271,5 +274,44 @@ public class Interceptors {
         return player instanceof EntityPlayer && isProning((EntityPlayer) player) 
                 && Minecraft.getMinecraft().gameSettings.thirdPersonView == 0 ? position 
                 + player.getEyeHeight() * 1.6f : position;
+    }
+
+    private static double sqDistanceToEntity;
+    
+    public static void setSquareDistanceToEntity(double d) {
+        sqDistanceToEntity = d;
+    }
+    
+    public static boolean shouldRender(List<ModelBox> cubeList) {
+        if(sqDistanceToEntity <= 0.1) {
+            return true;
+        }
+        OptimizedCubeList acubeList = (OptimizedCubeList) cubeList;
+        float maxVol = acubeList.getMaxVol();
+//        boolean shouldRender = true;
+        if(sqDistanceToEntity > 144 && maxVol <= 25f) {
+            return false;
+        }
+        if(sqDistanceToEntity > 100 && maxVol <= 12f) {
+            return false;
+        } 
+        if(sqDistanceToEntity > 64 && maxVol <= 9f) {
+            return false;
+        } 
+        if(sqDistanceToEntity > 25 && maxVol <= 6f) {
+            return false;
+        } 
+        if(sqDistanceToEntity > 16 && maxVol <= 4f) {
+            return false;
+        } 
+        if(sqDistanceToEntity > 9 && maxVol <= 2f) {
+            return false;
+        }
+        if(sqDistanceToEntity > 4 && maxVol <= 1f) {
+            return false;
+        }
+//        System.out.println("Should render: " + shouldRender 
+//                + ", distance: " + sqDistanceToEntity + ", maxVol: " + maxVol);
+        return true;
     }
 }

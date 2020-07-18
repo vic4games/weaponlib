@@ -79,6 +79,12 @@ public class CompatibleClassInfoProvider {
                 .addMethodInfo2("knockBack", "(Lnet/minecraft/entity/Entity;FDD)V", "a", "(Lvg;FDD)V")
                 );
         
+        classInfoMap.put("net/minecraft/client/model/ModelRenderer", 
+                new ClassInfo("net/minecraft/client/model/ModelRenderer", "brs")
+                .addMethodInfo2("render", "(F)V", "a", "(F)V")
+                .addFieldInfo("cubeList", "Lnet/minecraft/client/renderer/entity/RenderLivingBase;", "field_78804_l", "Lcaa;")
+                );
+        
     }
 
     private static CompatibleClassInfoProvider instance = new CompatibleClassInfoProvider();
