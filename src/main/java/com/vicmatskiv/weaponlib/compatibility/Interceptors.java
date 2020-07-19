@@ -3,11 +3,13 @@ package com.vicmatskiv.weaponlib.compatibility;
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Matrix4f;
 
+import com.vicmatskiv.weaponlib.OptimizedCubeList;
 import com.vicmatskiv.weaponlib.ClientModContext;
 import com.vicmatskiv.weaponlib.Part;
 import com.vicmatskiv.weaponlib.PlayerRenderer;
@@ -26,6 +28,7 @@ import com.vicmatskiv.weaponlib.vehicle.VehicleSuspensionStrategy;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelBiped;
+import net.minecraft.client.model.ModelBox;
 import net.minecraft.client.model.ModelPlayer;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms.TransformType;
 import net.minecraft.client.renderer.entity.RenderLivingBase;
@@ -349,5 +352,21 @@ public class Interceptors {
 
         player.prevRotationPitch += player.rotationPitch - originalPitch;
         player.prevRotationYaw += player.rotationYaw - originalYaw;
+    }
+
+    private static double sqDistanceToEntity;
+    
+    public static void setSquareDistanceToEntity(double d) {
+        sqDistanceToEntity = d;
+    }
+    
+    public static boolean shouldRender(List<ModelBox> cubeList) {
+        if(sqDistanceToEntity <= 0.1) {
+            return true;
+        }
+        OptimizedCubeList acubeList = (OptimizedCubeList) cubeList;
+        float vol = acubeList.getMaxVol();
+        float volThreshold = (int)sqDistanceToEntity >> 2;
+        return vol > volThreshold;
     }
 }

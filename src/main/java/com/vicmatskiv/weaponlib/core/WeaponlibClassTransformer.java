@@ -3,11 +3,13 @@ package com.vicmatskiv.weaponlib.core;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 import com.vicmatskiv.weaponlib.ClassInfo;
+import com.vicmatskiv.weaponlib.OptimizedCubeList;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClassInfoProvider;
 
 import net.minecraft.item.ItemBlock;
@@ -54,6 +56,9 @@ public class WeaponlibClassTransformer implements IClassTransformer {
     private static ClassInfo entityLivingBaseClassInfo = CompatibleClassInfoProvider.getInstance()
             .getClassInfo("net/minecraft/entity/EntityLivingBase");
     
+    private static ClassInfo modelRendererClassInfo = CompatibleClassInfoProvider.getInstance()
+            .getClassInfo("net/minecraft/client/model/ModelRenderer");
+    
     private static class UpdateCameraAndRenderMethodVisitor extends MethodVisitor {
 
         public UpdateCameraAndRenderMethodVisitor(MethodVisitor mv) {
@@ -69,6 +74,29 @@ public class WeaponlibClassTransformer implements IClassTransformer {
             } else {
                 super.visitMethodInsn(opcode, owner, name, desc, itf);
             }
+        }
+    }
+    
+    public byte[] transform(String par1, String className, byte[] bytecode) {
+        if (entityRendererClassInfo.classMatches(className) || 
+                (renderBipedClassInfo != null && renderBipedClassInfo.classMatches(className)) ||
+                (modelBipedClassInfo != null && modelBipedClassInfo.classMatches(className)) ||
+                (modelPlayerClassInfo != null && modelPlayerClassInfo.classMatches(className)) ||
+                (renderLivingBaseClassInfo != null && renderLivingBaseClassInfo.classMatches(className)) ||
+                (layerArmorBaseClassInfo != null && layerArmorBaseClassInfo.classMatches(className)) ||
+                (layerHeldItemClassInfo != null && layerHeldItemClassInfo.classMatches(className)) ||
+                (entityPlayerSPClassInfo != null && entityPlayerSPClassInfo.classMatches(className)) ||
+                (entityPlayerMPClassInfo != null && entityPlayerMPClassInfo.classMatches(className)) ||
+                (entityLivingBaseClassInfo != null && entityLivingBaseClassInfo.classMatches(className)) ||
+                (modelRendererClassInfo != null && modelRendererClassInfo.classMatches(className))
+                ) {
+            ClassReader cr = new ClassReader(bytecode);
+            ClassWriter cw = new ClassWriter(cr, 1);
+            CVTransform cv = new CVTransform(cw);
+            cr.accept(cv, 0);
+            return cw.toByteArray();
+        } else {
+            return bytecode;
         }
     }
     
@@ -137,28 +165,6 @@ public class WeaponlibClassTransformer implements IClassTransformer {
                 mv.visitMethodInsn(Opcodes.INVOKESTATIC, "com/vicmatskiv/weaponlib/compatibility/Interceptors", "nauseaCameraEffect", "(F)Z", false);
                 mv.visitJumpInsn(Opcodes.IFEQ, label);
             }
-        }
-    }
-
-    public byte[] transform(String par1, String className, byte[] bytecode) {
-        if (entityRendererClassInfo.classMatches(className) || 
-                (renderBipedClassInfo != null && renderBipedClassInfo.classMatches(className)) ||
-                (modelBipedClassInfo != null && modelBipedClassInfo.classMatches(className)) ||
-                (modelPlayerClassInfo != null && modelPlayerClassInfo.classMatches(className)) ||
-                (renderLivingBaseClassInfo != null && renderLivingBaseClassInfo.classMatches(className)) ||
-                (layerArmorBaseClassInfo != null && layerArmorBaseClassInfo.classMatches(className)) ||
-                (layerHeldItemClassInfo != null && layerHeldItemClassInfo.classMatches(className)) ||
-                (entityPlayerSPClassInfo != null && entityPlayerSPClassInfo.classMatches(className)) ||
-                (entityPlayerMPClassInfo != null && entityPlayerMPClassInfo.classMatches(className)) ||
-                (entityLivingBaseClassInfo != null && entityLivingBaseClassInfo.classMatches(className))
-                ) {
-            ClassReader cr = new ClassReader(bytecode);
-            ClassWriter cw = new ClassWriter(cr, 1);
-            CVTransform cv = new CVTransform(cw);
-            cr.accept(cv, 0);
-            return cw.toByteArray();
-        } else {
-            return bytecode;
         }
     }
     
@@ -352,6 +358,54 @@ public class WeaponlibClassTransformer implements IClassTransformer {
             }
         }
     }
+
+    
+    private static class ModelRendererConstructorVisitor extends MethodVisitor {
+
+        public ModelRendererConstructorVisitor(MethodVisitor mv) {
+            super(Opcodes.ASM4, mv);
+        }
+      
+        @Override
+        public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
+            if(opcode == Opcodes.INVOKESTATIC 
+                    && owner.equals("com/google/common/collect/Lists")
+                    && name.equals("newArrayList")) {  
+                String cubeListClassName = OptimizedCubeList.class.getName().replace('.', '/');
+                mv.visitMethodInsn(Opcodes.INVOKESTATIC, cubeListClassName, "newList", "()L" + cubeListClassName + ";", false);
+            } else {
+                super.visitMethodInsn(opcode, owner, name, desc, itf);
+            }
+        }
+    }
+    
+    private static class ModelRendererRenderMethodVisitor extends MethodVisitor {
+            
+        private boolean transformed;
+        private boolean notchMode;
+        
+        public ModelRendererRenderMethodVisitor(MethodVisitor mv, boolean notchMode) {
+            super(Opcodes.ASM4, mv);
+            this.notchMode = notchMode;
+        }
+
+        @Override
+        public void visitJumpInsn(int opcode, Label label) {
+            super.visitJumpInsn(opcode, label);
+            if(!transformed && opcode == Opcodes.IFNE) {
+                String fieldName = "cubeList";
+                if(notchMode) {
+                    fieldName = modelRendererClassInfo.getNotchFieldName(fieldName);
+                }
+                
+                mv.visitVarInsn(Opcodes.ALOAD, 0);
+                mv.visitFieldInsn(Opcodes.GETFIELD, modelRendererClassInfo.getMcpClassName(), fieldName, "Ljava/util/List;");
+                mv.visitMethodInsn(Opcodes.INVOKESTATIC, "com/vicmatskiv/weaponlib/compatibility/Interceptors", "shouldRender", "(Ljava/util/List;)Z", false);
+                mv.visitJumpInsn(Opcodes.IFEQ, label);
+                transformed = true;
+            }
+        }
+    }
     
     private static class AttackEntityFromMethodVisitor extends MethodVisitor {
         
@@ -402,7 +456,36 @@ public class WeaponlibClassTransformer implements IClassTransformer {
         public void visit(int version, int access, String name, String signature, String superName,
                 String[] interfaces) {
             this.classname = name;
+//            if(entityRendererClassInfo.classMatches(name)) {
+//                
+//            }
             this.cv.visit(version, access, name, signature, superName, interfaces);
+        }
+        
+//        public void visit(int version, int access, String name, String signature, String superName,
+//                String[] interfaces) {
+//            this.classname = name;
+//            if (worldServerClassInfo.classMatches(classname)) {
+//                if(interfaces == null) {
+//                    interfaces = new String[] { "com/vicmatskiv/weaponlib/compatibility/CompatibleEntityProvider" };
+//                } else {
+//                    String[] updatedInterfaces = new String[interfaces.length + 1];
+//                    System.arraycopy(interfaces, 0, updatedInterfaces, 0, interfaces.length);
+//                    updatedInterfaces[updatedInterfaces.length - 1] = "com/vicmatskiv/weaponlib/compatibility/CompatibleEntityProvider";
+//                    interfaces = updatedInterfaces;
+//                }
+//            }
+//            cv.visit(version, access, name, signature, superName, interfaces);
+//        }
+        
+        @Override
+        public void visitSource(String source, String debug) {
+            if (modelRendererClassInfo.classMatches(classname)) {
+                FieldVisitor fv = cv.visitField(Opcodes.ACC_PRIVATE, "maxVolume", "F", null, null);
+                fv.visitEnd();
+            }
+
+            super.visitSource(source, debug);
         }
 
         public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
@@ -446,6 +529,15 @@ public class WeaponlibClassTransformer implements IClassTransformer {
             } else if(entityLivingBaseClassInfo != null 
                     && entityLivingBaseClassInfo.methodMatches("attackEntityFrom", "(Lnet/minecraft/util/DamageSource;F)Z", classname, name, desc)) {
                 return new AttackEntityFromMethodVisitor(cv.visitMethod(access, name, desc, signature, exceptions));
+            } else if(entityLivingBaseClassInfo != null 
+                    && entityLivingBaseClassInfo.methodMatches("attackEntityFrom", "(Lnet/minecraft/util/DamageSource;F)Z", classname, name, desc)) {
+                return new AttackEntityFromMethodVisitor(cv.visitMethod(access, name, desc, signature, exceptions));
+            } else if(modelRendererClassInfo.classMatches(classname) && name.equals("<init>")) {
+                return new ModelRendererConstructorVisitor(cv.visitMethod(access, name, desc, signature, exceptions));
+            } else if(modelRendererClassInfo != null 
+                    && modelRendererClassInfo.methodMatches("render", "(F)V", classname, name, desc)) {
+                return new ModelRendererRenderMethodVisitor(
+                        cv.visitMethod(access, name, desc, signature, exceptions), !name.equals("render"));
             }
 
             return this.cv.visitMethod(access, name, desc, signature, exceptions);
