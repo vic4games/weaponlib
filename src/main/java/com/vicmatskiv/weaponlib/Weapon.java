@@ -1030,6 +1030,7 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         PlayerWeaponInstance mainHandHeldWeaponInstance = modContext.getMainHeldWeapon();
         if(mainHandHeldWeaponInstance != null
                 && (mainHandHeldWeaponInstance.getState() == WeaponState.READY
+                || mainHandHeldWeaponInstance.getState() == WeaponState.PAUSED
                 || mainHandHeldWeaponInstance.getState() == WeaponState.EJECT_REQUIRED)
                 ) {
             mainHandHeldWeaponInstance.setAimed(!mainHandHeldWeaponInstance.isAimed());

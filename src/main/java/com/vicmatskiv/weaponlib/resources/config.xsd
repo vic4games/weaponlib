@@ -50,6 +50,7 @@
 	<attribute name="knockbackOnHit" type="boolean"></attribute>
 	<attribute name="muzzleEffects" type="boolean"></attribute>
 	<attribute name="blurOnAim" type="boolean"></attribute>
+	<attribute name="renderOptimization" type="float"></attribute>
     </complexType>
 
     <complexType name="Gui">

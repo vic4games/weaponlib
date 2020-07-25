@@ -815,6 +815,42 @@ public class Compatibility1_12_2 implements Compatibility {
                 || block == Blocks.HAY_BLOCK
                 || block == Blocks.DOUBLE_PLANT
                 || block == Blocks.WEB
+                || block == Blocks.ACACIA_FENCE
+                || block == Blocks.ACACIA_FENCE_GATE
+                || block == Blocks.ACACIA_STAIRS
+                || block == Blocks.BARRIER
+                || block == Blocks.BEETROOTS
+                || block == Blocks.BIRCH_FENCE
+                || block == Blocks.BIRCH_FENCE_GATE
+                || block == Blocks.BIRCH_STAIRS
+                || block == Blocks.CAKE
+                || block == Blocks.CARPET
+                || block == Blocks.CARROTS
+                || block == Blocks.COCOA
+                || block == Blocks.DARK_OAK_FENCE
+                || block == Blocks.DARK_OAK_FENCE_GATE
+                || block == Blocks.DARK_OAK_STAIRS
+                || block == Blocks.GLASS
+                || block == Blocks.GLASS_PANE
+                || block == Blocks.GLOWSTONE
+                || block == Blocks.IRON_BARS
+                || block == Blocks.LADDER
+                || block == Blocks.LEVER
+                || block == Blocks.OAK_FENCE
+                || block == Blocks.OAK_FENCE_GATE
+                || block == Blocks.OAK_STAIRS
+                || block == Blocks.PLANKS
+                || block == Blocks.POTATOES
+                || block == Blocks.REDSTONE_TORCH
+                || block == Blocks.SAPLING
+                || block == Blocks.TORCH
+                || block == Blocks.TRAPDOOR
+                || block == Blocks.VINE
+                || block == Blocks.WALL_BANNER
+                || block == Blocks.WALL_SIGN
+                || block == Blocks.WATERLILY
+                || block == Blocks.WOODEN_SLAB
+                || block == Blocks.DOUBLE_WOODEN_SLAB
                 || block == Blocks.WHEAT;
     }
     

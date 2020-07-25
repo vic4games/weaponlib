@@ -50,6 +50,8 @@ public class Projectiles {
     protected Boolean muzzleEffects;
     @XmlAttribute(name = "blurOnAim")
     protected Boolean blurOnAim;
+    @XmlAttribute(name = "renderOptimization")
+    protected Float renderOptimization;
 
     /**
      * Gets the value of the gun property.
@@ -200,4 +202,11 @@ public class Projectiles {
         this.blurOnAim = value;
     }
 
+    public Float getRenderOptimization() {
+        return renderOptimization;
+    }
+
+    public void setRenderOptimization(Float renderOptimization) {
+        this.renderOptimization = renderOptimization;
+    }
 }

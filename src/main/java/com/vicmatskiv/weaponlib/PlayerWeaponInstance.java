@@ -468,7 +468,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 //        float f = player.distanceWalkedModified - player.prevDistanceWalkedModified;
 //        float f1 = -(player.distanceWalkedModified + f * partialTicks);
         float f2 = player.prevCameraYaw + (player.cameraYaw - player.prevCameraYaw) * partialTicks;
-        return -6.5f * f2 + 0.55f;
+        return -2f * f2 + 0.55f;
     }
 
     private float getAimChangeProgress() {

@@ -477,16 +477,16 @@ public class WeaponlibClassTransformer implements IClassTransformer {
 //            }
 //            cv.visit(version, access, name, signature, superName, interfaces);
 //        }
-        
-        @Override
-        public void visitSource(String source, String debug) {
-            if (modelRendererClassInfo.classMatches(classname)) {
-                FieldVisitor fv = cv.visitField(Opcodes.ACC_PRIVATE, "maxVolume", "F", null, null);
-                fv.visitEnd();
-            }
-
-            super.visitSource(source, debug);
-        }
+//        
+//        @Override
+//        public void visitSource(String source, String debug) {
+//            if (modelRendererClassInfo.classMatches(classname)) {
+//                FieldVisitor fv = cv.visitField(Opcodes.ACC_PRIVATE, "maxVolume", "F", null, null);
+//                fv.visitEnd();
+//            }
+//
+//            super.visitSource(source, debug);
+//        }
 
         public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
             if(entityRendererClassInfo.methodMatches("setupCameraTransform", "(FI)V", classname, name, desc)) {

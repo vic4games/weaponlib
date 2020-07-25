@@ -354,19 +354,16 @@ public class Interceptors {
         player.prevRotationYaw += player.rotationYaw - originalYaw;
     }
 
-    private static double sqDistanceToEntity;
+    private static double volumeThreshold;
     
-    public static void setSquareDistanceToEntity(double d) {
-        sqDistanceToEntity = d;
+    public static void setRenderVolumeThreshold(double d) {
+        volumeThreshold = d;
     }
     
     public static boolean shouldRender(List<ModelBox> cubeList) {
-        if(sqDistanceToEntity <= 0.1) {
+        if(volumeThreshold <= 0.1) {
             return true;
         }
-        OptimizedCubeList acubeList = (OptimizedCubeList) cubeList;
-        float vol = acubeList.getMaxVol();
-        float volThreshold = (int)sqDistanceToEntity >> 2;
-        return vol > volThreshold;
+        return ((OptimizedCubeList) cubeList).getMaxVol() > volumeThreshold;
     }
 }

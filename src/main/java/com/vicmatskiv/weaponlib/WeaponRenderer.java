@@ -28,10 +28,10 @@ import com.vicmatskiv.weaponlib.animation.MultipartTransitionProvider;
 import com.vicmatskiv.weaponlib.animation.Transition;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponRenderer;
 import com.vicmatskiv.weaponlib.compatibility.Interceptors;
+import com.vicmatskiv.weaponlib.config.Projectiles;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
-import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
@@ -1956,16 +1956,24 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 
 		double sqDistance = 0.0;
 		
-		if(player != null) {
+		if(player != null && player != Minecraft.getMinecraft().player) {
 		    Vec3d projectView = net.minecraft.client.renderer.ActiveRenderInfo.projectViewFromEntity(
 		            Minecraft.getMinecraft().player, 
 		            renderContext.getAgeInTicks());
 		    sqDistance = projectView.squareDistanceTo(player.posX, player.posY, player.posZ);
 		}
 		
-//		System.out.println("Distance sq: " + sqDistance);
+		Float renderOptimization = null;
+		Projectiles projectilesConfig = clientModContext.configurationManager.getProjectiles();
+		if(projectilesConfig != null) {
+		      renderOptimization = projectilesConfig.getRenderOptimization();
+		}
+		if(renderOptimization == null) {
+		    renderOptimization = 0.25f;
+		}
+		double volumeThreshold = sqDistance * renderOptimization;
 		
-		Interceptors.setSquareDistanceToEntity(sqDistance);
+		Interceptors.setRenderVolumeThreshold(volumeThreshold);
 		try {
 		    builder.getModel().render(this.player,
 	                renderContext.getLimbSwing(),
@@ -1975,12 +1983,14 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 	                renderContext.getHeadPitch(),
 	                renderContext.getScale());
 
-		    Interceptors.setSquareDistanceToEntity(sqDistance * 5);
-	        if(attachments != null) {
-	            renderAttachments(positioner, renderContext, attachments);
-	        }
+		    if(sqDistance < 900) {
+		    	    Interceptors.setRenderVolumeThreshold(volumeThreshold);
+		        if(attachments != null) {
+		            renderAttachments(positioner, renderContext, attachments);
+		        }
+		    }
 		} finally {
-		    Interceptors.setSquareDistanceToEntity(0.0);
+		    Interceptors.setRenderVolumeThreshold(0.0);
 		}
 		
 	}
@@ -2021,7 +2031,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 	    if(renderViewEntity == null) {
 	        renderViewEntity = Minecraft.getMinecraft().player;
 	    }
-	    double distanceSq = this.player != null ? renderViewEntity.getDistanceSqToEntity(this.player) : 0;
+//	    double distanceSq = this.player != null ? renderViewEntity.getDistanceSqToEntity(this.player) : 0;
 
 		for(Tuple<ModelBase, String> texturedModel: compatibleAttachment.getAttachment().getTexturedModels()) {
 			Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(builder.getModId()
