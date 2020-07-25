@@ -276,50 +276,16 @@ public class Interceptors {
                 + player.getEyeHeight() * 1.6f : position;
     }
 
-    private static double sqDistanceToEntity;
+    private static double volumeThreshold;
     
-    public static void setSquareDistanceToEntity(double d) {
-        sqDistanceToEntity = d;
+    public static void setRenderVolumeThreshold(double d) {
+        volumeThreshold = d;
     }
     
     public static boolean shouldRender(List<ModelBox> cubeList) {
-        if(sqDistanceToEntity <= 0.1) {
+        if(volumeThreshold <= 0.1) {
             return true;
         }
-        OptimizedCubeList acubeList = (OptimizedCubeList) cubeList;
-        float vol = acubeList.getMaxVol();
-        int volThreshold = (int)sqDistanceToEntity >> 2;
-        return vol > volThreshold;
-//        boolean shouldRender = true;
-//        if(sqDistanceToEntity > 100 && maxVol <= 100f) {
-//            return false;
-//        }
-//        if(sqDistanceToEntity > 81 && maxVol <= 64f) {
-//            return false;
-//        }
-//        if(sqDistanceToEntity > 64 && maxVol <= 49f) {
-//            return false;
-//        }
-//        if(sqDistanceToEntity > 49 && maxVol <= 25f) {
-//            return false;
-//        } 
-//        if(sqDistanceToEntity > 36 && maxVol <= 16f) {
-//            return false;
-//        } 
-//        if(sqDistanceToEntity > 25 && maxVol <= 9f) {
-//            return false;
-//        } 
-//        if(sqDistanceToEntity > 16 && maxVol <= 6f) {
-//            return false;
-//        } 
-//        if(sqDistanceToEntity > 9 && maxVol <= 4f) {
-//            return false;
-//        }
-//        if(sqDistanceToEntity > 4 && maxVol <= 1f) {
-//            return false;
-//        }
-//        System.out.println("Should render: " + shouldRender 
-//                + ", distance: " + sqDistanceToEntity + ", maxVol: " + maxVol);
-//        return true;
+        return ((OptimizedCubeList) cubeList).getMaxVol() > volumeThreshold;
     }
 }

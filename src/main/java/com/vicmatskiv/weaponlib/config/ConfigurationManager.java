@@ -33,6 +33,9 @@ public class ConfigurationManager {
 
     private static final float BLEEDING_ON_HIT_COEFFICIENT_MIN = 0f;
     private static final float BLEEDING_ON_HIT_COEFFICIENT_MAX = 1f;
+    
+    private static final float RENDER_OPTIMIZATION_MIN = 0f;
+    private static final float RENDER_OPTIMIZATION_MAX = 1f;
 
     private static final int ORE_MIN_PER_CHUNK = 0;
     private static final int ORE_MAX_PER_CHUNK = 50;
@@ -103,7 +106,7 @@ public class ConfigurationManager {
                 JAXBElement<Configuration> configElement = jaxbUnmarshaller.unmarshal(source, Configuration.class);
                 return configElement.getValue();
             } catch (JAXBException e) {
-                logger.error("Failed to parse configuration: " + e, e);
+                System.err.println("Failed to parse configuration: " + e);
                 return null;
             }
         }
@@ -198,7 +201,16 @@ public class ConfigurationManager {
 
             if(userConfig != null) {
                 if(userConfig.getProjectiles() != null) {
-
+                    
+                    Float renderOptimization = userConfig.getProjectiles().getRenderOptimization();
+                    if(renderOptimization != null) {
+                        if(renderOptimization < RENDER_OPTIMIZATION_MIN) {
+                            renderOptimization = RENDER_OPTIMIZATION_MIN;
+                        } else if(renderOptimization > RENDER_OPTIMIZATION_MAX) {
+                            renderOptimization = RENDER_OPTIMIZATION_MAX;
+                        }
+                        defaultUpdatableConfig.getProjectiles().setRenderOptimization(renderOptimization);
+                    }
                     Float bleedingOnHit = userConfig.getProjectiles().getBleedingOnHit();
                     if(bleedingOnHit != null) {
                         if(bleedingOnHit < BLEEDING_ON_HIT_COEFFICIENT_MIN) {
