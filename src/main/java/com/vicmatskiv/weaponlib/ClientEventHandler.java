@@ -97,7 +97,7 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 	        if(currentSlotIndex != newSlotIndex) {
 	            //modContext.getWeaponReloadAspect().updateMainHeldItem(player);
 	            currentSlotIndex = newSlotIndex;
-	            System.out.println("Changed active slot to " + newSlotIndex);
+//	            System.out.println("Changed active slot to " + newSlotIndex);
 	            modContext.getWeaponReloadAspect().drawMainHeldItem(player);
 	        }
 	    }

@@ -16,10 +16,11 @@ public class LightExposure extends UniversalObject implements Exposure {
     public LightExposure() {}
     
     
-    public LightExposure(long lastExposureTimestamp, long maxDuration, float dose) {
+    public LightExposure(long lastExposureTimestamp, long maxDuration, float dose, float decayFactor) {
         this.lastExposureTimestamp = lastExposureTimestamp;
         this.maxDuration = maxDuration;
         this.totalDose = dose;
+        this.decayFactor = decayFactor;
     }
 
     public float getTotalDose() {

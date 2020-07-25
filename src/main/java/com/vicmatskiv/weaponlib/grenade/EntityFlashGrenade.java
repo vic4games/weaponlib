@@ -185,15 +185,15 @@ public class EntityFlashGrenade extends AbstractEntityGrenade {
                 }
                 LightExposure exposure = CompatibleExposureCapability.getExposure(nearbyEntity, LightExposure.class);
                 if(exposure == null) {
-                    System.out.println("Entity " + nearbyEntity + " exposed to light dose " + dose);
-                    exposure = new LightExposure(compatibility.world(nearbyEntity).getTotalWorldTime(), 4000, dose);
+//                    System.out.println("Entity " + nearbyEntity + " exposed to light dose " + dose);
+                    exposure = new LightExposure(compatibility.world(nearbyEntity).getTotalWorldTime(), 4000, dose, 0.99f);
                     CompatibleExposureCapability.updateExposure(nearbyEntity, exposure);
                 } else {
                     float totalDose = exposure.getTotalDose() + dose;
                     if(totalDose > 1f) {
                         totalDose = 1f;
                     }
-                    System.out.println("Entity " + nearbyEntity + " exposed to light dose " + totalDose);
+//                    System.out.println("Entity " + nearbyEntity + " exposed to light dose " + totalDose);
                     exposure.setTotalDose(totalDose);
                     CompatibleExposureCapability.updateExposure(nearbyEntity, exposure);
                 }
@@ -235,8 +235,12 @@ public class EntityFlashGrenade extends AbstractEntityGrenade {
         double posY = this.posY + yOffset;
         double posZ = this.posZ + zOffset;
         final CompatibleVec3 grenadePos = new CompatibleVec3(posX, posY, posZ);
+//        BiPredicate<Block, CompatibleBlockState> isCollidable = (block, blockMetadata) -> 
+//            block != Blocks.GLASS && block != Blocks.GLASS_PANE && compatibility.canCollideCheck(block, blockMetadata, false);
+            
         BiPredicate<Block, CompatibleBlockState> isCollidable = (block, blockMetadata) -> 
-            block != Blocks.GLASS && block != Blocks.GLASS_PANE && compatibility.canCollideCheck(block, blockMetadata, false);
+            !isTransparentBlock(block)
+            && compatibility.canCollideCheck(block, blockMetadata, false);
         
         EntityPlayer player = (EntityPlayer) nearbyEntity;
         Vec3d playerLookVec = player.getLook(1f);
@@ -246,23 +250,16 @@ public class EntityFlashGrenade extends AbstractEntityGrenade {
         double dotProduct = playerLookVec.dotProduct(playerGrenadeVector);
         double cos = dotProduct / 
                 (MathHelper.sqrt(playerLookVec.lengthSquared()) * MathHelper.sqrt(playerGrenadeVector.lengthSquared()));
-        
-        System.out.println("Cos: " + cos);
-        
+                
         float exposureFactor = (float) ((cos + 1f)/ 2f);
         exposureFactor *= exposureFactor;
-        
-        System.out.println("Exposure factor: " + exposureFactor);
-        
+                
         final CompatibleVec3 compatiblePlayerEyePos = new CompatibleVec3(playerEyePosition.x, playerEyePosition.y, playerEyePosition.z);
         CompatibleRayTraceResult rayTraceResult = CompatibleRayTracing.rayTraceBlocks(compatibility.world(this), grenadePos, compatiblePlayerEyePos, isCollidable);
 
         float dose = 0f;
         if(rayTraceResult == null) {
             dose = exposureFactor * (1f - (float)playerGrenadeVector.lengthSquared() / (effectiveDistance * effectiveDistance)); 
-        } else {
-            CompatibleVec3 hitVec = rayTraceResult.getHitVec();
-            System.out.println("Hit vec: " + hitVec);
         }
         
         return dose;
@@ -270,5 +267,116 @@ public class EntityFlashGrenade extends AbstractEntityGrenade {
 
     public ItemGrenade getItemGrenade() {
         return itemGrenade;
+    }
+    
+    private boolean isTransparentBlock(Block block) {
+    	return block == Blocks.SAPLING
+        || block == Blocks.LEAVES
+        || block == Blocks.LEAVES2
+        || block == Blocks.GLASS
+        || block == Blocks.BED
+        || block == Blocks.GOLDEN_RAIL
+        || block == Blocks.DETECTOR_RAIL
+        || block == Blocks.WEB
+        || block == Blocks.TALLGRASS
+        || block == Blocks.DEADBUSH
+        || block == Blocks.PISTON_HEAD
+        || block == Blocks.PISTON_EXTENSION
+        || block == Blocks.YELLOW_FLOWER
+        || block == Blocks.RED_FLOWER
+        || block == Blocks.BROWN_MUSHROOM
+        || block == Blocks.RED_MUSHROOM
+        || block == Blocks.STONE_SLAB
+        || block == Blocks.TORCH
+        || block == Blocks.FIRE
+        || block == Blocks.MOB_SPAWNER
+        || block == Blocks.OAK_STAIRS
+        || block == Blocks.REDSTONE_WIRE
+        || block == Blocks.WHEAT
+        || block == Blocks.STANDING_SIGN
+        || block == Blocks.LADDER
+        || block == Blocks.RAIL
+        || block == Blocks.STONE_STAIRS
+        || block == Blocks.WALL_SIGN
+        || block == Blocks.LEVER
+        || block == Blocks.STONE_PRESSURE_PLATE
+        || block == Blocks.WOODEN_PRESSURE_PLATE
+        || block == Blocks.UNLIT_REDSTONE_TORCH
+        || block == Blocks.REDSTONE_TORCH
+        || block == Blocks.STONE_BUTTON
+        || block == Blocks.SNOW_LAYER
+        || block == Blocks.REEDS
+        || block == Blocks.OAK_FENCE
+        || block == Blocks.SPRUCE_FENCE
+        || block == Blocks.BIRCH_FENCE
+        || block == Blocks.JUNGLE_FENCE
+        || block == Blocks.DARK_OAK_FENCE
+        || block == Blocks.ACACIA_FENCE
+        || block == Blocks.PORTAL
+        || block == Blocks.CAKE
+        || block == Blocks.UNPOWERED_REPEATER
+        || block == Blocks.POWERED_REPEATER
+        || block == Blocks.MONSTER_EGG
+        || block == Blocks.IRON_BARS
+        || block == Blocks.GLASS_PANE
+        || block == Blocks.PUMPKIN_STEM
+        || block == Blocks.MELON_STEM
+        || block == Blocks.VINE
+        || block == Blocks.OAK_FENCE_GATE
+        || block == Blocks.SPRUCE_FENCE_GATE
+        || block == Blocks.BIRCH_FENCE_GATE
+        || block == Blocks.JUNGLE_FENCE_GATE
+        || block == Blocks.DARK_OAK_FENCE_GATE
+        || block == Blocks.ACACIA_FENCE_GATE
+        || block == Blocks.BRICK_STAIRS
+        || block == Blocks.STONE_BRICK_STAIRS
+        || block == Blocks.WATERLILY
+        || block == Blocks.NETHER_BRICK_FENCE
+        || block == Blocks.NETHER_BRICK_STAIRS
+        || block == Blocks.NETHER_WART
+        || block == Blocks.ENCHANTING_TABLE
+        || block == Blocks.BREWING_STAND
+        || block == Blocks.DRAGON_EGG
+        || block == Blocks.REDSTONE_LAMP
+        || block == Blocks.LIT_REDSTONE_LAMP
+        || block == Blocks.WOODEN_SLAB
+        || block == Blocks.COCOA
+        || block == Blocks.SANDSTONE_STAIRS
+        || block == Blocks.TRIPWIRE_HOOK
+        || block == Blocks.TRIPWIRE
+        || block == Blocks.SPRUCE_STAIRS
+        || block == Blocks.BIRCH_STAIRS
+        || block == Blocks.JUNGLE_STAIRS
+        || block == Blocks.FLOWER_POT
+        || block == Blocks.CARROTS
+        || block == Blocks.POTATOES
+        || block == Blocks.WOODEN_BUTTON
+        || block == Blocks.SKULL
+        || block == Blocks.ANVIL
+        || block == Blocks.LIGHT_WEIGHTED_PRESSURE_PLATE
+        || block == Blocks.HEAVY_WEIGHTED_PRESSURE_PLATE
+        || block == Blocks.UNPOWERED_COMPARATOR
+        || block == Blocks.POWERED_COMPARATOR
+        || block == Blocks.DAYLIGHT_DETECTOR
+        || block == Blocks.DAYLIGHT_DETECTOR_INVERTED
+        || block == Blocks.HOPPER
+        || block == Blocks.QUARTZ_STAIRS
+        || block == Blocks.ACTIVATOR_RAIL
+        || block == Blocks.DROPPER
+        || block == Blocks.BARRIER
+        || block == Blocks.CARPET
+        || block == Blocks.ACACIA_STAIRS
+        || block == Blocks.DARK_OAK_STAIRS
+        || block == Blocks.DOUBLE_PLANT
+        || block == Blocks.STAINED_GLASS
+        || block == Blocks.STAINED_GLASS_PANE
+        || block == Blocks.STANDING_BANNER
+        || block == Blocks.WALL_BANNER
+        || block == Blocks.RED_SANDSTONE_STAIRS
+        || block == Blocks.STONE_SLAB2
+        || block == Blocks.END_ROD
+        || block == Blocks.BEETROOTS
+        || block == Blocks.STRUCTURE_VOID
+        || block == Blocks.STRUCTURE_BLOCK;
     }
 }

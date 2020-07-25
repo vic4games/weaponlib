@@ -1956,7 +1956,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 
 		double sqDistance = 0.0;
 		
-		if(player != null) {
+		if(player != null && player != Minecraft.getMinecraft().player) {
 		    Vec3d projectView = net.minecraft.client.renderer.ActiveRenderInfo.projectViewFromEntity(
 		            Minecraft.getMinecraft().player, 
 		            renderContext.getAgeInTicks());
@@ -1975,10 +1975,12 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 	                renderContext.getHeadPitch(),
 	                renderContext.getScale());
 
-		    Interceptors.setSquareDistanceToEntity(sqDistance * 5);
-	        if(attachments != null) {
-	            renderAttachments(positioner, renderContext, attachments);
-	        }
+		    if(sqDistance < 900) {
+		    	Interceptors.setSquareDistanceToEntity(sqDistance * 1);
+		        if(attachments != null) {
+		            renderAttachments(positioner, renderContext, attachments);
+		        }
+		    }
 		} finally {
 		    Interceptors.setSquareDistanceToEntity(0.0);
 		}
@@ -2021,7 +2023,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 	    if(renderViewEntity == null) {
 	        renderViewEntity = Minecraft.getMinecraft().player;
 	    }
-	    double distanceSq = this.player != null ? renderViewEntity.getDistanceSqToEntity(this.player) : 0;
+//	    double distanceSq = this.player != null ? renderViewEntity.getDistanceSqToEntity(this.player) : 0;
 
 		for(Tuple<ModelBase, String> texturedModel: compatibleAttachment.getAttachment().getTexturedModels()) {
 			Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(builder.getModId()

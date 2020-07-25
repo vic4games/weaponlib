@@ -287,31 +287,39 @@ public class Interceptors {
             return true;
         }
         OptimizedCubeList acubeList = (OptimizedCubeList) cubeList;
-        float maxVol = acubeList.getMaxVol();
+        float vol = acubeList.getMaxVol();
+        int volThreshold = (int)sqDistanceToEntity >> 2;
+        return vol > volThreshold;
 //        boolean shouldRender = true;
-        if(sqDistanceToEntity > 144 && maxVol <= 25f) {
-            return false;
-        }
-        if(sqDistanceToEntity > 100 && maxVol <= 12f) {
-            return false;
-        } 
-        if(sqDistanceToEntity > 64 && maxVol <= 9f) {
-            return false;
-        } 
-        if(sqDistanceToEntity > 25 && maxVol <= 6f) {
-            return false;
-        } 
-        if(sqDistanceToEntity > 16 && maxVol <= 4f) {
-            return false;
-        } 
-        if(sqDistanceToEntity > 9 && maxVol <= 2f) {
-            return false;
-        }
-        if(sqDistanceToEntity > 4 && maxVol <= 1f) {
-            return false;
-        }
+//        if(sqDistanceToEntity > 100 && maxVol <= 100f) {
+//            return false;
+//        }
+//        if(sqDistanceToEntity > 81 && maxVol <= 64f) {
+//            return false;
+//        }
+//        if(sqDistanceToEntity > 64 && maxVol <= 49f) {
+//            return false;
+//        }
+//        if(sqDistanceToEntity > 49 && maxVol <= 25f) {
+//            return false;
+//        } 
+//        if(sqDistanceToEntity > 36 && maxVol <= 16f) {
+//            return false;
+//        } 
+//        if(sqDistanceToEntity > 25 && maxVol <= 9f) {
+//            return false;
+//        } 
+//        if(sqDistanceToEntity > 16 && maxVol <= 6f) {
+//            return false;
+//        } 
+//        if(sqDistanceToEntity > 9 && maxVol <= 4f) {
+//            return false;
+//        }
+//        if(sqDistanceToEntity > 4 && maxVol <= 1f) {
+//            return false;
+//        }
 //        System.out.println("Should render: " + shouldRender 
 //                + ", distance: " + sqDistanceToEntity + ", maxVol: " + maxVol);
-        return true;
+//        return true;
     }
 }
