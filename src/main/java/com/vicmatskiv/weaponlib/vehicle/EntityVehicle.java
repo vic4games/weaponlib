@@ -2,6 +2,7 @@ package com.vicmatskiv.weaponlib.vehicle;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -55,6 +56,7 @@ import net.minecraft.util.ReportedException;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -362,6 +364,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
      */
     public void onUpdate()
     {
+
         updateDriverInteractionEvent();
         
         this.previousStatus = this.status;
@@ -1355,7 +1358,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
     }
     
     
-    @Override
+//    @Override
     public void move(MoverType type, double x, double y, double z)
     {
         if (this.noClip)
@@ -1382,6 +1385,8 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
                 {
                     y = ((AxisAlignedBB)list1.get(k)).calculateYOffset(this.getEntityBoundingBox(), y);
                 }
+                
+                System.out.println("Requested yMove: " + requestedYOffset + ", actual: " + y);
 
                 this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0D, y, 0.0D));
             }
@@ -1466,6 +1471,8 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
                 }
 
                 axisalignedbb2 = axisalignedbb2.offset(0.0D, 0.0D, anotherZOffset);
+                
+                
                 AxisAlignedBB axisalignedbb4 = this.getEntityBoundingBox();
                 double calcYOffset = y;
                 int l2 = 0;
@@ -1476,6 +1483,8 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
                 }
 
                 axisalignedbb4 = axisalignedbb4.offset(0.0D, calcYOffset, 0.0D);
+                
+                
                 double calcXOffset = requestedXOffset;
                 int j3 = 0;
 
@@ -1485,6 +1494,8 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
                 }
 
                 axisalignedbb4 = axisalignedbb4.offset(calcXOffset, 0.0D, 0.0D);
+                
+                
                 double calcZOffset = requestedZOffset;
                 int l3 = 0;
 
@@ -1494,6 +1505,8 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
                 }
 
                 axisalignedbb4 = axisalignedbb4.offset(0.0D, 0.0D, calcZOffset);
+                
+                
                 double anotherSqDistance = anotherXOffset * anotherXOffset + anotherZOffset * anotherZOffset;
                 double calcSqDistance = calcXOffset * calcXOffset + calcZOffset * calcZOffset;
 
@@ -1528,6 +1541,8 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
                     z = originalZ;
                     this.setEntityBoundingBox(axisalignedbb1);
                 }
+            } else {
+                System.out.println("No step");
             }
 
             this.world.profiler.endSection();
@@ -1589,5 +1604,260 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 
             this.world.profiler.endSection();
         }
+    }
+    
+    // MC Heli try
+    
+    public static List<AxisAlignedBB> getCollidingBoundingBoxes(Entity par1Entity, AxisAlignedBB par2AxisAlignedBB) {
+        ArrayList<AxisAlignedBB> collidingBoundingBoxes = new ArrayList<>();
+        collidingBoundingBoxes.clear();
+        int i = MathHelper.floor(par2AxisAlignedBB.minX);
+        int j = MathHelper.floor(par2AxisAlignedBB.maxX + 1.0D);
+        int k = MathHelper.floor(par2AxisAlignedBB.minY);
+        int l = MathHelper.floor(par2AxisAlignedBB.maxY + 1.0D);
+        int i1 = MathHelper.floor(par2AxisAlignedBB.minZ);
+        int j1 = MathHelper.floor(par2AxisAlignedBB.maxZ + 1.0D);
+
+        MutableBlockPos mbs = new MutableBlockPos();
+        for (int d0 = i; d0 < j; ++d0) {
+            for (int l1 = i1; l1 < j1; ++l1) {
+                
+                if (par1Entity.world.isBlockLoaded(mbs.setPos(d0, 64, l1))) {
+                    for (int list = k - 1; list < l; ++list) {
+//                        compatibility.getBlockAtPosition(world, blockPos)
+                        
+                        mbs.setPos(d0, list, l1);
+                        IBlockState blockState = par1Entity.world.getBlockState(mbs);
+//                        Block block = par1Entity.world.getBlock(par1Entity.world, d0, list, l1);
+                        if (blockState != null) {
+                            blockState.addCollisionBoxToList(par1Entity.world, 
+                                    mbs, par2AxisAlignedBB, collidingBoundingBoxes, par1Entity, false);
+//                            block.addCollisionBoxesToList(par1Entity.world, d0, list, l1, par2AxisAlignedBB,
+//                                    collidingBoundingBoxes, par1Entity);
+                        }
+                    }
+                }
+            }
+        }
+
+        double arg14 = 0.25D;
+        List<Entity> arg15 = par1Entity.world.getEntitiesWithinAABBExcludingEntity(par1Entity,
+                par2AxisAlignedBB.expand(arg14, arg14, arg14));
+
+        for (int arg16 = 0; arg16 < arg15.size(); ++arg16) {
+            Entity entity = (Entity) arg15.get(arg16);
+            if (!(entity instanceof EntityLivingBase) /*&& !(entity instanceof MCH_EntitySeat)
+                    && !(entity instanceof MCH_EntityHitBox)*/) {
+                AxisAlignedBB axisalignedbb1 = entity.getEntityBoundingBox();
+                if (axisalignedbb1 != null && axisalignedbb1.intersects(par2AxisAlignedBB)) {
+                    collidingBoundingBoxes.add(axisalignedbb1);
+                }
+
+                axisalignedbb1 = par1Entity.getCollisionBox(entity);
+                if (axisalignedbb1 != null && axisalignedbb1.intersects(par2AxisAlignedBB)) {
+                    collidingBoundingBoxes.add(axisalignedbb1);
+                }
+            }
+        }
+
+        return collidingBoundingBoxes;
+      
+    }
+    
+//    @Override
+    public void moveNew(MoverType type, double moveX, double moveY, double moveZ) {
+        if (true /*this.getAcInfo() != null*/) {
+            
+            if(true) return;
+            
+            this.world.profiler.startSection("move");
+            this.height *= 0.4F;
+            
+            double originalPosX = this.posX;
+            double originalPosY = this.posY;
+            double originalPosZ = this.posZ;
+            
+            double requestedMoveX = moveX;
+            double requestedMoveY = moveY;
+            double requestedMoveZ = moveZ;
+            
+            AxisAlignedBB axisalignedbb = this.getEntityBoundingBox().offset(0, 0, 0); //.copy();
+            List<AxisAlignedBB> collidingBoxes = getCollidingBoundingBoxes(this, 
+                    this.getEntityBoundingBox().offset(moveX, moveY, moveZ));
+
+            for (int i = 0; i < collidingBoxes.size(); ++i) {
+                moveY = ((AxisAlignedBB) collidingBoxes.get(i)).calculateYOffset(this.getEntityBoundingBox(), moveY);
+            }
+
+//            this.boundingBox.offset(0.0D, moveY, 0.0D);
+            this.setEntityBoundingBox(getEntityBoundingBox().offset(0.0D, moveY, 0.0D));
+//            if (!this.field_70135_K && requestedMoveY != moveY) {
+//                moveZ = 0.0D;
+//                moveY = 0.0D;
+//                moveX = 0.0D;
+//            }
+
+            boolean yAdjustmentRequired = this.onGround || requestedMoveY != moveY && requestedMoveY < 0.0D;
+
+            for (int j = 0; j < collidingBoxes.size(); ++j) {
+                moveX = ((AxisAlignedBB) collidingBoxes.get(j)).calculateXOffset(this.getEntityBoundingBox(), moveX);
+            }
+
+            this.setEntityBoundingBox(this.getEntityBoundingBox().offset(moveX, 0.0D, 0.0D));
+//            if (!this.field_70135_K && requestedMoveX != moveX) {
+//                moveZ = 0.0D;
+//                moveY = 0.0D;
+//                moveX = 0.0D;
+//            }
+
+            for (int j = 0; j < collidingBoxes.size(); ++j) {
+                moveZ = ((AxisAlignedBB) collidingBoxes.get(j)).calculateZOffset(this.getEntityBoundingBox(), moveZ);
+            }
+
+            this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0D, 0.0D, moveZ));
+//            if (!this.field_70135_K && requestedMoveZ != moveZ) {
+//                moveZ = 0.0D;
+//                moveY = 0.0D;
+//                moveX = 0.0D;
+//            }
+
+            if (this.stepHeight > 0.0F && yAdjustmentRequired && this.height < 0.05F && (requestedMoveX != moveX || requestedMoveZ != moveZ)) {
+                double preStepMoveX = moveX;
+                double preStepMoveY = moveY;
+                double preStepMoveZ = moveZ;
+                moveX = requestedMoveX;
+                moveY = (double) this.stepHeight;
+                moveZ = requestedMoveZ;
+                AxisAlignedBB throwable = this.getEntityBoundingBox().offset(0, 0, 0); //this.boundingBox.copy();
+//                this.boundingBox.setBB(axisalignedbb);
+                this.setEntityBoundingBox(axisalignedbb);
+                collidingBoxes = getCollidingBoundingBoxes(this, this.getEntityBoundingBox().offset(requestedMoveX, moveY, requestedMoveZ));
+
+                for (int k = 0; k < collidingBoxes.size(); ++k) {
+                    moveY = ((AxisAlignedBB) collidingBoxes.get(k)).calculateYOffset(this.getEntityBoundingBox(), moveY);
+                }
+
+                this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0D, moveY, 0.0D));
+//                if (!this.field_70135_K && requestedMoveY != moveY) {
+//                    moveZ = 0.0D;
+//                    moveY = 0.0D;
+//                    moveX = 0.0D;
+//                }
+
+                for (int k = 0; k < collidingBoxes.size(); ++k) {
+                    moveX = ((AxisAlignedBB) collidingBoxes.get(k)).calculateXOffset(this.getEntityBoundingBox(), moveX);
+                }
+
+                this.setEntityBoundingBox(this.getEntityBoundingBox().offset(moveX, 0.0D, 0.0D));
+//                if (!this.field_70135_K && requestedMoveX != moveX) {
+//                    moveZ = 0.0D;
+//                    moveY = 0.0D;
+//                    moveX = 0.0D;
+//                }
+
+                for (int k = 0; k < collidingBoxes.size(); ++k) {
+                    moveZ = ((AxisAlignedBB) collidingBoxes.get(k)).calculateZOffset(this.getEntityBoundingBox(), moveZ);
+                }
+
+                this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0D, 0.0D, moveZ));
+//                if (!this.field_70135_K && requestedMoveZ != moveZ) {
+//                    moveZ = 0.0D;
+//                    moveY = 0.0D;
+//                    moveX = 0.0D;
+//                }
+
+//                if (!this.field_70135_K && requestedMoveY != moveY) {
+//                    moveZ = 0.0D;
+//                    moveY = 0.0D;
+//                    moveX = 0.0D;
+//                } else 
+                
+                {
+                    moveY = (double) (-this.stepHeight);
+
+                    for (int k = 0; k < collidingBoxes.size(); ++k) {
+                        moveY = ((AxisAlignedBB) collidingBoxes.get(k)).calculateYOffset(this.getEntityBoundingBox(), moveY);
+                    }
+
+                    this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0D, moveY, 0.0D));
+                }
+
+                if (preStepMoveX * preStepMoveX + preStepMoveZ * preStepMoveZ >= moveX * moveX + moveZ * moveZ) {
+                    moveX = preStepMoveX;
+                    moveY = preStepMoveY;
+                    moveZ = preStepMoveZ;
+//                    this.boundingBox.setBB(throwable);
+                    this.setEntityBoundingBox(throwable);
+                }
+            }
+
+            this.world.profiler.endSection();
+            this.world.profiler.startSection("rest");
+            this.posX = (this.getEntityBoundingBox().minX + this.getEntityBoundingBox().maxX) / 2.0D;
+            this.posY = this.getEntityBoundingBox().minY + (double) this.getYOffset()
+                    - (double) this.height;
+            this.posZ = (this.getEntityBoundingBox().minZ + this.getEntityBoundingBox().maxZ) / 2.0D;
+            this.isCollidedHorizontally = requestedMoveX != moveX || requestedMoveZ != moveZ;
+            this.isCollidedVertically = requestedMoveY != moveY;
+            this.onGround = requestedMoveY != moveY && requestedMoveY < 0.0D;
+            this.isCollided = this.isCollidedHorizontally || this.isCollidedVertically;
+            
+            int j6 = MathHelper.floor(this.posX);
+            int i1 = MathHelper.floor(this.posY - 0.20000000298023224D);
+            int k6 = MathHelper.floor(this.posZ);
+            BlockPos blockpos = new BlockPos(j6, i1, k6);
+            IBlockState iblockstate = this.world.getBlockState(blockpos);
+
+            if (iblockstate.getMaterial() == Material.AIR)
+            {
+                BlockPos blockpos1 = blockpos.down();
+                IBlockState iblockstate1 = this.world.getBlockState(blockpos1);
+                Block block1 = iblockstate1.getBlock();
+
+                if (block1 instanceof BlockFence || block1 instanceof BlockWall || block1 instanceof BlockFenceGate)
+                {
+                    iblockstate = iblockstate1;
+                    blockpos = blockpos1;
+                }
+            }
+
+//            this.updateFallState(y, this.onGround, iblockstate, blockpos);
+            
+            this.updateFallState(moveY, this.onGround, iblockstate, blockpos);
+            
+            if (requestedMoveX != moveX) {
+                this.motionX = 0.0D;
+            }
+
+            if (requestedMoveY != moveY) {
+                this.motionY = 0.0D;
+            }
+
+            if (requestedMoveZ != moveZ) {
+                this.motionZ = 0.0D;
+            }
+
+            // Unused code?
+//            double arg9999 = this.posX - originalPosX;
+//            arg9999 = this.posY - originalPosY;
+//            arg9999 = this.posZ - originalPosZ;
+
+            try {
+                this.doBlockCollisions();
+            } catch (Throwable arg32) {
+                CrashReport crashreport = CrashReport.makeCrashReport(arg32, "Checking entity tile collision");
+                CrashReportCategory crashreportcategory = crashreport
+                        .makeCategory("Entity being checked for collision");
+                this.addEntityCrashInfo(crashreportcategory);
+                throw new ReportedException(crashreport);
+            }
+
+            this.world.profiler.endSection();
+        }
+    }
+
+    private Object getAcInfo() {
+        // TODO Auto-generated method stub
+        return null;
     }
 }
