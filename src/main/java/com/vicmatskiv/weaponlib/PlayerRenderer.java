@@ -446,6 +446,7 @@ public class PlayerRenderer {
     private void renderLeftLeg(Positioner<Part, RenderContext<RenderableState>> positioner,
             ModelBiped modelPlayer, RenderContext<RenderableState> renderContext) {
         GL11.glPushMatrix();
+//        GL11.glScalef(1.01f, 1.01f, 1.01f);
         FloatBuffer preBuf = MatrixHelper.getModelViewMatrixBuffer();
         positioner.position(Part.LEFT_LEG, renderContext);
         FloatBuffer postBuf = MatrixHelper.getModelViewMatrixBuffer();
