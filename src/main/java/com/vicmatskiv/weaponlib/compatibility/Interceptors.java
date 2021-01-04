@@ -311,7 +311,7 @@ public class Interceptors {
         
         boolean canChangeRotationYaw = true;
         if(player.getRidingEntity() instanceof EntityVehicle && Minecraft.getMinecraft().gameSettings.thirdPersonView == 0) {
-            maxPitch = 30f;
+            maxPitch = 90f;
 //            EntityVehicle entityVehicle = (EntityVehicle) player.ridingEntity;
 ////            maxYawDelta = 10f + 200f * (float)entityVehicle.getSpeed();
 ////            if(maxYawDelta > 35f) {
@@ -335,22 +335,25 @@ public class Interceptors {
             else if(-vehicleRiderYawDelta > maxYawDelta) {
                 player.rotationYaw = player.getRidingEntity().rotationYaw + maxYawDelta;
             }
+            
+            player.rotationPitch = -player.getRidingEntity().rotationPitch * 1.3f;
 
         } else {
             player.rotationYaw = (float) ((double) player.rotationYaw + (double) yawDelta);
+            
+            player.rotationPitch = (float) ((double) player.rotationPitch - (double) pitchDelta * 0.15);
+
+            if (player.rotationPitch < -maxPitch) {
+                player.rotationPitch = -maxPitch;
+            }
+
+            if (player.rotationPitch > maxPitch) {
+                player.rotationPitch = maxPitch;
+            }
+            
+            player.prevRotationPitch += player.rotationPitch - originalPitch;
         }
         
-        player.rotationPitch = (float) ((double) player.rotationPitch - (double) pitchDelta * 0.15);
-
-        if (player.rotationPitch < -maxPitch) {
-            player.rotationPitch = -maxPitch;
-        }
-
-        if (player.rotationPitch > maxPitch) {
-            player.rotationPitch = maxPitch;
-        }
-
-        player.prevRotationPitch += player.rotationPitch - originalPitch;
         player.prevRotationYaw += player.rotationYaw - originalYaw;
     }
 

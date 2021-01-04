@@ -29,6 +29,8 @@ public class RenderVehicle extends CompatibleEntityRenderer
      */
     public void doCompatibleRender(Entity entity, double x, double y, double z, float entityYaw, float partialTicks)
     {
+        System.out.println("UI -- Rendering pitch " + entity.rotationPitch);
+
         GlStateManager.pushMatrix();
         this.setupTranslation(x, y, z);
         EntityVehicle entityVehicle = (EntityVehicle) entity;

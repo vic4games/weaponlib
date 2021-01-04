@@ -28,6 +28,7 @@ public class RenderVehicle2 extends CompatibleEntityRenderer
 
 	public void renderVehicle(EntityVehicle entityVehicle, double posX, double posY, double posZ, float rotationYaw, float par9)
 	{
+//	    System.out.println("Rendering pitch " + entityVehicle.rotationPitch);
 		//field_110782_f = textureResource; //new ResourceLocation("missing-texture"); //Halocraft.MODID+par1HCEntityMongoose.getEntityTexture());
 		GL11.glPushMatrix();
 		invertCameraTransform();

@@ -99,6 +99,9 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
     private EntityVehicle.Status previousStatus;
     private double lastYd;
     
+    private double inclineX;
+    private double inclineZ;
+    
     private double speed;
     
     private EntityVehicleConfiguration configuration;
@@ -167,6 +170,8 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
         this.prevPosY = y;
         this.prevPosZ = z;
     }
+    
+    
     
     @Override
     public EntityVehicleConfiguration getConfiguration() {
@@ -264,7 +269,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
                 {
                     if (!flag && this.world.getGameRules().getBoolean("doEntityDrops"))
                     {
-                        this.dropItemWithOffset(this.getItemBoat(), 1, 0.0F);
+//                        this.dropItemWithOffset(this.getItemBoat(), 1, 0.0F);
                     }
 
                     this.setDead();
@@ -297,25 +302,25 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
         }
     }
 
-    public Item getItemBoat()
-    {
-        switch (this.getBoatType())
-        {
-            case OAK:
-            default:
-                return Items.BOAT;
-            case SPRUCE:
-                return Items.SPRUCE_BOAT;
-            case BIRCH:
-                return Items.BIRCH_BOAT;
-            case JUNGLE:
-                return Items.JUNGLE_BOAT;
-            case ACACIA:
-                return Items.ACACIA_BOAT;
-            case DARK_OAK:
-                return Items.DARK_OAK_BOAT;
-        }
-    }
+//    public Item getItemBoat()
+//    {
+//        switch (this.getBoatType())
+//        {
+//            case OAK:
+//            default:
+//                return Items.BOAT;
+//            case SPRUCE:
+//                return Items.SPRUCE_BOAT;
+//            case BIRCH:
+//                return Items.BIRCH_BOAT;
+//            case JUNGLE:
+//                return Items.JUNGLE_BOAT;
+//            case ACACIA:
+//                return Items.ACACIA_BOAT;
+//            case DARK_OAK:
+//                return Items.DARK_OAK_BOAT;
+//        }
+//    }
 
     /**
      * Setups the entity to do the hurt animation. Only used by packets in multiplayer.
@@ -364,7 +369,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
      */
     public void onUpdate()
     {
-
+        
         updateDriverInteractionEvent();
         
         this.previousStatus = this.status;
@@ -398,7 +403,13 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
         this.prevPosY = this.posY;
         this.prevPosZ = this.posZ;
         super.onUpdate();
+        
+//        System.out.println("Rendering pitch post super.onUpdate " + rotationPitch);
+        
         this.tickLerp();
+        
+//        System.out.println("Rendering pitch post tickLerp " + rotationPitch);
+
 
         if (this.canPassengerSteer())
         {
@@ -416,6 +427,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
             }
 
             this.move(MoverType.SELF, this.motionX, this.motionY, this.motionZ);
+//            System.out.println("Rendering pitch post move " + rotationPitch);
         }
         else
         {
@@ -478,9 +490,17 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
             drivingAspect.onUpdate(this);
             getSuspensionStrategy().update(speed, lastYawDelta);
             handleLoopingSoundEffects();
+            
+//            Entity driver = this.getControllingPassenger();
+//            if (driver instanceof EntityPlayer && Minecraft.getMinecraft().gameSettings.thirdPersonView == 0) {
+//                driver.rotationPitch = this.rotationPitch;
+//            }
         } else {
             handleServerSounds();
         }
+        
+//        System.out.println("Rendering pitch post onUpdate " + rotationPitch);
+
     }
     
     public void handleLoopingSoundEffects() {
@@ -568,7 +588,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
             double d2 = this.posZ + (this.lerpZ - this.posZ) / (double)this.lerpSteps;
             double d3 = MathHelper.wrapDegrees(this.boatYaw - (double)this.rotationYaw);
             this.rotationYaw = (float)((double)this.rotationYaw + d3 / (double)this.lerpSteps);
-            this.rotationPitch = (float)((double)this.rotationPitch + (this.lerpXRot - (double)this.rotationPitch) / (double)this.lerpSteps);
+//            this.rotationPitch = (float)((double)this.rotationPitch + (this.lerpXRot - (double)this.rotationPitch) / (double)this.lerpSteps);
             --this.lerpSteps;
             this.setPosition(d0, d1, d2);
             this.setRotation(this.rotationYaw, this.rotationPitch);
@@ -899,7 +919,8 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
             
         }
         
-        speed = Math.sqrt((this.motionX * this.motionX) + (this.motionZ * this.motionZ));
+        // Added motionY to speed, see what happens
+        speed = Math.sqrt((this.motionX * this.motionX) + (this.motionZ * this.motionZ) + (this.motionY * this.motionY));
         
         wheelRotationAngle += -(float)speed /* Math.signum(getVelocity())*/ * 1.4f * 50f;
         wheelRotationAngle = wheelRotationAngle >= 360 ? wheelRotationAngle - 360 : wheelRotationAngle;
@@ -1361,6 +1382,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 //    @Override
     public void move(MoverType type, double x, double y, double z)
     {
+//        System.out.println("Rendering pitch pre move " + rotationPitch);
         if (this.noClip)
         {
             this.setEntityBoundingBox(this.getEntityBoundingBox().offset(x, y, z));
@@ -1369,36 +1391,46 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
         else
         {
             this.world.profiler.startSection("move");
+            
+            System.out.println("Yaw: " + this.rotationYaw);
 
             double requestedXOffset = x;
             double requestedYOffset = y;
             double requestedZOffset = z;
 
-            List<AxisAlignedBB> list1 = this.world.getCollisionBoxes(this, this.getEntityBoundingBox().expand(x, y, z));
-            AxisAlignedBB axisalignedbb = this.getEntityBoundingBox();
+            List<AxisAlignedBB> expandedCollisionBoxes = this.world.getCollisionBoxes(this, this.getEntityBoundingBox().expand(x, y, z));
+            AxisAlignedBB preMoveEntityBoundingBox = this.getEntityBoundingBox();
 
             if (y != 0.0D)
             {
-                int k = 0;
-
-                for (int l = list1.size(); k < l; ++k)
-                {
-                    y = ((AxisAlignedBB)list1.get(k)).calculateYOffset(this.getEntityBoundingBox(), y);
-                }
+//                int k = 0;
                 
-                System.out.println("Requested yMove: " + requestedYOffset + ", actual: " + y);
+                for(AxisAlignedBB expandedCollisionBox: expandedCollisionBoxes) {
+                    y = expandedCollisionBox.calculateYOffset(this.getEntityBoundingBox(), y);
+                }
+
+//                for (int l = expandedCollisionBoxes.size(); k < l; ++k)
+//                {
+//                    y = ((AxisAlignedBB)expandedCollisionBoxes.get(k)).calculateYOffset(this.getEntityBoundingBox(), y);
+//                }
+                
+//                System.out.println("Adjusted pre-step y: " + y + ", requested: " + requestedYOffset);
 
                 this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0D, y, 0.0D));
             }
 
             if (x != 0.0D)
             {
-                int j5 = 0;
+//                int j5 = 0;
 
-                for (int l5 = list1.size(); j5 < l5; ++j5)
-                {
-                    x = ((AxisAlignedBB)list1.get(j5)).calculateXOffset(this.getEntityBoundingBox(), x);
+                for(AxisAlignedBB expandedCollisionBox: expandedCollisionBoxes) {
+                    x = expandedCollisionBox.calculateXOffset(this.getEntityBoundingBox(), x);
                 }
+                
+//                for (int l5 = expandedCollisionBoxes.size(); j5 < l5; ++j5)
+//                {
+//                    x = ((AxisAlignedBB)expandedCollisionBoxes.get(j5)).calculateXOffset(this.getEntityBoundingBox(), x);
+//                }
 
                 if (x != 0.0D)
                 {
@@ -1408,12 +1440,16 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 
             if (z != 0.0D)
             {
-                int k5 = 0;
-
-                for (int i6 = list1.size(); k5 < i6; ++k5)
-                {
-                    z = ((AxisAlignedBB)list1.get(k5)).calculateZOffset(this.getEntityBoundingBox(), z);
+//                int k5 = 0;
+                
+                for(AxisAlignedBB expandedCollisionBox: expandedCollisionBoxes) {
+                    z = expandedCollisionBox.calculateZOffset(this.getEntityBoundingBox(), z);
                 }
+
+//                for (int i6 = expandedCollisionBoxes.size(); k5 < i6; ++k5)
+//                {
+//                    z = ((AxisAlignedBB)expandedCollisionBoxes.get(k5)).calculateZOffset(this.getEntityBoundingBox(), z);
+//                }
 
                 if (z != 0.0D)
                 {
@@ -1433,85 +1469,145 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
             boolean flag = this.onGround || requestedYOffset != y && requestedYOffset < 0.0D;
 
             this.stepHeight = 1f;
-            if (this.stepHeight > 0.0F && (flag || true)  && (requestedXOffset != x || requestedZOffset != z))
+            if (this.isSteeredForward() && this.stepHeight > 0.0F && (flag || true)  && (requestedXOffset != x || requestedZOffset != z))
             {
                 double originalX = x;
                 double originalY = y;
                 double originalZ = z;
-                AxisAlignedBB axisalignedbb1 = this.getEntityBoundingBox();
-                this.setEntityBoundingBox(axisalignedbb);
+                AxisAlignedBB preStepEntityBoundingBox = this.getEntityBoundingBox();
+                
+                this.setEntityBoundingBox(preMoveEntityBoundingBox);
+//                System.out.println("Pre-move box: " + this.getEntityBoundingBox());
                 y = (double)this.stepHeight;
-                List<AxisAlignedBB> list = this.world.getCollisionBoxes(this, this.getEntityBoundingBox().expand(requestedXOffset, y, requestedZOffset));
+                
+                AxisAlignedBB upExpandedBoundingBox = this.getEntityBoundingBox().expand(requestedXOffset, y, requestedZOffset);
+//                System.out.println("Pre-move expanded box: " + upExpandedBoundingBox);                
+              
+                List<AxisAlignedBB> stepExpandedCollisionBoxes = this.world.getCollisionBoxes(this, upExpandedBoundingBox);
+                
+                AxisAlignedBB downOnlyExpandedBoundingBox = this.getEntityBoundingBox().expand(0, -this.stepHeight, 0);
+                List<AxisAlignedBB> downOnlyExpandedCollisionBoxes = this.world.getCollisionBoxes(this, downOnlyExpandedBoundingBox);
+
+                /*
+                 * Compare step expanded collision boxes and XZ-expanded original bounding box.
+                 * 
+                 * If collisions were created as a result of the projected move,
+                 * it's likely calculateOffset methods will have to compare the projected move
+                 * and offsets in the respective directions.
+                 * 
+                 * For example, if the projected XZ-move results in collisions,
+                 * calculateYOffset will likely return a minimum y-offset to jump a step (potentially smaller than step height).
+                 * This is required not to overshoot the step: if the entity y-position, say, is already 1/2 block up,
+                 * calculateYOffset will be at the top of the block instead of top + 1/2.
+                 * 
+                 */
                 AxisAlignedBB axisalignedbb2 = this.getEntityBoundingBox();
-                AxisAlignedBB axisalignedbb3 = axisalignedbb2.expand(requestedXOffset, 0.0D, requestedZOffset);
+                
+                AxisAlignedBB requestedXZExpandedBoundingBox = axisalignedbb2.expand(requestedXOffset, 0.0D, requestedZOffset);
+
                 double anotherYOffset = y;
                 int j1 = 0;
 
-                for (int k1 = list.size(); j1 < k1; ++j1)
+                for (int k1 = stepExpandedCollisionBoxes.size(); j1 < k1; ++j1)
                 {
-                    anotherYOffset = ((AxisAlignedBB)list.get(j1)).calculateYOffset(axisalignedbb3, anotherYOffset);
+                    anotherYOffset = ((AxisAlignedBB)stepExpandedCollisionBoxes.get(j1)).calculateYOffset(requestedXZExpandedBoundingBox, anotherYOffset);
                 }
+                
+//                System.out.println("Alt y offset: " + anotherYOffset);
 
                 axisalignedbb2 = axisalignedbb2.offset(0.0D, anotherYOffset, 0.0D);
+                
+                double yDownOverlap = 0;
+                for(AxisAlignedBB downOnlyExpandedCollisionBox: downOnlyExpandedCollisionBoxes) {
+                    double newYOverlap = calculateYOverlap(downOnlyExpandedCollisionBox, downOnlyExpandedBoundingBox);
+                    if(Math.abs(newYOverlap) > yDownOverlap) {
+                        yDownOverlap = Math.abs(newYOverlap);
+                    }
+                }
+                
+                double yGap = yDownOverlap - this.stepHeight + 0.13;
+                System.out.println("Y gap: " + yGap);
+                
                 double anotherXOffset = requestedXOffset;
                 int l1 = 0;
 
-                for (int i2 = list.size(); l1 < i2; ++l1)
+                for (int i2 = stepExpandedCollisionBoxes.size(); l1 < i2; ++l1)
                 {
-                    anotherXOffset = ((AxisAlignedBB)list.get(l1)).calculateXOffset(axisalignedbb2, anotherXOffset);
+                    anotherXOffset = ((AxisAlignedBB)stepExpandedCollisionBoxes.get(l1)).calculateXOffset(axisalignedbb2, anotherXOffset);
                 }
+                
+//                System.out.println("Alt x offset: " + anotherXOffset + ", requested: " + requestedXOffset);
 
                 axisalignedbb2 = axisalignedbb2.offset(anotherXOffset, 0.0D, 0.0D);
+                
+                
                 double anotherZOffset = requestedZOffset;
                 int j2 = 0;
 
-                for (int k2 = list.size(); j2 < k2; ++j2)
+                for (int k2 = stepExpandedCollisionBoxes.size(); j2 < k2; ++j2)
                 {
-                    anotherZOffset = ((AxisAlignedBB)list.get(j2)).calculateZOffset(axisalignedbb2, anotherZOffset);
+                    anotherZOffset = ((AxisAlignedBB)stepExpandedCollisionBoxes.get(j2)).calculateZOffset(axisalignedbb2, anotherZOffset);
                 }
+                
+//                System.out.println("Alt z offset: " + anotherZOffset + ", requested: " + requestedZOffset);
 
                 axisalignedbb2 = axisalignedbb2.offset(0.0D, 0.0D, anotherZOffset);
                 
-                
+                /*
+                 * Now compare the step expanded collision boxes and the original bounding box.
+                 * 
+                 * If collisions were created only as a result of the projected move,
+                 * all calculateOffset methods should return the second argument, essentially:
+                 *   calcYOffset = step
+                 *   calcXOffset = requestedXOffset
+                 *   calcZOffset = requestedZOffset
+                 */
                 AxisAlignedBB axisalignedbb4 = this.getEntityBoundingBox();
                 double calcYOffset = y;
                 int l2 = 0;
 
-                for (int i3 = list.size(); l2 < i3; ++l2)
+                for (int i3 = stepExpandedCollisionBoxes.size(); l2 < i3; ++l2)
                 {
-                    calcYOffset = ((AxisAlignedBB)list.get(l2)).calculateYOffset(axisalignedbb4, calcYOffset);
+                    calcYOffset = ((AxisAlignedBB)stepExpandedCollisionBoxes.get(l2)).calculateYOffset(axisalignedbb4, calcYOffset);
                 }
 
+//                System.out.println("Alt2 y offset: " + calcYOffset);
                 axisalignedbb4 = axisalignedbb4.offset(0.0D, calcYOffset, 0.0D);
                 
                 
                 double calcXOffset = requestedXOffset;
                 int j3 = 0;
 
-                for (int k3 = list.size(); j3 < k3; ++j3)
+                for (int k3 = stepExpandedCollisionBoxes.size(); j3 < k3; ++j3)
                 {
-                    calcXOffset = ((AxisAlignedBB)list.get(j3)).calculateXOffset(axisalignedbb4, calcXOffset);
+                    calcXOffset = ((AxisAlignedBB)stepExpandedCollisionBoxes.get(j3)).calculateXOffset(axisalignedbb4, calcXOffset);
                 }
 
+//                System.out.println("Alt2 x offset: " + calcXOffset + ", requested: " + requestedXOffset);
                 axisalignedbb4 = axisalignedbb4.offset(calcXOffset, 0.0D, 0.0D);
                 
                 
                 double calcZOffset = requestedZOffset;
                 int l3 = 0;
 
-                for (int i4 = list.size(); l3 < i4; ++l3)
+                for (int i4 = stepExpandedCollisionBoxes.size(); l3 < i4; ++l3)
                 {
-                    calcZOffset = ((AxisAlignedBB)list.get(l3)).calculateZOffset(axisalignedbb4, calcZOffset);
+                    calcZOffset = ((AxisAlignedBB)stepExpandedCollisionBoxes.get(l3)).calculateZOffset(axisalignedbb4, calcZOffset);
                 }
 
+//                System.out.println("Alt2 z offset: " + calcZOffset + ", requested: " + requestedZOffset);
                 axisalignedbb4 = axisalignedbb4.offset(0.0D, 0.0D, calcZOffset);
                 
                 
                 double anotherSqDistance = anotherXOffset * anotherXOffset + anotherZOffset * anotherZOffset;
                 double calcSqDistance = calcXOffset * calcXOffset + calcZOffset * calcZOffset;
 
+                /*
+                 * Give priority to a farthest horizontal move.
+                 */
                 if (anotherSqDistance > calcSqDistance)
                 {
+//                    System.out.println("Option 1");
                     x = anotherXOffset;
                     z = anotherZOffset;
                     y = -anotherYOffset;
@@ -1519,6 +1615,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
                 }
                 else
                 {
+//                    System.out.println("Option 2");
                     x = calcXOffset;
                     z = calcZOffset;
                     y = -calcYOffset;
@@ -1527,27 +1624,98 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 
                 int j4 = 0;
 
-                for (int k4 = list.size(); j4 < k4; ++j4)
+                /*
+                 * Now again make sure we aren't overshooting the step.
+                 */
+                for (int k4 = stepExpandedCollisionBoxes.size(); j4 < k4; ++j4)
                 {
-                    y = ((AxisAlignedBB)list.get(j4)).calculateYOffset(this.getEntityBoundingBox(), y);
+                    y = ((AxisAlignedBB)stepExpandedCollisionBoxes.get(j4)).calculateYOffset(this.getEntityBoundingBox(), y);
                 }
+                
+                y *= 0.5;
+//                System.out.println("Final projected offset y: " + y);
 
-                this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0D, y, 0.0D));
-
-                if (originalX * originalX + originalZ * originalZ >= x * x + z * z)
-                {
-                    x = originalX;
-                    y = originalY;
-                    z = originalZ;
-                    this.setEntityBoundingBox(axisalignedbb1);
+//                this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0D, y, 0.0D));
+                
+                x = originalX * 0.99;
+                z = originalZ * 0.99;
+                
+//                motionX = x;
+//                motionZ = z;
+                
+                double climbStep = 0.1;
+                this.setEntityBoundingBox(preMoveEntityBoundingBox.offset(x, climbStep /*-y*/, z));
+                
+                double boxHeight = preMoveEntityBoundingBox.maxY - preMoveEntityBoundingBox.minY;
+                double boxLength = preMoveEntityBoundingBox.maxX - preMoveEntityBoundingBox.minX;
+                
+//                double incline = 360 / Math.PI * Math.asin((-2 * yGap + boxHeight) / boxLength);
+                double inclineCos = (-2 * yGap + boxHeight) / boxLength;
+                if(inclineCos > 1) {
+                    inclineCos = 1;
                 }
+                double incline = 180 / Math.PI * Math.acos(inclineCos);
+                double adjustement = 180 / Math.PI * Math.atan(boxHeight / boxLength);
+                double finalIncline = 90 - incline - adjustement;
+                this.rotationPitch = (float) finalIncline * 0.25f;
+                System.out.println("Final incline: " + finalIncline + ", incline: " + incline + ", adjustment: " + adjustement);
+                
+
+//                
+//                motionX = 0;
+//                motionZ = 0;
+                
+//                /*
+//                 * Compare step and step-less horizontal move.
+//                 * Select overall 3-d move based on a farthest horizontal move
+//                 */
+//                if (originalX * originalX + originalZ * originalZ >= x * x + z * z)
+//                {
+//                    System.out.println("Restore original pre-step bounding box");
+//                    x = originalX;
+//                    y = originalY;
+//                    z = originalZ;
+//                    this.setEntityBoundingBox(preStepEntityBoundingBox);
+//                }
             } else {
-                System.out.println("No step");
+                
+                double vehicleLength = 1.5;
+                double offset = vehicleLength / 2;
+                double offsetX = -offset * MathHelper.sin((float)(rotationYaw / 360f * Math.PI * 2.0));
+                double offsetZ = offset * MathHelper.cos((float)(rotationYaw / 360f * Math.PI * 2.0));
+
+                double frontBoxPosX = posX + offsetX;
+                double frontBoxPosZ = posZ + offsetZ;
+                double frontBoxPosY = posY;
+                
+                boolean frontBoxOnGround = world.getBlockState((new BlockPos(frontBoxPosX, frontBoxPosY, frontBoxPosZ)).down()).getMaterial() != Material.AIR;
+                if(!frontBoxOnGround) {
+                    System.out.println("Front box is in the air! ");
+                }
+                
+                double rearBoxPosX = posX - offsetX;
+                double rearBoxPosZ = posZ - offsetZ;
+                double rearBoxPosY = posY;
+                
+                boolean rearBoxOnGround = world.getBlockState((new BlockPos(rearBoxPosX, rearBoxPosY, rearBoxPosZ)).down()).getMaterial() != Material.AIR;
+                if(!rearBoxOnGround) {
+                    System.out.println("Rear box is in the air! ");
+                }
+                
+                if(!frontBoxOnGround && rearBoxOnGround && (requestedXOffset * requestedXOffset + requestedZOffset * requestedZOffset) > 0.01) {
+                    rotationPitch -= 5f;
+                } else if(rotationPitch > 0f) {
+                    rotationPitch -= rotationPitch * 0.2f;
+                } else {
+                    rotationPitch = 0f;
+                }
+                
             }
 
             this.world.profiler.endSection();
             this.world.profiler.startSection("rest");
             this.resetPositionToBB();
+//            System.out.println("Rendering pitch post resetPositionToBB " + rotationPitch);
             this.isCollidedHorizontally = requestedXOffset != x || requestedZOffset != z;
             this.isCollidedVertically = requestedYOffset != y;
             this.onGround = this.isCollidedVertically && requestedYOffset < 0.0D;
@@ -1573,14 +1741,16 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 
             this.updateFallState(y, this.onGround, iblockstate, blockpos);
 
-            if (requestedXOffset != x)
+            if (requestedXOffset != x && rotationPitch == 0)
             {
                 this.motionX = 0.0D;
+//                System.out.println("Cancelling motionX");
             }
 
-            if (requestedZOffset != z)
+            if (requestedZOffset != z && rotationPitch == 0)
             {
                 this.motionZ = 0.0D;
+//                System.out.println("Cancelling motionZ");
             }
 
             Block block = iblockstate.getBlock();
@@ -1590,20 +1760,33 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
                 block.onLanded(this.world, this);
             }
 
-            try
-            {
-                this.doBlockCollisions();
-            }
-            catch (Throwable throwable)
-            {
-                CrashReport crashreport = CrashReport.makeCrashReport(throwable, "Checking entity block collision");
-                CrashReportCategory crashreportcategory = crashreport.makeCategory("Entity being checked for collision");
-                this.addEntityCrashInfo(crashreportcategory);
-                throw new ReportedException(crashreport);
-            }
+//            try
+//            {
+//                this.doBlockCollisions();
+//            }
+//            catch (Throwable throwable)
+//            {
+//                CrashReport crashreport = CrashReport.makeCrashReport(throwable, "Checking entity block collision");
+//                CrashReportCategory crashreportcategory = crashreport.makeCategory("Entity being checked for collision");
+//                this.addEntityCrashInfo(crashreportcategory);
+//                throw new ReportedException(crashreport);
+//            }
 
             this.world.profiler.endSection();
         }
+    }
+    
+    public static double calculateYOverlap(AxisAlignedBB box1, AxisAlignedBB box2) {
+        double overlap = 0;
+        double maxDiff = box1.maxY - box2.maxY;
+        if(maxDiff >= 0 && box2.maxY >= box1.minY) {
+            overlap = box2.maxY - box1.minY;
+        } else if(maxDiff <= 0 && box1.maxY >= box2.minY) {
+            overlap = -(box1.maxY - box2.minY);
+        }
+        
+        return overlap;
+
     }
     
     // MC Heli try
