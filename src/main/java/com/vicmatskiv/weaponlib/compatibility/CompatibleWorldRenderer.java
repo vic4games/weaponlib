@@ -308,7 +308,7 @@ public class CompatibleWorldRenderer extends EntityRenderer
         this.fogColor2 = this.fogColor1;
         this.thirdPersonDistancePrev = 4.0F;
 
-        if (this.mc.gameSettings.smoothCamera)
+        if (true) // this.mc.gameSettings.smoothCamera)
         {
             float f = this.mc.gameSettings.mouseSensitivity * 0.6F + 0.2F;
             float f1 = f * f * f * 8.0F;

@@ -4,11 +4,13 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMaterial;
 
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
@@ -16,6 +18,7 @@ import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraftforge.client.model.ModelLoader;
 
 public class CustomTileEntityConfiguration<T extends CustomTileEntityConfiguration<T>> {
@@ -30,6 +33,7 @@ public class CustomTileEntityConfiguration<T extends CustomTileEntityConfigurati
     private AtomicInteger counter = new AtomicInteger(10000);
     private Supplier<Integer> entityIdSupplier = () -> counter.incrementAndGet();
     private Consumer<TileEntity> positioning = tileEntity -> {};
+    private Function<IBlockState, AxisAlignedBB> boundingBox;
     
     @SuppressWarnings("unchecked")
     private T safeCast(CustomTileEntityConfiguration<T> input) {
@@ -76,6 +80,17 @@ public class CustomTileEntityConfiguration<T extends CustomTileEntityConfigurati
         return safeCast(this);
     }
     
+    public T withBoundingBox(Function<IBlockState, AxisAlignedBB> boundingBox) {
+        this.boundingBox = boundingBox;
+        return safeCast(this);
+    }
+    
+    public T withBoundingBox(double x1, double y1, double z1, double x2, double y2, double z2) {
+    	AxisAlignedBB bb = new AxisAlignedBB(x1, y1, z1, x2, y2, z2);
+        this.boundingBox = state -> bb;
+        return safeCast(this);
+    }
+    
     protected Class<? extends TileEntity> getBaseClass() {
         return CustomTileEntity.class;
     }
@@ -96,6 +111,7 @@ public class CustomTileEntityConfiguration<T extends CustomTileEntityConfigurati
         tileEntityBlock.setHardness(hardness);
         tileEntityBlock.setResistance(resistance);
         tileEntityBlock.setCreativeTab(creativeTab);
+        tileEntityBlock.setBoundingBox(boundingBox);
         ResourceLocation textureResource = new ResourceLocation(modContext.getModId(), textureName);
         tileEntityBlock.setBlockTextureName(textureResource.toString());
         compatibility.registerTileEntity(tileEntityClass, "tile" + name);

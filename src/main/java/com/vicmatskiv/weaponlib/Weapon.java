@@ -64,8 +64,8 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
 
     public static class Builder {
 
-        private static final float DEFAULT_SPAWN_ENTITY_SPEED = 10f;
-        private static final float DEFAULT_INACCURACY = 1f;
+        private static final float DEFAULT_SPAWN_ENTITY_SPEED = 120f;
+        private static final float DEFAULT_INACCURACY = 0f;
         private static final String DEFAULT_SHELL_CASING_TEXTURE_NAME = "weaponlib:/com/vicmatskiv/weaponlib/resources/shell.png";
         private static final float DEFAULT_SHELL_CASING_VELOCITY = 0.1f;
         private static final float DEFAULT_SHELL_CASING_GRAVITY_VELOCITY = 0.05f;
