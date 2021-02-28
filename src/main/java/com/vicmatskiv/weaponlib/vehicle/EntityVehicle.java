@@ -1392,7 +1392,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
         {
             this.world.profiler.startSection("move");
             
-            System.out.println("Yaw: " + this.rotationYaw);
+//            System.out.println("Yaw: " + this.rotationYaw);
 
             double requestedXOffset = x;
             double requestedYOffset = y;

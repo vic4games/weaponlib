@@ -1,10 +1,18 @@
 buildscript {
     repositories {
         jcenter()
-        maven { url = "http://files.minecraftforge.net/maven" }
+        maven {
+            name = "forge"
+            url = "https://files.minecraftforge.net/maven"
+        }
+        maven {
+            name = "proguard"
+            url = "https://mvnrepository.com/artifact/net.sf.proguard"
+        }
     }
     dependencies {
         classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
+        classpath 'net.sf.proguard:proguard-gradle:5.2.1'
     }
 }
 apply plugin: 'net.minecraftforge.gradle.forge'
@@ -12,8 +20,8 @@ apply plugin: 'net.minecraftforge.gradle.forge'
 
 
 version = "1.0"
-group = "com.yourname.modid" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
-archivesBaseName = "modid"
+group= "com.vicmatskiv.weaponlib" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+archivesBaseName = "weaponlib"
 
 sourceCompatibility = targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
 compileJava {
@@ -74,4 +82,24 @@ processResources {
     from(sourceSets.main.resources.srcDirs) {
         exclude 'mcmod.info'
     }
+    
+    from ('src/main/java') {
+        include '**/*.png'
+        
+        include '**/*.json'
+        
+        include '**/*.vsh'
+        
+        include '**/*.fsh'
+    }
+    
+}
+
+
+task obfuscate(type: proguard.gradle.ProGuardTask) {
+  configuration 'proguard.cfg'
+  
+  injars "./build/libs/${archivesBaseName}-${version}.jar"
+  
+  outjars "./build/libs/${archivesBaseName}-${version}-${project.minecraft.version}.jar"
 }
