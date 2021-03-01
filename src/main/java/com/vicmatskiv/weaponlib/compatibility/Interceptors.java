@@ -47,7 +47,25 @@ public class Interceptors {
     }
 
     public static void setupCameraTransformAfterHurtCameraEffect(float partialTicks) {
-        
+       
+    	
+    	EntityPlayer  p = compatibility.clientPlayer();
+    
+    	if(p.isRiding()) {
+    		
+    		if(p.getRidingEntity() instanceof EntityVehicle) {
+    			EntityVehicle v = (EntityVehicle) p.getRidingEntity();
+    			if(Math.abs(p.rotationYaw) > 45) {
+    				p.rotationYawHead = 45*Math.signum(p.rotationYaw);
+    				p.prevRotationYawHead = p.rotationYawHead;
+    			}
+    			
+    			
+    		}
+    	}
+    	
+    	
+    	if(1+1==2) return;
         PlayerWeaponInstance weaponInstance = getPlayerWeaponInstance();
         EntityPlayer player = compatibility.getClientPlayer();
         if(weaponInstance != null ) {
@@ -59,6 +77,7 @@ public class Interceptors {
 //                    System.out.println("Last state " + lastState);
 //                }
 //            }
+            
             ScreenShakingAnimationManager yawPitchAnimationManager = context.getPlayerRawPitchAnimationManager();
             yawPitchAnimationManager.update(player, weaponInstance, stateManager != null ? stateManager.getLastState() : null);
 //            if(weaponInstance.isAimed() && !isProning(player)) {

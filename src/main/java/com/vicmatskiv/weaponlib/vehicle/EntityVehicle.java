@@ -4,9 +4,14 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
+import javax.vecmath.Vector2d;
+import javax.vecmath.Vector3d;
+
+import org.lwjgl.input.Keyboard;
 
 import com.google.common.collect.Lists;
 import com.vicmatskiv.weaponlib.Configurable;
@@ -16,7 +21,12 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleMathHelper;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMovingSound;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleVec3;
+import com.vicmatskiv.weaponlib.particle.DriftSmokeFX;
 import com.vicmatskiv.weaponlib.state.ExtendedState;
+import com.vicmatskiv.weaponlib.vehicle.engines.EvoIVEngine;
+import com.vicmatskiv.weaponlib.vehicle.jimphysics.Engine;
+import com.vicmatskiv.weaponlib.vehicle.jimphysics.brokesolver.VehiclePhysicsSolver;
+import com.vicmatskiv.weaponlib.vehicle.jimphysics.solverb.MarcTest;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockFence;
@@ -29,6 +39,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.MovingSound;
 import net.minecraft.client.audio.SoundHandler;
+import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.crash.CrashReport;
 import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.entity.Entity;
@@ -47,17 +58,20 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.network.play.client.CPacketSteerBoat;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EntityDamageSourceIndirect;
 import net.minecraft.util.EntitySelectors;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.ReportedException;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
@@ -364,10 +378,200 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
         return this.getHorizontalFacing().rotateY();
     }
 
+    //
+    public VehiclePhysicsSolver solver;
+    public double mass = 1352;
+    
+    int secondStepper = 0;
+    
+    // marco implementation
+    public double forwardLean = 0.0;
+    public double sideLean = 0.0;
+    
+    public double driftTuner = 0.0;
+   
+    
+    
+    public Vector2d velocity_wc = new Vector2d();
+	public Vector2d position_wc = new Vector2d();
+	public double angularvelocity = 0;
+	public double angle = 0;
+    public boolean isBraking = false;
+    public double throttle = 0;
+    public int brake = 0;
+    public double steerangle;
+    public Engine engine = new EvoIVEngine("Evo IV Engine", "Mitsubishi Motors");
+    
+    
+    public MarcTest mt = new MarcTest(this);
+    
+    public void runControls() {
+    	
+    }
+    
+    
+    /**
+     * FOR JIM IMPLEMENTATION
+     */
+    
+    @Override
+    public void onUpdate() {
+    	//realonUpdate();
+    	//if(1+1==2) return;
+
+    	
+    	
+    	
+    	
+    	if(!this.world.isRemote) return;
+    	
+    	updateDriverInteractionEvent();
+    	this.previousStatus = this.status;
+    	
+    	
+    	
+    	// update steering
+    	if(!this.isBeingRidden()) return;
+		Entity player = getPassengers().get(0);
+		if(player == null) {
+			return;
+		}
+		
+		
+		
+		
+		
+		//setState(VehicleState.DRIVING);
+		
+		
+		float yaw = player.rotationYaw;
+		float pitch = player.rotationPitch;
+		float f = 1.0F;
+		double motionX = (double)(-MathHelper.sin(yaw / 180.0F * (float)Math.PI) * MathHelper.cos(pitch / 180.0F * (float)Math.PI) * f);
+		double motionZ = (double)(MathHelper.cos(yaw / 180.0F * (float)Math.PI) * MathHelper.cos(pitch / 180.0F * (float)Math.PI) * f);
+		double motionY = (double)(-MathHelper.sin((pitch) / 180.0F * (float)Math.PI) * f);
+		Vec3d dirVec = new Vec3d(motionX, 0, motionZ);
+		
+		
+		Vec3d oreintVec = Vec3d.fromPitchYaw(this.rotationPitch, this.rotationYaw);
+		
+		
+		double det = dirVec.crossProduct(oreintVec).y;
+		if(det > 0) {
+			det = 1;
+		} else {
+			det = -1;
+		}
+		Vector3d dir = new Vector3d(dirVec.x, dirVec.y, dirVec.z);
+		Vector3d ore = new Vector3d(oreintVec.x, oreintVec.y, oreintVec.z);
+		double aT = Math.toDegrees(dir.angle(ore))/2;
+		double steeringAngle = aT*det*-1;
+		if(aT < -45.0F) {
+			aT = -45.0F;
+		}
+		if(aT > 45.0F) {
+			aT = 45.0F;
+		}
+		
+		
+		steerangle = Math.toRadians(-steeringAngle);
+    	
+		
+    	
+    	
+    	if(solver == null) {
+    		solver = new VehiclePhysicsSolver(this, 1352);
+    	}
+    	
+    	
+    	//
+    	if(Keyboard.isKeyDown(Keyboard.KEY_W)) {
+			if( throttle < 1) throttle += 0.1;
+		}  else {
+			if(throttle > 0) throttle -= 0.1;
+		}
+    	
+    	super.onUpdate();
+    	tickLerp();
+		if(Keyboard.isKeyDown(Keyboard.KEY_S)) {
+			if( throttle >= 0) throttle -= 0.1;
+			isBraking = true;
+		} else isBraking = false;
+		if(throttle < 0) throttle = 0;
+		if(throttle > 1) throttle = 1;
+		
+		if(Keyboard.isKeyDown(Keyboard.KEY_SPACE)) {
+			solver.applyHandbrake();
+		} else {
+			solver.releaseHandbrake();
+		}
+		
+		steerangle *= 0.5;
+		
+		
+		int mA = 45;
+		
+		if(Keyboard.isKeyDown(Keyboard.KEY_A))
+		{
+			 driftTuner -= 5;
+		      if(driftTuner < -mA) driftTuner = -mA;
+		} else if( Keyboard.isKeyDown(Keyboard.KEY_D) )
+	    {
+	       driftTuner += 5;
+	       if(driftTuner > mA) driftTuner = mA;
+	    } else {
+	    	double newTune = ((Math.abs(driftTuner) - 5))*Math.signum(driftTuner);
+			driftTuner = newTune;
+			 if(driftTuner < -mA) driftTuner = -mA;
+			
+	    }
+		
+		
+		/*
+		if(Keyboard.isKeyDown(Keyboard.KEY_A))
+		{
+	     if( steerangle > - Math.PI/5.0 ) steerangle -= Math.PI/64.0;
+		} else if( Keyboard.isKeyDown(Keyboard.KEY_D) )
+	    {
+	       if( steerangle <  Math.PI/5.0 ) steerangle += Math.PI/64.0;
+	    } */
+		
+		wheelRotationAngle -= (float) solver.velocity.lengthVector();
+		
+		lastYawDelta = Math.toDegrees(steerangle)*0.3;
+		
+		this.doBlockCollisions();
+		
+    	//
+    	
+		drivingAspect.onUpdate(this);
+        getSuspensionStrategy().update(speed, lastYawDelta);
+        handleLoopingSoundEffects();
+		
+        for(int x = 0; x < 5; ++x) {
+        	solver.updatePhysics();
+        	
+        	
+        }
+        
+        //setState(VehicleState.STARTING_TO_DRIVE);
+        
+        secondStepper += 1;
+    	if(secondStepper > 4) {
+    		secondStepper = 0;
+    	}
+    
+    	
+    	doDriveParticles();
+    	
+    	
+    } 
+    
+    
     /**
      * Called to update the entity's position/logic.
      */
-    public void onUpdate()
+    public void realonUpdate()
     {
         
         updateDriverInteractionEvent();
@@ -423,7 +627,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
             if (this.world.isRemote)
             {
                 this.controlBoat();
-//                this.world.sendPacketToServer(new CPacketSteerBoat(this.getPaddleState(0), this.getPaddleState(1)));
+              // this.world.sendPacketToServer(new CPacketSteerBoat(this.getPaddleState(0), this.getPaddleState(1)));
             }
 
             this.move(MoverType.SELF, this.motionX, this.motionY, this.motionZ);
@@ -480,7 +684,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
                     }
                     else
                     {
-//                        this.applyEntityCollision(entity);
+                        //this.applyEntityCollision(entity);
                     }
                 }
             }
@@ -501,6 +705,39 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
         
 //        System.out.println("Rendering pitch post onUpdate " + rotationPitch);
 
+    }
+    
+    @Override
+    protected void doBlockCollisions() {
+    	
+    	super.doBlockCollisions();
+    }
+    
+    
+    public void doDriveParticles() {
+    	
+    	
+    	Vec3d partDir = new Vec3d(-steerangle*20, 0.3, -1).rotateYaw((float) Math.toRadians(-rotationYaw)).scale(0.1);
+    	Vec3d posDir = new Vec3d(0, 0, -1).rotateYaw((float) Math.toRadians(-rotationYaw)).add(getPositionVector());
+//    	/System.out.println(partDir);
+    	
+    	
+    	// drift particles
+    	if(solver.rearAxel.isHandbraking) {
+    		Random rand = new Random();
+        	for(int x = 0; x < 4; ++x) {
+        		double gaus = rand.nextGaussian()/2;
+        		//this.world.spawnParticle(EnumParticleTypes.CLOUD, posDir.x+gaus,  posDir.y+gaus,  posDir.z+gaus, partDir.x, partDir.y, partDir.z, Block.getStateId(world.getBlockState(this.getPosition().down())));   
+        		Minecraft.getMinecraft().effectRenderer.addEffect(new DriftSmokeFX(this.world, posDir.x+gaus, posDir.y+gaus, posDir.z+gaus, partDir.x, partDir.y, partDir.z));
+            	  
+        	}
+    	}
+    	
+    	 
+    	for(int x = 0; x < ((int) solver.synthAccelFor); ++x) {
+    		this.world.spawnParticle(EnumParticleTypes.BLOCK_DUST, posDir.x + rand.nextGaussian()/2, posDir.y+ rand.nextGaussian()/15, posDir.z+ rand.nextGaussian()/2, partDir.x, partDir.y+0.1, partDir.z, Block.getStateId(world.getBlockState(this.getPosition().down())));   
+    	}
+    	
     }
     
     public void handleLoopingSoundEffects() {

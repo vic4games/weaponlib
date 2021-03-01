@@ -153,7 +153,7 @@ public class KeyBindings {
         deleteDebugKey = new KeyBinding("key.deleteDebugKey", Keyboard.KEY_BACK,
                 "key.categories.weaponlib");
 
-        altModeDebugKey = new KeyBinding("key.altModeDebugKey", Keyboard.KEY_RSHIFT,
+        altModeDebugKey = new KeyBinding("key.altModeDebugKey", Keyboard.KEY_LMETA,
                 "key.categories.weaponlib");
         
         compatibility.registerKeyBinding(jDebugKey);
