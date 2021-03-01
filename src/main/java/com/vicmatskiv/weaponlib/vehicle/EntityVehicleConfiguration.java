@@ -5,7 +5,6 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -15,7 +14,6 @@ import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 
 import net.minecraft.entity.Entity;
-import net.minecraft.item.Item;
 
 public class EntityVehicleConfiguration implements EntityConfiguration {
 
@@ -39,9 +37,12 @@ public class EntityVehicleConfiguration implements EntityConfiguration {
         private Class<? extends Entity> baseClass = EntityVehicle.class;
         private String name;
         private Supplier<Integer> entityIdSupplier;
+        private boolean spawnEgg;
+        private int primaryEggColor;
+        private int secondaryEggColor;
         
         private StatefulRenderer<VehicleRenderableState> renderer;
-        
+
         private String enterSound;
         private String exitSound;
         private String idleSound;
@@ -88,6 +89,13 @@ public class EntityVehicleConfiguration implements EntityConfiguration {
 
         public Builder withEntityIdSupplier(Supplier<Integer> entityIdSupplier) {
             this.entityIdSupplier = entityIdSupplier;
+            return this;
+        }
+
+        public Builder withSpawnEgg(int primaryEggColor, int secondaryEggColor) {
+            this.spawnEgg = true;
+            this.primaryEggColor = primaryEggColor;
+            this.secondaryEggColor = secondaryEggColor;
             return this;
         }
 
@@ -198,9 +206,8 @@ public class EntityVehicleConfiguration implements EntityConfiguration {
             compatibility.registerModEntity(entityClass, entityName, 
                     modEntityId, context.getMod(), context.getModId(), trackingRange, updateFrequency, sendVelocityUpdates);
 
-            ItemVehicle vehicleItem = new ItemVehicle(entityName, entityClass);
-            
-            compatibility.registerItem(context.getModId(), vehicleItem, entityName);
+            ItemVehicle itemVehicle = new ItemVehicle(EntityVehicle.Type.OAK, entityClass);
+            compatibility.registerItem(context.getModId(), itemVehicle, entityName);
             
 //            if(spawnEgg) {
 //                compatibility.registerEgg(context, entityClass, entityName, primaryEggColor, secondaryEggColor);

@@ -1,5 +1,6 @@
 package com.vicmatskiv.weaponlib.vehicle;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
@@ -22,16 +23,16 @@ import net.minecraft.world.World;
 
 public class ItemVehicle extends Item
 {
-//    private String name;
+    private final EntityVehicle.Type type;
     private Class<? extends Entity> entityClass;
 
-    public ItemVehicle(String name, Class<? extends Entity> entityClass)
+    public ItemVehicle(EntityVehicle.Type typeIn, Class<? extends Entity> entityClass)
     {
-//        this.name = name;
+        this.type = typeIn;
         this.entityClass = entityClass;
         this.maxStackSize = 1;
         this.setCreativeTab(CreativeTabs.TRANSPORTATION);
-        this.setUnlocalizedName(name);
+        this.setUnlocalizedName("vehicle." + typeIn.getName());
     }
 
     /**
@@ -109,7 +110,7 @@ public class ItemVehicle extends Item
                     entityboat.prevPosY = y;
                     entityboat.prevPosZ = z;
                     
-//                    entityboat.setBoatType(this.type);
+                    entityboat.setBoatType(this.type);
                     entityboat.rotationYaw = playerIn.rotationYaw;
                 } catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
                     throw new RuntimeException(e);

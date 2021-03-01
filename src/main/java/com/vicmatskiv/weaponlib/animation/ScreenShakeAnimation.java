@@ -157,6 +157,7 @@ public class ScreenShakeAnimation implements PlayerAnimation {
         }
         
         PlayerAnimation build() {
+        	
             if(state == null) {
                 throw new IllegalStateException("State is not set");
             }
@@ -185,6 +186,7 @@ public class ScreenShakeAnimation implements PlayerAnimation {
 //        xRotationCoefficient = 1f;
 //        yRotationCoefficient = 1f;
 //        zRotationCoefficient = 2f;
+    	
         float progress = (float)(System.currentTimeMillis() - startTime) / transitionDuration;
         
         if(progress >= 1f) {
@@ -258,6 +260,7 @@ public class ScreenShakeAnimation implements PlayerAnimation {
     }
 
     public void reset(EntityPlayer player, boolean force) {
+    	
         if(force || totalAdjustment != 0f) {
             totalAdjustment = 0f;
             cumulativeAttenuation = 1f;
