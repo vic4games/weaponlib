@@ -30,19 +30,10 @@ public class RenderVehicle2 extends CompatibleEntityRenderer
 	{
 //	    System.out.println("Rendering pitch " + entityVehicle.rotationPitch);
 		//field_110782_f = textureResource; //new ResourceLocation("missing-texture"); //Halocraft.MODID+par1HCEntityMongoose.getEntityTexture());
-		
 		GL11.glPushMatrix();
 		invertCameraTransform();
-		
-		float ptiYaw = entityVehicle.prevRotationYaw + (entityVehicle.rotationYaw-entityVehicle.prevRotationYaw)*Minecraft.getMinecraft().getRenderPartialTicks();
-		
-		
 		GL11.glTranslatef((float)posX, (float)posY, (float)posZ);
-		GL11.glRotatef(180.0F - ptiYaw, 0.0F, 1.0F, 0.0F);
-		
-		//GL11.glRotatef((float) entityVehicle.forwardLean, 1, 0, 0);
-		//GL11.glRotatef((float) entityVehicle.sideLean, 0, 0, 1);
-		
+		GL11.glRotatef(180.0F - rotationYaw, 0.0F, 1.0F, 0.0F);
 		GL11.glRotatef(entityVehicle.rotationPitch, 1.0F, 0.0F, 0.0F);
 		//GL11.glRotatef(MathHelper.wrapAngleTo180_float(par1HCEntityMongoose.getRotateWheelSpeed()*100F), 1.0F, 0.0F, 0.0F);
 		float f4 = 0.75F;

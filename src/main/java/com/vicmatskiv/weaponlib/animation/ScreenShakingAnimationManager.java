@@ -102,7 +102,6 @@ public class ScreenShakingAnimationManager {
     }
     
     public void update(EntityPlayer player, PlayerWeaponInstance weaponInstance, RenderableState weaponState) {
-    	
         State targetState = toManagedState(weaponState);
 //        System.out.println("Target state: " + targetState + ", render state: " + weaponState);
         PlayerAnimation activeAnimation = activeAnimations.get(player);
