@@ -215,17 +215,12 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 	@Override
     protected void onCompatibleRenderTickEvent(CompatibleRenderTickEvent event) {
 
-		
-		
         Minecraft minecraft = Minecraft.getMinecraft();
         DynamicShaderContext shaderContext = new DynamicShaderContext(DynamicShaderPhase.POST_WORLD_RENDER,
                 minecraft.entityRenderer,
                 minecraft.getFramebuffer(), event.getRenderTickTime());
 
         EntityPlayer clientPlayer = compatibility.clientPlayer();
-        
-      
-        
         
         if(event.getPhase() == CompatibleRenderTickEvent.Phase.START ) {
             ClientModContext.currentContext.set(modContext);

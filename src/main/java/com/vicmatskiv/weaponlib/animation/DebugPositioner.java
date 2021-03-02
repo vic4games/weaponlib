@@ -3,7 +3,9 @@ package com.vicmatskiv.weaponlib.animation;
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -24,6 +26,8 @@ public class DebugPositioner {
     private static Boolean debugModeEnabled;
 
     private static Object currentPart;
+    
+    private static Set<Object> debugParts = new HashSet<>();
 
     private static Entity watchableEntity;
     
@@ -70,6 +74,10 @@ public class DebugPositioner {
 
     private static Position getCurrentPartPosition() {
         return partPositions.get(currentPart);
+    }
+    
+    private static Position getDebugPartPosition(Object part) {
+        return partPositions.get(part);
     }
 
     public static void incrementXRotation(float increment) {
@@ -201,6 +209,7 @@ public class DebugPositioner {
 
     public static void setDebugPart(Object part) {
         currentPart = part;
+        debugParts.add(part);
         partPositions.computeIfAbsent(part, p -> new Position());
     }
 
@@ -218,10 +227,13 @@ public class DebugPositioner {
     }
 
     public static void position(Object part, Object renderContext) {
-        if(part != currentPart) {
+//        if(part != currentPart) {
+//            return;
+//        }
+        if(!debugParts.contains(part)) {
             return;
         }
-        Position partPosition = getCurrentPartPosition();
+        Position partPosition = getDebugPartPosition(part);
         if(partPosition == null) {
             return;
         }
