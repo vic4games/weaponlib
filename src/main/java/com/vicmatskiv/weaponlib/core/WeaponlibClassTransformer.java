@@ -12,11 +12,15 @@ import com.vicmatskiv.weaponlib.ClassInfo;
 import com.vicmatskiv.weaponlib.OptimizedCubeList;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClassInfoProvider;
 
+import net.minecraft.client.audio.SoundManager;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.launchwrapper.IClassTransformer;
 
 public class WeaponlibClassTransformer implements IClassTransformer {
 
+	private static ClassInfo playSoundClassInfo = CompatibleClassInfoProvider.getInstance()
+			.getClassInfo("paulscode.sound.libraries.SourceLWJGLOpenAL");
+	
     private static ClassInfo entityRendererClassInfo = CompatibleClassInfoProvider.getInstance()
             .getClassInfo("net/minecraft/client/renderer/EntityRenderer");
     
@@ -78,6 +82,26 @@ public class WeaponlibClassTransformer implements IClassTransformer {
     }
     
     public byte[] transform(String par1, String className, byte[] bytecode) {
+    	/*
+    	if(par1.contains("SoundSystemStarterThread")) {
+    		System.out.println("ALERT: " + par1);
+    	}
+    	if(className.contains("SoundSystemStarterThread")) {
+    		System.out.println("ALERT CLASS: " + className);
+    	}
+    	if(className.equals("paulscode.sound.libraries.SourceLWJGLOpenAL") || par1.equals("net.minecraft.client.audio.SoundManager$SoundSystemStarterThread")) {
+    		return SpecialPatcher.transform(par1, className, bytecode);
+    	}
+    	*/
+    	
+    	
+    	/*
+    	if(className.equals("paulscode.sound.libraries.SourceLWJGLOpenAL")) {
+    		System.out.println("here's your stupid info: " + playSoundClassInfo);
+    		System.out.println("here's your stupider thing: " + playSoundClassInfo.classMatches(className));
+    		
+    	}*/
+    	
         if (entityRendererClassInfo.classMatches(className) || 
                 (renderBipedClassInfo != null && renderBipedClassInfo.classMatches(className)) ||
                 (modelBipedClassInfo != null && modelBipedClassInfo.classMatches(className)) ||
@@ -116,6 +140,42 @@ public class WeaponlibClassTransformer implements IClassTransformer {
             }
         }
     }
+    
+    
+    
+    private static class SoundInterceptorMethodVistor extends MethodVisitor {
+        
+        private boolean visited;
+
+        public SoundInterceptorMethodVistor(MethodVisitor mv) {
+        	
+            super(Opcodes.ASM4, mv);
+            System.out.println("wassup bro");
+        }
+        
+        @Override
+        public void visitJumpInsn(int opcode, Label label) {
+            super.visitJumpInsn(opcode, label);
+            // There are other if statements, replace only the very first one
+            if(!visited && opcode == Opcodes.IFEQ) {
+            	String channelPath = "paulscode/sound/libraries/ChannelLWJGLOpenAL";
+            	
+            	
+                mv.visitVarInsn(Opcodes.ALOAD, 0);
+                mv.visitFieldInsn(Opcodes.GETFIELD, channelPath,
+					"channelOpenAL", "L"+channelPath+";");
+                mv.visitFieldInsn(Opcodes.GETFIELD, channelPath, "ALSource",
+    					"Ljava/nio/IntBuffer;");
+                mv.visitInsn(Opcodes.ICONST_0);
+                mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/nio/IntBuffer", "get", "(I)I", false);
+                
+                mv.visitMethodInsn(Opcodes.INVOKESTATIC, "com/vicmatskiv/weaponlib/compatibility/CoreSoundInterceptor", "onPlaySound", "(Lpaulscode/sound/Channel;)V", false);
+               // mv.visitJumpInsn(Opcodes.IFEQ, label);
+                visited = true;
+            }
+        }
+    }
+    
     
     private static class HurtCameraEffectMethodVisitor extends MethodVisitor {
         
@@ -489,11 +549,22 @@ public class WeaponlibClassTransformer implements IClassTransformer {
 //        }
 
         public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
+        	
+        	if(classname.equals("paulscode/sound/libraries/SourceLWJGLOpenAL")) {
+        		if(name.equals("play")) {
+        			System.out.println("SIG: " + desc);
+        			System.out.println("CI: " + playSoundClassInfo);
+        			boolean f = playSoundClassInfo.methodMatches("play", "(Lpaulscode/sound/Channel;)V", classname, name, desc);
+        			System.out.println("RESULT: " + f);
+        		}
+        	}
+        	
             if(entityRendererClassInfo.methodMatches("setupCameraTransform", "(FI)V", classname, name, desc)) {
                 return new SetupCameraTransformMethodVisitor(cv.visitMethod(access, name, desc, signature, exceptions));
             } else if(entityRendererClassInfo.methodMatches("setupViewBobbing", "(F)V", classname, name, desc)) {
                 return new SetupViewBobbingMethodVisitor(cv.visitMethod(access, name, desc, signature, exceptions));
             } else if(entityRendererClassInfo.methodMatches("hurtCameraEffect", "(F)V", classname, name, desc)) {
+            	
                 return new HurtCameraEffectMethodVisitor(cv.visitMethod(access, name, desc, signature, exceptions));
             } else if(entityRendererClassInfo.methodMatches("updateCameraAndRender", "(FJ)V", classname, name, desc)) {
                 return new UpdateCameraAndRenderMethodVisitor(cv.visitMethod(access, name, desc, signature, exceptions));
@@ -538,6 +609,8 @@ public class WeaponlibClassTransformer implements IClassTransformer {
                     && modelRendererClassInfo.methodMatches("render", "(F)V", classname, name, desc)) {
                 return new ModelRendererRenderMethodVisitor(
                         cv.visitMethod(access, name, desc, signature, exceptions), !name.equals("render"));
+            } else if(playSoundClassInfo != null && playSoundClassInfo.methodMatches("play", "(Lpaulscode/sound/Channel;)V", classname, name, desc)) {
+                return new SoundInterceptorMethodVistor(cv.visitMethod(access, name, desc, signature, exceptions));
             }
 
             return this.cv.visitMethod(access, name, desc, signature, exceptions);

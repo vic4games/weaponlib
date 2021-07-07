@@ -40,6 +40,8 @@ public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 
 	@Override
 	public void compatibleZoom(FOVUpdateEvent event) {
+		
+		
 		/*
 		 * TODO: if optical zoom is on then
 		 * 			if rendering phase is "render viewfinder" then
@@ -79,6 +81,7 @@ public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 
 	@Override
 	public void onCompatibleMouse(MouseEvent event) {
+		
 		if(compatibility.getButton(event) == 0 || compatibility.getButton(event) == 1) {
 			// If the current player holds the weapon in their main hand, cancel default minecraft mouse processing
 		    PlayerItemInstance<?> instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(compatibility.clientPlayer());
@@ -93,6 +96,8 @@ public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 	@Override
 	public void onCompatibleHandleRenderLivingEvent(@SuppressWarnings("rawtypes") RenderLivingEvent.Pre event) {
 
+		
+		
 		if ((event.isCanceled()) || (!(compatibility.getEntity(event) instanceof EntityPlayer)))
 			return;
 
@@ -121,6 +126,7 @@ public class WeaponEventHandler extends CompatibleWeaponEventHandler {
     @SideOnly(Side.CLIENT)
 	@SubscribeEvent
 	public final void onRenderItemEvent(RenderHandEvent event) {
+    	
 	    if(compatibility.clientPlayer().getRidingEntity() instanceof EntityVehicle) {
 	        event.setCanceled(true);
 	    }

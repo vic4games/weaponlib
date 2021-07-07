@@ -1,10 +1,13 @@
-package com.vicmatskiv.weaponlib.vehicle.jimphysics.brokesolver;
+package com.vicmatskiv.weaponlib.vehicle.jimphysics.solver;
 
 import java.sql.Driver;
 
+import com.vicmatskiv.weaponlib.network.IEncodable;
+
+import io.netty.buffer.ByteBuf;
 import net.minecraft.util.math.Vec3d;
 
-public class WheelAxel {
+public class WheelAxel implements IEncodable<WheelAxel> {
 	
 	public VehiclePhysicsSolver solver;
 	
@@ -24,6 +27,9 @@ public class WheelAxel {
 	public void addWheels(WheelSolver left, WheelSolver right) {
 		this.leftWheel = left;
 		this.rightWheel = right;
+		
+		this.solver.wheels.add(left);
+		this.solver.wheels.add(right);
 	}
 	
 	
@@ -34,12 +40,16 @@ public class WheelAxel {
 	public void releaseHandbrake() {
 		this.isHandbraking = false;
 	}
-	
+	/**
+	 * Tells the wheels to apply a braking force
+	 * (affects wheel acceleration and velocity)
+	 * 
+	 * @param Magnitude - value between 1.0 - 0.0,
+	 *  lower values mean higher braking.
+	 */
 	public void applyBrakingForce(double magnitude) {
-		leftWheel.wheelAngularVelocity *= magnitude;
-		rightWheel.wheelAngularVelocity *= magnitude;
-		leftWheel.wheelAngularAcceleration *= magnitude;
-		rightWheel.wheelAngularAcceleration *= magnitude;
+		leftWheel.applyBrake(0.3);
+		rightWheel.applyBrake(0.3);
 	}
 	
 	public void setSteeringAngle(double angle) {
@@ -64,7 +74,8 @@ public class WheelAxel {
 	}
 	
 	public Vec3d adjLateralForce() {
-		return getLateralForce().rotateYaw((float) Math.toRadians(-solver.vehicle.rotationYaw+solver.vehicle.driftTuner));
+		
+		return getLateralForce()/*.rotatePitch((float) Math.toRadians(solver.vehicle.rotationPitch))*/.rotateYaw((float) Math.toRadians(-solver.vehicle.rotationYaw+solver.vehicle.driftTuner));
 	}
 	
 	public double getWheelAngularVelocity() {
@@ -72,9 +83,14 @@ public class WheelAxel {
 	}
 	
 	public void applyDriveTorque(double torque) {
-		leftWheel.driveTorque += torque/2;
-		rightWheel.driveTorque += torque/2;
+		leftWheel.driveTorque += torque;
+		rightWheel.driveTorque += torque;
 		
+	}
+	
+	public void applySuspensionLoad(double load) {
+		leftWheel.applySuspensionLoad(load);
+		rightWheel.applySuspensionLoad(load);
 	}
 	
 	public void distributeLoad(double load) {
@@ -90,10 +106,15 @@ public class WheelAxel {
 		
 		double drTorque = leftWheel.driveTorque + rightWheel.driveTorque;
 		
+		
+		
 		double totalTorque = drTorque + leftWheel.tractionTorque + rightWheel.tractionTorque;
+		
+	
 		
 		double inertia = leftWheel.wheelInertia + rightWheel.wheelInertia;
 		double angularAccel = totalTorque/inertia;
+		
 		
 		leftWheel.wheelAngularAcceleration = angularAccel;
 		rightWheel.wheelAngularAcceleration = angularAccel;
@@ -104,6 +125,18 @@ public class WheelAxel {
 		leftWheel.driveTorque = 0;
 		rightWheel.driveTorque = 0;
 		
+		
+	}
+
+	@Override
+	public WheelAxel readFromBuf(ByteBuf buf) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void writeToBuf(ByteBuf buf) {
+		// TODO Auto-generated method stub
 		
 	}
 

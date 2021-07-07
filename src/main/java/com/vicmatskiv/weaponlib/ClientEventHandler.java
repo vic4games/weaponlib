@@ -199,6 +199,7 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 	@Override
 	public void onCompatibleRenderHand(CompatibleRenderHandEvent event) {
 	    
+		
 	    Minecraft minecraft = Minecraft.getMinecraft();
 	    if(minecraft.gameSettings.thirdPersonView == 0 && !compatibility.isShadersModEnabled()) {
 	        PlayerWeaponInstance weaponInstance = modContext.getMainHeldWeapon();
@@ -215,17 +216,12 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 	@Override
     protected void onCompatibleRenderTickEvent(CompatibleRenderTickEvent event) {
 
-		
-		
         Minecraft minecraft = Minecraft.getMinecraft();
         DynamicShaderContext shaderContext = new DynamicShaderContext(DynamicShaderPhase.POST_WORLD_RENDER,
                 minecraft.entityRenderer,
                 minecraft.getFramebuffer(), event.getRenderTickTime());
 
         EntityPlayer clientPlayer = compatibility.clientPlayer();
-        
-      
-        
         
         if(event.getPhase() == CompatibleRenderTickEvent.Phase.START ) {
             ClientModContext.currentContext.set(modContext);

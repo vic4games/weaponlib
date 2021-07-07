@@ -2,12 +2,16 @@ package com.vicmatskiv.weaponlib.compatibility;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
+import java.nio.FloatBuffer;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.logging.log4j.core.lookup.Interpolator;
+import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Matrix4f;
+import org.lwjgl.util.vector.Vector3f;
 
 import com.vicmatskiv.weaponlib.OptimizedCubeList;
 import com.vicmatskiv.weaponlib.ClientModContext;
@@ -18,13 +22,17 @@ import com.vicmatskiv.weaponlib.RenderContext;
 import com.vicmatskiv.weaponlib.RenderableState;
 import com.vicmatskiv.weaponlib.SpreadableExposure;
 import com.vicmatskiv.weaponlib.Weapon;
+import com.vicmatskiv.weaponlib.animation.MatrixHelper;
 import com.vicmatskiv.weaponlib.animation.MultipartRenderStateManager;
 import com.vicmatskiv.weaponlib.animation.ScreenShakingAnimationManager;
 import com.vicmatskiv.weaponlib.inventory.CustomPlayerInventory;
 import com.vicmatskiv.weaponlib.vehicle.EntityVehicle;
 import com.vicmatskiv.weaponlib.vehicle.RenderVehicle2;
 import com.vicmatskiv.weaponlib.vehicle.VehicleSuspensionStrategy;
+import com.vicmatskiv.weaponlib.vehicle.jimphysics.InterpolationKit;
+import com.vicmatskiv.weaponlib.vehicle.jimphysics.stability.InertialStabilizer;
 
+import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelBiped;
@@ -39,8 +47,13 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 //import net.minecraft.util.MathHelper;
 import net.minecraft.util.EnumHandSide;
+import net.minecraft.util.math.Vec3d;
+import net.minecraftforge.client.event.EntityViewRenderEvent.CameraSetup;
 
 public class Interceptors {
+	
+	public static InertialStabilizer thirdPersonCameraStabilizer = new InertialStabilizer(new Vec3d(1,1,1));
+	
     
     public static boolean is3dRenderableItem(Item item) {
         return compatibility.is3dRenderable(item);
@@ -48,26 +61,83 @@ public class Interceptors {
 
     public static void setupCameraTransformAfterHurtCameraEffect(float partialTicks) {
        
+    	PlayerWeaponInstance weaponInstance = getPlayerWeaponInstance();
+        EntityPlayer player = compatibility.getClientPlayer();
     	
-    	EntityPlayer  p = compatibility.clientPlayer();
-    
-    	if(p.isRiding()) {
+        
+        if(player.isRiding() && player.getRidingEntity() instanceof EntityVehicle && Minecraft.getMinecraft().gameSettings.thirdPersonView == 0) {
+        	EntityVehicle vehicle = (EntityVehicle) player.getRidingEntity();
+        	// DEBUG //
+        	//GL11.glRotated(-vehicle.rotationPitch*0.1, 1, 0, 0);
+        	//GL11.glRotated(vehicle.sideLean, 0.0, 0.0, 1.0);
+        	
+        	
+        	if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 0) {
+        		
+        		float muRoll = (float) ((1 - Math.cos(Minecraft.getMinecraft().getRenderPartialTicks() * Math.PI)) / 2f);
+        		float roll = (vehicle.prevRotationRollH+vehicle.prevRotationRoll) + ((vehicle.rotationRoll+vehicle.rotationRollH)-(vehicle.prevRotationRoll+vehicle.prevRotationRollH))*muRoll;
+        	}
+
+        }
+        
+        
+    	if(player.isRiding() && player.getRidingEntity() instanceof EntityVehicle && Minecraft.getMinecraft().gameSettings.thirdPersonView == 1) {
+    		EntityVehicle vehicle = (EntityVehicle) player.getRidingEntity();
     		
-    		if(p.getRidingEntity() instanceof EntityVehicle) {
-    			EntityVehicle v = (EntityVehicle) p.getRidingEntity();
-    			if(Math.abs(p.rotationYaw) > 45) {
-    				p.rotationYawHead = 45*Math.signum(p.rotationYaw);
-    				p.prevRotationYawHead = p.rotationYawHead;
-    			}
-    			
-    			
+    		/*
+    		double cRY = player.rotationYaw-vehicle.rotationYaw;
+    		double cPRY = player.rotationYaw-vehicle.rotationYaw;
+    		if(cRY > 90) cRY = 0;
+    		if(cPRY > 90) cPRY = 0;
+    		
+    		player.rotationYaw -= cRY*0.005;
+    		player.prevRotationYaw -= cPRY*0.005;*/
+    		/*
+    		player.rotationYaw = vehicle.rotationYaw;
+    		player.prevRotationYaw = vehicle.prevRotationYaw;*/
+    		
+    		
+    		//Vec3d vcv = vehicle.getSolver().getVelocityVector().scale(0.1);
+    		//GL11.glTranslated(vcv.x, vcv.y, vcv.z);
+    		
+    		//Minecraft.getMinecraft().gameSettings.fovSetting = (float) (70f + ((vehicle.getSolver().currentRPM)/500.0f) + (vehicle.getRealSpeed()/2));
+    		Vec3d pV = player.getPositionVector();
+    		//GL11.glTranslated(-pV.x, -pV.y, -pV.z);
+    		
+    		//thirdPersonCameraStabilizer.position = Vec3d.ZERO;
+    		/*
+    		if(thirdPersonCameraStabilizer.position.lengthVector() == 0.0) {
+    			thirdPersonCameraStabilizer.setPosition(vehicle.getPositionVector());
+    
+    		} else {
+    			thirdPersonCameraStabilizer.setPositionTarget(vehicle.getPositionVector());
     		}
+    		
+    		thirdPersonCameraStabilizer.tensor = vehicle.getSolver().getOreintationVector();
+    		
+    	
+    		thirdPersonCameraStabilizer.rotationYaw = vehicle.rotationYaw;
+    		thirdPersonCameraStabilizer.updateCameraTransforms();
+    		*/
+    		GL11.glTranslated(-0.525, 1.0 /*+ vehicle.getInterpolatedLiftOffset()/2*/, -3.0);
+    		GL11.glTranslated(0.0, 0.5, -2.5);
+    		
+    		/*
+    		float muRoll = (float) ((1 - Math.cos(Minecraft.getMinecraft().getRenderPartialTicks() * Math.PI)) / 2f);
+    		float roll = (vehicle.prevRotationRollH+vehicle.prevRotationRoll) + ((vehicle.rotationRoll+vehicle.rotationRollH)-(vehicle.prevRotationRoll+vehicle.prevRotationRollH))*muRoll;
+    		
+    		GL11.glRotated(-roll, 0.0, 0.0, 1.0);
+    		//System.out.println(vehicle.liftOffset);
+    		GL11.glTranslated(-0.525, 1.0 + vehicle.getInterpolatedLiftOffset()/2, -3.0);
+    		GL11.glTranslated(0.0, 0.5, -2.5);
+    		*/
+    		
+    		//player.rotationPitch = 15;
+    		//player.prevRotationPitch = 15;
+    		
     	}
     	
-    	
-    	if(1+1==2) return;
-        PlayerWeaponInstance weaponInstance = getPlayerWeaponInstance();
-        EntityPlayer player = compatibility.getClientPlayer();
+        
         if(weaponInstance != null ) {
             ClientModContext context = (ClientModContext) weaponInstance.getWeapon().getModContext();
             MultipartRenderStateManager<RenderableState, Part, RenderContext<RenderableState>> stateManager = weaponInstance.getWeapon().getRenderer().getStateManager(player);
@@ -77,7 +147,6 @@ public class Interceptors {
 //                    System.out.println("Last state " + lastState);
 //                }
 //            }
-            
             ScreenShakingAnimationManager yawPitchAnimationManager = context.getPlayerRawPitchAnimationManager();
             yawPitchAnimationManager.update(player, weaponInstance, stateManager != null ? stateManager.getLastState() : null);
 //            if(weaponInstance.isAimed() && !isProning(player)) {
@@ -105,6 +174,8 @@ public class Interceptors {
     }
     
     public static boolean setupViewBobbing(float partialTicks) {
+    	
+    	
         
         if(!(compatibility.getRenderViewEntity() instanceof EntityPlayer)) {
             return true;
@@ -146,15 +217,48 @@ public class Interceptors {
         }
         
         if(entityplayer.getRidingEntity() instanceof EntityVehicle) {
+        	//if(1+1==2) return false;
             EntityVehicle vehicle = (EntityVehicle) entityplayer.getRidingEntity();
             double lastYawDelta = vehicle.getLastYawDelta();
             double speed = vehicle.getSpeed();
-
+            
+            
             VehicleSuspensionStrategy suspensionStrategy = vehicle.getSuspensionStrategy();
             //System.out.printf("Rate: %.5f, amp: %.5f\n", suspensionStrategy.getRate(), suspensionStrategy.getAmplitude());
-            Matrix4f transformMatrix = vehicle.getRandomizer().update(suspensionStrategy.getRate(), 
-                    suspensionStrategy.getAmplitude());
-            RenderVehicle2.captureCameraTransform(transformMatrix);
+            //Matrix4f transformMatrix = vehicle.getRandomizer().update(suspensionStrategy.getRate(),  suspensionStrategy.getAmplitude());
+            
+            // jim hack
+            
+            float amplitude = 0.03f;
+            float frequency = 15f;
+            
+            double hillFrac = (vehicle.getSolver().getVelocityVector().lengthVector()*(vehicle.rotationPitch/2))/20;
+            amplitude += Math.abs(hillFrac)/250;
+            frequency += Math.abs(hillFrac)/250;
+            
+            
+            if(vehicle.getSolver().materialBelow != Material.ROCK) {
+            	amplitude += 0.1f;
+            	frequency += 2f;
+    
+            	amplitude *= vehicle.getRealSpeed()/25.0;
+            	frequency *= vehicle.getRealSpeed()/25.0;
+            	
+            	
+            }
+            
+            float appliedAmplitude = 0.0f;
+            if(Minecraft.getMinecraft().gameSettings.thirdPersonView != 0) {
+            	appliedAmplitude = amplitude;
+            } else appliedAmplitude = amplitude/10.0f;
+            
+            
+            
+            
+            Matrix4f transformMatrix = vehicle.getRandomizer().update(frequency,  appliedAmplitude);
+           //
+            
+            //RenderVehicle2.captureCameraTransform(transformMatrix);
             //System.out.printf("Yaw delta: %.5f, speed: %.5f\n", lastYawDelta, speed);
             
             if(Math.abs(lastYawDelta) > 0.3) {
@@ -201,6 +305,8 @@ public class Interceptors {
         }
         
         GL11.glRotatef(f2, 0.0F, 1.0F, 0.0F);
+        
+        
 
         return allowDefaultEffect;
     }
@@ -232,7 +338,17 @@ public class Interceptors {
     }
     
     public static void render2(ModelBase modelBase, Entity entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scale) {
-        
+    	
+    	
+    	
+    	if(entityIn instanceof EntityPlayer) {
+    		EntityPlayer player = (EntityPlayer) entityIn;
+    		if(player.isRiding() && player.getRidingEntity() instanceof EntityVehicle) {
+    			double b = ((EntityPlayer) entityIn).limbSwing;
+    			if(b != 39.0) return;    			
+    		}
+    	}
+    	
         if(entityIn instanceof EntityPlayer && modelBase instanceof ModelPlayer) {
             
             ModelPlayer modelPlayer = (ModelPlayer) modelBase;
@@ -241,7 +357,10 @@ public class Interceptors {
             PlayerRenderer playerRenderer = renderers.computeIfAbsent(entityIn, 
                     e -> new PlayerRenderer((EntityPlayer) entityIn, ClientModContext.getContext()));
             
+            
             playerRenderer.renderModel(modelPlayer, player, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
+            
+            
             
             CustomPlayerInventory capability = CompatibleCustomPlayerInventoryCapability.getInventory(player);
             if(capability != null) {
@@ -263,6 +382,8 @@ public class Interceptors {
         } else {
             modelBase.render(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
         }
+        
+        
     }
     
     private static void adjustBodyWearablePosition(EntityPlayer player) {
@@ -282,7 +403,7 @@ public class Interceptors {
     }
 
     public static void renderArmorLayer(ModelBase modelBase, Entity entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scale) {
-        
+       
         if(entityIn instanceof EntityPlayer) { 
             PlayerRenderer playerRenderer = renderers.get(entityIn);
             EntityPlayer player = (EntityPlayer) entityIn;
@@ -296,6 +417,7 @@ public class Interceptors {
 
     public static void positionItemSide(RenderLivingBase<?> livingEntityRenderer, EntityLivingBase entity,
             ItemStack itemStack, TransformType transformType, EnumHandSide handSide) {
+    	
         if(entity instanceof EntityPlayer /* && isProning((EntityPlayer) entity)*/) { 
             PlayerRenderer playerRenderer = renderers.get(entity);
             EntityPlayer player = (EntityPlayer) entity;
@@ -313,6 +435,7 @@ public class Interceptors {
     }
     
     public static float adjustCameraPosition(EntityLivingBase player, float position) {
+    
         return player instanceof EntityPlayer && isProning((EntityPlayer) player) 
                 && Minecraft.getMinecraft().gameSettings.thirdPersonView == 0 ? position 
                 + player.getEyeHeight() * 1.6f : position;
@@ -323,13 +446,18 @@ public class Interceptors {
         float originalYaw = player.rotationYaw;
         //System.out.println("Yaw delta: " + yawDelta);
         
+       
+        
         float maxPitch = 90f;
         float maxYawDelta = 40f;
         
         yawDelta *= 0.15;
         
+       
+       
         boolean canChangeRotationYaw = true;
         if(player.getRidingEntity() instanceof EntityVehicle && Minecraft.getMinecraft().gameSettings.thirdPersonView == 0) {
+        	
             maxPitch = 90f;
 //            EntityVehicle entityVehicle = (EntityVehicle) player.ridingEntity;
 ////            maxYawDelta = 10f + 200f * (float)entityVehicle.getSpeed();
@@ -355,9 +483,32 @@ public class Interceptors {
                 player.rotationYaw = player.getRidingEntity().rotationYaw + maxYawDelta;
             }
             
-            player.rotationPitch = -player.getRidingEntity().rotationPitch * 1.3f;
+          // player.rotationPitch = -player.getRidingEntity().rotationPitch * 1.3f;
+            
+            // extra jim code :)
+            //player.rotationPitch = -player.getRidingEntity().rotationPitch;
+            
+            
+            // start
+player.rotationYaw = (float) ((double) player.rotationYaw + (double) yawDelta);
+            
+            player.rotationPitch = (float) ((double) player.rotationPitch - (double) pitchDelta * 0.15);
+
+            if (player.rotationPitch < -maxPitch) {
+                player.rotationPitch = -maxPitch;
+            }
+
+            if (player.rotationPitch > maxPitch) {
+                player.rotationPitch = maxPitch;
+            }
+            
+            player.prevRotationPitch += player.rotationPitch - originalPitch;
+            
+            // end
+            
 
         } else {
+        	
             player.rotationYaw = (float) ((double) player.rotationYaw + (double) yawDelta);
             
             player.rotationPitch = (float) ((double) player.rotationPitch - (double) pitchDelta * 0.15);
@@ -372,7 +523,8 @@ public class Interceptors {
             
             player.prevRotationPitch += player.rotationPitch - originalPitch;
         }
-        
+       
+       
         player.prevRotationYaw += player.rotationYaw - originalYaw;
     }
 

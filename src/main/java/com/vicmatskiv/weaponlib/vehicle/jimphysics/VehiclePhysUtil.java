@@ -6,6 +6,23 @@ import net.minecraft.util.math.Vec3d;
 public class VehiclePhysUtil {
 	
 	/*
+	 * Spring force
+	 */
+	
+	public static double springEnergy(double k, double x) {
+		return 0.5*k*x*x;
+	}
+	
+	public static double springForce(double k, double x) {
+		return k*x;
+	}
+	
+	public static double springStretchFromEnergy(double k, double energy) {
+		return Math.sqrt(2*energy/k);
+	}
+	
+	
+	/*
 	 * LONGITUDINAl
 	 */
 	public static Vec3d simpleTractionForce(Vec3d oreintation, double engineForce) {
@@ -136,7 +153,7 @@ public class VehiclePhysUtil {
 	 */
 	
 	public static double doubleRadiusOfLSTurn(double wheelBase, double steeringAngle) {
-		return wheelBase/Math.sin(Math.toRadians(steeringAngle));
+		return wheelBase/Math.sin(steeringAngle);
 	}
 	
 	public static double carTurnRate(Vec3d speed, double turnRadius) {

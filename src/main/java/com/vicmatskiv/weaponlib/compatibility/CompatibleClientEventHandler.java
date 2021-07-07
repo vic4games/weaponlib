@@ -3,9 +3,12 @@ package com.vicmatskiv.weaponlib.compatibility;
 import com.vicmatskiv.weaponlib.ClientModContext;
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.RenderingPhase;
+import com.vicmatskiv.weaponlib.particle.DriftCloudFX;
 
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.entity.Entity;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.RenderHandEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.TextureStitchEvent;
@@ -71,10 +74,13 @@ public abstract class CompatibleClientEventHandler {
         onCompatibleRenderHand(new CompatibleRenderHandEvent(event));
     }
 
+    public static TextureAtlasSprite carParticles;
+    
     @SubscribeEvent
     public void onTextureStitchEvent(TextureStitchEvent.Pre event) {
         event.getMap().registerSprite(getModContext().getNamedResource(
                 CompatibleParticle.CompatibleParticleBreaking.TEXTURE_BLOOD_PARTICLES));
+        carParticles = event.getMap().registerSprite(new ResourceLocation("mw" + ":" + "particle/carparticle"));
     }
 
 	protected abstract void onCompatibleRenderTickEvent(CompatibleRenderTickEvent compatibleRenderTickEvent);

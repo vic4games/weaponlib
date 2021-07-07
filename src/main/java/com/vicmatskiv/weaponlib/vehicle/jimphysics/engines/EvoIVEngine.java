@@ -1,4 +1,4 @@
-package com.vicmatskiv.weaponlib.vehicle.engines;
+package com.vicmatskiv.weaponlib.vehicle.jimphysics.engines;
 
 import com.vicmatskiv.weaponlib.vehicle.jimphysics.Engine;
 

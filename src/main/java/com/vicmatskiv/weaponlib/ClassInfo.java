@@ -3,6 +3,8 @@ package com.vicmatskiv.weaponlib;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.vicmatskiv.weaponlib.compatibility.CompatibleClassInfoProvider;
+
 public class ClassInfo {
 
     private static class MethodSignature {
@@ -85,7 +87,11 @@ public class ClassInfo {
     }
 
     public boolean classMatches(String className) {
-        String normalizedClassName = className.replace('.', '/');
+    	String normalizedClassName = "";
+    	if(!className.equals("paulscode.sound.libraries.SourceLWJGLOpenAL")) {
+    		normalizedClassName = className.replace('.', '/');
+    	} else normalizedClassName = className;
+        
         return mcpClassName.equals(normalizedClassName) || notchClassName.equals(normalizedClassName);
     }
 
@@ -96,19 +102,29 @@ public class ClassInfo {
             String methodName,
             String methodSignature)
     {
+    	
         if(!expectedMcpMethodSignature.equals(methodSignature) 
                 && !methodSignature.equals(notchSignatureMap.get(new MethodSignature(expectedMcpMethodName, expectedMcpMethodSignature)))) {
             return false;
         }
+        
+        // this is terrible practice don't do this lol
+        if(methodName.equals(expectedMcpMethodName) && methodSignature.equals(expectedMcpMethodSignature)) {
+        	System.out.println("Success!");
+        	return true;
+        }
+        
 
         if(mcpClassName.equals(methodOwnerClassName)) {
             return expectedMcpMethodName.equals(methodName) 
                     || methodName.equals(mcpMethodInfoMap.get(new MethodSignature(expectedMcpMethodName, expectedMcpMethodSignature)));
         }
+        
 
         if(!notchClassName.equals(methodOwnerClassName)) {
             return false;
         }
+        
 
         String notchMethodName = notchMethodInfoMap.get(new MethodSignature(expectedMcpMethodName, expectedMcpMethodSignature));
         return notchMethodName != null && methodName.equals(notchMethodName);

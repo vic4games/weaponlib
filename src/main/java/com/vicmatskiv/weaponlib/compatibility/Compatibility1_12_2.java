@@ -300,6 +300,8 @@ public class Compatibility1_12_2 implements Compatibility {
             }
             item.setRegistryName(modId, registryName);
         }
+        
+        System.out.println("REGISTRY: " + item.getRegistryName());
         //GameRegistry.register(item);
         ForgeRegistries.ITEMS.register(item);
     }
@@ -322,6 +324,7 @@ public class Compatibility1_12_2 implements Compatibility {
     @SideOnly(Side.CLIENT)
     public void registerRenderingRegistry(CompatibleRenderingRegistry rendererRegistry) {
         //MinecraftForge.EVENT_BUS.register(rendererRegistry);
+    	
         //ModelLoaderRegistry.registerLoader(rendererRegistry);
     }
 

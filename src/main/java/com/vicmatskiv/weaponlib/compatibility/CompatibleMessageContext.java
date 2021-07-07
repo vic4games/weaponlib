@@ -12,6 +12,8 @@ public class CompatibleMessageContext {
 	public CompatibleMessageContext(MessageContext ctx) {
 		this.ctx = ctx;
 	}
+	
+
 
 	public boolean isServerSide() {
 		return ctx.side == Side.SERVER;

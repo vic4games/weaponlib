@@ -57,17 +57,37 @@ final class HierarchicalPartRenderer<Part, State> implements StatefulRenderer<St
         
         MultipartRenderStateManager<State, SinglePart, PartRenderContext<State>> stateManager = stateManagers.computeIfAbsent(context.getEntity(), e -> stateManagerSupplier.get());
         
+        
+        
         stateSetter.accept(stateManager, context);
         MultipartPositioning<SinglePart, PartRenderContext<State>> multipartPositioning = stateManager.nextPositioning();
         Positioner<SinglePart, PartRenderContext<State>> positioner = multipartPositioning.getPositioner();
         
+        
+       
+        
         context.setProgress(currentProgressProvider.apply(context));
         
-        Minecraft.getMinecraft().getTextureManager().bindTexture(textureResource);
+        /*
+         * NEXT FEW LINES ARE BY JIM (saying this for debug purposes)
+         * This just tells the renderer to use an alternative texture
+         * USE CASE: vehicle lights
+         */
+        if(context.shouldRenderAlternateTexture()) {
+        	Minecraft.getMinecraft().getTextureManager().bindTexture(context.getAlternateTexture());
+        } else {
+        	Minecraft.getMinecraft().getTextureManager().bindTexture(textureResource);
+        }
+        
+        
         
         GL11.glPushMatrix();
         
         try {
+        	
+        	
+        	
+        	
             positioner.position(SinglePart.MAIN, context);
             
             if(DebugPositioner.isDebugModeEnabled()) {

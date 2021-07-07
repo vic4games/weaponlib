@@ -11,6 +11,10 @@ import java.util.function.Supplier;
 import com.vicmatskiv.weaponlib.animation.MultipartRenderStateManager;
 import com.vicmatskiv.weaponlib.vehicle.HierarchicalPartRenderer.SinglePart;
 
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
+
 public class VehicleRendererBuilder extends HierarchicalRendererBuilder<VehiclePart, VehicleRenderableState> {
     
     private static List<VehiclePart> allParts = Arrays.asList(
@@ -56,7 +60,11 @@ public class VehicleRendererBuilder extends HierarchicalRendererBuilder<VehicleP
     public VehicleRendererBuilder withWheelModelProvider(Supplier<VehicleModel> mainModelProvider) {
         VehicleModel frontLeftWheelModel = mainModelProvider.get();
         withPartRenderer(VehiclePart.FRONT_LEFT_WHEEL, renderContext -> {
+        	
+        	
+        	
             frontLeftWheelModel.render((EntityVehicle) renderContext.getEntity(), 0.0625f);
+            
         });
         
         VehicleModel frontRightWheelModel = mainModelProvider.get();
@@ -93,15 +101,24 @@ public class VehicleRendererBuilder extends HierarchicalRendererBuilder<VehicleP
     public HierarchicalRendererBuilder<VehiclePart, VehicleRenderableState> withPartPosition(VehiclePart part, 
             Consumer<PartRenderContext<VehicleRenderableState>> positionFunction, 
             VehicleRenderableState...states) {
+
+    	
+    	System.out.println("Loading states... " + Arrays.toString(states));
+    	
         if(states.length == 0) {
+    
             withPartPosition(part, positionFunction, 
                     VehicleRenderableState.IDLE,
                     VehicleRenderableState.PREPARED_TO_DRIVE,
                     VehicleRenderableState.DRIVING,
+                    VehicleRenderableState.STARTING_SHIFT,
+                    VehicleRenderableState.SHIFTING,
+                    VehicleRenderableState.FINISHING_SHIFT,
 //                    VehicleRenderableState.TURN_LEFT,
 //                    VehicleRenderableState.TURN_RIGHT,
                     VehicleRenderableState.STOPPING);
         } else {
+        	
             super.withPartPosition(part, positionFunction, states);
         }
         
@@ -111,6 +128,8 @@ public class VehicleRendererBuilder extends HierarchicalRendererBuilder<VehicleP
     @Override
     protected void prebuild() {
         
+    	System.out.println("Prebuild called");
+    	
         withInitialState(VehicleRenderableState.IDLE);
 
         withPartStateSetter(VehiclePart.STEERING_WHEEL, DEFAULT_CONTINOUS_STATE_SETTER);
@@ -126,7 +145,8 @@ public class VehicleRendererBuilder extends HierarchicalRendererBuilder<VehicleP
         withPartStateSetter(VehiclePart.FRONT_LEFT_CONTROL_ARM, DEFAULT_CONTINOUS_STATE_SETTER);
         
         withPartStateSetter(VehiclePart.FRONT_RIGHT_CONTROL_ARM, DEFAULT_CONTINOUS_STATE_SETTER);
-
+        
+     
         withPartRenderer(VehiclePart.LEFT_HAND, StatefulRenderers.createLeftHandRenderer(null, c -> c.getEntity().getControllingPassenger()));
         withPartRenderer(VehiclePart.RIGHT_HAND, StatefulRenderers.createRightHandRenderer(null, c -> c.getEntity().getControllingPassenger()));
         
@@ -152,13 +172,25 @@ public class VehicleRendererBuilder extends HierarchicalRendererBuilder<VehicleP
                         && transitionDescriptors.isEmpty()) {
                     List<TransitionDescriptor> idleTransitionDescriptors = partConfiguration.transitionDescriptors.get(VehicleRenderableState.IDLE);
                     transitionDescriptors.add(new TransitionDescriptor(idleTransitionDescriptors.get(0).positionFunction, animationDuration));
-                } else if(part == VehiclePart.RIGHT_HAND && state == VehicleRenderableState.PREPARED_TO_DRIVE
+                }  else if(part == VehiclePart.LEFT_HAND && (state == VehicleRenderableState.FINISHING_SHIFT || state == VehicleRenderableState.SHIFTING || state == VehicleRenderableState.STARTING_SHIFT)
+                        && transitionDescriptors.isEmpty()) {
+                    List<TransitionDescriptor> idleTransitionDescriptors = partConfiguration.transitionDescriptors.get(VehicleRenderableState.DRIVING);
+                    transitionDescriptors.add(new TransitionDescriptor(idleTransitionDescriptors.get(0).positionFunction, animationDuration));
+                }  else if(part == VehiclePart.RIGHT_HAND && state == VehicleRenderableState.PREPARED_TO_DRIVE
                         && transitionDescriptors.isEmpty()) {
                     List<TransitionDescriptor> drivingTransitionDescriptors = partConfiguration.transitionDescriptors.get(VehicleRenderableState.DRIVING);
                     transitionDescriptors.add(new TransitionDescriptor(drivingTransitionDescriptors.get(0).positionFunction, animationDuration));
                 } else if(part == VehiclePart.RIGHT_HAND && state == VehicleRenderableState.STOPPING
                         && transitionDescriptors.isEmpty()) {
                     List<TransitionDescriptor> idleTransitionDescriptors = partConfiguration.transitionDescriptors.get(VehicleRenderableState.IDLE);
+                    transitionDescriptors.add(new TransitionDescriptor(idleTransitionDescriptors.get(0).positionFunction, animationDuration));
+                } else if(part == VehiclePart.RIGHT_HAND && state == VehicleRenderableState.STARTING_SHIFT
+                		&& transitionDescriptors.isEmpty()) {
+                    List<TransitionDescriptor> drivingTransitionDescriptors = partConfiguration.transitionDescriptors.get(VehicleRenderableState.SHIFTING);
+                    transitionDescriptors.add(new TransitionDescriptor(drivingTransitionDescriptors.get(0).positionFunction, animationDuration));
+                } else if(part == VehiclePart.RIGHT_HAND && state == VehicleRenderableState.FINISHING_SHIFT
+                        && transitionDescriptors.isEmpty()) {
+                    List<TransitionDescriptor> idleTransitionDescriptors = partConfiguration.transitionDescriptors.get(VehicleRenderableState.DRIVING);
                     transitionDescriptors.add(new TransitionDescriptor(idleTransitionDescriptors.get(0).positionFunction, animationDuration));
                 }
                 
