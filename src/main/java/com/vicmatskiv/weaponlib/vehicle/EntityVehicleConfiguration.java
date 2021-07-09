@@ -328,8 +328,8 @@ public class EntityVehicleConfiguration implements EntityConfiguration {
             ItemVehicle vehicleItem = new ItemVehicle(entityName, entityClass);
             
             compatibility.registerItem(context.getModId(), vehicleItem, entityName);
-            System.out.println("Renderer Registrar: " + ("mw:"  + entityName));
-            ModelLoader.setCustomModelResourceLocation(vehicleItem, 0, new net.minecraft.client.renderer.block.model.ModelResourceLocation("mw:"  + entityName, "inventory"));
+            //System.out.println("Renderer Registrar: " + ("mw:"  + entityName));
+            //ModelLoader.setCustomModelResourceLocation(vehicleItem, 0, new net.minecraft.client.renderer.block.model.ModelResourceLocation("mw:"  + entityName, "inventory"));
             
             // register the item renderer
           

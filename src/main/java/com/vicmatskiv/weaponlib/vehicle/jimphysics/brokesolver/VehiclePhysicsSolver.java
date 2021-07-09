@@ -1,1 +1,0 @@
-			synthAccelFor -= 3;
