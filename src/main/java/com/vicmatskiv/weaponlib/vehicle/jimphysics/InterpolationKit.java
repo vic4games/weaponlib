@@ -1,9 +1,20 @@
 package com.vicmatskiv.weaponlib.vehicle.jimphysics;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.entity.Entity;
 import net.minecraft.util.math.Vec3d;
 
 public class InterpolationKit {
 
+	
+	public static Vec3d interpolatedEntityPosition(Entity en) {
+		return new Vec3d(interpolateValue(en.prevPosX, en.posX, Minecraft.getMinecraft().getRenderPartialTicks()),
+				interpolateValue(en.prevPosY, en.posY, Minecraft.getMinecraft().getRenderPartialTicks()),
+				interpolateValue(en.prevPosZ, en.posZ, Minecraft.getMinecraft().getRenderPartialTicks())
+				);
+		
+	}
+	
 	public static double interpolateValue(double old, double newVal, double partialTicks) {
 		return old + (newVal-old)*partialTicks;
 	}

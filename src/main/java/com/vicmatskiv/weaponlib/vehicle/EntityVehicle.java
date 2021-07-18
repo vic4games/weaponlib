@@ -779,19 +779,276 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 	
 	
 	public float getInterpolatedLiftOffset() {
-		return prevLiftOffset + (liftOffset-prevLiftOffset)*Minecraft.getMinecraft().getRenderPartialTicks();
+		return (float) InterpolationKit.interpolateValue((double) prevLiftOffset, (double) liftOffset, (double) Minecraft.getMinecraft().getRenderPartialTicks());
+	}
+	
+	public void oldHC() {
+
+		float targetDown = 0.0f;
+		float targetUp = 0.0f;
+		
+		double dist = 0.0f;
+		double forwardNess = 2.0;
+		Vec3d sDown = new Vec3d(-0.5, 0.0, forwardNess).rotateYaw((float) Math.toRadians(-rotationYaw)).add(getPositionVector());
+		Vec3d eDown = new Vec3d(-0.5, -10, forwardNess).rotateYaw((float) Math.toRadians(-rotationYaw)).add(getPositionVector());
+		RayTraceResult rayDown = world.rayTraceBlocks(sDown, eDown);
+		if(rayDown != null) {
+			dist = rayDown.hitVec.subtract(sDown).lengthVector();
+			float newPitch = (float) -Math.toDegrees(Math.atan(dist/(2.5)));
+			targetDown = newPitch;
+			
+			
+		}
+		
+		
+		
+		
+		
+		
+		
+		
+		Vec3d start = new Vec3d(-0.5, 0.0, 0.0).rotateYaw((float) Math.toRadians(-rotationYaw)).add(getPositionVector());
+		Vec3d end = new Vec3d(-0.5, 0.0, 5.75).rotateYaw((float) Math.toRadians(-rotationYaw)).rotateYaw((float) -solver.getSideSlipAngle()).add(getPositionVector());
+		RayTraceResult ray = world.rayTraceBlocks(start, end);
+		
+		
+		if(ray != null) {
+			
+			IBlockState b = this.world.getBlockState(ray.getBlockPos().up());
+			
+			if(b.causesSuffocation()) return;
+			
+			
+			
+			Vec3d hitVec = ray.hitVec;
+			Vec3d ab = hitVec.subtract(getPositionVector());
+			
+			double distance = ab.lengthSquared();
+			
+			double upMag = 0.0;
+			
+		
+			
+			
+			if(distance > 15.5) {
+				upMag=  0.25;
+				
+			} else if (distance > 1.0){
+				
+				upMag=  0.5;
+				
+				
+			} else {
+				upMag=  1.5;
+				
+			}
+			
+			double liftPush = 0.0;
+			
+			IBlockState bL = this.world.getBlockState(ray.getBlockPos());
+			if(!bL.isFullBlock()) {
+				upMag /= 2;
+				liftPush = 0.1;
+			}
+			
+			//
+			/*
+			Vec3d lift = new Vec3d(0.0, upMag, 0.5+liftPush).rotateYaw((float) Math.toRadians(-rotationYaw));
+			this.move(MoverType.SELF, lift.x, lift.y, lift.z);
+	    	*/
+			
+			BlockPos bTC = ray.getBlockPos();
+			Vec3d sB = new Vec3d(bTC.getX(), bTC.getY()-1.0, bTC.getZ());
+			Vec3d eB = new Vec3d(bTC.getX(), bTC.getY(), bTC.getZ());
+			
+			RayTraceResult heightRay = this.world.rayTraceBlocks(sB, eB);
+			
+			double opp = 0.0;
+			double adj = 0.0;
+			
+			if(heightRay != null) {
+				
+				opp = heightRay.hitVec.y - getPositionVector().y;
+				adj = heightRay.hitVec.subtract(ray.hitVec).lengthVector();
+				//double hyp = Math.sqrt(Math.pow(opp, 2) + Math.pow(opp, 2));
+				
+				//System.out.println(opp + " | " + adj);
+				
+				
+				
+				
+			}
+			
+			
+			System.out.println("sped" + getSpeed());
+			float t = 1.0f;
+			float mu2 = (float) ((1 - Math.cos(t * Math.PI)) / 2f);
+			Vec3d lift = new Vec3d(0.0, upMag+0.2, 0.7+liftPush).rotateYaw((float) Math.toRadians(-rotationYaw)).scale(mu2);
+			this.move(MoverType.SELF, lift.x, lift.y, lift.z);
+			
+			
+			// test block behind & up
+			/*
+			Vec3d blockV = new Vec3d(ray.getBlockPos().getX(), ray.getBlockPos().getY(), ray.getBlockPos().getZ());
+			Vec3d abV = blockV.subtract(getPositionVector()).scale(2.5).add(getPositionVector());
+			BlockPos pos = new BlockPos(abV.x, abV.y, abV.z);
+			
+			if(this.world.getBlockState(pos.up()).causesSuffocation()) {
+			
+				upMag += 0.5;
+			}*/
+			
+			
+			float newPitch = (float) Math.toDegrees(Math.atan(upMag/(2.5)));
+			targetUp = newPitch;
+			
+			/*
+		   double diff = Math.abs(Math.abs(rotationPitch)-Math.abs(newPitch));
+		 //  System.out.println("diff: " + diff);
+		   if(diff > 6) {
+			   rotationPitch += (float) diff/(diff/2.5f);
+		   } else {
+			   rotationPitch = newPitch;
+		   }*/
+		  
+		   //System.out.println(rotationPitch);
+			
+			
+			
+		
+		} else {
+			//rotationPitch = 0;
+		}
+		
+		
+		/*
+		 * PITCH SMOOTHING
+		 */
+		
+		float adjT = 0.0f;
+		if(targetDown == 0.0) {
+			adjT = targetUp;
+		} else if(targetUp == 0.0) {
+			adjT = targetDown;
+		} else {
+			adjT = (targetDown + targetUp)/2.0f;
+		}
+		
+		
+		
+		// calculate difference from current pitch
+		
+		
+		if(dist > 0.5) {
+			if(adjT < rotationPitch) {
+				rotationPitch -= Math.abs(adjT)*0.05;
+			} else {
+				rotationPitch += Math.abs(adjT)*0.3;
+			}
+		} else {
+			
+			if(adjT == 0.0) {
+				adjT = -rotationPitch;
+			}
+			
+			if(adjT < rotationPitch) {
+				rotationPitch -= Math.abs(adjT)*0.5;
+			} else {
+				rotationPitch += Math.abs(adjT)*0.3;
+			}
+			
+		}
+		
+		
+		
+		/*
+		double diff = Math.abs(Math.abs(rotationPitch)-Math.abs(adjT));
+		
+		if(diff > 10) {
+			rotationPitch = adjT/1.75f;
+		} else if(diff > 6) {
+			rotationPitch = adjT/1.25f;
+		} else if(diff > 3) {
+			rotationPitch = adjT/1.1f;
+		} else {
+			rotationPitch += adjT;
+		}*/
+		
+		//System.out.println("CurrentPitch: " + rotationPitch + " | " + adjT);
+		/*
+		double diff = Math.abs(Math.abs(rotationPitch)-Math.abs(adjT));
+		
+		if(diff > 10) {
+			rotationPitch = adjT/1.75f;
+		} else if(diff > 6) {
+			rotationPitch = adjT/1.25f;
+		} else if(diff > 3) {
+			rotationPitch = adjT/1.1f;
+		} else {
+			rotationPitch += adjT;
+		}*/
+		
+		
+		
+		
+		
+		
+		
+		
+		/*
+		World world = this.world;
+		RayTraceResult ray = world.rayTraceBlocks(start, end);
+		if(ray != null) {
+			this.move(MoverType.SELF, 0.0, 0.6, 0.0);
+			
+		}*/
+		
+		
+		
+		/*
+		Vec3d rearTestingPoint = new Vec3d(-0.5, 0.5, -2.75).rotateYaw((float) Math.toRadians(-rotationYaw)).add(getPositionVector());
+    	Vec3d frontTestingPoint = new Vec3d(-0.5, 0.5, 4.75).rotateYaw((float) Math.toRadians(-rotationYaw)).add(getPositionVector());
+    	
+    	
+    	RayTraceResult rRay = world.rayTraceBlocks(rearTestingPoint, rearTestingPoint.subtract(0.0, 2.0, 0.0));
+    	RayTraceResult fRay = world.rayTraceBlocks(frontTestingPoint, frontTestingPoint.subtract(0.0, 4.0, 0.0));
+    	
+    	
+    	if(rRay != null && fRay != null) {
+    		
+    		float heightDiff = (float) (fRay.hitVec.y - rRay.hitVec.y);
+    		
+    		if(heightDiff == 0) {
+    			heightDiff = fRay.getBlockPos().getY() - rRay.getBlockPos().getY();
+    		}
+    		
+    		
+    		
+    		float angle = (float) Math.atan(heightDiff/(3.5));
+    		rotationPitch = (float) Math.toDegrees(angle);
+    		//System.out.println(rotationPitch);
+    		
+    	
+    	}
+    	*/
+    	
+    	
+    	//rotationPitch = 0;
+		
+		
 	}
 	
 	
 	public void handleHillClimbing() {
 		
+		/*
 		if(liftOffset == 0 && ticksExisted % 3 == 0) {
 			prevLiftOffset = liftOffset;
 		} else {
 			prevLiftOffset = liftOffset;
 		}
 		
-		if(prevLiftOffset == liftOffset) liftOffset = 0;
+		if(prevLiftOffset == liftOffset) liftOffset = 0;*/
 		
 		double wheelbase = 2.85;
 		
@@ -964,7 +1221,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 		
 		
 	
-		double baseReach = 8.75;
+		double baseReach = 8.75*(Math.min(getRealSpeed()/25.0, 1.0));
 		
 		if(!onGround || rotationPitch > 5) {
 			baseReach += 3;
@@ -974,6 +1231,14 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 		Vec3d end = new Vec3d(-0.5, 0.0, baseReach).rotateYaw((float) Math.toRadians(-rotationYaw)).rotateYaw((float) -solver.getSideSlipAngle()).add(getPositionVector());
 		RayTraceResult ray = world.rayTraceBlocks(start, end, false, true, false);
 		if(ray != null) {
+			
+			/*
+			 * CHECK IF VEHICLE IS ABOVE RAY
+			 */
+			//System.out.println( + " | " + posY);
+			
+			
+			
 			IBlockState b = this.world.getBlockState(ray.getBlockPos().up());
 			double upMag = 0.0;
 			if(b.getBlock() instanceof BlockSnow) {
@@ -1033,7 +1298,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 			}
 			float t = 1.0f;
 			float mu2 = (float) ((1 - Math.cos(t * Math.PI)) / 2f);
-			System.out.println(liftPush);
+			
 			Vec3d lift = new Vec3d(0.0, upMag+0.55, 0.05+liftPush).rotateYaw((float) Math.toRadians(-rotationYaw)).scale(mu2);
 			
 			
@@ -1043,7 +1308,20 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 			//System.out.println("lifting");
 			// DEBUG // 
 			
-			liftOffset += (float) lift.y/2;
+		//	liftOffset += (float) lift.y/2;
+			
+			double targetTopHeight = ray.getBlockPos().getY()+1.0;
+			double heightDifference = (lift.y + getPositionVector().y)-targetTopHeight;
+			if(heightDifference > 0) {
+				double correction = lift.y - heightDifference;
+				
+				lift = new Vec3d(lift.x, correction, lift.z);
+				//double hd2 = (correction + getPositionVector().y)-targetTopHeight;
+				//System.out.println("Height Difference: " + heightDifference + " | Corrected Difference: " + hd2);
+				
+			}
+			
+			
 			this.move(MoverType.SELF, lift.x, lift.y, lift.z);
 			float newPitch = (float) Math.toDegrees(Math.atan(upMag/(wheelbase/2)));
 			
@@ -1512,6 +1790,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
     			
     			//hil
     			handleHillClimbing();
+    			//oldHC();
     			
     			
     			

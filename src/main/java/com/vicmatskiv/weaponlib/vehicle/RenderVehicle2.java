@@ -27,6 +27,7 @@ import com.vicmatskiv.weaponlib.vehicle.collisions.GJKResult;
 import com.vicmatskiv.weaponlib.vehicle.collisions.OBBCollider;
 import com.vicmatskiv.weaponlib.vehicle.collisions.OreintedBB;
 import com.vicmatskiv.weaponlib.vehicle.collisions.RigidBody;
+import com.vicmatskiv.weaponlib.vehicle.jimphysics.InterpolationKit;
 import com.vicmatskiv.weaponlib.vehicle.jimphysics.solver.SuspensionSolver;
 import com.vicmatskiv.weaponlib.vehicle.jimphysics.solver.WheelSolver;
 import com.vicmatskiv.weaponlib.vehicle.jimphysics.stability.InertialStabilizer;
@@ -56,6 +57,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import scala.actors.threadpool.Arrays;
 import scala.collection.parallel.ParIterableLike.Min;
@@ -368,6 +370,23 @@ public class RenderVehicle2 extends CompatibleEntityRenderer
 		
 		//GL11.glRotatef(MathHelper.wrapAngleTo180_float(par1HCEntityMongoose.getRotateWheelSpeed()*100F), 1.0F, 0.0F, 0.0F);
 		
+		
+		
+		
+		//if(entityVehicle.rotationPitch > 5) {
+			Vec3d startLift = InterpolationKit.interpolatedEntityPosition(entityVehicle);
+			Vec3d endLift = startLift.subtract(new Vec3d(0, 10, 0).rotatePitch((float) Math.toRadians(entityVehicle.rotationPitch)).rotateYaw((float) Math.toRadians(-rotationYaw)));
+			RayTraceResult rtr = entityVehicle.world.rayTraceBlocks(startLift, endLift, false, true, false);
+			if(rtr != null) {
+				entityVehicle.prevLiftOffset = entityVehicle.liftOffset;
+				entityVehicle.liftOffset = (float) rtr.hitVec.subtract(startLift).lengthVector();
+				
+			}
+			
+			
+			//GL11.glTranslated(0.0, -entityVehicle.getInterpolatedLiftOffset(), 0.0);
+		//}
+		
 		for(Entity pass : entityVehicle.getPassengers()) {
 			
 			if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 0 && pass == Minecraft.getMinecraft().player) continue;
@@ -451,6 +470,8 @@ public class RenderVehicle2 extends CompatibleEntityRenderer
 		 * END SHIT
 		 */
 		
+		
+	
 		
 		
 		

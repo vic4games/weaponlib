@@ -47,6 +47,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 //import net.minecraft.util.MathHelper;
 import net.minecraft.util.EnumHandSide;
+import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.client.event.EntityViewRenderEvent.CameraSetup;
 
@@ -119,8 +120,24 @@ public class Interceptors {
     		thirdPersonCameraStabilizer.rotationYaw = vehicle.rotationYaw;
     		thirdPersonCameraStabilizer.updateCameraTransforms();
     		*/
+    		
+    		//GL11.glTranslated(0.0, vehicle.getInterpolatedLiftOffset(), 0.0);
+    		
+    		/*
+    		if(vehicle.rotationPitch > 5) {
+    			Vec3d startLift = InterpolationKit.interpolatedEntityPosition(vehicle);
+    			Vec3d endLift = startLift.subtract(new Vec3d(0, 10, 0).rotatePitch((float) Math.toRadians(vehicle.rotationPitch)).rotateYaw((float) Math.toRadians(-vehicle.rotationYaw)));
+    			RayTraceResult rtr = vehicle.world.rayTraceBlocks(startLift, endLift, false, true, false);
+    			if(rtr != null) {
+    				GL11.glTranslated(0.0, rtr.hitVec.subtract(startLift).lengthVector(), 0.0);
+    			}
+    		}*/
+    		
     		GL11.glTranslated(-0.525, 1.0 /*+ vehicle.getInterpolatedLiftOffset()/2*/, -3.0);
     		GL11.glTranslated(0.0, 0.5, -2.5);
+    		
+    		
+    		
     		
     		/*
     		float muRoll = (float) ((1 - Math.cos(Minecraft.getMinecraft().getRenderPartialTicks() * Math.PI)) / 2f);
