@@ -39,8 +39,9 @@ public abstract class CompatibleClientEventHandler {
     	if(player == null || !player.isRiding() || !(player.getRidingEntity() instanceof EntityVehicle)) return;
     	EntityVehicle vehicle = (EntityVehicle) player.getRidingEntity();
     	
+    	double fA = (vehicle.getSolver().getSyntheticAcceleration()/50 + (vehicle.getRealSpeed()/120))*0.2;
     	
-    	e.setNewfov((float) (e.getFov() + (vehicle.getSolver().getSyntheticAcceleration()/50 + (vehicle.getRealSpeed()/120))));
+    	e.setNewfov((float) (e.getFov()+fA));
     	
     }
     

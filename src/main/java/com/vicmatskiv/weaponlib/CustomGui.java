@@ -375,7 +375,7 @@ public class CustomGui extends CompatibleGui {
 		
 		
 		if(transmission.isReverseGear) {
-			drawCenteredString(Minecraft.getMinecraft().fontRenderer, "R", 0, -4, 0x4cd137);
+			drawCenteredString(Minecraft.getMinecraft().fontRenderer, "R", 0, -4, 0x10ac84);
 		} else {
 			drawCenteredString(Minecraft.getMinecraft().fontRenderer, "" + gear, 0, -4, 0x4cd137);
 		}

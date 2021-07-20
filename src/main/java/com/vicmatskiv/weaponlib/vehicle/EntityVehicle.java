@@ -166,7 +166,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
     private Randomizer randomizer;
     public float outOfControlTicks = 0.0F;
     private int lerpSteps;
-    private float deltaRotation;
+    public float deltaRotation;
     
     //
     private double boatPitch;
@@ -232,6 +232,9 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 	private float nextStepDistance;
 	private float nextFlap;
 	private int fire;
+	
+	
+	public boolean reverseLockout = true;
 	
 	/*
 	 * Sounds
@@ -678,41 +681,62 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 		
 		Transmission trans = getSolver().transmission;
 		
-		if(KeyBindings.vehicleThrottle.isKeyDown()) {
-			
-			if(trans.isReverseGear) {
-				trans.exitReverse();
+		
+		
+		if(!trans.isReverseGear) {
+			/*
+			 * HOW THE CONTROLS WORK
+			 * UNDER NORMAL CONDITIONS
+			 * (NO REVERSING!)
+			 */
+			if(KeyBindings.vehicleThrottle.isKeyDown()) {
+				reverseLockout = true;
+				if(throttle < 1) throttle += 0.1;
+			} else {
+				if(throttle > 0) throttle -= 0.1;
 			}
 			
-			if( throttle < 1) throttle += 0.1;
-		}  else {
-			if(throttle > 0) throttle -= 0.1;
+	
+			if(getSolver().getVelocityVector().lengthVector() < 0.5 && !KeyBindings.vehicleBrake.isKeyDown()) {
+				reverseLockout = false;
+			}
+			
+			if(KeyBindings.vehicleBrake.isKeyDown()) {
+			
+				// REVERSE LOCKOUT ALLOWS THE PROCESS TO BE SMOOTHER;
+				// YOU HAVE TO LET GO OF THE BRAKE TO ENTER REVERSE.
+				if(getSolver().getVelocityVector().lengthVector() < 0.5 && !reverseLockout) {
+					trans.enterReverse();
+				}
+				
+				isBraking = true;
+			} else isBraking = false;
+			
+		} else {
+			/*
+			 * HOW THE CONTROLS WORK
+			 * UNDER REVERSE CONDITIONS
+			 */
+			
+			if(KeyBindings.vehicleThrottle.isKeyDown()) {
+				
+				if(getSolver().getVelocityVector().lengthVector() < 0.5) {
+					trans.exitReverse();
+				}
+				
+				isBraking = true;
+			} else isBraking = false;
+			
+			if(KeyBindings.vehicleBrake.isKeyDown()) {
+				if(throttle < 1) throttle += 0.1;
+			} else {
+				if(throttle > 0) throttle -= 0.1;
+			}
+			
+			
 		}
 		
-		if(KeyBindings.vehicleBrake.isKeyDown() && !trans.isReverseGear) {
-			
-			/*
-			if(!trans.isReverseGear && getRealSpeed() == 0.0) {
-				trans.enterReverse();
-			}*/
-			
-			
-			if( throttle >= 0) throttle -= 0.1;
-			isBraking = true;
-		} else isBraking = false;
 		
-		
-		if(KeyBindings.vehicleThrottle.isKeyDown() && trans.isReverseGear) {
-			
-			if( throttle < 1) throttle += 0.1;
-		} 
-		
-		/*
-		 * if(trans.isReverseGear) {
-				if( throttle < 1) throttle += 0.1;
-			}
-			
-		 */
 		
 		if(throttle < 0) throttle = 0;
 		if(throttle > 1) throttle = 1;
@@ -1316,7 +1340,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 			
 			if(!bL.isFullBlock()) {
 				upMag = blockHeight+0.01;
-				liftPush = Math.sqrt((blockHeight*blockHeight)) + 0.55;
+				liftPush = Math.sqrt((blockHeight*blockHeight));
 				
 				
 			}

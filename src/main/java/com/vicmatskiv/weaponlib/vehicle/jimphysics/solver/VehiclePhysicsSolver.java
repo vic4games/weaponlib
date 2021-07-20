@@ -350,8 +350,11 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		if(1+1 == 2) return;
 		*/
 		
-		double torqueContributionRear = rearAxel.latNonVec()*rearAxel.COGoffset;
-		double torqueContributionFront = Math.cos(vehicle.steerangle)*frontAxel.latNonVec()*frontAxel.COGoffset;
+		
+		double rC = transmission.isReverseGear ? -1 : 1;
+		
+		double torqueContributionRear = rearAxel.latNonVec()*rearAxel.COGoffset*rC;
+		double torqueContributionFront = Math.cos(vehicle.steerangle)*frontAxel.latNonVec()*frontAxel.COGoffset*rC;
 		//System.out.println(torqueContributionFront + " | " + torqueContributionRear + " | " + (torqueContributionFront + torqueContributionRear));
 		
 		//System.out.println(frontAxel.latNonVec());
@@ -410,7 +413,7 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		
 		vehicle.rotationYaw += vehicle.driftTuner;
 		
-		vehicle.steerangle += Math.toDegrees(timeStep*angularVelocity*-1)*0.02;
+		vehicle.steerangle += Math.toDegrees(timeStep*angularVelocity*-1)*0.02*rC;
 		
 		
 		// pitching
@@ -430,6 +433,8 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		Vec3d lForce = rearAxel.getLongitudinalForce()/*.rotatePitch((float) Math.toRadians(vehicle.rotationPitch))*/.rotateYaw((float) Math.toRadians(-vehicle.rotationYaw+vehicle.driftTuner));
 		
 		//lForce = lForce.scale(vehicle.rotationPitch/20);
+		
+		
 		
 		Vec3d latForce = rearAxel.adjLateralForce().add(frontAxel.adjLateralForce().scale(Math.cos(vehicle.steerangle)));
 		Vec3d destructive = calculateResistiveForces(velocity);
@@ -485,10 +490,19 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		
 		velocity = new Vec3d(velocity.x, oYV, velocity.z);
 		
+		/*
+		 * REVERSE VEHICLE, BAD METHOD, BUT IT WORKS.
+		 */
+		double rG = 1.0;
+		if(transmission.isReverseGear) {
+			rG = -1;
+		}
+		
+		
 		// calculate position
-		double xP = timeStep*velocity.x;
+		double xP = timeStep*velocity.x * rG;
 		double yP = timeStep*velocity.y;
-		double zP = timeStep*velocity.z;
+		double zP = timeStep*velocity.z * rG;
 	
 		//System.out.println(yP);
 		

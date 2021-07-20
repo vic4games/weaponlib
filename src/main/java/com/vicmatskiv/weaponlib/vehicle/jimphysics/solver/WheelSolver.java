@@ -143,6 +143,16 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 			wheelAngularVelocity += wheelAngularAcceleration*solver.timeStep;
 		}
 		
+		
+		
+		
+		
+		// prevents the user from going too fast backwards
+		// in reverse. real life example = Mercedes G-Wagon.
+		if(solver.transmission.isReverseGear) {
+			if(wheelAngularVelocity > 20) wheelAngularVelocity = 20;
+		}
+		
 		/*
 		wheelAngularVelocity += wheelAngularAcceleration*solver.timeStep;
 		wheelAngularVelocity = oldWheelVel + (wheelAngularVelocity-oldWheelVel)*0.3;
@@ -153,6 +163,7 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 		wheelAngularAcceleration = 0;
 		
 		// update wheel oreintation
+		
 		Vec3d omega = wheelOreintation.rotateYaw((float) wheelAngle);
 		
 		

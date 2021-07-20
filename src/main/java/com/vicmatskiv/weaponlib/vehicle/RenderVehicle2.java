@@ -414,6 +414,10 @@ public class RenderVehicle2 extends CompatibleEntityRenderer
 				Render<Entity> render = rManager.getEntityRenderObject(pass);
 				
 				
+				
+				player.rotationYaw += entityVehicle.deltaRotation;
+				player.setRotationYawHead(player.getRotationYawHead() + entityVehicle.deltaRotation);
+	            
 				entityVehicle.applyYawToEntity(player);
 				player.limbSwing = 39;
 				render.doRender(player, 0, 0, 0, pass.rotationYaw, Minecraft.getMinecraft().getRenderPartialTicks());		
