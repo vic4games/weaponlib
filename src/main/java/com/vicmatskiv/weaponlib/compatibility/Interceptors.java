@@ -15,6 +15,7 @@ import org.lwjgl.util.vector.Vector3f;
 
 import com.vicmatskiv.weaponlib.OptimizedCubeList;
 import com.vicmatskiv.weaponlib.ClientModContext;
+import com.vicmatskiv.weaponlib.KeyBindings;
 import com.vicmatskiv.weaponlib.Part;
 import com.vicmatskiv.weaponlib.PlayerRenderer;
 import com.vicmatskiv.weaponlib.PlayerWeaponInstance;
@@ -49,6 +50,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHandSide;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
+import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.event.EntityViewRenderEvent.CameraSetup;
 
 public class Interceptors {
@@ -73,10 +75,23 @@ public class Interceptors {
         	//GL11.glRotated(vehicle.sideLean, 0.0, 0.0, 1.0);
         	
         	
+        	//Minecraft.getMinecraft().setRenderViewEntity(vehicle);
+        	
         	if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 0) {
+        		
+        		//MatrixHelper.applyMatrix(RenderVehicle2.tm);
+        		//vehicle.rotationPitch = 0;
+        		
+        		
+        		player.rotationPitch = -vehicle.rotationPitch;
+        		player.prevRotationPitch = -vehicle.prevRotationPitch;
+        		
+        		GL11.glTranslated(0.0, Math.abs(0.8*(vehicle.rotationPitch/45)), 0.0);
         		
         		float muRoll = (float) ((1 - Math.cos(Minecraft.getMinecraft().getRenderPartialTicks() * Math.PI)) / 2f);
         		float roll = (vehicle.prevRotationRollH+vehicle.prevRotationRoll) + ((vehicle.rotationRoll+vehicle.rotationRollH)-(vehicle.prevRotationRoll+vehicle.prevRotationRollH))*muRoll;
+        		GL11.glRotatef(-roll, 0.0f, 0.0f, 1.0f);
+        		
         	}
 
         }
@@ -133,7 +148,7 @@ public class Interceptors {
     			}
     		}*/
     		
-    		GL11.glTranslated(-0.525, 1.0 /*+ vehicle.getInterpolatedLiftOffset()/2*/, -3.0);
+    		GL11.glTranslated(-0.525, 1.0 /*+ vehicle.getInterpolatedLiftOffset()/2*/, -4.0);
     		GL11.glTranslated(0.0, 0.5, -2.5);
     		
     		
@@ -148,9 +163,73 @@ public class Interceptors {
     		GL11.glTranslated(-0.525, 1.0 + vehicle.getInterpolatedLiftOffset()/2, -3.0);
     		GL11.glTranslated(0.0, 0.5, -2.5);
     		*/
+    	
+    		/*
+    		vehicle.rotationYaw = 0;
+    		vehicle.prevRotationYaw = 0;
+    		
+    		
+    		if(player.rotationYaw == vehicle.rotationYaw) {
+    			
+    		} else if(player.rotationYaw > vehicle.rotationYaw) {
+    			player.rotationYaw += (player.rotationYaw-vehicle.rotationYaw)*0.05;
+    		} else if(player.rotationYaw < vehicle.rotationYaw) {
+    			player.rotationYaw -= (player.rotationYaw-vehicle.rotationYaw)*0.05;
+    		}
+    		
+    		if(player.prevRotationYaw == vehicle.prevRotationYaw) {
+    			
+    		} else if(player.prevRotationYaw > vehicle.prevRotationYaw) {
+    			player.prevRotationYaw += (player.prevRotationYaw-vehicle.prevRotationYaw)*0.05;
+    		} else if(player.prevRotationYaw < vehicle.prevRotationYaw) {
+    			player.prevRotationYaw -= (player.prevRotationYaw-vehicle.prevRotationYaw)*0.05;
+    		}
+    		
+    		System.out.println(player.rotationYaw + " | " + player.prevRotationYaw);
+    		//sysou
+    		*/
+    		
+    		
+    		double diff = player.rotationYaw - vehicle.rotationYaw;
+    		if(diff != 0.0) {
+    			double mod = 0.12*(Math.min(vehicle.getRealSpeed()/60.0, 1.0));
+    			if(vehicle.getRealSpeed() > 5) {
+    				if(Math.abs(diff) > 90) mod = 1;
+    			}
+    			if(player.rotationYaw < vehicle.rotationYaw) {
+    				player.rotationYaw -= diff*mod;
+    			} else if(player.rotationYaw > vehicle.rotationYaw) {
+    				player.rotationYaw -= diff*mod;
+    			}
+    		}
+    		
+    		
+    		
+    		
+    		player.prevRotationYaw = player.rotationYaw;
+    		//player.prevRotationYaw = vehicle.prevRotationYaw;
+    		
+    		
+    		double targ = -vehicle.rotationPitch + 15;
+    		
+    		double pitchDiff = player.rotationPitch - targ;
+    		if(pitchDiff != 0.0) {
+    			double mod = 0.12*(Math.min(vehicle.getRealSpeed()/60.0, 1.0));
+    			if(vehicle.getRealSpeed() > 5) {
+    				if(Math.abs(diff) > 90) mod = 1;
+    			}
+    			if(player.rotationPitch < targ) {
+    				player.rotationPitch -= pitchDiff*mod;
+    			} else if(player.rotationPitch > targ) {
+    				player.rotationPitch -= pitchDiff*mod;
+    			}
+    		}
+    		player.prevRotationPitch = player.rotationPitch;
+    		
     		
     		//player.rotationPitch = 15;
     		//player.prevRotationPitch = 15;
+    		
     		
     	}
     	
@@ -278,8 +357,9 @@ public class Interceptors {
             //RenderVehicle2.captureCameraTransform(transformMatrix);
             //System.out.printf("Yaw delta: %.5f, speed: %.5f\n", lastYawDelta, speed);
             
+            
             if(Math.abs(lastYawDelta) > 0.3) {
-                GL11.glRotatef(-(float)lastYawDelta * 2f, 0.0F, 1.0f, 0.0f);
+              //  GL11.glRotatef(-(float)lastYawDelta * 2f, 0.0F, 1.0f, 0.0f);
             }
         } else {
             RenderVehicle2.captureCameraTransform(null);

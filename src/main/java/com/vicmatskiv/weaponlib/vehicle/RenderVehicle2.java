@@ -257,6 +257,9 @@ public class RenderVehicle2 extends CompatibleEntityRenderer
 		
 		DebugRenderer.setupBasicRender();
 		
+		Matrix4f originalMatrix = MatrixHelper.captureMatrix();
+		
+		
 		GL11.glTranslatef((float)posX, (float)posY, (float)posZ);
 		
 		
@@ -324,7 +327,13 @@ public class RenderVehicle2 extends CompatibleEntityRenderer
 		float interpPitch = entityVehicle.prevRotationPitch + (entityVehicle.rotationPitch-entityVehicle.prevRotationPitch)*mu2;
 		
 		// debug DD
-		GL11.glRotatef(interpPitch, 1.0F, 0.0F, 0.0F);
+		if(Minecraft.getMinecraft().gameSettings.thirdPersonView != 0) {
+			GL11.glRotatef(interpPitch, 1.0F, 0.0F, 0.0F);
+		} else {
+		//	GL11.glRotatef(interpPitch*0.4f, 1.0F, 0.0F, 0.0F);
+			
+		}
+		//GL11.glRotatef(interpPitch, 1.0F, 0.0F, 0.0F);
 		
 		
 		if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 0) {
@@ -404,6 +413,8 @@ public class RenderVehicle2 extends CompatibleEntityRenderer
 				RenderManager rManager = Minecraft.getMinecraft().getRenderManager();
 				Render<Entity> render = rManager.getEntityRenderObject(pass);
 				
+				
+				entityVehicle.applyYawToEntity(player);
 				player.limbSwing = 39;
 				render.doRender(player, 0, 0, 0, pass.rotationYaw, Minecraft.getMinecraft().getRenderPartialTicks());		
 				player.limbSwing = 89;
@@ -484,7 +495,13 @@ public class RenderVehicle2 extends CompatibleEntityRenderer
 		context.setScale(0.0625f);
 		mainRenderer.render(context);
 		
-		this.tm = MatrixHelper.captureMatrix();
+		Matrix4f brother = MatrixHelper.captureMatrix();
+		
+		Matrix4f actual = new Matrix4f();
+		brother.sub(brother, originalMatrix, actual);
+		
+		
+		this.tm = actual;
 		
 		
 	

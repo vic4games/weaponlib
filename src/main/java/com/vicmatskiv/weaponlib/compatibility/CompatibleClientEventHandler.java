@@ -1,14 +1,24 @@
 package com.vicmatskiv.weaponlib.compatibility;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
+import org.lwjgl.opengl.GL11;
+
 import com.vicmatskiv.weaponlib.ClientModContext;
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.RenderingPhase;
 import com.vicmatskiv.weaponlib.particle.DriftCloudFX;
+import com.vicmatskiv.weaponlib.vehicle.EntityVehicle;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.Vec3d;
+import net.minecraftforge.client.event.EntityViewRenderEvent;
+import net.minecraftforge.client.event.FOVUpdateEvent;
 import net.minecraftforge.client.event.RenderHandEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.TextureStitchEvent;
@@ -21,6 +31,50 @@ public abstract class CompatibleClientEventHandler {
 
     private Entity origRenderVeiwEntity;
 
+    @SideOnly(Side.CLIENT)
+    @SubscribeEvent
+    public final void updateFOV(FOVUpdateEvent e) {
+    	
+    	EntityPlayer player = Minecraft.getMinecraft().player;
+    	if(player == null || !player.isRiding() || !(player.getRidingEntity() instanceof EntityVehicle)) return;
+    	EntityVehicle vehicle = (EntityVehicle) player.getRidingEntity();
+    	
+    	
+    	e.setNewfov((float) (e.getFov() + (vehicle.getSolver().getSyntheticAcceleration()/50 + (vehicle.getRealSpeed()/120))));
+    	
+    }
+    
+    @SubscribeEvent
+    public final void properCameraSetup(EntityViewRenderEvent.CameraSetup e) {
+    	EntityPlayer player = compatibility.getClientPlayer();
+    	
+    	
+        
+        if(player.isRiding() && player.getRidingEntity() instanceof EntityVehicle && Minecraft.getMinecraft().gameSettings.thirdPersonView == 0) {
+        	EntityVehicle vehicle = (EntityVehicle) player.getRidingEntity();
+        	//vehicle.rotationPitch = 30f;
+        	
+        	if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 0) {
+        			
+        		//GL11.glRotated(-45, 1.0, 0.0, 0.0);
+        		//GL11.glTranslated(player.posX, player.posY, player.posZ);
+
+        		
+        		
+        		//GL11.glTranslated(-player.posX, -player.posY, -player.posZ);
+        		
+        		
+        		//e.setRoll(-(vehicle.rotationRoll + vehicle.rotationRollH));
+        		//e.setPitch(-vehicle.rotationPitch);
+        		//GL11.glTranslated(0.0, -0.9, -.8);
+        	}
+
+        }
+    }
+    
+    
+    
+    
 	@SideOnly(Side.CLIENT)
 	@SubscribeEvent
 	public final void onClientTick(TickEvent.ClientTickEvent event) {

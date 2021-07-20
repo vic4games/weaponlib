@@ -211,7 +211,7 @@ public class Transmission {
             //System.out.println("Shifted up to gear " + getCurrentGear() + " RPM : " + engineRPM);
         }
         
-        if(engineRPM < dShift && this.getCurrentGear() != 1 && vehicle.throttle < 0.5) {
+        if(engineRPM < dShift && this.getCurrentGear() != 1 /*&& vehicle.throttle < 0.5*/) {
         	if(runningAShift) {
         		double median = maxShiftTime/2.0;
         		if(shiftTimer > median) {

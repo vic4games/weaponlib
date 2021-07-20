@@ -28,6 +28,7 @@ import com.vicmatskiv.weaponlib.CommonModContext;
 import com.vicmatskiv.weaponlib.Configurable;
 import com.vicmatskiv.weaponlib.Contextual;
 import com.vicmatskiv.weaponlib.EntityClassFactory;
+import com.vicmatskiv.weaponlib.KeyBindings;
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.TryFireMessage;
 import com.vicmatskiv.weaponlib.animation.Randomizer;
@@ -394,7 +395,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 	                }
 	            }
 
-	            
+	           // Vec3d vec3d = Vec3d.ZERO;
 	            Vec3d vec3d = (new Vec3d((double)f, 0.0D, 0.0D)).rotateYaw(-this.rotationYaw * 0.017453292F - ((float)Math.PI / 2F));
 	            
 	            /*
@@ -433,9 +434,27 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
         		
         		
 	           
-	            Vec3d apr = Vec3d.ZERO;
-	            passenger.setPosition(this.posX + vec3d.x + seatOffset.x+apr.x, this.posY + (double)f1 + seatOffset.y + apr.y, this.posZ + vec3d.z + seatOffset.z + apr.x);
-	           // passenger.setPosition(this.posX + seatOffset.x, this.posY + seatOffset.y, this.posZ + seatOffset.z);
+	            Vec3d apr = new Vec3d(this.posX + vec3d.x + seatOffset.x,
+	            		this.posY + (double)f1 + seatOffset.y,
+	            		this.posZ + vec3d.z + seatOffset.z);
+	         //   double iH = 0.3;
+	          //  double iX = Math.sin(Math.toRadians(rotationPitch))*iH;
+	            //double iY = Math.cos(Math.toRadians(rotationPitch))*iH;
+	            
+	            Vec3d tBro = new Vec3d(0, 0.0, 0.0).rotatePitch((float) Math.toRadians(rotationPitch)).rotateYaw((float) Math.toRadians(-rotationYaw));
+	            
+	            
+	          //  Vec3d posExhaust = new Vec3d(0, -0.5, 0.0).rotatePitch((float) Math.toRadians(rotationPitch)).rotateYaw((float) Math.toRadians(-rotationYaw)).add(getPositionVector());
+	    		
+	            //passenger.setPosition(posExhaust.x, posExhaust.y, posExhaust.z);
+	            
+	            passenger.setPosition(apr.x+tBro.x, apr.y+tBro.y, apr.z+tBro.z);
+	            
+	           // passenger.setPosition(this.posX + vec3d.x + seatOffset.x+apr.x, this.posY + (double)f1 + seatOffset.y + apr.y, this.posZ + vec3d.z + seatOffset.z + apr.x);
+	           
+	            
+	            
+	            // passenger.setPosition(this.posX + seatOffset.x, this.posY + seatOffset.y, this.posZ + seatOffset.z);
 		           
 	            passenger.rotationYaw += this.deltaRotation;
 	            passenger.setRotationYawHead(passenger.getRotationYawHead() + this.deltaRotation);
@@ -590,6 +609,31 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 	/*
 	 * CONTROLLING
 	 */
+	
+	public void keyBasedSteering() {
+		
+		double angle = Math.toDegrees(steerangle);
+		double sensitivity = 4;
+		if(KeyBindings.vehicleTurnLeft.isKeyDown()) {
+			angle -= sensitivity;
+		}
+		
+		if(KeyBindings.vehicleTurnRight.isKeyDown()) {
+			angle += sensitivity;
+		}
+		
+		
+		
+		if(angle < -45.0F) {
+			angle = -45.0F;
+		}
+		if(angle > 45.0F) {
+			angle = 45.0F;
+		}
+		
+		steerangle = Math.toRadians(angle);
+	}
+	
 	/**
 	 * Unless you are trying to add self-driven vehicles,
 	 * please keep this on client
@@ -634,7 +678,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 		
 		Transmission trans = getSolver().transmission;
 		
-		if(Keyboard.isKeyDown(Keyboard.KEY_W)) {
+		if(KeyBindings.vehicleThrottle.isKeyDown()) {
 			
 			if(trans.isReverseGear) {
 				trans.exitReverse();
@@ -645,7 +689,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 			if(throttle > 0) throttle -= 0.1;
 		}
 		
-		if(Keyboard.isKeyDown(Keyboard.KEY_S) && !trans.isReverseGear) {
+		if(KeyBindings.vehicleBrake.isKeyDown() && !trans.isReverseGear) {
 			
 			/*
 			if(!trans.isReverseGear && getRealSpeed() == 0.0) {
@@ -658,7 +702,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 		} else isBraking = false;
 		
 		
-		if(Keyboard.isKeyDown(Keyboard.KEY_S) && trans.isReverseGear) {
+		if(KeyBindings.vehicleThrottle.isKeyDown() && trans.isReverseGear) {
 			
 			if( throttle < 1) throttle += 0.1;
 		} 
@@ -673,20 +717,23 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 		if(throttle < 0) throttle = 0;
 		if(throttle > 1) throttle = 1;
 		
-		if(Keyboard.isKeyDown(Keyboard.KEY_SPACE)) {
+		if(KeyBindings.vehicleHandbrake.isKeyDown()) {
 			solver.applyHandbrake();
 		} else {
 			solver.releaseHandbrake();
 		}
 		
 		
-		steerangle *= 0.5;
+		
+		steerangle *= 0.8;
+		//MOUSE BASED steerangle *= 0.5;
 		int mA = 45;
 	
 		// Code below fixes bug where players are unable
 		// to become Takumi Fujiwara, even when listening to
 		// EuroBeat. This allows you to do the C-121, so you
 		// will win the Usui Pass Battle.
+		/*
 		if(Keyboard.isKeyDown(Keyboard.KEY_A))
 		{
 			 driftTuner -= 5;
@@ -700,7 +747,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 			driftTuner = newTune;
 			 if(driftTuner < -mA) driftTuner = -mA;
 			
-	    }
+	    }*/
 		
 		lastYawDelta = Math.toDegrees(steerangle)*0.3;
 		wheelRotationAngle -= (float) solver.velocity.lengthVector();
@@ -1056,9 +1103,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 		// HAVE ANY INTENT TO GO UP A HILL.
 				
 		
-		if(isBraking || getSolver().getVelocityVector().lengthVector() < 0.3 || (throttle == 0 && getSolver().getVelocityVector().lengthVector() < 25)) {
-			return;
-		}
+		
 		
 		
 		/*
@@ -1109,14 +1154,13 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 			
 		
 			
-			
-			// DOWN PITCHING //
 			if(Math.abs(rollTarget-rotationRollH) < 9) {
 	
 			} else if(rollTarget < rotationRollH) {
-				rotationRollH -= Math.abs(rollTarget)*0.08;
+				
+				rotationRollH -= Math.abs(rollTarget)*0.68;
 			} else {
-				rotationRollH += Math.abs(rollTarget)*0.8;
+				rotationRollH += Math.abs(rollTarget)*0.9;
 			}
 		} else {
 			
@@ -1227,10 +1271,16 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 			baseReach += 3;
 		}
 		
+		boolean flagOne = false;
+		if(isBraking || getSolver().getVelocityVector().lengthVector() < 0.3 || (throttle == 0 && getSolver().getVelocityVector().lengthVector() < 25)) {
+			flagOne = true;
+		}
+		
+		
 		Vec3d start = new Vec3d(-0.5, 0.0, 0.0).rotateYaw((float) Math.toRadians(-rotationYaw)).add(getPositionVector());
 		Vec3d end = new Vec3d(-0.5, 0.0, baseReach).rotateYaw((float) Math.toRadians(-rotationYaw)).rotateYaw((float) -solver.getSideSlipAngle()).add(getPositionVector());
 		RayTraceResult ray = world.rayTraceBlocks(start, end, false, true, false);
-		if(ray != null) {
+		if(ray != null && !flagOne) {
 			
 			/*
 			 * CHECK IF VEHICLE IS ABOVE RAY
@@ -1493,7 +1543,6 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
     	
     	
     	
-    	
 		
 		doExhaustParticles(true, new Vec3d(0.25, 0.5, -3.25), 0.5);
 		doExhaustParticles(true, new Vec3d(-1.45, 0.5, -3.25), 0.5);
@@ -1731,7 +1780,8 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
     			
     			
     			// update steering
-    			updateSteering((EntityPlayer) player);
+    			//updateSteering((EntityPlayer) player);
+    			keyBasedSteering();
     			
     			// update controls
     			updateControls();

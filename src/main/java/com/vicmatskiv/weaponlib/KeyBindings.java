@@ -47,6 +47,16 @@ public class KeyBindings {
     public static KeyBinding altModeDebugKey;
     
     public static KeyBinding deleteDebugKey;
+    
+    
+    /*
+     * VEHICLE
+     */
+    public static KeyBinding vehicleThrottle;
+    public static KeyBinding vehicleBrake;
+    public static KeyBinding vehicleHandbrake;
+    public static KeyBinding vehicleTurnLeft;
+    public static KeyBinding vehicleTurnRight;
 
     public static void init() {
 
@@ -100,6 +110,27 @@ public class KeyBindings {
         
         periodKey = new KeyBinding("key.sight", Keyboard.KEY_PERIOD,
                 "key.categories.weaponlib");
+        
+        
+        /*
+         * VEHICLE
+         */
+        
+        vehicleThrottle = new KeyBinding("vehicle.throttle", Keyboard.KEY_W,
+                "key.categories.weaponlib");
+        
+        vehicleBrake = new KeyBinding("vehicle.brake", Keyboard.KEY_S,
+                "key.categories.weaponlib");
+        
+        vehicleHandbrake = new KeyBinding("vehicle.handbrake", Keyboard.KEY_SPACE,
+                "key.categories.weaponlib");
+        
+        vehicleTurnLeft = new KeyBinding("vehicle.turnleft", Keyboard.KEY_A,
+                "key.categories.weaponlib");
+        
+        vehicleTurnRight = new KeyBinding("vehicle.turnright", Keyboard.KEY_D,
+                "key.categories.weaponlib");
+        
 
         compatibility.registerKeyBinding(reloadKey);
         compatibility.registerKeyBinding(unloadKey);
@@ -118,6 +149,13 @@ public class KeyBindings {
         compatibility.registerKeyBinding(laserAttachmentKey);
         compatibility.registerKeyBinding(periodKey);
         compatibility.registerKeyBinding(customInventoryKey);
+        
+        
+        compatibility.registerKeyBinding(vehicleThrottle);
+        compatibility.registerKeyBinding(vehicleBrake);
+        compatibility.registerKeyBinding(vehicleHandbrake);
+        compatibility.registerKeyBinding(vehicleTurnLeft);
+        compatibility.registerKeyBinding(vehicleTurnRight);
 
         if(DebugPositioner.isDebugModeEnabled()) {
             bindDebugKeys();
