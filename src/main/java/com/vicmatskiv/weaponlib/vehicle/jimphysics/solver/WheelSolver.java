@@ -116,10 +116,19 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 	 * @param magnitude 1.0-0.0, lower vals = higher braking
 	 */
 	public void applyBrake(double magnitude) {
+
+		wheelAngularVelocity -= 30;
+		wheelAngularAcceleration -= 30;
 		
 		
-		wheelAngularVelocity *= magnitude;
-		wheelAngularAcceleration *= Math.min(magnitude, 0.05);
+		
+		if(wheelAngularVelocity < 0) wheelAngularVelocity = 0;
+		if(wheelAngularAcceleration < 0) wheelAngularAcceleration = 0;
+		
+		
+		//wheelAngularVelocity *= magnitude;
+		//wheelAngularAcceleration *= Math.min(magnitude, 0.05);
+
 		
 	}
 	
@@ -129,12 +138,15 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 		
 		
 		
+
 		// update angular velocity
 		//wheelAngularVelocity += wheelAngularAcceleration*solver.timeStep;
 		
 		
 		
-		
+
+		//System.out.println("V: " + wheelAngularVelocity + "rad/s | A: " + wheelAngularAcceleration + "rad/s^2");
+
 		
 		double diff = wheelAngularVelocity - (wheelAngularAcceleration*solver.timeStep);
 		if(diff > 2) {
@@ -143,6 +155,7 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 			wheelAngularVelocity += wheelAngularAcceleration*solver.timeStep;
 		}
 		
+
 		
 		
 		
@@ -153,6 +166,7 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 			if(wheelAngularVelocity > 20) wheelAngularVelocity = 20;
 		}
 		
+
 		/*
 		wheelAngularVelocity += wheelAngularAcceleration*solver.timeStep;
 		wheelAngularVelocity = oldWheelVel + (wheelAngularVelocity-oldWheelVel)*0.3;
@@ -163,7 +177,7 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 		wheelAngularAcceleration = 0;
 		
 		// update wheel oreintation
-		
+
 		Vec3d omega = wheelOreintation.rotateYaw((float) wheelAngle);
 		
 		
@@ -191,6 +205,7 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 		
 		
 		
+
 		// get longitundinal force
 		longForce = VehiclePhysUtil.pacejkaLong(loadOnWheel, slipRatio, 1.65, 1, 0.97, 10);
 		if(Double.isNaN(longForce)) {
@@ -213,6 +228,7 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 		//tractionTorque = longForce*0.9*loadOnWheel*radius*-1/10000;
 		
 		
+
 	   tractionTorque = longForce*radius*-1;
 		
 	   
@@ -256,6 +272,7 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 		//System.out.println("YAW: " + yawspeed + " | ROT_ANGLE: " + rot_angle + " | SIDE SLIP: " + sideSlip);
 		
 		
+
 		// calculates the lateral forces
 		
 		lateralForce = VehiclePhysUtil.pacejkaLong(loadOnWheel, slipAngleTire, 1.3, 1, 0.97, 10);
@@ -282,6 +299,11 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 		if(this.axel.COGoffset < 0 && this.axel.solver.materialBelow != Material.ROCK) {
 			lateralForce *= 0.5;
 		}
+
+		
+		// kinetic friction (implementation = 0/10 effort)
+		if(Math.abs(slipAngleTire) > 1.5 && this.axel.COGoffset < 0) lateralForce *= 0.75; 
+
 			
 		
 		if(Double.isNaN(lateralForce)) {

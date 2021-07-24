@@ -8,10 +8,14 @@ import javax.vecmath.Matrix3f;
 import javax.vecmath.Quat4f;
 import javax.vecmath.Vector2d;
 
+
+import com.vicmatskiv.weaponlib.KeyBindings;
 import com.vicmatskiv.weaponlib.network.IEncodable;
 import com.vicmatskiv.weaponlib.vehicle.EntityVehicle;
+import com.vicmatskiv.weaponlib.vehicle.VehicleTransmissionStrategy.DefaultTransmissionStrategy;
 import com.vicmatskiv.weaponlib.vehicle.collisions.GJKResult;
 import com.vicmatskiv.weaponlib.vehicle.collisions.InertiaKit;
+import com.vicmatskiv.weaponlib.vehicle.collisions.MathHelper;
 import com.vicmatskiv.weaponlib.vehicle.collisions.OBBCollider;
 import com.vicmatskiv.weaponlib.vehicle.collisions.OreintedBB;
 import com.vicmatskiv.weaponlib.vehicle.jimphysics.Engine;
@@ -90,7 +94,9 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 	}
 	
 	public Vec3d getOreintationVector() {
-		return Vec3d.fromPitchYaw(vehicle.rotationPitch, vehicle.rotationYaw);
+
+		return Vec3d.fromPitchYaw(/*vehicle.rotationPitch*/0f, vehicle.rotationYaw);
+
 	}
 	
 	public Vec3d getVelocityVector() {
@@ -115,8 +121,14 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 	
 	public double getSideSlipAngle() {
 		try {
+
+			
 			Vec3d uVec = getOreintationVector();
 			
+			
+			//System.out.println(Vec3d.fromPitchYaw(0.0f, vehicle.rotationYaw) + " | " + uVec);
+			
+
 			Vector2d u2D = new Vector2d(uVec.x, uVec.z);
 			Vector2d v2D = new Vector2d(velocity.x, velocity.z);
 			
@@ -168,7 +180,9 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 	public double getLongitudinalSpeed() {
 		if(Double.isNaN(velocity.lengthVector())) return vehicle.throttle;
 		
-		return velocity.lengthVector()+vehicle.throttle;
+
+		return velocity.lengthVector()+(vehicle.throttle/10);
+
 	}
 	
 	public void updateSuspensionPlatform() { 
@@ -249,11 +263,31 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		double gearRatio = t.getCurrentGearRatio();
 		double finalDriveRatio = t.getDifferentialRatio();
 
+
+		
+		int rpm = 0;
+		if(!t.isEngineDeclutched()) {
+			rpm = (int) VehiclePhysUtil.getEngineRPM(rearAxel.getWheelAngularVelocity(), gearRatio, finalDriveRatio);
+			if(Math.abs(rpm-currentRPM) > 1000) {
+				
+				double bruv = rpm-currentRPM;
+				currentRPM += bruv*0.2;
+				rpm = currentRPM;
+			}
+		} else {
+			
+			this.currentRPM += 50*vehicle.throttle;
+			this.currentRPM -= 10*Math.pow(currentRPM/7000.0+1.0, 2);
+			
+			
+			
+		
+			
+			rpm = currentRPM;
+		}
+		
 	
-		
-		
-		int rpm = (int) VehiclePhysUtil.getEngineRPM(rearAxel.getWheelAngularVelocity(), gearRatio, finalDriveRatio);
-		
+
 		if(rpm < 1000) {
 			rpm = 1000;
 		}
@@ -273,12 +307,21 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		double drvT = VehiclePhysUtil.getDriveTorque(torque, gearRatio, finalDriveRatio, 1.0)*(vehicle.throttle);
 	
 		
+
+		// if the engine is declutched,
+		// do not apply any force to the wheels.
+		// As it is not analog, there is no
+		// slippage.
+		//System.out.println(t.isEngineDeclutched());
+		if(t.isEngineDeclutched()) drvT = 0;
+
 		
 		synthAccelFor += drvT*timeStep/10;
 		
 		// FIX THIS IN THE FUTURE
-		
-		
+
+		//System.out.println("Drive torque: " + drvT);
+
 		rearAxel.applyDriveTorque(drvT);
 		
 		transmission.runAutomaticTransmission(vehicle, currentRPM);
@@ -350,11 +393,12 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		if(1+1 == 2) return;
 		*/
 		
-		
+
 		double rC = transmission.isReverseGear ? -1 : 1;
 		
 		double torqueContributionRear = rearAxel.latNonVec()*rearAxel.COGoffset*rC;
 		double torqueContributionFront = Math.cos(vehicle.steerangle)*frontAxel.latNonVec()*frontAxel.COGoffset*rC;
+
 		//System.out.println(torqueContributionFront + " | " + torqueContributionRear + " | " + (torqueContributionFront + torqueContributionRear));
 		
 		//System.out.println(frontAxel.latNonVec());
@@ -413,7 +457,9 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		
 		vehicle.rotationYaw += vehicle.driftTuner;
 		
+
 		vehicle.steerangle += Math.toDegrees(timeStep*angularVelocity*-1)*0.02*rC;
+
 		
 		
 		// pitching
@@ -434,8 +480,7 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		
 		//lForce = lForce.scale(vehicle.rotationPitch/20);
 		
-		
-		
+
 		Vec3d latForce = rearAxel.adjLateralForce().add(frontAxel.adjLateralForce().scale(Math.cos(vehicle.steerangle)));
 		Vec3d destructive = calculateResistiveForces(velocity);
 		
@@ -477,11 +522,15 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		 * 
 		 */
 		
-			if(velocity.lengthVector() < 0.5 && vehicle.throttle == 0.0 ) {
+
+			boolean wheelThrottle = vehicle.throttle == 0.0 || transmission.isEngineDeclutched();
+		
+			if(velocity.lengthVector() < 0.5 && wheelThrottle ) {
 				velocity = velocity.scale(0.01);
 			}
 			
-			if(velocity.lengthVector() < 0.03 && vehicle.throttle == 0.0) {
+			if(velocity.lengthVector() < 0.03 && wheelThrottle) {
+
 				
 				velocity = Vec3d.ZERO;
 			}
@@ -490,6 +539,7 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		
 		velocity = new Vec3d(velocity.x, oYV, velocity.z);
 		
+
 		/*
 		 * REVERSE VEHICLE, BAD METHOD, BUT IT WORKS.
 		 */
@@ -503,6 +553,7 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		double xP = timeStep*velocity.x * rG;
 		double yP = timeStep*velocity.y;
 		double zP = timeStep*velocity.z * rG;
+
 	
 		//System.out.println(yP);
 		

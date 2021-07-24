@@ -38,7 +38,15 @@ public class Transmission {
 	 */
 	public boolean isReverseGear = false;
 	public boolean isOnEcoShift = false;
+
+	
+	
+	/*
+	 * Clutch
+	 */
 	public boolean declutched = false;
+	public float slippage = 1.0f;
+
 	
 	
 	/**
@@ -88,6 +96,23 @@ public class Transmission {
 		++highestGear;
 	}
 	
+
+	public void declutch() {
+		declutched = true;
+	}
+	
+	public void clutch() {
+		declutched = false;
+	}
+	
+	public boolean isEngineDeclutched() {
+		return declutched;
+	}
+	
+	
+	
+	
+
 	/**
 	 * ECO
 	 */
@@ -176,7 +201,9 @@ public class Transmission {
 		
 		// cancels automatic transmission update if
 		// the car is in reverse
-		if(isReverseGear) return;
+
+		if(isReverseGear || isEngineDeclutched()) return;
+
 		
 		int uShift = 0;
 		int dShift = 0;
@@ -190,8 +217,11 @@ public class Transmission {
 			 dShift = this.eDShift;
 		 }
 		
+
+		boolean launchControl = vehicle.getSolver().getVelocityVector().lengthVector() < 25 && engineRPM > 4000;
         
-        if(engineRPM > uShift && this.getCurrentGear() != highestGear && vehicle.throttle > 0.1) {
+        if(engineRPM > uShift && this.getCurrentGear() != highestGear && vehicle.throttle > 0.1 && !launchControl) {
+
         	if(runningAShift) {
         		double median = maxShiftTime/2.0;
         		if(shiftTimer > median) {
@@ -280,6 +310,15 @@ public class Transmission {
 		return this;
 	}
 	
+
+	
+	/**
+	 * ENGINE RPM
+	 */
+	public void getEngineSpeed(float driveWheelSpeed) {
+		
+	}
+
 	/**
 	 * QUICK INITIALIZERS FOR EASY TRANSMISSION GENERATION
 	 */

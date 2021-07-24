@@ -83,10 +83,21 @@ public class Interceptors {
         		//vehicle.rotationPitch = 0;
         		
         		
+
+        		player.rotationYaw = vehicle.rotationYaw;
+        		player.prevRotationYaw = vehicle.prevRotationYaw;
+        		
+        		
         		player.rotationPitch = -vehicle.rotationPitch;
         		player.prevRotationPitch = -vehicle.prevRotationPitch;
         		
-        		GL11.glTranslated(0.0, Math.abs(0.8*(vehicle.rotationPitch/45)), 0.0);
+        		
+        		
+        		double dist = vehicle.rotationPitch;
+        		
+        		GL11.glTranslated(0.0, 0.0, -dist*0.025);
+        		//GL11.glTranslated(0.0, Math.abs(0.8*(vehicle.rotationPitch/45)), 0.0);
+
         		
         		float muRoll = (float) ((1 - Math.cos(Minecraft.getMinecraft().getRenderPartialTicks() * Math.PI)) / 2f);
         		float roll = (vehicle.prevRotationRollH+vehicle.prevRotationRoll) + ((vehicle.rotationRoll+vehicle.rotationRollH)-(vehicle.prevRotationRoll+vehicle.prevRotationRollH))*muRoll;
@@ -194,11 +205,17 @@ public class Interceptors {
     		if(diff != 0.0) {
     			double mod = 0.12*(Math.min(vehicle.getRealSpeed()/60.0, 1.0));
     			if(vehicle.getRealSpeed() > 5) {
-    				if(Math.abs(diff) > 90) mod = 1;
+
+    				
+    				if(Math.abs(diff) > 120) mod = 1;
+    				
     			}
     			if(player.rotationYaw < vehicle.rotationYaw) {
+    				
     				player.rotationYaw -= diff*mod;
     			} else if(player.rotationYaw > vehicle.rotationYaw) {
+    				
+
     				player.rotationYaw -= diff*mod;
     			}
     		}

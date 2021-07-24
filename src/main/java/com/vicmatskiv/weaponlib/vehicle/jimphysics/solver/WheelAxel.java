@@ -108,6 +108,7 @@ public class WheelAxel implements IEncodable<WheelAxel> {
 		
 		
 		
+
 		double totalTorque = drTorque + leftWheel.tractionTorque + rightWheel.tractionTorque;
 		
 	

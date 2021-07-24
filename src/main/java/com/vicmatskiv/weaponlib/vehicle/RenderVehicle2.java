@@ -225,64 +225,27 @@ public class RenderVehicle2 extends CompatibleEntityRenderer
 	
 	public void renderVehicle(EntityVehicle entityVehicle, double posX, double posY, double posZ, float rotationYaw, float par9)
 	{
-		/*
-		GL11.glPushMatrix();
-		rigidBodyTest(entityVehicle);
-		GL11.glPopMatrix();*/
-		
-		//GL11.glTranslatef((float)posX, (float)posY, (float)posZ);
-		
-		
-		
-		/*
-		List<AxisAlignedBB> list1 = entityVehicle.world.getCollisionBoxes(entityVehicle, entityVehicle.getEntityBoundingBox().expand(-0.5, -0.5, -0.5));
-		GL11.glTranslatef((float)posX, (float)posY, (float)posZ);
-		System.out.println(list1.size());
-		for(AxisAlignedBB abb : list1) {
-			Vec3d v = entityVehicle.getPositionVector();
-			AxisAlignedBB aabb = abb.offset(-v.x, -v.y, -v.z);
-			RenderGlobal.drawBoundingBox(aabb.minX, aabb.minY, aabb.minZ, aabb.maxX, aabb.maxY, aabb.maxZ, 1.0f, 0.0f, 0.0f, 1.0f);
-			
-			
-		}*/
-		
-		// sus one
 
-		
-		// sus end
-		
-		
-		
+		// RENDER CUSTOM BOUNDING BOX
 		GL11.glPushMatrix();
-		
-		DebugRenderer.setupBasicRender();
-		
-		Matrix4f originalMatrix = MatrixHelper.captureMatrix();
-		
-		
+		DebugRenderer.setupBasicRender();	
 		GL11.glTranslatef((float)posX, (float)posY, (float)posZ);
-		
-		
-		
-		
 		if(Minecraft.getMinecraft().getRenderManager().isDebugBoundingBox()) {
 			entityVehicle.oreintedBoundingBox.renderOBB();
 		}
-		
 		DebugRenderer.destructBasicRender();
-		
-		
-		
 		GL11.glPopMatrix();
 		
-//	    System.out.println("Rendering pitch " + entityVehicle.rotationPitch);
-		//field_110782_f = textureResource; //new ResourceLocation("missing-texture"); //Halocraft.MODID+par1HCEntityMongoose.getEntityTexture());
+		
+		
+		
+
 		GL11.glPushMatrix();
 		invertCameraTransform();
-		
 		EntityVehicle v = entityVehicle;
 		float pt = Minecraft.getMinecraft().getRenderPartialTicks();
 		
+
 		/*
 		double preX = v.prevPosX - v.posX;
 		double preY = v.prevPosY - v.posY;
@@ -326,20 +289,26 @@ public class RenderVehicle2 extends CompatibleEntityRenderer
 		//float mu2 = (float) ((1 - Math.cos(Minecraft.getMinecraft().getRenderPartialTicks() * Math.PI)) / 2f);
 		float interpPitch = entityVehicle.prevRotationPitch + (entityVehicle.rotationPitch-entityVehicle.prevRotationPitch)*mu2;
 		
+
 		// debug DD
 		if(Minecraft.getMinecraft().gameSettings.thirdPersonView != 0) {
 			GL11.glRotatef(interpPitch, 1.0F, 0.0F, 0.0F);
 		} else {
-		//	GL11.glRotatef(interpPitch*0.4f, 1.0F, 0.0F, 0.0F);
+
+			GL11.glRotatef(interpPitch, 1.0F, 0.0F, 0.0F);
+
 			
 		}
 		//GL11.glRotatef(interpPitch, 1.0F, 0.0F, 0.0F);
 		
-		
+
+		/* wtf does this even do???
 		if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 0) {
 			double interp = 1.0*(roll/45.0);
+			System.out.println("fuck " + interp);
 			GL11.glTranslated(interp, 0.0, 0.0);
-		}
+		}*/ 
+
 		
 		
 //		Matrix4f cM = MatrixHelper.captureMatrix();
@@ -365,7 +334,9 @@ public class RenderVehicle2 extends CompatibleEntityRenderer
 		}*/
 		
 		if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 0) {
-			GL11.glTranslated(0.0, (Math.abs(entityVehicle.rotationPitch)/90.0)*2.0, 0.0);
+
+			//GL11.glTranslated(0.0, (Math.abs(entityVehicle.rotationPitch)/90.0)*2.0, 0.0);
+
 		} else {
 			
 			if(!entityVehicle.onGround && entityVehicle.rotationPitch > 3) {
@@ -414,10 +385,12 @@ public class RenderVehicle2 extends CompatibleEntityRenderer
 				Render<Entity> render = rManager.getEntityRenderObject(pass);
 				
 				
+
 				
 				player.rotationYaw += entityVehicle.deltaRotation;
 				player.setRotationYawHead(player.getRotationYawHead() + entityVehicle.deltaRotation);
 	            
+
 				entityVehicle.applyYawToEntity(player);
 				player.limbSwing = 39;
 				render.doRender(player, 0, 0, 0, pass.rotationYaw, Minecraft.getMinecraft().getRenderPartialTicks());		
@@ -468,22 +441,7 @@ public class RenderVehicle2 extends CompatibleEntityRenderer
 		}
 		
 		
-		/*
-		 * START SHIT
-		 */
-	
-		
-		
-		
-		
-		//
-		 
-	
-		
-		
-		/*
-		 * END SHIT
-		 */
+
 		
 		
 	
@@ -492,20 +450,14 @@ public class RenderVehicle2 extends CompatibleEntityRenderer
 		
 		
 		
-		
+		// RUN THE HIERARCHIAL RENDERING
 		PartRenderContext<VehicleRenderableState> context = new PartRenderContext<>();
 		context.setState(renderState);
 		context.setEntity(entityVehicle);
 		context.setScale(0.0625f);
 		mainRenderer.render(context);
 		
-		Matrix4f brother = MatrixHelper.captureMatrix();
-		
-		Matrix4f actual = new Matrix4f();
-		brother.sub(brother, originalMatrix, actual);
-		
-		
-		this.tm = actual;
+
 		
 		
 	

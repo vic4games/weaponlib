@@ -166,7 +166,9 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
     private Randomizer randomizer;
     public float outOfControlTicks = 0.0F;
     private int lerpSteps;
+
     public float deltaRotation;
+
     
     //
     private double boatPitch;
@@ -232,10 +234,11 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 	private float nextStepDistance;
 	private float nextFlap;
 	private int fire;
-	
+
 	
 	public boolean reverseLockout = true;
 	
+
 	/*
 	 * Sounds
 	 */
@@ -437,14 +440,25 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
         		
         		
 	           
-	            Vec3d apr = new Vec3d(this.posX + vec3d.x + seatOffset.x,
-	            		this.posY + (double)f1 + seatOffset.y,
-	            		this.posZ + vec3d.z + seatOffset.z);
+
+	            Vec3d apr = new Vec3d(this.posX /*+ vec3d.x + seatOffset.x*/,
+	            		this.posY /*+ (double)f1 + seatOffset.y*/,
+	            		this.posZ /*+ vec3d.z + seatOffset.z*/);
+
 	         //   double iH = 0.3;
 	          //  double iX = Math.sin(Math.toRadians(rotationPitch))*iH;
 	            //double iY = Math.cos(Math.toRadians(rotationPitch))*iH;
 	            
-	            Vec3d tBro = new Vec3d(0, 0.0, 0.0).rotatePitch((float) Math.toRadians(rotationPitch)).rotateYaw((float) Math.toRadians(-rotationYaw));
+
+	            
+	            //this.rotationPitch = 10f;
+	            
+	            //this.rotationPitch = (float) (45.0f*((ticksExisted%200)/200.0));
+	            
+	            float nin = (float) Math.toRadians(90);
+	            Vec3d tBro = new Vec3d(-.0, -0.3, -0.5).rotatePitch((float) Math.toRadians(interpPitch)).rotateYaw((float) Math.toRadians(-rotationYaw));
+	            //Vec3d tBro = new Vec3d(-0.6, -0.6, -1.6).rotateYaw(-nin).rotatePitch((float) Math.toRadians(-rotationRoll)).rotateYaw(nin).rotateYaw((float) Math.toRadians(-rotationYaw));
+
 	            
 	            
 	          //  Vec3d posExhaust = new Vec3d(0, -0.5, 0.0).rotatePitch((float) Math.toRadians(rotationPitch)).rotateYaw((float) Math.toRadians(-rotationYaw)).add(getPositionVector());
@@ -502,6 +516,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 	
 	public boolean processInitialInteract(EntityPlayer player, EnumHand hand)
     {
+
         if (player.isSneaking())
         {
             return false;
@@ -547,7 +562,9 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 	@Override
     public boolean setState(VehicleState vehicleState) {
         this.vehicleState = vehicleState;
-        System.out.println("State changed to " + vehicleState);
+
+        //DEBUG: System.out.println("State changed to " + vehicleState);
+
         stateUpdateTimestamp = System.currentTimeMillis();
         return false;
     }
@@ -681,6 +698,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 		
 		Transmission trans = getSolver().transmission;
 		
+
 		
 		
 		if(!trans.isReverseGear) {
@@ -738,6 +756,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 		
 		
 		
+
 		if(throttle < 0) throttle = 0;
 		if(throttle > 1) throttle = 1;
 		
@@ -747,6 +766,11 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 			solver.releaseHandbrake();
 		}
 		
+
+		if(KeyBindings.vehicleClutch.isKeyDown()) {
+			getSolver().transmission.declutch();
+		} else getSolver().transmission.clutch();
+
 		
 		
 		steerangle *= 0.8;
@@ -1341,6 +1365,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 			if(!bL.isFullBlock()) {
 				upMag = blockHeight+0.01;
 				liftPush = Math.sqrt((blockHeight*blockHeight));
+
 				
 				
 			}
@@ -1414,6 +1439,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 		 * Calculates the pitch target by blending the up & down targets
 		 */
 		
+
 		float adjT = 0.0f;
 		if(targetDown == 0.0) {
 			adjT = targetUp;
@@ -1496,7 +1522,9 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 		RayTraceResult r5 = null;
 				
 		if(rotationPitch > 5) {
-			r5 = castFromEntity(new Vec3d(0, -1*mag, 0));
+
+			//r5 = castFromEntity(new Vec3d(0, -1*mag, 0));
+
 		}
 		
 		if(r1 != null || r2 != null || r3 != null || r4 != null || r5 != null) {
@@ -2004,6 +2032,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
     
 
 
+
 	
 
 
@@ -2084,6 +2113,14 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 	
 
 	
+	
+	@Override
+	public boolean attackEntityFrom(DamageSource source, float amount) {
+		if(source.isCreativePlayer()) {
+			setDead();
+		}
+		return super.attackEntityFrom(source, amount);
+	}
 
 
 	
