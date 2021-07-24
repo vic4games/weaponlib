@@ -81,6 +81,7 @@ public class Interceptors {
         		
         		//MatrixHelper.applyMatrix(RenderVehicle2.tm);
         		//vehicle.rotationPitch = 0;
+        		float mu = (float) ((1 - Math.cos(Minecraft.getMinecraft().getRenderPartialTicks() * Math.PI)) / 2f);
         		
         		
 
@@ -92,18 +93,19 @@ public class Interceptors {
         		player.prevRotationPitch = -vehicle.prevRotationPitch;
         		
         		
+        		double dist = vehicle.prevRotationPitch + (vehicle.rotationPitch-vehicle.prevRotationPitch)*mu;
+        		float roll = (vehicle.prevRotationRollH+vehicle.prevRotationRoll) + ((vehicle.rotationRoll+vehicle.rotationRollH)-(vehicle.prevRotationRoll+vehicle.prevRotationRollH))*mu;
         		
-        		double dist = vehicle.rotationPitch;
+        	
         		
         		GL11.glTranslated(0.0, 0.0, -dist*0.025);
         		//GL11.glTranslated(0.0, Math.abs(0.8*(vehicle.rotationPitch/45)), 0.0);
 
-        		
-        		float muRoll = (float) ((1 - Math.cos(Minecraft.getMinecraft().getRenderPartialTicks() * Math.PI)) / 2f);
-        		float roll = (vehicle.prevRotationRollH+vehicle.prevRotationRoll) + ((vehicle.rotationRoll+vehicle.rotationRollH)-(vehicle.prevRotationRoll+vehicle.prevRotationRollH))*muRoll;
+        		GL11.glTranslated(roll*0.025, 0.0, 0.0);
+            	
         		GL11.glRotatef(-roll, 0.0f, 0.0f, 1.0f);
         		
-        	}
+        		}
 
         }
         

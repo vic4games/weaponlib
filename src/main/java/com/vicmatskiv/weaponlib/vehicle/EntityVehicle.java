@@ -10,6 +10,7 @@ import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 import javax.swing.border.MatteBorder;
+import javax.vecmath.Matrix4d;
 import javax.vecmath.Quat4d;
 import javax.vecmath.Quat4f;
 import javax.vecmath.Vector2d;
@@ -431,14 +432,12 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
         		if(aPRX == 1.0f || aPRX == -1.0f) aPRX = 0.0f;
 	          */
 	            
-	            
-	            float mu2 = (float) ((1 - Math.cos(Minecraft.getMinecraft().getRenderPartialTicks() * Math.PI)) / 2f);
-        		float interpPitch = prevRotationPitch + (rotationPitch-prevRotationPitch)*mu2;
-        		double tA = 1.0 * Math.signum(interpPitch);
-        		double o = Math.sin(Math.toRadians(interpPitch))*tA;
-        		double a = Math.cos(Math.toRadians(interpPitch))*tA;
+	            float mu = (float) ((1 - Math.cos(Minecraft.getMinecraft().getRenderPartialTicks() * Math.PI)) / 2f);
+        		float iRoll = (prevRotationRollH+prevRotationRoll) + ((rotationRoll+rotationRollH)-(prevRotationRoll+prevRotationRollH))*mu;
+        		float iPitch = prevRotationPitch + (rotationPitch-prevRotationPitch)*mu;
+
         		
-        		
+        	//	rotationRoll = 30f;
 	           
 
 	            Vec3d apr = new Vec3d(this.posX /*+ vec3d.x + seatOffset.x*/,
@@ -456,10 +455,9 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 	            //this.rotationPitch = (float) (45.0f*((ticksExisted%200)/200.0));
 	            
 	            float nin = (float) Math.toRadians(90);
-	            Vec3d tBro = new Vec3d(-.0, -0.3, -0.5).rotatePitch((float) Math.toRadians(interpPitch)).rotateYaw((float) Math.toRadians(-rotationYaw));
-	            //Vec3d tBro = new Vec3d(-0.6, -0.6, -1.6).rotateYaw(-nin).rotatePitch((float) Math.toRadians(-rotationRoll)).rotateYaw(nin).rotateYaw((float) Math.toRadians(-rotationYaw));
-
-	            
+	            Vec3d tBro = new Vec3d(seatOffset.x, seatOffset.y, seatOffset.z).rotatePitch((float) Math.toRadians(iPitch)).rotateYaw((float) Math.toRadians(-rotationYaw));
+	           // Vec3d tBro = new Vec3d(seatOffset.x, seatOffset.y, seatOffset.z).rotateYaw(nin).rotatePitch((float) Math.toRadians(-rotationRoll)).rotateYaw(-nin).rotateYaw((float) Math.toRadians(-rotationYaw));
+	           
 	            
 	          //  Vec3d posExhaust = new Vec3d(0, -0.5, 0.0).rotatePitch((float) Math.toRadians(rotationPitch)).rotateYaw((float) Math.toRadians(-rotationYaw)).add(getPositionVector());
 	    		
