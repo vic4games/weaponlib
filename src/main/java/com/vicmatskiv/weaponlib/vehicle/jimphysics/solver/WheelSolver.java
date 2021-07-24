@@ -118,8 +118,9 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 	public void applyBrake(double magnitude) {
 
 		wheelAngularVelocity -= 30;
-		wheelAngularAcceleration -= 30;
+		wheelAngularAcceleration = -30;
 		
+		//System.out.println("Wheel (" + this.hashCode() + ") " + wheelAngularAcceleration);
 		
 		
 		if(wheelAngularVelocity < 0) wheelAngularVelocity = 0;
@@ -136,7 +137,7 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 	
 	public void doPhysics() {
 		
-		
+		//System.out.println(wheelAngularAcceleration);
 		
 
 		// update angular velocity
@@ -156,6 +157,8 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 		}
 		
 
+		
+		//System.out.println(wheelAngularAcceleration);
 		
 		
 		
@@ -186,10 +189,11 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 		
 		
 		
+		
 		double slipRatio = VehiclePhysUtil.getSlipRatio(wheelAngularVelocity, radius, solver.getLongitudinalSpeed());
 		//System.out.println(wheelAngularVelocity*radius-solver.getLongitudinalSpeed()/solver.getLongitudinalSpeed());
 		
-		
+	
 		if(solver.getVelocityVector().lengthSquared() > 3 && solver.getVelocityVector().dotProduct(Vec3d.fromPitchYaw(0.0f, solver.vehicle.rotationYaw)) < 0) {
 			   solver.velocity = solver.velocity.scale(0.03);
 			}
@@ -202,6 +206,7 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 			longitudinalForce = Vec3d.ZERO;
 			return;
 		}
+		
 		
 		
 		
@@ -226,6 +231,7 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 		// calculate the traction torque
 		
 		//tractionTorque = longForce*0.9*loadOnWheel*radius*-1/10000;
+		
 		
 		
 

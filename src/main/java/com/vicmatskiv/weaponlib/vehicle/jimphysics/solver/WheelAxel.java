@@ -116,6 +116,7 @@ public class WheelAxel implements IEncodable<WheelAxel> {
 		double inertia = leftWheel.wheelInertia + rightWheel.wheelInertia;
 		double angularAccel = totalTorque/inertia;
 		
+		//System.out.println("Angular Acceleration: " + angularAccel);
 		
 		leftWheel.wheelAngularAcceleration = angularAccel;
 		rightWheel.wheelAngularAcceleration = angularAccel;

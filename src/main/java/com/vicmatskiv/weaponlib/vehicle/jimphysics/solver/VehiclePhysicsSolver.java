@@ -517,23 +517,6 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		
 		
 		
-		/*
-		 * Some stability features
-		 * 
-		 */
-		
-
-			boolean wheelThrottle = vehicle.throttle == 0.0 || transmission.isEngineDeclutched();
-		
-			if(velocity.lengthVector() < 0.5 && wheelThrottle ) {
-				velocity = velocity.scale(0.01);
-			}
-			
-			if(velocity.lengthVector() < 0.03 && wheelThrottle) {
-
-				
-				velocity = Vec3d.ZERO;
-			}
 		
 		
 		
@@ -547,6 +530,28 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		if(transmission.isReverseGear) {
 			rG = -1;
 		}
+		
+		
+		/*
+		 * Some stability features
+		 * 
+		 */
+		
+
+		
+			boolean wheelThrottle = vehicle.throttle == 0.0 || transmission.isEngineDeclutched();
+		
+			if(velocity.lengthVector() < 0.5 && wheelThrottle ) {
+				velocity = velocity.scale(0.01);
+				
+			}
+			
+			if(velocity.lengthVector() < 0.03 && wheelThrottle) {
+
+				
+				velocity = Vec3d.ZERO;
+			}
+		
 		
 		
 		// calculate position
