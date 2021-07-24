@@ -7,6 +7,21 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL12;
+import org.lwjgl.opengl.GL13;
+import org.lwjgl.opengl.GL14;
+import org.lwjgl.opengl.GL15;
+import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL21;
+import org.lwjgl.opengl.GL30;
+import org.lwjgl.opengl.GL31;
+import org.lwjgl.opengl.GL32;
+import org.lwjgl.opengl.GL33;
+import org.lwjgl.opengl.GL40;
+import org.lwjgl.opengl.GL41;
+import org.lwjgl.opengl.GL42;
+import org.lwjgl.opengl.GL43;
+import org.lwjgl.opengl.GL44;
 
 import com.vicmatskiv.weaponlib.animation.DebugPositioner;
 import com.vicmatskiv.weaponlib.animation.MultipartPositioning;
@@ -14,6 +29,7 @@ import com.vicmatskiv.weaponlib.animation.MultipartPositioning.Positioner;
 import com.vicmatskiv.weaponlib.animation.MultipartRenderStateManager;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
 
@@ -57,24 +73,74 @@ final class HierarchicalPartRenderer<Part, State> implements StatefulRenderer<St
         
         MultipartRenderStateManager<State, SinglePart, PartRenderContext<State>> stateManager = stateManagers.computeIfAbsent(context.getEntity(), e -> stateManagerSupplier.get());
         
+        
+        
         stateSetter.accept(stateManager, context);
         MultipartPositioning<SinglePart, PartRenderContext<State>> multipartPositioning = stateManager.nextPositioning();
         Positioner<SinglePart, PartRenderContext<State>> positioner = multipartPositioning.getPositioner();
         
+        
+       
+        
         context.setProgress(currentProgressProvider.apply(context));
         
-        Minecraft.getMinecraft().getTextureManager().bindTexture(textureResource);
+        /*
+         * NEXT FEW LINES ARE BY JIM (saying this for debug purposes)
+         * This just tells the renderer to use an alternative texture
+         * USE CASE: vehicle lights
+         */
+        if(context.shouldRenderAlternateTexture()) {
+        	Minecraft.getMinecraft().getTextureManager().bindTexture(context.getAlternateTexture());
+        } else {
+        	Minecraft.getMinecraft().getTextureManager().bindTexture(textureResource);
+        }
+        
+        
         
         GL11.glPushMatrix();
         
         try {
+        	
+        	
+        	
+        	
             positioner.position(SinglePart.MAIN, context);
             
             if(DebugPositioner.isDebugModeEnabled()) {
                 DebugPositioner.position(part, context);
             }
     
+            if(part == VehiclePart.WINDOWS) {
+            	 GlStateManager.enableBlend();
+            	 float transparency = 0.5f;
+            	 if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 0) {
+            		 transparency = 0.2f;
+            	 }
+            	// transparency = 0.13f;
+            	// GlStateManager.color(0.0f, 0f, 0f);
+            	 
+            	 GlStateManager.color(0.1f, 0.1f, 0.15f, transparency);
+                 
+            	// GlStateManager.blendFunc(GL11.GL_ONE, GL11.GL_ONE);
+            	 //GlStateManager.glBlendEquation(GL14.GL_MIN);
+            	 
+            	 //GlStateManager.glBlendEquation(GL14.GL_MIN);
+            	 
+            	 
+            	 //GlStateManager.glBlendEquation(GL14.GL_MIN);
+            	 
+                // GlStateManager.color(0.2f, 0.2f, 0.25f, transparency);
+            }
+           
             modelRenderer.render(context);
+            
+            if(part == VehiclePart.WINDOWS) {
+           	 GlStateManager.enableBlend();
+           	 float transparency = 0.5f;
+           	 //GlStateManager.blendFunc(GL11.GL_ONE, GL11.GL_ONE);
+           	 GlStateManager.glBlendEquation(GL14.GL_FUNC_ADD);
+        
+            }
             
             if(part instanceof PartContainer) {
                 for(Part renderablePart: ((PartContainer<Part>)part).getChildParts()) {

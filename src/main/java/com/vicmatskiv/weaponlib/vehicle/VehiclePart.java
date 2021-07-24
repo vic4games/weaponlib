@@ -6,6 +6,13 @@ import java.util.List;
 
 public interface VehiclePart extends PartContainer<VehiclePart> {
     
+	public static VehiclePart WINDOWS = new VehiclePart() {
+        @Override
+        public String toString() {
+            return "WINDOWS";
+        }
+    };
+	
     public static VehiclePart LEFT_HAND = new VehiclePart() {
         @Override
         public String toString() {
@@ -90,7 +97,7 @@ public interface VehiclePart extends PartContainer<VehiclePart> {
     
     public static VehiclePart MAIN = new VehiclePart() {
         private List<VehiclePart> parts = Collections.unmodifiableList(Arrays.asList(
-                STEERING_WHEEL, FRONT_LEFT_CONTROL_ARM, FRONT_RIGHT_CONTROL_ARM, REAR_LEFT_WHEEL, REAR_RIGHT_WHEEL));
+                STEERING_WHEEL, FRONT_LEFT_CONTROL_ARM, FRONT_RIGHT_CONTROL_ARM, REAR_LEFT_WHEEL, REAR_RIGHT_WHEEL, WINDOWS));
 
         @Override
         public List<VehiclePart> getChildParts() {

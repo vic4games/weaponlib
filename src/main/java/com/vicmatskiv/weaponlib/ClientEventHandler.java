@@ -199,6 +199,7 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 	@Override
 	public void onCompatibleRenderHand(CompatibleRenderHandEvent event) {
 	    
+		
 	    Minecraft minecraft = Minecraft.getMinecraft();
 	    if(minecraft.gameSettings.thirdPersonView == 0 && !compatibility.isShadersModEnabled()) {
 	        PlayerWeaponInstance weaponInstance = modContext.getMainHeldWeapon();

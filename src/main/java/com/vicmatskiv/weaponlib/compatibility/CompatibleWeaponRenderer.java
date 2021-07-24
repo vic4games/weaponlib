@@ -460,6 +460,8 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
         RenderPlayer render = (RenderPlayer) entityRenderObject;
         Minecraft.getMinecraft().getTextureManager().bindTexture(((AbstractClientPlayer) player).getLocationSkin());
 
+        
+        
         GL11.glPushMatrix();
         GL11.glScaled(1F, 1F, 1F);
         GL11.glTranslatef(-0.25f, 0f, 0.2f);
@@ -527,7 +529,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
     protected abstract void renderItem(ItemStack weaponItemStack, RenderContext<RenderableState> renderContext,
             Positioner<Part, RenderContext<RenderableState>> positioner);
 
-    private static void renderRightArm(ModelBiped modelplayer, AbstractClientPlayer clientPlayer) {
+    public static void renderRightArm(ModelBiped modelplayer, AbstractClientPlayer clientPlayer) {
         float f = 1.0F;
         GlStateManager.color(f, f, f);
         //ModelPlayer modelplayer = renderPlayer.getMainModel();
@@ -550,7 +552,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
         GlStateManager.disableBlend();
     }
     
-    private static void renderLeftArm(ModelBiped modelplayer, AbstractClientPlayer clientPlayer) {
+    public static void renderLeftArm(ModelBiped modelplayer, AbstractClientPlayer clientPlayer) {
         GlStateManager.color(1.0F, 1.0F, 1.0F);
         setModelVisibilities(modelplayer, clientPlayer);
         
@@ -568,7 +570,36 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
         GlStateManager.disableBlend();
     }
 
-    private static void setModelVisibilities(ModelBiped modelplayer, AbstractClientPlayer clientPlayer)
+    public static void renderVehicleRightArm(ModelBiped modelplayer, AbstractClientPlayer clientPlayer) {
+        GlStateManager.color(1.0F, 1.0F, 1.0F);
+        setModelVisibilities(modelplayer, clientPlayer);
+
+        GlStateManager.enableBlend();
+        modelplayer.bipedRightArm.render(0.0625F);
+        if(modelplayer instanceof ModelPlayer) {
+            ((ModelPlayer)modelplayer).bipedRightArmwear.rotateAngleX = 0.0F;
+            ((ModelPlayer)modelplayer).bipedRightArmwear.rotateAngleX = -0.3F;
+            ((ModelPlayer)modelplayer).bipedRightArmwear.render(0.0625F);
+        }
+       
+        GlStateManager.disableBlend();
+    }
+    
+    public static void renderLeftVehicleArm(ModelBiped modelplayer, AbstractClientPlayer clientPlayer) {
+        GlStateManager.color(1.0F, 1.0F, 1.0F);
+        setModelVisibilities(modelplayer, clientPlayer);
+        
+        GlStateManager.enableBlend();
+        modelplayer.bipedLeftArm.render(0.0625F);
+        if(modelplayer instanceof ModelPlayer) {
+            ((ModelPlayer)modelplayer).bipedLeftArmwear.rotateAngleX = 0.0F;
+            ((ModelPlayer)modelplayer).bipedLeftArmwear.render(0.0625F);
+        }
+        
+        GlStateManager.disableBlend();
+    }
+    
+    public static void setModelVisibilities(ModelBiped modelplayer, AbstractClientPlayer clientPlayer)
     {
         //ModelPlayer modelplayer = renderPlayer.getMainModel();
 
@@ -659,7 +690,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
         return pair;
     }
 
-    protected static ModelBiped getArmorModelHook(net.minecraft.entity.EntityLivingBase entity, net.minecraft.item.ItemStack itemStack, EntityEquipmentSlot slot, ModelBiped model) {
+    public static ModelBiped getArmorModelHook(net.minecraft.entity.EntityLivingBase entity, net.minecraft.item.ItemStack itemStack, EntityEquipmentSlot slot, ModelBiped model) {
         return net.minecraftforge.client.ForgeHooksClient.getArmorModel(entity, itemStack, slot, model);
     }
     

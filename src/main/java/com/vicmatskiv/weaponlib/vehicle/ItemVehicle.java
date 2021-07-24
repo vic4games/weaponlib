@@ -94,10 +94,14 @@ public class ItemVehicle extends Item
             {
                 Block block = worldIn.getBlockState(raytraceresult.getBlockPos()).getBlock();
                 boolean flag1 = block == Blocks.WATER || block == Blocks.FLOWING_WATER;
-                EntityVehicle entityboat;
+                EntityVehicle entityboat = null;
                 try {
+                	
 //                    entityClass = EntityVehicle.class;
+                	
+                	
                     entityboat = (EntityVehicle) entityClass.getConstructor(World.class).newInstance(worldIn);
+                
                     double x = raytraceresult.hitVec.x;
                     double y = flag1 ? raytraceresult.hitVec.y - 0.12 : raytraceresult.hitVec.y;
                     double z = raytraceresult.hitVec.z;
@@ -112,7 +116,8 @@ public class ItemVehicle extends Item
 //                    entityboat.setBoatType(this.type);
                     entityboat.rotationYaw = playerIn.rotationYaw;
                 } catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-                    throw new RuntimeException(e);
+                   e.printStackTrace();
+                	// throw new RuntimeException(e);
                 }
                 
 //                EntityVehicle entityboat = new EntityVehicle(worldIn, raytraceresult.hitVec.x, flag1 ? raytraceresult.hitVec.y - 0.12D : raytraceresult.hitVec.y, raytraceresult.hitVec.z);

@@ -306,6 +306,7 @@ public class ServerEventHandler extends CompatibleServerEventHandler {
     protected void onCompatiblePlayerLoggedIn(PlayerLoggedInEvent e) {
         MissionManager missionManager = modContext.getMissionManager();
         if(missionManager != null ) {
+        	
             modContext.getChannel().getChannel().sendTo(
                     new MissionOfferingSyncMessage(missionManager.getOfferings()), (EntityPlayerMP)e.player);
             modContext.getChannel().getChannel().sendTo(

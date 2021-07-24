@@ -84,6 +84,10 @@ import com.vicmatskiv.weaponlib.state.StateManager;
 import com.vicmatskiv.weaponlib.tracking.SyncPlayerEntityTrackerMessage;
 import com.vicmatskiv.weaponlib.tracking.SyncPlayerEntityTrackerMessageMessageHandler;
 import com.vicmatskiv.weaponlib.vehicle.EntityVehicle;
+import com.vicmatskiv.weaponlib.vehicle.network.VehicleClientPacket;
+import com.vicmatskiv.weaponlib.vehicle.network.VehicleClientPacketHandler;
+import com.vicmatskiv.weaponlib.vehicle.network.VehicleControlPacket;
+import com.vicmatskiv.weaponlib.vehicle.network.VehicleControlPacketHandler;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -92,6 +96,8 @@ import net.minecraft.util.ResourceLocation;
 
 public class CommonModContext implements ModContext {
 
+	
+	
     static {
         TypeRegistry.getInstance().register(LoadPermit.class);
         TypeRegistry.getInstance().register(MagazineState.class);
@@ -271,6 +277,7 @@ public class CommonModContext implements ModContext {
 
 		this.recipeManager = new RecipeManager();
 
+		
 		channel.registerMessage(new TryFireMessageHandler(weaponFireAspect),
 				TryFireMessage.class, 11, CompatibleSide.SERVER);
 
@@ -337,6 +344,12 @@ public class CommonModContext implements ModContext {
         channel.registerMessage(new EntityMissionOfferingSyncHandler(this),
                 EntityMissionOfferingSyncMessage.class, 33, CompatibleSide.CLIENT);
 		
+        channel.registerMessage(new VehicleControlPacketHandler(this),
+        		VehicleControlPacket.class, 34, CompatibleSide.SERVER);
+        
+        channel.registerMessage(new VehicleClientPacketHandler(this),
+        		VehicleClientPacket.class, 35, CompatibleSide.CLIENT);
+        
 		ServerEventHandler serverHandler = new ServerEventHandler(this, modId);
         compatibility.registerWithFmlEventBus(serverHandler);
         compatibility.registerWithEventBus(serverHandler);
@@ -361,7 +374,7 @@ public class CommonModContext implements ModContext {
 
         compatibility.registerModEntity(EntitySpreadable.class, "EntitySpreadable" + modEntityID, modEntityID++, mod, modId, 64, 3, false);
 
-        compatibility.registerModEntity(EntityVehicle.class, "EntityVehicle" + modEntityID, modEntityID++, mod, modId, 64, 3, false);
+        //compatibility.registerModEntity(EntityVehicle.class, "EntityVehicle" + modEntityID, modEntityID++, mod, modId, 64, 3, false);
 
 //        compatibility.registerModEntity(EntityCustomMob.class, "CustomMob" + modEntityID, modEntityID++, mod, modId, 64, 3, true);
 //
@@ -387,7 +400,7 @@ public class CommonModContext implements ModContext {
         File missionsDir = new File(new File(event.getEvent().getSuggestedConfigurationFile().getParent(), "mw"), "missions");
         File entityMissionFile = new File(new File(event.getEvent().getSuggestedConfigurationFile().getParent(), "mw"), "entity_mission_offerings.json");
 
-        this.missionManager = new MissionManager(modId, missionsDir, entityMissionFile);
+       // this.missionManager = new MissionManager(modId, missionsDir, entityMissionFile);
 	}
 	
 	@Override

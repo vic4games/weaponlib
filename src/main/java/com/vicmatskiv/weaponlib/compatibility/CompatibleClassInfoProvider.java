@@ -88,6 +88,13 @@ public class CompatibleClassInfoProvider {
                 .addFieldInfo("cubeList", "Lnet/minecraft/client/renderer/entity/RenderLivingBase;", "field_78804_l", "Lcaa;")
                 );
         
+        
+        classInfoMap.put("paulscode.sound.libraries.SourceLWJGLOpenAL", 
+        		new ClassInfo("paulscode.sound.libraries.SourceLWJGLOpenAL", "paulscode.sound.libraries.SourceLWJGLOpenAL")
+        		.addMethodInfo("play", "(Lpaulscode/sound/Channel;)V", "play", "play")
+        		);
+        
+        
     }
 
     private static CompatibleClassInfoProvider instance = new CompatibleClassInfoProvider();
@@ -97,7 +104,10 @@ public class CompatibleClassInfoProvider {
     }
 
     public ClassInfo getClassInfo(String mcpClassName) {
-        return classInfoMap.get(mcpClassName.replace('.', '/'));
+    	if(!mcpClassName.equals("paulscode.sound.libraries.SourceLWJGLOpenAL")) {
+    		return classInfoMap.get(mcpClassName.replace('.', '/'));
+    	} else return classInfoMap.get(mcpClassName);
+        
     }
 
 }

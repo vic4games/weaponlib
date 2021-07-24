@@ -9,6 +9,7 @@ import com.vicmatskiv.weaponlib.animation.DebugPositioner;
 import net.minecraft.client.settings.KeyBinding;
 
 public class KeyBindings {
+	
 
     public static KeyBinding reloadKey;
     public static KeyBinding unloadKey;
@@ -47,7 +48,19 @@ public class KeyBindings {
     public static KeyBinding altModeDebugKey;
     
     public static KeyBinding deleteDebugKey;
+    
+    
+    /*
+     * VEHICLE
+     */
+    public static KeyBinding vehicleThrottle;
+    public static KeyBinding vehicleBrake;
+    public static KeyBinding vehicleHandbrake;
+    public static KeyBinding vehicleTurnLeft;
+    public static KeyBinding vehicleTurnRight;
+    public static KeyBinding vehicleClutch;
 
+    
     public static void init() {
 
         reloadKey = new KeyBinding("key.reload", Keyboard.KEY_R,
@@ -100,6 +113,30 @@ public class KeyBindings {
         
         periodKey = new KeyBinding("key.sight", Keyboard.KEY_PERIOD,
                 "key.categories.weaponlib");
+        
+        
+        /*
+         * VEHICLE
+         */
+        
+        vehicleThrottle = new KeyBinding("vehicle.throttle", Keyboard.KEY_W,
+                "key.categories.vehicle");
+        
+        vehicleBrake = new KeyBinding("vehicle.brake", Keyboard.KEY_S,
+                "key.categories.vehicle");
+        
+        vehicleHandbrake = new KeyBinding("vehicle.handbrake", Keyboard.KEY_SPACE,
+                "key.categories.vehicle");
+        
+        vehicleTurnLeft = new KeyBinding("vehicle.turnleft", Keyboard.KEY_A,
+                "key.categories.vehicle");
+        
+        vehicleTurnRight = new KeyBinding("vehicle.turnright", Keyboard.KEY_D,
+                "key.categories.vehicle");
+        
+        vehicleClutch = new KeyBinding("vehicle.clutch", Keyboard.KEY_C,
+                "key.categories.vehicle");
+        
 
         compatibility.registerKeyBinding(reloadKey);
         compatibility.registerKeyBinding(unloadKey);
@@ -118,7 +155,16 @@ public class KeyBindings {
         compatibility.registerKeyBinding(laserAttachmentKey);
         compatibility.registerKeyBinding(periodKey);
         compatibility.registerKeyBinding(customInventoryKey);
-
+        
+        
+        compatibility.registerKeyBinding(vehicleThrottle);
+        compatibility.registerKeyBinding(vehicleBrake);
+        compatibility.registerKeyBinding(vehicleHandbrake);
+        compatibility.registerKeyBinding(vehicleTurnLeft);
+        compatibility.registerKeyBinding(vehicleTurnRight);
+        compatibility.registerKeyBinding(vehicleClutch);
+        
+        
         if(DebugPositioner.isDebugModeEnabled()) {
             bindDebugKeys();
         }
