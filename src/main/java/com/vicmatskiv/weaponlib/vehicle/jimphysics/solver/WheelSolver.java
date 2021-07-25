@@ -308,9 +308,18 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 
 		
 		// kinetic friction (implementation = 0/10 effort)
-		if(Math.abs(slipAngleTire) > 1.5 && this.axel.COGoffset < 0) lateralForce *= 0.75; 
+		if(Math.abs(slipAngleTire) > 1.5 && this.axel.COGoffset < 0) lateralForce *= 0.8;
 
-			
+			//System.out.println(solver.angularVelocity);
+		
+		
+		
+		double factor = 1.0;
+		if(this.axel.solver.materialBelow != Material.ROCK) factor = 0.4;
+		if(Math.abs(solver.angularVelocity) > factor) {
+			lateralForce *= 0.5;
+		}
+		
 		
 		if(Double.isNaN(lateralForce)) {
 			lateralForce = 0.0;

@@ -390,6 +390,8 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		
 	}
 	
+	public double angAccel = 0.0;
+	
 	public void updateRotationalVelocity() {
 		
 		
@@ -449,7 +451,7 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		
 		
 		
-		double angAccel = totalAxelTorque/inertia.m11;
+		angAccel = totalAxelTorque/inertia.m11;
 		
 		if(getVelocityVector().lengthSquared() < 1.0) {
 			angAccel = 0.0;
