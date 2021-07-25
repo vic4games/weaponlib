@@ -34,6 +34,7 @@ import com.vicmatskiv.weaponlib.vehicle.jimphysics.stability.InertialStabilizer;
 import com.vicmatskiv.weaponlib.vehicle.render.SuspensionModel;
 
 import net.minecraft.advancements.critereon.EnchantedItemTrigger;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelLeashKnot;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -53,17 +54,26 @@ import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.client.shader.ShaderLoader;
 import net.minecraft.client.shader.ShaderManager;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.World;
 import scala.actors.threadpool.Arrays;
 import scala.collection.parallel.ParIterableLike.Min;
 
 public class RenderVehicle2 extends CompatibleEntityRenderer
 {
+	
+	public static final ResourceLocation VEHICLE_SHADOW = new ResourceLocation("mw" + ":" + "textures/entity/vehicleshadow.png");
+	
+	
     private static ThreadLocal<Matrix4f> cameraTransformMatrix = new ThreadLocal<>();
 
 	private static ResourceLocation field_110782_f;
@@ -225,6 +235,10 @@ public class RenderVehicle2 extends CompatibleEntityRenderer
 	
 	public void renderVehicle(EntityVehicle entityVehicle, double posX, double posY, double posZ, float rotationYaw, float par9)
 	{
+		int renderPass = net.minecraftforge.client.MinecraftForgeClient.getRenderPass();
+		
+		
+		//		int pass = Minecraft.getMinecraft().getRenderManager().rend
 
 		// RENDER CUSTOM BOUNDING BOX
 		GL11.glPushMatrix();
@@ -367,43 +381,58 @@ public class RenderVehicle2 extends CompatibleEntityRenderer
 			//GL11.glTranslated(0.0, -entityVehicle.getInterpolatedLiftOffset(), 0.0);
 		//}
 		
-		for(Entity pass : entityVehicle.getPassengers()) {
-			
-			if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 0 && pass == Minecraft.getMinecraft().player) continue;
-			
-			GL11.glPushMatrix();
-			int i = entityVehicle.getPassengers().indexOf(pass);
-	        Vec3d seatOffset = entityVehicle.getConfiguration().getSeatAtIndex(i).getSeatPosition();
-	        
-			GL11.glTranslated(seatOffset.x, seatOffset.y, seatOffset.z);
-			
-			if(!(pass instanceof EntityPlayer)) {
-				Minecraft.getMinecraft().getRenderManager().doRenderEntity(pass, 0, 0, 0, -pass.rotationYaw, Minecraft.getMinecraft().getRenderPartialTicks(), true);		
-			} else {
-				EntityPlayer player = (EntityPlayer) pass;
-				RenderManager rManager = Minecraft.getMinecraft().getRenderManager();
-				Render<Entity> render = rManager.getEntityRenderObject(pass);
+		if(renderPass == 0) {
+			for(Entity pass : entityVehicle.getPassengers()) {
 				
+				if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 0 && pass == Minecraft.getMinecraft().player) continue;
+				
+				GL11.glPushMatrix();
+				int i = entityVehicle.getPassengers().indexOf(pass);
+		        Vec3d seatOffset = entityVehicle.getConfiguration().getSeatAtIndex(i).getSeatPosition();
+		        
+				GL11.glTranslated(seatOffset.x, seatOffset.y, seatOffset.z);
+				
+				if(!(pass instanceof EntityPlayer)) {
+					Minecraft.getMinecraft().getRenderManager().doRenderEntity(pass, 0, 0, 0, -pass.rotationYaw, Minecraft.getMinecraft().getRenderPartialTicks(), true);		
+				} else {
+					EntityPlayer player = (EntityPlayer) pass;
+					RenderManager rManager = Minecraft.getMinecraft().getRenderManager();
+					Render<Entity> render = rManager.getEntityRenderObject(pass);
+					
+					
+
+					
+					player.rotationYaw += entityVehicle.deltaRotation;
+					player.setRotationYawHead(player.getRotationYawHead() + entityVehicle.deltaRotation);
+		            
 				
 
-				
-				player.rotationYaw += entityVehicle.deltaRotation;
-				player.setRotationYawHead(player.getRotationYawHead() + entityVehicle.deltaRotation);
-	            
-
-				entityVehicle.applyYawToEntity(player);
-				player.limbSwing = 39;
-				render.doRender(player, 0, 0, 0, pass.rotationYaw, Minecraft.getMinecraft().getRenderPartialTicks());		
-				player.limbSwing = 89;
-				
+					entityVehicle.applyYawToEntity(player);
+					player.limbSwing = 39;
+					float aPH = player.rotationPitch;
+					float apPH = player.prevRotationPitch;
+					float aY = player.rotationYaw;
+					float apY = player.prevRotationYaw;
+					
+					player.rotationYawHead = 180f;
+					player.rotationPitch = 0;
+					player.prevRotationPitch = 0;
+					
+					player.rotationYaw = 180;
+					player.prevRotationYaw = 180;
+					render.doRender(player, 0, 0, 0, 180, Minecraft.getMinecraft().getRenderPartialTicks());		
+					
+					player.rotationPitch = aPH;
+					player.prevRotationPitch = apPH;
+					player.rotationYaw = aY;
+					player.prevRotationYaw = apY;
+					player.limbSwing = 89;
+					
+				}
+				GL11.glPopMatrix();
 			}
-			
-			
-			
-			//Minecraft.getMinecraft().getRenderManager().doRenderEntity(pass, 0, 0, 0, -pass.rotationYaw, Minecraft.getMinecraft().getRenderPartialTicks(), true);		
-			GL11.glPopMatrix();
-			
 		}
+		
 		
 		float f4 = 0.75F;
 		GL11.glScalef(f4, f4, f4);
@@ -652,6 +681,7 @@ public class RenderVehicle2 extends CompatibleEntityRenderer
 //
 //	        
 		GL11.glPopMatrix();
+		this.shadowSize = 0.1f;
 //		
 //		    GL11.glPushMatrix();
 //	        GL11.glDepthMask(false);
@@ -685,6 +715,164 @@ public class RenderVehicle2 extends CompatibleEntityRenderer
 //	        GL11.glDepthMask(true);
 //	        GL11.glPopMatrix();
 	}
+	
+	@Override
+	public void doRenderShadowAndFire(Entity entityIn, double x, double y, double z, float yaw, float partialTicks) {
+		if (this.renderManager.options != null)
+        {
+            if (this.renderManager.options.entityShadows && this.shadowSize > 0.0F && !entityIn.isInvisible() && this.renderManager.isRenderShadow())
+            {
+                double d0 = this.renderManager.getDistanceToCamera(entityIn.posX, entityIn.posY, entityIn.posZ);
+                float f = (float)((1.0D - d0 / 256.0D) * (double)this.shadowOpaque);
+
+                if (f > 0.0F)
+                {
+                    this.renderShadow(entityIn, x, y, z, f, partialTicks);
+                }
+            }
+
+        }
+	}
+	
+	public void renderShadow(Entity entityIn, double x, double y, double z, float yaw, float partialTicks) {
+		 GlStateManager.enableBlend();
+	        GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
+	        this.renderManager.renderEngine.bindTexture(VEHICLE_SHADOW);
+	        World world = entityIn.world;
+	        GlStateManager.depthMask(false);
+	        float f = this.shadowSize;
+
+	        if (entityIn instanceof EntityLiving)
+	        {
+	            EntityLiving entityliving = (EntityLiving)entityIn;
+	            f *= entityliving.getRenderSizeModifier();
+
+	            if (entityliving.isChild())
+	            {
+	                f *= 0.5F;
+	            }
+	        }
+
+	        double d5 = entityIn.lastTickPosX + (entityIn.posX - entityIn.lastTickPosX) * (double)partialTicks;
+	        double d0 = entityIn.lastTickPosY + (entityIn.posY - entityIn.lastTickPosY) * (double)partialTicks;
+	        double d1 = entityIn.lastTickPosZ + (entityIn.posZ - entityIn.lastTickPosZ) * (double)partialTicks;
+	        int i = MathHelper.floor(d5 - (double)f);
+	        int j = MathHelper.floor(d5 + (double)f);
+	        int k = MathHelper.floor(d0 - (double)f);
+	        int l = MathHelper.floor(d0);
+	        int i1 = MathHelper.floor(d1 - (double)f);
+	        int j1 = MathHelper.floor(d1 + (double)f);
+	        double d2 = x - d5;
+	        double d3 = y - d0;
+	        double d4 = z - d1;
+	        GL11.glPushMatrix();
+	       
+	        Tessellator tessellator = Tessellator.getInstance();
+	        BufferBuilder bufferbuilder = tessellator.getBuffer();
+	        bufferbuilder.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
+
+	        for (BlockPos blockpos : BlockPos.getAllInBoxMutable(new BlockPos(i, k, i1), new BlockPos(j, l, j1)))
+	        {
+	            IBlockState iblockstate = world.getBlockState(blockpos.down());
+
+	            if (iblockstate.getRenderType() != EnumBlockRenderType.INVISIBLE && world.getLightFromNeighbors(blockpos) > 3)
+	            {
+	                this.renderShadowSingle(entityIn, iblockstate, x, y, z, blockpos, 0.7f, f, d2, d3, d4);
+	            }
+	        }
+
+	        
+	      //  GlStateManager.rotate(-entityIn.rotationYaw, 0.0f, 1.0f, 0.0f);
+	       tessellator.draw();
+	        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+	        GlStateManager.disableBlend();
+	        GlStateManager.depthMask(true);
+	        GL11.glPopMatrix();
+	}
+	
+	private void renderShadowSingle(Entity e, IBlockState state, double p_188299_2_, double p_188299_4_, double p_188299_6_, BlockPos pos, float p_188299_9_, float p_188299_10_, double p_188299_11_, double p_188299_13_, double p_188299_15_)
+    {
+		if(1+1==2) return;
+		GlStateManager.disableBlend();
+		GlStateManager.disableAlpha();
+		GlStateManager.color(1.0f, 1.0f, 1.0f);
+		 if (state.isFullCube())
+	        {
+	            Tessellator tessellator = Tessellator.getInstance();
+	            BufferBuilder bufferbuilder = tessellator.getBuffer();
+	            double d0 = ((double)p_188299_9_ - (p_188299_4_ - ((double)pos.getY() + p_188299_13_)) / 2.0D) * 0.5D * (double)e.world.getLightBrightness(pos);
+
+	            
+	           
+	            if (d0 >= 0.0D)
+	            {
+	                if (d0 > 1.0D)
+	                {
+	                    d0 = 1.0D;
+	                }
+
+	                AxisAlignedBB axisalignedbb = new AxisAlignedBB(-1, 0, -1.5, 1, 0, 1.5);
+	                
+	                
+	                Vec3d p = e.getPositionVector();
+	                //Vec3d p = new Vec3d(pos.getX(), pos.getY(), pos.getZ());
+	                
+	                double d1 = (double)p.x + axisalignedbb.minX + p_188299_11_;
+	                double d2 = (double)p.x + axisalignedbb.maxX + p_188299_11_;
+	                double d3 = (double)p.y + axisalignedbb.minY + p_188299_13_ + 0.015625D;
+	                double d4 = (double)p.z + axisalignedbb.minZ + p_188299_15_;
+	                double d5 = (double)p.z + axisalignedbb.maxZ + p_188299_15_;
+	                
+	                
+	               
+	                
+	                /*
+	                 * D1 = 0;
+	                 * D2 = 1;
+	                 * D3 = 0;
+	                 * D4 = 0;
+	                 * D5 = 1;
+	                 */
+	               // System.out.println(axisalignedbb);
+
+	                
+	                float f = 0.0f;
+	                float f1 = 1.0f;
+	                float f2 = 0.0f;
+	                float f3 = 1.0f;
+	                
+	                
+	               
+	             //   System.out.println(d1 + " | " + d2 + " | " + d3 + " | " + d4 + " | " + d5);
+	                
+	                
+	               // GL11.glRotated(30, 0.0, 1, 0.0);
+	              // System.out.println(p_188299_11_ + " | " + p_188299_13_ + " | " + p_188299_15_);
+	                
+	                bufferbuilder.pos(d1, d3, d4).tex((double)f, (double)f2).color(1.0F, 1.0F, 1.0F, (float)d0).endVertex();
+	                bufferbuilder.pos(d1, d3, d5).tex((double)f, (double)f3).color(1.0F, 1.0F, 1.0F, (float)d0).endVertex();
+	                bufferbuilder.pos(d2, d3, d5).tex((double)f1, (double)f3).color(1.0F, 1.0F, 1.0F, (float)d0).endVertex();
+	                bufferbuilder.pos(d2, d3, d4).tex((double)f1, (double)f2).color(1.0F, 1.0F, 1.0F, (float)d0).endVertex();
+	                
+	                GL11.glTranslated(pos.getX(), pos.getY(), pos.getZ());
+	                GL11.glTranslated(p_188299_11_, p_188299_13_, p_188299_15_);
+	                
+	                e.rotationYaw = (float) (360.0*((e.ticksExisted%200)/200.0));
+	                GL11.glTranslated(1.0, 0.0, 1.0);
+	                GL11.glRotated(-e.rotationYaw+90, 0.0, 1, 0.0);
+		           
+	                
+	               
+	                
+	               GL11.glTranslated(-p_188299_11_, -p_188299_13_, -p_188299_15_);
+	               
+	               GL11.glTranslated(-pos.getX(), -pos.getY(), -pos.getZ());
+	               
+	            }
+	        }
+    }
+	
+	
 	
 	public static Vector3d matrixToEuler(Matrix3f rotation) {
 		

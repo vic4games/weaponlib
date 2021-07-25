@@ -155,6 +155,8 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
     
 	
 	
+	public boolean vehicleIsRunning = false;
+	
 	/*
 	 * GENERIC VARIABLES
 	 * (misc variables)
@@ -687,6 +689,10 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 		
 	}
 
+	public boolean isVehicleRunning() {
+		return this.vehicleIsRunning;
+	}
+	
 	/**
 	 * Updates the vehicles controls, like throttle, braking,
 	 * handbraking, drift-tuning, etc.
@@ -696,7 +702,15 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 		
 		Transmission trans = getSolver().transmission;
 		
+		if(KeyBindings.vehicleTurnOff.isPressed()) {
+			if(isVehicleRunning()) {
+				vehicleIsRunning = false;
+			} else vehicleIsRunning = true;
+		}
+		
 
+		
+		
 		
 		
 		if(!trans.isReverseGear) {
@@ -758,11 +772,18 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 		if(throttle < 0) throttle = 0;
 		if(throttle > 1) throttle = 1;
 		
-		if(KeyBindings.vehicleHandbrake.isKeyDown()) {
-			solver.applyHandbrake();
-		} else {
-			solver.releaseHandbrake();
+		if(!isVehicleRunning()) {
+			throttle = 0;
 		}
+		
+		if(isVehicleRunning()) {
+			if(KeyBindings.vehicleHandbrake.isKeyDown()) {
+				solver.applyHandbrake();
+			} else {
+				solver.releaseHandbrake();
+			}
+		}
+		
 		
 
 		if(KeyBindings.vehicleClutch.isKeyDown()) {
@@ -1131,6 +1152,12 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 		
 	}
 	
+	@Override
+	public boolean shouldRenderInPass(int pass) {
+		//System.out.println("AC360 " + super.shouldRenderInPass(pass) + " " + pass);
+		return true;
+	}
+	
 	
 	public void handleHillClimbing() {
 		
@@ -1143,6 +1170,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 		
 		if(prevLiftOffset == liftOffset) liftOffset = 0;*/
 		
+
 		double wheelbase = 2.85;
 		
 		// IF WE ARE BRAKING, WE DO NOT
@@ -1189,41 +1217,52 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 		
 		double rollDist = Math.abs(rotationRollH) - Math.abs(rollTarget);
 		
+		//System.out.println("Roll target: " + rollTarget + " | " + rotationRollH);
 		
+		//System.out.println("bruh: " + getConfiguration().getSeatAtIndex(0).seatPosition);
 		
 		
 		if(rollDist > 0.5) {
 			
 			if(rollTarget == 0.0 || rollTarget < 0) {
-				rollTarget = -rotationRollH;
+				//rollTarget = -rotationRollH;
+				
 			}
 			
 		
 			
-			if(Math.abs(rollTarget-rotationRollH) < 9) {
-	
-			} else if(rollTarget < rotationRollH) {
+			/*if(Math.abs(rollTarget-rotationRollH) < 2) {
 				
-				rotationRollH -= Math.abs(rollTarget)*0.68;
+			} else*/ if(rollTarget < rotationRollH) {
+				//System.out.println("BRUH: " + rotationRollH + " | " + rollDist) ;
+				rotationRollH -= Math.abs(rollDist)*0.68;
+				
 			} else {
-				rotationRollH += Math.abs(rollTarget)*0.9;
+				
+				//System.out.println("DECRERASING " + (rollTarget+rotationRollH));
+				double bruh = rotationRollH + rollTarget;
+				
+				rotationRollH += Math.abs(rollTarget+rotationRollH)*0.9;
 			}
 		} else {
 			
 			
 			
 			if(rollTarget == 0.0) {
+				
 				rollTarget = -rotationRollH;
 			}
 			//System.out.println(rollTarget + " | " + rotationRollH);
 		
-			if(Math.abs(rollTarget)- Math.abs(rotationRollH) < 0.01) {
+			/*if(Math.abs(rollTarget)- Math.abs(rotationRollH) < 0.01) {
 				
-			}else if(rollTarget < rotationRollH) {
-			
+			}else*/ if(rollTarget < rotationRollH) {
+				//System.out.println("main");
+				
 				rotationRollH -= Math.abs(rollTarget)*0.03;
 			} else {
 				
+				//System.out.println("Adjustment: " + bruh + " | " + rollTarget);
 				rotationRollH += Math.abs(rollTarget)*0.08;
 			}
 		}
@@ -1309,10 +1348,16 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 			targetDown = newPitch;
 		}
 		
+		double SSAng = Math.abs(Math.toDegrees(getSolver().getSideSlipAngle()));
+		double mult = 1.0-(0.3*Math.min(SSAng/30.0, 1.0));
+		
+		if(rotationPitch < 3) mult *= 0.5;
+		
+		// NOMINAL REACH: 8.75, MODIFIED FOR SMOOTHNESS TO 10.75
+		double baseReach = 5.75*(Math.min(getRealSpeed()/25.0, 1.0))*mult;
+		//System.out.println(baseReach);
 		
 	
-		double baseReach = 8.75*(Math.min(getRealSpeed()/25.0, 1.0));
-		
 		if(!onGround || rotationPitch > 5) {
 			baseReach += 3;
 		}
@@ -1593,10 +1638,12 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
     	
     	
     	
+		if(isVehicleRunning()) {
+			doExhaustParticles(true, new Vec3d(0.25, 0.5, -3.25), 0.5);
+			doExhaustParticles(true, new Vec3d(-1.45, 0.5, -3.25), 0.5);
+	    	
+		}
 		
-		doExhaustParticles(true, new Vec3d(0.25, 0.5, -3.25), 0.5);
-		doExhaustParticles(true, new Vec3d(-1.45, 0.5, -3.25), 0.5);
-    	
 		
 		
 		for(WheelSolver w : getSolver().wheels) {

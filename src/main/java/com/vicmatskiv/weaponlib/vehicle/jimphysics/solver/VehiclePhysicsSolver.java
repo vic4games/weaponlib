@@ -259,6 +259,19 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 	
 	
 	public void updateEngineForces() {
+		prevRPM = currentRPM;
+		
+		if(!vehicle.isVehicleRunning()) {
+			if(currentRPM > 0) {
+				currentRPM -= 10;
+			}
+			if(currentRPM < 0) currentRPM = 0;
+		}
+		
+		// If the engine is off, this code should not
+		// be run.
+		if(!vehicle.isVehicleRunning()) return;
+		
 		Transmission t = transmission;
 		double gearRatio = t.getCurrentGearRatio();
 		double finalDriveRatio = t.getDifferentialRatio();
@@ -296,7 +309,7 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		}
 		
 		// for smoothing purposes
-		prevRPM = currentRPM;
+		
 		currentRPM = rpm;
 		
 		
@@ -431,7 +444,7 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 			vehicle.rotationRoll -= 1.5f*Math.abs(diff);
 		}
 		
-		
+	
 		
 		
 		
@@ -466,6 +479,7 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		
 		double forwardG = getVelocityVector().lengthVector()/getSideSlipAngle();
 		vehicle.forwardLean = forwardG/inertia.m22;
+		if(Double.isNaN(vehicle.forwardLean)) vehicle.forwardLean = 0.0;
 		 
 		
 		

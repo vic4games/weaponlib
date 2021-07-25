@@ -96,7 +96,7 @@ public class Interceptors {
         		double dist = vehicle.prevRotationPitch + (vehicle.rotationPitch-vehicle.prevRotationPitch)*mu;
         		float roll = (vehicle.prevRotationRollH+vehicle.prevRotationRoll) + ((vehicle.rotationRoll+vehicle.rotationRollH)-(vehicle.prevRotationRoll+vehicle.prevRotationRollH))*mu;
         		
-        	
+        		
         		
         		GL11.glTranslated(0.0, 0.0, -dist*0.025);
         		//GL11.glTranslated(0.0, Math.abs(0.8*(vehicle.rotationPitch/45)), 0.0);
@@ -104,6 +104,14 @@ public class Interceptors {
         		GL11.glTranslated(roll*0.025, 0.0, 0.0);
             	
         		GL11.glRotatef(-roll, 0.0f, 0.0f, 1.0f);
+        		
+        		
+        		GL11.glRotated(vehicle.sideLean*2, 0.0, 0.0, 1.0);
+        		
+        		GL11.glTranslated(vehicle.sideLean/100, 0, -Math.min(vehicle.getRealSpeed()/150, 0.6));
+        		
+        		
+        		//GL11.glRotated(Math.toDegrees(vehicle.steerangle)/2, 0.0, 0.0, 1.0);
         		
         		}
 
@@ -365,7 +373,11 @@ public class Interceptors {
             float appliedAmplitude = 0.0f;
             if(Minecraft.getMinecraft().gameSettings.thirdPersonView != 0) {
             	appliedAmplitude = amplitude;
-            } else appliedAmplitude = amplitude/10.0f;
+            } else appliedAmplitude = amplitude/5.0f;
+            
+            if(vehicle.getSolver().velocity.lengthVector() > 10) {
+            	appliedAmplitude += vehicle.getSolver().getSideSlipAngle()/45;
+            }
             
             
             

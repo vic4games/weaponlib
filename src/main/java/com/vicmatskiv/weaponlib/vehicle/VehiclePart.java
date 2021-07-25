@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import net.minecraft.client.Minecraft;
+
 public interface VehiclePart extends PartContainer<VehiclePart> {
     
 	public static VehiclePart WINDOWS = new VehiclePart() {
@@ -29,7 +31,9 @@ public interface VehiclePart extends PartContainer<VehiclePart> {
     public static VehiclePart STEERING_WHEEL = new VehiclePart() {
         private List<VehiclePart> parts = Collections.unmodifiableList(Arrays.asList(LEFT_HAND, RIGHT_HAND));
         public List<VehiclePart> getChildParts() {
-            return parts;
+        	
+        	return parts;
+            
         }
         public String toString() {
             return "STEERING_WHEEL";

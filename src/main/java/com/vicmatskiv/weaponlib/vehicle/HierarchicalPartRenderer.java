@@ -110,37 +110,28 @@ final class HierarchicalPartRenderer<Part, State> implements StatefulRenderer<St
                 DebugPositioner.position(part, context);
             }
     
-            if(part == VehiclePart.WINDOWS) {
-            	 GlStateManager.enableBlend();
-            	 float transparency = 0.5f;
-            	 if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 0) {
-            		 transparency = 0.2f;
-            	 }
-            	// transparency = 0.13f;
-            	// GlStateManager.color(0.0f, 0f, 0f);
-            	 
-            	 GlStateManager.color(0.1f, 0.1f, 0.15f, transparency);
-                 
-            	// GlStateManager.blendFunc(GL11.GL_ONE, GL11.GL_ONE);
-            	 //GlStateManager.glBlendEquation(GL14.GL_MIN);
-            	 
-            	 //GlStateManager.glBlendEquation(GL14.GL_MIN);
-            	 
-            	 
-            	 //GlStateManager.glBlendEquation(GL14.GL_MIN);
-            	 
-                // GlStateManager.color(0.2f, 0.2f, 0.25f, transparency);
-            }
-           
-            modelRenderer.render(context);
+            int pass = net.minecraftforge.client.MinecraftForgeClient.getRenderPass();
             
-            if(part == VehiclePart.WINDOWS) {
-           	 GlStateManager.enableBlend();
-           	 float transparency = 0.5f;
-           	 //GlStateManager.blendFunc(GL11.GL_ONE, GL11.GL_ONE);
-           	 GlStateManager.glBlendEquation(GL14.GL_FUNC_ADD);
-        
+            
+            if(pass == 0 && part != VehiclePart.WINDOWS) {
+            	
+              
+               modelRenderer.render(context);
+            } else if(pass == 1 && part == VehiclePart.WINDOWS) {
+            	if(part == VehiclePart.WINDOWS) {
+                  	 GlStateManager.enableBlend();
+                  	 float transparency = 0.5f;
+                  	 if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 0) {
+                  		 transparency = 0.2f;
+                  	 }
+                  	 GlStateManager.color(0.1f, 0.1f, 0.15f, transparency);
+                  }
+            	modelRenderer.render(context);
             }
+            
+            
+            
+        
             
             if(part instanceof PartContainer) {
                 for(Part renderablePart: ((PartContainer<Part>)part).getChildParts()) {

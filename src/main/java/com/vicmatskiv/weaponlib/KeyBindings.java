@@ -59,6 +59,7 @@ public class KeyBindings {
     public static KeyBinding vehicleTurnLeft;
     public static KeyBinding vehicleTurnRight;
     public static KeyBinding vehicleClutch;
+    public static KeyBinding vehicleTurnOff;
 
 
     
@@ -138,6 +139,9 @@ public class KeyBindings {
         vehicleClutch = new KeyBinding("vehicle.clutch", Keyboard.KEY_C,
                 "key.categories.vehicle");
         
+        vehicleTurnOff = new KeyBinding("vehicle.turnoff", Keyboard.KEY_EQUALS,
+                "key.categories.vehicle");
+        
 
         compatibility.registerKeyBinding(reloadKey);
         compatibility.registerKeyBinding(unloadKey);
@@ -164,6 +168,7 @@ public class KeyBindings {
         compatibility.registerKeyBinding(vehicleTurnLeft);
         compatibility.registerKeyBinding(vehicleTurnRight);
         compatibility.registerKeyBinding(vehicleClutch);
+        compatibility.registerKeyBinding(vehicleTurnOff);
         
         
 
