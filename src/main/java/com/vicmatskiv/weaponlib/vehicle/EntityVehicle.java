@@ -95,6 +95,7 @@ import net.minecraft.client.audio.MovingSoundMinecart;
 import net.minecraft.client.audio.PositionedSound;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.audio.SoundHandler;
+import net.minecraft.client.renderer.vertex.VertexBuffer;
 import net.minecraft.client.resources.data.PackMetadataSection;
 import net.minecraft.crash.CrashReport;
 import net.minecraft.crash.CrashReportCategory;
@@ -1026,13 +1027,18 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 	             * Le magique
 	             */
 	            
-	            IBlockState below = world.getBlockState(getPosition().down());
-	    		AxisAlignedBB bb = below.getCollisionBoundingBox(world, getPosition().down());
-	    		if(bb.maxY >= 0.75 && bb.maxY < 1.0) {
-	    			//System.out.println(bb.maxY);
-	    			bb = new AxisAlignedBB(0, 0, 0, 1, 1, 1);
-	    			list1.add(bb.offset(getPosition().down()));
-	    		}
+	            	 IBlockState below = world.getBlockState(getPosition().down());
+	 	    		AxisAlignedBB bb = below.getCollisionBoundingBox(world, getPosition().down());
+	 	    		if(bb != null) {
+	 	    			if(bb.maxY >= 0.75 && bb.maxY < 1.0) {
+		 	    			//System.out.println(bb.maxY);
+		 	    			bb = new AxisAlignedBB(0, 0, 0, 1, 1, 1);
+		 	    			list1.add(bb.offset(getPosition().down()));
+		 	    		}
+	 	    		}
+	 	    		
+	            
+	           
 	            
 	            if (y != 0.0D)
 	            {
@@ -1603,11 +1609,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 				
 		
 		
-		IBlockState below = world.getBlockState(getPosition().down());
-		AxisAlignedBB bb = below.getCollisionBoundingBox(world, getPosition().down());
-		if(bb.maxY != 1.0) {
-			
-		}
+		
 		
 		
 		

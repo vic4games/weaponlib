@@ -7,6 +7,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleVec3;
 import com.vicmatskiv.weaponlib.vehicle.EntityVehicle;
 
 import net.minecraft.client.audio.ISound;
+import net.minecraft.client.renderer.vertex.VertexBuffer;
 
 public class EngineMovingSound extends AdvCompatibleMovingSound {
 
@@ -21,6 +22,7 @@ public class EngineMovingSound extends AdvCompatibleMovingSound {
 	
 	@Override
 	public void update() {
+		
 		// TODO Auto-generated method stub
 		super.update();
 		int rpm = vehicle.getSolver().currentRPM;
