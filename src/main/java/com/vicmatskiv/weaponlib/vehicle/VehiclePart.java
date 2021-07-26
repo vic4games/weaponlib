@@ -105,7 +105,16 @@ public interface VehiclePart extends PartContainer<VehiclePart> {
 
         @Override
         public List<VehiclePart> getChildParts() {
-            return parts;
+        	
+        	
+        	
+        	
+        	
+        	
+        	return Collections.unmodifiableList(Arrays.asList(
+                    STEERING_WHEEL, FRONT_LEFT_CONTROL_ARM, FRONT_RIGHT_CONTROL_ARM, REAR_LEFT_WHEEL, REAR_RIGHT_WHEEL, WINDOWS, RIGHT_HAND));
+
+            //return parts;
         }
         
         public String toString() {

@@ -387,6 +387,7 @@ public class RenderVehicle2 extends CompatibleEntityRenderer
 				if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 0 && pass == Minecraft.getMinecraft().player) continue;
 				
 				GL11.glPushMatrix();
+				GL11.glScaled(0.95, 0.95, 0.95);
 				int i = entityVehicle.getPassengers().indexOf(pass);
 		        Vec3d seatOffset = entityVehicle.getConfiguration().getSeatAtIndex(i).getSeatPosition();
 		        
@@ -413,6 +414,9 @@ public class RenderVehicle2 extends CompatibleEntityRenderer
 					float apPH = player.prevRotationPitch;
 					float aY = player.rotationYaw;
 					float apY = player.prevRotationYaw;
+					float aYO = player.renderYawOffset;
+					float apYO = player.prevRenderYawOffset;
+					
 					
 					player.rotationYawHead = 180f;
 					player.rotationPitch = 0;
@@ -420,8 +424,13 @@ public class RenderVehicle2 extends CompatibleEntityRenderer
 					
 					player.rotationYaw = 180;
 					player.prevRotationYaw = 180;
+					
+					player.renderYawOffset = 180;
+					player.prevRenderYawOffset = 180;
 					render.doRender(player, 0, 0, 0, 180, Minecraft.getMinecraft().getRenderPartialTicks());		
 					
+					player.renderYawOffset = aYO;
+					player.prevRenderYawOffset = apYO;
 					player.rotationPitch = aPH;
 					player.prevRotationPitch = apPH;
 					player.rotationYaw = aY;

@@ -145,7 +145,7 @@ public class GearShiftPattern {
 		
 		ArrayList<Pair<Double, Vec3d>> realTimeTransitions = new ArrayList<>();
 		double lastTime = 0;
-		double totalPauseTime = 5.0;
+		double totalPauseTime = 5;
 		for(int x = 0; x < transitions.size(); ++x) {
 			//realTimeTransitions.add(new Pair<Double, Vec3d>(lastTime+0.1, transitions.get(x)));
 			
@@ -183,7 +183,7 @@ public class GearShiftPattern {
 		}
 		
 		double step = (globalStep-fB)/(sB-fB);
-		step = Math.pow(step, 3);
+		step = step;
 		return interpVec3d(f, s, step);
 		
 		

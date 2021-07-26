@@ -54,7 +54,7 @@ public class AdvCompatibleMovingSound extends MovingSound {
     }
     
     public void fadeOut() {
-    	
+    
     	fadeTimer = 0;
     	isFadeIn = false;
     	isFade = true;
@@ -101,7 +101,7 @@ public class AdvCompatibleMovingSound extends MovingSound {
     @Override
     public boolean canRepeat() {
     	
-    	return super.canRepeat();
+    	return true;
     }
     
 

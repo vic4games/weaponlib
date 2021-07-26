@@ -357,6 +357,7 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		if(vehicle.forwardLean < 0) vehicle.forwardLean /= 5;
 		*/
 		
+		vehicle.prevSideLean = vehicle.sideLean;
 		vehicle.sideLean = (accel/12) + newSynthSide;
 		
 		//System.out.println(weightRear);

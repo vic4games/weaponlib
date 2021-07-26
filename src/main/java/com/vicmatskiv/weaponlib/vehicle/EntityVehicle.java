@@ -72,6 +72,8 @@ import com.vicmatskiv.weaponlib.vehicle.network.VehicleControlPacketHandler;
 import com.vicmatskiv.weaponlib.vehicle.network.VehicleDataContainer;
 import com.vicmatskiv.weaponlib.vehicle.network.VehicleDataSerializer;
 import com.vicmatskiv.weaponlib.vehicle.network.VehiclePhysSerializer;
+import com.vicmatskiv.weaponlib.vehicle.smoothlib.PTIVal;
+import com.vicmatskiv.weaponlib.vehicle.smoothlib.PTIVec;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockCarpet;
@@ -89,6 +91,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.ISound;
 import net.minecraft.client.audio.MovingSound;
+import net.minecraft.client.audio.MovingSoundMinecart;
 import net.minecraft.client.audio.PositionedSound;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.audio.SoundHandler;
@@ -209,15 +212,27 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
      * PHYSICS + COLLISION VARIABLES
      */
     public OreintedBB oreintedBoundingBox;
+    
+    // rot
     public float wheelRotationAngle;
+    public float prevWheelRotationAngle;
+    
     public VehiclePhysicsSolver solver;
     public double mass = 1352;
     public Engine engine = new EvoIVEngine("Evo IV Engine", "Mitsubishi Motors");
     public double steerangle;
     public double throttle = 0;
     public double angularvelocity = 0;
+    
+   
+    
+    
     public double forwardLean = 0.0;
     public double sideLean = 0.0;
+    
+    public double prevSideLean;
+    
+    
     public double driftTuner = 0.0;
     public boolean isBraking = false;
     
@@ -230,7 +245,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
     public float rotationRollH = 0.0f;
     public float prevRotationRollH = 0.0f;
     
-    
+    public double prevLastYawDelta = 0.0;
     public double lastYawDelta = 0.0;
     
     public boolean isReversing = false;
@@ -240,6 +255,11 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 
 	
 	public boolean reverseLockout = true;
+	
+	/*
+	 * Animations
+	 */
+	public PTIVec smoothShift = new PTIVec();
 	
 
 	/*
@@ -323,9 +343,18 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 		return this.oreintedBoundingBox;
 	}
 	
+	public float getInterpolatedWheelRotation() {
+		return (float) InterpolationKit.interpolateValue(prevWheelRotationAngle, wheelRotationAngle, Minecraft.getMinecraft().getRenderPartialTicks());
+	}
+	
 	public float getWheelRotationAngle() {
 		return this.wheelRotationAngle;
 	}
+	
+	public float getInterpolatedYawDelta() {
+		return (float) InterpolationKit.interpolateValue(prevLastYawDelta, lastYawDelta, Minecraft.getMinecraft().getRenderPartialTicks());
+	}
+	
 	
 	public double getLastYawDelta() {
 		return this.lastYawDelta;
@@ -816,8 +845,18 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 			
 	    }*/
 		
-		lastYawDelta = Math.toDegrees(steerangle)*0.3;
-		wheelRotationAngle -= (float) solver.velocity.lengthVector();
+		double maxSteerAngle = 35;
+		double dSA = Math.toDegrees(steerangle);
+		if(dSA > maxSteerAngle) steerangle = Math.toRadians(maxSteerAngle);
+		if(dSA < -maxSteerAngle) steerangle = Math.toRadians(-maxSteerAngle);
+		prevLastYawDelta = lastYawDelta;
+		lastYawDelta = steerangle;
+		
+		
+		prevWheelRotationAngle = wheelRotationAngle;
+		double angVel = getRealSpeed();
+		wheelRotationAngle += angVel%360; //wheelRotationAngle = 0.0f;
+		//wheelRotationAngle -= (float) solver.velocity.lengthVector();
 		
 		
 		
@@ -885,9 +924,395 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 	@Override
 	public void move(MoverType type, double x, double y, double z)
     {
-		//this.setEntityBoundingBox(getEntityBoundingBox().offset(0.0, 0.1, 0.0));
-		
-		super.move(type, x, y, z);
+		 if (this.noClip)
+	        {
+	            this.setEntityBoundingBox(this.getEntityBoundingBox().offset(x, y, z));
+	            this.resetPositionToBB();
+	        }
+	        else
+	        {
+	            
+
+	            this.world.profiler.startSection("move");
+	            double d10 = this.posX;
+	            double d11 = this.posY;
+	            double d1 = this.posZ;
+
+	            if (this.isInWeb)
+	            {
+	                this.isInWeb = false;
+	                x *= 0.25D;
+	                y *= 0.05000000074505806D;
+	                z *= 0.25D;
+	                this.motionX = 0.0D;
+	                this.motionY = 0.0D;
+	                this.motionZ = 0.0D;
+	            }
+
+	            double d2 = x;
+	            double d3 = y;
+	            double d4 = z;
+
+	            if ((type == MoverType.SELF || type == MoverType.PLAYER) && this.onGround && this.isSneaking())
+	            {
+	                for (double d5 = 0.05D; x != 0.0D && this.world.getCollisionBoxes(this, this.getEntityBoundingBox().offset(x, (double)(-this.stepHeight), 0.0D)).isEmpty(); d2 = x)
+	                {
+	                    if (x < 0.05D && x >= -0.05D)
+	                    {
+	                        x = 0.0D;
+	                    }
+	                    else if (x > 0.0D)
+	                    {
+	                        x -= 0.05D;
+	                    }
+	                    else
+	                    {
+	                        x += 0.05D;
+	                    }
+	                }
+
+	                for (; z != 0.0D && this.world.getCollisionBoxes(this, this.getEntityBoundingBox().offset(0.0D, (double)(-this.stepHeight), z)).isEmpty(); d4 = z)
+	                {
+	                    if (z < 0.05D && z >= -0.05D)
+	                    {
+	                        z = 0.0D;
+	                    }
+	                    else if (z > 0.0D)
+	                    {
+	                        z -= 0.05D;
+	                    }
+	                    else
+	                    {
+	                        z += 0.05D;
+	                    }
+	                }
+
+	                for (; x != 0.0D && z != 0.0D && this.world.getCollisionBoxes(this, this.getEntityBoundingBox().offset(x, (double)(-this.stepHeight), z)).isEmpty(); d4 = z)
+	                {
+	                    if (x < 0.05D && x >= -0.05D)
+	                    {
+	                        x = 0.0D;
+	                    }
+	                    else if (x > 0.0D)
+	                    {
+	                        x -= 0.05D;
+	                    }
+	                    else
+	                    {
+	                        x += 0.05D;
+	                    }
+
+	                    d2 = x;
+
+	                    if (z < 0.05D && z >= -0.05D)
+	                    {
+	                        z = 0.0D;
+	                    }
+	                    else if (z > 0.0D)
+	                    {
+	                        z -= 0.05D;
+	                    }
+	                    else
+	                    {
+	                        z += 0.05D;
+	                    }
+	                }
+	            }
+
+	            List<AxisAlignedBB> list1 = this.world.getCollisionBoxes(this, this.getEntityBoundingBox().expand(x, y, z));
+	            AxisAlignedBB axisalignedbb = this.getEntityBoundingBox();
+
+	            /*
+	             * Le magique
+	             */
+	            
+	            IBlockState below = world.getBlockState(getPosition().down());
+	    		AxisAlignedBB bb = below.getCollisionBoundingBox(world, getPosition().down());
+	    		if(bb.maxY >= 0.75 && bb.maxY < 1.0) {
+	    			//System.out.println(bb.maxY);
+	    			bb = new AxisAlignedBB(0, 0, 0, 1, 1, 1);
+	    			list1.add(bb.offset(getPosition().down()));
+	    		}
+	            
+	            if (y != 0.0D)
+	            {
+	                int k = 0;
+
+	                for (int l = list1.size(); k < l; ++k)
+	                {
+	                    y = ((AxisAlignedBB)list1.get(k)).calculateYOffset(this.getEntityBoundingBox(), y);
+	                }
+
+	                this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0D, y, 0.0D));
+	            }
+
+	            if (x != 0.0D)
+	            {
+	                int j5 = 0;
+
+	                for (int l5 = list1.size(); j5 < l5; ++j5)
+	                {
+	                    x = ((AxisAlignedBB)list1.get(j5)).calculateXOffset(this.getEntityBoundingBox(), x);
+	                }
+
+	                if (x != 0.0D)
+	                {
+	                    this.setEntityBoundingBox(this.getEntityBoundingBox().offset(x, 0.0D, 0.0D));
+	                }
+	            }
+
+	            if (z != 0.0D)
+	            {
+	                int k5 = 0;
+
+	                for (int i6 = list1.size(); k5 < i6; ++k5)
+	                {
+	                    z = ((AxisAlignedBB)list1.get(k5)).calculateZOffset(this.getEntityBoundingBox(), z);
+	                }
+
+	                if (z != 0.0D)
+	                {
+	                    this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0D, 0.0D, z));
+	                }
+	            }
+
+	            boolean flag = this.onGround || d3 != y && d3 < 0.0D;
+
+	            if (this.stepHeight > 0.0F && flag && (d2 != x || d4 != z))
+	            {
+	                double d14 = x;
+	                double d6 = y;
+	                double d7 = z;
+	                AxisAlignedBB axisalignedbb1 = this.getEntityBoundingBox();
+	                this.setEntityBoundingBox(axisalignedbb);
+	                y = (double)this.stepHeight;
+	                List<AxisAlignedBB> list = this.world.getCollisionBoxes(this, this.getEntityBoundingBox().expand(d2, y, d4));
+	                AxisAlignedBB axisalignedbb2 = this.getEntityBoundingBox();
+	                AxisAlignedBB axisalignedbb3 = axisalignedbb2.expand(d2, 0.0D, d4);
+	                double d8 = y;
+	                int j1 = 0;
+
+	                for (int k1 = list.size(); j1 < k1; ++j1)
+	                {
+	                    d8 = ((AxisAlignedBB)list.get(j1)).calculateYOffset(axisalignedbb3, d8);
+	                }
+
+	                axisalignedbb2 = axisalignedbb2.offset(0.0D, d8, 0.0D);
+	                double d18 = d2;
+	                int l1 = 0;
+
+	                for (int i2 = list.size(); l1 < i2; ++l1)
+	                {
+	                    d18 = ((AxisAlignedBB)list.get(l1)).calculateXOffset(axisalignedbb2, d18);
+	                }
+
+	                axisalignedbb2 = axisalignedbb2.offset(d18, 0.0D, 0.0D);
+	                double d19 = d4;
+	                int j2 = 0;
+
+	                for (int k2 = list.size(); j2 < k2; ++j2)
+	                {
+	                    d19 = ((AxisAlignedBB)list.get(j2)).calculateZOffset(axisalignedbb2, d19);
+	                }
+
+	                axisalignedbb2 = axisalignedbb2.offset(0.0D, 0.0D, d19);
+	                AxisAlignedBB axisalignedbb4 = this.getEntityBoundingBox();
+	                double d20 = y;
+	                int l2 = 0;
+
+	                for (int i3 = list.size(); l2 < i3; ++l2)
+	                {
+	                    d20 = ((AxisAlignedBB)list.get(l2)).calculateYOffset(axisalignedbb4, d20);
+	                }
+
+	                axisalignedbb4 = axisalignedbb4.offset(0.0D, d20, 0.0D);
+	                double d21 = d2;
+	                int j3 = 0;
+
+	                for (int k3 = list.size(); j3 < k3; ++j3)
+	                {
+	                    d21 = ((AxisAlignedBB)list.get(j3)).calculateXOffset(axisalignedbb4, d21);
+	                }
+
+	                axisalignedbb4 = axisalignedbb4.offset(d21, 0.0D, 0.0D);
+	                double d22 = d4;
+	                int l3 = 0;
+
+	                for (int i4 = list.size(); l3 < i4; ++l3)
+	                {
+	                    d22 = ((AxisAlignedBB)list.get(l3)).calculateZOffset(axisalignedbb4, d22);
+	                }
+
+	                axisalignedbb4 = axisalignedbb4.offset(0.0D, 0.0D, d22);
+	                double d23 = d18 * d18 + d19 * d19;
+	                double d9 = d21 * d21 + d22 * d22;
+
+	                if (d23 > d9)
+	                {
+	                    x = d18;
+	                    z = d19;
+	                    y = -d8;
+	                    this.setEntityBoundingBox(axisalignedbb2);
+	                }
+	                else
+	                {
+	                    x = d21;
+	                    z = d22;
+	                    y = -d20;
+	                    this.setEntityBoundingBox(axisalignedbb4);
+	                }
+
+	                int j4 = 0;
+
+	                for (int k4 = list.size(); j4 < k4; ++j4)
+	                {
+	                    y = ((AxisAlignedBB)list.get(j4)).calculateYOffset(this.getEntityBoundingBox(), y);
+	                }
+
+	                this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0D, y, 0.0D));
+
+	                if (d14 * d14 + d7 * d7 >= x * x + z * z)
+	                {
+	                    x = d14;
+	                    y = d6;
+	                    z = d7;
+	                    this.setEntityBoundingBox(axisalignedbb1);
+	                }
+	            }
+
+	            this.world.profiler.endSection();
+	            this.world.profiler.startSection("rest");
+	            this.resetPositionToBB();
+	            this.isCollidedHorizontally = d2 != x || d4 != z;
+	            this.isCollidedVertically = d3 != y;
+	            this.onGround = this.isCollidedVertically && d3 < 0.0D;
+	            this.isCollided = this.isCollidedHorizontally || this.isCollidedVertically;
+	            int j6 = MathHelper.floor(this.posX);
+	            int i1 = MathHelper.floor(this.posY - 0.20000000298023224D);
+	            int k6 = MathHelper.floor(this.posZ);
+	            BlockPos blockpos = new BlockPos(j6, i1, k6);
+	            IBlockState iblockstate = this.world.getBlockState(blockpos);
+
+	            if (iblockstate.getMaterial() == Material.AIR)
+	            {
+	                BlockPos blockpos1 = blockpos.down();
+	                IBlockState iblockstate1 = this.world.getBlockState(blockpos1);
+	                Block block1 = iblockstate1.getBlock();
+
+	                if (block1 instanceof BlockFence || block1 instanceof BlockWall || block1 instanceof BlockFenceGate)
+	                {
+	                    iblockstate = iblockstate1;
+	                    blockpos = blockpos1;
+	                }
+	            }
+
+	            this.updateFallState(y, this.onGround, iblockstate, blockpos);
+
+	            if (d2 != x)
+	            {
+	                this.motionX = 0.0D;
+	            }
+
+	            if (d4 != z)
+	            {
+	                this.motionZ = 0.0D;
+	            }
+
+	            Block block = iblockstate.getBlock();
+
+	            if (d3 != y)
+	            {
+	                block.onLanded(this.world, this);
+	            }
+
+	            if (this.canTriggerWalking() && (!this.onGround || !this.isSneaking() || !this.isRiding()))
+	            {
+	                double d15 = this.posX - d10;
+	                double d16 = this.posY - d11;
+	                double d17 = this.posZ - d1;
+
+	                if (block != Blocks.LADDER)
+	                {
+	                    d16 = 0.0D;
+	                }
+
+	                if (block != null && this.onGround)
+	                {
+	                    block.onEntityWalk(this.world, blockpos, this);
+	                }
+
+	                this.distanceWalkedModified = (float)((double)this.distanceWalkedModified + (double)MathHelper.sqrt(d15 * d15 + d17 * d17) * 0.6D);
+	                this.distanceWalkedOnStepModified = (float)((double)this.distanceWalkedOnStepModified + (double)MathHelper.sqrt(d15 * d15 + d16 * d16 + d17 * d17) * 0.6D);
+
+	                if (this.distanceWalkedOnStepModified > (float)this.nextStepDistance && iblockstate.getMaterial() != Material.AIR)
+	                {
+	                    this.nextStepDistance = (int)this.distanceWalkedOnStepModified + 1;
+
+	                    if (this.isInWater())
+	                    {
+	                        Entity entity = this.isBeingRidden() && this.getControllingPassenger() != null ? this.getControllingPassenger() : this;
+	                        float f = entity == this ? 0.35F : 0.4F;
+	                        float f1 = MathHelper.sqrt(entity.motionX * entity.motionX * 0.20000000298023224D + entity.motionY * entity.motionY + entity.motionZ * entity.motionZ * 0.20000000298023224D) * f;
+
+	                        if (f1 > 1.0F)
+	                        {
+	                            f1 = 1.0F;
+	                        }
+
+	                        this.playSound(this.getSwimSound(), f1, 1.0F + (this.rand.nextFloat() - this.rand.nextFloat()) * 0.4F);
+	                    }
+	                    else
+	                    {
+	                        this.playStepSound(blockpos, block);
+	                    }
+	                }
+	                else if (this.distanceWalkedOnStepModified > this.nextFlap && this.makeFlySound() && iblockstate.getMaterial() == Material.AIR)
+	                {
+	                    this.nextFlap = this.playFlySound(this.distanceWalkedOnStepModified);
+	                }
+	            }
+
+	            try
+	            {
+	                this.doBlockCollisions();
+	            }
+	            catch (Throwable throwable)
+	            {
+	                CrashReport crashreport = CrashReport.makeCrashReport(throwable, "Checking entity block collision");
+	                CrashReportCategory crashreportcategory = crashreport.makeCategory("Entity being checked for collision");
+	                this.addEntityCrashInfo(crashreportcategory);
+	                throw new ReportedException(crashreport);
+	            }
+
+	            boolean flag1 = this.isWet();
+
+	            if (this.world.isFlammableWithin(this.getEntityBoundingBox().shrink(0.001D)))
+	            {
+	                this.dealFireDamage(1);
+
+	                if (!flag1)
+	                {
+	                    ++this.fire;
+
+	                    if (this.fire == 0)
+	                    {
+	                        this.setFire(8);
+	                    }
+	                }
+	            }
+	            else if (this.fire <= 0)
+	            {
+	                this.fire = -this.getFireImmuneTicks();
+	            }
+
+	            if (flag1 && this.isBurning())
+	            {
+	                this.playSound(SoundEvents.ENTITY_GENERIC_EXTINGUISH_FIRE, 0.7F, 1.6F + (this.rand.nextFloat() - this.rand.nextFloat()) * 0.4F);
+	                this.fire = -this.getFireImmuneTicks();
+	            }
+
+	            this.world.profiler.endSection();
+	        }
     }
 	
 	
@@ -1178,6 +1603,14 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 				
 		
 		
+		IBlockState below = world.getBlockState(getPosition().down());
+		AxisAlignedBB bb = below.getCollisionBoundingBox(world, getPosition().down());
+		if(bb.maxY != 1.0) {
+			
+		}
+		
+		
+		
 		
 		
 		/*
@@ -1338,6 +1771,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 		if(hF-hB != 0.0) {
 			System.out.println("FE: " + hF  + " | RE: " + hB + " | DIFF: " + (hF-hB));
 		}*/
+		
 		
 		
 		if(rayDown != null && (hF-hB) >= 0) {
@@ -1680,7 +2114,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
     	
     	
     	
-    	int max = 100;
+    	int max = 1000;
     	int min = 0;
     	
     	int mult = 20;
@@ -2005,7 +2439,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
     	Material mat = this.world.getBlockState(getPosition().down()).getMaterial();
     	
     	if(isInShift()) {
-    		
+    	
     		PositionedSound ps = new PositionedSoundRecord(getConfiguration().getShiftSound().getSound(), SoundCategory.MASTER, 1.5f, 1.0f, (float) posX, (float) posY, (float) posZ);
     		Minecraft.getMinecraft().getSoundHandler().playSound(ps);
     	}
@@ -2018,18 +2452,34 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
     	}
     	
     	
-    	this.driftingSound = null;
+    	//this.driftingSound = null;
     	if(this.driftingSound != null) {
-    	 if(this.driftingSound.isDonePlaying()) this.driftingSound = null;
+    	 if(this.driftingSound.isDonePlaying()) {
+    		// System.out.println("hi");
+    		 this.driftingSound = null;
+    	 }
     	 if(current != mat) this.driftingSound = null;
     	 
     	}
     	
+    //	System.out.println(this.drivingSound.getSoundLocation());
+    	CompatibleSound engineNoise = getConfiguration().getRunSound();
     	if(this.drivingSound == null) {
-        	this.drivingSound = new EngineMovingSound(getConfiguration().getRunSound(), soundPositionProvider, donePlayingSoundProvider, this, true);
-        	Minecraft.getMinecraft().getSoundHandler().playSound(this.drivingSound);
+    		
+    		
+    		//this.drivingSound = new CompatibleMovingSound(getConfiguration().getRunSound(), soundPositionProvider, doriftoSoundProvider, donePlayingSoundProvider);
+        	//this.drivingSound = new MovingSoundMinecart(minecartIn)
+    		this.drivingSound = new EngineMovingSound(engineNoise, soundPositionProvider, donePlayingSoundProvider, this, false);
+        	//this.drivingSound = new DriftMovingSound(getConfiguration().getRunSound(), soundPositionProvider, isDorifto, this, false);
+    		
+    		Minecraft.getMinecraft().getSoundHandler().playSound(this.drivingSound);
         }
     	
+    	
+    	//this.drivingSound = new EngineMovingSound(engineNoise, soundPositionProvider, donePlayingSoundProvider, this, true);
+    	
+    	//Minecraft.getMinecraft().getSoundHandler().playSound(this.drivingSound);
+        
     	
 		
     	
@@ -2041,17 +2491,17 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
     		
     		if(mat == Material.GRASS || mat == Material.GROUND || mat == Material.CLAY) {
     			current = mat;
-    			chosen = GeneralVehicleSounds.driftGround1;
+    			chosen = GeneralVehicleSounds.driftConcrete1;
     		} else if(mat == Material.ROCK) {
     			current = mat;
     			chosen = GeneralVehicleSounds.driftConcrete1;
     		} else {
-    			chosen = GeneralVehicleSounds.driftGround1;
+    			chosen = GeneralVehicleSounds.driftConcrete1;
     		}
     		
     		chosen = GeneralVehicleSounds.driftConcrete1;
     		
-    		this.driftingSound = new DriftMovingSound(GeneralVehicleSounds.driftGround1, soundPositionProvider, isDorifto, this, false);
+    		this.driftingSound = new DriftMovingSound(chosen, soundPositionProvider, isDorifto, this, false);
     		Minecraft.getMinecraft().getSoundHandler().playSound(this.driftingSound);
     	}
     	

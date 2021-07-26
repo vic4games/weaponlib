@@ -313,12 +313,12 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 			//System.out.println(solver.angularVelocity);
 		
 		
-		
+		/*
 		double factor = 1.0;
 		if(this.axel.solver.materialBelow != Material.ROCK) factor = 0.4;
 		if(Math.abs(solver.angularVelocity) > factor) {
 			lateralForce *= 0.5;
-		}
+		}*/
 		
 		
 		if(Double.isNaN(lateralForce)) {

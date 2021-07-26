@@ -26,13 +26,20 @@ public class VehicleRendererBuilder extends HierarchicalRendererBuilder<VehicleP
 			stateManager, renderContext) -> {
 		stateManager.setContinousState(renderContext.getState(), true, false, false);
 	};
-
+/*
 	private static Function<PartRenderContext<VehicleRenderableState>, Float> DEFAULT_TURN_PROGRESS_PROVIDER = context -> 0.5f
 			+ (float) ((EntityVehicle) context.getEntity()).getLastYawDelta() / 20f;
+*/
+	
+	private static Function<PartRenderContext<VehicleRenderableState>, Float> DEFAULT_TURN_PROGRESS_PROVIDER = context -> ((EntityVehicle) context.getEntity()).getInterpolatedYawDelta();
 
+	
+	private static Function<PartRenderContext<VehicleRenderableState>, Float> DEFAULT_WHEEL_TURN_PROGRESS_PROVIDER = context -> (float) ((EntityVehicle) context.getEntity()).getInterpolatedWheelRotation();
+	
+	/*
 	private static Function<PartRenderContext<VehicleRenderableState>, Float> DEFAULT_WHEEL_TURN_PROGRESS_PROVIDER = context -> (float) Math
 			.abs(((EntityVehicle) context.getEntity()).getWheelRotationAngle()) / 360f;
-
+	*/
 	public VehicleRendererBuilder withMainModelProvider(Supplier<VehicleModel> mainModelProvider) {
 		VehicleModel model = mainModelProvider.get();
 		withPartRenderer(VehiclePart.MAIN, renderContext -> {

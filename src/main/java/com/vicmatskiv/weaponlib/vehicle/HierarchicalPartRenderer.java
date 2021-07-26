@@ -26,6 +26,7 @@ import org.lwjgl.opengl.GL44;
 import com.vicmatskiv.weaponlib.animation.DebugPositioner;
 import com.vicmatskiv.weaponlib.animation.MultipartPositioning;
 import com.vicmatskiv.weaponlib.animation.MultipartPositioning.Positioner;
+import com.vicmatskiv.weaponlib.vehicle.network.VehicleClientPacket;
 import com.vicmatskiv.weaponlib.animation.MultipartRenderStateManager;
 
 import net.minecraft.client.Minecraft;
@@ -77,6 +78,7 @@ final class HierarchicalPartRenderer<Part, State> implements StatefulRenderer<St
         
         stateSetter.accept(stateManager, context);
         MultipartPositioning<SinglePart, PartRenderContext<State>> multipartPositioning = stateManager.nextPositioning();
+       // System.out.println(multipartPositioning.getProgress());
         Positioner<SinglePart, PartRenderContext<State>> positioner = multipartPositioning.getPositioner();
         
         
@@ -130,13 +132,29 @@ final class HierarchicalPartRenderer<Part, State> implements StatefulRenderer<St
             }
             
             
-            
+            VehicleState state = ((EntityVehicle) context.getEntity()).getState();
+            boolean shiftState = (state == VehicleState.STARTING_TO_SHIFT || state == VehicleState.SHIFTING || state == VehicleState.FINISHING_SHIFT);
         
             
             if(part instanceof PartContainer) {
+            	
+            	
+            	
+            	
+            	
                 for(Part renderablePart: ((PartContainer<Part>)part).getChildParts()) {
                     HierarchicalPartRenderer<Part, State> partRenderer = partRenderers.get(renderablePart);
                     if(partRenderer != null) {
+                    	
+                    	if(renderablePart == VehiclePart.RIGHT_HAND) {
+                    		if(part == VehiclePart.MAIN && !shiftState) {
+                    			continue;
+                    		}
+                    		if(part == VehiclePart.STEERING_WHEEL && shiftState) {
+                    			continue;
+                    		}
+                    	}
+                    	
 //                        System.out.println("Rendering part " + renderablePart);
                         partRenderer.render(context);
                     }

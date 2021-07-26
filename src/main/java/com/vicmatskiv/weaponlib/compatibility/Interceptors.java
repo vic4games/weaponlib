@@ -32,6 +32,8 @@ import com.vicmatskiv.weaponlib.vehicle.RenderVehicle2;
 import com.vicmatskiv.weaponlib.vehicle.VehicleSuspensionStrategy;
 import com.vicmatskiv.weaponlib.vehicle.jimphysics.InterpolationKit;
 import com.vicmatskiv.weaponlib.vehicle.jimphysics.stability.InertialStabilizer;
+import com.vicmatskiv.weaponlib.vehicle.smoothlib.QPTI;
+import com.vicmatskiv.weaponlib.vehicle.smoothlib.VehicleRFCam;
 
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
@@ -57,6 +59,8 @@ public class Interceptors {
 	
 	public static InertialStabilizer thirdPersonCameraStabilizer = new InertialStabilizer(new Vec3d(1,1,1));
 	
+	
+	public static VehicleRFCam firstPersonCamera = new VehicleRFCam();
     
     public static boolean is3dRenderableItem(Item item) {
         return compatibility.is3dRenderable(item);
@@ -106,9 +110,13 @@ public class Interceptors {
         		GL11.glRotatef(-roll, 0.0f, 0.0f, 1.0f);
         		
         		
-        		GL11.glRotated(vehicle.sideLean*2, 0.0, 0.0, 1.0);
         		
-        		GL11.glTranslated(vehicle.sideLean/100, 0, -Math.min(vehicle.getRealSpeed()/150, 0.6));
+        		double iSL = QPTI.pti(vehicle.prevSideLean, vehicle.sideLean);
+        		
+        		
+        		GL11.glRotated(iSL*2, 0.0, 0.0, 1.0);
+        		
+        		GL11.glTranslated(iSL/100, 0, -Math.min(vehicle.getRealSpeed()/150, 0.6));
         		
         		
         		//GL11.glRotated(Math.toDegrees(vehicle.steerangle)/2, 0.0, 0.0, 1.0);
@@ -352,7 +360,7 @@ public class Interceptors {
             
             // jim hack
             
-            float amplitude = 0.03f;
+            float amplitude = 0.02f;
             float frequency = 15f;
             
             double hillFrac = (vehicle.getSolver().getVelocityVector().lengthVector()*(vehicle.rotationPitch/2))/20;
@@ -373,7 +381,7 @@ public class Interceptors {
             float appliedAmplitude = 0.0f;
             if(Minecraft.getMinecraft().gameSettings.thirdPersonView != 0) {
             	appliedAmplitude = amplitude;
-            } else appliedAmplitude = amplitude/5.0f;
+            } else appliedAmplitude = amplitude/7.5f;
             
             if(vehicle.getSolver().velocity.lengthVector() > 10) {
             	appliedAmplitude += vehicle.getSolver().getSideSlipAngle()/45;
