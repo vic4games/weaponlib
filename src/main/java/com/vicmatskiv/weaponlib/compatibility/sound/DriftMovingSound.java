@@ -21,11 +21,20 @@ public class DriftMovingSound extends AdvCompatibleMovingSound {
 	public void update() {
 		super.update();
 		
+		if(vehicle.isDead) {
+			donePlaying = true;
+		}
 		
 		//System.out.println("fortnite: " + ((float) Math.abs(vehicle.getSolver().getSideSlipAngle())*2.0));
 		//System.out.println(this.donePlaying);
 		if(!isDonePlaying()) {
-			this.volume = (float) ((float) Math.abs(vehicle.getSolver().getSideSlipAngle())*2.0);
+			this.volume = 0.0f;
+			if(vehicle.getRealSpeed() >= 9) {
+				double sideSlipAngle = Math.abs(Math.toDegrees(vehicle.getSolver().getSideSlipAngle()));
+				this.volume = (float) (sideSlipAngle/15.0);
+			}
+			
+			//this.volume = (float) ((float) Math.abs(vehicle.getSolver().getSideSlipAngle())*2.0);
 			//this.pitch = (float) 2.0*vehicle.getSolver().getVelocityVector().normalize();
 		}
 	}

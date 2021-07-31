@@ -59,6 +59,7 @@ public class Interceptors {
 	
 	public static InertialStabilizer thirdPersonCameraStabilizer = new InertialStabilizer(new Vec3d(1,1,1));
 	
+	public static float authenticFOV = 0f;
 	
 	public static VehicleRFCam firstPersonCamera = new VehicleRFCam();
     
@@ -72,6 +73,14 @@ public class Interceptors {
         EntityPlayer player = compatibility.getClientPlayer();
     	
         
+        
+        	if(authenticFOV != 0.0f && Minecraft.getMinecraft().gameSettings.fovSetting == 80.0f) {
+        		Minecraft.getMinecraft().gameSettings.fovSetting = authenticFOV;
+        		authenticFOV = 0.0f;
+        	}
+        
+        
+        
         if(player.isRiding() && player.getRidingEntity() instanceof EntityVehicle && Minecraft.getMinecraft().gameSettings.thirdPersonView == 0) {
         	EntityVehicle vehicle = (EntityVehicle) player.getRidingEntity();
         	// DEBUG //
@@ -81,20 +90,49 @@ public class Interceptors {
         	
         	//Minecraft.getMinecraft().setRenderViewEntity(vehicle);
         	
+        	
+        	
         	if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 0) {
+        		
+        		if(Minecraft.getMinecraft().gameSettings.fovSetting != 80.0f) {
+        			authenticFOV = Minecraft.getMinecraft().gameSettings.fovSetting;
+        			Minecraft.getMinecraft().gameSettings.fovSetting = 80.0f;
+        		}
+        		
         		
         		//MatrixHelper.applyMatrix(RenderVehicle2.tm);
         		//vehicle.rotationPitch = 0;
         		float mu = (float) ((1 - Math.cos(Minecraft.getMinecraft().getRenderPartialTicks() * Math.PI)) / 2f);
         		
         		
-
-        		player.rotationYaw = vehicle.rotationYaw;
-        		player.prevRotationYaw = vehicle.prevRotationYaw;
+        		/*
+        		 * BEGIN YAW & PITCH
+        		 */
         		
         		
-        		player.rotationPitch = -vehicle.rotationPitch;
-        		player.prevRotationPitch = -vehicle.prevRotationPitch;
+        		if(vehicle.getRealSpeed() != 0.0) {
+        			player.rotationYaw = vehicle.rotationYaw;
+            		player.prevRotationYaw = vehicle.prevRotationYaw;
+            		
+            		
+            		player.rotationPitch = -vehicle.rotationPitch;
+            		player.prevRotationPitch = -vehicle.prevRotationPitch;
+        		}
+        		
+        		
+        		
+        		/*
+        		 * END YAW & PITCH
+        		 */
+        		
+        		
+        		
+        		//player.rotationYaw = vehicle.rotationYaw;
+        		//player.prevRotationYaw = vehicle.prevRotationYaw;
+        		
+        		
+        		//player.rotationPitch = -vehicle.rotationPitch;
+        		//player.prevRotationPitch = -vehicle.prevRotationPitch;
         		
         		
         		double dist = vehicle.prevRotationPitch + (vehicle.rotationPitch-vehicle.prevRotationPitch)*mu;

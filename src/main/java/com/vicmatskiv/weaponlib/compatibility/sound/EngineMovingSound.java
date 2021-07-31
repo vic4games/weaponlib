@@ -29,10 +29,15 @@ public class EngineMovingSound extends AdvCompatibleMovingSound {
 		this.repeatDelay = -1;
 		this.attenuationType = ISound.AttenuationType.NONE;
 		
+		
+		if(vehicle.isDead) {
+			donePlaying = true;
+		}
+		
 		if(!isDonePlaying()) {
 			//System.out.println(this.pitch);
 			
-			this.pitch = (float) 2.0*(vehicle.solver.currentRPM/5500.0F);
+			this.pitch = (float) 1.0*(vehicle.solver.currentRPM/7500.0F)+1.0f;
 			this.volume = 2f;
 			//this.pitch = 1.0f;
 			//this.pitch = 1.0f;

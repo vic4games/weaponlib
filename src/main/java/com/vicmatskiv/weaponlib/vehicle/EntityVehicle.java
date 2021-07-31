@@ -4,6 +4,7 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 
 import java.io.BufferedReader;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.function.Supplier;
@@ -1027,15 +1028,37 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 	             * Le magique
 	             */
 	            
-	            	 IBlockState below = world.getBlockState(getPosition().down());
-	 	    		AxisAlignedBB bb = below.getCollisionBoundingBox(world, getPosition().down());
-	 	    		if(bb != null) {
-	 	    			if(bb.maxY >= 0.75 && bb.maxY < 1.0) {
-		 	    			//System.out.println(bb.maxY);
-		 	    			bb = new AxisAlignedBB(0, 0, 0, 1, 1, 1);
-		 	    			list1.add(bb.offset(getPosition().down()));
-		 	    		}
-	 	    		}
+	           
+	            ArrayList<AxisAlignedBB> rList = new ArrayList<>();
+	            for(int q = 0; q < list1.size(); ++q) {
+	            	AxisAlignedBB item = list1.get(q);
+	            	
+	            	BlockPos pos = new BlockPos(item.getCenter());
+	            	if(this.world.getBlockState(pos).getBlock() instanceof BlockCarpet) {
+	            		IBlockState below = world.getBlockState(getPosition().down());
+	            		AxisAlignedBB bb = below.getCollisionBoundingBox(world, getPosition().down());
+	            		rList.add(item);
+	            		
+	            		bb = new AxisAlignedBB(0, 0, 0, 1, 1, 1);
+	 	    			list1.add(bb.offset(getPosition().down()));
+	            	}
+	            }
+	            
+	            for(AxisAlignedBB bruh : rList) {
+	            	list1.remove(bruh);
+	            }
+	            
+	            
+	            
+				IBlockState below = world.getBlockState(getPosition().down());
+				AxisAlignedBB bb = below.getCollisionBoundingBox(world, getPosition().down());
+				if (bb != null) {
+					if (bb.maxY >= 0.75 && bb.maxY < 1.0) {
+						// System.out.println(bb.maxY);
+						bb = new AxisAlignedBB(0, 0, 0, 1, 1, 1);
+						list1.add(bb.offset(getPosition().down()));
+					}
+				}
 	 	    		
 	            
 	           
@@ -1804,17 +1827,20 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 		}
 		
 		
-		Vec3d start = new Vec3d(-0.5, 0.0, 0.0).rotateYaw((float) Math.toRadians(-rotationYaw)).add(getPositionVector());
-		Vec3d end = new Vec3d(-0.5, 0.0, baseReach).rotateYaw((float) Math.toRadians(-rotationYaw)).rotateYaw((float) -solver.getSideSlipAngle()).add(getPositionVector());
+		Vec3d start = new Vec3d(-0.5, 0.1, 0.0).rotateYaw((float) Math.toRadians(-rotationYaw)).add(getPositionVector());
+		Vec3d end = new Vec3d(-0.5, 0.1, baseReach).rotateYaw((float) Math.toRadians(-rotationYaw)).rotateYaw((float) -solver.getSideSlipAngle()).add(getPositionVector());
 		RayTraceResult ray = world.rayTraceBlocks(start, end, false, true, false);
 		if(ray != null && !flagOne) {
 			
+		
 			/*
 			 * CHECK IF VEHICLE IS ABOVE RAY
 			 */
 			//System.out.println( + " | " + posY);
 			
 			
+			IBlockState below = this.world.getBlockState(getPosition().down());
+			IBlockState bOfCar = this.world.getBlockState(getPosition());
 			
 			IBlockState b = this.world.getBlockState(ray.getBlockPos().up());
 			double upMag = 0.0;
@@ -1837,17 +1863,25 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 			}
 			double liftPush = 0.0;
 			IBlockState bL = this.world.getBlockState(ray.getBlockPos());
+
+			
+		
+			
+			//if((below instanceof BlockCarpet || bOfCar.getBlock() instanceof BlockCarpet) && bL.getBlock() instanceof BlockCarpet) return;
+			
+			//System.out.println("HIT: " + bL.getBlock().getLocalizedName());
 			
 			AxisAlignedBB ablf = bL.getCollisionBoundingBox(world, ray.getBlockPos());
 			double blockHeight = (ablf.maxY - ablf.minY);
 			
+			/*
 			if(!bL.isFullBlock()) {
 				upMag = blockHeight+0.01;
 				liftPush = Math.sqrt((blockHeight*blockHeight));
 
 				
 				
-			}
+			}*/
 			
 			if(bL.getBlock() instanceof BlockSnow || bL.getBlock() instanceof BlockSnowBlock) {
 				upMag += 0.45;
@@ -2006,25 +2040,33 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 
 		}
 		
+		
+		
 		if(r1 != null || r2 != null || r3 != null || r4 != null || r5 != null) {
 			
 			if(r1 != null) {
+				
+				if(getBlockAt(r1.getBlockPos()) instanceof BlockCarpet) return;
 				move(MoverType.SELF, -1*boost, 0.0, -1*boost);
 			}
 			
 			if(r2 != null) {
+				if(getBlockAt(r2.getBlockPos()) instanceof BlockCarpet) return;
 				move(MoverType.SELF, 1*boost, 0.0, 1*boost);
 			}
 			
 			if(r3 != null) {
+				if(getBlockAt(r3.getBlockPos()) instanceof BlockCarpet) return;
 				move(MoverType.SELF, 1*boost, 0.0, -1.0*boost);
 			}
 			
 			if(r4 != null) {
+				if(getBlockAt(r4.getBlockPos()) instanceof BlockCarpet) return;
 				move(MoverType.SELF, -1*boost, 0.0, 1.0*boost);
 			}
 			
 			if(r5 != null) {
+				if(getBlockAt(r5.getBlockPos()) instanceof BlockCarpet) return;
 				move(MoverType.SELF, 0, 1*boost, 0);
 			}
 		}
@@ -2041,6 +2083,10 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 		*/
 		
 	
+	}
+	
+	public Block getBlockAt(BlockPos pos) {
+		return this.world.getBlockState(pos).getBlock();
 	}
 	
 	public Vec3d[] calculateTerrainPlane() {
@@ -2614,7 +2660,9 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 	@Override
 	public boolean attackEntityFrom(DamageSource source, float amount) {
 		if(source.isCreativePlayer()) {
+			
 			setDead();
+			
 		}
 		return super.attackEntityFrom(source, amount);
 	}

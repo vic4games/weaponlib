@@ -148,13 +148,16 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 
 		//System.out.println("V: " + wheelAngularVelocity + "rad/s | A: " + wheelAngularAcceleration + "rad/s^2");
 
-		
+		/*
 		double diff = wheelAngularVelocity - (wheelAngularAcceleration*solver.timeStep);
 		if(diff > 2) {
 			wheelAngularVelocity += (wheelAngularAcceleration*solver.timeStep)/3;
 		} else {
 			wheelAngularVelocity += wheelAngularAcceleration*solver.timeStep;
 		}
+		*/
+		
+		wheelAngularVelocity += wheelAngularAcceleration*solver.timeStep;
 		
 
 		
@@ -188,11 +191,15 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 		// get slip ratio
 		
 		
-		
+		//System.out.println("V: " + wheelAngularVelocity + "rad/s | A: " + wheelAngularAcceleration + "rad/s^2 | Vs: " + solver.getLongitudinalSpeed());
+
 		
 		double slipRatio = VehiclePhysUtil.getSlipRatio(wheelAngularVelocity, radius, solver.getLongitudinalSpeed());
 		//System.out.println(wheelAngularVelocity*radius-solver.getLongitudinalSpeed()/solver.getLongitudinalSpeed());
 		
+		
+		//slipRatio = solver.vehicle.throttle;
+	//	System.out.println("Slip: " + slipRatio);
 	
 		if(solver.getVelocityVector().lengthSquared() > 3 && solver.getVelocityVector().dotProduct(Vec3d.fromPitchYaw(0.0f, solver.vehicle.rotationYaw)) < 0) {
 			   solver.velocity = solver.velocity.scale(0.03);
@@ -210,9 +217,10 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 		
 		
 		
-
+		
 		// get longitundinal force
 		longForce = VehiclePhysUtil.pacejkaLong(loadOnWheel, slipRatio, 1.65, 1, 0.97, 10);
+		
 		if(Double.isNaN(longForce)) {
 			longForce = 0.0;
 		}
@@ -234,7 +242,7 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 		
 		
 		
-
+		
 	   tractionTorque = longForce*radius*-1;
 		
 	   
@@ -297,8 +305,8 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 		
 		
 		if(axel.isHandbraking) {
-			
-			lateralForce *= 0.25;
+			axel.applyBrakingForce(0.85*(Math.toDegrees(axel.solver.vehicle.steerangle)/10));
+			lateralForce *= 0.15;
 		}
 		
 		

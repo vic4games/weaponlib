@@ -17,6 +17,7 @@ import org.lwjgl.opengl.GL44;
 import org.lwjgl.opengl.NVMultisampleFilterHint;
 
 import com.vicmatskiv.weaponlib.StatusMessageCenter.Message;
+import com.vicmatskiv.weaponlib.animation.jim.BasicStateAnimator;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleEntityEquipmentSlot;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleGui;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMathHelper;
@@ -24,21 +25,27 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleTessellator;
 import com.vicmatskiv.weaponlib.config.ConfigurationManager.StatusBarPosition;
 import com.vicmatskiv.weaponlib.electronics.ItemWirelessCamera;
 import com.vicmatskiv.weaponlib.grenade.ItemGrenade;
+import com.vicmatskiv.weaponlib.render.ScreenRenderer;
 import com.vicmatskiv.weaponlib.vehicle.EntityVehicle;
 import com.vicmatskiv.weaponlib.vehicle.GearShiftPattern;
 import com.vicmatskiv.weaponlib.vehicle.SimpleAnimationTimer;
 import com.vicmatskiv.weaponlib.vehicle.collisions.Test;
+import com.vicmatskiv.weaponlib.vehicle.jimphysics.InterpolationKit;
 import com.vicmatskiv.weaponlib.vehicle.jimphysics.Transmission;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.gui.inventory.GuiInventory;
+import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.ItemRenderer;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.GlStateManager.DestFactor;
 import net.minecraft.client.renderer.GlStateManager.SourceFactor;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.Vec3d;
@@ -57,7 +64,21 @@ public class CustomGui extends CompatibleGui {
 	private StatusBarPosition statusBarPosition;
 	
 	private FontRenderer niceFont = null;
+	
+	public static ModelBase keyModel;
+	public static ModelBase lockModel;
+	
+	public static ResourceLocation keyTex;
+	public static ResourceLocation lockTex;
+	
 
+	public static void setLockAndKeyModels(ModelBase key, ModelBase lock, ResourceLocation keyT, ResourceLocation lockT) {
+		keyModel = key;
+		lockModel = lock;
+		keyTex = lockT;
+		lockTex = keyT;
+	}
+	
 	public CustomGui(Minecraft mc, ModContext modContext, WeaponAttachmentAspect attachmentAspect) {
 		this.mc = mc;
 		this.modContext = modContext;
@@ -355,12 +376,16 @@ public class CustomGui extends CompatibleGui {
 		renderHalfCircle(Color.decode("#4cd137"), x-250+nX, y-50+nZ, 5, 0, 0, sat.smoothInterpDouble(0, 360));
 		*/
 		//
+		
+		/*
 		GL11.glPushMatrix();
 		GL11.glScaled(1.0, 1.0, 1.0);
 			GL11.glDisable(GL11.GL_POLYGON_SMOOTH);
 			drawShiftPattern(vehicle, x-125, y);
 			GL11.glEnable(GL11.GL_POLYGON_SMOOTH);
 		GL11.glPopMatrix();
+		*/
+		
 		
 		
 		Transmission transmission = vehicle.solver.transmission;
@@ -386,6 +411,7 @@ public class CustomGui extends CompatibleGui {
 		GL11.glPopMatrix();
 		
 		GL11.glPushMatrix();
+		
 		GL11.glTranslated(x, y, 0);
 		GL11.glScaled(2.0, 2.0, 2.0);
 		int fixedSpeed = (int) Math.round(speed*3.6);
@@ -398,20 +424,88 @@ public class CustomGui extends CompatibleGui {
 		
 		GL11.glPopMatrix();
 		
+		
+		
+		
 		this.prevRPMAngle = newRPMAngle;
 		
 		
 	}
+	
+	public BasicStateAnimator kA = null;
 
 	@Override
 	public void onCompatibleRenderHud(RenderGameOverlayEvent.Pre event) {
 	    
+		if(compatibility.getEventType(event) == RenderGameOverlayEvent.ElementType.HELMET) {
+		
+		}
+		
 		if(compatibility.getEventType(event) == RenderGameOverlayEvent.ElementType.HELMET && this.mc.player.isRiding() && this.mc.player.getRidingEntity() instanceof EntityVehicle) {
+			
+			
+			
 			EntityVehicle vehicle = (EntityVehicle) this.mc.player.getRidingEntity();
 			
 			ScaledResolution sr = new ScaledResolution(Minecraft.getMinecraft());
 			int width = sr.getScaledWidth();
 			int height = sr.getScaledHeight();
+			
+			
+			GL11.glPushMatrix();
+
+			double pM = Math.sin(vehicle.ticksExisted/2)*3;
+			double ppM = Math.sin((vehicle.ticksExisted-1)/2)*3;
+			double iPM = InterpolationKit.interpolateValue(ppM, pM, Minecraft.getMinecraft().getRenderPartialTicks());
+			
+			//kA = null;
+			if(kA == null) {
+				kA = new BasicStateAnimator();
+				kA.transition(new Vec3d(0.0, 0.0, 0.0),
+							  new Vec3d(0.0, 0, 0), 1.0);
+				
+				kA.transition(new Vec3d(20.0, 0.0, 0.0),
+						  new Vec3d(0.0, 0, 0), 50.0);
+				
+				kA.addPause(20);
+				
+				kA.transition(new Vec3d(20.0, 0.0, 0.0),
+						  new Vec3d(0.0, 0, 0.0), 50.0);
+			}
+			
+			
+			
+			kA.tick();
+			
+			
+			
+			//kA.transition(new Vec3d(5.0, 0.0, 0.0),
+			//		  new Vec3d(00.0, 0, 30), 200.0);
+	
+			
+			/*
+			
+			GL11.glTranslated(width-110, height-75, -50.0);
+			
+			//GL11.glRotated(90, 0, 1, 0);
+			GL11.glRotated(-150, 0.0, 1.0, 0.0);
+			GL11.glRotated(25, 1.0, 0.0, 0.0);
+			GL11.glRotated(25, 0.0, 0.0, 1.0);
+			ScreenRenderer.renderModelOnScreen(20.0, 0.0, 0.0, 30, 0f, 0f, 0f, lockModel, keyTex);
+			
+			
+			
+			Vec3d iR = kA.getInterpolatedRotation();
+			Vec3d iP = kA.getInterpolatedPosition();
+			//GL11.glRotated(45, 1, 0, 0);
+			ScreenRenderer.renderModelOnScreen(30.0 + iP.x, -5.0+ iP.y, -65.0+ iP.z, 30, 90f + iR.x, 0f + iR.y, 0f + iR.z, keyModel, lockTex);
+			
+			*/
+			
+			//GuiInventory.drawEntityOnScreen(320, 169, 30, 30, 30, Minecraft.getMinecraft().player);
+			
+			GL11.glPopMatrix();
+
 			
 			
 			

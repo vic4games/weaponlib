@@ -21,6 +21,7 @@ import com.vicmatskiv.weaponlib.vehicle.collisions.OreintedBB;
 import com.vicmatskiv.weaponlib.vehicle.jimphysics.Engine;
 import com.vicmatskiv.weaponlib.vehicle.jimphysics.Transmission;
 import com.vicmatskiv.weaponlib.vehicle.jimphysics.VehiclePhysUtil;
+import com.vicmatskiv.weaponlib.vehicle.jimphysics.engines.FlywheelSolver;
 import com.vicmatskiv.weaponlib.vehicle.network.VehicleClientPacket;
 import com.vicmatskiv.weaponlib.vehicle.network.VehicleClientPacketHandler;
 
@@ -33,6 +34,8 @@ import net.minecraft.util.math.Vec3d;
 public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 	
 
+	
+	public FlywheelSolver flywheel = new FlywheelSolver(9.07, 0.1651, 0.0025);
 	
 	public Matrix3d rotMat;
 	
@@ -129,6 +132,8 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 			//System.out.println(Vec3d.fromPitchYaw(0.0f, vehicle.rotationYaw) + " | " + uVec);
 			
 
+			
+			
 			Vector2d u2D = new Vector2d(uVec.x, uVec.z);
 			Vector2d v2D = new Vector2d(velocity.x, velocity.z);
 			
@@ -261,12 +266,13 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 	public void updateEngineForces() {
 		prevRPM = currentRPM;
 		
+		/*
 		if(!vehicle.isVehicleRunning()) {
 			if(currentRPM > 0) {
 				currentRPM -= 10;
 			}
 			if(currentRPM < 0) currentRPM = 0;
-		}
+		}*/
 		
 		// If the engine is off, this code should not
 		// be run.
@@ -279,8 +285,21 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 
 		
 		int rpm = 0;
+		
+		
+		//flywheel.doPhysics(0.0001);
+		//flywheel.angularVelocity = 0.0;
+		
+		
+		//rpm = (int) flywheel.getRPM();
+		
+		
+		
 		if(!t.isEngineDeclutched()) {
 			rpm = (int) VehiclePhysUtil.getEngineRPM(rearAxel.getWheelAngularVelocity(), gearRatio, finalDriveRatio);
+			
+			
+			
 			if(Math.abs(rpm-currentRPM) > 1000) {
 				
 				double bruv = rpm-currentRPM;
@@ -299,6 +318,8 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 			rpm = currentRPM;
 		}
 		
+		
+		
 	
 
 		if(rpm < 1000) {
@@ -310,6 +331,7 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		
 		// for smoothing purposes
 		
+		
 		currentRPM = rpm;
 		
 		
@@ -319,6 +341,9 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		double torque = engine.getTorqueAtRPM(currentRPM);
 		double drvT = VehiclePhysUtil.getDriveTorque(torque, gearRatio, finalDriveRatio, 1.0)*(vehicle.throttle);
 	
+		
+		flywheel.applyTorque(drvT);
+		
 		
 
 		// if the engine is declutched,
