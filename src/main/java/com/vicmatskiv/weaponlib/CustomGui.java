@@ -416,6 +416,13 @@ public class CustomGui extends CompatibleGui {
 		GL11.glScaled(2.0, 2.0, 2.0);
 		int fixedSpeed = (int) Math.round(speed*3.6);
 		drawCenteredString(Minecraft.getMinecraft().fontRenderer, "" + fixedSpeed, 20, 2, 0xc8d6e5);
+		
+		GL11.glPushMatrix();
+		GL11.glScaled(0.4, 0.4, 0.4);
+		drawCenteredString(Minecraft.getMinecraft().fontRenderer, "km/h", 53, 25, 0xc8d6e5);
+		
+		GL11.glPopMatrix();
+		
 		GL11.glPopMatrix();
 		
 		

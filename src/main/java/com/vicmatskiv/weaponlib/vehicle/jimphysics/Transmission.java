@@ -196,6 +196,9 @@ public class Transmission {
 	
 	public void runAutomaticTransmission(EntityVehicle vehicle, int engineRPM) {
 		
+		//this.upshiftRPM = 4000;
+		//System.out.println(this.upshiftRPM);
+		
 		//tick
 		tickTransmission();
 		
@@ -218,9 +221,10 @@ public class Transmission {
 		 }
 		
 
-		boolean launchControl = vehicle.getSolver().getVelocityVector().lengthVector() < 25 && engineRPM > 4000;
+		//boolean launchControl = vehicle.getSolver().getVelocityVector().lengthVector() < 25 && engineRPM > 4000;
         
-        if(engineRPM > uShift && this.getCurrentGear() != highestGear && vehicle.throttle > 0.1 && !launchControl) {
+		//System.out.println((engineRPM > uShift) + " | " + (this.getCurrentGear() != highestGear) + " | " + (vehicle.throttle > 0.1) + " | " + !launchControl);
+        if(engineRPM > uShift && this.getCurrentGear() != highestGear && vehicle.throttle > 0.1 /*&& !launchControl*/) {
 
         	if(runningAShift) {
         		double median = maxShiftTime/2.0;

@@ -37,7 +37,7 @@ public class EngineMovingSound extends AdvCompatibleMovingSound {
 		if(!isDonePlaying()) {
 			//System.out.println(this.pitch);
 			
-			this.pitch = (float) 1.0*(vehicle.solver.currentRPM/7500.0F)+1.0f;
+			this.pitch = (float) 1.0*(vehicle.solver.currentRPM/3500.0F)+1.0f;
 			this.volume = 2f;
 			//this.pitch = 1.0f;
 			//this.pitch = 1.0f;
