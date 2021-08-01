@@ -410,8 +410,11 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 	}
 	
 	public Vec3d calculateResistiveForces(Vec3d speed) {
-		Vec3d drag = VehiclePhysUtil.realDrag(0.3F, speed, 2.2);
+		Vec3d drag = VehiclePhysUtil.realDrag(0.282F, speed, 2.2);
+		//Vec3d drag = Vec3d.ZERO;
 		Vec3d rolling = VehiclePhysUtil.rollingResistance(12.8F, speed);
+		//Vec3d rolling = Vec3d.ZERO;
+		//System.out.println(rolling);
 		return drag.add(rolling);
 		
 	}

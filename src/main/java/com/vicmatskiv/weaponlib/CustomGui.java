@@ -377,14 +377,14 @@ public class CustomGui extends CompatibleGui {
 		*/
 		//
 		
-		/*
+		
 		GL11.glPushMatrix();
 		GL11.glScaled(1.0, 1.0, 1.0);
 			GL11.glDisable(GL11.GL_POLYGON_SMOOTH);
 			drawShiftPattern(vehicle, x-125, y);
 			GL11.glEnable(GL11.GL_POLYGON_SMOOTH);
 		GL11.glPopMatrix();
-		*/
+		
 		
 		
 		

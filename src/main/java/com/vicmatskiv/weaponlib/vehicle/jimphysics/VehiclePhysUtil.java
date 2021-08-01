@@ -35,7 +35,7 @@ public class VehiclePhysUtil {
 	 */
 	
 	public static Vec3d realDrag(float coF, Vec3d speed, double areaOfCar) {
-		return speed.scale(0.5).scale(-coF).scale(1.29).scale(speed.lengthSquared());
+		return speed.scale(0.5).scale(-coF).scale(1.225).scale(speed.lengthSquared());
 	}
 	
 	public static Vec3d simpleDragForce(float dragC, Vec3d motionVector) {
