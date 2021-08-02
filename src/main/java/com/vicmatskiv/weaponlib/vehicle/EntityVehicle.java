@@ -1492,14 +1492,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 		
 		entityIn.addVelocity(speed.x, speed.y+1.0, speed.z);
 		entityIn.attackEntityFrom(DamageSource.ANVIL, (float) speed.lengthSquared());
-		speed = speed.normalize();
-		for (int x = 0; x < 40; ++x) {
-			Vec3d pos = entityIn.getPositionVector();
-			
-			this.world.spawnParticle(EnumParticleTypes.BLOCK_DUST, pos.x + rand.nextGaussian()/8, pos.y + 2.0 + rand.nextGaussian()/8, pos.z + rand.nextGaussian()/8,
-					speed.x + rand.nextGaussian()/4, speed.y + rand.nextGaussian()/4, speed.z + rand.nextGaussian()/4,
-					Block.getStateId(Blocks.REDSTONE_BLOCK.getDefaultState()));
-		}
+
 		
 		super.applyEntityCollision(entityIn);
 	}
@@ -2056,6 +2049,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 				.rotateYaw((float) Math.toRadians(-rotationYaw)).add(getPositionVector());
 		Vec3d partDirExhaust = new Vec3d(0.0, 0.3, -1).rotateYaw((float) Math.toRadians(-rotationYaw))
 				.rotatePitch((float) Math.toRadians(rotationPitch)).scale(0.1);
+
 		for (int x = 0; x < 2 + (solver.synthAccelFor / 2); ++x) {
 			Minecraft.getMinecraft().effectRenderer.addEffect(new ExhaustParticle(this.world, posExhaust.x,
 					posExhaust.y, posExhaust.z, partDirExhaust.x, partDirExhaust.y, partDirExhaust.z, 2));

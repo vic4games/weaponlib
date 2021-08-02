@@ -179,6 +179,7 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 		
 		//System.out.println(wheelAngularAcceleration);
 		
+
 		
 		
 		
@@ -339,7 +340,7 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 			
 			
 			//axel.applyBrakingForce(0.85*(Math.toDegrees(axel.solver.vehicle.steerangle)/10));
-			lateralForce *= 0.4;
+			lateralForce *= 0.15;
 		}
 		
 		
