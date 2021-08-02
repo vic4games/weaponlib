@@ -240,6 +240,23 @@ public class RenderVehicle2 extends CompatibleEntityRenderer
 		
 		//		int pass = Minecraft.getMinecraft().getRenderManager().rend
 
+		// RENDER VECTORS
+		/*
+		GL11.glPushMatrix();
+		DebugRenderer.setupBasicRender();
+		GL11.glTranslatef((float)posX, (float)posY+2, (float)posZ);
+		
+		Vec3d ve = entityVehicle.getSolver().getVelocityVector();
+		Vec3d ov = entityVehicle.getSolver().getOreintationVector();
+		
+		DebugRenderer.renderLine(Vec3d.ZERO, ve.scale(0.1), new Vec3d(1, 0, 0));
+		DebugRenderer.renderLine(Vec3d.ZERO, ov.scale(2), new Vec3d(0, 1, 0));
+		
+		GlStateManager.color(1.0f, 1.0f, 1.0f);
+		DebugRenderer.destructBasicRender();
+		GL11.glPopMatrix();
+		*/
+		
 		// RENDER CUSTOM BOUNDING BOX
 		GL11.glPushMatrix();
 		DebugRenderer.setupBasicRender();	
@@ -280,9 +297,9 @@ public class RenderVehicle2 extends CompatibleEntityRenderer
 		
 		
 		
-		
 		// debug
 		GL11.glRotatef(180.0F - rotationYaw, 0.0F, 1.0F, 0.0F);
+		
 		
 		if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 0) { 
 			GL11.glRotatef(roll, 0.0f, 0.0f, 1.0f);
@@ -303,7 +320,9 @@ public class RenderVehicle2 extends CompatibleEntityRenderer
 		//float mu2 = (float) ((1 - Math.cos(Minecraft.getMinecraft().getRenderPartialTicks() * Math.PI)) / 2f);
 		float interpPitch = entityVehicle.prevRotationPitch + (entityVehicle.rotationPitch-entityVehicle.prevRotationPitch)*mu2;
 		
-
+		interpPitch += entityVehicle.forwardLean;
+		
+		
 		// debug DD
 		if(Minecraft.getMinecraft().gameSettings.thirdPersonView != 0) {
 			GL11.glRotatef(interpPitch, 1.0F, 0.0F, 0.0F);

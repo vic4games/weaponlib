@@ -182,7 +182,7 @@ public class Transmission {
 		}
 		
 		if(shiftTimer >= maxShiftTime) {
-			System.out.println("SHIFT COMPLETED!");
+			//System.out.println("SHIFT COMPLETED!");
 			runningAShift = false;
 			shiftTimer = 0;
 			startGear = targetGear;

@@ -6,10 +6,12 @@ import java.util.LinkedList;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.concurrent.SynchronousQueue;
+import java.util.function.Function;
 
 import org.lwjgl.opengl.GL11;
 
 import com.vicmatskiv.weaponlib.animation.jim.BasicStateAnimator.Transition;
+import com.vicmatskiv.weaponlib.vehicle.EntityVehicle;
 import com.vicmatskiv.weaponlib.vehicle.VehicleState;
 import com.vicmatskiv.weaponlib.vehicle.jimphysics.InterpolationKit;
 
@@ -36,6 +38,13 @@ public class BasicStateAnimator {
 	public Vec3d prevRot = Vec3d.ZERO;
 	
 	public static final Transition ZERO_TRANSITION = new BasicStateAnimator.Transition(Vec3d.ZERO, Vec3d.ZERO, 0.0);
+	
+	
+	public boolean isInAction = false;
+
+	
+	//public static final
+	
 	
 	public void BasicStateAnimator() {
 		
@@ -66,8 +75,9 @@ public class BasicStateAnimator {
 	}
 	
 	public void addPause(double time) {
-		Transition pauseTransition = callList.peek();
+		Transition pauseTransition = callList.peekLast();
 		pauseTransition.time = time;
+	
 		callList.offer(pauseTransition);
 		
 	}
@@ -79,6 +89,10 @@ public class BasicStateAnimator {
 	}
 	
 	public void tick() { 
+		
+		if(callList.size() > 50) {
+			callList.clear();
+		}
 		
 		if(goingTransition != null && currentTransition == null) {
 			currentTransition = ZERO_TRANSITION;
@@ -120,7 +134,13 @@ public class BasicStateAnimator {
 		}
 	}
 	
-	public static class Transition {
+	
+	public static interface ITransitionable {
+		
+		
+	}
+	
+	public static class Transition implements ITransitionable {
 		
 		public Vec3d pos;
 		public Vec3d rot;
@@ -133,6 +153,8 @@ public class BasicStateAnimator {
 		}
 		
 	}
+	
+
 	
 
 }

@@ -2,11 +2,17 @@ package com.vicmatskiv.weaponlib.vehicle.jimphysics.solver;
 
 
 
+import org.lwjgl.input.Keyboard;
+
 import com.vicmatskiv.weaponlib.network.IEncodable;
 import com.vicmatskiv.weaponlib.vehicle.collisions.InertiaKit;
+import com.vicmatskiv.weaponlib.vehicle.jimphysics.InterpolationKit;
 import com.vicmatskiv.weaponlib.vehicle.jimphysics.VehiclePhysUtil;
+import com.vicmatskiv.weaponlib.vehicle.jimphysics.stability.numerical.vehicle.RK4Wheel;
+import com.vicmatskiv.weaponlib.vehicle.jimphysics.stability.numerical.vehicle.WheelSolutionVector;
 
 import io.netty.buffer.ByteBuf;
+
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.math.Vec3d;
@@ -23,7 +29,7 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 	public SuspensionSolver suspension;
 	
 	
-	private WheelAxel axel;
+	public WheelAxel axel;
 	public double radius = 0.0;
 	public double wheelAngularVelocity = 0.0;
 	double wheelAngularAcceleration = 0.0;
@@ -50,6 +56,12 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 	public double rideHeight;
 	
 	
+	public double wheelRot = 0.0;
+	public double prevWheelRot = 0.0;
+	
+	public WheelSolutionVector state = new WheelSolutionVector();
+	
+	
 	/**
 	 * https://tiresize.com/calculator/
 	 * This is FANTASTIC!
@@ -66,17 +78,26 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 	 * @param thickness thickness of tire in (m)
 	 * @param isDrive Does the wheel get powered from the engine?
 	 */
-	public WheelSolver(VehiclePhysicsSolver solver, WheelAxel axel, double springRate, double mass, double radius, double thickness, boolean isDrive) {
+	public WheelSolver(double springRate, double mass, double radius, double thickness, boolean isDrive) {
 		
 		this.suspension = new SuspensionSolver(springRate, 1.0);
 		
 		this.radius = radius;
-		this.axel = axel;
+		//this.axel = axel;
 		this.solver = solver;
 		
 		// calculates the wheel's inertia, only ar
 		this.wheelInertia = InertiaKit.inertiaTensorCylinder((float) mass, (float) radius, (float) thickness).m22;
 		this.isDrive = isDrive;
+	}
+	
+	public void assignSolver(VehiclePhysicsSolver solver) {
+		this.solver = solver;
+		
+	}
+	
+	public double getInterpolatedWheelRotation() {
+		return InterpolationKit.interpolateValue(prevWheelRot, wheelRot, Minecraft.getMinecraft().getRenderPartialTicks());
 	}
 	
 	public Vec3d getSuspensionPosition() {
@@ -117,19 +138,12 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 	 */
 	public void applyBrake(double magnitude) {
 
-		wheelAngularVelocity -= 30;
+		
 		wheelAngularAcceleration = -30;
-		
-		//System.out.println("Wheel (" + this.hashCode() + ") " + wheelAngularAcceleration);
-		
-		
-		if(wheelAngularVelocity < 0) wheelAngularVelocity = 0;
-		if(wheelAngularAcceleration < 0) wheelAngularAcceleration = 0;
-		
-		
-		//wheelAngularVelocity *= magnitude;
-		//wheelAngularAcceleration *= Math.min(magnitude, 0.05);
+		wheelAngularVelocity = 0;
 
+	//	if(wheelAngularVelocity < 0) wheelAngularVelocity = 0;
+	//	if(wheelAngularAcceleration < 0) wheelAngularAcceleration = 0;
 		
 	}
 	
@@ -157,9 +171,11 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 		}
 		*/
 		
+		//System.out.println(wheelAngularAcceleration);
 		wheelAngularVelocity += wheelAngularAcceleration*solver.timeStep;
 		
-
+		prevWheelRot = wheelRot;
+		wheelRot += wheelAngularVelocity*solver.timeStep*20;
 		
 		//System.out.println(wheelAngularAcceleration);
 		
@@ -195,6 +211,9 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 
 		
 		double slipRatio = VehiclePhysUtil.getSlipRatio(wheelAngularVelocity, radius, solver.getLongitudinalSpeed());
+		
+		
+	
 		//System.out.println(wheelAngularVelocity*radius-solver.getLongitudinalSpeed()/solver.getLongitudinalSpeed());
 		
 		
@@ -225,11 +244,14 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 			longForce = 0.0;
 		}
 		
+
+		
 		
 		
 		
 		longitudinalForce = omega.scale(longForce);
 		if(this.axel.solver.materialBelow != Material.ROCK) {
+			
 			longitudinalForce = longitudinalForce.scale(0.5);
 		}
 			
@@ -243,7 +265,7 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 		
 		
 		
-	   tractionTorque = longForce*radius*-1;
+	  tractionTorque = longForce*radius*-1;
 		
 	   
 	   
@@ -288,9 +310,11 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 		
 
 		// calculates the lateral forces
+		//lateralForce = VehiclePhysUtil.pacejkaLong(loadOnWheel, slipAngleTire, 2, 0.5,1, 4);
 		
-		lateralForce = VehiclePhysUtil.pacejkaLong(loadOnWheel, slipAngleTire, 1.3, 1, 0.97, 10);
+		lateralForce = VehiclePhysUtil.pacejkaLong(loadOnWheel, slipAngleTire, 1.3, 0.95, 0.97, 10);
 		
+		//System.out.println(solver.configuration.getVehicleMassObject().centerOfGravity);
 		
 		
 		/*
@@ -304,19 +328,32 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 		*/
 		
 		
+		//System.out.println(Math.toDegrees(solver.vehicle.steerangle));
+		
 		if(axel.isHandbraking) {
+			
+			if(!(Math.abs(Math.toDegrees(solver.vehicle.steerangle)) > 4)) {
+				axel.applyBrakingForce(0.85*(Math.toDegrees(axel.solver.vehicle.steerangle)/10));
+				
+			}
+			
+			
 			//axel.applyBrakingForce(0.85*(Math.toDegrees(axel.solver.vehicle.steerangle)/10));
-			lateralForce *= 0.15;
+			lateralForce *= 0.4;
 		}
 		
 		
 		if(this.axel.COGoffset < 0 && this.axel.solver.materialBelow != Material.ROCK) {
+		
 			lateralForce *= 0.5;
 		}
 
 		
 		// kinetic friction (implementation = 0/10 effort)
-		if(Math.abs(slipAngleTire) > 1.5 && this.axel.COGoffset < 0) lateralForce *= 0.8;
+		if(Math.abs(slipAngleTire) > 1.5 && this.axel.COGoffset < 0) lateralForce *= 0.7;
+
+		
+//		if(Math.abs(slipAngleTire) > 10.5 && this.axel.COGoffset < 0) lateralForce *= 0.6;
 
 			//System.out.println(solver.angularVelocity);
 		
@@ -368,6 +405,12 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 	public Vec3d longitudinalForce = new Vec3d(0, 0, 0);
 	public Vec3d lateralForceVec = new Vec3d(0, 0, 0);
 	 */
+	
+	public WheelSolver withRelativePosition(Vec3d vec) {
+		setRelativePosition(vec);
+		return this;
+		
+	}
 	
 
 	@Override

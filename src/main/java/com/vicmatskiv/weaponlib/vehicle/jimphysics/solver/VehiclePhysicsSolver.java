@@ -8,6 +8,7 @@ import javax.vecmath.Matrix3f;
 import javax.vecmath.Quat4f;
 import javax.vecmath.Vector2d;
 
+import org.lwjgl.input.Keyboard;
 
 import com.vicmatskiv.weaponlib.KeyBindings;
 import com.vicmatskiv.weaponlib.network.IEncodable;
@@ -18,7 +19,9 @@ import com.vicmatskiv.weaponlib.vehicle.collisions.InertiaKit;
 import com.vicmatskiv.weaponlib.vehicle.collisions.MathHelper;
 import com.vicmatskiv.weaponlib.vehicle.collisions.OBBCollider;
 import com.vicmatskiv.weaponlib.vehicle.collisions.OreintedBB;
+import com.vicmatskiv.weaponlib.vehicle.collisions.VehicleInertiaBuilder;
 import com.vicmatskiv.weaponlib.vehicle.jimphysics.Engine;
+import com.vicmatskiv.weaponlib.vehicle.jimphysics.PhysicsConfiguration;
 import com.vicmatskiv.weaponlib.vehicle.jimphysics.Transmission;
 import com.vicmatskiv.weaponlib.vehicle.jimphysics.VehiclePhysUtil;
 import com.vicmatskiv.weaponlib.vehicle.jimphysics.engines.FlywheelSolver;
@@ -26,6 +29,8 @@ import com.vicmatskiv.weaponlib.vehicle.network.VehicleClientPacket;
 import com.vicmatskiv.weaponlib.vehicle.network.VehicleClientPacketHandler;
 
 import io.netty.buffer.ByteBuf;
+
+import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.MoverType;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -47,6 +52,9 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 	public double timeStep = 0.05;
 	public Vec3d positonDelta = new Vec3d(0, 0, 0);
 	double mass;
+	
+	
+	public Vec3d acceleration = Vec3d.ZERO;
 	public Vec3d velocity = new Vec3d(0, 0, 0);
 	double brakeTorque = 12000;
 	double COGHeight = 0.3;
@@ -71,6 +79,10 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 	public double synthAccelSide = 0.0;
 	
 	
+	
+	public double accelerationValue = 0.0;
+	
+	
 	// 
 	
 	public double rotationalImpulse = 0.0;
@@ -89,12 +101,46 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 	
 	public ArrayList<WheelSolver> wheels = new ArrayList<>();
 	
-	public VehiclePhysicsSolver(EntityVehicle vehicle, double mass) {
-		this.vehicle = vehicle;
-		this.engine = vehicle.engine;
-		this.transmission = vehicle.getConfiguration().getVehicleTransmission().cloneTransmission();
-		initTestingVehicle();
+	
+	public PhysicsConfiguration configuration;
+	
+	public VehiclePhysicsSolver(PhysicsConfiguration config) {
+		//this.vehicle = vehicle;
+		this.configuration = config;
+		setupConfiguration(config);
+		
+		//(new VehicleInertiaBuilder(1660)).basicSedanConstruct(d, heightOffGround, wheelBase, wheelRadius, wheelThickness);
+		//this.transmission = vehicle.getConfiguration().getVehicleTransmission().cloneTransmission();
+		//initTestingVehicle();
 	}
+	
+	public PhysicsConfiguration compileStructure() {
+		return configuration;
+	}
+	
+	public void activate(EntityVehicle vehicle) {
+		this.vehicle = vehicle;
+	}
+	
+	public PhysicsConfiguration getPhysConf() {
+		return this.configuration;
+	}
+	
+	public void setupConfiguration(PhysicsConfiguration conf) {
+		this.wheelBase = conf.wheelBase;
+		this.COGHeight = conf.COGHeight;
+		
+		this.transmission = conf.trans.cloneTransmission();
+		this.engine = conf.getEngine();
+		
+		
+	}
+	
+	public Vec3d getAccelerationVector() {
+		return this.acceleration;
+	}
+	
+
 	
 	public Vec3d getOreintationVector() {
 
@@ -157,30 +203,12 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 	
 	
 	
-	
-	/**
-	 * Initializes a testing vehicle with 225/45R17 tires
-	 * 
-	 */
-	public void initTestingVehicle() {
-		frontAxel = new WheelAxel(this, 0.5, false);
-		rearAxel = new WheelAxel(this,-0.5, true);
-		WheelSolver f1 = new WheelSolver(this, frontAxel, 22500, 75.0, 0.3175, 0.225, false);
-		WheelSolver f2 = new WheelSolver(this, frontAxel, 22500, 75.0, 0.3175, 0.225, false);
-		WheelSolver r1 = new WheelSolver(this, rearAxel,  22500, 75.0, 0.3175, 0.225, true);
-		WheelSolver r2 = new WheelSolver(this, rearAxel,  22500, 75.0, 0.3175, 0.225, true);
-		
-		
-		f2.setRelativePosition(new Vec3d(-1.7, 0.0, 1.75));
-		f1.setRelativePosition(new Vec3d(0.5, 0.0, 1.75));
-		r2.setRelativePosition(new Vec3d(-1.7, 0.0, -1.75));
-		r1.setRelativePosition(new Vec3d(0.5, 0.0, -1.75));
-		
-		frontAxel.addWheels(f1, f2);
-		rearAxel.addWheels(r1, r2);
-		
+	public void setupSolver() {
 		
 	}
+	
+	
+	
 	
 	public double getLongitudinalSpeed() {
 		if(Double.isNaN(velocity.lengthVector())) return vehicle.throttle;
@@ -265,7 +293,7 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 	
 	public void updateEngineForces() {
 		prevRPM = currentRPM;
-		
+		//System.out.println(idleRPM);
 		/*
 		if(!vehicle.isVehicleRunning()) {
 			if(currentRPM > 0) {
@@ -274,8 +302,13 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 			if(currentRPM < 0) currentRPM = 0;
 		}*/
 		
+		
 		// If the engine is off, this code should not
 		// be run.
+		
+		//System.out.println(vehicle.isVehicleRunning());
+		//System.out.println(this.vehicle.vehicleIsRunning);
+	
 		if(!vehicle.isVehicleRunning()) return;
 		
 		Transmission t = transmission;
@@ -283,6 +316,10 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		double finalDriveRatio = t.getDifferentialRatio();
 
 
+		int redline = configuration.getEngine().getRedline();
+		int maxRPM = configuration.getEngine().getMaxRPM();
+		int idleRPM = configuration.getEngine().getIdleRPM();
+		
 		
 		int rpm = 0;
 		
@@ -295,12 +332,13 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		
 		
 		
+		
 		if(!t.isEngineDeclutched()) {
 			rpm = (int) VehiclePhysUtil.getEngineRPM(rearAxel.getWheelAngularVelocity(), gearRatio, finalDriveRatio);
 			
 			
 			
-			if(Math.abs(rpm-currentRPM) > 1000) {
+			if(Math.abs(rpm-currentRPM) > idleRPM) {
 				
 				double bruv = rpm-currentRPM;
 				currentRPM += bruv*0.2;
@@ -309,7 +347,7 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		} else {
 			
 			this.currentRPM += 50*vehicle.throttle;
-			this.currentRPM -= 10*Math.pow(currentRPM/7000.0+1.0, 2);
+			this.currentRPM -= 10*Math.pow(currentRPM/maxRPM+1.0, 2);
 			
 			
 			
@@ -320,14 +358,23 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		
 		
 		
-	
+		//int redline = configuration.getEngine().getRedline();
+		
 
-		if(rpm < 1000) {
-			rpm = 1000;
+		
+		
+		if(rpm < idleRPM) {
+			rpm = configuration.getEngine().getIdleRPM();
+			
 		}
-		if(rpm > 7000) {
-			rpm = 7000;
+		if(rpm > redline) {
+			rpm = redline;
 		}
+		
+		//System.out.println(rpm);
+		
+		//System.out.println(rpm);
+		
 		
 		// for smoothing purposes
 		
@@ -336,10 +383,13 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		
 		
 		
-		Engine engine = vehicle.getConfiguration().getEngine();
+		
+		Engine engine = configuration.getEngine();
+		
+		double efficiency = configuration.getDriveTrainEfficiency();
 		
 		double torque = engine.getTorqueAtRPM(currentRPM);
-		double drvT = VehiclePhysUtil.getDriveTorque(torque, gearRatio, finalDriveRatio, 1.0)*(vehicle.throttle);
+		double drvT = VehiclePhysUtil.getDriveTorque(torque, gearRatio, finalDriveRatio, efficiency)*(vehicle.throttle);
 	
 		
 		flywheel.applyTorque(drvT);
@@ -366,11 +416,20 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 	}
 	
 	public void updateLoad() {
-		double weight = vehicle.mass*9.81;
-		double accel = synthAccelFor;
-		double weightFront = (frontAxel.COGoffset/wheelBase)*weight - (COGHeight/wheelBase)*vehicle.mass*accel;
-		double weightRear = (rearAxel.COGoffset/wheelBase)*weight - (COGHeight/wheelBase)*vehicle.mass*accel;
 		
+		this.materialBelow = vehicle.world.getBlockState(vehicle.getPosition().down()).getMaterial();
+		
+		double mass = configuration.vehicleMass;
+		double weight = mass*9.81*4;
+		double accel = accelerationValue;
+		
+		//System.out.println(accelerationValue + " | " + vehicle.getRealSpeed());
+		
+		//COGHeight = 0.2;
+	
+		double weightFront = (frontAxel.COGoffset/wheelBase)*weight - (COGHeight/wheelBase)*mass*accel;
+		double weightRear = ((rearAxel.COGoffset)/wheelBase)*weight - (COGHeight/wheelBase)*mass*accel;
+	
 		
 		
 		double newSynth = ((Math.abs(synthAccelFor) * 0.8))*Math.signum(synthAccelFor);
@@ -391,8 +450,8 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		frontAxel.applySuspensionLoad(weightFront*-9.81);
 		
 		
-		rearAxel.distributeLoad(vehicle.mass*9.81);
-		frontAxel.distributeLoad(vehicle.mass*9.81);
+		rearAxel.distributeLoad(weightFront);
+		frontAxel.distributeLoad(-weightRear);
 	}
 	
 	
@@ -410,11 +469,8 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 	}
 	
 	public Vec3d calculateResistiveForces(Vec3d speed) {
-		Vec3d drag = VehiclePhysUtil.realDrag(0.282F, speed, 2.2);
-		//Vec3d drag = Vec3d.ZERO;
-		Vec3d rolling = VehiclePhysUtil.rollingResistance(12.8F, speed);
-		//Vec3d rolling = Vec3d.ZERO;
-		//System.out.println(rolling);
+		Vec3d drag = VehiclePhysUtil.realDrag((float) configuration.getDragCoefficient(), speed, configuration.getFrontArea());
+		Vec3d rolling = VehiclePhysUtil.rollingResistance(0.02F, speed);
 		return drag.add(rolling);
 		
 	}
@@ -422,6 +478,8 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 	public double angAccel = 0.0;
 	
 	public void updateRotationalVelocity() {
+		
+		
 		
 		
 		/*
@@ -443,7 +501,6 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		double torqueContributionRear = rearAxel.latNonVec()*rearAxel.COGoffset*rC;
 		double torqueContributionFront = Math.cos(vehicle.steerangle)*frontAxel.latNonVec()*frontAxel.COGoffset*rC;
 
-		//System.out.println(torqueContributionFront + " | " + torqueContributionRear + " | " + (torqueContributionFront + torqueContributionRear));
 		
 		//System.out.println(frontAxel.latNonVec());
 		
@@ -455,7 +512,13 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		double totalAxelTorque = torqueContributionFront + torqueContributionRear;
 		
 		
-		Matrix3f inertia = InertiaKit.inertiaTensorCube((float) vehicle.mass, 2.15f, 2.25f, 6f);
+		Matrix3f inertia = configuration.getVehicleMassObject().inertia;
+		
+
+		inertia.m11 = 3660;
+		//inertia.mul(0.2f);
+		//System.out.println(inertia);
+		
 		
 		// add roll impulse
 		if(rotationalImpulse != 0.0) {
@@ -477,12 +540,22 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		
 	
 		
-		
-		
-		
+		/*
+		if(Keyboard.isKeyDown(Keyboard.KEY_N)) {
+			vehicle.driftTuner  += 1;
+			if(vehicle.driftTuner > 45) vehicle.driftTuner = 45;
+		} else if(Keyboard.isKeyDown(Keyboard.KEY_O)) {
+			vehicle.driftTuner -= 1;
+			if(vehicle.driftTuner < -45) vehicle.driftTuner = -45;
+		} else {
+			vehicle.driftTuner -= 1*Math.signum(vehicle.driftTuner);
+		}
+		*/
 		angAccel = totalAxelTorque/inertia.m11;
 		
-		if(getVelocityVector().lengthSquared() < 1.0) {
+		
+		if(vehicle.getRealSpeed() == 0.0) {
+			//System.out.println("BWEAP");
 			angAccel = 0.0;
 			
 			// add it back as a roll impulse so it's not abrupt
@@ -495,9 +568,19 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 			
 		}
 		
-		angularVelocity *= 0.99;
-		angularVelocity += timeStep*angAccel;
-		vehicle.rotationYaw += Math.toDegrees(timeStep*angularVelocity);
+		
+		
+		
+		
+		
+			angularVelocity *= 0.98;
+			angularVelocity += timeStep*angAccel;
+			vehicle.rotationYaw += Math.toDegrees(timeStep*angularVelocity);
+			
+			
+		
+		
+		
 		
 		vehicle.rotationYaw += vehicle.driftTuner;
 		
@@ -508,8 +591,8 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		
 		// pitching
 		
-		double forwardG = getVelocityVector().lengthVector()/getSideSlipAngle();
-		vehicle.forwardLean = forwardG/inertia.m22;
+		double forwardG = accelerationValue;
+		vehicle.forwardLean = forwardG;
 		if(Double.isNaN(vehicle.forwardLean)) vehicle.forwardLean = 0.0;
 		 
 		
@@ -521,30 +604,57 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 	
 	public void updatePosition() {
 		timeStep = 0.01;
-		Vec3d lForce = rearAxel.getLongitudinalForce()/*.rotatePitch((float) Math.toRadians(vehicle.rotationPitch))*/.rotateYaw((float) Math.toRadians(-vehicle.rotationYaw+vehicle.driftTuner));
+		
+		double mass = configuration.vehicleMass;
+		
+		
+		
+		
+		
+		Vec3d lForce = rearAxel.getLongitudinalForce()/*.rotatePitch((float) Math.toRadians(vehicle.rotationPitch))*/.rotateYaw((float) ((float) Math.toRadians(-vehicle.rotationYaw+vehicle.driftTuner)));
 		
 		//lForce = lForce.scale(vehicle.rotationPitch/20);
 		
-
+		
+		
 		Vec3d latForce = rearAxel.adjLateralForce().add(frontAxel.adjLateralForce().scale(Math.cos(vehicle.steerangle)));
+		
+		
+		
 		Vec3d destructive = calculateResistiveForces(velocity);
 		
 		
+		
+		
+		//Vec3d netForAccel = rearAxel.getLongitudinalForce().subtract(destructive.rotateYaw((float) Math.toRadians(vehicle.rotationYaw))).scale(1/vehicle.mass);
+		//this.acceleration = netForAccel;
+		
+		
+
+		
 		Vec3d vertForce = Vec3d.ZERO;
 		
+		boolean b = vehicle.world.getBlockState(vehicle.getPosition()).getMaterial().isLiquid();
+		
+
 		
 		if(!vehicle.onGround) {
-		
 			
-			vertForce = new Vec3d(0, -vehicle.mass*(9.81)*2, 0);
+			vertForce = new Vec3d(0, -mass*(9.81)*2, 0);
 		}
 		
-	
+		//System.out.println(vertForce);
 		
 		
 		Vec3d net = (lForce).add(latForce).add(destructive).add(vertForce);
-		Vec3d acceleration = new Vec3d(net.x/vehicle.mass, net.y/vehicle.mass, net.z/vehicle.mass);
+		Vec3d acceleration = new Vec3d(net.x/mass, net.y/mass, net.z/mass);
 		;
+		
+		//System.out.println(acceleration);
+		
+		
+		
+		//this.acceleration = acceleration;
 		
 		if(acceleration == null) return;
 		
@@ -554,18 +664,29 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		double yV = velocity.y + timeStep*acceleration.y;
 		double zV = velocity.z + timeStep*acceleration.z;
 		Vec3d newVel = new Vec3d(xV, yV, zV);
+		
+	
 		velocity = newVel;
+		
+		
 		
 		
 		double oYV = yV;
 		
+		if(b) oYV *= 0.7;
+		
+	
+		
+		double r = 1.0;
+		if(b) r = 0.8;
+ 		
 		
 		
 		
 		
+		velocity = new Vec3d(velocity.x*r, oYV, velocity.z*r);
 		
-		
-		velocity = new Vec3d(velocity.x, oYV, velocity.z);
+
 		
 
 		/*
@@ -582,6 +703,7 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		 * 
 		 */
 		
+		double yT = velocity.y;
 
 		
 			boolean wheelThrottle = vehicle.throttle == 0.0 || transmission.isEngineDeclutched();
@@ -593,19 +715,23 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 			
 			if(velocity.lengthVector() < 0.03 && wheelThrottle) {
 
-				
 				velocity = Vec3d.ZERO;
 			}
 		
 		
+			if(!b) yT = velocity.y;
 		
 		// calculate position
 		double xP = timeStep*velocity.x * rG;
-		double yP = timeStep*velocity.y;
+		double yP = timeStep*yT;
 		double zP = timeStep*velocity.z * rG;
 
+		
+		
 	
 		//System.out.println(yP);
+		
+		Vec3d pD = new Vec3d(xP, yP, zP);
 		
 		
 		this.vehicle.move(MoverType.SELF, xP, yP, zP);
@@ -683,6 +809,54 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		
 		
 	}
+
+	public VehiclePhysicsSolver jimHansen(Object object) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	/**
+	 * BUILDING TOOLS
+	 */
+	
+	/**
+	 * Initializes a testing vehicle with 225/45R17 tires
+	 * 
+	 */
+	/*
+	public void initTestingVehicle() {
+		frontAxel = new WheelAxel(this, 0.5, false);
+		rearAxel = new WheelAxel(this,-0.5, true);
+		WheelSolver f1 = new WheelSolver(this, frontAxel, 22500, 75.0, 0.3175, 0.225, false);
+		WheelSolver f2 = new WheelSolver(this, frontAxel, 22500, 75.0, 0.3175, 0.225, false);
+		WheelSolver r1 = new WheelSolver(this, rearAxel,  22500, 75.0, 0.3175, 0.225, true);
+		WheelSolver r2 = new WheelSolver(this, rearAxel,  22500, 75.0, 0.3175, 0.225, true);
+		
+		
+		f2.setRelativePosition(new Vec3d(-1.7, 0.0, 1.75));
+		f1.setRelativePosition(new Vec3d(0.5, 0.0, 1.75));
+		r2.setRelativePosition(new Vec3d(-1.7, 0.0, -1.75));
+		r1.setRelativePosition(new Vec3d(0.5, 0.0, -1.75));
+		
+		frontAxel.addWheels(f1, f2);
+		rearAxel.addWheels(r1, r2);
+		
+		
+	}*/
+	
+	public VehiclePhysicsSolver withAxels(WheelAxel front, WheelAxel rear) {
+		front.assignSolver(this);
+		rear.assignSolver(this);
+		
+		frontAxel = front;
+		rearAxel = rear;
+		return this;
+	}
+	
+	
+
+
+	
 	
 
 }

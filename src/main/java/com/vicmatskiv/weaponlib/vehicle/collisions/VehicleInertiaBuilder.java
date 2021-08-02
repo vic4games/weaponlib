@@ -4,6 +4,8 @@ import java.util.ArrayList;
 
 import javax.vecmath.Matrix3f;
 
+import com.vicmatskiv.weaponlib.vehicle.jimphysics.Chassis;
+
 import net.minecraft.client.renderer.Vector3d;
 import net.minecraft.util.math.Vec3d;
 
@@ -30,7 +32,17 @@ public class VehicleInertiaBuilder {
 	 * High level constructions
 	 */
 	
-	public void basicSedanConstruct(Vec3d d, float heightOffGround, float wheelBase, float wheelRadius, float wheelThickness) {
+	public VehicleInertiaBuilder basicConstructor(Chassis chassis, Vec3d d, float hOG, float wB, float wR, float wT) {
+		
+		switch(chassis) {
+		case SEDAN:
+			return basicSedanConstruct(d, hOG, wB, wR, wT);
+		}
+		return null;
+		
+	}
+	
+	public VehicleInertiaBuilder basicSedanConstruct(Vec3d d, float heightOffGround, float wheelBase, float wheelRadius, float wheelThickness) {
 		
 		
 		addBasicBody(new Vec3d(d.x, d.y/2, d.z), heightOffGround, 0.5f, 0.5f, 5.05f);
@@ -38,7 +50,7 @@ public class VehicleInertiaBuilder {
 		addWheelAssembly(2, heightOffGround, wheelBase, wheelRadius, wheelThickness, (float) d.x, 3.03f);
 		addPowerLine(d.scale(0.2), wheelBase, heightOffGround, 0.1f);
 		
-		
+		return this;
 	}
 	
 	/*
@@ -206,7 +218,7 @@ public class VehicleInertiaBuilder {
  	}
 	
 	
-	public Matrix3f build() {
+	public VehicleMassObject build() {
 		
 		assignMass();
 		
@@ -242,7 +254,8 @@ public class VehicleInertiaBuilder {
 		
 		
 		
-		return tensor;
+		
+		return new VehicleMassObject(mass, tensor, local);
 		
 	}
 	

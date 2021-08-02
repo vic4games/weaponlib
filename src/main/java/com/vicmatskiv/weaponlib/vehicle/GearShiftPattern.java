@@ -61,7 +61,7 @@ public class GearShiftPattern {
     }
 	
 	
-	public void renderPattern(Color c, int x, int y) {
+	public void renderPattern(Color c, double x, double y) {
 		
 		
 		

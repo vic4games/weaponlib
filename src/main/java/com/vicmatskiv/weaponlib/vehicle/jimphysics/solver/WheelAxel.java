@@ -18,8 +18,7 @@ public class WheelAxel implements IEncodable<WheelAxel> {
 	public double COGoffset;
 	public boolean isHandbraking;
 	
-	public WheelAxel(VehiclePhysicsSolver solver, double offsetFromCOG, boolean isDriveWheel) {
-		this.solver = solver;
+	public WheelAxel(double offsetFromCOG, boolean isDriveWheel) {
 		this.isDriveWheel = isDriveWheel;
 		this.COGoffset = offsetFromCOG;
 	}
@@ -28,10 +27,18 @@ public class WheelAxel implements IEncodable<WheelAxel> {
 		this.leftWheel = left;
 		this.rightWheel = right;
 		
-		this.solver.wheels.add(left);
-		this.solver.wheels.add(right);
+		
 	}
 	
+	public void assignSolver(VehiclePhysicsSolver solver) {
+		this.solver = solver;
+		
+		this.leftWheel.assignSolver(solver);
+		this.rightWheel.assignSolver(solver);
+		
+		this.solver.wheels.add(this.leftWheel);
+		this.solver.wheels.add(this.rightWheel);
+	}
 	
 	public void applyHandbrake() {
 		this.isHandbraking = true;
@@ -101,6 +108,9 @@ public class WheelAxel implements IEncodable<WheelAxel> {
 	}
 	
 	public void doPhysics() {
+		
+		
+		
 		leftWheel.doPhysics();
 		rightWheel.doPhysics();
 		
@@ -128,6 +138,16 @@ public class WheelAxel implements IEncodable<WheelAxel> {
 		rightWheel.driveTorque = 0;
 		
 		
+	}
+	
+	public WheelAxel withWheels(WheelSolver left, WheelSolver right) {
+		left.axel = this;
+		
+		right.axel = this;
+		
+		
+		this.addWheels(left, right);
+		return this;
 	}
 
 	@Override

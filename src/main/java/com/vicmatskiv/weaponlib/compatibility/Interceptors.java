@@ -256,8 +256,8 @@ public class Interceptors {
     		//sysou
     		*/
     		
-    		
-    		double diff = player.rotationYaw - vehicle.rotationYaw;
+    		double targ = vehicle.rotationYaw - vehicle.driftTuner;
+    		double diff = player.rotationYaw - targ;
     		if(diff != 0.0) {
     			double mod = 0.12*(Math.min(vehicle.getRealSpeed()/60.0, 1.0));
     			if(vehicle.getRealSpeed() > 5) {
@@ -266,10 +266,10 @@ public class Interceptors {
     				if(Math.abs(diff) > 120) mod = 1;
     				
     			}
-    			if(player.rotationYaw < vehicle.rotationYaw) {
+    			if(player.rotationYaw < targ) {
     				
     				player.rotationYaw -= diff*mod;
-    			} else if(player.rotationYaw > vehicle.rotationYaw) {
+    			} else if(player.rotationYaw > targ) {
     				
 
     				player.rotationYaw -= diff*mod;
@@ -283,17 +283,17 @@ public class Interceptors {
     		//player.prevRotationYaw = vehicle.prevRotationYaw;
     		
     		
-    		double targ = -vehicle.rotationPitch + 15;
+    		double targ2 = -vehicle.rotationPitch + 15;
     		
-    		double pitchDiff = player.rotationPitch - targ;
+    		double pitchDiff = player.rotationPitch - targ2;
     		if(pitchDiff != 0.0) {
     			double mod = 0.12*(Math.min(vehicle.getRealSpeed()/60.0, 1.0));
     			if(vehicle.getRealSpeed() > 5) {
     				if(Math.abs(diff) > 90) mod = 1;
     			}
-    			if(player.rotationPitch < targ) {
+    			if(player.rotationPitch < targ2) {
     				player.rotationPitch -= pitchDiff*mod;
-    			} else if(player.rotationPitch > targ) {
+    			} else if(player.rotationPitch > targ2) {
     				player.rotationPitch -= pitchDiff*mod;
     			}
     		}
@@ -428,7 +428,7 @@ public class Interceptors {
             
             
             
-            Matrix4f transformMatrix = vehicle.getRandomizer().update(frequency,  appliedAmplitude);
+            Matrix4f transformMatrix = vehicle.getRandomizer().update(frequency*0.5f,  appliedAmplitude*0.5f);
            //
             
             //RenderVehicle2.captureCameraTransform(transformMatrix);

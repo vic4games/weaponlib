@@ -4,23 +4,35 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 public class Engine {
+	
+	private int maxRPM = 0;
+	private int redlineRPM = 0;
+	private int idleRPM = 0;
+	
 	private String engineName;
 	private String engineBrand;
 	
 	public LinkedHashMap<Integer, Double> torqueCurve = new LinkedHashMap<Integer, Double>();
 	
-	public Engine(String name, String engineBrand) {
+	public Engine(String name, String engineBrand, int maxRPM, int redLine, int idleRPM) {
 		this.engineName = name;
 		this.engineBrand = engineBrand;
+		this.maxRPM = maxRPM;
+		this.redlineRPM = redLine;
+		this.idleRPM = idleRPM;
 		setupTorqueCurve();
 		
+	}
+	
+	public void addPoint(int rpm, double nm) {
+		torqueCurve.put(rpm, nm);
 	}
 	
 	public void setupTorqueCurve() {}
 	
 	public double getTorqueAtRPM(int rpm) {
 
-		if(rpm < 1000) return 0;
+		if(rpm < getIdleRPM()) return 0;
 		
 		if(torqueCurve.containsKey(rpm)) return torqueCurve.get(rpm);
 		int firstBound = 0;
@@ -52,7 +64,9 @@ public class Engine {
 		
 	}
 	
-	
+	public int getIdleRPM() {
+		return this.idleRPM;
+	}
 	
 	public String getEngineBrand() {
 		return engineBrand;
@@ -62,4 +76,11 @@ public class Engine {
 		return engineName;
 	}
 
+	public int getMaxRPM() {
+		return this.maxRPM;
+	}
+	
+	public int getRedline() {
+		return this.redlineRPM;
+	}
 }
