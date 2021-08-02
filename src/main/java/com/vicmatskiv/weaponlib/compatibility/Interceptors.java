@@ -428,7 +428,7 @@ public class Interceptors {
             
             
             
-            Matrix4f transformMatrix = vehicle.getRandomizer().update(frequency*0.5f,  appliedAmplitude*0.5f);
+            Matrix4f transformMatrix = vehicle.getRandomizer().update(frequency,  appliedAmplitude*0.8f);
            //
             
             //RenderVehicle2.captureCameraTransform(transformMatrix);
