@@ -791,9 +791,6 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 
 		if (isVehicleRunning()) {
 			if (KeyBindings.vehicleHandbrake.isKeyDown()) {
-				
-				
-				
 				solver.applyHandbrake();
 			} else {
 				solver.releaseHandbrake();
@@ -2255,6 +2252,8 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 
 					// update controls
 					updateControls();
+					
+				
 
 					/*
 					 * this.rotationYaw += driftTuner/10; if(Keyboard.isKeyDown(Keyboard.KEY_W)) {

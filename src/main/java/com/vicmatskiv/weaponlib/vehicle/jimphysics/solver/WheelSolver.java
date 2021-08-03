@@ -150,6 +150,7 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 	double oldWheelVel = 0;
 	
 	public void doPhysics() {
+		//this.solver.wheelBase = 2.648;
 		
 		//System.out.println(wheelAngularAcceleration);
 		
@@ -313,7 +314,7 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 		// calculates the lateral forces
 		//lateralForce = VehiclePhysUtil.pacejkaLong(loadOnWheel, slipAngleTire, 2, 0.5,1, 4);
 		
-		lateralForce = VehiclePhysUtil.pacejkaLong(loadOnWheel, slipAngleTire, 1.3, 0.95, 0.97, 10);
+		lateralForce = VehiclePhysUtil.pacejkaLong(loadOnWheel, slipAngleTire, 1.3, 1.0, 0.97, 10);
 		
 		//System.out.println(solver.configuration.getVehicleMassObject().centerOfGravity);
 		
@@ -351,7 +352,7 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 
 		
 		// kinetic friction (implementation = 0/10 effort)
-		if(Math.abs(slipAngleTire) > 1.5 && this.axel.COGoffset < 0) lateralForce *= 0.7;
+		if(Math.abs(slipAngleTire) > 1.5 && this.axel.COGoffset < 0) lateralForce *= 0.75;
 
 		
 //		if(Math.abs(slipAngleTire) > 10.5 && this.axel.COGoffset < 0) lateralForce *= 0.6;

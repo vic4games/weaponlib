@@ -256,7 +256,7 @@ public class Interceptors {
     		//sysou
     		*/
     		
-    		double targ = vehicle.rotationYaw - vehicle.driftTuner;
+    		double targ = vehicle.rotationYaw;
     		double diff = player.rotationYaw - targ;
     		if(diff != 0.0) {
     			double mod = 0.12*(Math.min(vehicle.getRealSpeed()/60.0, 1.0));

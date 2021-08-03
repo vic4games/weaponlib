@@ -478,47 +478,17 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 	public double angAccel = 0.0;
 	
 	public void updateRotationalVelocity() {
-		
-		
-		
-		
-		/*
-		double rad = VehiclePhysUtil.doubleRadiusOfLSTurn(2.25, vehicle.steerangle);
-		double angVel = VehiclePhysUtil.carTurnRate(getVelocityVector(), rad);
-		
-		
-		
-		vehicle.rotationYaw += angVel;
-		//System.out.println(vehicle.rotationYaw);
-		
-		
-		if(1+1 == 2) return;
-		*/
-		
-
 		double rC = transmission.isReverseGear ? -1 : 1;
 		
 		double torqueContributionRear = rearAxel.latNonVec()*rearAxel.COGoffset*rC;
 		double torqueContributionFront = Math.cos(vehicle.steerangle)*frontAxel.latNonVec()*frontAxel.COGoffset*rC;
 
 		
-		//System.out.println(frontAxel.latNonVec());
-		
-		/*
-		double torqueContR = rearAxel.adjLateralForce().lengthVector()*rearAxel.COGoffset;
-		double torqueContF = Math.cos(vehicle.steerangle)*frontAxel.adjLateralForce().lengthVector()*frontAxel.COGoffset;
-		*/
-		
 		double totalAxelTorque = torqueContributionFront + torqueContributionRear;
 		
 		
-		Matrix3f inertia = configuration.getVehicleMassObject().inertia;
-		
+		Matrix3f inertia = InertiaKit.inertiaTensorCube(1660, 1.6f, 3.0f, 6.0f);
 
-		inertia.m11 = 3660;
-		//inertia.mul(0.2f);
-		//System.out.println(inertia);
-		
 		
 		// add roll impulse
 		if(rotationalImpulse != 0.0) {
@@ -573,7 +543,7 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		
 		
 		
-			angularVelocity *= 0.98;
+			angularVelocity *= 0.99;
 			angularVelocity += timeStep*angAccel;
 			vehicle.rotationYaw += Math.toDegrees(timeStep*angularVelocity);
 			
