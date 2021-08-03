@@ -137,50 +137,19 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 	 * @param magnitude 1.0-0.0, lower vals = higher braking
 	 */
 	public void applyBrake(double magnitude) {
-
-		
-		wheelAngularAcceleration = -30;
+		wheelAngularAcceleration = -magnitude;
 		wheelAngularVelocity = 0;
-
-	//	if(wheelAngularVelocity < 0) wheelAngularVelocity = 0;
-	//	if(wheelAngularAcceleration < 0) wheelAngularAcceleration = 0;
-		
 	}
 	
 	double oldWheelVel = 0;
 	
 	public void doPhysics() {
-		//this.solver.wheelBase = 2.648;
-		
-		//System.out.println(wheelAngularAcceleration);
-		
-
-		// update angular velocity
-		//wheelAngularVelocity += wheelAngularAcceleration*solver.timeStep;
-		
-		
-		
-
-		//System.out.println("V: " + wheelAngularVelocity + "rad/s | A: " + wheelAngularAcceleration + "rad/s^2");
-
-		/*
-		double diff = wheelAngularVelocity - (wheelAngularAcceleration*solver.timeStep);
-		if(diff > 2) {
-			wheelAngularVelocity += (wheelAngularAcceleration*solver.timeStep)/3;
-		} else {
-			wheelAngularVelocity += wheelAngularAcceleration*solver.timeStep;
-		}
-		*/
-		
-		//System.out.println(wheelAngularAcceleration);
 		wheelAngularVelocity += wheelAngularAcceleration*solver.timeStep;
 		
+		
+		// UPDATES THE WHEEL ROTATION
 		prevWheelRot = wheelRot;
 		wheelRot += wheelAngularVelocity*solver.timeStep*20;
-		
-		//System.out.println(wheelAngularAcceleration);
-		
-
 		
 		
 		
@@ -190,37 +159,20 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 			if(wheelAngularVelocity > 20) wheelAngularVelocity = 20;
 		}
 		
-
-		/*
-		wheelAngularVelocity += wheelAngularAcceleration*solver.timeStep;
-		wheelAngularVelocity = oldWheelVel + (wheelAngularVelocity-oldWheelVel)*0.3;
-		oldWheelVel = wheelAngularVelocity;*/
 		
-		
-		// reset accel
+		// RESETS THE WHEEL ANGULAR ACCELERATION
 		wheelAngularAcceleration = 0;
 		
-		// update wheel oreintation
-
+		// update wheel oreintatio
 		Vec3d omega = wheelOreintation.rotateYaw((float) wheelAngle);
 		
 		
 		
 		// get slip ratio
-		
-		
-		//System.out.println("V: " + wheelAngularVelocity + "rad/s | A: " + wheelAngularAcceleration + "rad/s^2 | Vs: " + solver.getLongitudinalSpeed());
-
-		
 		double slipRatio = VehiclePhysUtil.getSlipRatio(wheelAngularVelocity, radius, solver.getLongitudinalSpeed());
 		
 		
-	
-		//System.out.println(wheelAngularVelocity*radius-solver.getLongitudinalSpeed()/solver.getLongitudinalSpeed());
-		
-		
-		//slipRatio = solver.vehicle.throttle;
-	//	System.out.println("Slip: " + slipRatio);
+
 	
 		if(solver.getVelocityVector().lengthSquared() > 3 && solver.getVelocityVector().dotProduct(Vec3d.fromPitchYaw(0.0f, solver.vehicle.rotationYaw)) < 0) {
 			   solver.velocity = solver.velocity.scale(0.03);
@@ -250,24 +202,14 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 		
 		
 		
-		
+		// REDUCES THE GRIP ON OTHER MATERIALS (DIRT)
 		longitudinalForce = omega.scale(longForce);
 		if(this.axel.solver.materialBelow != Material.ROCK) {
-			
 			longitudinalForce = longitudinalForce.scale(0.5);
 		}
-			
-
 		
-		
-		// calculate the traction torque
-		
-		//tractionTorque = longForce*0.9*loadOnWheel*radius*-1/10000;
-		
-		
-		
-		
-	  tractionTorque = longForce*radius*-1;
+		// CALCULATES THE TRACTION TORQUE
+		tractionTorque = longForce*radius*-1;
 		
 	   
 	   
@@ -297,7 +239,6 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 	
 		double slipAngleTire;
 		if(axel.COGoffset < 0) {
-			
 			slipAngleTire = sideSlip - rot_angle - wheelAngle;
 		} else {
 			slipAngleTire = sideSlip + rot_angle - wheelAngle;
@@ -305,69 +246,57 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 		slipAngleTire = Math.toDegrees(slipAngleTire);
 		
 		
+		// LATERAL FORCE
+		// https://www.edy.es/dev/docs/pacejka-94-parameters-explained-a-comprehensive-guide/
+		// (SHOULD BE UPGRADED FROM '94 FORMULA)
+		lateralForce = VehiclePhysUtil.pacejkaLong(loadOnWheel, slipAngleTire, 1.3, 1.0, 1.0, 4);
 		
-		// useful sysout for debugging.
-		//System.out.println("YAW: " + yawspeed + " | ROT_ANGLE: " + rot_angle + " | SIDE SLIP: " + sideSlip);
-		
-		
-
-		// calculates the lateral forces
-		//lateralForce = VehiclePhysUtil.pacejkaLong(loadOnWheel, slipAngleTire, 2, 0.5,1, 4);
-		
-		lateralForce = VehiclePhysUtil.pacejkaLong(loadOnWheel, slipAngleTire, 1.3, 1.0, 0.97, 10);
-		
-		//System.out.println(solver.configuration.getVehicleMassObject().centerOfGravity);
-		
-		
-		/*
+		// APPLIES THE FX OF HANDBRAKE
 		if(axel.isHandbraking) {
-			if(axel.COGoffset > 0) {
-				lateralForce *= solver.vehicle.driftTuner;
-			} else {
-				lateralForce *= 0.5;
-			}
-		}
-		*/
-		
-		
-		//System.out.println(Math.toDegrees(solver.vehicle.steerangle));
-		
-		if(axel.isHandbraking) {
-			
 			if(!(Math.abs(Math.toDegrees(solver.vehicle.steerangle)) > 4)) {
-				axel.applyBrakingForce(0.85*(Math.toDegrees(axel.solver.vehicle.steerangle)/10));
-				
+				if(this.axel.solver.materialBelow == Material.ROCK) {
+					axel.applyBrakingForce(40);
+				} else {
+					axel.applyBrakingForce(10);
+				}
 			}
-			
-			
-			//axel.applyBrakingForce(0.85*(Math.toDegrees(axel.solver.vehicle.steerangle)/10));
 			lateralForce *= 0.15;
 		}
 		
 		
+		// REDUCES GRIP ON DIRT
 		if(this.axel.COGoffset < 0 && this.axel.solver.materialBelow != Material.ROCK) {
-		
 			lateralForce *= 0.5;
+		} 
+
+		
+		double absSlip = Math.abs(slipAngleTire);
+		
+		if(this.axel.COGoffset < 0) {
+			if(this.axel.solver.materialBelow != Material.ROCK) {
+				if(absSlip > 1.5) lateralForce *= 0.6;
+			} else {
+				
+				
+				if(absSlip > 0.2 && absSlip < 4.5) {
+					
+					lateralForce *= 0.4;
+				} else if(absSlip > 4.5) {
+					lateralForce *= 0.8;
+				}
+
+			}
 		}
-
 		
-		// kinetic friction (implementation = 0/10 effort)
-		if(Math.abs(slipAngleTire) > 1.5 && this.axel.COGoffset < 0) lateralForce *= 0.75;
-
-		
-//		if(Math.abs(slipAngleTire) > 10.5 && this.axel.COGoffset < 0) lateralForce *= 0.6;
-
-			//System.out.println(solver.angularVelocity);
+	
 		
 		
-		/*
-		double factor = 1.0;
-		if(this.axel.solver.materialBelow != Material.ROCK) factor = 0.4;
-		if(Math.abs(solver.angularVelocity) > factor) {
-			lateralForce *= 0.5;
-		}*/
 		
 		
+		
+		// if(absSlip > 1.5 && this.axel.COGoffset < 0) lateralForce *= kC;
+		
+		// PREVENTS THE LATERAL FORCE VALUE FROM GOING NAN
 		if(Double.isNaN(lateralForce)) {
 			lateralForce = 0.0;
 			lateralForceVec = Vec3d.ZERO;
@@ -386,28 +315,6 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 		
 	}
 
-	/*
-	 * private WheelAxel axel;
-	double radius = 0.0;
-	double wheelAngularVelocity = 0.0;
-	double wheelAngularAcceleration = 0.0;
-	double wheelAngle = 0.0;
-	double wheelInertia = 0.0;
-	double loadOnWheel = 0.0;
-	Vec3d wheelOreintation = new Vec3d(0, 0, 1);
-	
-	double driveTorque;
-	double tractionTorque;
-	double lateralForce = 0.0;
-	double longForce = 0.0;
-	
-	boolean isDrive;
-	
-	// LAT & LONG FORCE
-	public Vec3d longitudinalForce = new Vec3d(0, 0, 0);
-	public Vec3d lateralForceVec = new Vec3d(0, 0, 0);
-	 */
-	
 	public WheelSolver withRelativePosition(Vec3d vec) {
 		setRelativePosition(vec);
 		return this;

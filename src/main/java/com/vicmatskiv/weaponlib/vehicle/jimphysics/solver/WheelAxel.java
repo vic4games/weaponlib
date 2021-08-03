@@ -55,8 +55,8 @@ public class WheelAxel implements IEncodable<WheelAxel> {
 	 *  lower values mean higher braking.
 	 */
 	public void applyBrakingForce(double magnitude) {
-		leftWheel.applyBrake(0.3);
-		rightWheel.applyBrake(0.3);
+		leftWheel.applyBrake(30);
+		rightWheel.applyBrake(30);
 	}
 	
 	public void setSteeringAngle(double angle) {

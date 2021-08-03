@@ -52,6 +52,7 @@ import com.vicmatskiv.weaponlib.particle.DriftSmokeFX;
 import com.vicmatskiv.weaponlib.particle.ParticleExSmoke;
 import com.vicmatskiv.weaponlib.particle.vehicle.DriftCloudParticle;
 import com.vicmatskiv.weaponlib.particle.vehicle.ExhaustParticle;
+import com.vicmatskiv.weaponlib.particle.vehicle.TireTracks;
 import com.vicmatskiv.weaponlib.particle.vehicle.TurbulentSmokeParticle;
 import com.vicmatskiv.weaponlib.particle.vehicle.VehicleExhaustFlameParticle;
 import com.vicmatskiv.weaponlib.state.ExtendedState;
@@ -2109,6 +2110,24 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 					direction.x, direction.y + 0.1, direction.z,
 					Block.getStateId(world.getBlockState(this.getPosition().down())));
 		}
+		
+		
+		if(wSolve.isDriveWheel()) {
+            if(Math.abs(Math.toDegrees(getSolver().getSideSlipAngle())) > 3) {
+            	Minecraft.getMinecraft().effectRenderer.addEffect(new TireTracks(Minecraft.getMinecraft().getTextureManager(),
+        				this.world, realPos.x, realPos.y+0.01, realPos.z, -rotationYaw+Math.toDegrees(getSolver().getSideSlipAngle())));
+
+            }
+        }
+		
+	
+		/*
+		for (int x = 0; x < 1; ++x) {
+			this.world.spawnParticle(EnumParticleTypes.FOOTSTEP, realPos.x,
+					realPos.y+0.1, realPos.z,
+					0.0, 0.0, 0.0,
+					Block.getStateId(world.getBlockState(this.getPosition().down())));
+		}*/
 
 		if (!isDriveWheel)
 			return;

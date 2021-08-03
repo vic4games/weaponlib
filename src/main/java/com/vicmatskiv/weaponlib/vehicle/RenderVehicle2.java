@@ -320,7 +320,7 @@ public class RenderVehicle2 extends CompatibleEntityRenderer
 		//float mu2 = (float) ((1 - Math.cos(Minecraft.getMinecraft().getRenderPartialTicks() * Math.PI)) / 2f);
 		float interpPitch = entityVehicle.prevRotationPitch + (entityVehicle.rotationPitch-entityVehicle.prevRotationPitch)*mu2;
 		
-		interpPitch += entityVehicle.forwardLean;
+		//interpPitch += entityVehicle.forwardLean;
 		
 		
 		// debug DD

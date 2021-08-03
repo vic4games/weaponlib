@@ -58,6 +58,9 @@ public class TurbulentSmokeParticle extends ParticleCloud {
 	public void renderParticle(BufferBuilder buffer, Entity entityIn, float partialTicks, float rotationX,
 			float rotationZ, float rotationYZ, float rotationXY, float rotationXZ) {
 		
+		
+		//rotationX = 0f;
+		//rotationXZ = 30f;
 			
 			Random urandom = new Random(333);
 			
