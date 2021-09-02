@@ -441,7 +441,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 			 * aPRY, 10.0); if(aPRX == 1.0f || aPRX == -1.0f) aPRX = 0.0f;
 			 */
 
-			float mu = (float) ((1 - Math.cos(Minecraft.getMinecraft().getRenderPartialTicks() * Math.PI)) / 2f);
+			float mu = (float) ((1 - Math.cos(0.5f * Math.PI)) / 2f);
 			float iRoll = (prevRotationRollH + prevRotationRoll)
 					+ ((rotationRoll + rotationRollH) - (prevRotationRoll + prevRotationRollH)) * mu;
 			float iPitch = prevRotationPitch + (rotationPitch - prevRotationPitch) * mu;
@@ -992,7 +992,9 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 			for (int q = 0; q < list1.size(); ++q) {
 				AxisAlignedBB item = list1.get(q);
 
-				BlockPos pos = new BlockPos(item.getCenter());
+				Vec3d centerOfPos = new Vec3d(item.minX + (item.maxX - item.minX) * 0.5D, item.minY + (item.maxY - item.minY) * 0.5D, item.minZ + (item.maxZ - item.minZ) * 0.5D);
+				
+				BlockPos pos = new BlockPos(centerOfPos);
 				if (this.world.getBlockState(pos).getBlock() instanceof BlockCarpet) {
 					IBlockState below = world.getBlockState(getPosition().down());
 					AxisAlignedBB bb = below.getCollisionBoundingBox(world, getPosition().down());
