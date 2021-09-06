@@ -76,7 +76,9 @@ import com.vicmatskiv.weaponlib.vehicle.network.VehicleControlPacket;
 import com.vicmatskiv.weaponlib.vehicle.network.VehicleControlPacketHandler;
 import com.vicmatskiv.weaponlib.vehicle.network.VehicleDataContainer;
 import com.vicmatskiv.weaponlib.vehicle.network.VehicleDataSerializer;
+import com.vicmatskiv.weaponlib.vehicle.network.VehiclePacketLatencyTracker;
 import com.vicmatskiv.weaponlib.vehicle.network.VehiclePhysSerializer;
+import com.vicmatskiv.weaponlib.vehicle.network.VehicleSmoothShell;
 import com.vicmatskiv.weaponlib.vehicle.smoothlib.PTIVal;
 import com.vicmatskiv.weaponlib.vehicle.smoothlib.PTIVec;
 
@@ -268,10 +270,13 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 	/*
 	 * CONSTRUCTORS
 	 */
+	
+	public VehicleSmoothShell smoothShell;
 
 	public EntityVehicle(World worldIn) {
 		super(worldIn);
 
+		this.smoothShell = new VehicleSmoothShell(this);
 		this.setSize(1.4F, 1.5f);
 		// this.setSize(1.375F, 0.5625F);
 		this.oreintedBoundingBox = new OreintedBB(getConfiguration().getAABBforOBB());
@@ -2337,6 +2342,11 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 
 				} else {
 
+					
+					// USE SMOOTHSHELL!
+					this.smoothShell.update();
+					
+					//System.out.println("Last update: " + VehiclePacketLatencyTracker.getLastDelta(this) + "ms");
 					// doNetworking(true);
 
 				}

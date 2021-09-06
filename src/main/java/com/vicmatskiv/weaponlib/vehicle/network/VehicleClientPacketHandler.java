@@ -27,13 +27,20 @@ public class VehicleClientPacketHandler implements CompatibleMessageHandler<Vehi
 		 if(!ctx.isServerSide()) {
 	            compatibility.runInMainClientThread(() -> {
 				
+	            	
+	            	
 				EntityPlayer player = compatibility.clientPlayer();
 				VehicleDataContainer cont = m.serializer;
 				
 				EntityVehicle vehicle = (EntityVehicle) player.world.getEntityByID(cont.entityID);
+				
+				VehiclePacketLatencyTracker.push(vehicle);
 				//System.out.println("There we go! " + vehicle);
 				if(vehicle != null) {
-					cont.updateVehicle(vehicle);
+					
+					vehicle.smoothShell.upload(cont);
+					
+					//cont.updateVehicle(vehicle);
 				}
 				
 				
