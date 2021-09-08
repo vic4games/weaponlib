@@ -50,7 +50,7 @@ public class PhysicsConfiguration {
 		this.shiftPattern = pat;
 		
 		
-		this.vmo = (new VehicleInertiaBuilder(mass)).basicConstructor(chassis, this.dimensions, (float) this.COGHeight, (float) this.wheelBase, 0.33f, 0.33f).build();
+		//this.vmo = (new VehicleInertiaBuilder(mass)).basicConstructor(chassis, this.dimensions, (float) this.COGHeight, (float) this.wheelBase, 0.33f, 0.33f).build();
 		
 	}
 	
