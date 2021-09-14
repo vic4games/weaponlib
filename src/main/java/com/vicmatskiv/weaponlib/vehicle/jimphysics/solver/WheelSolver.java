@@ -151,7 +151,7 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 	 * @param magnitude 1.0-0.0, lower vals = higher braking
 	 */
 	public void applyBrake(double magnitude) {
-		wheelAngularVelocity *= 0.01;
+		//wheelAngularVelocity *= 0.01;
 		
 		//wheelAngularAcceleration = -magnitude;
 		//wheelAngularVelocity = 0;
@@ -373,7 +373,7 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 		
 		//lateralForce = VehiclePhysUtil.pacejkaLong(loadOnWheel, lateralSlipRatio, 1.3, 1.0, 1.0, 4);
 		//lateralForce = VehiclePhysUtil.pacejkaLong(loadOnWheel, slipAngleTire, 1.3, 1.9, 1.0, 4);
-		lateralForce = VehiclePhysUtil.pacejkaLong(loadOnWheel, slipAngleTire, 1.3, 1.9, 1.0, 4);
+		lateralForce = VehiclePhysUtil.pacejkaLong(loadOnWheel, slipAngleTire, 1.3, 1.3, 1.0, 4);
 		
 		// APPLIES THE FX OF HANDBRAKE
 		if(axel.isHandbraking) {
@@ -393,7 +393,7 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 			lateralForce *= 0.5;
 		} 
 
-		
+		/*
 		double absSlip = Math.abs(slipAngleTire);
 		
 		if(this.axel.COGoffset < 0) {
@@ -411,7 +411,7 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 				}
 
 			}
-		}
+		}*/
 		
 	
 		

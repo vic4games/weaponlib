@@ -63,10 +63,10 @@ public class WheelAxel implements IEncodable<WheelAxel> {
 	 */
 	public void applyBrakingForce(double magnitude) {
 		
-		//leftWheel.driveTorque += -magnitude;
-		//rightWheel.driveTorque += -magnitude;
-		leftWheel.applyBrake(100);
-		rightWheel.applyBrake(100);
+		leftWheel.driveTorque += -magnitude;
+		rightWheel.driveTorque += -magnitude;
+		//leftWheel.applyBrake(100);
+		//rightWheel.applyBrake(100);
 	}
 	
 	public void setSteeringAngle(double angle) {

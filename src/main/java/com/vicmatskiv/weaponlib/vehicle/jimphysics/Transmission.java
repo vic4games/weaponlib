@@ -226,7 +226,8 @@ public class Transmission {
 		//boolean launchControl = vehicle.getSolver().getVelocityVector().lengthVector() < 25 && engineRPM > 4000;
         
 		//System.out.println((engineRPM > uShift) + " | " + (this.getCurrentGear() != highestGear) + " | " + (vehicle.throttle > 0.1) + " | " + !launchControl);
-        if(engineRPM > uShift && (this.getCurrentGear()+1) != highestGear && vehicle.throttle > 0.1 /*&& !launchControl*/) {
+        //System.out.println("BR: " + (this.getCurrentGear()+1) + " | " + ((this.getCurrentGear()+1) == highestGear));
+		if(engineRPM > uShift && (this.getCurrentGear()) != highestGear && vehicle.throttle > 0.1 /*&& !launchControl*/) {
 
         
         	//double gr = vehicleGears.get(getCurrentGear()).gearRatio;

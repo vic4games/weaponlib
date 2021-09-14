@@ -566,6 +566,7 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		
 		if(this.materialBelow == Material.ROCK) {
 			//angAccel *= 1.5;
+			//angAccel *= 1.5;
 		}
 		
 		
@@ -575,7 +576,7 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 			
 			// add it back as a roll impulse so it's not abrupt
 			if(angularVelocity != 0.0) {
-				rotationalImpulse += -Math.signum(getSideSlipAngle()) * angularVelocity*1.8;
+				//rotationalImpulse += -Math.signum(getSideSlipAngle()) * angularVelocity*1.8;
 			}
 			
 			angularVelocity *= 0.2;
@@ -585,7 +586,7 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		
 		
 		
-			angularVelocity *= 0.9999;
+			angularVelocity *= 0.999;
 			//angularVelocity *= 0.99;
 			angularVelocity += timeStep*angAccel;
 			vehicle.rotationYaw += Math.toDegrees(timeStep*angularVelocity);
