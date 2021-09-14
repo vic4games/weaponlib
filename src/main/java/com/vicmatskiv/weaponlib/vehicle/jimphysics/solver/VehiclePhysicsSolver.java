@@ -552,6 +552,14 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 			vehicle.rotationRoll -= rollContant*Math.abs(diff);
 		}
 		
+		float mR = 5f;
+		if(vehicle.rotationRoll < 0) {
+			vehicle.rotationRoll = Math.max(vehicle.rotationRoll, -mR);
+		} else if (vehicle.rotationRoll > 0) {
+			vehicle.rotationRoll = Math.min(vehicle.rotationRoll, mR);
+			
+		}
+		
 		
 
 		angAccel = totalAxelTorque/inertia.m11;
@@ -696,7 +704,7 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		
 			boolean wheelThrottle = vehicle.throttle == 0.0 || transmission.isEngineDeclutched();
 			//System.out.println(velocity.lengthVector());
-			if(velocity.lengthVector() < 10 && wheelThrottle ) {
+			if(/*velocity.lengthVector() < 10*/vehicle.getRealSpeed() < 2 && wheelThrottle && !transmission.isReverseGear ) {
 				
 				velocity = velocity.scale(0.01);
 				

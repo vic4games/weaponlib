@@ -222,11 +222,15 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 		
 		
 		
-		if(wheelAngularVelocity < 0) wheelAngularVelocity = 0;
+		if(wheelAngularVelocity < 0 && !solver.transmission.isReverseGear) {
+			
+			wheelAngularVelocity = 0;
+		}
 		
 	
 		
-		if(solver.vehicle.getRealSpeed() < 1 && KeyBindings.vehicleBrake.isKeyDown()) {
+		if(solver.vehicle.getRealSpeed() < 1 && KeyBindings.vehicleBrake.isKeyDown() && !solver.transmission.isReverseGear) {
+			solver.velocity = Vec3d.ZERO;
 			wheelAngularVelocity = 0;
 			wheelAngularAcceleration = 0;
 			slipRatio = 0;
