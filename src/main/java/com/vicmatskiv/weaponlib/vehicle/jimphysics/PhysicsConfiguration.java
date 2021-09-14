@@ -1,9 +1,12 @@
 package com.vicmatskiv.weaponlib.vehicle.jimphysics;
 
+import java.util.ArrayList;
+
 import com.vicmatskiv.weaponlib.vehicle.GearShiftPattern;
 import com.vicmatskiv.weaponlib.vehicle.collisions.VehicleInertiaBuilder;
 import com.vicmatskiv.weaponlib.vehicle.collisions.VehicleMassObject;
 import com.vicmatskiv.weaponlib.vehicle.jimphysics.solver.VehiclePhysicsSolver;
+import com.vicmatskiv.weaponlib.vehicle.jimphysics.solver.aero.IAeroComponent;
 
 import net.minecraft.util.math.Vec3d;
 
@@ -24,6 +27,8 @@ public class PhysicsConfiguration {
 	 */
 	public double COGHeight;
 	
+	public Dimensions realDimensions;
+	
 	
 	public Transmission trans;
 	
@@ -36,22 +41,35 @@ public class PhysicsConfiguration {
 	
 	public VehiclePhysicsSolver solver;
 	
+	
+	
 	public PhysicsConfiguration(double wheelBase, double frontArea, double dragC,
-			double mass, double COGHeight, double driveTrainEfficiency, Transmission trans, Engine eng, Vec3d dimensions, Chassis chassis, GearShiftPattern pat) {
+			double mass, double COGHeight, double driveTrainEfficiency, Transmission trans,
+			Engine eng, Dimensions realDim, Vec3d dimensions, Chassis chassis,
+			GearShiftPattern pat) {
 		this.wheelBase = wheelBase;
 		this.frontSurfaceArea = frontArea;
 		this.dragCoefficient = dragC;
 		this.vehicleMass = mass;
 		this.COGHeight = COGHeight;
 		this.trans = trans;
+		this.realDimensions = realDim;
 		this.dimensions = dimensions;
 		this.engine = eng;
 		this.driveTrainEfficiency = driveTrainEfficiency;
 		this.shiftPattern = pat;
 		
+		this.vmo = (new VehicleInertiaBuilder(mass)).basicConstructor(chassis, realDim).build();
+		
 		
 		//this.vmo = (new VehicleInertiaBuilder(mass)).basicConstructor(chassis, this.dimensions, (float) this.COGHeight, (float) this.wheelBase, 0.33f, 0.33f).build();
 		
+	}
+	
+	
+	
+	public Dimensions getRealDimensions() {
+		return realDimensions;
 	}
 	
 	public VehiclePhysicsSolver getPhysicsSolver() {

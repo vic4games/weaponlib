@@ -33,6 +33,7 @@ import com.vicmatskiv.weaponlib.vehicle.jimphysics.solver.WheelSolver;
 import com.vicmatskiv.weaponlib.vehicle.jimphysics.stability.InertialStabilizer;
 import com.vicmatskiv.weaponlib.vehicle.render.SuspensionModel;
 
+import akka.japi.pf.DeciderBuilder;
 import net.minecraft.advancements.critereon.EnchantedItemTrigger;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
@@ -261,6 +262,11 @@ public class RenderVehicle2 extends CompatibleEntityRenderer
 		GL11.glPushMatrix();
 		DebugRenderer.setupBasicRender();	
 		GL11.glTranslatef((float)posX, (float)posY, (float)posZ);
+		
+		double sr = entityVehicle.getSolver().rearAxel.leftWheel.slipRatio;
+		
+		//DebugRenderer.renderLine(Vec3d.ZERO.addVector(0, 3, 0), Vec3d.ZERO.addVector(0, -sr*100, 0), new Vec3d(1, 0, 0));
+		GlStateManager.color(1.0f, 1f, 1f);
 		if(Minecraft.getMinecraft().getRenderManager().isDebugBoundingBox()) {
 			entityVehicle.oreintedBoundingBox.renderOBB();
 		}
@@ -410,7 +416,7 @@ public class RenderVehicle2 extends CompatibleEntityRenderer
 				int i = entityVehicle.getPassengers().indexOf(pass);
 		        Vec3d seatOffset = entityVehicle.getConfiguration().getSeatAtIndex(i).getSeatPosition();
 		        
-				GL11.glTranslated(seatOffset.x, seatOffset.y, seatOffset.z);
+				GL11.glTranslated(-seatOffset.x, seatOffset.y, -seatOffset.z);
 				
 				if(!(pass instanceof EntityPlayer)) {
 					Minecraft.getMinecraft().getRenderManager().doRenderEntity(pass, 0, 0, 0, -pass.rotationYaw, Minecraft.getMinecraft().getRenderPartialTicks(), true);		

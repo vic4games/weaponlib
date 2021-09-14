@@ -4,11 +4,12 @@ package com.vicmatskiv.weaponlib.vehicle.jimphysics.solver;
 
 import org.lwjgl.input.Keyboard;
 
+import com.vicmatskiv.weaponlib.KeyBindings;
 import com.vicmatskiv.weaponlib.network.IEncodable;
 import com.vicmatskiv.weaponlib.vehicle.collisions.InertiaKit;
 import com.vicmatskiv.weaponlib.vehicle.jimphysics.InterpolationKit;
+import com.vicmatskiv.weaponlib.vehicle.jimphysics.TyreSize;
 import com.vicmatskiv.weaponlib.vehicle.jimphysics.VehiclePhysUtil;
-import com.vicmatskiv.weaponlib.vehicle.jimphysics.stability.numerical.vehicle.RK4Wheel;
 import com.vicmatskiv.weaponlib.vehicle.jimphysics.stability.numerical.vehicle.WheelSolutionVector;
 
 import io.netty.buffer.ByteBuf;
@@ -30,7 +31,7 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 	
 	
 	public WheelAxel axel;
-	public double radius = 0.0;
+
 	public double wheelAngularVelocity = 0.0;
 	double wheelAngularAcceleration = 0.0;
 	public double wheelAngle = 0.0;
@@ -61,6 +62,10 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 	
 	public WheelSolutionVector state = new WheelSolutionVector();
 	
+	public double wheelMass = 0.0;
+	
+	public TyreSize tyreSize;
+	
 	
 	/**
 	 * https://tiresize.com/calculator/
@@ -78,22 +83,30 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 	 * @param thickness thickness of tire in (m)
 	 * @param isDrive Does the wheel get powered from the engine?
 	 */
-	public WheelSolver(double springRate, double mass, double radius, double thickness, boolean isDrive) {
+	public WheelSolver(TyreSize tyreSize, double mass, boolean isDrive) {
 		
 		this.suspension = new SuspensionSolver(springRate, 1.0);
+		this.tyreSize = tyreSize;
 		
-		this.radius = radius;
 		//this.axel = axel;
 		this.solver = solver;
-		
+		this.wheelMass = mass;
 		// calculates the wheel's inertia, only ar
-		this.wheelInertia = InertiaKit.inertiaTensorCylinder((float) mass, (float) radius, (float) thickness).m22;
+		this.wheelInertia = InertiaKit.inertiaTensorCylinder((float) mass, (float) getRadius(), (float) getWidth()).m22;
 		this.isDrive = isDrive;
 	}
 	
 	public void assignSolver(VehiclePhysicsSolver solver) {
 		this.solver = solver;
 		
+	}
+	
+	public double getRadius() {
+		return tyreSize.getRadius();
+	}
+	
+	public double getWidth() {
+		return tyreSize.getWidth();
 	}
 	
 	public double getInterpolatedWheelRotation() {
@@ -125,6 +138,7 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 	
 	public double getRenderRideHeight() {
 		double d = this.rideHeight;
+		
 		if(this.axel.solver.vehicle.rideOffset < 0) {
 			d += this.axel.solver.vehicle.rideOffset*1.75;
 		}
@@ -137,20 +151,30 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 	 * @param magnitude 1.0-0.0, lower vals = higher braking
 	 */
 	public void applyBrake(double magnitude) {
-		wheelAngularAcceleration = -magnitude;
-		wheelAngularVelocity = 0;
+		wheelAngularVelocity *= 0.01;
+		
+		//wheelAngularAcceleration = -magnitude;
+		//wheelAngularVelocity = 0;
 	}
 	
 	double oldWheelVel = 0;
 	
+	public double slipRatio = 0.0;
+	
 	public void doPhysics() {
-		wheelAngularVelocity += wheelAngularAcceleration*solver.timeStep;
+		double radius = getRadius();
 		
+		wheelAngularVelocity += wheelAngularAcceleration*solver.timeStep;
+	
 		
 		// UPDATES THE WHEEL ROTATION
 		prevWheelRot = wheelRot;
-		wheelRot += wheelAngularVelocity*solver.timeStep*20;
+		wheelRot += wheelAngularVelocity*solver.timeStep;
 		
+		
+		if(solver.getLongitudinalSpeed() == 0.0) {
+			wheelAngularVelocity = 0;
+		}
 		
 		
 		// prevents the user from going too fast backwards
@@ -168,16 +192,90 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 		
 		
 		
+		
+		
+		//System.out.println(wheelAngularVelocity);
 		// get slip ratio
-		double slipRatio = VehiclePhysUtil.getSlipRatio(wheelAngularVelocity, radius, solver.getLongitudinalSpeed());
+		//double slipRatio = VehiclePhysUtil.getSlipRatio(wheelAngularVelocity, radius, solver.getLongitudinalSpeed());
+	//	slipRatio = VehiclePhysUtil.getSlipRatio(wheelAngularVelocity, radius, solver.getLongitudinalSpeed());
+		double B = 0.91;
+		double ls = solver.getLongitudinalSpeed();
+		
+		
+		
+		
+		double rm = solver.timeStep/2;
+		double cx = 75000;
+		double n = 1.1;
+		double m = loadOnWheel/9.81;
+		
+		//System.out.println(hashCode());
+		
+		double lamdaR = -(cx/ls)*((1/m)+((radius*radius)/wheelInertia));
+		double r = -1/lamdaR;
+
+		
+		
+		
+		double umx = rm*cx*(((radius*radius)/wheelInertia) + (1/(m)));
+		slipRatio = ((wheelAngularVelocity*radius)-ls)/Math.max(Math.abs(ls), n*umx);
+		
+		
+		
+		if(wheelAngularVelocity < 0) wheelAngularVelocity = 0;
+		
+	
+		
+		if(solver.vehicle.getRealSpeed() < 1 && KeyBindings.vehicleBrake.isKeyDown()) {
+			wheelAngularVelocity = 0;
+			wheelAngularAcceleration = 0;
+			slipRatio = 0;
+		}
+	
+		
+		//System.out.println(slipRatio);
+		//slipRatio = 0;
+		// Bernard & Clover
+		
+		
+		
+		//slipRatio = (-(ls/B)*slipRatio)+((wheelAngularVelocity-ls)/B);
+		//System.out.println(slipRatio);
+		//System.out.println(solver.getLongitudinalSpeed()*3.6);
+		
+		//slipRatio += 
+		
+		//slipRatio = 1-(wheelAngularVelocity/solver.getLongitudinalSpeed());
+		
+		/*
+		slipRatio = 0;
+		double B = 0.91;
+		 double delta = (wheelAngularVelocity - solver.getLongitudinalSpeed()) - Math.abs(solver.getLongitudinalSpeed()) * slipRatio;
+		 delta /= B;
+		 
+		 double tau = 0.002;
+		 if(solver.getLongitudinalSpeed() > 5) tau = 0;
+		 
+		 
+		 slipRatio += delta + tau * solver.timeStep;
+		
+		 if(this.axel.COGoffset < 0) {
+			// System.out.println(slipRatio);
+		 }*/
+		
+		 //slipRatio = wheelAngularVelocity*radius-solver.getLongitudinalSpeed();
+			
+		 if(Double.isNaN(slipRatio)) slipRatio = 0;
+		//double slipRatio = VehiclePhysUtil.getSlipRatio(wheelAngularVelocity, radius, this.solver.vehicle.getRealSpeed());
 		
 		
 
-	
+	/*
 		if(solver.getVelocityVector().lengthSquared() > 3 && solver.getVelocityVector().dotProduct(Vec3d.fromPitchYaw(0.0f, solver.vehicle.rotationYaw)) < 0) {
-			   solver.velocity = solver.velocity.scale(0.03);
+			 
+			solver.velocity = solver.velocity.scale(0.03);
 			}
-		
+		*/
 		
 		
 		
@@ -187,12 +285,15 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 			return;
 		}
 		
+	
 		
-		
-		
+		//loadOnWheel *= 5;
 		
 		// get longitundinal force
 		longForce = VehiclePhysUtil.pacejkaLong(loadOnWheel, slipRatio, 1.65, 1, 0.97, 10);
+		//longForce = VehiclePhysUtil.pacejkaLong(loadOnWheel, slipRatio, 1.65, 2.5, 0.8, 10);
+		
+		
 		
 		if(Double.isNaN(longForce)) {
 			longForce = 0.0;
@@ -212,7 +313,9 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 		tractionTorque = longForce*radius*-1;
 		
 	   
-	   
+		
+		
+	  // System.out.println(tractionTorque);
 	   
 	   
 	   
@@ -245,11 +348,28 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 		}
 		slipAngleTire = Math.toDegrees(slipAngleTire);
 		
+		double cy = 100000;
+		double uym = rm*(cy/m);
+	
+		//double lateralSlipRatio = ls/max
 		
-		// LATERAL FORCE
+		Vec3d lateralVector = solver.getOreintationVector().rotateYaw((float) Math.toRadians(-90));
+		double dotter = lateralVector.dotProduct(solver.velocity);
+		
+		double lateralSlipRatio = dotter/Math.max(Math.abs(ls), n*uym);
+		lateralSlipRatio *= 100000;
+		if(lateralSlipRatio == 0.0) lateralSlipRatio = 90.0;
+		
+		
+	//	double lF = VehiclePhysUtil.pacejkaLong(loadOnWheel, lateralSlipRatio, 1.3, 1.0, 1.0, 4);
+		//System.out.println(lateralSlipRatio + " | " + slipAngleTire);
+		//// LATERAL FORCE
 		// https://www.edy.es/dev/docs/pacejka-94-parameters-explained-a-comprehensive-guide/
 		// (SHOULD BE UPGRADED FROM '94 FORMULA)
-		lateralForce = VehiclePhysUtil.pacejkaLong(loadOnWheel, slipAngleTire, 1.3, 1.0, 1.0, 4);
+		
+		//lateralForce = VehiclePhysUtil.pacejkaLong(loadOnWheel, lateralSlipRatio, 1.3, 1.0, 1.0, 4);
+		//lateralForce = VehiclePhysUtil.pacejkaLong(loadOnWheel, slipAngleTire, 1.3, 1.9, 1.0, 4);
+		lateralForce = VehiclePhysUtil.pacejkaLong(loadOnWheel, slipAngleTire, 1.3, 1.9, 1.0, 4);
 		
 		// APPLIES THE FX OF HANDBRAKE
 		if(axel.isHandbraking) {
@@ -279,10 +399,11 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 				
 				
 				if(absSlip > 0.2 && absSlip < 4.5) {
-					
-					lateralForce *= 0.4;
+					lateralForce *= 0.6;
+					//lateralForce *= 0.4;
 				} else if(absSlip > 4.5) {
-					lateralForce *= 0.8;
+					lateralForce *= 0.9;
+					//lateralForce *= 0.8;
 				}
 
 			}
@@ -314,6 +435,17 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 		
 		
 	}
+	
+	
+	public WheelSolver newInstance() {
+		
+		WheelSolver newSolve = new WheelSolver(tyreSize, this.wheelMass, this.isDrive)
+				.withRelativePosition(this.relativePosition);
+		
+		
+		return newSolve;
+	}
+	
 
 	public WheelSolver withRelativePosition(Vec3d vec) {
 		setRelativePosition(vec);
@@ -333,5 +465,7 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 	public void writeToBuf(ByteBuf buf) {
 		
 	}
+	
+
 
 }

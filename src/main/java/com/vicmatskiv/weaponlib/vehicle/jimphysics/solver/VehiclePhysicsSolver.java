@@ -25,6 +25,7 @@ import com.vicmatskiv.weaponlib.vehicle.jimphysics.PhysicsConfiguration;
 import com.vicmatskiv.weaponlib.vehicle.jimphysics.Transmission;
 import com.vicmatskiv.weaponlib.vehicle.jimphysics.VehiclePhysUtil;
 import com.vicmatskiv.weaponlib.vehicle.jimphysics.engines.FlywheelSolver;
+import com.vicmatskiv.weaponlib.vehicle.jimphysics.solver.aero.IAeroComponent;
 import com.vicmatskiv.weaponlib.vehicle.network.VehicleClientPacket;
 import com.vicmatskiv.weaponlib.vehicle.network.VehicleClientPacketHandler;
 
@@ -104,6 +105,8 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 	
 	public PhysicsConfiguration configuration;
 	
+	public ArrayList<IAeroComponent> aeroComponents = new ArrayList<>();
+	
 	public VehiclePhysicsSolver(PhysicsConfiguration config) {
 		//this.vehicle = vehicle;
 		this.configuration = config;
@@ -112,6 +115,24 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		//(new VehicleInertiaBuilder(1660)).basicSedanConstruct(d, heightOffGround, wheelBase, wheelRadius, wheelThickness);
 		//this.transmission = vehicle.getConfiguration().getVehicleTransmission().cloneTransmission();
 		//initTestingVehicle();
+	}
+	
+	public VehiclePhysicsSolver withAero(IAeroComponent aeroPiece) {
+		this.aeroComponents.add(aeroPiece);
+		return this;
+	}
+	
+	public ArrayList<IAeroComponent> getAeroEquipment() {
+		return this.aeroComponents;
+	}
+	
+	
+	public VehiclePhysicsSolver clone() {
+		VehiclePhysicsSolver solv = new VehiclePhysicsSolver(this.configuration);
+		solv.withAxels(this.frontAxel.newInstance(), this.rearAxel.newInstance());
+		solv.aeroComponents = this.aeroComponents;
+		return solv;
+		
 	}
 	
 	public PhysicsConfiguration compileStructure() {
@@ -209,6 +230,9 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 	
 	
 	
+	public double getLongSpeedDir() {
+		return 0.0;
+	}
 	
 	public double getLongitudinalSpeed() {
 		if(Double.isNaN(velocity.lengthVector())) return vehicle.throttle;
@@ -335,6 +359,7 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		
 		if(!t.isEngineDeclutched()) {
 			
+		//	System.out.println("RWAV: " + rearAxel.getWheelAngularVelocity() + " | " + gearRatio + " | " + finalDriveRatio);
 			rpm = (int) VehiclePhysUtil.getEngineRPM(rearAxel.getWheelAngularVelocity(), gearRatio, finalDriveRatio);
 			
 			
@@ -390,8 +415,10 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		double efficiency = configuration.getDriveTrainEfficiency();
 		
 		double torque = engine.getTorqueAtRPM(currentRPM);
+		
 		double drvT = VehiclePhysUtil.getDriveTorque(torque, gearRatio, finalDriveRatio, efficiency)*(vehicle.throttle);
 	
+		
 		
 		flywheel.applyTorque(drvT);
 		
@@ -405,7 +432,7 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		if(t.isEngineDeclutched()) drvT = 0;
 
 		
-		synthAccelFor += drvT*timeStep/10;
+		synthAccelFor += drvT*timeStep/1000;
 		
 		// FIX THIS IN THE FUTURE
 
@@ -420,16 +447,28 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		
 		this.materialBelow = vehicle.world.getBlockState(vehicle.getPosition().down()).getMaterial();
 		
-		double mass = configuration.vehicleMass;
-		double weight = mass*9.81*4;
-		double accel = accelerationValue;
+		double downForce = 0;
+		if(!this.aeroComponents.isEmpty()) {
+			for(IAeroComponent comp : getAeroEquipment()) {
+				downForce += VehiclePhysUtil.calculateLift((float) comp.getLiftCoefficient(), getLongitudinalSpeed(), comp.getAreaOfWing())*10;
+			}
+		}
 		
+		double mass = configuration.vehicleMass;
+		double weight = mass*9.81 + downForce;
+		double accel = accelerationValue;
+		//System.out.println("down force: " + downForce);
+		
+		//weight *= 2;
 		//System.out.println(accelerationValue + " | " + vehicle.getRealSpeed());
 		
 		//COGHeight = 0.2;
 	
-		double weightFront = (frontAxel.COGoffset/wheelBase)*weight - (COGHeight/wheelBase)*mass*accel;
-		double weightRear = ((rearAxel.COGoffset)/wheelBase)*weight - (COGHeight/wheelBase)*mass*accel;
+		double b = (wheelBase/2);
+		double c = -(wheelBase/2);
+		
+		double weightFront = (b/wheelBase)*weight - (COGHeight/wheelBase)*mass*accel;
+		double weightRear = (c/wheelBase)*weight - (COGHeight/wheelBase)*mass*accel;
 	
 		
 		
@@ -443,13 +482,13 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		*/
 		
 		vehicle.prevSideLean = vehicle.sideLean;
-		vehicle.sideLean = (accel/12) + newSynthSide;
+		vehicle.sideLean = (accel/2) + newSynthSide;
 		
 		//System.out.println(weightRear);
 		
 		rearAxel.applySuspensionLoad(weightRear*9.81);
 		frontAxel.applySuspensionLoad(weightFront*-9.81);
-		
+	
 		
 		rearAxel.distributeLoad(weightFront);
 		frontAxel.distributeLoad(-weightRear);
@@ -461,8 +500,10 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 	public void updateWheels() {
 		if(vehicle.isBraking) {
 			synthAccelFor -= 3;
-			frontAxel.applyBrakingForce(30);
-			rearAxel.applyBrakingForce(30);
+			frontAxel.applyBrakingForce(3000);
+			
+			
+			rearAxel.applyBrakingForce(3000);
 		}
 		frontAxel.setSteeringAngle(vehicle.steerangle);
 		frontAxel.doPhysics();
@@ -470,6 +511,7 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 	}
 	
 	public Vec3d calculateResistiveForces(Vec3d speed) {
+		//Vec3d drag = Vec3d.ZERO;
 		Vec3d drag = VehiclePhysUtil.realDrag((float) configuration.getDragCoefficient(), speed, configuration.getFrontArea());
 		Vec3d rolling = VehiclePhysUtil.rollingResistance(0.02F, speed);
 		return drag.add(rolling);
@@ -487,8 +529,8 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		
 		double totalAxelTorque = torqueContributionFront + torqueContributionRear;
 		
-		
-		Matrix3f inertia = InertiaKit.inertiaTensorCube(1660, 1.6f, 3.0f, 6.0f);
+		Matrix3f inertia = getPhysConf().getVehicleMassObject().inertia;
+		//Matrix3f inertia = InertiaKit.inertiaTensorCube(1660, 1.6f, 3.0f, 6.0f);
 
 		
 		// add roll impulse
@@ -500,20 +542,22 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		
 		
 		// https://suspensionsecrets.co.uk/calculating-ideal-spring-and-roll-bar-rates/
+		double rollContant = 1.5;
 		double rollTorque = (velocity.lengthVector()*getSideSlipAngle());
 		vehicle.rotationRoll += (float) Math.toDegrees(rollTorque/(inertia.m00));
 		double diff = 1.0*Math.sin(Math.toRadians(vehicle.rotationRoll));
 		if(vehicle.rotationRoll < 0) {
-			 vehicle.rotationRoll += 1.5f*Math.abs(diff);
+			 vehicle.rotationRoll += rollContant*Math.abs(diff);
 		} else if (vehicle.rotationRoll > 0 ) {
-			vehicle.rotationRoll -= 1.5f*Math.abs(diff);
+			vehicle.rotationRoll -= rollContant*Math.abs(diff);
 		}
+		
 		
 
 		angAccel = totalAxelTorque/inertia.m11;
 		
 		if(this.materialBelow == Material.ROCK) {
-			angAccel *= 1.5;
+			//angAccel *= 1.5;
 		}
 		
 		
@@ -533,8 +577,8 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		
 		
 		
-		
-			angularVelocity *= 0.99;
+			angularVelocity *= 0.9999;
+			//angularVelocity *= 0.99;
 			angularVelocity += timeStep*angAccel;
 			vehicle.rotationYaw += Math.toDegrees(timeStep*angularVelocity);
 			
@@ -564,9 +608,10 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 	
 	
 	public void updatePosition() {
-		timeStep = 0.01;
+		timeStep = 0.001;
 		
 		double mass = configuration.vehicleMass;
+		
 		
 		
 		
@@ -608,7 +653,7 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		double zV = velocity.z + timeStep*acceleration.z;
 		Vec3d newVel = new Vec3d(xV, yV, zV);
 		
-	
+		//System.out.println(hashCode());
 		velocity = newVel;
 		
 		
@@ -650,8 +695,8 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 
 		
 			boolean wheelThrottle = vehicle.throttle == 0.0 || transmission.isEngineDeclutched();
-		
-			if(velocity.lengthVector() < 0.5 && wheelThrottle ) {
+			//System.out.println(velocity.lengthVector());
+			if(velocity.lengthVector() < 10 && wheelThrottle ) {
 				
 				velocity = velocity.scale(0.01);
 				

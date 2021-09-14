@@ -220,12 +220,19 @@ public class Transmission {
 			 dShift = this.eDShift;
 		 }
 		
+		
+		
 
 		//boolean launchControl = vehicle.getSolver().getVelocityVector().lengthVector() < 25 && engineRPM > 4000;
         
 		//System.out.println((engineRPM > uShift) + " | " + (this.getCurrentGear() != highestGear) + " | " + (vehicle.throttle > 0.1) + " | " + !launchControl);
-        if(engineRPM > uShift && this.getCurrentGear() != highestGear && vehicle.throttle > 0.1 /*&& !launchControl*/) {
+        if(engineRPM > uShift && (this.getCurrentGear()+1) != highestGear && vehicle.throttle > 0.1 /*&& !launchControl*/) {
 
+        
+        	//double gr = vehicleGears.get(getCurrentGear()).gearRatio;
+        	//int newRPM = (int) VehiclePhysUtil.getEngineRPM(vehicle.getSolver().rearAxel.getWheelAngularVelocity(), gr, differentialRatio);
+        	//System.out.println("Current Engine Speed: " + engineRPM + " | In higher: " + newRPM);
+        	
         	if(runningAShift) {
         		double median = maxShiftTime/2.0;
         		if(shiftTimer > median) {
@@ -326,6 +333,13 @@ public class Transmission {
 	/**
 	 * QUICK INITIALIZERS FOR EASY TRANSMISSION GENERATION
 	 */
+	
+	public Transmission quickSpeed(float...gears) {
+		for(float f : gears) {
+			gearWithRatio(f);
+		}
+		return this;
+	}
 	
 	public Transmission quickSixSpeed(float one, float two, float three, float four, float five, float six) {
 		gearWithRatio(one);

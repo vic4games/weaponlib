@@ -588,8 +588,8 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 
 	public void updateSolver() {
 		if (solver == null) {
+			solver = getConfiguration().getPhysicsConfig().getPhysicsSolver().clone();
 			
-			solver = getConfiguration().getPhysicsConfig().getPhysicsSolver();
 			if(solver.vehicle == null) {
 				solver.activate(this);
 			}
@@ -2108,7 +2108,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 			reducer = 2;
 		}
 		
-		int amount = (int) Math.min((wSolve.wheelAngularVelocity*wSolve.radius)/8, 8);
+		int amount = (int) Math.min((wSolve.wheelAngularVelocity*wSolve.getRadius())/8, 8);
 		//System.out.println(amount);
 
 		for (int x = 0; x < amount; ++x) {
@@ -2213,7 +2213,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 
 		if (result != null) {
 
-			double h = Math.min(Math.abs((realPos.y - result.hitVec.y)) - solver.radius + 0.4, 1);
+			double h = Math.min(Math.abs((realPos.y - result.hitVec.y)) - solver.getRadius() + 0.4, 1);
 
 			// h = -0.2;
 			if (solver.actualRideHeight == 0.0) {
@@ -2309,7 +2309,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 					// run the physics solver
 					Vec3d oldPos = getPositionVector();
 					try {
-						for (int x = 0; x < 5; ++x) {
+						for (int x = 0; x < 50; ++x) {
 							getSolver().updatePhysics();
 						}
 					} catch (Exception e) {
@@ -2441,7 +2441,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 				chosen = GeneralVehicleSounds.driftConcrete1;
 			}
 
-			chosen = GeneralVehicleSounds.driftConcrete1;
+			//chosen = GeneralVehicleSounds.driftConcrete1;
 
 			this.driftingSound = new DriftMovingSound(chosen, soundPositionProvider, isDorifto, this, false);
 			Minecraft.getMinecraft().getSoundHandler().playSound(this.driftingSound);
@@ -2522,7 +2522,8 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 	@Override
 	public boolean attackEntityFrom(DamageSource source, float amount) {
 		if (source.isCreativePlayer()) {
-
+			this.solver = null;
+			
 			setDead();
 
 		}

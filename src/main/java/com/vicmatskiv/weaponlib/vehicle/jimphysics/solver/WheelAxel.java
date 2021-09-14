@@ -23,6 +23,13 @@ public class WheelAxel implements IEncodable<WheelAxel> {
 		this.COGoffset = offsetFromCOG;
 	}
 	
+	public WheelAxel newInstance() {
+		WheelAxel newAxel = new WheelAxel(this.COGoffset, this.isDriveWheel);
+		newAxel.withWheels(this.leftWheel.newInstance(), this.rightWheel.newInstance());
+		
+		return newAxel;
+	}
+	
 	public void addWheels(WheelSolver left, WheelSolver right) {
 		this.leftWheel = left;
 		this.rightWheel = right;
@@ -55,8 +62,11 @@ public class WheelAxel implements IEncodable<WheelAxel> {
 	 *  lower values mean higher braking.
 	 */
 	public void applyBrakingForce(double magnitude) {
-		leftWheel.applyBrake(30);
-		rightWheel.applyBrake(30);
+		
+		//leftWheel.driveTorque += -magnitude;
+		//rightWheel.driveTorque += -magnitude;
+		leftWheel.applyBrake(100);
+		rightWheel.applyBrake(100);
 	}
 	
 	public void setSteeringAngle(double angle) {
@@ -117,9 +127,9 @@ public class WheelAxel implements IEncodable<WheelAxel> {
 		double drTorque = leftWheel.driveTorque + rightWheel.driveTorque;
 		
 		
-		
+		double tractionTorque = leftWheel.tractionTorque + rightWheel.tractionTorque;
 
-		double totalTorque = drTorque + leftWheel.tractionTorque + rightWheel.tractionTorque;
+		double totalTorque = drTorque + tractionTorque;
 		
 	
 		

@@ -390,6 +390,9 @@ public class VehicleCustomGUI extends Gui {
 		} else {
 			drawCenteredString(Minecraft.getMinecraft().fontRenderer, "" + gear, 0, -4, 0x4cd137);
 		}
+		double valie = Math.floor(vehicle.getSolver().rearAxel.leftWheel.wheelAngularVelocity);
+		//drawCenteredString(Minecraft.getMinecraft().fontRenderer, "" + valie, 0, -48, 0x4cd137);
+		
 		
 		GL11.glPopMatrix();
 		

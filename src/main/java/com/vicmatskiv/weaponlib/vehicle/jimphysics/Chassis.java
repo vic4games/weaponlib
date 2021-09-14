@@ -5,7 +5,10 @@ public enum Chassis {
 	HATCHBACK,
 	SUV,
 	SPORT,
+	COUPE,
+	WAGON,
 	TRUCK,
+	VAN
 	
 
 }
