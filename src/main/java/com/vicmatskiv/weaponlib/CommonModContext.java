@@ -88,6 +88,8 @@ import com.vicmatskiv.weaponlib.vehicle.network.VehicleClientPacket;
 import com.vicmatskiv.weaponlib.vehicle.network.VehicleClientPacketHandler;
 import com.vicmatskiv.weaponlib.vehicle.network.VehicleControlPacket;
 import com.vicmatskiv.weaponlib.vehicle.network.VehicleControlPacketHandler;
+import com.vicmatskiv.weaponlib.vehicle.network.VehicleInteractPHandler;
+import com.vicmatskiv.weaponlib.vehicle.network.VehicleInteractPacket;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -349,6 +351,9 @@ public class CommonModContext implements ModContext {
         
         channel.registerMessage(new VehicleClientPacketHandler(this),
         		VehicleClientPacket.class, 35, CompatibleSide.CLIENT);
+        
+        channel.registerMessage(new VehicleInteractPHandler(this),
+        		VehicleInteractPacket.class, 36, CompatibleSide.SERVER);
         
 		ServerEventHandler serverHandler = new ServerEventHandler(this, modId);
         compatibility.registerWithFmlEventBus(serverHandler);

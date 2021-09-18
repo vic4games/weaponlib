@@ -2,6 +2,8 @@ package com.vicmatskiv.weaponlib.compatibility;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
+import java.util.List;
+
 import org.lwjgl.opengl.GL11;
 
 import com.vicmatskiv.weaponlib.ClientModContext;
@@ -9,6 +11,11 @@ import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.RenderingPhase;
 import com.vicmatskiv.weaponlib.particle.DriftCloudFX;
 import com.vicmatskiv.weaponlib.vehicle.EntityVehicle;
+import com.vicmatskiv.weaponlib.vehicle.collisions.OBBCollider;
+import com.vicmatskiv.weaponlib.vehicle.collisions.OreintedBB;
+import com.vicmatskiv.weaponlib.vehicle.network.VehicleControlPacket;
+import com.vicmatskiv.weaponlib.vehicle.network.VehicleDataContainer;
+import com.vicmatskiv.weaponlib.vehicle.network.VehicleInteractPacket;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
@@ -16,12 +23,15 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.client.event.EntityViewRenderEvent;
 import net.minecraftforge.client.event.FOVUpdateEvent;
 import net.minecraftforge.client.event.RenderHandEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.TextureStitchEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
@@ -126,6 +136,76 @@ public abstract class CompatibleClientEventHandler {
             event.getRenderer().getRenderManager().renderViewEntity = origRenderVeiwEntity;
         }
     }
+    
+    @SubscribeEvent
+    public void onRightHandEmpty(PlayerInteractEvent.RightClickEmpty evt) {
+    	
+    	 ClientModContext context = (ClientModContext) getModContext();
+    	EntityPlayer player = Minecraft.getMinecraft().player;
+    	
+    	List<EntityVehicle> i = player.world.getEntitiesWithinAABB(EntityVehicle.class, 
+    			new AxisAlignedBB(player.getPosition()).grow(3));
+    	
+    	if(i == null || i.isEmpty()) {
+    		return;
+    	} else {
+    		
+    		for(EntityVehicle v : i) {
+    			
+    			OreintedBB bb = v.getOreintedBoundingBox();
+    			
+    			//bb.move(v.posX, v.posY, v.posZ);
+    			Vec3d start = player.getPositionEyes(Minecraft.getMinecraft().getRenderPartialTicks());
+    			Vec3d endVec = start.add(player.getLookVec().scale(4));
+    		
+    			
+    			RayTraceResult rtr = bb.doRayTrace(start, endVec);
+    			if(rtr != null) {
+    				System.out.println("sending");
+    				context.getChannel().getChannel()
+					.sendToServer(new VehicleInteractPacket(true, v.getEntityId(), player.getEntityId()));
+    				return;
+    			}
+    			
+    		}
+    		
+    	}
+    	
+    }
+    
+    @SubscribeEvent
+    public void onLeftHandEmpty(PlayerInteractEvent.LeftClickEmpty evt) {
+
+   	 ClientModContext context = (ClientModContext) getModContext();
+   	EntityPlayer player = Minecraft.getMinecraft().player;
+   	
+   	List<EntityVehicle> i = player.world.getEntitiesWithinAABB(EntityVehicle.class, 
+   			new AxisAlignedBB(player.getPosition()).grow(3));
+   	
+   	if(i == null || i.isEmpty()) {
+   		return;
+   	} else {
+   		
+   		for(EntityVehicle v : i) {
+   			
+   			OreintedBB bb = v.getOreintedBoundingBox();
+   			
+   			//bb.move(v.posX, v.posY, v.posZ);
+   			Vec3d start = player.getPositionEyes(Minecraft.getMinecraft().getRenderPartialTicks());
+   			Vec3d endVec = start.add(player.getLookVec().scale(4));
+   		
+   			
+   			RayTraceResult rtr = bb.doRayTrace(start, endVec);
+   			if(rtr != null) {
+   				v.setDead();
+   				return;
+   			}
+   			
+   		}
+   		
+   	}
+    }
+    
     
     @SubscribeEvent
     public void onRenderHand(RenderHandEvent event) {

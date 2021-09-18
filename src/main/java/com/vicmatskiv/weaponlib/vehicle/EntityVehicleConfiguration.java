@@ -9,6 +9,8 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilder;
+
 import com.vicmatskiv.weaponlib.EntityClassFactory;
 import com.vicmatskiv.weaponlib.EntityConfiguration;
 import com.vicmatskiv.weaponlib.ModContext;
@@ -77,6 +79,10 @@ public class EntityVehicleConfiguration implements EntityConfiguration {
         private String idleSound;
         private String runSound;
         private String constantRevSound;
+        
+        
+        public boolean doShiftAnim;
+        public boolean shiftWRight;
         
         private String backfireSound;
         private String gearshiftSound;
@@ -190,6 +196,12 @@ public class EntityVehicleConfiguration implements EntityConfiguration {
         
         public Builder withConstantRevSound(String constantRev) {
         	this.constantRevSound = constantRev.toLowerCase();
+        	return this;
+        }
+        
+        public Builder withShiftSettings(boolean perform, boolean rightHand) {
+        	this.doShiftAnim = perform;
+        	this.shiftWRight = rightHand;
         	return this;
         }
 
@@ -316,6 +328,10 @@ public class EntityVehicleConfiguration implements EntityConfiguration {
             configuration.gearshiftSound = context.registerSound(gearshiftSound);
             
             
+            configuration.shiftRight = this.shiftWRight;
+            configuration.doShiftAnim = this.doShiftAnim;
+            
+            
           //  configuration.engine = engine;
             
             configuration.physicsConfig = physicsConfig;
@@ -393,6 +409,9 @@ public class EntityVehicleConfiguration implements EntityConfiguration {
     
     
     
+    public boolean shiftRight;
+    public boolean doShiftAnim;
+    
     
     private CompatibleSound rev1;
     private CompatibleSound rev2;
@@ -430,6 +449,14 @@ public class EntityVehicleConfiguration implements EntityConfiguration {
     public Engine getEngine() {
     	return this.engine;
     }*/
+    
+    public boolean performShiftAnimation() {
+    	return this.doShiftAnim;
+    }
+    
+    public boolean shiftWithRight() {
+    	return this.shiftRight;
+    }
     
     public CompatibleSound getRevSound(int id) {
     	switch(id) {

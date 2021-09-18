@@ -21,11 +21,13 @@ import com.vicmatskiv.weaponlib.vehicle.collisions.OBBCollider;
 import com.vicmatskiv.weaponlib.vehicle.collisions.OreintedBB;
 import com.vicmatskiv.weaponlib.vehicle.collisions.VehicleInertiaBuilder;
 import com.vicmatskiv.weaponlib.vehicle.jimphysics.Engine;
+import com.vicmatskiv.weaponlib.vehicle.jimphysics.MechanicalClutch;
 import com.vicmatskiv.weaponlib.vehicle.jimphysics.PhysicsConfiguration;
 import com.vicmatskiv.weaponlib.vehicle.jimphysics.Transmission;
 import com.vicmatskiv.weaponlib.vehicle.jimphysics.VehiclePhysUtil;
 import com.vicmatskiv.weaponlib.vehicle.jimphysics.engines.FlywheelSolver;
 import com.vicmatskiv.weaponlib.vehicle.jimphysics.solver.aero.IAeroComponent;
+import com.vicmatskiv.weaponlib.vehicle.jimphysics.solver.components.EngineSolver;
 import com.vicmatskiv.weaponlib.vehicle.network.VehicleClientPacket;
 import com.vicmatskiv.weaponlib.vehicle.network.VehicleClientPacketHandler;
 
@@ -59,15 +61,15 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 	public Vec3d velocity = new Vec3d(0, 0, 0);
 	double brakeTorque = 12000;
 	double COGHeight = 0.3;
-	public Transmission transmission;
 	
+	
+	// Component Solvers
+	public Transmission transmission;
+	public EngineSolver engineSolver;
 	
 	public float[] angles;
 	
-	
-	public int currentRPM = 0;
-	public int prevRPM = 0;
-	
+
 	// forces
 	double angularVelocity = 0;
 	double yawspeed = 0;
@@ -112,6 +114,8 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		this.configuration = config;
 		setupConfiguration(config);
 		
+		
+		
 		//(new VehicleInertiaBuilder(1660)).basicSedanConstruct(d, heightOffGround, wheelBase, wheelRadius, wheelThickness);
 		//this.transmission = vehicle.getConfiguration().getVehicleTransmission().cloneTransmission();
 		//initTestingVehicle();
@@ -126,6 +130,14 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		return this.aeroComponents;
 	}
 	
+	
+	public double getCurrentRPM() {
+		return this.engineSolver.rpm;
+	}
+	
+	public double getPreviousRPM() {
+		return this.engineSolver.previousRPM;
+	}
 	
 	public VehiclePhysicsSolver clone() {
 		VehiclePhysicsSolver solv = new VehiclePhysicsSolver(this.configuration);
@@ -153,6 +165,7 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		
 		this.transmission = conf.trans.cloneTransmission();
 		this.engine = conf.getEngine();
+		this.engineSolver = new EngineSolver(this, this.engine);
 		
 		
 	}
@@ -235,10 +248,15 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 	}
 	
 	public double getLongitudinalSpeed() {
+		if(Double.isNaN(velocity.lengthVector())) return 0.0;
+		
+
+		return velocity.lengthVector();
+		/*
 		if(Double.isNaN(velocity.lengthVector())) return vehicle.throttle;
 		
 
-		return velocity.lengthVector()+(vehicle.throttle/10);
+		return velocity.lengthVector()/+(vehicle.throttle/10);*/
 
 	}
 	
@@ -314,8 +332,35 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 	    return angles;
 	}
 	
+	public double getTractionTorque() {
+		return this.rearAxel.tractionTorque;
+	}
 	
 	public void updateEngineForces() {
+		
+		
+		if(this.engineSolver.rpm != 0) {
+			this.engineSolver.rpm -= 3;
+			if(this.engineSolver.rpm < 0) this.engineSolver.rpm = 0;
+		}
+		
+		// if vehicle is off, there are no engine
+		// forces, save the calculation time.
+		if(!vehicle.isVehicleRunning()) return;
+		
+		
+		// run all the engine calculations
+		double driveTorque = this.engineSolver.getDriveTorque();
+
+		// apply the drive torque
+		rearAxel.applyDriveTorque(driveTorque);
+		
+		// Run the automatic transmission
+		transmission.runAutomaticTransmission(vehicle, this.engineSolver.rpm);
+	}
+	
+	/*
+	public void updateEngineForcesOld() {
 		prevRPM = currentRPM;
 		//System.out.println(idleRPM);
 		/*
@@ -324,7 +369,7 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 				currentRPM -= 10;
 			}
 			if(currentRPM < 0) currentRPM = 0;
-		}*/
+		
 		
 		
 		// If the engine is off, this code should not
@@ -441,7 +486,7 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		rearAxel.applyDriveTorque(drvT);
 		
 		transmission.runAutomaticTransmission(vehicle, currentRPM);
-	}
+	}*/
 	
 	public void updateLoad() {
 		
@@ -500,10 +545,10 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 	public void updateWheels() {
 		if(vehicle.isBraking) {
 			synthAccelFor -= 3;
-			frontAxel.applyBrakingForce(3000);
+			frontAxel.applyBrakingForce(8000);
 			
 			
-			rearAxel.applyBrakingForce(3000);
+			rearAxel.applyBrakingForce(8000);
 		}
 		frontAxel.setSteeringAngle(vehicle.steerangle);
 		frontAxel.doPhysics();
@@ -561,8 +606,8 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		}
 		
 		
-
-		angAccel = totalAxelTorque/inertia.m11;
+		//System.out.println(angAccel);
+		angAccel += totalAxelTorque/inertia.m11;
 		
 		if(this.materialBelow == Material.ROCK) {
 			//angAccel *= 1.5;
@@ -592,7 +637,7 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 			vehicle.rotationYaw += Math.toDegrees(timeStep*angularVelocity);
 			
 			
-		
+			angAccel = 0;
 		
 		
 		

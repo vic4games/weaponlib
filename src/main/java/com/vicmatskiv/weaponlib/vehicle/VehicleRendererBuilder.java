@@ -17,6 +17,10 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class VehicleRendererBuilder extends HierarchicalRendererBuilder<VehiclePart, VehicleRenderableState> {
 
+	private boolean doShiftAnimation = false;
+	private boolean shiftRight = false;
+	
+	
 	private static List<VehiclePart> allParts = Arrays.asList(VehiclePart.MAIN, VehiclePart.WINDOWS,
 			VehiclePart.STEERING_WHEEL, VehiclePart.LEFT_HAND, VehiclePart.RIGHT_HAND,
 			VehiclePart.FRONT_LEFT_CONTROL_ARM, VehiclePart.FRONT_RIGHT_CONTROL_ARM, VehiclePart.FRONT_LEFT_WHEEL,
@@ -40,6 +44,17 @@ public class VehicleRendererBuilder extends HierarchicalRendererBuilder<VehicleP
 	private static Function<PartRenderContext<VehicleRenderableState>, Float> DEFAULT_WHEEL_TURN_PROGRESS_PROVIDER = context -> (float) Math
 			.abs(((EntityVehicle) context.getEntity()).getWheelRotationAngle()) / 360f;
 	*/
+	
+	public VehicleRendererBuilder performShiftAnimation(boolean state) {
+		this.doShiftAnimation = state;
+		return this;
+	}
+	
+	public VehicleRendererBuilder shiftWithRight(boolean state) {
+		this.shiftRight = state;
+		return this;
+	}
+	
 	public VehicleRendererBuilder withMainModelProvider(Supplier<VehicleModel> mainModelProvider) {
 		VehicleModel model = mainModelProvider.get();
 		withPartRenderer(VehiclePart.MAIN, renderContext -> {
@@ -106,7 +121,7 @@ public class VehicleRendererBuilder extends HierarchicalRendererBuilder<VehicleP
 	public HierarchicalRendererBuilder<VehiclePart, VehicleRenderableState> withPartPosition(VehiclePart part,
 			Consumer<PartRenderContext<VehicleRenderableState>> positionFunction, VehicleRenderableState... states) {
 
-		System.out.println("Loading states... " + Arrays.toString(states));
+		//System.out.println("Loading states... " + Arrays.toString(states));
 
 		if (states.length == 0) {
 
@@ -128,7 +143,7 @@ public class VehicleRendererBuilder extends HierarchicalRendererBuilder<VehicleP
 	@Override
 	protected void prebuild() {
 
-		System.out.println("Prebuild called");
+		//System.out.println("Prebuild called");
 
 		withInitialState(VehicleRenderableState.IDLE);
 
@@ -167,6 +182,150 @@ public class VehicleRendererBuilder extends HierarchicalRendererBuilder<VehicleP
 				List<TransitionDescriptor> transitionDescriptors = partConfiguration.transitionDescriptors
 						.computeIfAbsent(state, k -> new ArrayList<>());
 
+				
+				if(doShiftAnimation) {
+					
+					if(shiftRight) {
+						// right handed shifting
+						if (part == VehiclePart.LEFT_HAND && state == VehicleRenderableState.PREPARED_TO_DRIVE
+								&& transitionDescriptors.isEmpty()) {
+							List<TransitionDescriptor> drivingTransitionDescriptors = partConfiguration.transitionDescriptors
+									.get(VehicleRenderableState.DRIVING);
+							transitionDescriptors.add(new TransitionDescriptor(
+									drivingTransitionDescriptors.get(0).positionFunction, animationDuration));
+						} else if (part == VehiclePart.LEFT_HAND && state == VehicleRenderableState.STOPPING
+								&& transitionDescriptors.isEmpty()) {
+							List<TransitionDescriptor> idleTransitionDescriptors = partConfiguration.transitionDescriptors
+									.get(VehicleRenderableState.IDLE);
+							transitionDescriptors.add(new TransitionDescriptor(
+									idleTransitionDescriptors.get(0).positionFunction, animationDuration));
+						} else if (part == VehiclePart.LEFT_HAND && (state == VehicleRenderableState.FINISHING_SHIFT
+								|| state == VehicleRenderableState.SHIFTING || state == VehicleRenderableState.STARTING_SHIFT)
+								&& transitionDescriptors.isEmpty()) {
+							List<TransitionDescriptor> idleTransitionDescriptors = partConfiguration.transitionDescriptors
+									.get(VehicleRenderableState.DRIVING);
+							transitionDescriptors.add(new TransitionDescriptor(
+									idleTransitionDescriptors.get(0).positionFunction, animationDuration));
+						} else if (part == VehiclePart.RIGHT_HAND && state == VehicleRenderableState.PREPARED_TO_DRIVE
+								&& transitionDescriptors.isEmpty()) {
+							List<TransitionDescriptor> drivingTransitionDescriptors = partConfiguration.transitionDescriptors
+									.get(VehicleRenderableState.DRIVING);
+							transitionDescriptors.add(new TransitionDescriptor(
+									drivingTransitionDescriptors.get(0).positionFunction, animationDuration));
+						} else if (part == VehiclePart.RIGHT_HAND && state == VehicleRenderableState.STOPPING
+								&& transitionDescriptors.isEmpty()) {
+							List<TransitionDescriptor> idleTransitionDescriptors = partConfiguration.transitionDescriptors
+									.get(VehicleRenderableState.IDLE);
+							transitionDescriptors.add(new TransitionDescriptor(
+									idleTransitionDescriptors.get(0).positionFunction, animationDuration));
+						} else if (part == VehiclePart.RIGHT_HAND && state == VehicleRenderableState.STARTING_SHIFT
+								&& transitionDescriptors.isEmpty()) {
+							List<TransitionDescriptor> drivingTransitionDescriptors = partConfiguration.transitionDescriptors
+									.get(VehicleRenderableState.SHIFTING);
+							transitionDescriptors.add(new TransitionDescriptor(
+									drivingTransitionDescriptors.get(0).positionFunction, animationDuration));
+						} else if (part == VehiclePart.RIGHT_HAND && state == VehicleRenderableState.FINISHING_SHIFT
+								&& transitionDescriptors.isEmpty()) {
+							List<TransitionDescriptor> idleTransitionDescriptors = partConfiguration.transitionDescriptors
+									.get(VehicleRenderableState.DRIVING);
+							transitionDescriptors.add(new TransitionDescriptor(
+									idleTransitionDescriptors.get(0).positionFunction, animationDuration));
+						}
+					} else {
+						// Left handed shifting :)
+						if (part == VehiclePart.RIGHT_HAND && state == VehicleRenderableState.PREPARED_TO_DRIVE
+								&& transitionDescriptors.isEmpty()) {
+							List<TransitionDescriptor> drivingTransitionDescriptors = partConfiguration.transitionDescriptors
+									.get(VehicleRenderableState.DRIVING);
+							transitionDescriptors.add(new TransitionDescriptor(
+									drivingTransitionDescriptors.get(0).positionFunction, animationDuration));
+						} else if (part == VehiclePart.RIGHT_HAND && state == VehicleRenderableState.STOPPING
+								&& transitionDescriptors.isEmpty()) {
+							List<TransitionDescriptor> idleTransitionDescriptors = partConfiguration.transitionDescriptors
+									.get(VehicleRenderableState.IDLE);
+							transitionDescriptors.add(new TransitionDescriptor(
+									idleTransitionDescriptors.get(0).positionFunction, animationDuration));
+						} else if (part == VehiclePart.RIGHT_HAND && (state == VehicleRenderableState.FINISHING_SHIFT
+								|| state == VehicleRenderableState.SHIFTING || state == VehicleRenderableState.STARTING_SHIFT)
+								&& transitionDescriptors.isEmpty()) {
+							List<TransitionDescriptor> idleTransitionDescriptors = partConfiguration.transitionDescriptors
+									.get(VehicleRenderableState.DRIVING);
+							transitionDescriptors.add(new TransitionDescriptor(
+									idleTransitionDescriptors.get(0).positionFunction, animationDuration));
+						} else if (part == VehiclePart.LEFT_HAND && state == VehicleRenderableState.PREPARED_TO_DRIVE
+								&& transitionDescriptors.isEmpty()) {
+							List<TransitionDescriptor> drivingTransitionDescriptors = partConfiguration.transitionDescriptors
+									.get(VehicleRenderableState.DRIVING);
+							transitionDescriptors.add(new TransitionDescriptor(
+									drivingTransitionDescriptors.get(0).positionFunction, animationDuration));
+						} else if (part == VehiclePart.LEFT_HAND && state == VehicleRenderableState.STOPPING
+								&& transitionDescriptors.isEmpty()) {
+							List<TransitionDescriptor> idleTransitionDescriptors = partConfiguration.transitionDescriptors
+									.get(VehicleRenderableState.IDLE);
+							transitionDescriptors.add(new TransitionDescriptor(
+									idleTransitionDescriptors.get(0).positionFunction, animationDuration));
+						} else if (part == VehiclePart.LEFT_HAND && state == VehicleRenderableState.STARTING_SHIFT
+								&& transitionDescriptors.isEmpty()) {
+							List<TransitionDescriptor> drivingTransitionDescriptors = partConfiguration.transitionDescriptors
+									.get(VehicleRenderableState.SHIFTING);
+							transitionDescriptors.add(new TransitionDescriptor(
+									drivingTransitionDescriptors.get(0).positionFunction, animationDuration));
+						} else if (part == VehiclePart.LEFT_HAND && state == VehicleRenderableState.FINISHING_SHIFT
+								&& transitionDescriptors.isEmpty()) {
+							List<TransitionDescriptor> idleTransitionDescriptors = partConfiguration.transitionDescriptors
+									.get(VehicleRenderableState.DRIVING);
+							transitionDescriptors.add(new TransitionDescriptor(
+									idleTransitionDescriptors.get(0).positionFunction, animationDuration));
+						}
+						
+					}
+					
+				} else {
+					// If not doing shift anims
+					if (part == VehiclePart.LEFT_HAND && state == VehicleRenderableState.PREPARED_TO_DRIVE
+							&& transitionDescriptors.isEmpty()) {
+						List<TransitionDescriptor> drivingTransitionDescriptors = partConfiguration.transitionDescriptors
+								.get(VehicleRenderableState.DRIVING);
+						transitionDescriptors.add(new TransitionDescriptor(
+								drivingTransitionDescriptors.get(0).positionFunction, animationDuration));
+					} else if (part == VehiclePart.LEFT_HAND && state == VehicleRenderableState.STOPPING
+							&& transitionDescriptors.isEmpty()) {
+						List<TransitionDescriptor> idleTransitionDescriptors = partConfiguration.transitionDescriptors
+								.get(VehicleRenderableState.IDLE);
+						transitionDescriptors.add(new TransitionDescriptor(
+								idleTransitionDescriptors.get(0).positionFunction, animationDuration));
+					} else if (part == VehiclePart.LEFT_HAND && (state == VehicleRenderableState.FINISHING_SHIFT
+							|| state == VehicleRenderableState.SHIFTING || state == VehicleRenderableState.STARTING_SHIFT)
+							&& transitionDescriptors.isEmpty()) {
+						List<TransitionDescriptor> idleTransitionDescriptors = partConfiguration.transitionDescriptors
+								.get(VehicleRenderableState.DRIVING);
+						transitionDescriptors.add(new TransitionDescriptor(
+								idleTransitionDescriptors.get(0).positionFunction, animationDuration));
+					} else if (part == VehiclePart.RIGHT_HAND && state == VehicleRenderableState.PREPARED_TO_DRIVE
+							&& transitionDescriptors.isEmpty()) {
+						List<TransitionDescriptor> drivingTransitionDescriptors = partConfiguration.transitionDescriptors
+								.get(VehicleRenderableState.DRIVING);
+						transitionDescriptors.add(new TransitionDescriptor(
+								drivingTransitionDescriptors.get(0).positionFunction, animationDuration));
+					} else if (part == VehiclePart.RIGHT_HAND && state == VehicleRenderableState.STOPPING
+							&& transitionDescriptors.isEmpty()) {
+						List<TransitionDescriptor> idleTransitionDescriptors = partConfiguration.transitionDescriptors
+								.get(VehicleRenderableState.IDLE);
+						transitionDescriptors.add(new TransitionDescriptor(
+								idleTransitionDescriptors.get(0).positionFunction, animationDuration));
+					} else if (part == VehiclePart.RIGHT_HAND && (state == VehicleRenderableState.FINISHING_SHIFT
+							|| state == VehicleRenderableState.SHIFTING || state == VehicleRenderableState.STARTING_SHIFT)
+							&& transitionDescriptors.isEmpty()) {
+						List<TransitionDescriptor> drivingTransitionDescriptors = partConfiguration.transitionDescriptors
+								.get(VehicleRenderableState.DRIVING);
+						transitionDescriptors.add(new TransitionDescriptor(
+								drivingTransitionDescriptors.get(0).positionFunction, animationDuration));
+					} 
+					
+				}
+				
+				
+				
 				if (part == VehiclePart.LEFT_HAND && state == VehicleRenderableState.PREPARED_TO_DRIVE
 						&& transitionDescriptors.isEmpty()) {
 					List<TransitionDescriptor> drivingTransitionDescriptors = partConfiguration.transitionDescriptors

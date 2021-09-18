@@ -164,13 +164,26 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 	public void doPhysics() {
 		double radius = getRadius();
 		
+		
+		
+		
 		wheelAngularVelocity += wheelAngularAcceleration*solver.timeStep;
 	
+		
+		if(solver.vehicle.throttle != 1.0) {
+			wheelAngularVelocity *= 0.995;
+		}
 		
 		// UPDATES THE WHEEL ROTATION
 		prevWheelRot = wheelRot;
 		wheelRot += wheelAngularVelocity*solver.timeStep;
 		
+		
+		if(this.axel.COGoffset < 0.5) {
+			//double expected = VehiclePhysUtil.wheelAngularVelocity((int) solver.engineSolver.rpm, solver.transmission.getCurrentGearRatio(), solver.transmission.getDifferentialRatio());
+			//System.out.println(wheelAngularVelocity + " | " + expected);
+			
+		}
 		
 		if(solver.getLongitudinalSpeed() == 0.0) {
 			wheelAngularVelocity = 0;
@@ -294,17 +307,24 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 		//loadOnWheel *= 5;
 		
 		// get longitundinal force
-		longForce = VehiclePhysUtil.pacejkaLong(loadOnWheel, slipRatio, 1.65, 1, 0.97, 10);
+		double peak = 1.0;
+		if(this.solver.transmission.getClutch().getSlippage() == 1) peak = 1.9;
+		longForce = VehiclePhysUtil.pacejkaLong(loadOnWheel, slipRatio, 1.65, peak, 0.97, 10);
+		
+		
+		//longForce = VehiclePhysUtil.pacejkaLong(loadOnWheel, slipRatio, 1.65, 1, 0.97, 10);
+		
+		
 		//longForce = VehiclePhysUtil.pacejkaLong(loadOnWheel, slipRatio, 1.65, 2.5, 0.8, 10);
 		
 		
 		
-		if(Double.isNaN(longForce)) {
-			longForce = 0.0;
-		}
+	
 		
 
-		
+		if(solver.vehicle.isBraking) {
+			//longForce *= 30.0;
+		}
 		
 		
 		// REDUCES THE GRIP ON OTHER MATERIALS (DIRT)
@@ -313,12 +333,15 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 			longitudinalForce = longitudinalForce.scale(0.5);
 		}
 		
+		
+		
+		
 		// CALCULATES THE TRACTION TORQUE
 		tractionTorque = longForce*radius*-1;
 		
-	   
 		
-		
+
+	
 	  // System.out.println(tractionTorque);
 	   
 	   

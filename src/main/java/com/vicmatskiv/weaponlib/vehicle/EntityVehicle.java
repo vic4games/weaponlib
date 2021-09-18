@@ -67,7 +67,7 @@ import com.vicmatskiv.weaponlib.vehicle.jimphysics.Engine;
 import com.vicmatskiv.weaponlib.vehicle.jimphysics.InterpolationKit;
 import com.vicmatskiv.weaponlib.vehicle.jimphysics.QuatUtil;
 import com.vicmatskiv.weaponlib.vehicle.jimphysics.Transmission;
-import com.vicmatskiv.weaponlib.vehicle.jimphysics.engines.EvoIVEngine;
+
 import com.vicmatskiv.weaponlib.vehicle.jimphysics.solver.VehiclePhysicsSolver;
 import com.vicmatskiv.weaponlib.vehicle.jimphysics.solver.WheelSolver;
 import com.vicmatskiv.weaponlib.vehicle.network.VehicleClientPacket;
@@ -89,6 +89,7 @@ import net.minecraft.block.BlockFenceGate;
 import net.minecraft.block.BlockLiquid;
 import net.minecraft.block.BlockPane;
 import net.minecraft.block.BlockPlanks;
+import net.minecraft.block.BlockSlab;
 import net.minecraft.block.BlockSnow;
 import net.minecraft.block.BlockSnowBlock;
 import net.minecraft.block.BlockWall;
@@ -272,12 +273,15 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 	 */
 	
 	public VehicleSmoothShell smoothShell;
+	
+	public int clutchTimer = 0;
 
 	public EntityVehicle(World worldIn) {
 		super(worldIn);
 
 		this.smoothShell = new VehicleSmoothShell(this);
-		this.setSize(1.4F, 1.5f);
+		this.setSize(0.2F, 0.4f);
+		//this.setSize(1.4F, 1.5f);
 		// this.setSize(1.375F, 0.5625F);
 		this.oreintedBoundingBox = new OreintedBB(getConfiguration().getAABBforOBB());
 	}
@@ -530,7 +534,9 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 	}
 
 	public boolean processInitialInteract(EntityPlayer player, EnumHand hand) {
-
+		return true;
+	
+		/*
 		if (player.isSneaking()) {
 			return false;
 		} else {
@@ -539,10 +545,10 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 			}
 
 			return true;
-		}
+		}*/
 	}
 
-	protected boolean canFitPassenger(Entity passenger) {
+	public boolean canFitPassenger(Entity passenger) {
 		return getCurrentRiders() + 1 <= getCarMaxPersonnel();
 	}
 
@@ -713,6 +719,9 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 	public void updateControls() {
 		
 
+		
+		
+		
 	
 		
 		
@@ -720,6 +729,18 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 	//	System.out.println(isVehicleRunning());
 		Transmission trans = getSolver().transmission;
 
+		/*
+		if(clutchTimer < 60) {
+		//	System.out.println(clutchTimer);
+			if(throttle < 0.3) throttle = 0.3;
+			double step = (1.0-trans.getClutch().engagementPoint)/60;
+			trans.getClutch().removePressure(step);
+		//	System.out.println(trans.getClutch().pedalPressure + " | " + trans.getClutch().getSlippage());
+			clutchTimer++;
+			
+		}
+		
+		*/
 		if (KeyBindings.vehicleTurnOff.isPressed()) {
 			if (isVehicleRunning()) {
 				vehicleIsRunning = false;
@@ -792,7 +813,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 			throttle = 1;
 
 		if (!isVehicleRunning()) {
-			throttle = 0;
+			//throttle = 0;
 		}
 
 		if (isVehicleRunning()) {
@@ -857,6 +878,87 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 
 	@Override
 	public void doOBBCollision() {
+		
+		// DO BLOCK SHIT
+		OreintedBB carBound = getOreintedBoundingBox();
+		
+		/*
+		List<AxisAlignedBB> list1 = this.world.getCollisionBoxes(this, this.getEntityBoundingBox().expand(2, 1, 2));
+		for(AxisAlignedBB box : list1) {
+			
+			GJKResult result = OBBCollider.areColliding(carBound, OreintedBB.fromAABB(box));
+			if(result.status == GJKResult.Status.COLLIDING) {
+				Vec3d d = result.separationVector.scale(-result.penetrationDepth);
+				System.out.println(d);
+				move(MoverType.SELF, d.x, d.y, d.z);
+				
+				
+				//getSolver().velocity = getSolver().velocity.add();
+			}
+		}*/
+		
+		List<AxisAlignedBB> list3 = this.world.getCollisionBoxes(this, this.getEntityBoundingBox().grow(3).expand(1, 1, 1));
+    
+        OreintedBB bb = this.getOreintedBoundingBox();
+        GJKResult bestResult = new GJKResult();
+         
+         for(AxisAlignedBB aabb : list3) {
+             
+             Vec3d pos = new Vec3d(aabb.maxX-0.5, aabb.maxY-0.5, aabb.maxZ-0.5);
+             AxisAlignedBB fixedBB = aabb.offset(pos.scale(-1));
+             
+             GJKResult result = OBBCollider.areColliding(bb, OreintedBB.fromAABB(fixedBB, pos));
+             if(result.status == GJKResult.Status.COLLIDING && result.penetrationDepth > bestResult.penetrationDepth) {
+                 bestResult = result;
+             }
+             
+         }
+         
+         Vec3d aSep = Vec3d.ZERO;
+         if(bestResult.penetrationDepth != 0.0) {
+             aSep = bestResult.separationVector.scale(-bestResult.penetrationDepth*2.0);
+             aSep = new Vec3d(aSep.x, 0.0, aSep.z);
+             
+         }
+        // System.out.println(aSep);
+         if(aSep.lengthVector() != 0.0) {
+        	 /*
+        	  * 	 Vec3d rC = bestResult.contactPointA.subtract(getPositionVector()).rotateYaw((float) Math.toRadians(rotationYaw));
+        	 Vec3d r2 = new Vec3d(0.0, 0.0, rC.z);
+        	 Vec3d coG = getSolver().getPhysConf().getVehicleMassObject().centerOfGravity;
+        	
+        	 double dist = r2.distanceTo(coG);
+        	 
+        	 double momentum = getSolver().getPhysConf().vehicleMass*getRealSpeed()/250;
+        	 getSolver().angAccel += momentum*-dist;
+        	  */
+        	 Vec3d rC = bestResult.contactPointA.subtract(getPositionVector()).rotateYaw((float) Math.toRadians(rotationYaw));
+        	 Vec3d coG = getSolver().getPhysConf().getVehicleMassObject().centerOfGravity;
+        	 
+        	 Vec3d cross = rC.crossProduct(coG);
+        	 
+        	 double momentum = getSolver().getPhysConf().vehicleMass*getRealSpeed()/50;
+        	 
+        	 Vec3d velo = getSolver().velocity.scale(-0.1);
+        	 
+   
+        	
+ 		
+        	 
+        	 getSolver().angAccel += momentum*cross.y;
+        	 
+        	 //System.out.println("septes"  + aSep.y);
+        	 
+        	 getSolver().velocity = getSolver().velocity.add(aSep);
+        	  move(MoverType.SELF, aSep.x, aSep.y, aSep.z);
+         }
+       
+         
+        /// Vec3d p3 = getPositionVector();
+        // setPosition(p3.x + aSep.x, p3.y + aSep.y, p3.z + aSep.z);
+    
+		
+		
 
 		List<Entity> list = this.world.getEntitiesInAABBexcluding(this, this.getEntityBoundingBox().grow(10.0),
 				EntitySelectors.IS_ALIVE);
@@ -1741,12 +1843,13 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 
 			IBlockState b = this.world.getBlockState(ray.getBlockPos().up());
 			double upMag = 0.0;
+			
 			if (b.getBlock() instanceof BlockSnow) {
 
 				if (b.getValue(BlockSnow.LAYERS).intValue() > 2)
 					return;
 				upMag += 0.5;
-			} else if (b.causesSuffocation() || b.getBlock() instanceof BlockPane)
+			} else if (b.causesSuffocation() || b.getBlock() instanceof BlockPane || b.getBlock() instanceof BlockSlab)
 				return;
 			Vec3d hitVec = ray.hitVec;
 			Vec3d ab = hitVec.subtract(getPositionVector());
@@ -1762,7 +1865,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 			}
 			double liftPush = 0.0;
 			IBlockState bL = this.world.getBlockState(ray.getBlockPos());
-
+			//System.out.println(bL.getBlock());
 			
 			if(bL.getBlock() instanceof BlockFence || bL.getBlock() instanceof BlockWall) {
 				return;
@@ -2235,10 +2338,16 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 
 		try {
 
+			/*
+			if(getSolver().velocity.lengthVector() == 0.0) {
+				setSize(1.5f, 1.4f);
+			} else setSize(0.4f, 0.4f);
+			*/
+			
 			this.prevRotationRoll = rotationRoll;
 			this.prevRotationRollH = rotationRollH;
 
-			doOBBCollision();
+			
 
 			updateOBB();
 
@@ -2271,6 +2380,8 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 					/*
 					 * DRIVER SIDE
 					 */
+					
+					doOBBCollision();
 
 					// update steering
 					// updateSteering((EntityPlayer) player);
@@ -2290,7 +2401,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 					// run block collisions
 					tickLerp();
 					super.onUpdate();
-					doBlockCollisions();
+					//doBlockCollisions();
 
 					drivingAspect.onUpdate(this);
 					getSuspensionStrategy().update(getSpeed(), lastYawDelta);
@@ -2302,12 +2413,15 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 					// System.out.println(isCollided + " | " + isCollidedHorizontally + " | " +
 					// isCollidedVertically);
 
-					doBlockCollisions();
+					//doBlockCollisions();
 
 					getSolver().activate(this);
 					
 					// run the physics solver
 					Vec3d oldPos = getPositionVector();
+					
+					// for interpolation purposes
+					solver.engineSolver.previousRPM = solver.getCurrentRPM();
 					try {
 						for (int x = 0; x < 50; ++x) {
 							getSolver().updatePhysics();
@@ -2316,7 +2430,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 						e.printStackTrace();
 					}
 
-					doBlockCollisions();
+					//doBlockCollisions();
 
 					Vec3d newPos = getPositionVector();
 					
@@ -2433,7 +2547,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 
 			if (mat == Material.GRASS || mat == Material.GROUND || mat == Material.CLAY) {
 				current = mat;
-				chosen = GeneralVehicleSounds.driftConcrete1;
+				chosen = GeneralVehicleSounds.driftGround1;
 			} else if (mat == Material.ROCK) {
 				current = mat;
 				chosen = GeneralVehicleSounds.driftConcrete1;
@@ -2521,12 +2635,13 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 
 	@Override
 	public boolean attackEntityFrom(DamageSource source, float amount) {
+		/*
 		if (source.isCreativePlayer()) {
 			this.solver = null;
 			
 			setDead();
 
-		}
+		}*/
 		return super.attackEntityFrom(source, amount);
 	}
 

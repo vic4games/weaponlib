@@ -131,8 +131,8 @@ final class HierarchicalPartRenderer<Part, State> implements StatefulRenderer<St
             	modelRenderer.render(context);
             }
             
-            
-            VehicleState state = ((EntityVehicle) context.getEntity()).getState();
+            EntityVehicle v = (EntityVehicle) context.getEntity();
+            VehicleState state = (v).getState();
             boolean shiftState = (state == VehicleState.STARTING_TO_SHIFT || state == VehicleState.SHIFTING || state == VehicleState.FINISHING_SHIFT);
         
             
@@ -147,13 +147,42 @@ final class HierarchicalPartRenderer<Part, State> implements StatefulRenderer<St
                     if(partRenderer != null) {
                     	
                     	if(renderablePart == VehiclePart.RIGHT_HAND) {
-                    		if(part == VehiclePart.MAIN && !shiftState) {
-                    			continue;
-                    		}
-                    		if(part == VehiclePart.STEERING_WHEEL && shiftState) {
-                    			continue;
-                    		}
+                    		//return;
                     	}
+                    	
+                    	
+                    	if(v.getConfiguration().performShiftAnimation()) {
+                    		if(v.getConfiguration().shiftWithRight()) {
+                    			if(renderablePart == VehiclePart.RIGHT_HAND) {
+                    				
+                            		if(part == VehiclePart.MAIN && !shiftState) {
+                            			continue;
+                            		}
+                            		if(part == VehiclePart.STEERING_WHEEL && shiftState) {
+                            			continue;
+                            		}
+                            	}
+                    		} else {
+                    			if(renderablePart == VehiclePart.LEFT_HAND) {
+                    				
+                            		if(part == VehiclePart.MAIN && !shiftState) {
+                            			continue;
+                            		}
+                            		if(part == VehiclePart.STEERING_WHEEL && shiftState) {
+                            			continue;
+                            		}
+                            	}
+                    		}
+                    	} 
+                    	
+                    	if(renderablePart == VehiclePart.LEFT_HAND && (v.getConfiguration().shiftWithRight() || !v.getConfiguration().performShiftAnimation())
+                    			&& part == VehiclePart.MAIN) {
+                    		continue;
+                    		
+                    	}
+                    	
+                    	
+                    	
                     	
 //                        System.out.println("Rendering part " + renderablePart);
                         partRenderer.render(context);

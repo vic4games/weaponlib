@@ -230,10 +230,15 @@ public class OreintedBB {
 		Vec3d a = transformToLocalSpace(start);
 		Vec3d b = transformToLocalSpace(end);
 		
+		//System.out.println(" TRZ: " + a + " | " + b);
+		
 		
 		RayTraceResult rtr = aabb.calculateIntercept(a, b);
 		//rtr.hitVec = transformVec3dWithMatrix(rtr.hitVec, this.axis);
-		rtr.hitVec = transformBackToWorld(rtr.hitVec);
+		if(rtr != null) {
+			rtr.hitVec = transformBackToWorld(rtr.hitVec);
+		}
+		
 		return rtr;
 	}
 	
@@ -260,15 +265,16 @@ public class OreintedBB {
 	}
 	
 	public Vec3d transformToLocalSpace(Vec3d v) {
-		v = transformVec3dWithMatrix(v, this.inverse);
+		//v = transformVec3dWithMatrix(v, this.inverse);
 		v = v.subtract(c);
+		
 		//System.out.println("Breh vec: " + v);
 		
 		return v;
 	}
 	
 	public Vec3d transformBackToWorld(Vec3d v) {
-		v = transformVec3dWithMatrix(v, this.axis);
+	//	v = transformVec3dWithMatrix(v, this.axis);
 		v = v.add(c);
 		
 		return v;

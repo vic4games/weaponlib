@@ -254,7 +254,7 @@ public class VehicleCustomGUI extends Gui {
 		GL11.glPopMatrix();
 	}
 	
-	public void drawSpeedometer(EntityVehicle vehicle, double x, double y, int maxRPM, int gear, int rpm, double speed, double ratio) {
+	public void drawSpeedometer(EntityVehicle vehicle, double x, double y, int maxRPM, int gear, double rpm, double speed, double ratio) {
 		GL11.glPushMatrix();
 		double scale = (new ScaledResolution(Minecraft.getMinecraft())).getScaledWidth()/640.0;
 		//GL11.glScaled(scale, scale, scale);
@@ -296,7 +296,7 @@ public class VehicleCustomGUI extends Gui {
 		float newRPMAngle = (float) (0.0 + ((maxAng+45)-0.0)*(rpm/(double) maxRPM));
 		
 		
-		float prevRPMAngle = (float) (0.0 + ((maxAng+45)-0.0)*(vehicle.solver.prevRPM/(double) maxRPM));
+		float prevRPMAngle = (float) (0.0 + ((maxAng+45)-0.0)*(vehicle.solver.getPreviousRPM()/(double) maxRPM));
 		
 		//float rpmAng = prevRPMAngle + (newRPMAngle-prevRPMAngle)*Minecraft.getMinecraft().getRenderPartialTicks();
 
@@ -387,8 +387,12 @@ public class VehicleCustomGUI extends Gui {
 		
 		if(transmission.isReverseGear) {
 			drawCenteredString(Minecraft.getMinecraft().fontRenderer, "R", 0, -4, 0x10ac84);
+		} else if(transmission.inNeutral()){
+			drawCenteredString(Minecraft.getMinecraft().fontRenderer, "N", 0, -4, 0xc8d6e5);
+			
 		} else {
-			drawCenteredString(Minecraft.getMinecraft().fontRenderer, "" + gear, 0, -4, 0x4cd137);
+				drawCenteredString(Minecraft.getMinecraft().fontRenderer, "" + gear, 0, -4, 0x4cd137);
+				
 		}
 		double valie = Math.floor(vehicle.getSolver().rearAxel.leftWheel.wheelAngularVelocity);
 		//drawCenteredString(Minecraft.getMinecraft().fontRenderer, "" + valie, 0, -48, 0x4cd137);
@@ -524,7 +528,7 @@ public class VehicleCustomGUI extends Gui {
 			
 		}
 		
-		drawSpeedometer(vehicle, x, y, vehicle.solver.configuration.getEngine().getMaxRPM(), vehicle.solver.transmission.getCurrentGear(), vehicle.solver.currentRPM, vehicle.getRealSpeed(), ratio);
+		drawSpeedometer(vehicle, x, y, vehicle.solver.configuration.getEngine().getMaxRPM(), vehicle.solver.transmission.getCurrentGear(), vehicle.solver.getCurrentRPM(), vehicle.getRealSpeed(), ratio);
 		//renderKeyAndLock(vehicle, 1, 1);
 		GL11.glPopMatrix();
 	}

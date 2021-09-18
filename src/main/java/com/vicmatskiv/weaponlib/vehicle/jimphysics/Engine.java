@@ -12,7 +12,7 @@ public class Engine {
 	private String engineName;
 	private String engineBrand;
 	
-	public LinkedHashMap<Integer, Double> torqueCurve = new LinkedHashMap<Integer, Double>();
+	public LinkedHashMap<Double, Double> torqueCurve = new LinkedHashMap<Double, Double>();
 	
 	public Engine(String name, String engineBrand, int maxRPM, int redLine, int idleRPM) {
 		this.engineName = name;
@@ -24,26 +24,26 @@ public class Engine {
 		
 	}
 	
-	public void addPoint(int rpm, double nm) {
+	public void addPoint(double rpm, double nm) {
 		torqueCurve.put(rpm, nm);
 	}
 	
 	public void setupTorqueCurve() {}
 	
-	public double getTorqueAtRPM(int rpm) {
+	public double getTorqueAtRPM(double rpm) {
 
 		if(rpm < getIdleRPM()) return 0;
 		
 		if(torqueCurve.containsKey(rpm)) return torqueCurve.get(rpm);
-		int firstBound = 0;
-		int secondBound = 0;
+		double firstBound = 0;
+		double secondBound = 0;
 		
 		
-		ArrayList<Integer> keys = new ArrayList<Integer>();
+		ArrayList<Double> keys = new ArrayList<Double>();
 		keys.addAll(torqueCurve.keySet());
 		for(int f = 0; f < keys.size()-1; ++f) {
-			int min = keys.get(f);
-			int max = keys.get(f+1);
+			double min = keys.get(f);
+			double max = keys.get(f+1);
 			if(min < rpm && rpm < max) {
 				firstBound = min;
 				secondBound = max;

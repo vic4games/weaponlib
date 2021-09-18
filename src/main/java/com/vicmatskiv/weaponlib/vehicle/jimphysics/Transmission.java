@@ -68,6 +68,14 @@ public class Transmission {
 	public int shiftTimer = 0;
 	
 	
+	public boolean isNeutral = true;
+	
+	public MechanicalClutch clutch = new MechanicalClutch(0.4);
+	
+	
+	
+	
+	
 	/**
 	 * Creates a new Transmission with various paramets.
 	 * WARNING: YOU MUST STILL ADD GEARS!!!
@@ -83,6 +91,18 @@ public class Transmission {
 		upshiftRPM = uRPM;
 		reverseGearRatio = rRatio;
 		downshiftRPM = dRPM;
+	}
+	
+	public boolean inNeutral() {
+		return this.isNeutral;
+	}
+	
+	public void setNeutral(boolean v) {
+		this.isNeutral = v;
+	}
+	
+	public MechanicalClutch getClutch() {
+		return this.clutch;
 	}
 	
 	
@@ -189,24 +209,76 @@ public class Transmission {
 		}
 	}
 	
+	boolean markedForUpshift = false;
+	boolean markedForDownshift = false;
+	
 	/**
 	 * AUTOMATIC TRANSMISSION RUNNER
 	 * @param engineRPM
 	 */
 	
-	public void runAutomaticTransmission(EntityVehicle vehicle, int engineRPM) {
-		
+	public void runAutomaticTransmission(EntityVehicle vehicle, double engineRPM) {
+	
 		//this.upshiftRPM = 4000;
 		//System.out.println(this.upshiftRPM);
 		
 		//tick
+		
 		tickTransmission();
+		
+		
+		if((((getCurrentGear() == 1 || isReverseGear) && engineRPM <= vehicle.solver.engine.getIdleRPM()) || (vehicle.solver.getVelocityVector().lengthVector() == 0 && vehicle.throttle == 0 && engineRPM < 1100)) && vehicle.getRealSpeed() < 10.0) {
+			
+			setNeutral(true);
+		} else if (vehicle.solver.getVelocityVector().lengthVector() < 0.1 && vehicle.throttle > 0.5 && inNeutral()){
+			vehicle.solver.engineSolver.rpm += 2000;
+			//System.out.println("sussy");
+
+			
+			//vehicle.clutchTimer = 0;
+			//clutch.applyPedalPressure(1.0-getClutch().engagementPoint);
+			setNeutral(false);
+		} else if(vehicle.solver.getVelocityVector().lengthVector() > 0.1 && vehicle.throttle > 0.2 && inNeutral()) {
+			setNeutral(false);
+		}
+		
+	
+		if(!vehicle.isBraking) {
+			int delta = 0;
+			if(vehicle.solver.transmission.isReverseGear) delta = 350;
+			double nonStallWheelRatio = VehiclePhysUtil.wheelAngularVelocity(vehicle.getSolver().engineSolver.engineTemplate.getIdleRPM() + delta, getCurrentGearRatio(), getDifferentialRatio());
+			double wheelAngularVelocity = vehicle.getSolver().rearAxel.getWheelAngularVelocity();
+			
+			double mu = Math.min(wheelAngularVelocity/nonStallWheelRatio, 1);
+			
+			double pressure = getClutch().engagementPoint+(1.0-getClutch().engagementPoint)*mu;
+			//System.out.println("pressure: " + (1.0-pressure));
+			clutch.applyPedalPressure(1.0-pressure);
+		} else {
+			clutch.applyPedalPressure(1.0);
+		}
+		
+		if(vehicle.solver.engineSolver.rpm < 1200 && vehicle.throttle < 0.3) {
+			clutch.applyPedalPressure(1.0);
+		}
+		
+		
+		
 		
 		// cancels automatic transmission update if
 		// the car is in reverse
 
 		if(isReverseGear || isEngineDeclutched()) return;
-
+		//System.out.println(vehicle.solver.getLongitudinalSpeed());
+		//System.out.println("conditions: " + (vehicle.solver.getVelocityVector().lengthVector() == 0.0 && vehicle.throttle > 0.5));
+		//System.out.println("shawty " + vehicle.throttle + " | " + vehicle.solver.getVelocityVector().lengthVector());
+		
+		
+		
+		//System.out.println(clutch.getSlippage());
+		//System.out.println("Pedal Pressure: " + clutch.pedalPressure);
+		//System.out.println(1.0-pressure);
+		
 		
 		int uShift = 0;
 		int dShift = 0;
@@ -222,19 +294,25 @@ public class Transmission {
 		
 		
 		
+		
 
-		//boolean launchControl = vehicle.getSolver().getVelocityVector().lengthVector() < 25 && engineRPM > 4000;
-        
-		//System.out.println((engineRPM > uShift) + " | " + (this.getCurrentGear() != highestGear) + " | " + (vehicle.throttle > 0.1) + " | " + !launchControl);
-        //System.out.println("BR: " + (this.getCurrentGear()+1) + " | " + ((this.getCurrentGear()+1) == highestGear));
-		if(engineRPM > uShift && (this.getCurrentGear()) != highestGear && vehicle.throttle > 0.1 /*&& !launchControl*/) {
-
-        
-        	//double gr = vehicleGears.get(getCurrentGear()).gearRatio;
-        	//int newRPM = (int) VehiclePhysUtil.getEngineRPM(vehicle.getSolver().rearAxel.getWheelAngularVelocity(), gr, differentialRatio);
-        	//System.out.println("Current Engine Speed: " + engineRPM + " | In higher: " + newRPM);
-        	
-        	if(runningAShift) {
+		if(markedForUpshift || markedForDownshift) {
+			if(engineRPM > uShift && (this.getCurrentGear()) != highestGear && vehicle.throttle > 0.1 /*&& !launchControl*/) {
+	        	markedForUpshift = true;
+	        } else {
+	        	
+	        	markedForUpshift = false;
+	        }
+	        
+	        if(engineRPM < dShift && this.getCurrentGear() != 1 /*&& vehicle.throttle < 0.5*/) {
+	        	markedForDownshift = true;
+	        } else markedForDownshift = false;
+		}
+		
+		//System.out.println(markedForUpshift);
+		if(markedForUpshift) {
+			
+			if(runningAShift) {
         		double median = maxShiftTime/2.0;
         		if(shiftTimer > median) {
         			startGear = getCurrentGear();
@@ -250,10 +328,13 @@ public class Transmission {
             vehicle.notifyOfShift(getCurrentGear());
             targetGear = getCurrentGear();
             notifyShift();
-            //System.out.println("Shifted up to gear " + getCurrentGear() + " RPM : " + engineRPM);
-        }
+            markedForUpshift = false;
+            
+		}
         
-        if(engineRPM < dShift && this.getCurrentGear() != 1 /*&& vehicle.throttle < 0.5*/) {
+        
+        
+        if(markedForDownshift) {
         	if(runningAShift) {
         		double median = maxShiftTime/2.0;
         		if(shiftTimer > median) {
@@ -269,8 +350,19 @@ public class Transmission {
             vehicle.notifyOfShift(getCurrentGear());
             targetGear = getCurrentGear();
             notifyShift();
+            markedForDownshift = false;
             //System.out.println("Shifted down to gear " + getCurrentGear() + " RPM : " + engineRPM);
         }
+        
+        if(engineRPM > uShift && (this.getCurrentGear()) != highestGear && vehicle.throttle > 0.1 /*&& !launchControl*/) {
+        	
+        	markedForUpshift = true;
+        }
+        
+        if(engineRPM < dShift && this.getCurrentGear() != 1 /*&& vehicle.throttle < 0.5*/) {
+        	markedForDownshift = true;
+        }
+        
 	}
 	
 	public Transmission cloneTransmission() {

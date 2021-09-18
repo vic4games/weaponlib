@@ -6,6 +6,7 @@ import java.nio.FloatBuffer;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import org.apache.logging.log4j.core.lookup.Interpolator;
 import org.lwjgl.BufferUtils;
@@ -52,6 +53,10 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHandSide;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.gen.NoiseGeneratorImproved;
+import net.minecraft.world.gen.NoiseGeneratorOctaves;
+import net.minecraft.world.gen.NoiseGeneratorPerlin;
+import net.minecraft.world.gen.NoiseGeneratorSimplex;
 import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.event.EntityViewRenderEvent.CameraSetup;
 
@@ -215,7 +220,15 @@ public class Interceptors {
     			}
     		}*/
     		
-    		GL11.glTranslated(-0.525, 1.0 /*+ vehicle.getInterpolatedLiftOffset()/2*/, -4.0);
+    		if(!vehicle.getConfiguration().shiftWithRight() ) {
+    			GL11.glTranslated(-0.2, 1.0 /*+ vehicle.getInterpolatedLiftOffset()/2*/, -4.0);
+        		
+    		} else {
+    			GL11.glTranslated(-0.525, 1.0 /*+ vehicle.getInterpolatedLiftOffset()/2*/, -4.0);
+        		
+    		}
+    		
+    		//GL11.glTranslated(-0.525, 1.0 /*+ vehicle.getInterpolatedLiftOffset()/2*/, -4.0);
     		GL11.glTranslated(0.0, 0.5, -2.5);
     		
     		
@@ -425,8 +438,16 @@ public class Interceptors {
             	appliedAmplitude += vehicle.getSolver().getSideSlipAngle()/45;
             }
             
+           // System.out.println(vehicle.getSolver().getVelocityVector().lengthVector());
             
-            
+            if(vehicle.getSolver().getVelocityVector().lengthVector() != 0.0) {
+            	  NoiseGeneratorPerlin ngo = new NoiseGeneratorPerlin(new Random(45302), 1);
+                  double val = ngo.getValue(vehicle.posX, vehicle.posZ)/25;
+                 // System.out.println(val);
+                  appliedAmplitude += val;
+                  frequency += val*2;
+            }
+          
             
             Matrix4f transformMatrix = vehicle.getRandomizer().update(frequency,  appliedAmplitude*0.8f);
            //

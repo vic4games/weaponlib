@@ -110,9 +110,9 @@ public interface VehiclePart extends PartContainer<VehiclePart> {
         	
         	
         	
-        	
+        
         	return Collections.unmodifiableList(Arrays.asList(
-                    STEERING_WHEEL, FRONT_LEFT_CONTROL_ARM, FRONT_RIGHT_CONTROL_ARM, REAR_LEFT_WHEEL, REAR_RIGHT_WHEEL, WINDOWS, RIGHT_HAND));
+                    STEERING_WHEEL, FRONT_LEFT_CONTROL_ARM, FRONT_RIGHT_CONTROL_ARM, REAR_LEFT_WHEEL, REAR_RIGHT_WHEEL, WINDOWS, LEFT_HAND, RIGHT_HAND));
 
             //return parts;
         }

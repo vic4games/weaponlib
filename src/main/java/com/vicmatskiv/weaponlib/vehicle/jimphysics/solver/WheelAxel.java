@@ -17,6 +17,7 @@ public class WheelAxel implements IEncodable<WheelAxel> {
 	public boolean isDriveWheel;
 	public double COGoffset;
 	public boolean isHandbraking;
+	public double tractionTorque;
 	
 	public WheelAxel(double offsetFromCOG, boolean isDriveWheel) {
 		this.isDriveWheel = isDriveWheel;
@@ -127,9 +128,12 @@ public class WheelAxel implements IEncodable<WheelAxel> {
 		double drTorque = leftWheel.driveTorque + rightWheel.driveTorque;
 		
 		
-		double tractionTorque = leftWheel.tractionTorque + rightWheel.tractionTorque;
+		tractionTorque = leftWheel.tractionTorque + rightWheel.tractionTorque;
 
+	
 		double totalTorque = drTorque + tractionTorque;
+		
+	
 		
 	
 		
