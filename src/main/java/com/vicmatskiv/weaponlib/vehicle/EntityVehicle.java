@@ -280,8 +280,8 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 		super(worldIn);
 
 		this.smoothShell = new VehicleSmoothShell(this);
-		this.setSize(0.2F, 0.4f);
-		//this.setSize(1.4F, 1.5f);
+		//this.setSize(0.2F, 0.4f);
+		this.setSize(1.4F, 1.5f);
 		// this.setSize(1.375F, 0.5625F);
 		this.oreintedBoundingBox = new OreintedBB(getConfiguration().getAABBforOBB());
 	}
@@ -534,9 +534,9 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 	}
 
 	public boolean processInitialInteract(EntityPlayer player, EnumHand hand) {
-		return true;
+		
 	
-		/*
+		
 		if (player.isSneaking()) {
 			return false;
 		} else {
@@ -545,7 +545,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 			}
 
 			return true;
-		}*/
+		}
 	}
 
 	public boolean canFitPassenger(Entity passenger) {
@@ -958,15 +958,18 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
         // setPosition(p3.x + aSep.x, p3.y + aSep.y, p3.z + aSep.z);
     
 		
+       // System.out.println("bruh");
 		
-
+         
 		List<Entity> list = this.world.getEntitiesInAABBexcluding(this, this.getEntityBoundingBox().grow(10.0),
 				EntitySelectors.IS_ALIVE);
+		
+	
 
 		list.removeIf((e) -> this.isPassenger(e));
 
 		for (Entity ent : list) {
-
+			
 			AxisAlignedBB cEnt = ent.getEntityBoundingBox();
 			AxisAlignedBB aabbEnt = new AxisAlignedBB(cEnt.minX - ent.posX, cEnt.minY - ent.posY, cEnt.minZ - ent.posZ,
 					cEnt.maxX - ent.posX, cEnt.maxY - ent.posY, cEnt.maxZ - ent.posZ);
@@ -974,7 +977,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 			GJKResult result = OBBCollider.areColliding(getOreintedBoundingBox(),
 					OreintedBB.fromAABB(aabbEnt, ent.getPositionVector()));
 			if (result.status == GJKResult.Status.COLLIDING) {
-				/// System.out.println("COLLISION DETECTED!");
+				//System.out.println("COLLISION DETECTED!");
 
 				Vec3d shoot = result.separationVector.scale(result.penetrationDepth);
 				Vec3d p = ent.getPositionVector();
@@ -2337,6 +2340,17 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 	public void onUpdate() {
 
 		try {
+			
+			//this.setSize(0.2F, 0.4f);
+			//this.setSize(1.4F, 1.5f);
+			if(this.getPassengers() == null || this.getPassengers().isEmpty()) {
+				if(this.width != 1.4F) {
+					this.setSize(1.4F, 1.5f);
+				}
+			} else if(this.width != 0.2F) {
+				this.setSize(0.2F, 0.4f);
+			}
+			
 
 			/*
 			if(getSolver().velocity.lengthVector() == 0.0) {
@@ -2350,11 +2364,10 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 			
 
 			updateOBB();
+			
+			doOBBCollision();
 
-			updateSuspension(getSolver().frontAxel.leftWheel);
-			updateSuspension(getSolver().frontAxel.rightWheel);
-			updateSuspension(getSolver().rearAxel.leftWheel);
-			updateSuspension(getSolver().rearAxel.rightWheel);
+	
 
 			if (this.world.isRemote) {
 				/*
@@ -2362,7 +2375,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 				 */
 
 			
-
+				
 				// get the controlling passenger
 				if (!this.isBeingRidden())
 					return;
@@ -2376,6 +2389,8 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 				// do particles
 				handleDriveParticles();
 
+				
+				
 				if (Minecraft.getMinecraft().player == player) {
 					/*
 					 * DRIVER SIDE
@@ -2455,7 +2470,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 					stabilizeRotation();
 
 				} else {
-
+					
 					
 					// USE SMOOTHSHELL!
 					this.smoothShell.update();
@@ -2635,13 +2650,13 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 
 	@Override
 	public boolean attackEntityFrom(DamageSource source, float amount) {
-		/*
+		
 		if (source.isCreativePlayer()) {
 			this.solver = null;
 			
 			setDead();
 
-		}*/
+		}
 		return super.attackEntityFrom(source, amount);
 	}
 
