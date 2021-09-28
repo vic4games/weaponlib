@@ -64,7 +64,7 @@ public class Transmission {
 	 * Shift timer
 	 */
 	public boolean runningAShift = false;
-	public int maxShiftTime = 275;
+	public int maxShiftTime = 75;
 	public int shiftTimer = 0;
 	
 	
@@ -223,12 +223,11 @@ public class Transmission {
 		//System.out.println(this.upshiftRPM);
 		
 		//tick
-		
+		tickTransmission();
 
 		
 		
 		if((((getCurrentGear() == 1 || isReverseGear) && engineRPM <= vehicle.solver.engine.getIdleRPM()) || (vehicle.solver.getVelocityVector().lengthVector() == 0 && vehicle.throttle == 0 && engineRPM < 1100)) && vehicle.getRealSpeed() < 10.0 && !inNeutral()) {
-			System.out.println("shit man");
 			setNeutral(true);
 		} else if (vehicle.solver.getVelocityVector().lengthVector() < 0.1 && vehicle.throttle > 0.5 && inNeutral()){
 			vehicle.solver.engineSolver.rpm += 2000;

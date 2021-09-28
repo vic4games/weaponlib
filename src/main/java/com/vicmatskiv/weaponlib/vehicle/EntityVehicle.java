@@ -896,62 +896,65 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 				//getSolver().velocity = getSolver().velocity.add();
 			}
 		}*/
+	
+		if(rotationPitch == 0.0) {
+			List<AxisAlignedBB> list3 = this.world.getCollisionBoxes(this, this.getEntityBoundingBox().grow(3).expand(1, 1, 1));
+		    
+	        OreintedBB bb = this.getOreintedBoundingBox();
+	        GJKResult bestResult = new GJKResult();
+	         
+	         for(AxisAlignedBB aabb : list3) {
+	             
+	             Vec3d pos = new Vec3d(aabb.maxX-0.5, aabb.maxY-0.5, aabb.maxZ-0.5);
+	             AxisAlignedBB fixedBB = aabb.offset(pos.scale(-1));
+	             
+	             GJKResult result = OBBCollider.areColliding(bb, OreintedBB.fromAABB(fixedBB, pos));
+	             if(result.status == GJKResult.Status.COLLIDING && result.penetrationDepth > bestResult.penetrationDepth) {
+	                 bestResult = result;
+	             }
+	             
+	         }
+	         
+	         Vec3d aSep = Vec3d.ZERO;
+	         if(bestResult.penetrationDepth != 0.0) {
+	             aSep = bestResult.separationVector.scale(-bestResult.penetrationDepth*2.0);
+	             aSep = new Vec3d(aSep.x, 0.0, aSep.z);
+	             
+	         }
+	        // System.out.println(aSep);
+	         if(aSep.lengthVector() != 0.0) {
+	        	 /*
+	        	  * 	 Vec3d rC = bestResult.contactPointA.subtract(getPositionVector()).rotateYaw((float) Math.toRadians(rotationYaw));
+	        	 Vec3d r2 = new Vec3d(0.0, 0.0, rC.z);
+	        	 Vec3d coG = getSolver().getPhysConf().getVehicleMassObject().centerOfGravity;
+	        	
+	        	 double dist = r2.distanceTo(coG);
+	        	 
+	        	 double momentum = getSolver().getPhysConf().vehicleMass*getRealSpeed()/250;
+	        	 getSolver().angAccel += momentum*-dist;
+	        	  */
+	        	 Vec3d rC = bestResult.contactPointA.subtract(getPositionVector()).rotateYaw((float) Math.toRadians(rotationYaw));
+	        	 Vec3d coG = getSolver().getPhysConf().getVehicleMassObject().centerOfGravity;
+	        	 
+	        	 Vec3d cross = rC.crossProduct(coG);
+	        	 
+	        	 double momentum = getSolver().getPhysConf().vehicleMass*getRealSpeed()/50;
+	        	 
+	        	 Vec3d velo = getSolver().velocity.scale(-0.1);
+	        	 
+	   
+	        	
+	 		
+	        	 
+	        	 getSolver().angAccel += momentum*cross.y;
+	        	 
+	        	 //System.out.println("septes"  + aSep.y);
+	        	 
+	        	 getSolver().velocity = getSolver().velocity.add(aSep);
+	        	  move(MoverType.SELF, aSep.x, aSep.y, aSep.z);
+	         }
+		}
 		
-		List<AxisAlignedBB> list3 = this.world.getCollisionBoxes(this, this.getEntityBoundingBox().grow(3).expand(1, 1, 1));
-    
-        OreintedBB bb = this.getOreintedBoundingBox();
-        GJKResult bestResult = new GJKResult();
-         
-         for(AxisAlignedBB aabb : list3) {
-             
-             Vec3d pos = new Vec3d(aabb.maxX-0.5, aabb.maxY-0.5, aabb.maxZ-0.5);
-             AxisAlignedBB fixedBB = aabb.offset(pos.scale(-1));
-             
-             GJKResult result = OBBCollider.areColliding(bb, OreintedBB.fromAABB(fixedBB, pos));
-             if(result.status == GJKResult.Status.COLLIDING && result.penetrationDepth > bestResult.penetrationDepth) {
-                 bestResult = result;
-             }
-             
-         }
-         
-         Vec3d aSep = Vec3d.ZERO;
-         if(bestResult.penetrationDepth != 0.0) {
-             aSep = bestResult.separationVector.scale(-bestResult.penetrationDepth*2.0);
-             aSep = new Vec3d(aSep.x, 0.0, aSep.z);
-             
-         }
-        // System.out.println(aSep);
-         if(aSep.lengthVector() != 0.0) {
-        	 /*
-        	  * 	 Vec3d rC = bestResult.contactPointA.subtract(getPositionVector()).rotateYaw((float) Math.toRadians(rotationYaw));
-        	 Vec3d r2 = new Vec3d(0.0, 0.0, rC.z);
-        	 Vec3d coG = getSolver().getPhysConf().getVehicleMassObject().centerOfGravity;
-        	
-        	 double dist = r2.distanceTo(coG);
-        	 
-        	 double momentum = getSolver().getPhysConf().vehicleMass*getRealSpeed()/250;
-        	 getSolver().angAccel += momentum*-dist;
-        	  */
-        	 Vec3d rC = bestResult.contactPointA.subtract(getPositionVector()).rotateYaw((float) Math.toRadians(rotationYaw));
-        	 Vec3d coG = getSolver().getPhysConf().getVehicleMassObject().centerOfGravity;
-        	 
-        	 Vec3d cross = rC.crossProduct(coG);
-        	 
-        	 double momentum = getSolver().getPhysConf().vehicleMass*getRealSpeed()/50;
-        	 
-        	 Vec3d velo = getSolver().velocity.scale(-0.1);
-        	 
-   
-        	
- 		
-        	 
-        	 getSolver().angAccel += momentum*cross.y;
-        	 
-        	 //System.out.println("septes"  + aSep.y);
-        	 
-        	 getSolver().velocity = getSolver().velocity.add(aSep);
-        	  move(MoverType.SELF, aSep.x, aSep.y, aSep.z);
-         }
        
          
         /// Vec3d p3 = getPositionVector();
@@ -2367,7 +2370,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 
 			updateOBB();
 			
-			doOBBCollision();
+		//	doOBBCollision();
 
 	
 
