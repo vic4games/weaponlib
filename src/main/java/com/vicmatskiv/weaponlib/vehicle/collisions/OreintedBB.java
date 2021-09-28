@@ -234,7 +234,7 @@ public class OreintedBB {
 		
 		
 		RayTraceResult rtr = aabb.calculateIntercept(a, b);
-		rtr.hitVec = transformVec3dWithMatrix(rtr.hitVec, this.axis);
+		//rtr.hitVec = transformVec3dWithMatrix(rtr.hitVec, this.axis);
 		if(rtr != null) {
 			rtr.hitVec = transformBackToWorld(rtr.hitVec);
 		}
@@ -274,7 +274,7 @@ public class OreintedBB {
 	}
 	
 	public Vec3d transformBackToWorld(Vec3d v) {
-	//	v = transformVec3dWithMatrix(v, this.axis);
+		v = transformVec3dWithMatrix(v, this.axis);
 		v = v.add(c);
 		
 		return v;
