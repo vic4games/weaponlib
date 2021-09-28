@@ -1816,7 +1816,9 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 			mult *= 0.5;
 
 		// NOMINAL REACH: 8.75, MODIFIED FOR SMOOTHNESS TO 10.75
-		double baseReach = 5.75 * (Math.min(getRealSpeed() / 25.0, 1.0)) * mult;
+		
+		// new was 5.75
+		double baseReach = 7.75 * (Math.min(getRealSpeed() / 25.0, 1.0)) * mult;
 		// System.out.println(baseReach);
 
 		if (!onGround || rotationPitch > 5) {
@@ -2395,6 +2397,18 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 					/*
 					 * DRIVER SIDE
 					 */
+					
+					GearShiftPattern pattern = this.getSolver().getPhysConf().getShiftPattern();
+            		
+					if(!(getState() == VehicleState.STARTING_TO_SHIFT || getState() == VehicleState.SHIFTING || getState() == VehicleState.FINISHING_SHIFT)) {
+						if(this.smoothShift.get().lengthVector() != 0.0) {
+							this.smoothShift.set(pattern.quickDoAnimation(this.getSolver().transmission).scale(0.3));
+						}
+						this.smoothShift.updatePrev();
+						
+						
+					}
+					
 					
 					doOBBCollision();
 

@@ -133,9 +133,11 @@ final class HierarchicalPartRenderer<Part, State> implements StatefulRenderer<St
             
             EntityVehicle v = (EntityVehicle) context.getEntity();
             VehicleState state = (v).getState();
-            boolean shiftState = (state == VehicleState.STARTING_TO_SHIFT || state == VehicleState.SHIFTING || state == VehicleState.FINISHING_SHIFT);
-        
             
+          
+            
+           boolean shiftState = (state == VehicleState.STARTING_TO_SHIFT || state == VehicleState.SHIFTING || state == VehicleState.FINISHING_SHIFT);
+          
             if(part instanceof PartContainer) {
             	
             	
@@ -146,11 +148,12 @@ final class HierarchicalPartRenderer<Part, State> implements StatefulRenderer<St
                     HierarchicalPartRenderer<Part, State> partRenderer = partRenderers.get(renderablePart);
                     if(partRenderer != null) {
                     	
-                    	if(renderablePart == VehiclePart.RIGHT_HAND) {
-                    		//return;
-                    	}
                     	
                     	
+                    	//System.out.println(partRenderer.);
+                    	
+
+                  
                     	if(v.getConfiguration().performShiftAnimation()) {
                     		if(v.getConfiguration().shiftWithRight()) {
                     			if(renderablePart == VehiclePart.RIGHT_HAND) {
@@ -159,6 +162,7 @@ final class HierarchicalPartRenderer<Part, State> implements StatefulRenderer<St
                             			continue;
                             		}
                             		if(part == VehiclePart.STEERING_WHEEL && shiftState) {
+                            	
                             			continue;
                             		}
                             	}

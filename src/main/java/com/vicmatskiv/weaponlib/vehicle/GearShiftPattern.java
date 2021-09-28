@@ -135,6 +135,8 @@ public class GearShiftPattern {
 	public Vec3d doAnimation(int curVal, int maxVal, int startGear, int targetGear) {
 		
 		
+		
+		
 		curVal = Math.min(maxVal, curVal);
 		//System.out.println("CURVAL: " + curVal + " | MAX: " + maxVal + " | SG: " + startGear + " | TG: " + targetGear);
 		
@@ -184,6 +186,9 @@ public class GearShiftPattern {
 		
 		double step = (globalStep-fB)/(sB-fB);
 		step = step;
+		
+		
+		
 		return interpVec3d(f, s, step);
 		
 		

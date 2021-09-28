@@ -58,8 +58,8 @@ public class EngineSolver {
 				finalDriveRatio);
 		
 	
-
-		
+			
+	
 //		/System.out.println(clutch.getSlippage());
 		if (clutch.getSlippage() == 1 && !t.inNeutral()) {
 			// Clutch is fully connected, easiest one to solve!
