@@ -18,6 +18,7 @@ import javax.vecmath.Quat4f;
 import javax.vecmath.Vector2d;
 import javax.vecmath.Vector3d;
 
+import org.apache.logging.log4j.core.Core;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.openal.AL10;
 import org.lwjgl.openal.EFX10;
@@ -123,6 +124,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.network.play.client.CPacketPlayer;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EntityDamageSourceIndirect;
 import net.minecraft.util.EntitySelectors;
@@ -139,6 +141,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import paulscode.sound.libraries.SourceLWJGLOpenAL;
@@ -280,8 +283,8 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 		super(worldIn);
 
 		this.smoothShell = new VehicleSmoothShell(this);
-		//this.setSize(0.2F, 0.4f);
-		this.setSize(1.4F, 1.5f);
+		this.setSize(0.2F, 0.4f);
+		//this.setSize(1.4F, 1.5f);
 		// this.setSize(1.375F, 0.5625F);
 		this.oreintedBoundingBox = new OreintedBB(getConfiguration().getAABBforOBB());
 	}
@@ -585,11 +588,27 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 
 	@Override
 	public void updateOBB() {
-		this.oreintedBoundingBox = this.oreintedBoundingBox.fromAABB(
-				AABBTool.createAABB(new Vec3d(-0.75, 0.2, -2.9), new Vec3d(1.90, 1.2, 3.2)), getPositionVector());
+		Vec3d d = getSolver().getPhysConf().dimensions;
+		Vec3d corDim = new Vec3d(d.y, d.z, d.x);
+		
+		
+		AxisAlignedBB bb = AABBTool.createAABB(corDim.scale(-0.5), corDim.scale(0.5));
+		bb = bb.offset(0.5, 1.0, 0.0).grow(0.0, -0.2, 0.0);
+		this.oreintedBoundingBox = this.oreintedBoundingBox.fromAABB(bb, getPositionVector());
+		//System.out.println(bb);
+	//	System.out.println("con");
+		//this.oreintedBoundingBox = this.oreintedBoundingBox.fromAABB(bb);
+		
+		//this.oreintedBoundingBox = this.oreintedBoundingBox.fromAABB(
+		//		AABBTool.createAABB(new Vec3d(-0.75, 0.2, -2.9), new Vec3d(1.90, 1.2, 3.2)), getPositionVector());
+		//System.out.println(AABBTool.createAABB(new Vec3d(-0.75, 0.2, -2.9), new Vec3d(1.90, 1.2, 3.2)));
 		this.oreintedBoundingBox.setPosition(posX, posY, posZ);
 		this.oreintedBoundingBox.setRotation(Math.toRadians(180 - rotationYaw), Math.toRadians(this.rotationPitch),
-				0.0);
+				Math.toRadians(rotationRoll+rotationRollH));
+		
+		//System.out.println(this.oreintedBoundingBox.c);
+		//this.oreintedBoundingBox.axis.setIdentity();
+	
 	}
 
 	public void updateSolver() {
@@ -875,10 +894,82 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 	/*
 	 * COLLISIONS
 	 */
-
+	
+	
+	
+	/**
+	 * https://research.ncl.ac.uk/game/mastersdegree/gametechnologies/physicstutorials/5collisionresponse/Physics%20-%20Collision%20Response.pdf
+	 */
 	@Override
 	public void doOBBCollision() {
+		OreintedBB obb = getOreintedBoundingBox();
 		
+		
+		if(Math.abs(rotationPitch) < 0.0000001) {
+			List<AxisAlignedBB> list3 = this.world.getCollisionBoxes(this, this.getEntityBoundingBox().grow(3).expand(1, 1, 1));
+		    
+	        OreintedBB bb = this.getOreintedBoundingBox();
+	        GJKResult bestResult = new GJKResult();
+	         
+	         for(AxisAlignedBB aabb : list3) {
+	             Vec3d pos = new Vec3d(aabb.maxX-0.5, aabb.maxY-0.5, aabb.maxZ-0.5);
+	             AxisAlignedBB fixedBB = aabb.offset(pos.scale(-1));
+	             
+	             GJKResult result = OBBCollider.areColliding(bb, OreintedBB.fromAABB(fixedBB, pos));
+	             if(result.status == GJKResult.Status.COLLIDING && result.penetrationDepth > bestResult.penetrationDepth) {
+	                 bestResult = result;
+	             }
+	             
+	         }
+	         
+	        if(bestResult == null || bestResult.status != GJKResult.Status.COLLIDING) return;
+	        
+	        Vec3d normal = bestResult.separationVector;
+	        
+	        double yawInertia = 1/getSolver().getPhysConf().getVehicleMassObject().inertia.m11;
+	        
+	        // PROJECTION
+	        Vec3d aSep = normal.scale(-bestResult.penetrationDepth);
+	        setPosition(this.posX+aSep.x, this.posY+aSep.y, this.posZ+aSep.z);
+       	 
+	        
+	        
+	        double totalMass = 1/getSolver().getPhysConf().getVehicleMassObject().mass;
+	        Vec3d relativeA = bestResult.contactPointA.subtract(getPositionVector()).rotateYaw((float) Math.toRadians(rotationYaw));
+	        
+	        Vec3d angularVelocityA = new Vec3d(0.0, getSolver().angularVelocity, 0.0).crossProduct(relativeA);
+	        
+	        Vec3d fullVelocityA = getSolver().velocity.add(angularVelocityA);
+	        
+	        Vec3d contactVelocity = fullVelocityA.scale(-1);
+	        
+	        double impulseForce = contactVelocity.dotProduct(normal);
+	        
+	        Vec3d inertiaA = relativeA.crossProduct(normal).scale(yawInertia).crossProduct(relativeA);
+	        
+	        double angularEffect = inertiaA.dotProduct(normal);
+	        
+	        double restitution = 0.85;
+	        
+	        double j = (-(1.0 + restitution)*impulseForce)/(totalMass+angularEffect);
+	        
+	        Vec3d fullImpulse = normal.scale(j);
+	        
+	        getSolver().velocity = getSolver().velocity.add(fullImpulse.scale(-1).scale(totalMass));
+	        
+	        Vec3d angularImpulse = relativeA.crossProduct(fullImpulse).scale(-1);
+	        getSolver().angularVelocity += angularImpulse.scale(yawInertia).y;
+	        
+	        
+	        
+		}
+		
+		
+		
+	}
+	
+	public void oldCollisions() {
+
 		// DO BLOCK SHIT
 		OreintedBB carBound = getOreintedBoundingBox();
 		
@@ -897,7 +988,8 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 			}
 		}*/
 	
-		if(rotationPitch == 0.0) {
+		/* functional
+		if(Math.abs(rotationPitch) < 0.0000001) {
 			List<AxisAlignedBB> list3 = this.world.getCollisionBoxes(this, this.getEntityBoundingBox().grow(3).expand(1, 1, 1));
 		    
 	        OreintedBB bb = this.getOreintedBoundingBox();
@@ -917,22 +1009,14 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 	         
 	         Vec3d aSep = Vec3d.ZERO;
 	         if(bestResult.penetrationDepth != 0.0) {
-	             aSep = bestResult.separationVector.scale(-bestResult.penetrationDepth*2.0);
+	        	
+	             aSep = bestResult.separationVector.scale(-bestResult.penetrationDepth);
 	             aSep = new Vec3d(aSep.x, 0.0, aSep.z);
 	             
 	         }
 	        // System.out.println(aSep);
 	         if(aSep.lengthVector() != 0.0) {
-	        	 /*
-	        	  * 	 Vec3d rC = bestResult.contactPointA.subtract(getPositionVector()).rotateYaw((float) Math.toRadians(rotationYaw));
-	        	 Vec3d r2 = new Vec3d(0.0, 0.0, rC.z);
-	        	 Vec3d coG = getSolver().getPhysConf().getVehicleMassObject().centerOfGravity;
-	        	
-	        	 double dist = r2.distanceTo(coG);
-	        	 
-	        	 double momentum = getSolver().getPhysConf().vehicleMass*getRealSpeed()/250;
-	        	 getSolver().angAccel += momentum*-dist;
-	        	  */
+
 	        	 Vec3d rC = bestResult.contactPointA.subtract(getPositionVector()).rotateYaw((float) Math.toRadians(rotationYaw));
 	        	 Vec3d coG = getSolver().getPhysConf().getVehicleMassObject().centerOfGravity;
 	        	 
@@ -940,21 +1024,21 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 	        	 
 	        	 double momentum = getSolver().getPhysConf().vehicleMass*getRealSpeed()/50;
 	        	 
-	        	 Vec3d velo = getSolver().velocity.scale(-0.1);
-	        	 
-	   
+	 
 	        	
 	 		
 	        	 
-	        	 getSolver().angAccel += momentum*cross.y;
+	        	 getSolver().collisionTorque += momentum*cross.y;
 	        	 
 	        	 //System.out.println("septes"  + aSep.y);
 	        	 
-	        	 getSolver().velocity = getSolver().velocity.add(aSep);
-	        	  move(MoverType.SELF, aSep.x, aSep.y, aSep.z);
+	        	 getSolver().velocity = getSolver().velocity.add(aSep.scale(1/0.1));
+	        	 setPosition(this.posX+aSep.x, this.posY+aSep.y, this.posZ+aSep.z);
+	        	 updateOBB();
+	        	//  move(MoverType.SELF, aSep.x, aSep.y, aSep.z);
 	         }
 		}
-		
+		*/
        
          
         /// Vec3d p3 = getPositionVector();
@@ -988,12 +1072,34 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 					if (this.world.isRemote) {
 						ent.setPosition(p.x + shoot.x, p.y + shoot.y, p.z + shoot.z);
 
+						
+						EntityPlayer player = (EntityPlayer) ent;
+						
+					//	Minecraft.getMinecraft().getConnection().sendPacket(new CPacketPlayer.PositionRotation(this.motionX, -999.0D, this.motionZ, this.rotationYaw, this.rotationPitch, true));
+			               //player.onGround = true;
+						
+						//player.fallDistance = 0.0f;
+						
+						
+						if(!player.onGround) {
+							
+							player.motionY += 0.08D;
+							player.motionX *= 0.9;
+							player.motionZ *= 0.9;
+						}
+						
+						
+		        
 					}
 				} else {
 					applyEntityCollision(ent);
 					ent.setPosition(p.x + shoot.x, p.y + shoot.y, p.z + shoot.z);
 
 				}
+				
+				
+				
+				//((EntityPlayer) ent).onGround = true;
 
 				/*
 				 * Vec3d shoot = result.separationVector.scale(result.penetrationDepth*5.0);
@@ -1852,12 +1958,13 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 			IBlockState b = this.world.getBlockState(ray.getBlockPos().up());
 			double upMag = 0.0;
 			
+			/*
 			if (b.getBlock() instanceof BlockSnow) {
 
 				if (b.getValue(BlockSnow.LAYERS).intValue() > 2)
 					return;
 				upMag += 0.5;
-			} else if (b.causesSuffocation() || b.getBlock() instanceof BlockPane || b.getBlock() instanceof BlockSlab)
+			} else*/ if (b.causesSuffocation() || b.getBlock() instanceof BlockPane || b.getBlock() instanceof BlockSlab)
 				return;
 			Vec3d hitVec = ray.hitVec;
 			Vec3d ab = hitVec.subtract(getPositionVector());
@@ -1897,9 +2004,10 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 			 * }
 			 */
 
+			/*
 			if (bL.getBlock() instanceof BlockSnow || bL.getBlock() instanceof BlockSnowBlock) {
 				upMag += 0.45;
-			}
+			}*/
 
 			BlockPos bTC = ray.getBlockPos();
 			Vec3d sB = new Vec3d(bTC.getX(), bTC.getY() - 1.0, bTC.getZ());
@@ -2233,7 +2341,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 		if(wSolve.isDriveWheel()) {
             if(Math.abs(Math.toDegrees(getSolver().getSideSlipAngle())) > 3) {
             	Minecraft.getMinecraft().effectRenderer.addEffect(new TireTracks(Minecraft.getMinecraft().getTextureManager(),
-        				this.world, realPos.x, realPos.y+0.01, realPos.z, -rotationYaw+Math.toDegrees(getSolver().getSideSlipAngle())));
+        				this.world, realPos.x, realPos.y+0.001, realPos.z, -rotationYaw+Math.toDegrees(getSolver().getSideSlipAngle())));
 
             }
         }
@@ -2262,7 +2370,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 				if (getSolver().materialBelow == Material.SAND)
 					id = 4;
 				Minecraft.getMinecraft().effectRenderer.addEffect(new DriftCloudParticle(this.world, realPos.x + gaus,
-						realPos.y + gaus, realPos.z + gaus, direction.x, direction.y, direction.z, id));
+						realPos.y + gaus+0.2, realPos.z + gaus, direction.x, direction.y, direction.z, id));
 
 			}
 		}
@@ -2336,6 +2444,9 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 		}
 
 	}
+	
+	public double tV;
+	public double prevtV;
 
 	/**
 	 * onUpdate handles the following: physics, control events, syncing, and overall
@@ -2348,13 +2459,14 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 			
 			//this.setSize(0.2F, 0.4f);
 			//this.setSize(1.4F, 1.5f);
+			/*
 			if(this.getPassengers() == null || this.getPassengers().isEmpty()) {
 				if(this.width != 1.4F) {
 					this.setSize(1.4F, 1.5f);
 				}
 			} else if(this.width != 0.2F) {
 				this.setSize(0.2F, 0.4f);
-			}
+			}*/
 			
 
 			/*
@@ -2370,7 +2482,8 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 
 			updateOBB();
 			
-		//	doOBBCollision();
+			oldCollisions();
+			//doOBBCollision();
 
 	
 
@@ -2379,6 +2492,14 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 				 * CLIENT SIDE
 				 */
 
+				
+			//this.oreintedBoundingBox.previousEuler = this.oreintedBoundingBox.matrixToEuler(this.oreintedBoundingBox.axis);
+				
+				
+				for(WheelSolver ws : getSolver().wheels) {
+					ws.prevWheelRot = ws.wheelRot;
+				}
+				
 			
 				
 				// get the controlling passenger
@@ -2461,6 +2582,8 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
+					
+					getSolver().resetStep();
 
 					//doBlockCollisions();
 
@@ -2473,7 +2596,11 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 					this.dist = newPos.subtract(oldPos).lengthVector();
 
 					
-					getSolver().accelerationValue = ((dist*20)-(prevDist*20))/2.0;
+					this.prevtV = tV;
+					this.tV = ((dist*20)-(prevtV*20))/20;
+					//System.out.println(this.dist*20);
+					
+				//	getSolver().accelerationValue = ((dist*20)-(prevDist*20))/2.0;
 					// hil
 					handleHillClimbing();
 					// oldHC();
@@ -2481,7 +2608,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 					// System.out.println("ID: " + getEntityId());
 					context.getChannel().getChannel()
 							.sendToServer(new VehicleControlPacket(new VehicleDataContainer(this)));
-
+					
 					// doNetworking(false);
 
 					stabilizeRotation();
@@ -2529,50 +2656,33 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 	public void handleGeneralSound() {
 		Material mat = this.world.getBlockState(getPosition().down()).getMaterial();
 
+		
+		// PLAY SHIFTING SOUND
 		if (isInShift()) {
-
 			PositionedSound ps = new PositionedSoundRecord(getConfiguration().getShiftSound().getSound(),
 					SoundCategory.MASTER, 1.5f, 1.0f, (float) posX, (float) posY, (float) posZ);
 			Minecraft.getMinecraft().getSoundHandler().playSound(ps);
 		}
 
-		if (this.drivingSound != null) {
-			if (this.drivingSound.isDonePlaying())
-				this.drivingSound = null;
-		}
+		
+		// NULLIFY SOUNDS IF THEY ARE DONE
+		if (this.drivingSound != null) if (this.drivingSound.isDonePlaying()) this.drivingSound = null;
+		if (this.driftingSound != null) if (this.driftingSound.isDonePlaying()) this.driftingSound = null;
+		if (current != mat) this.driftingSound = null;
+			
 
-		// this.driftingSound = null;
-		if (this.driftingSound != null) {
-			if (this.driftingSound.isDonePlaying()) {
-				// System.out.println("hi");
-				this.driftingSound = null;
-			}
-			if (current != mat)
-				this.driftingSound = null;
-
-		}
-
-		// System.out.println(this.drivingSound.getSoundLocation());
-		CompatibleSound engineNoise = getConfiguration().getRunSound();
+		
+		// INITIATE A DRIVING SOUND
 		if (this.drivingSound == null) {
-
-			// this.drivingSound = new
-			// CompatibleMovingSound(getConfiguration().getRunSound(),
-			// soundPositionProvider, doriftoSoundProvider, donePlayingSoundProvider);
-			// this.drivingSound = new MovingSoundMinecart(minecartIn)
-			this.drivingSound = new EngineMovingSound(engineNoise, soundPositionProvider, donePlayingSoundProvider,
+				this.drivingSound = new EngineMovingSound(getConfiguration().getRunSound(), soundPositionProvider, donePlayingSoundProvider,
 					this, false);
-			// this.drivingSound = new DriftMovingSound(getConfiguration().getRunSound(),
-			// soundPositionProvider, isDorifto, this, false);
 
 			Minecraft.getMinecraft().getSoundHandler().playSound(this.drivingSound);
 		}
 
-		// this.drivingSound = new EngineMovingSound(engineNoise, soundPositionProvider,
-		// donePlayingSoundProvider, this, true);
+		
 
-		// Minecraft.getMinecraft().getSoundHandler().playSound(this.drivingSound);
-
+		// INITIATE A DRIFTING SOUND
 		if (this.driftingSound == null) {
 
 			CompatibleSound chosen = null;
@@ -2586,8 +2696,6 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 			} else {
 				chosen = GeneralVehicleSounds.driftConcrete1;
 			}
-
-			//chosen = GeneralVehicleSounds.driftConcrete1;
 
 			this.driftingSound = new DriftMovingSound(chosen, soundPositionProvider, isDorifto, this, false);
 			Minecraft.getMinecraft().getSoundHandler().playSound(this.driftingSound);

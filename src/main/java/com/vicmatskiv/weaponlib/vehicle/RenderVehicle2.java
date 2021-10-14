@@ -308,9 +308,9 @@ public class RenderVehicle2 extends CompatibleEntityRenderer
 		
 		
 		if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 0) { 
-			GL11.glRotatef(roll, 0.0f, 0.0f, 1.0f);
+			//GL11.glRotatef(roll, 0.0f, 0.0f, 1.0f);
 		} else {
-			GL11.glRotatef(roll, 0.0f, 0.0f, 1.0f);
+			//GL11.glRotatef(roll, 0.0f, 0.0f, 1.0f);
 		}
 		
 		

@@ -26,6 +26,7 @@ import org.lwjgl.opengl.GL44;
 import com.vicmatskiv.weaponlib.animation.DebugPositioner;
 import com.vicmatskiv.weaponlib.animation.MultipartPositioning;
 import com.vicmatskiv.weaponlib.animation.MultipartPositioning.Positioner;
+import com.vicmatskiv.weaponlib.vehicle.jimphysics.InterpolationKit;
 import com.vicmatskiv.weaponlib.vehicle.network.VehicleClientPacket;
 import com.vicmatskiv.weaponlib.animation.MultipartRenderStateManager;
 
@@ -103,7 +104,9 @@ final class HierarchicalPartRenderer<Part, State> implements StatefulRenderer<St
         
         try {
         	
-        	
+        	 EntityVehicle v = (EntityVehicle) context.getEntity();
+             VehicleState state = (v).getState();
+             
         	
         	
             positioner.position(SinglePart.MAIN, context);
@@ -115,10 +118,25 @@ final class HierarchicalPartRenderer<Part, State> implements StatefulRenderer<St
             int pass = net.minecraftforge.client.MinecraftForgeClient.getRenderPass();
             
             
+            double susRoll = InterpolationKit.interpolateValue(v.getSolver().prevSuspensionRoll, v.getSolver().suspensionRoll, Minecraft.getMinecraft().getRenderPartialTicks());
+            double susPitch = InterpolationKit.interpolateValue(v.getSolver().prevSuspensionPitch, v.getSolver().suspensionPitch, Minecraft.getMinecraft().getRenderPartialTicks());
+            
+           // System.out.println(susPitch);
             if(pass == 0 && part != VehiclePart.WINDOWS) {
             	
-              
-               modelRenderer.render(context);
+            	if(part == VehiclePart.MAIN) {
+            		
+            		GL11.glRotated(susRoll, 0, 0, 1);
+            		GL11.glRotated(susPitch, 1, 0, 0);
+            		modelRenderer.render(context);
+            		GL11.glRotated(-susPitch, 1, 0, 0);
+            		GL11.glRotated(-susRoll, 0, 0, 1);
+            		
+            	} else {
+            		modelRenderer.render(context);
+            	}
+            
+               
             } else if(pass == 1 && part == VehiclePart.WINDOWS) {
             	if(part == VehiclePart.WINDOWS) {
                   	 GlStateManager.enableBlend();
@@ -131,9 +149,7 @@ final class HierarchicalPartRenderer<Part, State> implements StatefulRenderer<St
             	modelRenderer.render(context);
             }
             
-            EntityVehicle v = (EntityVehicle) context.getEntity();
-            VehicleState state = (v).getState();
-            
+           
           
             
            boolean shiftState = (state == VehicleState.STARTING_TO_SHIFT || state == VehicleState.SHIFTING || state == VehicleState.FINISHING_SHIFT);

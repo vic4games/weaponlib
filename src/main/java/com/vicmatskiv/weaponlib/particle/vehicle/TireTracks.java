@@ -26,11 +26,14 @@ public class TireTracks extends ParticleFootStep {
 	public TireTracks(TextureManager currentFootStepsIn, World worldIn, double xCoordIn, double yCoordIn,
 			double zCoordIn, double angle) {
 		super(currentFootStepsIn, worldIn, xCoordIn, yCoordIn, zCoordIn);
-		this.footstepMaxAge = 150;
+		this.footstepMaxAge = 100000000;
+		this.particleMaxAge = 100000000;
 		this.currentFootStepsIn = currentFootStepsIn;
 		this.angle = angle;
 		// TODO Auto-generated constructor stub
 	}
+	
+	
 	@Override
 	public void renderParticle(BufferBuilder buffer, Entity vehicle, float partialTicks, float rotationX,
 			float rotationZ, float rotationYZ, float rotationXY, float rotationXZ) {
@@ -78,5 +81,10 @@ public class TireTracks extends ParticleFootStep {
         GlStateManager.enableLighting();
         GL11.glPopMatrix();}
 		
+	@Override
+	public void onUpdate() {
+		// TODO Auto-generated method stub
+		super.onUpdate();
+	}
 
 }

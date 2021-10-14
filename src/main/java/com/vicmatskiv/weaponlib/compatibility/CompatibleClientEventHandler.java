@@ -158,10 +158,10 @@ public abstract class CompatibleClientEventHandler {
     			Vec3d start = player.getPositionEyes(Minecraft.getMinecraft().getRenderPartialTicks());
     			Vec3d endVec = start.add(player.getLookVec().scale(4));
     		
-    			
+    			bb.updateInverse();
     			RayTraceResult rtr = bb.doRayTrace(start, endVec);
     			if(rtr != null) {
-    				System.out.println("sending");
+    			//	System.out.println("sending");
     				context.getChannel().getChannel()
 					.sendToServer(new VehicleInteractPacket(true, v.getEntityId(), player.getEntityId()));
     				return;
@@ -194,8 +194,9 @@ public abstract class CompatibleClientEventHandler {
    			Vec3d start = player.getPositionEyes(Minecraft.getMinecraft().getRenderPartialTicks());
    			Vec3d endVec = start.add(player.getLookVec().scale(4));
    		
-   			
+   		//	bb.updateInverse();
    			RayTraceResult rtr = bb.doRayTrace(start, endVec);
+   			
    			if(rtr != null) {
    				v.setDead();
    				return;

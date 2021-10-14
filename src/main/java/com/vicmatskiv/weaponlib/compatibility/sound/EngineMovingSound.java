@@ -34,6 +34,8 @@ public class EngineMovingSound extends AdvCompatibleMovingSound {
 			donePlaying = true;
 		}
 		
+		if(!vehicle.isVehicleRunning()) donePlaying = true;
+		
 		if(!isDonePlaying()) {
 			//System.out.println(this.pitch);
 			//System.out.println(this.pitch);

@@ -12,7 +12,9 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Matrix;
 
 import com.vicmatskiv.weaponlib.animation.MatrixHelper;
+import com.vicmatskiv.weaponlib.vehicle.jimphysics.InterpolationKit;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
@@ -34,6 +36,10 @@ public class OreintedBB {
 	
 	public Vec3d c;
 	public Matrix3d axis;
+	
+	
+	// PURELY FOR INTERPOLATION PURPOSES
+	public Vector3d previousEuler = new Vector3d(0, 0, 0);
 	
 	
 	
@@ -109,6 +115,10 @@ public class OreintedBB {
 		this.c = this.c.addVector(x, y, z);
 	}
 	
+	public double qPTI(double a, double b, float t) {
+		return InterpolationKit.interpolateValue(a, b, t);
+	}
+	
 	public void renderOBB() {
 		
 		//updateInverse();
@@ -123,10 +133,13 @@ public class OreintedBB {
 		
 		//GL11.glTranslated(c.x, c.y, c.z);
 		
+		float t = Minecraft.getMinecraft().getRenderPartialTicks();
 		
 		GL11.glRotated(Math.toDegrees(eulerRotations.x), 1, 0, 0);
 		GL11.glRotated(Math.toDegrees(eulerRotations.y), 0, 1, 0);
 		GL11.glRotated(Math.toDegrees(eulerRotations.z), 0, 0, 1);
+		
+		this.previousEuler = eulerRotations;
 		GL11.glLineWidth(2.0f);
 		RenderGlobal.drawBoundingBox(aabb.minX, aabb.minY, aabb.minZ, aabb.maxX, aabb.maxY, aabb.maxZ, 1.0f, 0.0f, 0.0f, 1.0f);
 		
@@ -265,9 +278,9 @@ public class OreintedBB {
 	}
 	
 	public Vec3d transformToLocalSpace(Vec3d v) {
-		v = transformVec3dWithMatrix(v, this.inverse);
-		v = v.subtract(c);
 		
+		v = v.subtract(c);
+		v = transformVec3dWithMatrix(v, this.inverse);
 		//System.out.println("Breh vec: " + v);
 		
 		return v;

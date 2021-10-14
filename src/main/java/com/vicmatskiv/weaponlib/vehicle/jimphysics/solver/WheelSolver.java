@@ -2,6 +2,8 @@ package com.vicmatskiv.weaponlib.vehicle.jimphysics.solver;
 
 
 
+import javax.vecmath.Vector3d;
+
 import org.lwjgl.input.Keyboard;
 
 import com.vicmatskiv.weaponlib.KeyBindings;
@@ -110,7 +112,7 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 	}
 	
 	public double getInterpolatedWheelRotation() {
-		return InterpolationKit.interpolateValue(prevWheelRot, wheelRot, Minecraft.getMinecraft().getRenderPartialTicks());
+		return Math.toDegrees(InterpolationKit.interpolateValue(prevWheelRot, wheelRot, Minecraft.getMinecraft().getRenderPartialTicks()));
 	}
 	
 	public Vec3d getSuspensionPosition() {
@@ -164,24 +166,26 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 	public void doPhysics() {
 		double radius = getRadius();
 		
-		
+		Vec3d vM = solver.velocity.normalize();
+		Vec3d oM = solver.getOreintationVector();
+		Vector3d oreintation = new Vector3d(oM.x, oM.y, oM.z);
+		Vector3d velocity = new Vector3d(vM.x, vM.y, vM.z);
 		
 		
 		wheelAngularVelocity += wheelAngularAcceleration*solver.timeStep;
 	
-		
 		if(solver.vehicle.throttle != 1.0) {
 			wheelAngularVelocity *= 0.995;
 		}
 		
-		// UPDATES THE WHEEL ROTATION
-		prevWheelRot = wheelRot;
-		wheelRot += wheelAngularVelocity*solver.timeStep;
+	
+		//if(wheelAngularVelocity < 0) wheelAngularVelocity = 0;
 		
-		
+		//tractionTorque *= -1;
 		if(this.axel.COGoffset < 0.5) {
 			//double expected = VehiclePhysUtil.wheelAngularVelocity((int) solver.engineSolver.rpm, solver.transmission.getCurrentGearRatio(), solver.transmission.getDifferentialRatio());
 			//System.out.println(wheelAngularVelocity + " | " + expected);
+			
 			
 		}
 		
@@ -199,6 +203,10 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 		
 		// RESETS THE WHEEL ANGULAR ACCELERATION
 		wheelAngularAcceleration = 0;
+		
+		// UPDATES THE WHEEL ROTATION
+		wheelRot += wheelAngularVelocity*solver.timeStep;
+		
 		
 		// update wheel oreintatio
 		Vec3d omega = wheelOreintation.rotateYaw((float) wheelAngle);
@@ -229,10 +237,8 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 
 		
 		
-		
 		double umx = rm*cx*(((radius*radius)/wheelInertia) + (1/(m)));
 		slipRatio = ((wheelAngularVelocity*radius)-ls)/Math.max(Math.abs(ls), n*umx);
-		
 		
 		
 		if(wheelAngularVelocity < 0 && !solver.transmission.isReverseGear) {
@@ -318,6 +324,10 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 		//longForce = VehiclePhysUtil.pacejkaLong(loadOnWheel, slipRatio, 1.65, 2.5, 0.8, 10);
 		
 		
+		if(Math.abs(Math.toDegrees(oreintation.angle(velocity))) > 150 && !solver.transmission.isReverseGear) {
+			
+			longForce *= -1;
+		}
 		
 	
 		
@@ -334,8 +344,7 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 		}
 		
 		
-		
-		
+
 		// CALCULATES THE TRACTION TORQUE
 		tractionTorque = longForce*radius*-1;
 		

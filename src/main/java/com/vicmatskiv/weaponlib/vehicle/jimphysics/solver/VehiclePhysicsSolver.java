@@ -35,6 +35,7 @@ import io.netty.buffer.ByteBuf;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.MoverType;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.Vec3d;
@@ -71,7 +72,7 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 	
 
 	// forces
-	double angularVelocity = 0;
+	public double angularVelocity = 0;
 	double yawspeed = 0;
 	
 	// various properties
@@ -89,6 +90,9 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 	// 
 	
 	public double rotationalImpulse = 0.0;
+	
+	
+	public int physicsStep = 0;
 	
 	// side and forward accel
 	Vec3d sideForAccel = new Vec3d(0, 0, 0);
@@ -109,6 +113,8 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 	
 	public ArrayList<IAeroComponent> aeroComponents = new ArrayList<>();
 	
+	public double collisionTorque = 0;
+	
 	public VehiclePhysicsSolver(PhysicsConfiguration config) {
 		//this.vehicle = vehicle;
 		this.configuration = config;
@@ -124,6 +130,14 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 	public VehiclePhysicsSolver withAero(IAeroComponent aeroPiece) {
 		this.aeroComponents.add(aeroPiece);
 		return this;
+	}
+	
+	public void step() {
+		this.physicsStep += 1;
+	}
+	
+	public void resetStep() {
+		this.physicsStep = 0;
 	}
 	
 	public ArrayList<IAeroComponent> getAeroEquipment() {
@@ -488,6 +502,9 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		transmission.runAutomaticTransmission(vehicle, currentRPM);
 	}*/
 	
+	public double weightRatio;
+	
+	
 	public void updateLoad() {
 		
 		this.materialBelow = vehicle.world.getBlockState(vehicle.getPosition().down()).getMaterial();
@@ -517,6 +534,7 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 	
 		
 		
+		
 		double newSynth = ((Math.abs(synthAccelFor) * 0.8))*Math.signum(synthAccelFor);
 		double newSynthSide = Math.toDegrees(vehicle.steerangle)/5;
 
@@ -526,8 +544,8 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		if(vehicle.forwardLean < 0) vehicle.forwardLean /= 5;
 		*/
 		
-		vehicle.prevSideLean = vehicle.sideLean;
-		vehicle.sideLean = (accel/2) + newSynthSide;
+	//	vehicle.prevSideLean = vehicle.sideLean;
+	//	vehicle.sideLean = (accel/2) + newSynthSide;
 		
 		//System.out.println(weightRear);
 		
@@ -540,6 +558,35 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 	}
 	
 	
+	public double prevSuspensionPitch = 0;
+	public double suspensionPitch = 0;
+	
+	public double prevSuspensionRoll = 0;
+	public double suspensionRoll = 0;
+	
+	public void updateSimpleSuspension() {
+		
+		double acceleration = accelerationValue;
+		
+		if(physicsStep == 0) {
+			this.prevSuspensionPitch = suspensionPitch;
+			this.prevSuspensionRoll = suspensionRoll;
+		}
+		
+		Vec3d sideG = velocity.scale(velocity.dotProduct(getOreintationVector().rotateYaw((float) Math.toRadians(-90)))).scale(timeStep);
+		
+		
+		
+		double sideAcceleration = 0.0;
+		for(WheelSolver ws : wheels) sideAcceleration += ws.lateralForce;
+		sideAcceleration *= timeStep;
+		
+		
+		suspensionRoll = 5.53*sideG.lengthVector()*Math.signum(getSideSlipAngle());
+		suspensionPitch = -1.53*(acceleration*2.81);
+		
+		
+	}
 	
 	
 	public void updateWheels() {
@@ -572,7 +619,7 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		double torqueContributionFront = Math.cos(vehicle.steerangle)*frontAxel.latNonVec()*frontAxel.COGoffset*rC;
 
 		
-		double totalAxelTorque = torqueContributionFront + torqueContributionRear;
+		double totalAxelTorque = torqueContributionFront + torqueContributionRear + collisionTorque;
 		
 		Matrix3f inertia = getPhysConf().getVehicleMassObject().inertia;
 		//Matrix3f inertia = InertiaKit.inertiaTensorCube(1660, 1.6f, 3.0f, 6.0f);
@@ -587,6 +634,7 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		
 		
 		// https://suspensionsecrets.co.uk/calculating-ideal-spring-and-roll-bar-rates/
+		/*
 		double rollContant = 1.5;
 		double rollTorque = (velocity.lengthVector()*getSideSlipAngle());
 		vehicle.rotationRoll += (float) Math.toDegrees(rollTorque/(inertia.m00));
@@ -595,7 +643,7 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 			 vehicle.rotationRoll += rollContant*Math.abs(diff);
 		} else if (vehicle.rotationRoll > 0 ) {
 			vehicle.rotationRoll -= rollContant*Math.abs(diff);
-		}
+		}*/
 		
 		float mR = 5f;
 		if(vehicle.rotationRoll < 0) {
@@ -761,9 +809,10 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 				velocity = Vec3d.ZERO;
 			}
 		
+			
 		
 			if(!b) yT = velocity.y;
-		
+			
 		// calculate position
 		double xP = timeStep*velocity.x * rG;
 		double yP = timeStep*yT;
@@ -778,11 +827,16 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		
 		
 		this.vehicle.move(MoverType.SELF, xP, yP, zP);
+		
+		if(this.physicsStep % 5 == 0) doBlockCollision();
 	
+		this.acceleration = acceleration;
 		
 	}
 	
-	
+	public void doBlockCollision() {
+		this.vehicle.doOBBCollision();
+	}
 	
 
 	
@@ -792,10 +846,14 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		updateEngineForces();
 		updateLoad();
 		updateWheels();
-		//updateSuspensionPlatform();
+
 		updateRotationalVelocity();
+		updateSimpleSuspension();
 		updatePosition();
 		
+		
+		
+		step();
 		
 		
 		
