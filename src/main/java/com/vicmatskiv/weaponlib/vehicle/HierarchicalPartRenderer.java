@@ -169,7 +169,7 @@ final class HierarchicalPartRenderer<Part, State> implements StatefulRenderer<St
                     	//System.out.println(partRenderer.);
                     	
 
-                  
+  
                     	if(v.getConfiguration().performShiftAnimation()) {
                     		if(v.getConfiguration().shiftWithRight()) {
                     			if(renderablePart == VehiclePart.RIGHT_HAND) {
@@ -193,7 +193,15 @@ final class HierarchicalPartRenderer<Part, State> implements StatefulRenderer<St
                             		}
                             	}
                     		}
-                    	} 
+                    	} else {
+                    		
+                    	}
+                    	
+                    	if(renderablePart == VehiclePart.RIGHT_HAND && (!v.getConfiguration().shiftWithRight() || !v.getConfiguration().performShiftAnimation())
+                    			&& part == VehiclePart.MAIN) {
+                    		continue;
+                    		
+                    	}
                     	
                     	if(renderablePart == VehiclePart.LEFT_HAND && (v.getConfiguration().shiftWithRight() || !v.getConfiguration().performShiftAnimation())
                     			&& part == VehiclePart.MAIN) {

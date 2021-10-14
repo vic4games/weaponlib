@@ -930,7 +930,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 	        
 	        // PROJECTION
 	        Vec3d aSep = normal.scale(-bestResult.penetrationDepth);
-	        setPosition(this.posX+aSep.x, this.posY+aSep.y, this.posZ+aSep.z);
+	        setPosition(this.posX+aSep.x, this.posY/*+aSep.y*/, this.posZ+aSep.z);
        	 
 	        
 	        

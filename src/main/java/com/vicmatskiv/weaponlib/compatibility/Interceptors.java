@@ -221,7 +221,7 @@ public class Interceptors {
     		}*/
     		
     		if(!vehicle.getConfiguration().shiftWithRight() ) {
-    			GL11.glTranslated(-0.2, 1.0 /*+ vehicle.getInterpolatedLiftOffset()/2*/, -4.0);
+    			GL11.glTranslated(-0.3, 1.0 /*+ vehicle.getInterpolatedLiftOffset()/2*/, -4.0);
         		
     		} else {
     			GL11.glTranslated(-0.525, 1.0 /*+ vehicle.getInterpolatedLiftOffset()/2*/, -4.0);
@@ -270,7 +270,7 @@ public class Interceptors {
     		*/
     		
     		
-    		/* REAL GOOD CODE
+    		
     		double targ = vehicle.rotationYaw;
     		double diff = player.rotationYaw - targ;
     		if(diff != 0.0) {
@@ -313,7 +313,7 @@ public class Interceptors {
     			}
     		}
     		player.prevRotationPitch = player.rotationPitch;
-    		*/
+    	
     		
     		//player.rotationPitch = 15;
     		//player.prevRotationPitch = 15;

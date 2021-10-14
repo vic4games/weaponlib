@@ -327,6 +327,7 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 		if(Math.abs(Math.toDegrees(oreintation.angle(velocity))) > 150 && !solver.transmission.isReverseGear) {
 			
 			longForce *= -1;
+			
 		}
 		
 	
