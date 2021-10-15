@@ -828,7 +828,7 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		
 		this.vehicle.move(MoverType.SELF, xP, yP, zP);
 		
-		if(this.physicsStep % 5 == 0) doBlockCollision();
+		if(this.physicsStep % 10 == 0) doBlockCollision();
 	
 		this.acceleration = acceleration;
 		

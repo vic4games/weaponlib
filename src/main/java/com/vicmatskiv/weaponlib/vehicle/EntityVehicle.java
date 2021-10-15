@@ -908,6 +908,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 		OreintedBB obb = getOreintedBoundingBox();
 		
 		
+		
 		if(Math.abs(rotationPitch) < 0.0000001) {
 			List<AxisAlignedBB> list3 = this.world.getCollisionBoxes(this, this.getEntityBoundingBox().grow(3).expand(1, 1, 1));
 		    
@@ -932,7 +933,21 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 	        double yawInertia = 1/getSolver().getPhysConf().getVehicleMassObject().inertia.m11;
 	        
 	        // PROJECTION
-	        Vec3d aSep = normal.scale(-bestResult.penetrationDepth);
+	        double a = 1;
+	        
+	        /*
+	        double cD = Math.abs(bestResult.contactPointA.subtract(bestResult.contactPointB).lengthVector());
+	        if(Math.abs(bestResult.penetrationDepth) > cD) {
+	        	bestResult.penetrationDepth = cD*Math.signum(bestResult.penetrationDepth);
+	        	
+	        }
+	        System.out.println(bestResult.penetrationDepth);*/
+	        //if(solver.velocity.lengthVector() > 15) a = 0.5;
+	        Vec3d aSep = normal.scale(-bestResult.penetrationDepth*a);
+	        this.prevPosX = this.posX;
+	        this.prevPosY = this.posY;
+	        this.prevPosZ = this.posZ;
+	        
 	        setPosition(this.posX+aSep.x, this.posY/*+aSep.y*/, this.posZ+aSep.z);
        	 
 	        
@@ -961,7 +976,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 	        getSolver().velocity = getSolver().velocity.add(fullImpulse.scale(-1).scale(totalMass));
 	        
 	        Vec3d angularImpulse = relativeA.crossProduct(fullImpulse).scale(-1);
-	        getSolver().angularVelocity += angularImpulse.scale(yawInertia).y;
+	        getSolver().angularVelocity += angularImpulse.scale(yawInertia).y*0.02;
 	        
 	        
 	        
