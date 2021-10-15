@@ -952,7 +952,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 	        
 	        double angularEffect = inertiaA.dotProduct(normal);
 	        
-	        double restitution = 0.85;
+	        double restitution = 0.30;
 	        
 	        double j = (-(1.0 + restitution)*impulseForce)/(totalMass+angularEffect);
 	        
@@ -2673,6 +2673,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 		if (this.driftingSound != null) if (this.driftingSound.isDonePlaying()) this.driftingSound = null;
 		if (current != mat) this.driftingSound = null;
 			
+		
 
 		
 		// INITIATE A DRIVING SOUND

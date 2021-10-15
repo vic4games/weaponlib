@@ -237,9 +237,16 @@ public class Transmission {
 			//vehicle.clutchTimer = 0;
 			//clutch.applyPedalPressure(1.0-getClutch().engagementPoint);
 			setNeutral(false);
-		} else if(vehicle.solver.getVelocityVector().lengthVector() > 0.1 && vehicle.throttle > 0.2 && inNeutral()) {
+		}else if(vehicle.solver.getVelocityVector().lengthVector() > 0.1 && vehicle.throttle > 0.2 && inNeutral()) {
 			setNeutral(false);
 		}
+		
+		if (this.getClutch().getSlippage() != 1 && this.getClutch().getSlippage() != 0) {
+			
+		}
+			
+				
+			
 		
 	
 		if(!vehicle.isBraking) {

@@ -144,6 +144,12 @@ public class EngineSolver {
 			
 			drvT = 0;
 		}
+		
+		if (clutch.getSlippage() != 1 && clutch.getSlippage() != 0) {
+			drvT *= 10;
+			//drvT *= Math.max(10*(1-clutch.getSlippage()), 1.0);
+		}
+			
 
 		//System.out.println(drvT);
 		
