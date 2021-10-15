@@ -947,7 +947,8 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 	        this.prevPosX = this.posX;
 	        this.prevPosY = this.posY;
 	        this.prevPosZ = this.posZ;
-	        
+	        if(aSep.lengthVector() > 0.1) aSep = aSep.scale(1/(aSep.lengthVector()/0.1));
+	        System.out.println(aSep.lengthVector());
 	        setPosition(this.posX+aSep.x, this.posY/*+aSep.y*/, this.posZ+aSep.z);
        	 
 	        
