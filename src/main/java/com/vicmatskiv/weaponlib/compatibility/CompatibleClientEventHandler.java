@@ -144,7 +144,8 @@ public abstract class CompatibleClientEventHandler {
     	EntityPlayer player = Minecraft.getMinecraft().player;
     	
     	List<EntityVehicle> i = player.world.getEntitiesWithinAABB(EntityVehicle.class, 
-    			new AxisAlignedBB(player.getPosition()).grow(3));
+    			new AxisAlignedBB(player.getPosition()).grow(5));
+    
     	
     	if(i == null || i.isEmpty()) {
     		return;

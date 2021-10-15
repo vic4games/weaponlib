@@ -283,7 +283,8 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 		super(worldIn);
 
 		this.smoothShell = new VehicleSmoothShell(this);
-		this.setSize(0.2F, 0.4f);
+		this.setSize(0.2F, 0.1f);
+		//this.setSize(0.2F, 0.4f);
 		//this.setSize(1.4F, 1.5f);
 		// this.setSize(1.375F, 0.5625F);
 		this.oreintedBoundingBox = new OreintedBB(getConfiguration().getAABBforOBB());
@@ -762,12 +763,14 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 		*/
 		if (KeyBindings.vehicleTurnOff.isPressed()) {
 			if (isVehicleRunning()) {
+				
 				vehicleIsRunning = false;
-
+				this.drivingSound = null;
 				CustomGui.vehicleGUIOverlay.keyAnimator.removeKey();
 			} else {
-				vehicleIsRunning = true;
 				
+				vehicleIsRunning = true;
+				this.drivingSound = null;
 				CustomGui.vehicleGUIOverlay.keyAnimator.turnKey();
 			}
 		}
@@ -2666,14 +2669,15 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 
 		
 		// NULLIFY SOUNDS IF THEY ARE DONE
-		if (this.drivingSound != null) if (this.drivingSound.isDonePlaying()) this.drivingSound = null;
+		if (this.drivingSound != null) if (this.drivingSound.isDonePlaying() || !this.isVehicleRunning()) this.drivingSound = null;
 		if (this.driftingSound != null) if (this.driftingSound.isDonePlaying()) this.driftingSound = null;
 		if (current != mat) this.driftingSound = null;
 			
 
 		
 		// INITIATE A DRIVING SOUND
-		if (this.drivingSound == null) {
+		if (this.drivingSound == null && this.isVehicleRunning()) {
+			
 				this.drivingSound = new EngineMovingSound(getConfiguration().getRunSound(), soundPositionProvider, donePlayingSoundProvider,
 					this, false);
 
