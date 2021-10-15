@@ -22,6 +22,9 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 
 public class AttachmentBuilder<T> {
+	
+	public static int noRecipe = 0;
+	
 	protected String name;
 	protected String modId;
 	protected ModelBase model;
@@ -307,7 +310,8 @@ public class AttachmentBuilder<T> {
 		        || attachment.getCategory() == AttachmentCategory.LASER
 		        ){
 		    //throw new IllegalStateException("No recipe defined for attachment " + name);
-		    System.err.println("!!!No recipe defined for attachment " + name);
+		    noRecipe += 1;
+			//System.err.println("!!!No recipe defined for attachment " + name);
 		}
 
 		return attachment;

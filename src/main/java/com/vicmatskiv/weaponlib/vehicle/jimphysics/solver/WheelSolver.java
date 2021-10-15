@@ -322,10 +322,9 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 		
 		
 		//longForce = VehiclePhysUtil.pacejkaLong(loadOnWheel, slipRatio, 1.65, 2.5, 0.8, 10);
-		
-		
+	
 		if(Math.abs(Math.toDegrees(oreintation.angle(velocity))) > 150 && !solver.transmission.isReverseGear) {
-			
+			applyBrake(0.3);
 			longForce *= -1;
 			
 		}

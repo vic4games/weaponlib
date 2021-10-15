@@ -301,7 +301,7 @@ public class Compatibility1_12_2 implements Compatibility {
             item.setRegistryName(modId, registryName);
         }
         
-        System.out.println("REGISTRY: " + item.getRegistryName());
+        //System.out.println("REGISTRY: " + item.getRegistryName());
         //GameRegistry.register(item);
         ForgeRegistries.ITEMS.register(item);
     }

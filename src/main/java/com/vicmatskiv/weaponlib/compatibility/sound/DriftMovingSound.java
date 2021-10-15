@@ -31,7 +31,9 @@ public class DriftMovingSound extends AdvCompatibleMovingSound {
 			this.volume = 0.0f;
 			if(vehicle.getRealSpeed() >= 9) {
 				double sideSlipAngle = Math.abs(Math.toDegrees(vehicle.getSolver().getSideSlipAngle()));
-				this.volume = (float) (sideSlipAngle/15.0);
+				if(Double.isNaN(sideSlipAngle)) sideSlipAngle = 0;
+				
+				this.volume = (float) Math.min(sideSlipAngle/15.0, 2.0);
 			}
 			
 			//this.volume = (float) ((float) Math.abs(vehicle.getSolver().getSideSlipAngle())*2.0);

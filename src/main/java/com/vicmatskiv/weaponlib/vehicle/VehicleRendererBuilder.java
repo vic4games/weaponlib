@@ -268,9 +268,11 @@ public class VehicleRendererBuilder extends HierarchicalRendererBuilder<VehicleP
 								&& transitionDescriptors.isEmpty()) {
 							List<TransitionDescriptor> drivingTransitionDescriptors = partConfiguration.transitionDescriptors
 									.get(VehicleRenderableState.SHIFTING);
-							transitionDescriptors.add(new TransitionDescriptor(
-									drivingTransitionDescriptors.get(0).positionFunction, animationDuration));
-						} else if (part == VehiclePart.LEFT_HAND && state == VehicleRenderableState.FINISHING_SHIFT
+			
+								transitionDescriptors.add(new TransitionDescriptor(
+										drivingTransitionDescriptors.get(0).positionFunction, animationDuration));
+						
+							} else if (part == VehiclePart.LEFT_HAND && state == VehicleRenderableState.FINISHING_SHIFT
 								&& transitionDescriptors.isEmpty()) {
 							List<TransitionDescriptor> idleTransitionDescriptors = partConfiguration.transitionDescriptors
 									.get(VehicleRenderableState.DRIVING);

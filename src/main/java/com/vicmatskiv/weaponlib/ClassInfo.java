@@ -110,7 +110,7 @@ public class ClassInfo {
         
         // this is terrible practice don't do this lol
         if(methodName.equals(expectedMcpMethodName) && methodSignature.equals(expectedMcpMethodSignature)) {
-        	System.out.println("Success!");
+        	//System.out.println("Success!");
         	return true;
         }
         

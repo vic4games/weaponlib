@@ -63,6 +63,8 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
     }
 
     public static class Builder {
+    	
+    	public static int noRecipe = 0;
 
         private static final float DEFAULT_SPAWN_ENTITY_SPEED = 120f;
         private static final float DEFAULT_INACCURACY = 0f;
@@ -914,7 +916,8 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
                     }
 
                 } else {
-                    System.err.println("!!!No recipe defined for weapon " + name);
+                	noRecipe += 1;
+                    //System.err.println("!!!No recipe defined for weapon " + name);
                 }
             }
 
