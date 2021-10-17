@@ -104,6 +104,11 @@ public abstract class CompatibleClientEventHandler {
 	@SideOnly(Side.CLIENT)
     @SubscribeEvent
 	public final void onPreRenderPlayer(RenderPlayerEvent.Pre event) {
+		
+		if(event.getEntityPlayer().isRiding() && event.getEntityPlayer().getRidingEntity() instanceof EntityVehicle && event.getEntityPlayer().limbSwing != 39) {
+			event.setCanceled(true);
+		}
+		
 	    ClientModContext modContext = (ClientModContext) getModContext();
 	    if(modContext.getSafeGlobals().renderingPhase.get() == RenderingPhase.RENDER_PERSPECTIVE
 	            && event.getEntityPlayer() instanceof EntityPlayerSP) {
@@ -199,7 +204,12 @@ public abstract class CompatibleClientEventHandler {
    			RayTraceResult rtr = bb.doRayTrace(start, endVec);
    			
    			if(rtr != null) {
-   				v.setDead();
+   				
+   				context.getChannel().getChannel()
+				.sendToServer(new VehicleInteractPacket(false, v.getEntityId(), player.getEntityId()));
+				
+   				//v.onKillCommand();
+   				//v.setDead();
    				return;
    			}
    			

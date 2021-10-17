@@ -36,9 +36,7 @@ public class VehicleInteractPHandler implements CompatibleMessageHandler<Vehicle
 					}
 				} else {
 					
-					if(player.isCreative()) {
-						vehicle.setDead();
-					}
+					vehicle.setDead();
 					
 					
 				}

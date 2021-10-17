@@ -54,7 +54,7 @@ public class EntityVehicleConfiguration implements EntityConfiguration {
     private static final double DEFAULT_IN_AIR_FRICTION_FACTOR = 0.99;
     private static final double DEFAULT_UNRIDDEN_DECCELERATION = 0.9;
     private static final double DEFAULT_IN_WATER_DECCELERATION = 0.95; */
-    private static final int DEFAULT_TRACKING_RANGE = 100;
+    private static final int DEFAULT_TRACKING_RANGE = 160;
     private static final int DEFAULT_UPDATE_FREQUENCY = 3;
 
     public static class Builder {

@@ -6,14 +6,19 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleVec3;
 import com.vicmatskiv.weaponlib.vehicle.EntityVehicle;
 
+import net.minecraft.block.material.Material;
+
 public class DriftMovingSound extends AdvCompatibleMovingSound {
 	
 	public EntityVehicle vehicle;
+	public int startingMat = 0;
+	public Supplier<Integer> currentMat;
 
 	public DriftMovingSound(CompatibleSound sound, Supplier<CompatibleVec3> positionProvider,
-			Supplier<Boolean> donePlayingProvider, EntityVehicle vehicle, boolean shouldFade) {
+			Supplier<Boolean> donePlayingProvider, EntityVehicle vehicle, boolean shouldFade, int startMat, Supplier<Integer> currentMat) {
 		super(sound, positionProvider, donePlayingProvider, shouldFade);
-		
+		this.startingMat = startMat;
+		this.currentMat = currentMat;
 		this.vehicle = vehicle;
 	}
 	
@@ -24,6 +29,13 @@ public class DriftMovingSound extends AdvCompatibleMovingSound {
 		if(vehicle.isDead) {
 			donePlaying = true;
 		}
+		
+		if(currentMat.get() != startingMat) {
+			this.donePlaying = true;
+			
+			
+		}
+		
 		
 		//System.out.println("fortnite: " + ((float) Math.abs(vehicle.getSolver().getSideSlipAngle())*2.0));
 		//System.out.println(this.donePlaying);

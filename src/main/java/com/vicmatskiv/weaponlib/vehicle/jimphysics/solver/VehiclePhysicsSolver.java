@@ -362,6 +362,7 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		// forces, save the calculation time.
 		if(!vehicle.isVehicleRunning()) return;
 		
+	
 		
 		// run all the engine calculations
 		double driveTorque = this.engineSolver.getDriveTorque();

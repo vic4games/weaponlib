@@ -109,7 +109,9 @@ import net.minecraft.client.resources.data.PackMetadataSection;
 import net.minecraft.crash.CrashReport;
 import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.EntityTracker;
 import net.minecraft.entity.MoverType;
 import net.minecraft.entity.item.EntityBoat;
 import net.minecraft.entity.passive.EntityAnimal;
@@ -141,7 +143,10 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
+import net.minecraftforge.fml.common.registry.EntityRegistry;
+import net.minecraftforge.fml.common.registry.EntityRegistry.EntityRegistration;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import paulscode.sound.libraries.SourceLWJGLOpenAL;
@@ -281,7 +286,9 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 
 	public EntityVehicle(World worldIn) {
 		super(worldIn);
-
+		
+		
+		this.ignoreFrustumCheck = true;
 		this.smoothShell = new VehicleSmoothShell(this);
 		this.setSize(0.2F, 0.1f);
 		//this.setSize(0.2F, 0.4f);
@@ -289,6 +296,8 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 		// this.setSize(1.375F, 0.5625F);
 		this.oreintedBoundingBox = new OreintedBB(getConfiguration().getAABBforOBB());
 	}
+	
+	
 
 	public EntityVehicle(World worldIn, double x, double y, double z) {
 		this(worldIn);
@@ -775,7 +784,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 			}
 		}
 
-		if (!trans.isReverseGear) {
+		if (!trans.isReverseGear && this.isVehicleRunning()) {
 			/*
 			 * HOW THE CONTROLS WORK UNDER NORMAL CONDITIONS (NO REVERSING!)
 			 */
@@ -804,7 +813,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 			} else
 				isBraking = false;
 
-		} else {
+		} else if (this.isVehicleRunning()){
 			/*
 			 * HOW THE CONTROLS WORK UNDER REVERSE CONDITIONS
 			 */
@@ -948,7 +957,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 	        this.prevPosY = this.posY;
 	        this.prevPosZ = this.posZ;
 	        if(aSep.lengthVector() > 0.1) aSep = aSep.scale(1/(aSep.lengthVector()/0.1));
-	        System.out.println(aSep.lengthVector());
+	       // System.out.println(aSep.lengthVector());
 	        setPosition(this.posX+aSep.x, this.posY/*+aSep.y*/, this.posZ+aSep.z);
        	 
 	        
@@ -1946,7 +1955,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 		// NOMINAL REACH: 8.75, MODIFIED FOR SMOOTHNESS TO 10.75
 		
 		// new was 5.75
-		double baseReach = 7.75 * (Math.min(getRealSpeed() / 25.0, 1.0)) * mult;
+		double baseReach = 14.75 * (Math.min(getRealSpeed() / 25.0, 1.0)) * mult;
 		// System.out.println(baseReach);
 
 		if (!onGround || rotationPitch > 5) {
@@ -1958,6 +1967,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 				|| (throttle == 0 && getSolver().getVelocityVector().lengthVector() < 25)) {
 			flagOne = true;
 		}
+		//System.out.println(flagOne);
 
 		Vec3d start = new Vec3d(-0.5, 0.1, 0.0).rotateYaw((float) Math.toRadians(-rotationYaw))
 				.add(getPositionVector());
@@ -1975,6 +1985,8 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 			IBlockState bOfCar = this.world.getBlockState(getPosition());
 
 			IBlockState b = this.world.getBlockState(ray.getBlockPos().up());
+			
+			
 			double upMag = 0.0;
 			
 			/*
@@ -2467,12 +2479,25 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 	public double tV;
 	public double prevtV;
 
+	@Override
+	public boolean isInRangeToRenderDist(double distance) {
+		// TODO Auto-generated method stub
+		return true;
+	}
+	
 	/**
 	 * onUpdate handles the following: physics, control events, syncing, and overall
 	 * is the 'nucleus' of the vehicle class. (this is my favorite method!)
 	 */
 	@Override
 	public void onUpdate() {
+		
+		
+		
+		//EntityRegistration er = EntityRegistry.instance().lookupModSpawn(getClass(), true);
+		
+		//System.out.println(this.isInRangeToRenderDist(64));
+		//System.out.println(er.getTrackingRange() + " | " + this.getRenderDistanceWeight());
 
 		try {
 			
@@ -2669,7 +2694,13 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 		}
 	}
 
-	public static Material current;
+	public Material current;
+	public Supplier<Integer> currentMaterial = () -> {
+		
+		if(current == Material.GRASS || current == Material.GROUND || current == Material.CLAY || current == Material.SAND) return 0;
+		return 1;
+		
+	};
 
 	@SideOnly(Side.CLIENT)
 	public void handleGeneralSound() {
@@ -2706,20 +2737,25 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 		// INITIATE A DRIFTING SOUND
 		if (this.driftingSound == null) {
 
+			int sMat = 0;
+			
 			CompatibleSound chosen = null;
 
-			if (mat == Material.GRASS || mat == Material.GROUND || mat == Material.CLAY) {
+			if (mat == Material.GRASS || mat == Material.GROUND || mat == Material.CLAY || mat == Material.SAND) {
 				current = mat;
+				sMat = 0;
 				chosen = GeneralVehicleSounds.driftGround1;
 			} else if (mat == Material.ROCK) {
+				sMat = 1;
 				current = mat;
 				chosen = GeneralVehicleSounds.driftConcrete1;
 			} else {
 				chosen = GeneralVehicleSounds.driftConcrete1;
 			}
 
-			this.driftingSound = new DriftMovingSound(chosen, soundPositionProvider, isDorifto, this, false);
+			this.driftingSound = new DriftMovingSound(chosen, soundPositionProvider, isDorifto, this, false, sMat, this.currentMaterial);
 			Minecraft.getMinecraft().getSoundHandler().playSound(this.driftingSound);
+		
 		}
 
 	}

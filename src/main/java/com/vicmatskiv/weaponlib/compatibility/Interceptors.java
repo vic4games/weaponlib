@@ -538,6 +538,7 @@ public class Interceptors {
     	
     	
     	
+    	
     	if(entityIn instanceof EntityPlayer) {
     		EntityPlayer player = (EntityPlayer) entityIn;
     		if(player.isRiding() && player.getRidingEntity() instanceof EntityVehicle) {
@@ -545,6 +546,7 @@ public class Interceptors {
     			if(b != 39.0) return;    			
     		}
     	}
+    	
     	
         if(entityIn instanceof EntityPlayer && modelBase instanceof ModelPlayer) {
             
