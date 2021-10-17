@@ -784,43 +784,52 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 			}
 		}
 
-		if (!trans.isReverseGear && this.isVehicleRunning()) {
+		if (!trans.isReverseGear) {
 			/*
 			 * HOW THE CONTROLS WORK UNDER NORMAL CONDITIONS (NO REVERSING!)
 			 */
-			if (KeyBindings.vehicleThrottle.isKeyDown()) {
-				reverseLockout = true;
-				if (throttle < 1)
-					throttle += 0.1;
-			} else {
-				if (throttle > 0)
-					throttle -= 0.1;
+			if(isVehicleRunning()) {
+				if (KeyBindings.vehicleThrottle.isKeyDown()) {
+					reverseLockout = true;
+					if (throttle < 1)
+						throttle += 0.1;
+				} else {
+					if (throttle > 0)
+						throttle -= 0.1;
+				}
+				
+				if (getSolver().getVelocityVector().lengthVector() < 0.5 && !KeyBindings.vehicleBrake.isKeyDown()) {
+					reverseLockout = false;
+				}
 			}
-
-			if (getSolver().getVelocityVector().lengthVector() < 0.5 && !KeyBindings.vehicleBrake.isKeyDown()) {
-				reverseLockout = false;
-			}
+			
+			
+			
+			
 
 			if (KeyBindings.vehicleBrake.isKeyDown()) {
 
 				// REVERSE LOCKOUT ALLOWS THE PROCESS TO BE SMOOTHER;
 				// YOU HAVE TO LET GO OF THE BRAKE TO ENTER REVERSE.
-				if (getSolver().getVelocityVector().lengthVector() < 0.5 && !reverseLockout) {
-					trans.enterReverse();
+				if(isVehicleRunning()) {
+					if (getSolver().getVelocityVector().lengthVector() < 0.5 && !reverseLockout) {
+						trans.enterReverse();
+					}
 				}
+				
 
 				isBraking = true;
 			} else
 				isBraking = false;
 
-		} else if (this.isVehicleRunning()){
+		} else if(isVehicleRunning()) {
 			/*
 			 * HOW THE CONTROLS WORK UNDER REVERSE CONDITIONS
 			 */
 
 			if (KeyBindings.vehicleThrottle.isKeyDown()) {
 
-				if (getSolver().getVelocityVector().lengthVector() < 0.5) {
+				if (getSolver().getVelocityVector().lengthVector() < 2.5) {
 					trans.exitReverse();
 				}
 
