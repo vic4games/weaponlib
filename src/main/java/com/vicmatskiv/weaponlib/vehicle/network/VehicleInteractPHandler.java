@@ -32,6 +32,7 @@ public class VehicleInteractPHandler implements CompatibleMessageHandler<Vehicle
 				
 				if(m.right) {
 					if(vehicle.canFitPassenger(player)) {
+						
 						player.startRiding(vehicle);
 					}
 				} else {

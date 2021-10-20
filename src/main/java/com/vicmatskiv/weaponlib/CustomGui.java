@@ -90,7 +90,7 @@ public class CustomGui extends CompatibleGui {
 		if(this.mc.player.isRiding() && this.mc.player.getRidingEntity() instanceof EntityVehicle) {
 			EntityVehicle v = (EntityVehicle) this.mc.player.getRidingEntity();
 			
-			if(v.getSolver().getVelocityVector().lengthSquared() != 0.0) {
+			if(!Double.isNaN(v.getSolver().getVelocityVector().lengthSquared()) && v.getSolver().getVelocityVector().lengthSquared() != 0.0) {
 				if(event.getType() == RenderGameOverlayEvent.ElementType.CROSSHAIRS) event.setCanceled(true);
 				if(event.getType() == RenderGameOverlayEvent.ElementType.HOTBAR) event.setCanceled(true);
 				if(event.getType() == RenderGameOverlayEvent.ElementType.HEALTH) event.setCanceled(true);

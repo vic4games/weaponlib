@@ -87,6 +87,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockCarpet;
 import net.minecraft.block.BlockFence;
 import net.minecraft.block.BlockFenceGate;
+import net.minecraft.block.BlockGlass;
 import net.minecraft.block.BlockLiquid;
 import net.minecraft.block.BlockPane;
 import net.minecraft.block.BlockPlanks;
@@ -115,8 +116,10 @@ import net.minecraft.entity.EntityTracker;
 import net.minecraft.entity.MoverType;
 import net.minecraft.entity.item.EntityBoat;
 import net.minecraft.entity.passive.EntityAnimal;
+import net.minecraft.entity.passive.EntityPig;
 import net.minecraft.entity.passive.EntityWaterMob;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.init.SoundEvents;
@@ -144,6 +147,8 @@ import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
+import net.minecraftforge.common.util.FakePlayer;
+import net.minecraftforge.common.util.FakePlayerFactory;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.registry.EntityRegistry;
 import net.minecraftforge.fml.common.registry.EntityRegistry.EntityRegistration;
@@ -284,13 +289,18 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 	
 	public int clutchTimer = 0;
 
+	public List<Entity> riddenByEntities = Lists.<Entity>newArrayList();
+
 	public EntityVehicle(World worldIn) {
 		super(worldIn);
 		
 		
 		this.ignoreFrustumCheck = true;
+		
 		this.smoothShell = new VehicleSmoothShell(this);
-		this.setSize(0.2F, 0.1f);
+		//this.setSize(0.2F, 0.1f);
+		this.setSize(0.2f, 0.5f);
+		
 		//this.setSize(0.2F, 0.4f);
 		//this.setSize(1.4F, 1.5f);
 		// this.setSize(1.375F, 0.5625F);
@@ -413,15 +423,22 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 
 	@Override
 	public void updatePassenger(Entity passenger) {
-
+	
+		
 		if (this.isPassenger(passenger)) {
+			
+			
+			if(passenger.motionY == 0) passenger.motionY = 0.00001;
 			float f = 0.0F;
 			float f1 = (float) ((this.isDead ? 0.009999999776482582D : this.getMountedYOffset())
 					+ passenger.getYOffset());
 
 			int i = this.getPassengers().indexOf(passenger);
 			Vec3d seatOffset = getConfiguration().getSeatAtIndex(i).getSeatPosition();
-
+			//System.out.println(passenger + " | " + i);
+			if(i==1)	seatOffset = new Vec3d(-1, -0.3, -1);
+			
+			
 			if (this.getPassengers().size() > 1) {
 
 				if (i == 0) {
@@ -526,6 +543,8 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 		entityToUpdate.rotationYaw += f1 - f;
 		entityToUpdate.setRotationYawHead(entityToUpdate.rotationYaw);
 	}
+	
+	
 
 	@Override
 	protected void removePassenger(Entity passenger) {
@@ -659,6 +678,22 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 	@Override
 	protected void addPassenger(Entity passenger) {
 		super.addPassenger(passenger);
+		/*
+		if (passenger.getRidingEntity() != this)
+        {
+            throw new IllegalStateException("Use x.startRiding(y), not y.addPassenger(x)");
+        }
+        else
+        {
+            if (!this.world.isRemote && passenger instanceof EntityPlayer && !(this.getControllingPassenger() instanceof EntityPlayer))
+            {
+                this.riddenByEntities.add(0, passenger);
+            }
+            else
+            {
+                this.riddenByEntities.add(passenger);
+            }
+        }*/
 		if (this.canPassengerSteer() && this.lerpSteps > 0) {
 			this.lerpSteps = 0;
 			this.posX = this.boatPitch;
@@ -924,7 +959,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 	@Override
 	public void doOBBCollision() {
 		OreintedBB obb = getOreintedBoundingBox();
-		
+		//if(1+1==2) return;
 		
 		
 		if(Math.abs(rotationPitch) < 0.0000001) {
@@ -1003,6 +1038,12 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 		
 		
 		
+	}
+	
+	@Override
+	public AxisAlignedBB getCollisionBoundingBox() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 	public void oldCollisions() {
@@ -1156,13 +1197,15 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 		
 		
 		
-		super.doBlockCollisions();
+		//super.doBlockCollisions();
 	}
 
 	@Override
 	public void move(MoverType type, double x, double y, double z) {
+		
+		
 		if (this.noClip) {
-			this.setEntityBoundingBox(this.getEntityBoundingBox().offset(x, y, z));
+			this.setEntityBoundingBox(this.getEntityBoundingBox().offset(x, 0.0, z));
 			this.resetPositionToBB();
 		} else {
 
@@ -1211,6 +1254,8 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 						z += 0.05D;
 					}
 				}
+				
+				
 
 				for (; x != 0.0D && z != 0.0D
 						&& this.world
@@ -1251,10 +1296,15 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 				Vec3d centerOfPos = new Vec3d(item.minX + (item.maxX - item.minX) * 0.5D, item.minY + (item.maxY - item.minY) * 0.5D, item.minZ + (item.maxZ - item.minZ) * 0.5D);
 				
 				BlockPos pos = new BlockPos(centerOfPos);
-				if (this.world.getBlockState(pos).getBlock() instanceof BlockCarpet) {
+				IBlockState state = this.world.getBlockState(pos);
+				
+				if (state.getBlock() instanceof BlockCarpet /*|| state.getBlock() instanceof BlockSnow*/) {
+				
 					IBlockState below = world.getBlockState(getPosition().down());
 					AxisAlignedBB bb = below.getCollisionBoundingBox(world, getPosition().down());
 					rList.add(item);
+					
+					
 
 					bb = new AxisAlignedBB(0, 0, 0, 1, 1, 1);
 					list1.add(bb.offset(getPosition().down()));
@@ -1262,9 +1312,11 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 			}
 
 			for (AxisAlignedBB bruh : rList) {
+			
 				list1.remove(bruh);
 			}
-
+			
+			
 			IBlockState below = world.getBlockState(getPosition().down());
 			AxisAlignedBB bb = below.getCollisionBoundingBox(world, getPosition().down());
 			if (bb != null) {
@@ -1308,6 +1360,9 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 					this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0D, 0.0D, z));
 				}
 			}
+		
+		
+		
 
 			boolean flag = this.onGround || d3 != y && d3 < 0.0D;
 
@@ -1761,6 +1816,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 
 	public void handleHillClimbing() {
 
+	//	if(1+1==2) return;		
 		/*
 		 * if(liftOffset == 0 && ticksExisted % 3 == 0) { prevLiftOffset = liftOffset; }
 		 * else { prevLiftOffset = liftOffset; }
@@ -2004,7 +2060,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 				if (b.getValue(BlockSnow.LAYERS).intValue() > 2)
 					return;
 				upMag += 0.5;
-			} else*/ if (b.causesSuffocation() || b.getBlock() instanceof BlockPane || b.getBlock() instanceof BlockSlab)
+			} else*/ if (/*b.causesSuffocation() ||*/ b.getBlock() instanceof BlockPane || b.getBlock() instanceof BlockSlab || b.getBlock() instanceof BlockGlass)
 				return;
 			Vec3d hitVec = ray.hitVec;
 			Vec3d ab = hitVec.subtract(getPositionVector());
@@ -2026,6 +2082,13 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 				return;
 			}
 				
+			boolean snowFlag = false;
+			int layers = 0;
+			if(bL.getBlock() instanceof BlockSnow) {
+				snowFlag = true;
+				
+				layers = bL.getValue(BlockSnow.LAYERS).intValue();
+			}
 
 			// if((below instanceof BlockCarpet || bOfCar.getBlock() instanceof BlockCarpet)
 			// && bL.getBlock() instanceof BlockCarpet) return;
@@ -2034,7 +2097,9 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 
 			AxisAlignedBB ablf = bL.getCollisionBoundingBox(world, ray.getBlockPos());
 			double blockHeight = (ablf.maxY - ablf.minY);
-
+			
+			
+		
 			/*
 			 * if(!bL.isFullBlock()) { upMag = blockHeight+0.01; liftPush =
 			 * Math.sqrt((blockHeight*blockHeight));
@@ -2078,6 +2143,14 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 			// liftOffset += (float) lift.y/2;
 
 			double targetTopHeight = ray.getBlockPos().getY() + 1.0;
+			if(snowFlag) {
+				if(layers == 0) {
+					targetTopHeight = ray.getBlockPos().getY()+0.5;
+				} else {
+					targetTopHeight = ray.getBlockPos().getY() + 1.0;
+				}
+				
+			}
 			double heightDifference = (lift.y + getPositionVector().y) - targetTopHeight;
 			if (heightDifference > 0) {
 				double correction = lift.y - heightDifference;
@@ -2094,9 +2167,14 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 
 			// DEBUG //
 			newPitch += -hillAngle;
-			newPitch /= 2;
+			//newPitch /= 2;
 
+			// snow
+			if(snowFlag) newPitch *= 0.2;
+			
 			targetUp = newPitch;
+			
+		
 
 		}
 
@@ -2494,6 +2572,13 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 		return true;
 	}
 	
+	
+	@Override
+	protected boolean pushOutOfBlocks(double x, double y, double z) {
+		System.out.println("FUICK?");
+		return super.pushOutOfBlocks(x, y, z);
+	}
+	
 	/**
 	 * onUpdate handles the following: physics, control events, syncing, and overall
 	 * is the 'nucleus' of the vehicle class. (this is my favorite method!)
@@ -2501,6 +2586,30 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 	@Override
 	public void onUpdate() {
 		
+		this.stepHeight = 0.3f;
+		if(!this.world.isRemote) {
+	
+			
+			//System.out.println("fuck");
+			/*
+			EntityPlayerMP player = null;
+			if(!this.world.getMinecraftServer().getPlayerList().getPlayers().isEmpty()) {
+				player = this.world.getMinecraftServer().getPlayerList().getPlayers().get(0);
+				
+			}
+			if(player == null) return;
+			
+			List<EntityPig> i = player.world.getEntitiesWithinAABB(EntityPig.class, 
+	    			new AxisAlignedBB(player.getPosition()).grow(6));
+			
+			if(!i.isEmpty() && this.getPassengers().isEmpty()) {
+				i.get(0).startRiding(this);
+			}*/
+		}
+	
+		
+		
+		//if(1+1==2) return;
 		
 		
 		//EntityRegistration er = EntityRegistry.instance().lookupModSpawn(getClass(), true);
@@ -2510,7 +2619,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 
 		try {
 			
-			//this.setSize(0.2F, 0.4f);
+			//this.setSize(0.02F, 0.04f);
 			//this.setSize(1.4F, 1.5f);
 			/*
 			if(this.getPassengers() == null || this.getPassengers().isEmpty()) {
@@ -2558,6 +2667,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 				// get the controlling passenger
 				if (!this.isBeingRidden())
 					return;
+				if(!(getControllingPassenger() instanceof EntityPlayer)) return;
 				EntityPlayer player = (EntityPlayer) getControllingPassenger();
 				if (player == null) {
 					return;

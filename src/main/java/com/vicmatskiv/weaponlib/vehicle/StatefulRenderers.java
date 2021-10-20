@@ -50,9 +50,12 @@ public class StatefulRenderers {
         @Override
         public void render(PartRenderContext<State> context) {
             Entity entity = entitySupplier.apply(context);
-            if(entity != null) {
+            if(entity != null && entity instanceof EntityPlayer) {
                 Minecraft minecraft = Minecraft.getMinecraft();
                 if(minecraft.gameSettings.thirdPersonView == 0) {
+                	
+                
+                	
                     minecraft.getTextureManager().bindTexture(((AbstractClientPlayer) entity).getLocationSkin());
 
                     Render<AbstractClientPlayer> entityRenderObject = Minecraft.getMinecraft().getRenderManager().getEntityRenderObject((AbstractClientPlayer)entity);
@@ -103,7 +106,7 @@ public class StatefulRenderers {
         @Override
         public void render(PartRenderContext<State> context) {
             Entity entity = entitySupplier.apply(context);
-            if(entity != null) {
+            if(entity != null && entity instanceof EntityPlayer) {
                 Minecraft minecraft = Minecraft.getMinecraft();
                 if(minecraft.gameSettings.thirdPersonView == 0) {
                     minecraft.getTextureManager().bindTexture(((AbstractClientPlayer) entity).getLocationSkin());

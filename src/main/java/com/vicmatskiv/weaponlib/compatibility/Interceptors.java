@@ -59,6 +59,7 @@ import net.minecraft.world.gen.NoiseGeneratorPerlin;
 import net.minecraft.world.gen.NoiseGeneratorSimplex;
 import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.event.EntityViewRenderEvent.CameraSetup;
+import net.minecraftforge.common.util.FakePlayer;
 
 public class Interceptors {
 	
@@ -73,7 +74,9 @@ public class Interceptors {
     }
 
     public static void setupCameraTransformAfterHurtCameraEffect(float partialTicks) {
-       
+    	//if(1+1==2) return;
+    	
+    	
     	PlayerWeaponInstance weaponInstance = getPlayerWeaponInstance();
         EntityPlayer player = compatibility.getClientPlayer();
     	
@@ -84,7 +87,7 @@ public class Interceptors {
         		authenticFOV = 0.0f;
         	}
         
-        
+        	
         
         if(player.isRiding() && player.getRidingEntity() instanceof EntityVehicle && Minecraft.getMinecraft().gameSettings.thirdPersonView == 0) {
         	EntityVehicle vehicle = (EntityVehicle) player.getRidingEntity();
@@ -109,13 +112,12 @@ public class Interceptors {
         		//vehicle.rotationPitch = 0;
         		float mu = (float) ((1 - Math.cos(Minecraft.getMinecraft().getRenderPartialTicks() * Math.PI)) / 2f);
         		
-        		
         		/*
         		 * BEGIN YAW & PITCH
         		 */
         		
         		
-        		if(vehicle.getRealSpeed() != 0.0) {
+        		if(vehicle.getRealSpeed() != 0.0 && vehicle.getPassengers().indexOf(player) == 0) {
         			player.rotationYaw = vehicle.rotationYaw;
             		player.prevRotationYaw = vehicle.prevRotationYaw;
             		
@@ -123,6 +125,7 @@ public class Interceptors {
             		player.rotationPitch = -vehicle.rotationPitch;
             		player.prevRotationPitch = -vehicle.prevRotationPitch;
         		}
+        		
         		
         		
         		
@@ -145,9 +148,14 @@ public class Interceptors {
         		
         		
         		
+        		if(Double.isNaN(dist)) dist = 0;
+        		if(Double.isNaN(roll)) roll = 0;
+        		
+        		
         		GL11.glTranslated(0.0, 0.0, -dist*0.025);
         		//GL11.glTranslated(0.0, Math.abs(0.8*(vehicle.rotationPitch/45)), 0.0);
 
+        		
         		GL11.glTranslated(roll*0.025, 0.0, 0.0);
             	
         		GL11.glRotatef(-roll, 0.0f, 0.0f, 1.0f);
@@ -156,7 +164,7 @@ public class Interceptors {
         		
         		double iSL = QPTI.pti(vehicle.prevSideLean, vehicle.sideLean);
         		
-        		
+        		if(Double.isNaN(iSL)) iSL = 0.0;
         		GL11.glRotated(iSL*2, 0.0, 0.0, 1.0);
         		
         		GL11.glTranslated(iSL/100, 0, -Math.min(vehicle.getRealSpeed()/150, 0.6));
@@ -360,10 +368,13 @@ public class Interceptors {
     public static boolean setupViewBobbing(float partialTicks) {
     	
     	
-        
+    
+    	
         if(!(compatibility.getRenderViewEntity() instanceof EntityPlayer)) {
             return true;
         }
+        
+       
         
         EntityPlayer entityplayer = (EntityPlayer)compatibility.getRenderViewEntity();
 
@@ -400,9 +411,12 @@ public class Interceptors {
             }
         }
         
+        
+        
         if(entityplayer.getRidingEntity() instanceof EntityVehicle) {
         	//if(1+1==2) return false;
             EntityVehicle vehicle = (EntityVehicle) entityplayer.getRidingEntity();
+            if(vehicle.getControllingPassenger() != entityplayer) return false;
             double lastYawDelta = vehicle.getLastYawDelta();
             double speed = vehicle.getSpeed();
             
@@ -450,6 +464,7 @@ public class Interceptors {
                   frequency += val*2;
             }
           
+           
             
             Matrix4f transformMatrix = vehicle.getRandomizer().update(frequency,  appliedAmplitude*0.8f);
            //
@@ -462,8 +477,11 @@ public class Interceptors {
               //  GL11.glRotatef(-(float)lastYawDelta * 2f, 0.0F, 1.0f, 0.0f);
             }
         } else {
+        	
             RenderVehicle2.captureCameraTransform(null);
         }
+        
+       
         
         return false;
     }
@@ -535,7 +553,7 @@ public class Interceptors {
     }
     
     public static void render2(ModelBase modelBase, Entity entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scale) {
-    	
+    	//if(1+1==2) return;
     	
     	
     	
@@ -641,7 +659,8 @@ public class Interceptors {
     }
     
     public static void turn(EntityPlayer player, float yawDelta, float pitchDelta) {
-        float originalPitch = player.rotationPitch;
+    	//if(1+1==2) return;
+    	float originalPitch = player.rotationPitch;
         float originalYaw = player.rotationYaw;
         //System.out.println("Yaw delta: " + yawDelta);
         

@@ -128,7 +128,8 @@ public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 	public final void onRenderItemEvent(RenderHandEvent event) {
     	
 	    if(compatibility.clientPlayer().getRidingEntity() instanceof EntityVehicle) {
-	        event.setCanceled(true);
+	       
+	    	event.setCanceled(true);
 	    }
 	    //System.out.println("Render player");
 	}

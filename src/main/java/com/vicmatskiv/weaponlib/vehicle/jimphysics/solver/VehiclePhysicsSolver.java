@@ -827,8 +827,10 @@ public class VehiclePhysicsSolver implements IEncodable<VehiclePhysicsSolver> {
 		Vec3d pD = new Vec3d(xP, yP, zP);
 		
 		
-		this.vehicle.move(MoverType.SELF, xP, yP, zP);
+		//this.vehicle.setPosition(vehicle.posX + xP , vehicle.posY + yP, vehicle.posZ + zP);
+	this.vehicle.move(MoverType.SELF, xP, yP, zP);
 		
+//	vehicle.resetPositionToBB();
 		if(this.physicsStep % 10 == 0) doBlockCollision();
 	
 		this.acceleration = acceleration;

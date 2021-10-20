@@ -51,6 +51,7 @@ public abstract class CompatibleClientEventHandler {
     	
     	double fA = (vehicle.getSolver().getSyntheticAcceleration()/55 + (vehicle.getRealSpeed()/120))*0.2;
     	//System.out.println(fA);
+    	
     	e.setNewfov((float) (e.getFov()+fA));
     	
     	
@@ -149,7 +150,7 @@ public abstract class CompatibleClientEventHandler {
     	EntityPlayer player = Minecraft.getMinecraft().player;
     	
     	List<EntityVehicle> i = player.world.getEntitiesWithinAABB(EntityVehicle.class, 
-    			new AxisAlignedBB(player.getPosition()).grow(5));
+    			new AxisAlignedBB(player.getPosition()).grow(10));
     
     	
     	if(i == null || i.isEmpty()) {
@@ -162,7 +163,7 @@ public abstract class CompatibleClientEventHandler {
     			
     			//bb.move(v.posX, v.posY, v.posZ);
     			Vec3d start = player.getPositionEyes(Minecraft.getMinecraft().getRenderPartialTicks());
-    			Vec3d endVec = start.add(player.getLookVec().scale(4));
+    			Vec3d endVec = start.add(player.getLookVec().scale(7));
     		
     			bb.updateInverse();
     			RayTraceResult rtr = bb.doRayTrace(start, endVec);

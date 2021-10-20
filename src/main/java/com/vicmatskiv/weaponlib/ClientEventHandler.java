@@ -86,6 +86,7 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 			EntityPlayer player = compatibility.clientPlayer();
 	        if (player instanceof EntityPlayerSP && player.getRidingEntity() instanceof EntityVehicle)
 	        {
+	        	
 	            EntityPlayerSP clientPlayer = (EntityPlayerSP) player;
 	            EntityVehicle entityboat = (EntityVehicle)clientPlayer.getRidingEntity();
 	            entityboat.updateInputs(clientPlayer.movementInput.leftKeyDown, 
