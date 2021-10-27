@@ -2036,6 +2036,8 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 		}
 		//System.out.println(flagOne);
 
+		
+		
 		Vec3d start = new Vec3d(-0.5, 0.1, 0.0).rotateYaw((float) Math.toRadians(-rotationYaw))
 				.add(getPositionVector());
 		Vec3d end = new Vec3d(-0.5, 0.1, baseReach).rotateYaw((float) Math.toRadians(-rotationYaw))
@@ -2043,6 +2045,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 		RayTraceResult ray = world.rayTraceBlocks(start, end, false, true, false);
 		if (ray != null && !flagOne) {
 
+			
 			/*
 			 * CHECK IF VEHICLE IS ABOVE RAY
 			 */
@@ -2164,17 +2167,25 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 
 			}
 
-			this.move(MoverType.SELF, lift.x, lift.y, lift.z);
-			float newPitch = (float) Math.toDegrees(Math.atan(upMag / (wheelbase / 2)));
-
-			// DEBUG //
-			newPitch += -hillAngle;
-			//newPitch /= 2;
-
-			// snow
-			if(snowFlag) newPitch *= 0.2;
+			float newPitch = (float) Math.toDegrees(Math.atan(upMag / (wheelbase)));
 			
-			targetUp = newPitch;
+			
+			if(rotationPitch < 55f) {
+				this.move(MoverType.SELF, lift.x, lift.y, lift.z);
+				
+				// DEBUG //
+				newPitch += -hillAngle;
+				//newPitch /= 2;
+
+				// snow
+				if(snowFlag) newPitch *= 0.2;
+				
+			
+				targetUp = newPitch;
+			}
+			
+			
+			
 			
 		
 
