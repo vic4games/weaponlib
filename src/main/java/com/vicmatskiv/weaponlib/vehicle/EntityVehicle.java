@@ -1923,6 +1923,8 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 				rotationRollH += Math.abs(rollTarget) * 0.08;
 			}
 		}
+		
+		
 
 		// rotationRoll = -35f;
 		// rotationRoll = (float) ((ticksExisted/75.0)*45f);
@@ -2145,9 +2147,9 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 			double targetTopHeight = ray.getBlockPos().getY() + 1.0;
 			if(snowFlag) {
 				if(layers == 0) {
-					targetTopHeight = ray.getBlockPos().getY()+0.5;
+					targetTopHeight = ray.getBlockPos().getY()+0.3;
 				} else {
-					targetTopHeight = ray.getBlockPos().getY() + 1.0;
+					targetTopHeight = ray.getBlockPos().getY() + 0.7;
 				}
 				
 			}
@@ -2855,7 +2857,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 
 		// INITIATE A DRIFTING SOUND
 		if (this.driftingSound == null) {
-
+/*
 			int sMat = 0;
 			
 			CompatibleSound chosen = null;
@@ -2874,7 +2876,7 @@ public class EntityVehicle extends Entity implements Configurable<EntityVehicleC
 
 			this.driftingSound = new DriftMovingSound(chosen, soundPositionProvider, isDorifto, this, false, sMat, this.currentMaterial);
 			Minecraft.getMinecraft().getSoundHandler().playSound(this.driftingSound);
-		
+		*/
 		}
 
 	}
