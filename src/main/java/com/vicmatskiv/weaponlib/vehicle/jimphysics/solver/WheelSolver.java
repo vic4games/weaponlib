@@ -69,11 +69,16 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 	public TyreSize tyreSize;
 	
 	
+	public double grassCoef = 0.5;
+	
 	/**
 	 * https://tiresize.com/calculator/
 	 * This is FANTASTIC!
 	 * 
 	 */
+	
+	
+	
 	
 	/**
 	 * Creates a new wheel solver
@@ -97,6 +102,21 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 		this.wheelInertia = InertiaKit.inertiaTensorCylinder((float) mass, (float) getRadius(), (float) getWidth()).m22;
 		this.isDrive = isDrive;
 	}
+	
+public WheelSolver(TyreSize tyreSize, double mass, boolean isDrive, double grassCoef) {
+		
+		this.suspension = new SuspensionSolver(springRate, 1.0);
+		this.tyreSize = tyreSize;
+		
+		//this.axel = axel;
+		this.solver = solver;
+		this.wheelMass = mass;
+		// calculates the wheel's inertia, only ar
+		this.wheelInertia = InertiaKit.inertiaTensorCylinder((float) mass, (float) getRadius(), (float) getWidth()).m22;
+		this.isDrive = isDrive;
+		this.grassCoef = grassCoef;
+	}
+	
 	
 	public void assignSolver(VehiclePhysicsSolver solver) {
 		this.solver = solver;
@@ -422,7 +442,7 @@ public class WheelSolver implements IEncodable<WheelSolver>{
 		
 		// REDUCES GRIP ON DIRT
 		if(this.axel.COGoffset < 0 && this.axel.solver.materialBelow != Material.ROCK) {
-			lateralForce *= 0.5;
+			lateralForce *= this.grassCoef;
 		} 
 
 		/*

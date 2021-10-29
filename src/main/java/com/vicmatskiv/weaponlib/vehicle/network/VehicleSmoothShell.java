@@ -34,7 +34,7 @@ public class VehicleSmoothShell {
 		//System.out.println("States: " + states.);
 		//System.out.println("uploaded a new state");
 		
-		if(states.size() > 25) {
+		if(states.size() > 5) {
 			//System.out.println("clearing");
 			states.clear();
 		}
