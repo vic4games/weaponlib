@@ -9,6 +9,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.lwjgl.input.Keyboard;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientTickEvent;
@@ -18,6 +19,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleExtraEntityFlags;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderHandEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderPlayerPreEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderTickEvent;
+import com.vicmatskiv.weaponlib.perspective.OpticalScopePerspective;
 import com.vicmatskiv.weaponlib.perspective.Perspective;
 import com.vicmatskiv.weaponlib.shader.DynamicShaderContext;
 import com.vicmatskiv.weaponlib.shader.DynamicShaderGroupManager;
@@ -28,9 +30,11 @@ import com.vicmatskiv.weaponlib.vehicle.EntityVehicle;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.item.EntityBoat;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.math.Vec3d;
 
 public class ClientEventHandler extends CompatibleClientEventHandler {
 
@@ -71,6 +75,8 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 	}
 
 	public void onCompatibleClientTick(CompatibleClientTickEvent event) {
+		
+		
 		if(event.getPhase() == Phase.START) {
 			mainLoopLock.lock();
 			updateOnStartTick();
@@ -88,6 +94,7 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 	        {
 	        	
 	            EntityPlayerSP clientPlayer = (EntityPlayerSP) player;
+	            
 	            EntityVehicle entityboat = (EntityVehicle)clientPlayer.getRidingEntity();
 	            entityboat.updateInputs(clientPlayer.movementInput.leftKeyDown, 
 	                    clientPlayer.movementInput.rightKeyDown, 
@@ -123,6 +130,8 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 		modContext.getPlayerItemInstanceRegistry().update(player);
 		PlayerWeaponInstance mainHandHeldWeaponInstance = modContext.getMainHeldWeapon();
 		if(player != null) {
+			
+			
 		    if(isProning(player)) {
 	            slowPlayerDown(player, SLOW_DOWN_WHILE_PRONING_ATTRIBUTE_MODIFIER);
 	        } else {
@@ -205,18 +214,21 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 	    if(minecraft.gameSettings.thirdPersonView == 0 && !compatibility.isShadersModEnabled()) {
 	        PlayerWeaponInstance weaponInstance = modContext.getMainHeldWeapon();
 	        
+	        
 	        DynamicShaderContext shaderContext = new DynamicShaderContext(DynamicShaderPhase.PRE_ITEM_RENDER,
 	                null,
 	                minecraft.getFramebuffer(),
 	                event.getPartialTicks())
 	                .withProperty("weaponInstance", weaponInstance);
-	        shaderGroupManager.applyShader(shaderContext, weaponInstance);
+	    //   shaderGroupManager.applyShader(shaderContext, weaponInstance);
+	       
 	    }
+	    
 	}
 
 	@Override
     protected void onCompatibleRenderTickEvent(CompatibleRenderTickEvent event) {
-
+		
         Minecraft minecraft = Minecraft.getMinecraft();
         DynamicShaderContext shaderContext = new DynamicShaderContext(DynamicShaderPhase.POST_WORLD_RENDER,
                 minecraft.entityRenderer,

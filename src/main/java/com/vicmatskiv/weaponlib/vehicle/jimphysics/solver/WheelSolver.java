@@ -495,8 +495,10 @@ public WheelSolver(TyreSize tyreSize, double mass, boolean isDrive, double grass
 	
 	public WheelSolver newInstance() {
 		
-		WheelSolver newSolve = new WheelSolver(tyreSize, this.wheelMass, this.isDrive)
+		WheelSolver newSolve = new WheelSolver(tyreSize, this.wheelMass, this.isDrive, this.grassCoef)
 				.withRelativePosition(this.relativePosition);
+		
+	
 		
 		
 		return newSolve;

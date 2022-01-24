@@ -55,6 +55,7 @@ public class EntityShellCasing extends EntityProjectile {
     public EntityShellCasing(PlayerWeaponInstance weaponInstance, World world, EntityLivingBase player, float velocity,
             float gravityVelocity, float inaccuracy) {
         super(world, player, velocity, gravityVelocity, inaccuracy);
+       
         this.weapon = weaponInstance.getWeapon();
         this.weaponInstance = weaponInstance;
     }
@@ -116,6 +117,10 @@ public class EntityShellCasing extends EntityProjectile {
                 * (double) (-CompatibleMathHelper.sin(adjustedRotationYaw / 180.0F * (float) Math.PI) * f);
 
         this.motionY = 0;
+        
+        this.motionX *= 0.1;
+        this.motionY *= 0.1;
+        this.motionZ *= 0.1;
 
         this.initialYaw = this.rotationYaw;
         this.initialPitch = this.rotationPitch;

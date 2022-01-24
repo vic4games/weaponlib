@@ -5,9 +5,12 @@ import java.util.function.BiConsumer;
 import org.lwjgl.opengl.GL11;
 
 import com.vicmatskiv.weaponlib.perspective.PerspectiveRenderer;
+import com.vicmatskiv.weaponlib.perspective.ReflexScreen;
 
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.Vec3d;
 
 public class ItemScope extends ItemAttachment<Weapon> {
 
@@ -24,6 +27,14 @@ public class ItemScope extends ItemAttachment<Weapon> {
         private BiConsumer<EntityLivingBase, ItemStack> viewfinderPositioning;
         private int width = DEFAULT_WIDTH;
         private int height = DEFAULT_HEIGHT;
+        
+        
+        public ResourceLocation reticleTexture;
+        public float texScale = 0.05f;
+        public float reticleCut = 0.1f;
+        private boolean hasReticle = false;
+        public Vec3d background;
+        private BiConsumer<EntityLivingBase, ItemStack> reticlePositioning;
 
         public Builder withZoomRange(float minZoom, float maxZoom) {
             this.minZoom = minZoom;
@@ -46,6 +57,27 @@ public class ItemScope extends ItemAttachment<Weapon> {
             this.hasNightVision = true;
             return this;
         }
+        
+        // reticle
+        
+        public Builder withHolographicReticle() {
+        	this.hasReticle = true;
+        	return this;
+        }
+        
+        public Builder withReticleSettings(String textureName, float texScale, float radius, Vec3d background) {
+        	this.reticleTexture = new ResourceLocation("mw" + ":" + "textures/crosshairs/" + textureName);
+        	this.texScale = texScale;
+        	this.reticleCut = radius;
+        	this.background = background;
+        	
+        	return this;
+        }
+        
+        public Builder withReticlePositioning(BiConsumer<EntityLivingBase, ItemStack> reticlePositioning) {
+        	this.reticlePositioning = reticlePositioning;
+        	return this;
+        }
 
         public Builder withViewfinderPositioning(BiConsumer<EntityLivingBase, ItemStack> viewfinderPositioning) {
             this.viewfinderPositioning = viewfinderPositioning;
@@ -62,6 +94,10 @@ public class ItemScope extends ItemAttachment<Weapon> {
                     };
                 }
                 withPostRender(new PerspectiveRenderer(viewfinderPositioning));
+            }
+            
+            if(hasReticle) {
+            	withPostRender(new ReflexScreen(reticlePositioning, this.texScale, this.reticleCut, this.background, this.reticleTexture));
             }
 
             ItemScope itemScope = new ItemScope(this);
@@ -95,6 +131,12 @@ public class ItemScope extends ItemAttachment<Weapon> {
         setMaxStackSize(DEFAULT_MAX_STACK_SIZE);
     }
 
+    public boolean hasReticle() {
+    	return builder.hasReticle;
+    }
+    
+   
+    
     public float getMinZoom() {
         return builder.minZoom;
     }

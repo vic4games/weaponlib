@@ -445,6 +445,7 @@ public class CustomGui extends CompatibleGui {
 
 
 	private String getDefaultMagazineMessage(ItemStack itemStack) {
+		
 		ItemMagazine magazine = (ItemMagazine) itemStack.getItem();
 
 		String ammoCounterMessage = compatibility.getLocalizedString(

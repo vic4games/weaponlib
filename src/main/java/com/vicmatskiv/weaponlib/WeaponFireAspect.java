@@ -12,14 +12,20 @@ import java.util.function.Predicate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.vicmatskiv.weaponlib.animation.ClientValueRepo;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
+import com.vicmatskiv.weaponlib.network.packets.GunFXPacket;
+import com.vicmatskiv.weaponlib.sound.JSoundEngine;
 import com.vicmatskiv.weaponlib.state.Aspect;
 import com.vicmatskiv.weaponlib.state.PermitManager;
 import com.vicmatskiv.weaponlib.state.StateManager;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraftforge.fml.common.network.NetworkRegistry.TargetPoint;
 
 
 /*
@@ -30,7 +36,7 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
     @SuppressWarnings("unused")
     private static final Logger logger = LogManager.getLogger(WeaponFireAspect.class);
 
-    private static final float FLASH_X_OFFSET_ZOOMED = 0;
+    private static final float FLASH_X_OFFSET_ZOOMED = -0.03f;
 
     private static final long ALERT_TIMEOUT = 500;
     
@@ -201,6 +207,8 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
     }
 
     private void fire(PlayerWeaponInstance weaponInstance) {
+    	
+    	
         EntityLivingBase player = weaponInstance.getPlayer();
         Weapon weapon = (Weapon) weaponInstance.getItem();
         Random random = player.getRNG();
@@ -236,6 +244,15 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
         }
         
         if(shootSound != null) {
+        	/*
+        	try {
+        		JSoundEngine.getInstance().playSound();
+        	} catch(Exception e) {
+        		e.printStackTrace();
+        	}*/
+        	
+        	
+        	
             compatibility.playSound(player, shootSound,
                     silencerOn ? weapon.getSilencedShootSoundVolume() : weapon.getShootSoundVolume(), 1F);
         }
@@ -251,20 +268,32 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
 
         Boolean muzzleFlash = modContext.getConfigurationManager().getProjectiles().isMuzzleEffects();
         if(muzzleFlash == null || muzzleFlash) {
-            if(weapon.builder.flashIntensity > 0) {
-                modContext.getEffectManager().spawnFlashParticle(player, weapon.builder.flashIntensity,
-                        weapon.builder.flashScale.get(),
-                        weaponInstance.isAimed() ? FLASH_X_OFFSET_ZOOMED : compatibility.getEffectOffsetX()
-                                + weapon.builder.flashOffsetX.get(),
-                                compatibility.getEffectOffsetY() + weapon.builder.flashOffsetY.get(),
-                        weapon.builder.flashTexture);
+            if(weapon.builder.flashIntensity > 0 && !silencerOn && Math.random() <= 1.0) {
+            	
+            	
+            	
+            		modContext.getEffectManager().spawnFlashParticle(player, weapon.builder.flashIntensity,
+                            weapon.builder.flashScale.get(),
+                            weaponInstance.isAimed() ? FLASH_X_OFFSET_ZOOMED : compatibility.getEffectOffsetX()
+                                    + weapon.builder.flashOffsetX.get(),
+                                    weaponInstance.isAimed() ? -1.55f :
+                                    compatibility.getEffectOffsetY() + weapon.builder.flashOffsetY.get(),
+                            weapon.builder.flashTexture);
+            	
+            	
+                
             }  
         }
-        
+        ClientValueRepo.gunTick++;
+        System.out.println("Gun tick added @ " + Minecraft.getMinecraft().player.ticksExisted);
+        //System.out.println("WFA: " + System.currentTimeMillis());
+        ClientValueRepo.flash = 1;
+     
+       ClientValueRepo.recoilStop = 50f;
         if(weapon.isSmokeEnabled()) {
             modContext.getEffectManager().spawnSmokeParticle(player, compatibility.getEffectOffsetX()
                     + weapon.builder.smokeOffsetX.get(),
-                    compatibility.getEffectOffsetY() + weapon.builder.smokeOffsetY.get());
+                    compatibility.getEffectOffsetY() + weapon.builder.smokeOffsetY.get()+0.3f);
         }
 
         int seriesShotCount = weaponInstance.getSeriesShotCount();
@@ -294,6 +323,10 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
         if(!(itemStack.getItem() instanceof Weapon)) {
             return;
         }
+        
+        TargetPoint tp = new TargetPoint(player.dimension, player.posX, player.posY, player.posZ, 100);
+        modContext.getChannel().getChannel().sendToAllAround(new GunFXPacket(player.getEntityId()), tp);
+        
 
         Weapon weapon = (Weapon) itemStack.getItem();
         
@@ -318,8 +351,19 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
         PlayerWeaponInstance playerWeaponInstance = Tags.getInstance(itemStack, PlayerWeaponInstance.class);
 
         if(weapon.isShellCasingEjectEnabled() && playerWeaponInstance != null)  {
+        	//System.out.println("yo");
             EntityShellCasing entityShellCasing = weapon.builder.spawnShellWith.apply(playerWeaponInstance, player);
             if(entityShellCasing != null) {
+            	
+            	System.out.println(entityShellCasing.posX + " | " + entityShellCasing.posY + " | " + entityShellCasing.posZ);
+            	
+            	entityShellCasing.posX = CompatibleClientEventHandler.NEW_POS.get(0) + player.posX;
+            	entityShellCasing.posY = CompatibleClientEventHandler.NEW_POS.get(1) + player.posY;
+            	
+            	entityShellCasing.posZ = CompatibleClientEventHandler.NEW_POS.get(2) + player.posZ;
+            	
+            	System.out.println("After: " + entityShellCasing.posX + " | " + entityShellCasing.posY + " | " + entityShellCasing.posZ);
+            	
                 compatibility.spawnEntity(player, entityShellCasing);
             }
         }

@@ -8,6 +8,7 @@ import org.lwjgl.input.Keyboard;
 
 import com.vicmatskiv.weaponlib.animation.DebugPositioner;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleExtraEntityFlags;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponKeyInputHandler;
@@ -17,10 +18,12 @@ import com.vicmatskiv.weaponlib.inventory.OpenCustomPlayerInventoryGuiMessage;
 import com.vicmatskiv.weaponlib.melee.MeleeState;
 import com.vicmatskiv.weaponlib.melee.PlayerMeleeInstance;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.math.Vec3d;
 
 public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
 
@@ -55,6 +58,35 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
 //	    if(DebugPositioner.isDebugModeEnabled()) {
 //	        KeyBindings.bindDebugKeys();
 //        }
+	    
+	    try {
+	    	//System.out.println(KeyBindings.jDebugKey);
+	    	if(CompatibleClientEventHandler.muzzlePositioner) {
+		    	double incr = 0.1;
+		    	if(KeyBindings.upArrowKey.isPressed()) {
+		    		CompatibleClientEventHandler.debugmuzzlePosition = CompatibleClientEventHandler.debugmuzzlePosition.addVector(0, incr, 0);
+		    	} else if(KeyBindings.downArrowKey.isPressed()) {
+		    		CompatibleClientEventHandler.debugmuzzlePosition = CompatibleClientEventHandler.debugmuzzlePosition.addVector(0, -incr, 0);
+			    	
+		    	} else if(KeyBindings.leftArrowKey.isPressed()) {
+		    		CompatibleClientEventHandler.debugmuzzlePosition = CompatibleClientEventHandler.debugmuzzlePosition.addVector(incr, 0, 0);
+			    	
+		    	} else if(KeyBindings.rightArrowKey.isPressed()) {
+		    		CompatibleClientEventHandler.debugmuzzlePosition = CompatibleClientEventHandler.debugmuzzlePosition.addVector(-incr, 0, 0);
+			    	
+		    	} else if(KeyBindings.jDebugKey.isPressed()) {
+		    		CompatibleClientEventHandler.debugmuzzlePosition = CompatibleClientEventHandler.debugmuzzlePosition.addVector(0, 0, incr);
+			    	
+		    	} else if(KeyBindings.kDebugKey.isPressed()) {
+		    		CompatibleClientEventHandler.debugmuzzlePosition = CompatibleClientEventHandler.debugmuzzlePosition.addVector(0, 0, -incr);
+			    	
+		    	}
+		    }
+	    } catch (Exception e) {
+	    	e.printStackTrace();
+	    }
+	    
+	    
         
         if(DebugPositioner.isDebugModeEnabled() && KeyBindings.upArrowKey.isPressed()) {
             DebugPositioner.incrementXRotation(5);
@@ -232,6 +264,9 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
         }
         
         else if(KeyBindings.proningSwitchKey.isPressed()) {
+        	//EntityPlayer player = Minecraft.getMinecraft().player;
+        	
+        	
             modContext.getChannel().getChannel().sendToServer(new EntityControlMessage(player, 
                     CompatibleExtraEntityFlags.PRONING | CompatibleExtraEntityFlags.FLIP, 0));
         }

@@ -9,7 +9,10 @@ import java.util.concurrent.LinkedBlockingDeque;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.lwjgl.opengl.GL13;
+import org.lwjgl.opengl.GL20;
 
+import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.network.TypeRegistry;
 import com.vicmatskiv.weaponlib.perspective.OpticalScopePerspective;
 import com.vicmatskiv.weaponlib.perspective.Perspective;
@@ -19,6 +22,7 @@ import com.vicmatskiv.weaponlib.shader.DynamicShaderPhase;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -54,7 +58,17 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 
     public final DynamicShaderGroupSource VIGNETTE_SOURCE = new DynamicShaderGroupSource(VIGNETTE_SOURCE_UUID,
             new ResourceLocation("weaponlib:/com/vicmatskiv/weaponlib/resources/vignette.json"))
-            .withUniform("Radius", context -> getOpticScopeVignetteRadius(context.getPartialTicks()));
+            .withUniform("Radius", context -> getOpticScopeVignetteRadius(context.getPartialTicks()))
+            .withUniform("Velocity", context -> new float[]{CompatibleClientEventHandler.scopeVelX, CompatibleClientEventHandler.scopeVelY})
+            .withUniform("Reticle", context -> {
+            	
+            	GlStateManager.setActiveTexture(GL13.GL_TEXTURE0+4);
+            	Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mw" + ":" + "textures/hud/reticle1.png"));
+            	GlStateManager.setActiveTexture(GL13.GL_TEXTURE0);
+            	
+            	return 4;
+            });
+         
 
     private static final long AIM_CHANGE_DURATION = 1200;
 
@@ -397,7 +411,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 	}
 
 	public void setZoom(float zoom) {
-		if(this.zoom != zoom) {
+		if(this.zoom != zoom && zoom > 0) {
 			this.zoom = zoom;
 			markDirty();
 		}
@@ -442,7 +456,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 	@Override
 	public Class<? extends Perspective<?>> getRequiredPerspectiveType() {
 	    Class<? extends Perspective<?>> result = null;
-	    if(isAimed()) {
+	    if(isAimed() || !isAimed()) {
 	        ItemAttachment<Weapon> scope = getAttachmentItemWithCategory(AttachmentCategory.SCOPE);
 	        if(scope instanceof ItemScope && ((ItemScope) scope).isOptical()) {
 	            result = OpticalScopePerspective.class;
@@ -468,7 +482,8 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 //        float f = player.distanceWalkedModified - player.prevDistanceWalkedModified;
 //        float f1 = -(player.distanceWalkedModified + f * partialTicks);
         float f2 = player.prevCameraYaw + (player.cameraYaw - player.prevCameraYaw) * partialTicks;
-        return -2f * f2 + 0.55f;
+       // return -2f * f2 + 0.55f;
+        return 0.55f;
     }
 
     private float getAimChangeProgress() {
@@ -485,6 +500,8 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 	    if(isAimed() && phase == DynamicShaderPhase.POST_WORLD_OPTICAL_SCOPE_RENDER) {
 	        ItemScope scope = getScope();
 	        if(scope.isOptical()) {
+	        	
+	        	
 	            return scope.hasNightVision() && nightVisionOn ? NIGHT_VISION_SOURCE 
 	                    : VIGNETTE_SOURCE;
 	        }

@@ -12,11 +12,27 @@ import java.util.WeakHashMap;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import javax.vecmath.Quat4f;
+
+import org.apache.commons.codec.language.bm.BeiderMorseEncoder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.util.vector.Matrix3f;
 import org.lwjgl.util.vector.Matrix4f;
+import org.lwjgl.util.vector.Quaternion;
+import org.lwjgl.util.vector.Vector3f;
+import org.lwjgl.util.vector.Vector4f;
+
+import com.vicmatskiv.weaponlib.DefaultPart;
+import com.vicmatskiv.weaponlib.RenderableState;
+
+import akka.japi.Pair;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GLAllocation;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.util.math.Vec3d;
 
 
 public class MultipartRenderStateManager<State, Part, Context extends PartPositionProvider> {
@@ -174,10 +190,14 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
 
 			long currentTime = currentTimeProvider.get();
 			MultipartTransition<Part, Context> targetState = toPositioning.get(currentIndex);
-
+			
+		
+			
+			
 			long currentDuration = targetState.getDuration();
 			long currentPause = targetState.getPause();
 
+			
 			if(currentIndex == 0 && startTime == null) {
 				logger.debug("Starting transition {}, duration {}ms, pause {}ms", currentIndex, currentDuration, currentPause);
 				startTime = currentTime;
@@ -203,21 +223,53 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
 			if(currentProgress > 1f) {
 				currentProgress = 1f;
 			}
+			
 
 			float finalCurrentProgress = currentProgress;
 
+			Interpolation interpolation = targetState.getInterpolationType();
+			
+			
 			if(currentIndex >= segmentCount) {
 				expired = true;
 				return new Positioner<Part, Context>() {
 
+					
 					@Override
 					public void position(Part part, Context context) {
 						PartData partData = getPartData(part, context);
-						applyOnce(part, context,
-						        partData.matrices.get(currentIndex - 1),
-						        partData.matrices.get(currentIndex),
-						        partData.attachedTo,
-						        1f);
+						
+						boolean revertFlag = (toState == RenderableState.NORMAL && fromState == RenderableState.ZOOMING);
+						
+						
+						
+						
+						
+						if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 0 && part.toString().contains("MAIN_ITEM")
+								&& ((toState == RenderableState.ZOOMING && fromState == RenderableState.NORMAL) ||
+										(toState == RenderableState.NORMAL && fromState == RenderableState.ZOOMING))) {
+							
+							Vec3d beizer = Vec3d.ZERO;
+							if(targetState != null && targetState.beizer != null) {
+								beizer = revertFlag ? targetState.beizer.scale(1.25) : targetState.beizer;
+							}
+							
+							
+							applyOnceNewBeizer(part, context,
+									partData.matrices.get(currentIndex - 1),
+							        partData.matrices.get(currentIndex),
+							        partData.attachedTo,
+							        1f, beizer, revertFlag, interpolation);
+						} else {
+							applyOnce2(part, context,
+							        partData.matrices.get(currentIndex - 1),
+							        partData.matrices.get(currentIndex),
+							        partData.attachedTo,
+							        1f, interpolation);
+							
+						}
+						
+						
 					}
 
 					@Override
@@ -227,16 +279,41 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
 				};
 			}
 
-
+			
 			return new Positioner<Part, Context> () {
 				@Override
 				public void position(Part part, Context context) {
 					PartData partData = getPartData(part, context);
-					applyOnce(part, context,
-					    partData.matrices.get(currentIndex),
-						partData.matrices.get(currentIndex + 1),
-						partData.attachedTo,
-						finalCurrentProgress);
+					
+					boolean revertFlag = (toState == RenderableState.NORMAL && fromState == RenderableState.ZOOMING);
+					
+					if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 0 && part.toString().contains("MAIN_ITEM")
+							&& ((toState == RenderableState.ZOOMING && fromState == RenderableState.NORMAL) ||
+									(toState == RenderableState.NORMAL && fromState == RenderableState.ZOOMING))) {
+						
+						Vec3d beizer = Vec3d.ZERO;
+						if(targetState != null && targetState.beizer != null) {
+							beizer = revertFlag ? targetState.beizer.scale(1.25) : targetState.beizer;
+						}
+						
+						
+						applyOnceNewBeizer(part, context,
+							    partData.matrices.get(currentIndex),
+								partData.matrices.get(currentIndex + 1),
+								partData.attachedTo,
+								finalCurrentProgress, beizer, revertFlag, interpolation);
+								
+					} else {
+						
+						applyOnce2(part, context,
+							    partData.matrices.get(currentIndex),
+								partData.matrices.get(currentIndex + 1),
+								partData.attachedTo,
+								finalCurrentProgress, interpolation);
+						
+						
+					}
+					
 				}
 
 				@Override
@@ -247,11 +324,60 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
 		}
 
 		private void applyOnce(Part part, Context context, Matrix4f beforeMatrix, Matrix4f afterMatrix,
-		        Part attachedTo, float progress) {
+		        Part attachedTo, float progress, Interpolation interp) {
 
 		    logger.trace("Applying position for part {}", part);
 
 
+		   
+		    
+			/*
+			 *
+			 * progress = (endTime - startTime) / duration
+			 *
+			 * current = start + (end - start) * progress = start * (1 - progress)  + end * progress;
+			 */
+
+		    Matrix4f currentMatrix = null;
+
+		    if(attachedTo != null) {
+		        currentMatrix = context.getPartPosition(attachedTo);
+		        
+		    }
+
+		    /*
+		     * Otherwise capture current position
+		     */
+		    if(currentMatrix == null) {
+		    	//currentMatrix = new Matrix4f();
+				currentMatrix = MatrixHelper.captureMatrix();
+			}
+
+		 
+		    
+			Matrix4f m1 = MatrixHelper.interpolateMatrix(beforeMatrix, 1 - progress, interp); //start * (1 - progress)
+			Matrix4f m2 = MatrixHelper.interpolateMatrix(afterMatrix, progress, interp);
+			
+			
+
+			Matrix4f deltaMatrix = Matrix4f.add(m1, m2, null);
+			
+			lastApplied.put(part, deltaMatrix);
+
+			Matrix4f composite = Matrix4f.mul(currentMatrix, deltaMatrix, null);
+
+			MatrixHelper.loadMatrix(composite);
+		}
+		
+		private void applyOnceCom(Part part, Context context, Matrix4f beforeMatrix, Matrix4f afterMatrix,
+		        Part attachedTo, float progress, Vec3d beizer, boolean accel, Interpolation interp) {
+
+		    logger.trace("Applying position for part {}", part);
+
+		    //progress = 0.0f;
+		    
+		 
+		   // progress = (float) interp.ACCELERATION.interpolate(progress);
 			/*
 			 *
 			 * progress = (endTime - startTime) / duration
@@ -271,16 +397,299 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
 		    if(currentMatrix == null) {
 				currentMatrix = MatrixHelper.captureMatrix();
 			}
+		    
+		    
+		    
+		    
+		    
+		    FloatBuffer auxGLMatrix = GLAllocation.createDirectFloatBuffer(16);
+		    auxGLMatrix.rewind();
+		    
+		    Vec3d beezer = new Vec3d(0, 3.5, -1);
+		    
+		    float fastProgress = 0f;
+		    if(!accel) {
+		    	fastProgress =  1 - ((1-progress)*(1-progress));
+		    } else {
+		    	fastProgress =  1 - ((1-progress)*(1-progress));
+		    	//fastProgress =  progress*progress*(3-(2*progress));
+		    }
+		    
+		    float newX = MatrixHelper.solveBeizer(beforeMatrix.m30, (float) beizer.x, afterMatrix.m30, fastProgress);
+		    float newY = MatrixHelper.solveBeizer(beforeMatrix.m31, (float) beizer.y, afterMatrix.m31, fastProgress);
+		    float newZ = MatrixHelper.solveBeizer(beforeMatrix.m32, (float) beizer.z, afterMatrix.m32, fastProgress);
+		  //  Vec3d trans = MatrixHelper.lerpVectors(new Vec3d(beforeMatrix.m30, beforeMatrix.m31, beforeMatrix.m32),
+		   // 									   new Vec3d(afterMatrix.m30, afterMatrix.m31, afterMatrix.m32),
+		   // 		progress);
+		    
+		    Vec3d trans = new Vec3d(newX, newY, newZ);
+		   
+		    Vec3d scaleBefore = MatrixHelper.extractScale(beforeMatrix);
+		    Vec3d scaleAfter = MatrixHelper.extractScale(afterMatrix);
+		    
+		  
+		  
+		    
+		   Quaternion q = new Quaternion();
+		   Quaternion.setFromMatrix(beforeMatrix, q);
+		   
+		   Quaternion q2 = new Quaternion();
+		   Quaternion.setFromMatrix(afterMatrix, q2);
+		   
+		   MatrixHelper.restoreScale(beforeMatrix, scaleBefore);
+		   MatrixHelper.restoreScale(afterMatrix, scaleAfter);
+		 
+		   
+		   GlStateManager.quatToGlMatrix(auxGLMatrix, MatrixHelper.slerp(q, q2, progress));
+		   
+		   
+		   
+		   MatrixHelper.scaleFloatBuffer(auxGLMatrix, MatrixHelper.lerpVectors(scaleBefore, scaleAfter, progress));
+		   
+		   auxGLMatrix.put(12, (float) trans.x);
+			auxGLMatrix.put(13, (float) trans.y);
+			auxGLMatrix.put(14, (float) trans.z);
+		   
+		   
+		   
+		   //System.out.println("Jim's Method: " + deltaMatrix);
+		   
+		   
 
+		//	deltaMatrix = Matrix4f.add(m1, m2, null);
+			//System.out.println("Vic's Method: " + deltaMatrix);
+			
+			
+			
+		    
+		    
+		    Matrix4f deltaMatrix = new Matrix4f();
+			  
+			   deltaMatrix.load(auxGLMatrix);
+			   deltaMatrix = deltaMatrix.rotate((float) Math.toRadians(90), new Vector3f(0, 1, 0));
+		  
+			   Matrix4f m1 = MatrixHelper.interpolateMatrix(beforeMatrix, 1 - progress, interp); //start * (1 - progress)
+				Matrix4f m2 = MatrixHelper.interpolateMatrix(afterMatrix, progress, interp);
+			   
+				deltaMatrix = Matrix4f.add(m1, m2, null);
+		   
+				
+				
+			   deltaMatrix.m30 = (float) trans.x;
+			   deltaMatrix.m31 = (float) trans.y;
+			   deltaMatrix.m32 = (float) trans.z;
+			
+			   
+			   //deltaMatrix.m30 = 0.0f;
+		    /*
 			Matrix4f m1 = MatrixHelper.interpolateMatrix(beforeMatrix, 1 - progress); //start * (1 - progress)
 			Matrix4f m2 = MatrixHelper.interpolateMatrix(afterMatrix, progress);
 
 			Matrix4f deltaMatrix = Matrix4f.add(m1, m2, null);
+			*/
+		   
+		  
+			//Matrix4f deltaMatrix = MatrixHelper.beizerInterpolation(beforeMatrix, 
+			//		MatrixHelper.buildTranslation(0.5f, 0.5f, 0), afterMatrix, progress, true);
+			
+			
+			//Matrix4f deltaMatrix = Matrix4f.add(m1, m2, null);
 
 			lastApplied.put(part, deltaMatrix);
 
 			Matrix4f composite = Matrix4f.mul(currentMatrix, deltaMatrix, null);
 
+		///	Matrix4f comp2 = MatrixHelper.beizerInterpolation(beforeMatrix, new Matrix4f(), afterMatrix, progress);
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			MatrixHelper.loadMatrix(composite);
+		}
+		
+		private void applyOnceNewBeizer(Part part, Context context, Matrix4f beforeMatrix, Matrix4f afterMatrix,
+		        Part attachedTo, float progress, Vec3d beizer, boolean accel, Interpolation interp) {
+
+			
+		    logger.trace("Applying position for part {}", part);
+		    
+		    
+		    progress = (float) interp.interpolate(progress);
+
+		   
+		    Matrix4f currentMatrix = null;
+
+		    if(attachedTo != null) {
+		        currentMatrix = context.getPartPosition(attachedTo);
+		    }
+
+		  
+		    /*
+		     * Otherwise capture current position
+		     */
+		    if(currentMatrix == null) {
+				currentMatrix = MatrixHelper.captureMatrix();
+			}
+		    
+		    // Copy matrices
+		    Matrix4f copiedBefore = new Matrix4f(beforeMatrix);
+		    Matrix4f copiedAfter = new Matrix4f(afterMatrix);
+		    
+
+		    FloatBuffer AUXGLBRUHFER = BufferUtils.createFloatBuffer(16);
+			
+		    
+		    // Extract translations and interpolate 
+		    
+		    float newX = MatrixHelper.solveBeizer(copiedBefore.m30, (float) beizer.x, copiedAfter.m30, progress);
+		    float newY = MatrixHelper.solveBeizer(copiedBefore.m31, (float) beizer.y, copiedAfter.m31, progress);
+		    float newZ = MatrixHelper.solveBeizer(copiedBefore.m32, (float) beizer.z, copiedAfter.m32, progress);
+		    Vec3d iT = new Vec3d(newX, newY, newZ);
+		    
+		    
+		    // Create the quaternions
+			  Quaternion q4 = new Quaternion();
+			  Quaternion q5 = new Quaternion();
+			   Matrix4f matty = new Matrix4f();
+
+			   
+			   // extract scales
+			   
+			   Vec3d scaleBefore = MatrixHelper.extractScale(copiedBefore);
+			    Vec3d scaleAfter = MatrixHelper.extractScale(copiedAfter);
+			   Vec3d iS = MatrixHelper.lerpVectors(scaleBefore, scaleAfter, progress);
+
+			   // Deal with the before matrix
+			   Quaternion.setFromMatrix(copiedBefore, q4);
+			   
+			   // Deal with after matrix
+			   Quaternion.setFromMatrix(copiedAfter, q5);
+			   
+			   
+			   // "Slerp" between the two quaternions
+			   Quaternion q6 = MatrixHelper.slerp(q4, q5, progress);
+			   GlStateManager.quatToGlMatrix(AUXGLBRUHFER, q6);
+			   
+			   //GlStateManager.quatToGlMatrix(AUXGLBRUHFER, q5);
+			   
+			   
+			   
+			   
+			   // Put in matrix and do magic
+			   AUXGLBRUHFER.rewind();
+			   matty.load(AUXGLBRUHFER);
+			   AUXGLBRUHFER.rewind();
+			   matty.scale(new Vector3f((float) iS.x, (float)iS.y, (float) iS.z));
+			   
+			   matty.transpose();
+			   
+	
+
+		    
+		    // Add in the translation
+		    matty.m30 = (float) iT.x;
+		    matty.m31 = (float) iT.y;
+		    matty.m32 = (float) iT.z;
+
+			lastApplied.put(part, matty);
+			Matrix4f composite = Matrix4f.mul(currentMatrix, matty, null);
+			MatrixHelper.loadMatrix(composite);
+		}
+		
+		private void applyOnce2(Part part, Context context, Matrix4f beforeMatrix, Matrix4f afterMatrix,
+		        Part attachedTo, float progress, Interpolation interp) {
+
+		    logger.trace("Applying position for part {}", part);
+		    
+		    
+		   // progress = 0f;
+		   // progress = (float) interp.interpolate(progress);
+
+		  // boolean log = part == DefaultPart.RIGHT_HAND;
+		   
+		 //  if(log) System.out.println("Before: " + beforeMatrix);
+		    
+		    
+		    Matrix4f currentMatrix = null;
+
+		    if(attachedTo != null) {
+		        currentMatrix = context.getPartPosition(attachedTo);
+		    }
+
+		  
+		    /*
+		     * Otherwise capture current position
+		     */
+		    if(currentMatrix == null) {
+				currentMatrix = MatrixHelper.captureMatrix();
+			}
+		    
+		    // Copy matrices
+		    Matrix4f copiedBefore = new Matrix4f(beforeMatrix);
+		    Matrix4f copiedAfter = new Matrix4f(afterMatrix);
+		    
+
+		    FloatBuffer AUXGLBRUHFER = BufferUtils.createFloatBuffer(16);
+			
+		    
+		    // Extract translations and interpolate
+		    Vec3d beforeTranslation = new Vec3d(copiedBefore.m30, copiedBefore.m31, copiedBefore.m32);
+			Vec3d afterTranslation = new Vec3d(copiedAfter.m30, copiedAfter.m31, copiedAfter.m32);   
+		    Vec3d iT = MatrixHelper.lerpVectors(beforeTranslation, afterTranslation, progress);
+		    
+		    // Create the quaternions
+			  Quaternion q4 = new Quaternion();
+			  Quaternion q5 = new Quaternion();
+			   Matrix4f matty = new Matrix4f();
+
+			   
+			   // extract scales
+			   
+			   Vec3d scaleBefore = MatrixHelper.extractScale(copiedBefore);
+			    Vec3d scaleAfter = MatrixHelper.extractScale(copiedAfter);
+			   Vec3d iS = MatrixHelper.lerpVectors(scaleBefore, scaleAfter, progress);
+
+			   // Deal with the before matrix
+			   Quaternion.setFromMatrix(copiedBefore, q4);
+			   
+			   // Deal with after matrix
+			   Quaternion.setFromMatrix(copiedAfter, q5);
+			   
+			   
+			   // "Slerp" between the two quaternions
+			   Quaternion q6 = MatrixHelper.slerp(q4, q5, progress);
+			   GlStateManager.quatToGlMatrix(AUXGLBRUHFER, q6);
+			   
+			   //GlStateManager.quatToGlMatrix(AUXGLBRUHFER, q5);
+			   
+			   
+			   
+			   
+			   // Put in matrix and do magic
+			   AUXGLBRUHFER.rewind();
+			   matty.load(AUXGLBRUHFER);
+			   AUXGLBRUHFER.rewind();
+			   matty.scale(new Vector3f((float) iS.x, (float)iS.y, (float) iS.z));
+			   
+			   matty.transpose();
+			  
+	
+
+		    
+		    // Add in the translation
+		    matty.m30 = (float) iT.x;
+		    matty.m31 = (float) iT.y;
+		    matty.m32 = (float) iT.z;
+
+		    //if(log) System.out.println("After: " + matty);
+		    
+			lastApplied.put(part, matty);
+			Matrix4f composite = Matrix4f.mul(currentMatrix, matty, null);
 			MatrixHelper.loadMatrix(composite);
 		}
 

@@ -31,6 +31,7 @@ public class PerspectiveRenderer implements CustomRenderer<RenderableState> {
 
         @Override
         public int getTexture(RenderContext<RenderableState> context) {
+        	
             if(textureId == null) {
                 ResourceLocation textureResource = new ResourceLocation(WirelessCameraPerspective.DARK_SCREEN_TEXTURE);
                 Minecraft.getMinecraft().getTextureManager().bindTexture(textureResource);

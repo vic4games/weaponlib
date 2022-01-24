@@ -2,6 +2,8 @@ package com.vicmatskiv.weaponlib;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 import com.vicmatskiv.weaponlib.compatibility.CompatibleEntityJoinWorldEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleExposureCapability;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponEventHandler;
@@ -10,6 +12,7 @@ import com.vicmatskiv.weaponlib.grenade.PlayerGrenadeInstance;
 import com.vicmatskiv.weaponlib.melee.PlayerMeleeInstance;
 import com.vicmatskiv.weaponlib.vehicle.EntityVehicle;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -51,23 +54,43 @@ public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 		 *       else if optical zoom is off
 		 *       	setNewFov(getZoom())
 		 */
+		
+		
+		
 
 		//ItemStack stack = compatibility.getHeldItemMainHand(compatibility.getEntity(event));
+		//ClientModContext modContext = ClientModContext.getContext();
 		PlayerWeaponInstance instance = modContext.getMainHeldWeapon();
 		EntityPlayer clientPlayer = compatibility.clientPlayer();
 		if (instance != null) {
-
-		    final float fov;
+		   
+		    float fov;
 		    if(instance.isAttachmentZoomEnabled()) {
-		        if(safeGlobals.renderingPhase.get() == RenderingPhase.RENDER_PERSPECTIVE) {
-		            fov = instance.getZoom();
+		    	fov = instance.getWeapon().getADSZoom();
+		    	 if(safeGlobals.renderingPhase.get() == RenderingPhase.RENDER_PERSPECTIVE) {
+		           
+		        	fov = instance.getZoom();
 		        } else {
+		        	
 		            fov = compatibility.isFlying(clientPlayer) ? 1.1f : 1.0f;
 		        }
 		    } else {
-		        fov = compatibility.isFlying(compatibility.clientPlayer()) ? 1.1f : 1.0f; //instance.isAimed() ? instance.getZoom() : 1f;
+		    	 fov = compatibility.isFlying(compatibility.clientPlayer()) ? 1.1f : 1.0f;
+		    	//fov = instance.isAimed() ? instance.getZoom() : 1f;
+		       // fov = compatibility.isFlying(compatibility.clientPlayer()) ? 1.1f : 1.0f; //instance.isAimed() ? instance.getZoom() : 1f;
 		    }
 
+		   RenderingPhase phase = (((ClientModContext) modContext).getSafeGlobals().renderingPhase).get();
+		 
+		     if(instance.isAimed() && phase == null) {
+		    	fov = 0.8f;
+		    }
+		     
+		    if(Minecraft.getMinecraft().player.isSprinting()) {
+		    	fov *= 1.2;
+		    }
+		    
+		    //fov = 0.3f;
 		    compatibility.setNewFov(event, fov); //Tags.getZoom(stack));
 		} else {
 		    SpreadableExposure spreadableExposure = CompatibleExposureCapability.getExposure(compatibility.clientPlayer(), SpreadableExposure.class);
@@ -131,6 +154,7 @@ public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 	       
 	    	event.setCanceled(true);
 	    }
+	    
 	    //System.out.println("Render player");
 	}
 

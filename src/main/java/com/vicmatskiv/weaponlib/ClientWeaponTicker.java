@@ -6,9 +6,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.lwjgl.input.Mouse;
 
+import com.vicmatskiv.weaponlib.animation.ClientValueRepo;
 import com.vicmatskiv.weaponlib.grenade.ItemGrenade;
 import com.vicmatskiv.weaponlib.melee.ItemMelee;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -95,6 +98,19 @@ class ClientWeaponTicker extends Thread {
         if(item instanceof ItemGrenade) { // TODO: introduce generic action handler interface with on*Click() handler
             ((ItemGrenade) item).attackUp(player, false);
         }
+        
+        PlayerWeaponInstance mainHandHeldWeaponInstance = clientModContext.getMainHeldWeapon();
+        if(mainHandHeldWeaponInstance != null) {
+        	if(item instanceof Weapon && mainHandHeldWeaponInstance.isAimed()) {
+        		if(mainHandHeldWeaponInstance.isAimed() && ClientValueRepo.shouldContinueRunning) {
+        			player.setSprinting(true);
+        			ClientValueRepo.shouldContinueRunning = false;
+        		}
+        		((Weapon) item).toggleAiming();
+        	
+        	}
+        }
+        
     }
 
     private void onLeftButtonDown() {
@@ -108,11 +124,20 @@ class ClientWeaponTicker extends Thread {
             ((ItemGrenade) item).attack(player, true);
         }
     }
+    
+    
 
     private void onRightButtonDown() {
         EntityPlayer player = compatibility.getClientPlayer();
         Item item = getHeldItemMainHand(player);
+        
         if(item instanceof Weapon) {
+        	if(player.isSprinting()) {
+        		player.setSprinting(false);
+        		
+        		KeyBinding.setKeyBindState(Minecraft.getMinecraft().gameSettings.keyBindSprint.getKeyCode(), false);
+        		ClientValueRepo.shouldContinueRunning = true;
+        	}
             ((Weapon) item).toggleAiming();
         } else if(item instanceof ItemMelee) {
             ((ItemMelee) item).attack(player, true);
@@ -122,8 +147,29 @@ class ClientWeaponTicker extends Thread {
     }
 
 	private void onTick() {
+		
+		
+		
 	    EntityPlayer player = compatibility.getClientPlayer();
+	    
+	    
+	    
+	    
 	    Item item = getHeldItemMainHand(player);
+	    /*
+	    if(item instanceof Weapon) {
+	    	PlayerWeaponInstance pwi = ClientModContext.getContext().getMainHeldWeapon();
+	    	if(pwi != null)  {
+	    		if(Mouse.isButtonDown(1) && !pwi.isAimed()) {
+					((Weapon) item).toggleAiming();
+				} else if(pwi.isAimed()) {
+					((Weapon) item).toggleAiming();
+				}
+	    	}
+	    	
+	    }*/
+	    
+	    
         if(item instanceof Updatable) {
             ((Updatable) item).update(player);
         }

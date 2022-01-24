@@ -439,12 +439,12 @@ public class Compatibility1_12_2 implements Compatibility {
 
     @Override
     public float getEffectOffsetX() {
-		return -0.02f;
+		return -0.1f;
     }
 
     @Override
     public float getEffectOffsetY() {
-		return -1.65f;
+		return -1.7f;
     }
 
     @Override

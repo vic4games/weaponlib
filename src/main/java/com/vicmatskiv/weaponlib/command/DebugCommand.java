@@ -5,11 +5,13 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 import com.vicmatskiv.weaponlib.ItemAttachment;
 import com.vicmatskiv.weaponlib.Part;
 import com.vicmatskiv.weaponlib.animation.DebugPositioner;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleCommand;
 import com.vicmatskiv.weaponlib.vehicle.VehiclePart;
 
 import net.minecraft.command.ICommandSender;
 import net.minecraft.item.Item;
+import net.minecraft.util.text.TextFormatting;
 
 public class DebugCommand extends CompatibleCommand {
 
@@ -25,6 +27,9 @@ public class DebugCommand extends CompatibleCommand {
     private static final String DEBUG_ARG_WATCH = "watch";
     private static final String DEBUG_ARG_STEP = "step";
     private static final String DEBUG_ARG_AUTOROTATE = "ar";
+    
+    private static final String DEBUG_FREECAM = "freecam";
+    private static final String DEBUG_MUZZLE_POS = "muzzle";
 
     private String modId;
 
@@ -36,10 +41,18 @@ public class DebugCommand extends CompatibleCommand {
     public String getCompatibleName() {
         return COMMAND_DEBUG;
     }
+    
+    public String getDebugPrefix() {
+    	return TextFormatting.RED + "" + TextFormatting.RED + "(" + TextFormatting.DARK_GRAY + "MW" + TextFormatting.RED + ") ";
+    }
+    
+    public String getDefaultPrefix() {
+    	return TextFormatting.BOLD + "" + TextFormatting.GOLD + "(" + TextFormatting.DARK_GRAY + "MW" + TextFormatting.GOLD + ") ";
+    }
 
     @Override
     public String getCompatibleUsage(ICommandSender sender) {
-        return "/" + COMMAND_DEBUG + "<options>";
+        return getDebugPrefix() + "/" + COMMAND_DEBUG + " <options>";
     }
 
     private String getSubCommandDebugUsage() {
@@ -80,6 +93,7 @@ public class DebugCommand extends CompatibleCommand {
 
     @Override
     public void execCommand(ICommandSender sender, String[] args) {
+    	
         if (args.length > 0) {
             switch(args[0].toLowerCase()) {
             case DEBUG_ARG_ON:
@@ -112,12 +126,48 @@ public class DebugCommand extends CompatibleCommand {
             case DEBUG_ARG_AUTOROTATE:
                 processAutorotateSubCommand(args);
                 break;
+            case DEBUG_FREECAM:
+            	processFreecamAndMuzzleSubCommands(args);
+            	break;
+            case DEBUG_MUZZLE_POS:
+            	processFreecamAndMuzzleSubCommands(args);
+            	break;
+             
             default:
                 compatibility.addChatMessage(compatibility.clientPlayer(), getCompatibleUsage(sender));
             }
         } else {
             compatibility.addChatMessage(compatibility.clientPlayer(), getCompatibleUsage(sender));
         }
+    }
+    
+    private void processFreecamAndMuzzleSubCommands(String[] args) {
+    	switch(args[0].toLowerCase()) {
+    	case DEBUG_FREECAM:
+    		if(CompatibleClientEventHandler.freecamEnabled) {
+    			CompatibleClientEventHandler.freecamEnabled = false;
+    			compatibility.addChatMessage(compatibility.clientPlayer(), getDebugPrefix() + "Freecam disabled");
+     	       
+    		} else {
+    			CompatibleClientEventHandler.freecamEnabled = true;
+    			compatibility.addChatMessage(compatibility.clientPlayer(), getDebugPrefix() + "Freecam enabled");
+     	       
+    		}
+    		 
+    		break;
+    	case DEBUG_MUZZLE_POS:
+    		 
+    		if(CompatibleClientEventHandler.muzzlePositioner) {
+    			compatibility.addChatMessage(compatibility.clientPlayer(), getDebugPrefix() + "Exiting muzzle debug...");
+    			CompatibleClientEventHandler.muzzlePositioner = false;
+      	      
+    		} else {
+    			compatibility.addChatMessage(compatibility.clientPlayer(), getDebugPrefix() + "Entering muzzle debug... a point will display.");
+      	      	CompatibleClientEventHandler.muzzlePositioner = true;
+    		}
+    		
+    		 break;
+    	}
     }
 
     private void processDebugModeSubCommand(String[] args) {
@@ -132,7 +182,7 @@ public class DebugCommand extends CompatibleCommand {
         }
         if(debugMode != null) {
             DebugPositioner.setDebugMode(debugMode);
-            compatibility.addChatMessage(compatibility.clientPlayer(), "Debug mode " + args[0].toLowerCase());
+            compatibility.addChatMessage(compatibility.clientPlayer(), getDebugPrefix() + "Debug mode " + args[0].toLowerCase());
         } else {
             compatibility.addChatMessage(compatibility.clientPlayer(), getSubCommandDebugUsage());
         }
@@ -252,7 +302,12 @@ public class DebugCommand extends CompatibleCommand {
             compatibility.addChatMessage(compatibility.clientPlayer(), getSubCommandShowUsage());
             return;
         }
-
+        
+        
+        if(CompatibleClientEventHandler.muzzlePositioner) {
+        	compatibility.addChatMessage(compatibility.clientPlayer(), getDebugPrefix() + "Muzzle Position: " + CompatibleClientEventHandler.debugmuzzlePosition);
+            return;
+        }
         if(DebugPositioner.getDebugPart() == null) {
             compatibility.addChatMessage(compatibility.clientPlayer(), "Debug part not selected");
             return;

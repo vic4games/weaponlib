@@ -27,6 +27,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleStopTrackingEvent;
 import com.vicmatskiv.weaponlib.electronics.ItemHandheld;
 import com.vicmatskiv.weaponlib.inventory.CustomPlayerInventory;
 import com.vicmatskiv.weaponlib.inventory.EntityInventorySyncMessage;
+import com.vicmatskiv.weaponlib.jim.util.HitUtil;
 import com.vicmatskiv.weaponlib.mission.EntityMissionOfferingSyncMessage;
 import com.vicmatskiv.weaponlib.mission.GoToLocationAction;
 import com.vicmatskiv.weaponlib.mission.KillEntityAction;
@@ -44,6 +45,8 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 
@@ -258,12 +261,32 @@ public class ServerEventHandler extends CompatibleServerEventHandler {
 
     @Override
     protected void onCompatibleLivingHurtEvent(CompatibleLivingHurtEvent e) {
+    	
+    	
+    	
         CustomPlayerInventory inventory = CompatibleCustomPlayerInventoryCapability
                 .getInventory(e.getEntityLiving());
         if (inventory != null && inventory.getStackInSlot(1) != null) {
             compatibility.applyArmor(e, e.getEntityLiving(),
                     new ItemStack[] { inventory.getStackInSlot(1) }, e.getDamageSource(), e.getAmount());
         }
+        
+        if(e.getDamageSource().getImmediateSource() instanceof EntityProjectile) {
+        	RayTraceResult hit = HitUtil.traceProjectilehit(e.getDamageSource().getImmediateSource(), e.getEntityLiving());
+        	if(hit != null) {
+        		Vec3d eyes = e.getEntityLiving().getPositionEyes(1.0f);
+            	if(hit.hitVec.distanceTo(eyes) < 0.6f) {
+            		System.out.println("hit!!");
+            		e.setAmount(e.getAmount()*1.5f);
+            	}
+        	}
+        	
+        	
+        	
+        }
+        
+       
+        
     }
 
     @Override

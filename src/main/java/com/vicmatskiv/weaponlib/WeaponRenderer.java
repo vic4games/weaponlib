@@ -2,6 +2,8 @@ package com.vicmatskiv.weaponlib;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -17,21 +19,37 @@ import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL20;
+import org.lwjgl.util.glu.GLU;
+import org.lwjgl.util.glu.Project;
 
+import com.vicmatskiv.weaponlib.animation.ClientValueRepo;
 import com.vicmatskiv.weaponlib.animation.DebugPositioner;
+import com.vicmatskiv.weaponlib.animation.Interpolation;
 import com.vicmatskiv.weaponlib.animation.DebugPositioner.TransitionConfiguration;
 import com.vicmatskiv.weaponlib.animation.MultipartPositioning.Positioner;
 import com.vicmatskiv.weaponlib.animation.MultipartRenderStateManager;
 import com.vicmatskiv.weaponlib.animation.MultipartTransition;
 import com.vicmatskiv.weaponlib.animation.MultipartTransitionProvider;
 import com.vicmatskiv.weaponlib.animation.Transition;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponRenderer;
 import com.vicmatskiv.weaponlib.compatibility.Interceptors;
 import com.vicmatskiv.weaponlib.config.Projectiles;
+import com.vicmatskiv.weaponlib.debug.DebugRenderer;
+import com.vicmatskiv.weaponlib.render.Bloom;
+import com.vicmatskiv.weaponlib.render.Dloom;
+import com.vicmatskiv.weaponlib.shader.jim.Shader;
+import com.vicmatskiv.weaponlib.shader.jim.ShaderManager;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
+import net.minecraft.client.model.ModelBox;
+import net.minecraft.client.renderer.GLAllocation;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
@@ -61,6 +79,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 	public static class Builder {
 	    
         private Random random = new Random();
+        
+        private Vec3d beizer = new Vec3d(0, 3.5, -1);
 
 		private ModelBase model;
 		private String textureName;
@@ -262,6 +282,11 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 
 		public Builder withTextureName(String textureName) {
 			this.textureName = textureName + ".png";
+			return this;
+		}
+		
+		public Builder withADSBeizer(Vec3d beizer) {
+			this.beizer = beizer;
 			return this;
 		}
 
@@ -923,19 +948,24 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				firstPersonPositioningRecoiled = firstPersonPositioning;
 			} else {
 			    Consumer<RenderContext<RenderableState>> firstPersonPositioningRecoiledOrig = firstPersonPositioningRecoiled;
+			   
 			    
 			    firstPersonPositioningRecoiled = renderContext -> {
 			        
+			    	
 			        float maxAngle = 1.5f;
 		            float xRotation = random.nextFloat() * maxAngle;
 		            float yRotation = random.nextFloat() * maxAngle;
 		            float zRotation = random.nextFloat() * maxAngle;
 
+
+		            
 		            GL11.glRotatef(xRotation, 1f, 0f, 0f);
 		            GL11.glRotatef(yRotation, 0f, 1f, 0f);
 		            GL11.glRotatef(zRotation, 0f, 0f, 1f);
 
 		            float amplitude = 0f;
+		           
                     float xRandomOffset = random.nextFloat() * amplitude;
 		            float yRandomOffset = random.nextFloat() * amplitude;
 		            float zRandomOffset = random.nextFloat() * amplitude;
@@ -1334,6 +1364,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 
 	@Override
 	protected StateDescriptor getFirstPersonStateDescriptor(EntityLivingBase player, ItemStack itemStack) {
+		
+		
 		float amplitude = builder.normalRandomizingAmplitude;
 		float rate = builder.normalRandomizingRate;
 		RenderableState currentState = null;
@@ -1355,7 +1387,9 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			switch(asyncWeaponState.getState()) {
 
 			case RECOILED:
+				
 				if(playerWeaponInstance.isAutomaticModeEnabled() && !hasRecoilPositioning()) {
+					
 					if(playerWeaponInstance.isAimed()) {
 						currentState = RenderableState.ZOOMING;
 						rate = builder.firingRandomizingRate;
@@ -1369,9 +1403,10 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 					currentState = RenderableState.ZOOMING_RECOILED;
 					amplitude = builder.zoomRandomizingAmplitude;
 				} else {
+					
 					currentState = RenderableState.RECOILED;
 				}
-
+				
 				break;
 
 			case PAUSED:
@@ -1734,6 +1769,42 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		});
 		return Collections.singletonList(mt);
 	}
+	
+	private List<MultipartTransition<Part, RenderContext<RenderableState>>> getSimpleTransition(
+			Consumer<RenderContext<RenderableState>> w,
+			Consumer<RenderContext<RenderableState>> lh,
+			Consumer<RenderContext<RenderableState>> rh,
+			//Consumer<RenderContext<RenderableState>> m,
+			LinkedHashMap<Part, Consumer<RenderContext<RenderableState>>> custom,
+			int duration,
+			Interpolation interpType
+			) {
+		MultipartTransition<Part, RenderContext<RenderableState>> mt = new MultipartTransition<Part, RenderContext<RenderableState>>(duration, 0, interpType)
+				.withPartPositionFunction(Part.MAIN_ITEM, createWeaponPartPositionFunction(w))
+				.withPartPositionFunction(Part.LEFT_HAND, createWeaponPartPositionFunction(lh))
+				.withPartPositionFunction(Part.RIGHT_HAND, createWeaponPartPositionFunction(rh));
+		custom.forEach((part, position) -> {
+			mt.withPartPositionFunction(part, createWeaponPartPositionFunction(position));
+		});
+		return Collections.singletonList(mt);
+	}
+	
+	private List<MultipartTransition<Part, RenderContext<RenderableState>>> getSimpleTransitionBeizer(
+			Consumer<RenderContext<RenderableState>> w,
+			Consumer<RenderContext<RenderableState>> lh,
+			Consumer<RenderContext<RenderableState>> rh,
+			//Consumer<RenderContext<RenderableState>> m,
+			LinkedHashMap<Part, Consumer<RenderContext<RenderableState>>> custom,
+			int duration, Vec3d beizer) {
+		MultipartTransition<Part, RenderContext<RenderableState>> mt = new MultipartTransition<Part, RenderContext<RenderableState>>(duration, 0, beizer)
+				.withPartPositionFunction(Part.MAIN_ITEM, createWeaponPartPositionFunction(w))
+				.withPartPositionFunction(Part.LEFT_HAND, createWeaponPartPositionFunction(lh))
+				.withPartPositionFunction(Part.RIGHT_HAND, createWeaponPartPositionFunction(rh));
+		custom.forEach((part, position) -> {
+			mt.withPartPositionFunction(part, createWeaponPartPositionFunction(position));
+		});
+		return Collections.singletonList(mt);
+	}
 
 	private class FirstPersonWeaponTransitionProvider implements MultipartTransitionProvider<RenderableState, Part, RenderContext<RenderableState>> {
 
@@ -1757,7 +1828,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 						builder.firstPersonLeftHandPositioningRunning,
 						builder.firstPersonRightHandPositioningRunning,
 						builder.firstPersonCustomPositioning,
-						DEFAULT_ANIMATION_DURATION);
+						325, Interpolation.ACCELERATION);
 			case UNLOADING:
 				return getComplexTransition(builder.firstPersonPositioningUnloading,
 						builder.firstPersonLeftHandPositioningUnloading,
@@ -1837,11 +1908,11 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
                         builder.firstPersonCustomPositioningEjectSpentRoundAimed
                         );
 			case NORMAL:
-				return getSimpleTransition(builder.firstPersonPositioning,
+				return getSimpleTransitionBeizer(builder.firstPersonPositioning,
 						builder.firstPersonLeftHandPositioning,
 						builder.firstPersonRightHandPositioning,
 						builder.firstPersonCustomPositioning,
-						DEFAULT_ANIMATION_DURATION);
+						DEFAULT_ANIMATION_DURATION, builder.beizer);
             case PRONING:
                 return getSimpleTransition(builder.firstPersonPositioningProning,
                         builder.firstPersonLeftHandPositioningProning,
@@ -1849,11 +1920,14 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
                         builder.firstPersonCustomPositioningProning,
                         DEFAULT_ANIMATION_DURATION);
 			case ZOOMING:
-				return getSimpleTransition(builder.firstPersonPositioningZooming,
+				
+				
+				return getSimpleTransitionBeizer(builder.firstPersonPositioningZooming,
 						builder.firstPersonLeftHandPositioningZooming,
 						builder.firstPersonRightHandPositioningZooming,
 						builder.firstPersonCustomPositioningZooming,
-						DEFAULT_ANIMATION_DURATION);
+						DEFAULT_ANIMATION_DURATION, builder.beizer);
+				
 			case ZOOMING_SHOOTING:
 				return getSimpleTransition(builder.firstPersonPositioningZoomingShooting,
 						builder.firstPersonLeftHandPositioningZooming,
@@ -1911,7 +1985,77 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
             //return null;
         }
     }
+	
+	public static ResourceLocation SPARKS_ONE = new ResourceLocation("mw" + ":" + "textures/flashes/sparks1.png");
+	public static ResourceLocation FLASHF = new ResourceLocation("mw" + ":" + "textures/flashes/flashfront2.png");
 
+
+	public static void renderFlash(ItemStack weaponItemStack, boolean bloom) {
+		flash.use();
+		
+		flash.uniform1i("bloom", bloom ? 1 : 0);
+		
+		GlStateManager.disableLighting();
+		GlStateManager.pushMatrix();
+		GlStateManager.enableBlend();
+		GlStateManager.depthMask(false);
+		
+		GlStateManager.disableCull();
+		GlStateManager.color(1f, 1f, 1f, 0.99f);
+		GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
+		
+		Vec3d mP = ((Weapon) weaponItemStack.getItem()).getMuzzlePosition();
+		GlStateManager.translate(mP.x, mP.y, mP.z);
+		Minecraft.getMinecraft().getTextureManager().bindTexture(ClientEventHandler.FLASH);
+		EntityPlayer p = Minecraft.getMinecraft().player;
+
+		
+		
+		GlStateManager.rotate(-180f, 0f, 1f, 0f);
+		//GlStateManager.rotate(p.rotationPitch, 1f, 0f, 0f);
+		// renderFlashPlane(0, 0, 0, 0.7, 0.4, 0);
+		//double scale = 3.0-(1*Math.random());
+		double scale = 3;
+		
+		
+		//	GlStateManager.color(2.0f, 2.0f, 2.0f);
+		if(Minecraft.getMinecraft().gameSettings.thirdPersonView != 0) {
+			ClientEventHandler.renderFlashPlane(0, 0, 0, 0, 0.6 * scale, 0.8 * scale, 0);
+			ClientEventHandler.renderFlashPlane(0, 0, 0, 0, 0.6 * scale, 0.8 * scale, 90);
+			
+		}
+		
+		Minecraft.getMinecraft().getTextureManager().bindTexture(SPARKS_ONE);
+		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+    	GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+    
+    	flash.uniform1i("natural", 1);
+		ClientEventHandler.renderSparks(0, 0, 0, 0.6*scale, 0.6 * scale, 0, 0, 3);
+		flash.uniform1i("natural", 0);
+		Minecraft.getMinecraft().getTextureManager().bindTexture(ClientEventHandler.FLASHF);
+
+		
+		
+		ClientEventHandler.renderFlashPlane(0, 0, 0.1, 0.6*scale, 0.6 * scale, 0, 30);
+		ClientEventHandler.renderFlashPlane(0, 0, 2.0/scale, 0.5 * scale, 0.5 * scale, 0, 30);
+		ClientEventHandler.renderFlashPlane(0, 0, 3.5/scale, 0.4 * scale, 0.4 * scale, 0, 0);
+		
+		
+		GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+		GlStateManager.depthMask(true);
+		GlStateManager.popMatrix();
+		flash.release();
+	}
+	
+	
+	public static final FloatBuffer MODELVIEW = GLAllocation.createDirectFloatBuffer(16);
+	public static final FloatBuffer PROJECTION = GLAllocation.createDirectFloatBuffer(16);
+	public static final IntBuffer VIEWPORT = GLAllocation.createDirectIntBuffer(16);
+	public static final FloatBuffer POSITION = GLAllocation.createDirectFloatBuffer(4);
+    
+   
+	
+	
 	@Override
 	public void renderItem(ItemStack weaponItemStack, RenderContext<RenderableState> renderContext,
 			Positioner<Part, RenderContext<RenderableState>> positioner) {
@@ -1919,7 +2063,55 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 //	    if(player.getDistanceSqToEntity(compatibility.clientPlayer()) > 400) {
 //	        return;
 //	    }
-	    
+		
+		Weapon wea = (Weapon) weaponItemStack.getItem();
+	
+		
+		if(CompatibleClientEventHandler.muzzlePositioner) {
+			//Bloom.bindBloomBuffer();
+			DebugRenderer.setupBasicRender();
+			GL11.glPointSize(10f);
+			DebugRenderer.renderPoint(CompatibleClientEventHandler.debugmuzzlePosition, new Vec3d(1, 1, 1));
+			DebugRenderer.destructBasicRender();
+			//Minecraft.getMinecraft().getFramebuffer().bindFramebuffer(false);
+			
+			GlStateManager.color(1.0f, 1.0f, 1.0f);
+		}
+		
+		
+		
+		if(renderContext.getPlayer() != null && ClientEventHandler.checkShot(renderContext.getPlayer().getEntityId())) {
+			
+			//flash = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/flash"));
+			
+			Bloom.bindBloomBuffer();
+			
+			
+			//Dloom.bloomData.bindFramebuffer(false);
+			renderFlash(weaponItemStack, true);
+			Minecraft.getMinecraft().getFramebuffer().bindFramebuffer(false);
+			renderFlash(weaponItemStack, false);
+			
+		}
+		
+		
+		
+        GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW);
+        GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, PROJECTION);
+        GL11.glGetInteger(GL11.GL_VIEWPORT, VIEWPORT);
+		Project.gluProject(-2f, -1.6f, -4.5f, MODELVIEW, PROJECTION, VIEWPORT, POSITION);
+	      
+		
+		
+		
+		//Project.gluProject((float) (100f*Math.random()-100), (float) (100f*Math.random()-100), (float) (100f*Math.random()-100), buf, buf2, buf3, test);
+        
+		 
+		
+	//	System.out.println(POSITION.get(0) + " | " + POSITION.get(1) + " | " + POSITION.get(2) + " | " + POSITION.get(3));
+		//GLU.gluUnProject(winx, winy, winz, modelMatrix, projMatrix, viewport, obj_pos)
+		
+		
 		List<CompatibleAttachment<? extends AttachmentContainer>> attachments = null;
 		if(builder.getModel() instanceof ModelWithAttachments) {
 			attachments = ((Weapon) weaponItemStack.getItem()).getActiveAttachments(renderContext.getPlayer(), weaponItemStack);
@@ -1952,6 +2144,14 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(builder.getModId()
 					+ ":textures/models/" + textureName));
 		}
+		//gunLightingShader = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/gunlight"));
+	    
+		
+		gunLightingShader.use();
+    	GL20.glUniform1i(GL20.glGetUniformLocation(gunLightingShader.getShaderId(), "lightmap"), 1);
+    	GL20.glUniform1f(GL20.glGetUniformLocation(gunLightingShader.getShaderId(), "lightIntensity"), (ClientValueRepo.flash > 0) ? 5.0f : 0.0f);
+    	
+    	
 
 
 		double sqDistance = 0.0;
@@ -1993,11 +2193,36 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		    Interceptors.setRenderVolumeThreshold(0.0);
 		}
 		
+		gunLightingShader.release();
+		
+		/*
+		for(CompatibleAttachment<?> compatibleAttachment: attachments) {
+			@SuppressWarnings("unchecked")
+	        CustomRenderer<RenderableState> postRenderer = (CustomRenderer<RenderableState>) compatibleAttachment.getAttachment().getPostRenderer();
+			if(postRenderer != null) {
+				
+				GL11.glPushMatrix();
+				GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_CURRENT_BIT);
+				postRenderer.render(renderContext);
+				GL11.glPopAttrib();
+				GL11.glPopMatrix();
+				
+			}
+		}
+		*/
+		
 	}
 
 	public void renderAttachments(Positioner<Part, RenderContext<RenderableState>> positioner, RenderContext<RenderableState> renderContext,List<CompatibleAttachment<? extends AttachmentContainer>> attachments) {
+		
 		for(CompatibleAttachment<?> compatibleAttachment: attachments) {
-			if(compatibleAttachment != null && !(compatibleAttachment.getAttachment() instanceof ItemSkin)) {
+			if(compatibleAttachment != null && !(compatibleAttachment.getAttachment() instanceof ItemSkin) && !(compatibleAttachment.getAttachment() instanceof ItemScope)) {
+				renderCompatibleAttachment(compatibleAttachment, positioner, renderContext);
+			}
+		}
+		
+		for(CompatibleAttachment<?> compatibleAttachment: attachments) {
+			if(compatibleAttachment != null && !(compatibleAttachment.getAttachment() instanceof ItemSkin) && (compatibleAttachment.getAttachment() instanceof ItemScope)) {
 				renderCompatibleAttachment(compatibleAttachment, positioner, renderContext);
 			}
 		}
@@ -2033,6 +2258,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 	    }
 //	    double distanceSq = this.player != null ? renderViewEntity.getDistanceSqToEntity(this.player) : 0;
 
+	   
+	    
 		for(Tuple<ModelBase, String> texturedModel: compatibleAttachment.getAttachment().getTexturedModels()) {
 			Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(builder.getModId()
 					+ ":textures/models/" + texturedModel.getV()));
@@ -2056,15 +2283,22 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			GL11.glPopMatrix();
 		}
 
+		
+		
+		
+		
 		@SuppressWarnings("unchecked")
         CustomRenderer<RenderableState> postRenderer = (CustomRenderer<RenderableState>) compatibleAttachment.getAttachment().getPostRenderer();
 		if(postRenderer != null) {
+			
 			GL11.glPushMatrix();
 			GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_CURRENT_BIT);
 			postRenderer.render(renderContext);
 			GL11.glPopAttrib();
 			GL11.glPopMatrix();
+			
 		}
+		
 
 		for(CompatibleAttachment<?> childAttachment: itemAttachment.getAttachments()) {
 			renderCompatibleAttachment(childAttachment, positioner, renderContext);
@@ -2077,6 +2311,10 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 	public boolean hasRecoilPositioning() {
         return builder.hasRecoilPositioningDefined;
     }
+	
+	public Vec3d getADSBeizer() {
+		return builder.beizer;
+	}
 
     public long getTotalLoadIterationDuration() {
         return builder.totalLoadIterationDuration;

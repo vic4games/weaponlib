@@ -28,6 +28,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleItem;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTargetPoint;
+import com.vicmatskiv.weaponlib.compatibility.RecoilParam;
 import com.vicmatskiv.weaponlib.config.Gun;
 import com.vicmatskiv.weaponlib.crafting.CraftingComplexity;
 import com.vicmatskiv.weaponlib.crafting.OptionsMetadata;
@@ -40,6 +41,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 public class Weapon extends CompatibleItem implements PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, 
@@ -79,6 +81,7 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         int ammoCapacity = 0;
         float recoil = 1.0F;
 
+        
         private String shootSound;
         private String silencedShootSound;
         private String reloadSound;
@@ -91,6 +94,8 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         private String endOfShootSound;
         private String burstShootSound;
         private String silencedBurstShootSound;
+        
+        private Vec3d muzzlePosition = new Vec3d(-.3, -1.0, -5.3);
 
         @SuppressWarnings("unused")
         private String exceededMaxShotsSound;
@@ -179,6 +184,8 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
 
         public boolean shellCasingEjectEnabled = true;
         
+        public RecoilParam recoilParam = new RecoilParam();
+        
         private boolean hasIteratedLoad;
 
         private ShellCasingEjectDirection shellCasingEjectDirection = ShellCasingEjectDirection.RIGHT;
@@ -192,6 +199,8 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         private Set<AttachmentCategory> unremovableAttachmentCategories = new HashSet<>();
 //        private Map<RenderableState, ScreenShaking> screenShakings = new HashMap<>();
         private Map<RenderableState, ScreenShakeAnimation.Builder> screenShakingBuilders = new HashMap<>();
+        
+        private float zoom;
         
         public Builder() {
             ScreenShakeAnimation.Builder defaultShootingStateScreenShakingBuilder = new ScreenShakeAnimation.Builder()
@@ -232,6 +241,11 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
             this.name = name;
             return this;
         }
+        
+        public Builder withRecoilParam(RecoilParam param) {
+        	this.recoilParam = param;
+        	return this;
+        }
 
         public Builder withAmmoCapacity(int ammoCapacity) {
             this.ammoCapacity = ammoCapacity;
@@ -253,9 +267,9 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
             return this;
         }
 
-        @Deprecated
+        
         public Builder withZoom(float zoom) {
-            //this.zoom = zoom;
+            this.zoom = zoom;
             return this;
         }
 
@@ -335,6 +349,14 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
             this.crosshairZoomed = modId + ":" + "textures/crosshairs/" + crosshairZoomed.toLowerCase() + ".png";
             this.crosshairZoomedFullScreen = fullScreen;
             return this;
+        }
+        
+        public Builder withMuzzlePosition(Vec3d pos) {
+        	 if (modId == null) {
+                 throw new IllegalStateException("ModId is not set");
+             }
+        	this.muzzlePosition = pos;
+        	return this;
         }
 
         public Builder withShootSound(String shootSound) {
@@ -864,6 +886,8 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
                 weapon.endOfShootSound = modContext.registerSound(this.endOfShootSound);
             }
             
+            weapon.muzzlePosition = this.muzzlePosition;
+            
             weapon.burstShootSound = modContext.registerSound(this.burstShootSound);
             weapon.silencedBurstShootSound = modContext.registerSound(this.silencedBurstShootSound);
 
@@ -946,10 +970,12 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
     private static final float DEFAULT_SILENCED_SHOOT_SOUND_VOLUME = 0.7f;
     private static final float DEFAULT_SHOOT_SOUND_VOLUME = 10f;
 
-    Builder builder;
+    public Builder builder;
 
     private ModContext modContext;
 
+    private Vec3d muzzlePosition;
+    
     private CompatibleSound shootSound;
     private CompatibleSound endOfShootSound;
     private CompatibleSound silencedShootSound;
@@ -1022,6 +1048,10 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
 
     public CompatibleSound getEjectSpentRoundSound() {
         return ejectSpentRoundSound;
+    }
+    
+    public Vec3d getMuzzlePosition() {
+    	return this.muzzlePosition;
     }
 
     @Override
@@ -1282,13 +1312,17 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
     public boolean hasRecoilPositioning() {
         return builder.renderer.hasRecoilPositioning();
     }
+    
+    public RecoilParam getRecoilParameters() {
+    	return builder.recoilParam;
+    }
 
     void incrementZoom(PlayerWeaponInstance instance) {
         Item scopeItem = instance.getAttachmentItemWithCategory(AttachmentCategory.SCOPE);
         if(scopeItem instanceof ItemScope && ((ItemScope) scopeItem).isOptical()) {
             float minZoom = ((ItemScope) scopeItem).getMinZoom();
             float maxZoom = ((ItemScope) scopeItem).getMaxZoom();
-            float increment = (minZoom - maxZoom) / 20f;
+            float increment = (minZoom - maxZoom) / 7.5f;
             float zoom = instance.getZoom();
 
             if(zoom > maxZoom) {
@@ -1313,7 +1347,7 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         if(scopeItem instanceof ItemScope && ((ItemScope) scopeItem).isOptical()) {
             float minZoom = ((ItemScope) scopeItem).getMinZoom();
             float maxZoom = ((ItemScope) scopeItem).getMaxZoom();
-            float increment = (minZoom - maxZoom) / 20f;
+            float increment = (minZoom - maxZoom) / 7.5f;
             float zoom = instance.getZoom();
 
             if(zoom < minZoom) {
@@ -1420,6 +1454,10 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
 
     public boolean isCategoryRemovable(AttachmentCategory category) {
         return !builder.unremovableAttachmentCategories.contains(category);
+    }
+    
+    public float getADSZoom() {
+    	return builder.zoom;
     }
 
     public boolean isSmokeEnabled() {

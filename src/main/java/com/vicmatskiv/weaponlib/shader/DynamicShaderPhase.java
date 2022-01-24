@@ -2,6 +2,8 @@ package com.vicmatskiv.weaponlib.shader;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
+import java.lang.reflect.Field;
+import java.util.List;
 
 import org.lwjgl.opengl.GL11;
 
@@ -9,7 +11,9 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleWorldRenderer;
 
 import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.renderer.OpenGlHelper;
+import net.minecraft.client.shader.Shader;
 import net.minecraft.client.shader.ShaderGroup;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
 public interface DynamicShaderPhase {
 
@@ -25,7 +29,7 @@ public interface DynamicShaderPhase {
 
         @Override
         public void apply(DynamicShaderContext context, DynamicShaderGroup shaderGroup) {
-
+        	
             if (OpenGlHelper.shadersSupported) {
                 int originalMatrixMode = GL11.glGetInteger(GL11.GL_MATRIX_MODE);
 
@@ -60,6 +64,7 @@ public interface DynamicShaderPhase {
         @Override
         public void apply(DynamicShaderContext context, DynamicShaderGroup shaderGroup) {
             Object target = context.getTarget();
+            
             if(target instanceof EntityRenderer) {
                 EntityRenderer entityRenderer = (EntityRenderer) target;
                 ShaderGroup currentShaderGroup = compatibility.getShaderGroup(entityRenderer);
@@ -102,13 +107,17 @@ public interface DynamicShaderPhase {
 
         @Override
         public void apply(DynamicShaderContext context, DynamicShaderGroup shaderGroup) {
-            Object target = context.getTarget();
+           
+        	
+        	
+        	Object target = context.getTarget();
             if(target instanceof CompatibleWorldRenderer) {
                 CompatibleWorldRenderer entityRenderer = (CompatibleWorldRenderer) target;
                 ShaderGroup currentShaderGroup = entityRenderer.getShaderGroup();
                 if(currentShaderGroup != shaderGroup) {
                     //remove(context, null);
-                    entityRenderer.setShaderGroup(shaderGroup);
+                	
+                	entityRenderer.setShaderGroup(shaderGroup);
                     entityRenderer.useShader(true);
                 }
             }

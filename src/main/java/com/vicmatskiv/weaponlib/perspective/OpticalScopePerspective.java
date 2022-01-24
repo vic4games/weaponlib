@@ -1,5 +1,11 @@
 package com.vicmatskiv.weaponlib.perspective;
 
+import java.nio.FloatBuffer;
+
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GLSync;
+
 import com.vicmatskiv.weaponlib.ClientModContext;
 import com.vicmatskiv.weaponlib.ItemScope;
 import com.vicmatskiv.weaponlib.PlayerWeaponInstance;
@@ -8,13 +14,21 @@ import com.vicmatskiv.weaponlib.RenderableState;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderTickEvent;
 import com.vicmatskiv.weaponlib.shader.DynamicShaderContext;
 import com.vicmatskiv.weaponlib.shader.DynamicShaderPhase;
+import com.vicmatskiv.weaponlib.shader.jim.Shader;
+import com.vicmatskiv.weaponlib.shader.jim.ShaderManager;
+import com.vicmatskiv.weaponlib.shader.jim.Uniform;
+
+import net.minecraft.client.renderer.GLAllocation;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.util.ResourceLocation;
 
 public class OpticalScopePerspective extends FirstPersonPerspective<RenderableState> {
 
-    private static final int DEFAULT_WIDTH = 400;
-    private static final int DEFAULT_HEIGHT = 400;
+    private static final int DEFAULT_WIDTH = 200;
+    private static final int DEFAULT_HEIGHT = 200;
 
     public OpticalScopePerspective() {
+    	
         this.width = DEFAULT_WIDTH;
         this.height = DEFAULT_HEIGHT;
     }
@@ -33,7 +47,9 @@ public class OpticalScopePerspective extends FirstPersonPerspective<RenderableSt
 
     @Override
     public float getBrightness(RenderContext<RenderableState> renderContext) {
-        float brightness = 0f;
+     // if(1+1==2) return 1f;
+    	
+    	float brightness = 0f;
         PlayerWeaponInstance instance = renderContext.getWeaponInstance();
         if(instance == null) {
             return 0f;
@@ -60,18 +76,50 @@ public class OpticalScopePerspective extends FirstPersonPerspective<RenderableSt
 
     @Override
     public void update(CompatibleRenderTickEvent event) {
-        PlayerWeaponInstance instance = modContext.getMainHeldWeapon();
+    	
+         PlayerWeaponInstance instance = modContext.getMainHeldWeapon();
         if(instance != null && instance.isAimed()) {
             ItemScope scope = instance.getScope();
+            
+            
+            		
+           
             if(scope.isOptical()) {
-                setSize(scope.getWidth(), scope.getHeight());
+            	//setSize(1920, DEFAULT_HEIGHT);
+               setSize(scope.getWidth(), scope.getHeight());
             }
+            
             super.update(event);
         }
     }
-
+    
+    public static final FloatBuffer AUX_GL_BUFFER = GLAllocation.createDirectFloatBuffer(16);
+    
+    
+    public static final Uniform PROJECTION_MATRIX = shader -> {
+		GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, AUX_GL_BUFFER);
+		AUX_GL_BUFFER.rewind();
+		
+		GL20.glUniformMatrix4(GL20.glGetUniformLocation(shader, "projection"), false, AUX_GL_BUFFER);
+		
+	};
+	
+	public static Shader scope = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/vignette"))
+    		.withUniforms(PROJECTION_MATRIX);
+   
+    
+    
     @Override
     protected void prepareRenderWorld(CompatibleRenderTickEvent event) {
+    	boolean reload = true;
+    	if(reload) {
+    		//System.out.println("yo");
+    		//System.out.println("yo");
+    		scope = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/vignette"));
+    	}
+    	//GlStateManager.enableAlpha();
+    	//scope.use();
+    	/*
         DynamicShaderContext shaderContext = new DynamicShaderContext(
                 DynamicShaderPhase.POST_WORLD_OPTICAL_SCOPE_RENDER,
                 this.entityRenderer,
@@ -79,15 +127,22 @@ public class OpticalScopePerspective extends FirstPersonPerspective<RenderableSt
                 event.getRenderTickTime());
         PlayerWeaponInstance instance = modContext.getMainHeldWeapon();
         shaderGroupManager.applyShader(shaderContext, instance);
+       // shaderGroupManager.
+        
+        */
+        
     }
 
     @Override
     protected void postRenderWorld(CompatibleRenderTickEvent event) {
+    	//scope.release();
+    	/*
         DynamicShaderContext shaderContext = new DynamicShaderContext(
                 DynamicShaderPhase.POST_WORLD_OPTICAL_SCOPE_RENDER,
                 this.entityRenderer,
                 framebuffer,
                 event.getRenderTickTime());
         shaderGroupManager.removeStaleShaders(shaderContext); // this is probably not the right place
+        */
     }
 }
