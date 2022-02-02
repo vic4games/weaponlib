@@ -17,6 +17,61 @@ public class MatrixHelper {
 	/*
 	 * BEEZER lmao
 	 */
+	//https://danceswithcode.net/engineeringnotes/rotations_in_3d/rotations_in_3d_part2.html
+	public static Matrix4f yawPitchRollToMatrix( 
+            double yaw,     //Yaw   angle (radians)
+            double pitch,   //Pitch angle (radians)
+            double roll )   //Roll  angle (radians)
+{
+        //Precompute sines and cosines of Euler angles
+        double su = Math.sin(roll);
+        double cu = Math.cos(roll);
+        double sv = Math.sin(pitch);
+        double cv = Math.cos(pitch);
+        double sw = Math.sin(yaw);
+        double cw = Math.cos(yaw);
+        
+        //Create and populate RotationMatrix
+        Matrix4f A = new Matrix4f();
+        A.m00 = (float) (cv*cw);
+        A.m10 = (float) (su*sv*cw - cu*sw);
+        A.m20 = (float) (su*sw + cu*sv*cw);
+        A.m01 = (float) (cv*sw);
+        A.m11 = (float) (cu*cw + su*sv*sw);
+        A.m21 = (float) (cu*sv*sw - su*cw);
+        A.m02 = (float) -sv;
+        A.m12 = (float) (su*cv);
+        A.m22 = (float) (cu*cv);        
+        
+     
+        return A;
+}
+	
+	public static double[] MatrixToYawPitchRoll( Matrix4f mat)	{
+	        double[] angle = new double[3];
+	        angle[1] = -Math.asin( mat.m02 );  //Pitch
+
+	        //Gymbal lock: pitch = -90
+	        if( mat.m02 == 1 ){    
+	            angle[0] = 0.0;             //yaw = 0
+	            angle[2] = Math.atan2( -mat.m10, -mat.m20 );    //Roll
+	            System.out.println("Gimbal lock: pitch = -90");
+	        }
+
+	        //Gymbal lock: pitch = 90
+	        else if( mat.m02 == -1 ){    
+	            angle[0] = 0.0;             //yaw = 0
+	            angle[2] = Math.atan2( mat.m10, mat.m20 );    //Roll
+	            System.out.println("Gimbal lock: pitch = 90");
+	        }
+	        //General solution
+	        else{
+	            angle[0] = Math.atan2(  mat.m01, mat.m00 );
+	            angle[2] = Math.atan2(  mat.m12, mat.m22 );
+	            System.out.println("No gimbal lock");
+	        }
+	        return angle;   //Euler angles in order yaw, pitch, roll
+	}
 	
 	public static void scaleFloatBuffer(FloatBuffer matrix, Vec3d scale) {
 		matrix.put(0, (float) (matrix.get(0)*scale.x));
@@ -38,12 +93,29 @@ public class MatrixHelper {
 	public static Vec3d extractScale(Matrix4f mat) {
 		
 	
-		/*
+		
+		
 		Vec3d a = new Vec3d(mat.m00, mat.m01, mat.m02);
 		Vec3d b = new Vec3d(mat.m10, mat.m11, mat.m12);
 		Vec3d c = new Vec3d(mat.m20, mat.m21, mat.m22);
-		*/
 		
+		Vec3d scale = new Vec3d(a.lengthVector(), b.lengthVector(), c.lengthVector());
+		
+		
+		mat.m00 /= (float) scale.x;
+		mat.m01 /= (float) scale.x;
+		mat.m02 /= (float) scale.x;
+		
+		mat.m10/= (float) scale.y;
+		mat.m11/= (float) scale.y;
+		mat.m12 /= (float) scale.y;
+		
+		mat.m20/= (float) scale.z;
+		mat.m21 /= (float) scale.z;
+		mat.m22 /= (float) scale.z;
+		
+		
+		/*
 		Vec3d a = new Vec3d(mat.m00, mat.m10, mat.m20);
 		Vec3d b = new Vec3d(mat.m01, mat.m11, mat.m21);
 		Vec3d c = new Vec3d(mat.m02, mat.m12, mat.m22);
@@ -62,7 +134,29 @@ public class MatrixHelper {
 		mat.m02/= (float) scale.z;
 		mat.m12 /= (float) scale.z;
 		mat.m22 /= (float) scale.z;
+		*/
+		return scale;
+	}
+	
+	public static Vec3d extractScaleOld(Matrix4f mat) {
+		Vec3d a = new Vec3d(mat.m00, mat.m10, mat.m20);
+		Vec3d b = new Vec3d(mat.m01, mat.m11, mat.m21);
+		Vec3d c = new Vec3d(mat.m02, mat.m12, mat.m22);
 		
+		Vec3d scale = new Vec3d(a.lengthVector(), b.lengthVector(), c.lengthVector());
+		
+		
+		mat.m00 /= (float) scale.x;
+		mat.m10 /= (float) scale.x;
+		mat.m20 /= (float) scale.x;
+		
+		mat.m01/= (float) scale.y;
+		mat.m11/= (float) scale.y;
+		mat.m21 /= (float) scale.y;
+		
+		mat.m02/= (float) scale.z;
+		mat.m12 /= (float) scale.z;
+		mat.m22 /= (float) scale.z;
 		return scale;
 	}
 	
@@ -353,5 +447,124 @@ Matrix4f result = new Matrix4f();
         result.m33 = m.m33 * factor;
 
         return result;
+    }
+    
+    /**
+     * https://www.javatips.net/api/robotutils-master/src/main/java/robotutils/Quaternion.java
+     * @param roll
+     * @param pitch
+     * @param yaw
+     * @return
+     */
+    
+    public static Quaternion fromEulerAngles(double roll, double pitch, double yaw) {
+        double q[] = new double[4];
+        
+        // Apply Euler angle transformations
+        // Derivation from www.euclideanspace.com
+        double c1 = Math.cos(yaw/2.0);
+        double s1 = Math.sin(yaw/2.0);
+        double c2 = Math.cos(pitch/2.0);
+        double s2 = Math.sin(pitch/2.0);
+        double c3 = Math.cos(roll/2.0);
+        double s3 = Math.sin(roll/2.0);
+        double c1c2 = c1*c2;
+        double s1s2 = s1*s2;
+        
+        // Compute quaternion from components
+        q[0] = c1c2*c3 - s1s2*s3;
+        q[1] = c1c2*s3 + s1s2*c3;
+        q[2] = s1*c2*c3 + c1*s2*s3;
+        q[3] = c1*s2*c3 - s1*c2*s3;
+       
+        return new Quaternion((float) q[0],(float)  q[1], (float) q[2], (float) q[3]);
+    }
+    
+    /**
+     * Returns the roll component of the quaternion if it is represented
+     * as standard roll-pitch-yaw Euler angles.
+     * @return the roll (x-axis rotation) of the robot.
+     */
+    public static double toRoll(Quaternion q) {
+        // This is a test for singularities
+        double test = q.x*q.y + q.z*q.w;
+        
+        // Special case for north pole
+        if (test > SINGULARITY_NORTH_POLE)
+            return 0;
+        
+        // Special case for south pole
+        if (test < SINGULARITY_SOUTH_POLE)
+            return 0;
+            
+        return Math.atan2( 
+                    2*q.x*q.w - 2*q.y*q.z,
+                    1 - 2*q.x*q.x - 2*q.z*q.z
+                ); 
+    }
+    
+    /**
+     * Returns the pitch component of the quaternion if it is represented
+     * as standard roll-pitch-yaw Euler angles.
+     * @return the pitch (y-axis rotation) of the robot.
+     */
+    public static double toPitch(Quaternion q) {
+        // This is a test for singularities
+        double test = q.x*q.y + q.z*q.w;
+        
+        // Special case for north pole
+        if (test > SINGULARITY_NORTH_POLE)
+            return Math.PI/2;
+        
+        // Special case for south pole
+        if (test < SINGULARITY_SOUTH_POLE)
+            return -Math.PI/2;
+        
+        return Math.asin(2*test); 
+    }
+    
+    /**
+    * This defines the north pole singularity cutoff when converting 
+    * from quaternions to Euler angles.
+    */
+   public static final double SINGULARITY_NORTH_POLE = 0.49999;
+   
+   /**
+    * This defines the south pole singularity cutoff when converting 
+    * from quaternions to Euler angles.
+    */
+   public static final double SINGULARITY_SOUTH_POLE = -0.49999;
+    
+    /**
+     * Returns the yaw component of the quaternion if it is represented
+     * as standard roll-pitch-yaw Euler angles.
+     * @return the yaw (z-axis rotation) of the robot.
+     */
+    public static double toYaw(Quaternion q) {
+        // This is a test for singularities
+        double test = q.x*q.y + q.z*q.w;
+        
+        // Special case for north pole
+        if (test > SINGULARITY_NORTH_POLE)
+            return 2 * Math.atan2(q.x, q.w);
+        
+        // Special case for south pole
+        if (test < SINGULARITY_SOUTH_POLE)
+            return -2 * Math.atan2(q.x, q.w);
+        
+        return Math.atan2(
+                    2*q.y*q.w - 2*q.x*q.z,
+                    1 - 2*q.y*q.y - 2*q.z*q.z
+                ); 
+
+    }
+    
+    /**
+     * Returns the components of the quaternion if it is represented
+     * as standard roll-pitch-yaw Euler angles.
+     * @return an array of the form {roll, pitch, yaw}.
+     */
+    public static double[] toEulerAngles(Quaternion q) {
+        return new double[] { toRoll(q), toPitch(q), toYaw(q) };
     }
 }

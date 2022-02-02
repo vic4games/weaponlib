@@ -181,7 +181,12 @@ public class ScreenShakeAnimation implements PlayerAnimation {
     }
     
     public void update(EntityPlayer player, boolean fadeOut) {
-//        transitionDuration = 50;
+    	
+    	
+    	
+//       
+    	
+    	//transitionDuration = 50;
 //        xRotationCoefficient = 1f;
 //        yRotationCoefficient = 1f;
 //        zRotationCoefficient = 2f;

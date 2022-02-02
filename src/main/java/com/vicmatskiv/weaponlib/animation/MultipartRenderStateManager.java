@@ -193,7 +193,6 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
 			
 		
 			
-			
 			long currentDuration = targetState.getDuration();
 			long currentPause = targetState.getPause();
 
@@ -240,7 +239,6 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
 						PartData partData = getPartData(part, context);
 						
 						boolean revertFlag = (toState == RenderableState.NORMAL && fromState == RenderableState.ZOOMING);
-						
 						
 						
 						
@@ -607,6 +605,8 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
 		    logger.trace("Applying position for part {}", part);
 		    
 		    
+		    progress = (float) Interpolation.SMOOTHSTEP.interpolate(progress);
+		    
 		   // progress = 0f;
 		   // progress = (float) interp.interpolate(progress);
 
@@ -650,10 +650,29 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
 			   
 			   // extract scales
 			   
-			   Vec3d scaleBefore = MatrixHelper.extractScale(copiedBefore);
-			    Vec3d scaleAfter = MatrixHelper.extractScale(copiedAfter);
+			   Vec3d scaleBefore = null;
+				if(AnimationModeProcessor.getInstance().isLegacyMode()) {
+					scaleBefore =  MatrixHelper.extractScaleOld(copiedBefore);
+				} else {
+					scaleBefore =  MatrixHelper.extractScale(copiedBefore);
+				}
+					   
+					   
+					  
+			    Vec3d scaleAfter = null;
+			    if(AnimationModeProcessor.getInstance().isLegacyMode()) {
+			    	scaleAfter =  MatrixHelper.extractScaleOld(copiedAfter);
+				} else {
+					scaleAfter =  MatrixHelper.extractScale(copiedAfter);
+				}
+					 
+			    
+			    
 			   Vec3d iS = MatrixHelper.lerpVectors(scaleBefore, scaleAfter, progress);
 
+			   
+			   
+			   
 			   // Deal with the before matrix
 			   Quaternion.setFromMatrix(copiedBefore, q4);
 			   
@@ -674,17 +693,41 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
 			   AUXGLBRUHFER.rewind();
 			   matty.load(AUXGLBRUHFER);
 			   AUXGLBRUHFER.rewind();
-			   matty.scale(new Vector3f((float) iS.x, (float)iS.y, (float) iS.z));
-			   
-			   matty.transpose();
-			  
-	
 
+			   
+			   if(AnimationModeProcessor.getInstance().isLegacyMode()) {
+				   matty.scale(new Vector3f((float) iS.x, (float)iS.y, (float) iS.z));
+				   
+					
+					// somewhat for legacy scale first?
+					   matty.transpose();
+			   } else {
+				   
+
+				   matty.transpose();
+				   matty.scale(new Vector3f((float) iS.x, (float)iS.y, (float) iS.z));
+				   
+					
+					
+			   }
+			   
+			
+			
+			   
+			
+			   
+			
+			
+			  
+			
+			   
+				// Add in the translation
+			    matty.m30 = (float) iT.x;
+			    matty.m31 = (float) iT.y;
+			    matty.m32 = (float) iT.z;
+			   
+			   
 		    
-		    // Add in the translation
-		    matty.m30 = (float) iT.x;
-		    matty.m31 = (float) iT.y;
-		    matty.m32 = (float) iT.z;
 
 		    //if(log) System.out.println("After: " + matty);
 		    
@@ -756,7 +799,9 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
 	}
 
 	public void setCycleState(State cycleState, /*, State endState, */ boolean immediate) {
-	    if(cycleState == null) {
+	    
+		
+		if(cycleState == null) {
             throw new IllegalArgumentException("State cannot be null");
         }
 

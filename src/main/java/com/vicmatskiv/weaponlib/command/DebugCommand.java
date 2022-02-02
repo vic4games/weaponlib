@@ -2,9 +2,13 @@ package com.vicmatskiv.weaponlib.command;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
+import com.vicmatskiv.weaponlib.ClientModContext;
 import com.vicmatskiv.weaponlib.ItemAttachment;
 import com.vicmatskiv.weaponlib.Part;
+import com.vicmatskiv.weaponlib.WeaponRenderer.Builder;
+import com.vicmatskiv.weaponlib.animation.AnimationModeProcessor;
 import com.vicmatskiv.weaponlib.animation.DebugPositioner;
+import com.vicmatskiv.weaponlib.animation.OpenGLSelectionHelper;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleCommand;
 import com.vicmatskiv.weaponlib.vehicle.VehiclePart;
@@ -27,6 +31,7 @@ public class DebugCommand extends CompatibleCommand {
     private static final String DEBUG_ARG_WATCH = "watch";
     private static final String DEBUG_ARG_STEP = "step";
     private static final String DEBUG_ARG_AUTOROTATE = "ar";
+    private static final String DEBUG_ANIM_MODE = "anim";
     
     private static final String DEBUG_FREECAM = "freecam";
     private static final String DEBUG_MUZZLE_POS = "muzzle";
@@ -132,6 +137,9 @@ public class DebugCommand extends CompatibleCommand {
             case DEBUG_MUZZLE_POS:
             	processFreecamAndMuzzleSubCommands(args);
             	break;
+            case DEBUG_ANIM_MODE:
+            	processAnimMode(args);
+            	break;
              
             default:
                 compatibility.addChatMessage(compatibility.clientPlayer(), getCompatibleUsage(sender));
@@ -140,6 +148,14 @@ public class DebugCommand extends CompatibleCommand {
             compatibility.addChatMessage(compatibility.clientPlayer(), getCompatibleUsage(sender));
         }
     }
+    
+    private void processAnimMode(String[] args) {
+    	if(args[1].equals("on")) {
+    		AnimationModeProcessor.getInstance().setFPSMode(true);
+    	} else if(args[1].equals("off")) {
+    		AnimationModeProcessor.getInstance().setFPSMode(false);
+    	}
+     }
     
     private void processFreecamAndMuzzleSubCommands(String[] args) {
     	switch(args[0].toLowerCase()) {

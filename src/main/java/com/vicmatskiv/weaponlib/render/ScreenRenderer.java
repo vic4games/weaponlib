@@ -18,6 +18,8 @@ public class ScreenRenderer {
 	public static void renderModelOnScreen(double posX, double posY, double posZ, int scale, double yaw, double pitch, double roll, ModelBase model, ResourceLocation loc)
     {
 		
+	
+		
 		//float bruh = (float) ((Minecraft.getMinecraft().player.ticksExisted%200)/200.0);
         float scalef = 0.0625f;
 		

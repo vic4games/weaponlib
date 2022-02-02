@@ -6,21 +6,28 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Stack;
 
+import org.lwjgl.BufferUtils;
 import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL14;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL31;
+import org.lwjgl.opengl.GL43;
 import org.lwjgl.util.glu.Project;
 
 import com.vicmatskiv.weaponlib.ClientModContext;
@@ -29,14 +36,23 @@ import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.PlayerWeaponInstance;
 import com.vicmatskiv.weaponlib.RenderingPhase;
 import com.vicmatskiv.weaponlib.WeaponRenderer;
+import com.vicmatskiv.weaponlib.animation.AnimationModeProcessor;
 import com.vicmatskiv.weaponlib.animation.ClientValueRepo;
+import com.vicmatskiv.weaponlib.animation.MatrixHelper;
+import com.vicmatskiv.weaponlib.animation.OpenGLSelectionHelper;
+import com.vicmatskiv.weaponlib.animation.jim.AnimationData;
+import com.vicmatskiv.weaponlib.animation.jim.AnimationData.BlockbenchTransition;
+import com.vicmatskiv.weaponlib.animation.jim.BBLoader;
 import com.vicmatskiv.weaponlib.debug.DebugRenderer;
 import com.vicmatskiv.weaponlib.model.Bullet556;
 import com.vicmatskiv.weaponlib.particle.DriftCloudFX;
 import com.vicmatskiv.weaponlib.render.Bloom;
 import com.vicmatskiv.weaponlib.render.Dloom;
+import com.vicmatskiv.weaponlib.render.ShellParticleTest;
+import com.vicmatskiv.weaponlib.render.ShellParticleTest.Shell;
 import com.vicmatskiv.weaponlib.render.ShellRenderer;
 import com.vicmatskiv.weaponlib.render.ShellRenderer2;
+import com.vicmatskiv.weaponlib.render.qrender.QRenderer;
 import com.vicmatskiv.weaponlib.shader.jim.Shader;
 import com.vicmatskiv.weaponlib.shader.jim.ShaderManager;
 import com.vicmatskiv.weaponlib.sound.JSoundEngine;
@@ -49,10 +65,12 @@ import com.vicmatskiv.weaponlib.vehicle.network.VehicleInteractPacket;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
+import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
@@ -66,6 +84,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
+import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.event.EntityViewRenderEvent;
 import net.minecraftforge.client.event.FOVUpdateEvent;
 import net.minecraftforge.client.event.GuiScreenEvent.KeyboardInputEvent;
@@ -74,6 +93,7 @@ import net.minecraftforge.client.event.RenderHandEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.client.event.TextureStitchEvent;
+import net.minecraftforge.client.model.obj.OBJModel;
 import net.minecraftforge.client.settings.KeyBindingMap;
 import net.minecraftforge.event.entity.living.LivingFallEvent;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingJumpEvent;
@@ -83,6 +103,8 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.eventhandler.Event.Result;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
+import net.minecraftforge.fml.common.gameevent.TickEvent.PlayerTickEvent;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -141,6 +163,8 @@ public abstract class CompatibleClientEventHandler {
 			}
 
 		}
+		
+		
 		// System.out.println("hi");
 		if (Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) && freecamEnabled && !freecamLock) {
 			// System.out.println("hi");
@@ -209,10 +233,31 @@ public abstract class CompatibleClientEventHandler {
 
 		}
 	}
+	@SubscribeEvent
+	public void playerTick(PlayerTickEvent evt) {
+		//Minecraft.getMinecraft().player.inventory.currentItem = 0;
+	}
 
 	@SubscribeEvent
 	public void mouseMove(MouseEvent me) {
-
+		
+		if(AnimationModeProcessor.getInstance().getFPSMode()) {
+			AnimationModeProcessor amp = AnimationModeProcessor.getInstance();
+			amp.pan = amp.pan.addVector(0, 0, me.getDwheel()/50f);
+			
+			Field f = ReflectionHelper.findField(Mouse.class, "event_dwheel");
+			try {
+				f.set(null, 0);
+			} catch (IllegalArgumentException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}	
+		}
+		
+		
 	}
 
 	public static Shader blur = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/blur"));
@@ -306,8 +351,54 @@ public abstract class CompatibleClientEventHandler {
 	public static final IntBuffer VIEWPORT = GLAllocation.createDirectIntBuffer(16);
 	public static final FloatBuffer NEW_POS = GLAllocation.createDirectFloatBuffer(4);
 
+	
+	public static Shader shellLight = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/shells"));
+	
 	@SubscribeEvent
 	public void renderWorrldLastEvent(RenderWorldLastEvent evt) {
+		
+		
+		
+		
+		
+		
+		if(getModContext() != null) {
+			if(getModContext().getMainHeldWeapon() != null && getModContext().getMainHeldWeapon().getWeapon().builder.isUsingNewSystem()) {
+				AnimationModeProcessor.getInstance().legacyMode = false;
+			} else {
+				AnimationModeProcessor.getInstance().legacyMode = true;
+			}
+		}
+		
+		//System.out.println(Mouse.isButtonDown(0));
+	
+		
+		if(AnimationModeProcessor.getInstance().getFPSMode()) {
+			Minecraft.getMinecraft().setIngameNotInFocus();
+
+			//Minecraft.getMinecraft().mouseHelper.ungrabMouseCursor();
+			AnimationModeProcessor.getInstance().onTick();
+			
+			Minecraft.getMinecraft().player.inventory.currentItem = 0;
+			Shader blackScree = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/black"));
+			
+			
+			
+			blackScree.use();
+			Bloom.renderFboTriangle(Minecraft.getMinecraft().getFramebuffer());
+			blackScree.release();
+			return;
+		}
+		
+
+        
+		
+		
+		/*
+		AnimationData test = BBLoader.loadAnimationData("emfour.animation.json", "animation.M4A1.test", "main");
+		System.out.println(test.getTransitionList().size());
+		*/
+	//	BBLoader.load();
 
 		if (ClientModContext.getContext().getSafeGlobals().renderingPhase.get() == RenderingPhase.RENDER_PERSPECTIVE)
 			return;
@@ -321,57 +412,86 @@ public abstract class CompatibleClientEventHandler {
 		
 		Vec3d newPV = new Vec3d(NEW_POS.get(0), NEW_POS.get(1), NEW_POS.get(2));
 		
+		
+		
 		DebugRenderer.setupBasicRender();
-		//DebugRenderer.renderPoint(newPV, new Vec3d(1, 0, 0));
+		DebugRenderer.renderPoint(newPV, new Vec3d(1, 0, 0));
 		DebugRenderer.destructBasicRender();
 		
 		
+		//shellLight = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/shells"));
+		
 		GlStateManager.pushMatrix();
-		GlStateManager.enableLighting();
+		
 		GlStateManager.enableTexture2D();
-		int i = Minecraft.getMinecraft().player.world.getCombinedLight(new BlockPos(NEW_POS.get(0), NEW_POS.get(1), NEW_POS.get(2)), 0);
-        float f = (float)(i & 65535);
-        float f1 = (float)(i >> 16);
-        //OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 125, 125);
-		//GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
+	
+        EntityPlayerSP pla = Minecraft.getMinecraft().player;
+        
+        
+      
+        float interpX = (float) MatrixHelper.solveLerp(pla.prevPosX, pla.posX, Minecraft.getMinecraft().getRenderPartialTicks());
+        float interpY = (float) MatrixHelper.solveLerp(pla.prevPosY, pla.posY, Minecraft.getMinecraft().getRenderPartialTicks());
+        float interpZ = (float) MatrixHelper.solveLerp(pla.prevPosZ, pla.posZ, Minecraft.getMinecraft().getRenderPartialTicks());
+        
+        /*
+        Minecraft.getMinecraft().entityRenderer.enableLightmap();
+        RenderHelper.enableStandardItemLighting();
+		*///Minecraft.getMinecraft().entityRenderer.enableLightmap();
+       // RenderHelper.enableStandardItemLighting();
+        GlStateManager.color(1.0f, 1f, 1f, 1f);
+        GlStateManager.enableCull();
+        //GlStateManager.enableRescaleNormal();
+        //GlStateManager.enableLighting();
+        Minecraft.getMinecraft().entityRenderer.enableLightmap();
+        
+    
+       // OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, f, f1);
+        
 		Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mw" + ":" + "textures/models/bullet556.png"));
-		GlStateManager.translate(newPV.x, newPV.y, newPV.z);
-		OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, (float)f, (float)f1);
-		GlStateManager.disableTexture2D();
+		GlStateManager.translate(-interpX, -interpY, -interpZ);
+        
+		float fps = Minecraft.getMinecraft().gameSettings.thirdPersonView == 0 ? 0.5f : 1.0f;
 		
+		try {
+			Iterator<Shell> itr = ShellParticleTest.shells.iterator();
+			while(itr.hasNext()) {
+				Shell sh = itr.next();
+				
+				int i = Minecraft.getMinecraft().world.getCombinedLight(new BlockPos(sh.pos.x, sh.pos.y, sh.pos.z), 0);
+		        float f = (float)(i & 65535);
+		        float f1 = (float)(i >> 16);
+		        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, f, f1);
+				
+				GlStateManager.pushMatrix();
+				Vec3d iP = MatrixHelper.lerpVectors(sh.prevPos, sh.pos, Minecraft.getMinecraft().getRenderPartialTicks());
+				GlStateManager.translate(iP.x, iP.y, iP.z);
+				
+				GlStateManager.rotate((float) sh.rot.x, 1, 0, 0);
+				GlStateManager.rotate((float) sh.rot.y, 0, 1, 0);
+				GlStateManager.rotate((float) sh.rot.z, 0, 0, 1);
+				ShellParticleTest.bulletModel.render(null, 0f, 0f, 0f, 0f, 0f, 0.1f*fps);
+				GlStateManager.popMatrix();
+			}
+		} catch(Exception e) {
+			e.printStackTrace(); 
+		}
+		//RenderHelper.disableStandardItemLighting();
 		/*
-		Tessellator t = Tessellator.getInstance();
-		BufferBuilder bb = t.getBuffer();
-		bb.begin(GL11.GL_TRIANGLES, DefaultVertexFormats.POSITION);
+		RenderHelper.disableStandardItemLighting();
+		Minecraft.getMinecraft().entityRenderer.disableLightmap();
+		*/
 		
-		bb.pos(0, 0, 0).endVertex();
-		bb.pos(0, 1, 0).endVertex();
-		bb.pos(0, 0, 1).endVertex();
-		
-		t.draw();*/
-		
+		Minecraft.getMinecraft().entityRenderer.disableLightmap();
+
 		PROJECTION.rewind();
 		MODELVIEW.rewind();
 		
+		GlStateManager.disableLighting();
 		GlStateManager.disableTexture2D();
-		//GL11.glClearColor(1, 0, 0, 1);
-		//GL11.glClear(GL11.GL_COLOR_BUFFER_BIT);
-	//	GlStateManager.scale(0.1, 0.1, 0.1);
-		/*
-		ShellRenderer2.init();
-		GlStateManager.color(1.0f, 0.0f, 0.0f);
-		ShellRenderer2.realRender();
-		*/
-	
-		//ShellRenderer.init();
-		//ShellRenderer.use();
-		/*
-		ShellRenderer.init();
-		ShellRenderer.use();
-		*/
-		//(new Bullet556()).render(null, 0f, 0f, 0f, 0f, 0f, 0.05f);
-		GlStateManager.popMatrix();
 
+		GlStateManager.popMatrix();
+		
+		
 		//System.out.println(NEW_POS.get(0) + " | " + NEW_POS.get(1) + " | " + NEW_POS.get(2));
 
 		ClientValueRepo.update();
@@ -544,6 +664,7 @@ public abstract class CompatibleClientEventHandler {
 		onCompatibleClientTick(new CompatibleClientTickEvent(event));
 		if(event.phase  == Phase.START && Minecraft.getMinecraft().player != null) {
 			ClientValueRepo.ticker.update(Minecraft.getMinecraft().player.ticksExisted);
+			ShellParticleTest.update(0.05);
 		}
 		// if(Minecraft.getMinecraft().player.isSprinting()) {
 		// RayTraceResult rtr = Minecraft.getMinec
@@ -572,7 +693,9 @@ public abstract class CompatibleClientEventHandler {
 	@SideOnly(Side.CLIENT)
 	@SubscribeEvent
 	public final void onRenderTickEvent(TickEvent.RenderTickEvent event) {
+		
 		onCompatibleRenderTickEvent(new CompatibleRenderTickEvent(event));
+		
 	}
 
 	@SideOnly(Side.CLIENT)
@@ -698,7 +821,7 @@ public abstract class CompatibleClientEventHandler {
 	public void onRenderHand(RenderHandEvent event) {
 
 		onCompatibleRenderHand(new CompatibleRenderHandEvent(event));
-
+		
 	}
 
 	public static TextureAtlasSprite carParticles;

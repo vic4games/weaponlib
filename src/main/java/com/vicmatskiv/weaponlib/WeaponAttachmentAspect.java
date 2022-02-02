@@ -222,13 +222,18 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 		return activeAttachments;
 	}
 
-	void changeAttachment(AttachmentCategory attachmentCategory, PlayerWeaponInstance weaponInstance) {
+	public void changeAttachment(AttachmentCategory attachmentCategory, PlayerWeaponInstance weaponInstance) {
 		if(weaponInstance != null) {
+			
 			stateManager.changeState(this, weaponInstance, new ChangeAttachmentPermit(attachmentCategory),
 					WeaponState.NEXT_ATTACHMENT);
 		}
 	}
 
+	public void tryChange(ChangeAttachmentPermit permit, PlayerWeaponInstance weaponInstance) {
+		changeAttachment(permit, weaponInstance);
+	}
+	
 	@SuppressWarnings("unchecked")
 	private void changeAttachment(ChangeAttachmentPermit permit, PlayerWeaponInstance weaponInstance) {
 	    if(!(weaponInstance.getPlayer() instanceof EntityPlayer)) {

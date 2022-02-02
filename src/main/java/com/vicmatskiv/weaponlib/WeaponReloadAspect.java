@@ -273,6 +273,23 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 	public void reloadMainHeldItem(EntityPlayer player) {
 		PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
 		if(instance != null) {
+
+		
+			
+			if(WeaponAttachmentAspect.getActiveAttachment(AttachmentCategory.MAGAZINE, instance) == null) {
+				instance.getWeapon().getRenderer().compoundReloadEmpty = false;
+				instance.getWeapon().getRenderer().compoundReload = false;
+				
+			} else {
+				if(instance.getAmmo() == 0) {
+					instance.getWeapon().getRenderer().compoundReloadEmpty = true;
+				} else {
+					instance.getWeapon().getRenderer().compoundReload = true;
+				}
+				
+			}
+		    
+			
 //			stateManager.changeState(this, instance, WeaponState.LOAD, WeaponState.ALERT);
 		    stateManager.changeState(this, instance, WeaponState.AWAIT_FURTHER_LOAD_INSTRUCTIONS, WeaponState.READY);
 		}
@@ -281,6 +298,8 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 	public void unloadMainHeldItem(EntityPlayer player) {
         PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
         if(instance != null) {
+        	instance.getWeapon().getRenderer().compoundReloadEmpty = false;
+        	instance.getWeapon().getRenderer().compoundReload = false;
             instance.setLoadAfterUnloadEnabled(false);
             stateManager.changeState(this, instance, WeaponState.UNLOAD, WeaponState.ALERT);
         }
@@ -444,7 +463,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 
 	private void completeClientUnload(PlayerWeaponInstance weaponInstance, UnloadPermit p) {
 	    if(weaponInstance.isLoadAfterUnloadEnabled()) {
-	        stateManager.changeState(this, weaponInstance, WeaponState.LOAD, WeaponState.ALERT);
+	       stateManager.changeState(this, weaponInstance, WeaponState.LOAD, WeaponState.ALERT);
 	        weaponInstance.setLoadAfterUnloadEnabled(false);
 	    }
 	}

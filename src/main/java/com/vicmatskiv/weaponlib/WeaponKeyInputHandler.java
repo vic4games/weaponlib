@@ -6,7 +6,9 @@ import java.util.function.Function;
 
 import org.lwjgl.input.Keyboard;
 
+import com.vicmatskiv.weaponlib.animation.AnimationModeProcessor;
 import com.vicmatskiv.weaponlib.animation.DebugPositioner;
+import com.vicmatskiv.weaponlib.animation.OpenGLSelectionHelper;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleExtraEntityFlags;
@@ -86,9 +88,22 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
 	    	e.printStackTrace();
 	    }
 	    
+   
+
+	    if(AnimationModeProcessor.getInstance().getFPSMode()) {
+	    	if(Keyboard.isKeyDown(Keyboard.KEY_HOME)) {
+	    		AnimationModeProcessor.getInstance().transformMode = 1;
+	    	} else if(Keyboard.isKeyDown(Keyboard.KEY_INSERT)) {
+	    		AnimationModeProcessor.getInstance().transformMode = 2;
+	    	} else if(Keyboard.isKeyDown(Keyboard.KEY_END)) {
+	    		OpenGLSelectionHelper.ballBuf.framebufferClear();
+	    		AnimationModeProcessor.getInstance().transformMode = 3;
+	    	}
 	    
-        
-        if(DebugPositioner.isDebugModeEnabled() && KeyBindings.upArrowKey.isPressed()) {
+	    }
+	    
+	    
+	     if(DebugPositioner.isDebugModeEnabled() && KeyBindings.upArrowKey.isPressed()) {
             DebugPositioner.incrementXRotation(5);
         } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.downArrowKey.isPressed()) {
             DebugPositioner.incrementXRotation(-5);
@@ -96,23 +111,25 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
             DebugPositioner.incrementYRotation(5);
         } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.rightArrowKey.isPressed()) {
             DebugPositioner.incrementYRotation(-5);
-        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.jDebugKey.isPressed()) {
+        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.jDebugKey.isKeyDown()) {
+        	System.out.println("yo");
             DebugPositioner.incrementZRotation(5);
-        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.kDebugKey.isPressed()) {
+        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.kDebugKey.isKeyDown()) {
             DebugPositioner.incrementZRotation(-5);
-        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.minusDebugKey.isPressed()) {
+        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.minusDebugKey.isKeyDown()) {
+        
             DebugPositioner.incrementXPosition(-1f, altMode);
-        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.equalsDebugKey.isPressed()) {
+        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.equalsDebugKey.isKeyDown()) {
             DebugPositioner.incrementXPosition(1f, altMode);
-        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.lBracketDebugKey.isPressed()) {
+        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.lBracketDebugKey.isKeyDown()) {
             DebugPositioner.incrementYPosition(-1f, altMode);
-        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.rBracketDebugKey.isPressed()) {
+        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.rBracketDebugKey.isKeyDown()) {
             DebugPositioner.incrementYPosition(1f, altMode);
-        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.semicolonDebugKey.isPressed()) {
+        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.semicolonDebugKey.isKeyDown()) {
             DebugPositioner.incrementZPosition(-1f, altMode);
-        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.apostropheDebugKey.isPressed()) {
+        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.apostropheDebugKey.isKeyDown()) {
             DebugPositioner.incrementZPosition(1f, altMode);
-        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.deleteDebugKey.isPressed()) {
+        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.deleteDebugKey.isKeyDown()) {
             DebugPositioner.reset();
         }
 

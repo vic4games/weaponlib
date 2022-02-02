@@ -202,6 +202,9 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         
         private float zoom;
         
+        
+        private boolean newSys = false;
+        
         public Builder() {
             ScreenShakeAnimation.Builder defaultShootingStateScreenShakingBuilder = new ScreenShakeAnimation.Builder()
                 .withState(ScreenShakingAnimationManager.State.SHOOTING)
@@ -210,6 +213,15 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
                 .withZRotationCoefficient(2f)
                 .withTransitionDuration(50);
             screenShakingBuilders.put(RenderableState.SHOOTING, defaultShootingStateScreenShakingBuilder);
+        }
+        
+        public Builder useNewSystem() {
+        	this.newSys = true;
+        	return this;
+        }
+        
+        public boolean isUsingNewSystem() {
+        	return this.newSys;
         }
         
         public Builder withModId(String modId) {
@@ -1229,6 +1241,7 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         PlayerWeaponInstance instance = new PlayerWeaponInstance(slot, player, itemStack);
         //state.setAmmo(Tags.getAmmo(itemStack)); // TODO: get ammo properly
         instance.setState(WeaponState.READY);
+     
         instance.setRecoil(builder.recoil);
         instance.setMaxShots(builder.maxShots.get(0));
 

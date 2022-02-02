@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.lwjgl.input.Mouse;
 
+import com.vicmatskiv.weaponlib.animation.AnimationModeProcessor;
 import com.vicmatskiv.weaponlib.animation.ClientValueRepo;
 import com.vicmatskiv.weaponlib.grenade.ItemGrenade;
 import com.vicmatskiv.weaponlib.melee.ItemMelee;
@@ -114,6 +115,7 @@ class ClientWeaponTicker extends Thread {
     }
 
     private void onLeftButtonDown() {
+    	if(AnimationModeProcessor.getInstance().getFPSMode()) return;
         EntityPlayer player = compatibility.getClientPlayer();
         Item item = getHeldItemMainHand(player);
         if(item instanceof Weapon) {
@@ -128,6 +130,8 @@ class ClientWeaponTicker extends Thread {
     
 
     private void onRightButtonDown() {
+    	if(AnimationModeProcessor.getInstance().getFPSMode()) return;
+        
         EntityPlayer player = compatibility.getClientPlayer();
         Item item = getHeldItemMainHand(player);
         

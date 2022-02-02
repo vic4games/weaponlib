@@ -9,17 +9,21 @@ import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL31;
 import org.lwjgl.opengl.GL33;
+import org.lwjgl.util.vector.Matrix4f;
 
 import com.vicmatskiv.weaponlib.ClientEventHandler;
+import com.vicmatskiv.weaponlib.model.Bullet556;
+import com.vicmatskiv.weaponlib.render.ModelRenderTool.VertexData;
 import com.vicmatskiv.weaponlib.shader.jim.Shader;
 import com.vicmatskiv.weaponlib.shader.jim.ShaderManager;
 
 import net.minecraft.client.model.TexturedQuad;
 import net.minecraft.util.ResourceLocation;
+import scala.actors.threadpool.Arrays;
 
 public class ShellRenderer2 {
 	
-	public static final int MAX = 1000000;
+	public static final int MAX = 10;
 	public static final float[] VERTICES = { 0f, 0f, 0f,
 			0f, 1f, 0f,
 			0f, 0f, 1f,
@@ -48,6 +52,11 @@ public class ShellRenderer2 {
 		
 	
 		vbo = createEmptyVBO(INSTANCE_DATA_LENGTH*MAX);
+		
+		Triangle[] tris = ModelRenderTool.triangulate((new Bullet556()).boxList.get(0).cubeList.get(0), new Matrix4f());
+		VertexData vd = ModelRenderTool.compress(tris);
+		float[] vets = vd.vertexArray();
+		
 		data = VAOLoader.loadToVAO(VERTICES);
 		addInstancedAttribute(data.getVaoID(), vbo, 1, 3, INSTANCE_DATA_LENGTH, 0);
 	}
@@ -55,7 +64,16 @@ public class ShellRenderer2 {
 	public static void realRender() {
 		//shader = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/instanced"));
 		
+		Triangle[] tris = ModelRenderTool.triangulate((new Bullet556()).boxList.get(0).cubeList.get(0), new Matrix4f());
+		VertexData vd = ModelRenderTool.compress(tris);
+		float[] vets = vd.vertexArray();
 		
+		for(int x = 0; x < vets.length; x++) {
+			vets[x] *= 0.2f;
+		}
+		System.out.println(Arrays.toString(vets));
+		data = VAOLoader.loadToVAO(vets);
+		addInstancedAttribute(data.getVaoID(), vbo, 1, 3, INSTANCE_DATA_LENGTH, 0);
 		
 		shader.use();
 		bindAttribute(shader.getShaderId(), 1, "posy");
@@ -90,8 +108,8 @@ public class ShellRenderer2 {
 	public static void fillData(float[] data) {
 		for(int i = 0; i < (data.length/3); ++i) {
 			data[pointer++] = 0;
-			data[pointer++] = 0;
 			data[pointer++] = pointer;
+			data[pointer++] = 0;
 		}
 	}
 	

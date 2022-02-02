@@ -11,6 +11,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.input.Keyboard;
 
+import com.vicmatskiv.weaponlib.animation.OpenGLSelectionHelper;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientTickEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientTickEvent.Phase;
@@ -210,6 +211,7 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 	public void onCompatibleRenderHand(CompatibleRenderHandEvent event) {
 	    
 		
+		
 	    Minecraft minecraft = Minecraft.getMinecraft();
 	    if(minecraft.gameSettings.thirdPersonView == 0 && !compatibility.isShadersModEnabled()) {
 	        PlayerWeaponInstance weaponInstance = modContext.getMainHeldWeapon();
@@ -265,6 +267,8 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
             mainLoopLock.unlock();
             ClientModContext.currentContext.remove();
         }
+        
+        
     }
 
     @Override

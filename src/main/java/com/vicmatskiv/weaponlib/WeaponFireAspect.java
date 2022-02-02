@@ -16,6 +16,8 @@ import com.vicmatskiv.weaponlib.animation.ClientValueRepo;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 import com.vicmatskiv.weaponlib.network.packets.GunFXPacket;
+import com.vicmatskiv.weaponlib.render.ShellParticleTest;
+import com.vicmatskiv.weaponlib.render.ShellParticleTest.Shell;
 import com.vicmatskiv.weaponlib.sound.JSoundEngine;
 import com.vicmatskiv.weaponlib.state.Aspect;
 import com.vicmatskiv.weaponlib.state.PermitManager;
@@ -25,6 +27,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.fml.common.network.NetworkRegistry.TargetPoint;
 
 
@@ -350,8 +353,21 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
 
         PlayerWeaponInstance playerWeaponInstance = Tags.getInstance(itemStack, PlayerWeaponInstance.class);
 
+        if(playerWeaponInstance != null) {
+        	
+        }
+        
         if(weapon.isShellCasingEjectEnabled() && playerWeaponInstance != null)  {
+        	
+        	Vec3d newPos = new Vec3d(CompatibleClientEventHandler.NEW_POS.get(0), 
+        			CompatibleClientEventHandler.NEW_POS.get(1),
+        			CompatibleClientEventHandler.NEW_POS.get(2));
+        	float rotate = (float) Math.toRadians(-Minecraft.getMinecraft().player.rotationYaw);
+        	Vec3d vec = (new Vec3d(-25, -0, 0)).rotateYaw(rotate);
+        	Shell shell = new Shell(newPos.add(player.getPositionVector()), new Vec3d(-90, 0, 0).rotateYaw(rotate), vec);
+        	ShellParticleTest.shells.add(shell);
         	//System.out.println("yo");
+        	/*
             EntityShellCasing entityShellCasing = weapon.builder.spawnShellWith.apply(playerWeaponInstance, player);
             if(entityShellCasing != null) {
             	
@@ -365,7 +381,7 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
             	System.out.println("After: " + entityShellCasing.posX + " | " + entityShellCasing.posY + " | " + entityShellCasing.posZ);
             	
                 compatibility.spawnEntity(player, entityShellCasing);
-            }
+            }*/
         }
         
         CompatibleSound shootSound = null;

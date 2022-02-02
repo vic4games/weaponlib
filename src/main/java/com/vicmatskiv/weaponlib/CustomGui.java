@@ -3,6 +3,9 @@ package com.vicmatskiv.weaponlib;
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
 import java.awt.Color;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.ARBMultisample;
@@ -17,14 +20,19 @@ import org.lwjgl.opengl.GL44;
 import org.lwjgl.opengl.NVMultisampleFilterHint;
 
 import com.vicmatskiv.weaponlib.StatusMessageCenter.Message;
+import com.vicmatskiv.weaponlib.animation.AnimationModeProcessor;
+import com.vicmatskiv.weaponlib.animation.gui.AnimationGUI;
+import com.vicmatskiv.weaponlib.animation.gui.Button;
 import com.vicmatskiv.weaponlib.animation.jim.BasicStateAnimator;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleEntityEquipmentSlot;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleGui;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMathHelper;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTessellator;
 import com.vicmatskiv.weaponlib.config.ConfigurationManager.StatusBarPosition;
+import com.vicmatskiv.weaponlib.debug.DebugRenderer;
 import com.vicmatskiv.weaponlib.electronics.ItemWirelessCamera;
 import com.vicmatskiv.weaponlib.grenade.ItemGrenade;
+import com.vicmatskiv.weaponlib.render.Bloom;
 import com.vicmatskiv.weaponlib.render.ScreenRenderer;
 import com.vicmatskiv.weaponlib.vehicle.EntityVehicle;
 import com.vicmatskiv.weaponlib.vehicle.GearShiftPattern;
@@ -35,10 +43,12 @@ import com.vicmatskiv.weaponlib.vehicle.jimphysics.InterpolationKit;
 import com.vicmatskiv.weaponlib.vehicle.jimphysics.Transmission;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.client.model.ModelBase;
+import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.ItemRenderer;
@@ -51,6 +61,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
 public class CustomGui extends CompatibleGui {
 
@@ -84,6 +95,46 @@ public class CustomGui extends CompatibleGui {
 
 	@Override
 	public void onCompatibleRenderHud(RenderGameOverlayEvent.Pre event) {
+		
+		
+		
+		
+		// animation on
+		if(AnimationModeProcessor.getInstance().getFPSMode()) {
+			event.setCanceled(true);
+
+			GlStateManager.disableTexture2D();
+		
+			AnimationGUI.getInstance().render();
+			
+			
+			if(AnimationGUI.getInstance().titleSafe.isState()) {
+				DebugRenderer.setupBasicRender();
+				ScaledResolution sr = new ScaledResolution(Minecraft.getMinecraft());
+				DebugRenderer.renderPoint(new Vec3d(sr.getScaledWidth_double()/2, sr.getScaledHeight_double()/2, 0), new Vec3d(1, 0, 0));
+				
+				DebugRenderer.destructBasicRender();
+			}
+			
+			
+		}
+		
+		/*
+		GlStateManager.disableTexture2D();
+		Tessellator t = Tessellator.getInstance();
+		BufferBuilder bb = t.getBuffer();
+		bb.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION);
+		
+		bb.pos(0, 0, 0).endVertex();
+		bb.pos(0, 50, 0).endVertex();
+		bb.pos(50, 50, 0).endVertex();
+		bb.pos(50, 0, 0).endVertex();
+		
+		t.draw();
+		*/
+		
+		//GlStateManager.color(1f, 0f, 0f, 0f);
+		
 		
 		
 		

@@ -95,6 +95,9 @@ public final class Randomizer {
 	}
 
 	public Matrix4f update(float rate, float amplitude) {
+		
+		if(AnimationModeProcessor.getInstance().getFPSMode()) return new Matrix4f();
+		
 		reconfigure(rate, amplitude);
 
 		if(rate == 0f || amplitude == 0f) {

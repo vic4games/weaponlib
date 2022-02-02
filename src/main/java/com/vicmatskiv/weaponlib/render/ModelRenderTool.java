@@ -1,6 +1,8 @@
 package com.vicmatskiv.weaponlib.render;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.lwjgl.util.vector.Matrix4f;
 
@@ -18,13 +20,83 @@ public class ModelRenderTool {
 		public int[] positionsIndices;
 		public float[] texCoords;
 		
+	
+		
+		
 		public float[] vertexArray() {
-			return texCoords;
-			
+			float[] verts = new float[positions.length*3];
+			for(int i = 0; i < positions.length; i ++){
+				Vec3d pos = positions[i];
+				verts[i*3] = (float) pos.x;
+				verts[i*3+1] = (float) pos.y;
+				verts[i*3+2] = (float) pos.z;
+			}
+			return verts;
 		}
 	}
 	
-
+	public static VertexData compress(Triangle[] tris){
+		List<Vec3d> vertices = new ArrayList<Vec3d>(tris.length*3);
+		int[] indices = new int[tris.length*3];
+		float[] texCoords = new float[tris.length*6];
+		for(int i = 0; i < tris.length; i ++){
+			Triangle tri = tris[i];
+			double eps = 0.00001D;
+			int idx = epsIndexOf(vertices, tri.p1.pos, eps);
+			if(idx != -1){
+				indices[i*3] = idx;
+			} else {
+				indices[i*3] = vertices.size();
+				vertices.add(tri.p1.pos);
+			}
+			
+			idx = epsIndexOf(vertices, tri.p2.pos, eps);
+			if(idx != -1){
+				indices[i*3+1] = idx;
+			} else {
+				indices[i*3+1] = vertices.size();
+				vertices.add(tri.p2.pos);
+			}
+			
+			idx = epsIndexOf(vertices, tri.p3.pos, eps);
+			if(idx != -1){
+				indices[i*3+2] = idx;
+			} else {
+				indices[i*3+2] = vertices.size();
+				vertices.add(tri.p3.pos);
+			}
+			
+			texCoords[i*6+0] = tri.p1.texX;
+			texCoords[i*6+1] = tri.p1.texY;
+			texCoords[i*6+2] = tri.p2.texX;
+			texCoords[i*6+3] = tri.p2.texY;
+			texCoords[i*6+4] = tri.p3.texX;
+			texCoords[i*6+5] = tri.p3.texY;
+		}
+		VertexData data = new VertexData();
+		data.positions = vertices.toArray(new Vec3d[0]);
+		//data.positionIndices = indices;
+		data.texCoords = texCoords;
+		return data;
+	}
+	
+	public static boolean epsilonEquals(Vec3d a, Vec3d b, double eps){
+		double dx = Math.abs(a.x-b.x);
+		double dy = Math.abs(a.y-b.y);
+		double dz = Math.abs(a.z-b.z);
+		
+		return dx < eps && dy < eps && dz < eps;
+	}
+	
+	private static int epsIndexOf(List<Vec3d> l, Vec3d vec, double eps){
+		for(int i = 0; i < l.size(); i++){
+			if(epsilonEquals(vec, l.get(i), eps)){
+				return i;
+			}
+		}
+		return -1;
+	}
+	
 	
 	public static Triangle[] triangulate(ModelBox b, Matrix4f transform) {
 		if(quadListField == null){

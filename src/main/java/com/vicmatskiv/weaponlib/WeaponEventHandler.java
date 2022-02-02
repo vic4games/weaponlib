@@ -4,6 +4,7 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 
 import java.util.concurrent.atomic.AtomicReference;
 
+import com.vicmatskiv.weaponlib.animation.OpenGLSelectionHelper;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleEntityJoinWorldEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleExposureCapability;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponEventHandler;
@@ -154,6 +155,7 @@ public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 	       
 	    	event.setCanceled(true);
 	    }
+	    
 	    
 	    //System.out.println("Render player");
 	}

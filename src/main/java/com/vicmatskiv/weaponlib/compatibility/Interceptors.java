@@ -12,6 +12,7 @@ import java.util.Random;
 import org.apache.logging.log4j.core.lookup.Interpolator;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GLSync;
 import org.lwjgl.util.vector.Matrix4f;
@@ -27,6 +28,7 @@ import com.vicmatskiv.weaponlib.RenderContext;
 import com.vicmatskiv.weaponlib.RenderableState;
 import com.vicmatskiv.weaponlib.SpreadableExposure;
 import com.vicmatskiv.weaponlib.Weapon;
+import com.vicmatskiv.weaponlib.animation.AnimationModeProcessor;
 import com.vicmatskiv.weaponlib.animation.ClientValueRepo;
 import com.vicmatskiv.weaponlib.animation.MatrixHelper;
 import com.vicmatskiv.weaponlib.animation.MultipartRenderStateManager;
@@ -382,6 +384,16 @@ public class Interceptors {
     
     public static boolean setupViewBobbing(float partialTicks) {
     	
+    	/*
+    	GlStateManager.translate(2.0, 0.0, 0.0);
+    	GlStateManager.rotate(45f, 0, 1, 0);
+    	*/
+    	if(AnimationModeProcessor.getInstance().getFPSMode()) {
+    		AnimationModeProcessor.getInstance().applyCameraTransforms();
+        	
+    	}
+    	
+    	
     	
     	//GlStateManager.translate(0, ClientValueRepo.rise, 0);
     	
@@ -553,7 +565,7 @@ public class Interceptors {
     }
     
     public static boolean hurtCameraEffect(float partialTicks) {
-        
+//	    if(1+1==2) return false;  
         if(!(compatibility.getRenderViewEntity() instanceof EntityPlayer)) {
             return true;
         }
@@ -727,6 +739,19 @@ public class Interceptors {
     public static void turn(EntityPlayer player, float yawDelta, float pitchDelta) {
     	//if(1+1==2) return;
 
+    	
+    	//Animation mdoe on
+    	if(AnimationModeProcessor.getInstance().getFPSMode() && Mouse.isButtonDown(0)) {
+    		Mouse.getEventDWheel();
+    		AnimationModeProcessor amp = AnimationModeProcessor.getInstance();
+    		amp.rot = amp.rot.addVector(pitchDelta, yawDelta, 0);
+    		yawDelta = 0;
+        	pitchDelta = 0;
+    	}
+    	
+    	
+    	
+    	
     	ClientValueRepo.xInertia += yawDelta*0.02;
     	ClientValueRepo.yInertia += pitchDelta*0.04;
     	

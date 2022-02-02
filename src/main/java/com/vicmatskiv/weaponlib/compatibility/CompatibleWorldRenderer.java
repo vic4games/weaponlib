@@ -1298,6 +1298,7 @@ public class CompatibleWorldRenderer extends EntityRenderer
 
     public void renderWorld(float partialTicks, long finishTimeNano)
     {
+    	
         this.updateLightmap(partialTicks);
 
         if (this.mc.getRenderViewEntity() == null)
