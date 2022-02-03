@@ -78,14 +78,17 @@ public class AnimationModeProcessor {
 	public void onMouseClick() {
 
 		// currentPartMatrix = DebugPositioner.rotationMatrix();
-		Minecraft mc = Minecraft.getMinecraft();
-		ScaledResolution scaledresolution = new ScaledResolution(mc);
-        final int scaledWidth = scaledresolution.getScaledWidth();
-        final int scaledHeight = scaledresolution.getScaledHeight();
-        int mouseX = Mouse.getX() * scaledWidth / mc.displayWidth;
-        int mouseY = scaledHeight - Mouse.getY() * scaledHeight / mc.displayHeight - 1;
-		AnimationModeProcessor.getInstance().atGrab = AnimationModeProcessor.getInstance().getTransformFromSelected().copy();
-		Arcball.grab(mouseX, mouseY);
+		if(OpenGLSelectionHelper.selectID != -1) {
+			Minecraft mc = Minecraft.getMinecraft();
+			ScaledResolution scaledresolution = new ScaledResolution(mc);
+	        final int scaledWidth = scaledresolution.getScaledWidth();
+	        final int scaledHeight = scaledresolution.getScaledHeight();
+	        int mouseX = Mouse.getX() * scaledWidth / mc.displayWidth;
+	        int mouseY = scaledHeight - Mouse.getY() * scaledHeight / mc.displayHeight - 1;
+			AnimationModeProcessor.getInstance().atGrab = AnimationModeProcessor.getInstance().getTransformFromSelected().copy();
+			Arcball.grab(mouseX, mouseY);
+		}
+		
 		
 		if (Mouse.isButtonDown(0) && !AnimationModeProcessor.instance.leftLock) {
 			AnimationModeProcessor.instance.tryToUpdateSelectedColor(AnimationModeProcessor.instance.colorHover);
