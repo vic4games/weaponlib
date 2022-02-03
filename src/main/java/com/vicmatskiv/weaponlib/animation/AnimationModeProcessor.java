@@ -1,9 +1,11 @@
 package com.vicmatskiv.weaponlib.animation;
 
 import java.awt.Color;
+import java.nio.FloatBuffer;
 
 import javax.management.modelmbean.ModelMBeanNotificationBroadcaster;
 
+import org.lwjgl.BufferUtils;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
@@ -537,11 +539,32 @@ public class AnimationModeProcessor {
 		if (transformMode == 1) {
 			if(editRotationPointMode) {
 				Transform t = getTransformFromSelected();
+				
+
+				
+				
 				GlStateManager.pushMatrix();
 				GlStateManager.translate(t.getRotationPointX()+t.getPositionX(), t.getRotationPointY()+t.getPositionY(), t.getRotationPointZ()+t.getPositionZ());
-				//GlStateManager.scale(2, 2, 2);
+				GlStateManager.scale(3, 3, 3);
 				renderAtlas(scalar*5);
+				
+				GlStateManager.disableDepth();
+				renderLightAxisRing(new Vec3d(0, 1, 0), Color.red, 0.2f, 0.1f, true, false);
+				
+				DebugRenderer.setupBasicRender();
+				DebugRenderer.renderPoint(Vec3d.ZERO, new Vec3d(1, 0, 0));
+				DebugRenderer.destructBasicRender();
+				GlStateManager.enableDepth();
+				//renderLightAxisRing(new Vec3d(0, 0, 1), Color.red, 0.2f, 0.1f, true, false);
+				
+				
+				
+				
+				
 				GlStateManager.popMatrix();
+				
+				
+				
 			} else {
 				renderAtlas(scalar);
 			}

@@ -169,7 +169,7 @@ public class AnimationGUI {
 		
 		if(Mouse.isButtonDown(0) && !mouseStatus) {
 			mouseStatus = true;
-			Arcball.grab(mouseX, mouseY);
+			
 			
 			
 			
