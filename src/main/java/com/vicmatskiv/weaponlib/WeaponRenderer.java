@@ -2472,31 +2472,6 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 //	    }
 		
 		
-		try {
-			/*
-			AnimationSet data = BBLoader.loadAnimationFile("real" + BBLoader.getAnimationSuffix());
-			SingleAnimation sa = data.getSingleAnimation("reload");
-			AnimationData bone = sa.getBone("main");
-			sa.bake();
-			*/
-			
-			AnimationData data = BBLoader.getAnimation("real", "reload", "magazine");
-			
-		//	System.out.println(bone.translateKeyframes);
-			//sa.bake();
-			
-			/*
-			System.out.println("Start");
-			for(Entry<Float, BlockbenchTransition> bbS : sa.getBone("main").bbTransition.entrySet()) {
-				BlockbenchTransition bb = bbS.getValue();
-				System.out.println(bb.getTimestamp() + " | " + bb.getTranslation());
-			}
-			System.out.println("end");
-				*/
-		} catch(Exception e) {
-			e.printStackTrace();
-		}
-		//
 		
 		Weapon wea = (Weapon) weaponItemStack.getItem();
 	

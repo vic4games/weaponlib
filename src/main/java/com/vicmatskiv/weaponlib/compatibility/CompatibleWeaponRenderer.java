@@ -451,6 +451,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 			// if(!DebugPositioner.isDebugModeEnabled())
 			positioner.position(Part.MAIN_ITEM, renderContext);
 
+			/*
 			AnimationData anm = BBLoader.getAnimation("real", "reload", "main");
 			//AnimationData anm = BBLoader.loadAnimationData("m16.animation.json", "animation.M16.reload", "main");
 			FuckMyLife.instance.bbMap.clear();
@@ -464,7 +465,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 	        	//FuckMyLife.instance.position(FuckMyLife.instance.timer, 4.0f, false);
 	        } catch(Exception e) {
 	        	e.printStackTrace();
-	        }
+	        }*/
 	        
 	        /*
 	        GL11.glRotated(-23.0522f, 0, 0, 1);
@@ -979,7 +980,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 		if (DebugPositioner.isDebugModeEnabled()) {
 			DebugPositioner.position(Part.LEFT_HAND, renderContext);
 		}
-
+		/*
 		AnimationData anm = BBLoader.getAnimation("real", "reload", "lefthand");
 		//AnimationData anm = BBLoader.loadAnimationData("m16.animation.json", "animation.M16.reload", "lefthand");
 		FuckMyLife.instance.bbMap.clear();
@@ -993,7 +994,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
         	//FuckMyLife.instance.position(FuckMyLife.instance.timer, 4.0f, true);
         } catch(Exception e) {
         	e.printStackTrace();
-        }
+        }*/
        // System.out.println(anm.bbTransition);
        
 

@@ -8,6 +8,7 @@ import org.lwjgl.opengl.GL14;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL32;
+import org.lwjgl.opengl.GL40;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.shader.jim.Shader;
@@ -210,6 +211,8 @@ public class Bloom {
 		GlStateManager.enableLighting();
 		GlStateManager.enableDepth();
 		*/
+		
+		
 		
 		runDownsampler();
 		GlStateManager.enableBlend();

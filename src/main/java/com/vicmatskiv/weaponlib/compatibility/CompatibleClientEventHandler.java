@@ -362,6 +362,7 @@ public abstract class CompatibleClientEventHandler {
 		
 		
 		
+		
 		if(getModContext() != null) {
 			if(getModContext().getMainHeldWeapon() != null && getModContext().getMainHeldWeapon().getWeapon().builder.isUsingNewSystem()) {
 				AnimationModeProcessor.getInstance().legacyMode = false;

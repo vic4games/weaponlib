@@ -42,6 +42,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 
 public class Weapon extends CompatibleItem implements PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, 
@@ -173,6 +174,8 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         private CraftingComplexity craftingComplexity;
 
         private Object[] craftingMaterials;
+        
+        private String gunType = "Gun";
 
         private float shellCasingForwardOffset = Weapon.DEFAULT_SHELL_CASING_FORWARD_OFFSET;
 
@@ -234,8 +237,9 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
             return this;
         }
 
+        @Deprecated
         public Builder withInformationProvider(Function<ItemStack, List<String>> informationProvider) {
-            this.informationProvider = informationProvider;
+           // this.informationProvider = informationProvider;
             return this;
         }
 
@@ -956,6 +960,29 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
                     //System.err.println("!!!No recipe defined for weapon " + name);
                 }
             }
+            
+            
+           
+            
+            
+            this.informationProvider = (stack) -> {
+            	 String firemodes = "";
+                 if(!firemodes.equals("")) {
+                 	
+                 	if(maxShots.contains(1)) firemodes += "Semi";
+                 	
+                 	for(Integer i : maxShots) {
+                 		if(i != Integer.MAX_VALUE && i != 1) firemodes += "Burst";
+                 	}
+                 	
+                 	if(maxShots.contains(Integer.MAX_VALUE)) firemodes += "Auto";
+                 	
+                 	
+                 }
+            	return Arrays.asList(TextFormatting.RED + "Damage: " + TextFormatting.GRAY + this.spawnEntityDamage,
+            			TextFormatting.RED + "Fire Mode: " + TextFormatting.GRAY + firemodes
+            			);
+            };
 
 
             return weapon;
