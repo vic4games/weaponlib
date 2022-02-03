@@ -64,9 +64,13 @@ public class Dloom {
 				System.out.println("Failed to create depth texture framebuffer! This is an error!");
 			}
     	}
-    	OpenGlHelper.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, Minecraft.getMinecraft().getFramebuffer().framebufferObject);
-    	OpenGlHelper.glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, depthFrameBuffer);
-    	GL30.glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL11.GL_DEPTH_BUFFER_BIT, GL11.GL_NEAREST);
+    	
+    
+    	
+    	OpenGlHelper.glBindFramebuffer(GLCompatible.GL_READ_FRAMEBUFFER, Minecraft.getMinecraft().getFramebuffer().framebufferObject);
+    	OpenGlHelper.glBindFramebuffer(GLCompatible.GL_DRAW_FRAMEBUFFER, depthFrameBuffer);
+    	
+    	GLCompatible.glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL11.GL_DEPTH_BUFFER_BIT, GL11.GL_NEAREST);
     	
     	Minecraft.getMinecraft().getFramebuffer().bindFramebuffer(false);
     }

@@ -4,9 +4,9 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 
 public abstract class CompatibleWeaponKeyInputHandler {
-	
+
 	@SubscribeEvent
-    public final void onKeyInput(InputEvent.KeyInputEvent event) {
+	public final void onKeyInput(InputEvent.KeyInputEvent event) {
 		onCompatibleKeyInput();
 	}
 

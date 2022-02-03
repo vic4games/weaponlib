@@ -2587,6 +2587,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 	    
 		if(!OpenGLSelectionHelper.isInSelectionPass) {
 			gunLightingShader.use();
+			
+			
 	    	GL20.glUniform1i(GL20.glGetUniformLocation(gunLightingShader.getShaderId(), "lightmap"), 1);
 	    	GL20.glUniform1f(GL20.glGetUniformLocation(gunLightingShader.getShaderId(), "lightIntensity"), (ClientValueRepo.flash > 0) ? 5.0f : 0.0f);
 	    	

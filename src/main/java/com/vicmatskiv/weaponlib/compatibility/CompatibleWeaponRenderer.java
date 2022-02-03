@@ -14,6 +14,7 @@ import javax.vecmath.Matrix4f;
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.input.Mouse;
+import org.lwjgl.opengl.ARBComputeShader;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
@@ -768,22 +769,24 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 		
 
 		if (AnimationModeProcessor.getInstance().getFPSMode()) {
-			Shader edge = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/selectedge"));
-			edge.use();
+			
+			selectedge.use();
 			if (OpenGLSelectionHelper.fbo != null) {
 
 				GlStateManager.setActiveTexture(GL13.GL_TEXTURE0 + 5);
 				GL11.glBindTexture(GL11.GL_TEXTURE_2D, OpenGLSelectionHelper.fbo.framebufferTexture);
-				edge.uniform1i("select", 5);
+				selectedge.uniform1i("select", 5);
 			}
 			// System.out.println(OpenGLSelectionHelper.selectID);
-			edge.uniform1i("idSelected", OpenGLSelectionHelper.selectID);
-			edge.uniform2f("fragSize", (float) 1.0f / mc.displayWidth, (float) 1.0f / mc.displayHeight);
+			selectedge.uniform1i("idSelected", OpenGLSelectionHelper.selectID);
+			selectedge.uniform2f("fragSize", (float) 1.0f / mc.displayWidth, (float) 1.0f / mc.displayHeight);
 			GlStateManager.setActiveTexture(GL13.GL_TEXTURE0);
 
+			
+			
 			Minecraft.getMinecraft().getFramebuffer().bindFramebuffer(true);
 			Bloom.renderFboTriangle(Minecraft.getMinecraft().getFramebuffer());
-			edge.release();
+			selectedge.release();
 
 			OpenGLSelectionHelper.bindBallBuf();
 			ByteBuffer buf = OpenGLSelectionHelper.readRawColor();
@@ -821,6 +824,8 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 		}
 
 	}
+	
+	public static final Shader selectedge = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/selectedge"));
 
 	static void fixVersionSpecificFirstPersonPositioning(TransformType transformType) {
 		int i = transformType == TransformType.FIRST_PERSON_RIGHT_HAND ? 1 : -1;

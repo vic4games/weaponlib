@@ -140,6 +140,8 @@ public class AnimationModeProcessor {
 		
 		
 		
+		//this.transformMode = 1;
+		
 		
 		//Minecraft.getMinecraft().player.world.setWorldTime(6000);
 		
@@ -480,7 +482,10 @@ public class AnimationModeProcessor {
 	public void renderTransformIndicator(float scalar) {
 		//GlStateManager.enableRescaleNormal();
 		
+		GlStateManager.disableDepth();
 		if(!AnimationGUI.getInstance().axisToggle.isState()) return;
+		
+		
 		
 		
 		GlStateManager.pushMatrix();

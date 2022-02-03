@@ -92,11 +92,11 @@ public class Bloom {
 		
 		data = new Framebuffer(width, height, true);
 		data.bindFramebufferTexture();
-		GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL30.GL_RGBA16F, width, height, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_SHORT, (IntBuffer) null);
+		GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GLCompatible.GL_RGBA16F, width, height, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_SHORT, (IntBuffer) null);
 		data.bindFramebuffer(false);
 		
-		OpenGlHelper.glBindRenderbuffer(GL30.GL_RENDERBUFFER, mc.getFramebuffer().depthBuffer);
-		OpenGlHelper.glFramebufferRenderbuffer(GL30.GL_FRAMEBUFFER, GL30.GL_DEPTH_ATTACHMENT, GL30.GL_RENDERBUFFER, mc.getFramebuffer().depthBuffer);
+		OpenGlHelper.glBindRenderbuffer(GLCompatible.GL_RENDERBUFFER, mc.getFramebuffer().depthBuffer);
+		OpenGlHelper.glFramebufferRenderbuffer(GLCompatible.GL_FRAMEBUFFER, GLCompatible.GL_DEPTH_ATTACHMENT, GLCompatible.GL_RENDERBUFFER, mc.getFramebuffer().depthBuffer);
 		
 		data.setFramebufferFilter(GL11.GL_LINEAR);
 		data.setFramebufferColor(0, 0, 0, 0);
@@ -109,7 +109,7 @@ public class Bloom {
 		for(int i = 0; i < LAYERS; ++i) {
 			buffers[i] = new Framebuffer((int) bW, (int) bH, false);
 			buffers[i].bindFramebufferTexture();
-			GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL30.GL_RGBA16F, (int) bW, (int) bH, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_SHORT, (IntBuffer) null);
+			GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GLCompatible.GL_RGBA16F, (int) bW, (int) bH, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_SHORT, (IntBuffer) null);
 			buffers[i].setFramebufferFilter(GL11.GL_LINEAR);
 			buffers[i].setFramebufferColor(0, 0, 0, 0);
 			if(i < 1){
@@ -271,7 +271,7 @@ public class Bloom {
 	
 	
 	public static void bindMultisample() {
-		GL30.glBindFramebuffer(OpenGlHelper.GL_FRAMEBUFFER, multisampleFBO);
+		GLCompatible.glBindFramebuffer(OpenGlHelper.GL_FRAMEBUFFER, multisampleFBO);
 	}
 
 	
@@ -285,21 +285,21 @@ public class Bloom {
 	}
 	
 	public static void setupMultisampleBuffer() {
-		
+
 		if(multisample && getWidthTimesHeight() == mRes) return;
-		System.out.println("Recalculating MSAA buffer...");
+		//System.out.println("Recalculating MSAA buffer...");
 		mRes = getWidthTimesHeight();
 		
-		multisampleFBO  = GL30.glGenFramebuffers();
-		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, multisampleFBO);
+		multisampleFBO  = GLCompatible.glGenFramebuffers();
+		GLCompatible.glBindFramebuffer(GLCompatible.GL_FRAMEBUFFER, multisampleFBO);
 		multiampleTexFBO = GL11.glGenTextures();
 		
 		int width = Minecraft.getMinecraft().displayWidth;
 		int height = Minecraft.getMinecraft().displayHeight;
 		
-		GL11.glBindTexture(GL32.GL_TEXTURE_2D_MULTISAMPLE, multiampleTexFBO);
-		GL32.glTexImage2DMultisample(GL32.GL_TEXTURE_2D_MULTISAMPLE, 4, GL11.GL_RGBA8, width, height, false);
-		GL30.glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, GL32.GL_TEXTURE_2D_MULTISAMPLE, multiampleTexFBO, 0);
+		GL11.glBindTexture(GLCompatible.GL_TEXTURE_2D_MULTISAMPLE, multiampleTexFBO);
+		GLCompatible.glTexImage2DMultisample(GLCompatible.GL_TEXTURE_2D_MULTISAMPLE, 4, GL11.GL_RGBA8, width, height, false);
+		GLCompatible.glFramebufferTexture2D(GLCompatible.GL_FRAMEBUFFER, GLCompatible.GL_COLOR_ATTACHMENT0, GLCompatible.GL_TEXTURE_2D_MULTISAMPLE, multiampleTexFBO, 0);
 		multisample = true;
 		
 	}
@@ -308,9 +308,9 @@ public class Bloom {
 		int gWidth = Minecraft.getMinecraft().displayWidth;
     	int gHeight = Minecraft.getMinecraft().displayHeight;
     	setupMultisampleBuffer();
-		GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, Minecraft.getMinecraft().getFramebuffer().framebufferObject);
-        GL30.glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, multisampleFBO);
-        GL30.glBlitFramebuffer(0, 0, gWidth, gHeight, 0, 0, gWidth, gHeight, GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
+		GLCompatible.glBindFramebuffer(GLCompatible.GL_READ_FRAMEBUFFER, Minecraft.getMinecraft().getFramebuffer().framebufferObject);
+		GLCompatible.glBindFramebuffer(GLCompatible.GL_DRAW_FRAMEBUFFER, multisampleFBO);
+        GLCompatible.glBlitFramebuffer(0, 0, gWidth, gHeight, 0, 0, gWidth, gHeight, GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
 
         bindMultisample();
 	}
@@ -318,9 +318,9 @@ public class Bloom {
 	public static void unapplyMultisample() {
 		int gWidth = Minecraft.getMinecraft().displayWidth;
     	int gHeight = Minecraft.getMinecraft().displayHeight;
-		GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, multisampleFBO);
-        GL30.glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, Minecraft.getMinecraft().getFramebuffer().framebufferObject);
-        GL30.glBlitFramebuffer(0, 0, gWidth, gHeight, 0, 0, gWidth, gHeight, GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
+    	GLCompatible.glBindFramebuffer(GLCompatible.GL_READ_FRAMEBUFFER, multisampleFBO);
+    	GLCompatible.glBindFramebuffer(GLCompatible.GL_DRAW_FRAMEBUFFER, Minecraft.getMinecraft().getFramebuffer().framebufferObject);
+        GLCompatible.glBlitFramebuffer(0, 0, gWidth, gHeight, 0, 0, gWidth, gHeight, GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
 
 	}
 
