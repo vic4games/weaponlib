@@ -17,6 +17,7 @@ import com.vicmatskiv.weaponlib.WeaponAttachmentAspect.ChangeAttachmentPermit;
 import com.vicmatskiv.weaponlib.WeaponState;
 import com.vicmatskiv.weaponlib.WeaponRenderer.Builder;
 import com.vicmatskiv.weaponlib.animation.AnimationModeProcessor;
+import com.vicmatskiv.weaponlib.animation.Arcball;
 import com.vicmatskiv.weaponlib.animation.DebugPositioner;
 import com.vicmatskiv.weaponlib.animation.OpenGLSelectionHelper;
 import com.vicmatskiv.weaponlib.animation.DebugPositioner.Position;
@@ -164,8 +165,13 @@ public class AnimationGUI {
 	}
 	
 	public void update(int mouseX, int mouseY) {
+		
+		
 		if(Mouse.isButtonDown(0) && !mouseStatus) {
 			mouseStatus = true;
+			Arcball.grab(mouseX, mouseY);
+			
+			
 			
 			onMouseClick(mouseX, mouseY);
 			

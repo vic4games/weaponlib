@@ -243,7 +243,13 @@ public abstract class CompatibleClientEventHandler {
 		
 		if(AnimationModeProcessor.getInstance().getFPSMode()) {
 			AnimationModeProcessor amp = AnimationModeProcessor.getInstance();
-			amp.pan = amp.pan.addVector(0, 0, me.getDwheel()/50f);
+			
+			
+			double pan = Math.max(0.01, Math.abs(amp.pan.z)/10000f);
+			
+			
+		
+			amp.pan = amp.pan.addVector(0, 0, (me.getDwheel())*pan);
 			
 			Field f = ReflectionHelper.findField(Mouse.class, "event_dwheel");
 			try {
@@ -356,7 +362,6 @@ public abstract class CompatibleClientEventHandler {
 	
 	@SubscribeEvent
 	public void renderWorrldLastEvent(RenderWorldLastEvent evt) {
-		
 		
 		
 		

@@ -27,12 +27,14 @@ import com.vicmatskiv.weaponlib.render.Bloom;
 import com.vicmatskiv.weaponlib.render.ModelRenderTool;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.MouseHelper;
 import net.minecraft.util.math.Vec3d;
+import scala.actors.threadpool.Arrays;
 
 public class AnimationModeProcessor {
 
@@ -74,7 +76,15 @@ public class AnimationModeProcessor {
 	public void onMouseClick() {
 
 		// currentPartMatrix = DebugPositioner.rotationMatrix();
-
+		Minecraft mc = Minecraft.getMinecraft();
+		ScaledResolution scaledresolution = new ScaledResolution(mc);
+        final int scaledWidth = scaledresolution.getScaledWidth();
+        final int scaledHeight = scaledresolution.getScaledHeight();
+        int mouseX = Mouse.getX() * scaledWidth / mc.displayWidth;
+        int mouseY = scaledHeight - Mouse.getY() * scaledHeight / mc.displayHeight - 1;
+		AnimationModeProcessor.getInstance().atGrab = AnimationModeProcessor.getInstance().getTransformFromSelected().copy();
+		Arcball.grab(mouseX, mouseY);
+		
 		if (Mouse.isButtonDown(0) && !AnimationModeProcessor.instance.leftLock) {
 			AnimationModeProcessor.instance.tryToUpdateSelectedColor(AnimationModeProcessor.instance.colorHover);
 		}
@@ -109,6 +119,8 @@ public class AnimationModeProcessor {
 	}
 
 	public int transformMode = -1;
+	
+	public Transform atGrab;
 
 	public boolean editRotationPointMode = false;
 	
@@ -178,6 +190,15 @@ public class AnimationModeProcessor {
 			leftLock = false;
 		}
 
+		
+		if(!Mouse.isButtonDown(0)) {
+			
+			AnimationModeProcessor.getInstance().atGrab = null;
+		}
+		
+		Minecraft mc = Minecraft.getMinecraft();
+		
+		
 		double dx = Mouse.getDX();
 		double dy = Mouse.getDY();
 		if (permissionToDrag && colorSelected == -1) {
@@ -187,6 +208,8 @@ public class AnimationModeProcessor {
 				// double x = Minecraft.getMinecraft().mouseHelper.deltaX/1.0;
 				// double y = Minecraft.getMinecraft().mouseHelper.deltaY/300.0;
 
+				
+				
 				double x = dx / 2f;
 				double y = dy / 2f;
 				rot = rot.addVector(-y, x, 0);
@@ -218,6 +241,9 @@ public class AnimationModeProcessor {
 
 					break;
 				}
+				
+				
+				
 
 				// Make transforms relative to the axis of the object
 
@@ -334,6 +360,18 @@ public class AnimationModeProcessor {
 				boolean modernMode = true;
 				
 				
+				 ScaledResolution scaledresolution = new ScaledResolution(mc);
+			        final int scaledWidth = scaledresolution.getScaledWidth();
+			        final int scaledHeight = scaledresolution.getScaledHeight();
+			        int mouseX = Mouse.getX() * scaledWidth / mc.displayWidth;
+			        int mouseY = scaledHeight - Mouse.getY() * scaledHeight / mc.displayHeight - 1;
+			    
+					Quaternion quat = Arcball.runArcBall(mouseX, mouseY);
+					double[] quangles = MatrixHelper.toEulerAngles(quat);
+					
+					
+				
+				
 				if(!modernMode) {
 					DebugPositioner.incrementXRotation((float) (vec.x * m));
 					DebugPositioner.incrementYRotation((float) (vec.y * m));
@@ -351,7 +389,11 @@ public class AnimationModeProcessor {
 					} 
 					
 					
-					t.withRotation(t.getRotationX() + vec.x*m*0.1, t.getRotationY() + vec.y*m*0.1, t.getRotationZ() + vec.z*m*0.1);
+					
+					
+				if(atGrab != null)	t.withRotation(atGrab.getRotationX() + Math.toDegrees(quangles[0])*vec.x, atGrab.getRotationY() + Math.toDegrees(quangles[1])*vec.y, atGrab.getRotationZ() + -Math.toDegrees(quangles[2])*vec.z);
+					
+					//t.withRotation(t.getRotationX() + vec.x*m*0.1, t.getRotationY() + vec.y*m*0.1, t.getRotationZ() + vec.z*m*0.1);
 					
 				}
 				
@@ -456,8 +498,8 @@ public class AnimationModeProcessor {
 		}
 		if (Mouse.isButtonDown(1)) {
 			// System.out.println(Mouse.getDX());
-			double x = dx / 50f;
-			double y = dy / 50f;
+			double x = dx / 10f;
+			double y = dy / 10f;
 
 			// double x = Minecraft.getMinecraft().mouseHelper.deltaX/120.0;
 			// double y = Minecraft.getMinecraft().mouseHelper.deltaY/120.0;

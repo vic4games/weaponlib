@@ -17,6 +17,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.vicmatskiv.weaponlib.RenderContext;
 import com.vicmatskiv.weaponlib.RenderableState;
+import com.vicmatskiv.weaponlib.WeaponRenderer;
 import com.vicmatskiv.weaponlib.animation.MatrixHelper;
 import com.vicmatskiv.weaponlib.animation.Transform;
 import com.vicmatskiv.weaponlib.animation.Transition;
@@ -332,8 +333,20 @@ public class AnimationData {
 		public Transition<?> createVMWTransition(Transform t, double divisor) {
 			return new Transition<>((rc) -> {
 
+				
+				double tesla = 0;
+				if(divisor == 17) {
+				
+					tesla = BBLoader.HANDDIVISOR;
+				} else if(divisor == 5) {
+					tesla = BBLoader.GENDIVISOR;
+				} else {
+					tesla = divisor;
+				}
+				System.out.println(tesla);
+				
 				// Transform Multiplier (12x as small)
-				double mul = 1 / divisor;
+				double mul = 1 / tesla;
 				
 				
 				

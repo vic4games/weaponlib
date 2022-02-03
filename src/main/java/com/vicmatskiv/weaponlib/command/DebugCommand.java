@@ -9,6 +9,7 @@ import com.vicmatskiv.weaponlib.WeaponRenderer.Builder;
 import com.vicmatskiv.weaponlib.animation.AnimationModeProcessor;
 import com.vicmatskiv.weaponlib.animation.DebugPositioner;
 import com.vicmatskiv.weaponlib.animation.OpenGLSelectionHelper;
+import com.vicmatskiv.weaponlib.animation.jim.BBLoader;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleCommand;
 import com.vicmatskiv.weaponlib.vehicle.VehiclePart;
@@ -154,6 +155,12 @@ public class DebugCommand extends CompatibleCommand {
     		AnimationModeProcessor.getInstance().setFPSMode(true);
     	} else if(args[1].equals("off")) {
     		AnimationModeProcessor.getInstance().setFPSMode(false);
+    	} else if(args[1].equals("dh")) {
+    		BBLoader.HANDDIVISOR = Double.parseDouble(args[2]);
+    		compatibility.addChatMessage(compatibility.clientPlayer(), "Hand divisor set to " + BBLoader.HANDDIVISOR);
+    	}else if(args[1].equals("dg")) {
+    		BBLoader.GENDIVISOR = Double.parseDouble(args[2]);
+    		compatibility.addChatMessage(compatibility.clientPlayer(), "General divisor set to " + BBLoader.GENDIVISOR);
     	}
      }
     

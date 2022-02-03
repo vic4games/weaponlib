@@ -781,6 +781,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 		
 		
 		
+		
 
 		if (AnimationModeProcessor.getInstance().getFPSMode()) {
 			
