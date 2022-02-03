@@ -43,8 +43,7 @@ public class GLCompatible {
 	public static void init() {
 		if(isLoaded) return;
 		isLoaded = true;
-		
-		
+	
 		ContextCapabilities cap = GLContext.getCapabilities();
 
 		if (cap.OpenGL30) {

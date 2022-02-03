@@ -565,6 +565,7 @@ public class AnimationModeProcessor {
 		
 		OpenGLSelectionHelper.ballBuf.framebufferClear();
 		OpenGLSelectionHelper.ballBuf.bindFramebuffer(false);
+		
 		renderAxisRing(new Vec3d(1, 0, 0), Color.RED, size, innerSize, (colorSelected == -1 || colorSelected == 1), false);
 		renderAxisRing(Vec3d.ZERO, Color.BLUE, size, innerSize, (colorSelected == -1 || colorSelected == 3), false);
 		renderAxisRing(new Vec3d(0, 1, 0), Color.GREEN, size, innerSize, (colorSelected == -1 || colorSelected == 2), false);
@@ -573,7 +574,7 @@ public class AnimationModeProcessor {
 		Bloom.initializeMultisample();
 		
 
-		GL11.glLineWidth(2f);
+		GL11.glLineWidth(5f);
 		
 		renderLightAxisRing(new Vec3d(1, 0, 0), new Color(0xff3838), size, innerSize, (colorSelected == -1 || colorSelected == 1), (colorSelected == 1 || colorHover == 1));
 		renderLightAxisRing(Vec3d.ZERO, new Color(0x32ff7e), size, innerSize, (colorSelected == -1 || colorSelected == 3), (colorSelected == 3 || colorHover == 3));
@@ -857,29 +858,23 @@ public class AnimationModeProcessor {
 		BufferBuilder bb = t.getBuffer();
 		double endAng = 0;
 		bb.begin(GL11.GL_TRIANGLE_STRIP, DefaultVertexFormats.POSITION_COLOR);
-		for (double a = beginAngle; a < finishAngle; a += 12) {
+		for (double a = beginAngle; a <= finishAngle; a += 12) {
 			double cos = -Math.cos(Math.toRadians(a)) * outerRadius;
 			double sin = -Math.sin(Math.toRadians(a)) * outerRadius;
 
 			double cosI = -Math.cos(Math.toRadians(a)) * innerRadius;
 			double sinI = -Math.sin(Math.toRadians(a)) * innerRadius;
 
-			bb.pos(x + cos, y + sin, -0.2).color(red, green, blue, (float) alpha).endVertex();
+			bb.pos(x + cos, y + sin, -0.4).color(red, green, blue, (float) alpha).endVertex();
 			bb.pos(x + cosI, y + sinI, 0.2).color(red, green, blue, (float) alpha).endVertex();
 
 			endAng = a;
 		}
+		
+		
 
-		if (endAng != finishAngle) {
-			double cos = -Math.cos(Math.toRadians(finishAngle)) * outerRadius;
-			double sin = -Math.sin(Math.toRadians(finishAngle)) * outerRadius;
 
-			double cosI = -Math.cos(Math.toRadians(finishAngle)) * innerRadius;
-			double sinI = -Math.sin(Math.toRadians(finishAngle)) * innerRadius;
-
-			bb.pos(x + cos, y + sin, 0).color(red, green, blue, (float) alpha).endVertex();
-			bb.pos(x + cosI, y + sinI, 0.2).color(red, green, blue, (float) alpha).endVertex();
-		}
+		
 
 		t.draw();
 

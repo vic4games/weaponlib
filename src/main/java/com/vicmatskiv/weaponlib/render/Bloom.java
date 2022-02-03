@@ -285,7 +285,7 @@ public class Bloom {
 	}
 	
 	public static void setupMultisampleBuffer() {
-
+		if(GLCompatible.isLoaded &&GLCompatible.multisampleType == -1) return;
 		if(multisample && getWidthTimesHeight() == mRes) return;
 		//System.out.println("Recalculating MSAA buffer...");
 		mRes = getWidthTimesHeight();
@@ -305,6 +305,8 @@ public class Bloom {
 	}
 	
 	public static void initializeMultisample() {
+		
+		if(GLCompatible.isLoaded && GLCompatible.multisampleType == -1) return;
 		int gWidth = Minecraft.getMinecraft().displayWidth;
     	int gHeight = Minecraft.getMinecraft().displayHeight;
     	setupMultisampleBuffer();
@@ -316,6 +318,7 @@ public class Bloom {
 	}
 	
 	public static void unapplyMultisample() {
+		if(GLCompatible.isLoaded && GLCompatible.multisampleType == -1) return;
 		int gWidth = Minecraft.getMinecraft().displayWidth;
     	int gHeight = Minecraft.getMinecraft().displayHeight;
     	GLCompatible.glBindFramebuffer(GLCompatible.GL_READ_FRAMEBUFFER, multisampleFBO);

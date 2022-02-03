@@ -43,6 +43,7 @@ import com.vicmatskiv.weaponlib.animation.jim.AnimationData.BlockbenchTransition
 import com.vicmatskiv.weaponlib.animation.MultipartRenderStateDescriptor;
 import com.vicmatskiv.weaponlib.animation.MultipartRenderStateManager;
 import com.vicmatskiv.weaponlib.animation.OpenGLSelectionHelper;
+import com.vicmatskiv.weaponlib.animation.Transform;
 import com.vicmatskiv.weaponlib.render.Bloom;
 import com.vicmatskiv.weaponlib.render.Dloom;
 import com.vicmatskiv.weaponlib.shader.jim.Shader;
@@ -660,6 +661,19 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 
 					renderRightArm(player, renderContext, positioner);
 
+					if (!OpenGLSelectionHelper.isInSelectionPass && AnimationModeProcessor.getInstance().getFPSMode()) {
+
+						
+						if (OpenGLSelectionHelper.selectID == 1 || OpenGLSelectionHelper.selectID == 2) {
+							
+							GlStateManager.pushMatrix();
+							Transform t = AnimationModeProcessor.getInstance().getTransformFromSelected();
+							GlStateManager.translate(t.getPositionX(), t.getPositionY(), t.getPositionZ());
+							AnimationModeProcessor.getInstance().renderTransformIndicator(0.2f);
+							GlStateManager.popMatrix();
+						}
+					}
+					
 					// gunLightingShader.release();
 
 				}
@@ -932,13 +946,14 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 			DebugPositioner.position(Part.RIGHT_HAND, renderContext);
 		}
 
+		/*
 		if (!OpenGLSelectionHelper.isInSelectionPass && AnimationModeProcessor.getInstance().getFPSMode()) {
 
 			if (OpenGLSelectionHelper.selectID == 2) {
 
 				AnimationModeProcessor.getInstance().renderTransformIndicator(0.2f);
 			}
-		}
+		}*/
 
 		renderContext.capturePartPosition(Part.RIGHT_HAND);
 
@@ -1016,13 +1031,15 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
         */
 
 		
+		/*
 		if (!OpenGLSelectionHelper.isInSelectionPass && AnimationModeProcessor.getInstance().getFPSMode()) {
 
 			if (OpenGLSelectionHelper.selectID == 1) {
 
 				AnimationModeProcessor.getInstance().renderTransformIndicator(0.2f);
 			}
-		}
+		}*/
+		
 
 		renderContext.capturePartPosition(Part.LEFT_HAND);
 
