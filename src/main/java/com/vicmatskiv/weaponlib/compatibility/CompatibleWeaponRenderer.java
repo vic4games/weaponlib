@@ -40,10 +40,12 @@ import com.vicmatskiv.weaponlib.animation.jim.AnimationData;
 import com.vicmatskiv.weaponlib.animation.jim.BBLoader;
 import com.vicmatskiv.weaponlib.animation.jim.FuckMyLife;
 import com.vicmatskiv.weaponlib.animation.jim.AnimationData.BlockbenchTransition;
+import com.vicmatskiv.weaponlib.debug.DebugRenderer;
 import com.vicmatskiv.weaponlib.animation.MultipartRenderStateDescriptor;
 import com.vicmatskiv.weaponlib.animation.MultipartRenderStateManager;
 import com.vicmatskiv.weaponlib.animation.OpenGLSelectionHelper;
 import com.vicmatskiv.weaponlib.animation.Transform;
+import com.vicmatskiv.weaponlib.render.ArmModel;
 import com.vicmatskiv.weaponlib.render.Bloom;
 import com.vicmatskiv.weaponlib.render.Dloom;
 import com.vicmatskiv.weaponlib.shader.jim.Shader;
@@ -82,6 +84,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHandSide;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -276,6 +279,8 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 			.loadShader(new ResourceLocation("mw" + ":" + "shaders/gunlight"));
 	public static Shader flash = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/flash"));
 
+	public static ArmModel armModel = new ArmModel();
+	
 	@SideOnly(Side.CLIENT)
 	public void renderItem() {
 
@@ -657,9 +662,10 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 					 * "lightIntensity"), (ClientValueRepo.flash > 0) ? 5.0f : 0.0f);
 					 */
 
+				//	renderSpecialLeftArm(player, renderContext, positioner);
 					renderLeftArm(player, renderContext, positioner);
 
-					renderRightArm(player, renderContext, positioner);
+					//renderRightArm(player, renderContext, positioner);
 
 					if (!OpenGLSelectionHelper.isInSelectionPass && AnimationModeProcessor.getInstance().getFPSMode()) {
 
@@ -980,8 +986,8 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 
 		GL11.glPopMatrix();
 	}
-
-	static <T> void renderLeftArm(EntityLivingBase player, RenderContext<T> renderContext,
+	
+	static <T> void renderSpecialLeftArm(EntityLivingBase player, RenderContext<T> renderContext,
 			Positioner<Part, RenderContext<T>> positioner) {
 
 		Render<AbstractClientPlayer> entityRenderObject = Minecraft.getMinecraft().getRenderManager()
@@ -990,17 +996,23 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 		Minecraft.getMinecraft().getTextureManager().bindTexture(((AbstractClientPlayer) player).getLocationSkin());
 
 		GL11.glPushMatrix();
-		if (AnimationModeProcessor.getInstance().isLegacyMode()) {
-			GL11.glTranslatef(0f, -1f, 0f);
-			GL11.glRotatef(-10F, 1f, 0f, 0f);
-			GL11.glRotatef(0F, 0f, 1f, 0f);
-			GL11.glRotatef(10F, 0f, 0f, 1f);
-		}
+	
 		
-		positioner.position(Part.LEFT_HAND, renderContext);
+
+		//GlStateManager.translate(0,-0, -70);
+		
+		
+		//positioner.position(Part.LEFT_HAND, renderContext);
 		if (DebugPositioner.isDebugModeEnabled()) {
 			DebugPositioner.position(Part.LEFT_HAND, renderContext);
 		}
+		
+		GlStateManager.translate(5,-5, -2);
+		
+		float mcT = 45f*(Minecraft.getMinecraft().player.ticksExisted%20)/20f;
+		
+		GlStateManager.rotate(mcT, 0, 1, 0);
+		
 		/*
 		AnimationData anm = BBLoader.getAnimation("real", "reload", "lefthand");
 		//AnimationData anm = BBLoader.loadAnimationData("m16.animation.json", "animation.M16.reload", "lefthand");
@@ -1046,8 +1058,125 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 
 		if (!AnimationModeProcessor.getInstance().isLegacyMode()) {
 
-			GL11.glTranslatef(-0.38f, -0.12f, -0.13f);
+			//GL11.glTranslatef(-0.38f, -0.12f, -0.13f);
 		}
+
+		System.out.println("hi");
+		//armModel.boxList.get(0).rotateAngleY = (float) Math.toRadians(180);
+		GlStateManager.disableTexture2D();
+		armModel.render(null, 0f, 0f, 0f, 0f, 0f, 0.0625f);
+		
+	//	renderLeftArm(render.getMainModel(), (AbstractClientPlayer) player);
+
+		ItemStack itemstack = getItemStackFromSlot(player, EntityEquipmentSlot.CHEST);
+
+		if (itemstack != null && itemstack.getItem() instanceof ItemArmor) {
+			// ItemArmor itemarmor = (ItemArmor)itemstack.getItem();
+			render.bindTexture(getArmorResource(player, itemstack, EntityEquipmentSlot.CHEST, null));
+
+			ModelBiped armorModel = getArmorModelHook(player, itemstack, EntityEquipmentSlot.CHEST, null);
+			if (armorModel != null) {
+				renderLeftArm(armorModel, (AbstractClientPlayer) player);
+			}
+		}
+
+		// GlStateManager.enableTexture2D();
+
+		GL11.glPopMatrix();
+	}
+	
+
+	static <T> void renderLeftArm(EntityLivingBase player, RenderContext<T> renderContext,
+			Positioner<Part, RenderContext<T>> positioner) {
+
+		Render<AbstractClientPlayer> entityRenderObject = Minecraft.getMinecraft().getRenderManager()
+				.getEntityRenderObject((AbstractClientPlayer) player);
+		RenderPlayer render = (RenderPlayer) entityRenderObject;
+		Minecraft.getMinecraft().getTextureManager().bindTexture(((AbstractClientPlayer) player).getLocationSkin());
+
+		GL11.glPushMatrix();
+		if (AnimationModeProcessor.getInstance().isLegacyMode()) {
+		
+			GL11.glTranslatef(0f, -1f, 0f);
+			GL11.glRotatef(-10F, 1f, 0f, 0f);
+			GL11.glRotatef(0F, 0f, 1f, 0f);
+			GL11.glRotatef(10F, 0f, 0f, 1f);
+		}
+		
+		float mct = 45f*((Minecraft.getMinecraft().player.ticksExisted%45)/45f);
+		
+		
+	
+		
+		
+		
+		
+		positioner.position(Part.LEFT_HAND, renderContext);
+		if (DebugPositioner.isDebugModeEnabled()) {
+			DebugPositioner.position(Part.LEFT_HAND, renderContext);
+		}
+		/*
+		AnimationData anm = BBLoader.getAnimation("real", "reload", "lefthand");
+		//AnimationData anm = BBLoader.loadAnimationData("m16.animation.json", "animation.M16.reload", "lefthand");
+		FuckMyLife.instance.bbMap.clear();
+        for(Entry<Float, BlockbenchTransition> tranny : anm.bbTransition.entrySet()) {
+			FuckMyLife.instance.bbMap.put(tranny.getKey(), tranny.getValue());
+		}
+        
+      //  System.out.println(anm.bbTransition.get(1.5).directTransform());
+        FuckMyLife.instance.timer = 0f;
+        try {
+        	//FuckMyLife.instance.position(FuckMyLife.instance.timer, 4.0f, true);
+        } catch(Exception e) {
+        	e.printStackTrace();
+        }*/
+       // System.out.println(anm.bbTransition);
+       
+
+        /*
+        FuckMyLife.instance.timer += 0.01f;
+        FuckMyLife.instance.timer = 0f;
+        */
+       
+		
+		//AnimationModeProcessor.getInstance().renderCross();
+		
+		/*
+		DebugRenderer.setupBasicRender();
+		DebugRenderer.renderPoint(Vec3d.ZERO, new Vec3d(1, 0, 0));
+		DebugRenderer.destructBasicRender();
+		GlStateManager.color(1, 1, 1);
+        */
+        /*
+   	 GlStateManager.rotate(57.7232f, 0, 0, 1); 
+   	 GlStateManager.rotate(26.1991f, 0, 1, 0);
+   	 GlStateManager.rotate(-17.5f, 1, 0, 0);
+        */
+
+		
+		/*
+		if (!OpenGLSelectionHelper.isInSelectionPass && AnimationModeProcessor.getInstance().getFPSMode()) {
+
+			if (OpenGLSelectionHelper.selectID == 1) {
+
+				AnimationModeProcessor.getInstance().renderTransformIndicator(0.2f);
+			}
+		}*/
+		
+
+		renderContext.capturePartPosition(Part.LEFT_HAND);
+
+		//GL11.glTranslated(1, 0, 0);
+		//GlStateManager.rotate(0f, 0, 1, 0);
+		
+		if (!AnimationModeProcessor.getInstance().isLegacyMode()) {
+
+//			GL11.glTranslatef(-0.38f, -0.12f, -0.13f);
+		}
+		
+		
+		
+		
 
 		renderLeftArm(render.getMainModel(), (AbstractClientPlayer) player);
 
@@ -1130,7 +1259,16 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 			modelplayer.bipedLeftArm.rotateAngleX = 0.0F;
 			
 		}
-
+		
+		
+		modelplayer.bipedLeftArm.offsetX = -0.375f;
+		modelplayer.bipedLeftArm.offsetY = -0.125f;
+		modelplayer.bipedLeftArm.offsetZ = -0.15f;
+		
+		
+		
+		
+		
 		modelplayer.bipedLeftArm.render(0.0625F);
 		if (modelplayer instanceof ModelPlayer) {
 			((ModelPlayer) modelplayer).bipedLeftArmwear.rotateAngleX = 0.0F;
