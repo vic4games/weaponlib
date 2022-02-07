@@ -161,7 +161,14 @@ public class DebugCommand extends CompatibleCommand {
     	}else if(args[1].equals("dg")) {
     		BBLoader.GENDIVISOR = Double.parseDouble(args[2]);
     		compatibility.addChatMessage(compatibility.clientPlayer(), "General divisor set to " + BBLoader.GENDIVISOR);
-    	}
+    	} else if(args[1].equals("as")) {
+    		double x = Double.parseDouble(args[2]);
+    		double y = Double.parseDouble(args[3]);
+    		double z = Double.parseDouble(args[4]);
+    		
+    		ClientModContext.getContext().getMainHeldWeapon().getWeapon().getRenderer().getWeaponRendererBuilder().firstPersonLeftHandTransform.withScale(x, y, z);
+    	
+    }
      }
     
     private void processFreecamAndMuzzleSubCommands(String[] args) {

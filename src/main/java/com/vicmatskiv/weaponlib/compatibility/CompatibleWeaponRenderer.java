@@ -45,7 +45,7 @@ import com.vicmatskiv.weaponlib.animation.MultipartRenderStateDescriptor;
 import com.vicmatskiv.weaponlib.animation.MultipartRenderStateManager;
 import com.vicmatskiv.weaponlib.animation.OpenGLSelectionHelper;
 import com.vicmatskiv.weaponlib.animation.Transform;
-import com.vicmatskiv.weaponlib.render.ArmModel;
+
 import com.vicmatskiv.weaponlib.render.Bloom;
 import com.vicmatskiv.weaponlib.render.Dloom;
 import com.vicmatskiv.weaponlib.shader.jim.Shader;
@@ -279,7 +279,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 			.loadShader(new ResourceLocation("mw" + ":" + "shaders/gunlight"));
 	public static Shader flash = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/flash"));
 
-	public static ArmModel armModel = new ArmModel();
+
 	
 	@SideOnly(Side.CLIENT)
 	public void renderItem() {
@@ -1064,7 +1064,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 		System.out.println("hi");
 		//armModel.boxList.get(0).rotateAngleY = (float) Math.toRadians(180);
 		GlStateManager.disableTexture2D();
-		armModel.render(null, 0f, 0f, 0f, 0f, 0f, 0.0625f);
+		//armModel.render(null, 0f, 0f, 0f, 0f, 0f, 0.0625f);
 		
 	//	renderLeftArm(render.getMainModel(), (AbstractClientPlayer) player);
 
@@ -1175,8 +1175,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 		}
 		
 		
-		
-		
+	//	armModel = new ArmModel();
 
 		renderLeftArm(render.getMainModel(), (AbstractClientPlayer) player);
 

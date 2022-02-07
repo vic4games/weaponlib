@@ -41,7 +41,7 @@ public class SingleAnimation {
 			}
 		}
 		Collections.sort(timestamps);
-		System.out.println("Created animation w/ " + timestamps.size() + " keyframes.");
+		System.out.println("[" + this.animationName + "] Created animation w/ " + timestamps.size() + " keyframes.");
 		this.timestampCount = timestamps.size();
 		
 		// Bake keyframes

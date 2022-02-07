@@ -10,6 +10,8 @@ import javax.annotation.Nullable;
 
 import com.vicmatskiv.weaponlib.animation.Transition;
 
+import net.minecraft.client.renderer.GlStateManager;
+
 public class TransitionContainer {
 
 	private LinkedHashMap<Part, List<Transition<RenderContext<RenderableState>>>> custom = new LinkedHashMap<>();
@@ -45,6 +47,7 @@ public class TransitionContainer {
 			duration += t.getPause();
 		}
 
+		GlStateManager.pushMatrix();
 		// Build left hand
 		if (leftHand == null) {
 			leftHand = firstPerson.stream().map(t -> new Transition<RenderContext<RenderableState>>(c -> {
@@ -53,8 +56,10 @@ public class TransitionContainer {
 				
 			}, 0)).collect(Collectors.toList());
 		}
+		GlStateManager.popMatrix();
 
 		// Build right hand
+		GlStateManager.pushMatrix();
 		if (rightHand == null) {
 			rightHand = firstPerson.stream().map(t -> new Transition<RenderContext<RenderableState>>(c -> {
 				
@@ -62,6 +67,7 @@ public class TransitionContainer {
 				
 			}, 0)).collect(Collectors.toList());
 		}
+		GlStateManager.popMatrix();
 
 		// build custom
 		custom.forEach((p, t) -> {

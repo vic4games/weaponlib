@@ -159,6 +159,7 @@ public class AnimationModeProcessor {
 		
 		
 		
+	
 		
 		//this.transformMode = 1;
 		

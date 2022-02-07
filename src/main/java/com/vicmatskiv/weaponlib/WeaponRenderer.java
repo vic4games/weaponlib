@@ -838,6 +838,15 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			return this;
 		}
 		
+		public final Builder withFirstPersonCustomPositioningReloading(Part part, List<Transition<RenderContext<RenderableState>>> transitions) {
+			if(part instanceof DefaultPart) {
+				throw new IllegalArgumentException("Part " + part + " is not custom");
+			}
+
+			this.firstPersonCustomPositioningReloading.put(part, transitions);
+			return this;
+		}
+		
 	      @SafeVarargs
 	      public final Builder withThirdPersonCustomPositioningReloading(Part part, Transition<RenderContext<RenderableState>> ...transitions) {
 	          if(part instanceof DefaultPart) {

@@ -82,6 +82,10 @@ public class AnimationData {
 					timestamps.add(time);
 				translateKeyframes.put(time, translationVector);
 			}
+		} else if(!obj.has("position")) {
+			
+			translateKeyframes.put(0f, Vec3d.ZERO);
+			
 		} else if(!obj.get("position").isJsonObject()) {
 			
 			JsonArray ar = obj.get("position").getAsJsonArray();
@@ -266,12 +270,8 @@ public class AnimationData {
 		
 		
 
-		
-		//System.out.println("---Begin--");
 		if(!isNull) {
 			for (Entry<Float, BlockbenchTransition> bb : this.bbTransition.entrySet()) {
-				//System.out.print("\n" + bb.getKey() + " [" + ((int) bb.getValue().getTimestamp()) + "] " + bb.getValue().getTranslation() + bb.getValue().getRotation());
-				
 				transitionList.add((Transition<RenderContext<RenderableState>>) bb.getValue().createVMWTransition(initial, divisor));
 			}
 		} else {
@@ -343,12 +343,13 @@ public class AnimationData {
 				} else {
 					tesla = divisor;
 				}
-				System.out.println(tesla);
+				//System.out.println(tesla);
 				
 				// Transform Multiplier (12x as small)
 				double mul = 1 / tesla;
 				
 				
+				System.out.println(tesla);
 				
 				//if(divisor == 5) mul = 0.0000000;
 				
@@ -357,27 +358,43 @@ public class AnimationData {
 
 				// Animation translation
 				GL11.glTranslated(translation.x * mul, -translation.y * mul, translation.z * mul);
-
+				
 				// Offset rotation point
 				GlStateManager.translate(t.getRotationPointX(), t.getRotationPointY(), t.getRotationPointZ());
 
+				
+				
 				// Original object rotation (+Z, -Y, -X)
 				GL11.glRotated(t.getRotationZ(), 0, 0, 1);
+				GL11.glRotated(rotation.z, 0, 0, 1);
+				
 				GL11.glRotated(t.getRotationY(), 0, 1, 0);
+				GL11.glRotated(rotation.y, 0, 1, 0);
+				
 				GL11.glRotated(t.getRotationX(), 1, 0, 0);
+				GL11.glRotated(rotation.x, 1, 0, 0);
+				
 
 				// Animation rotation
 				
-				GL11.glRotated(rotation.z, 0, 0, 1);
-				GL11.glRotated(rotation.y, 0, 1, 0);
-				GL11.glRotated(rotation.x, 1, 0, 0);
+				
+				
+				
+				
+				
+				
 
 				// Revert rotation point
 				GlStateManager.translate(-t.getRotationPointX(), -t.getRotationPointY(), -t.getRotationPointZ());
 
+				
+				
+				
 				// Original object scale
 					GlStateManager.scale(t.getScaleX(), t.getScaleY(), t.getScaleZ());
 
+					
+					
 				
 			}, (int) timestamp);
 
