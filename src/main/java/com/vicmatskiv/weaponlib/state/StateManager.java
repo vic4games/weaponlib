@@ -172,6 +172,8 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 					throw new IllegalStateException("Permitted transitions cannot be automatic");
 				}
 				
+				System.out.println("Permitted transitions: " + toState.permitRequestedPhase());
+				
 				TransitionRule<S, E> requestPermitRule = new TransitionRule<>(effectiveFromState, toState.permitRequestedPhase(), 
 						effectivePredicate, 
 						(s, f, t, p) -> {

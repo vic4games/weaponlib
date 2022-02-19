@@ -119,7 +119,7 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         private float spawnEntitySmokeParticleAgeCoefficient = 1f;
         private float spawnEntityExplosionParticleScaleCoefficient = 1.5f;
         private float spawnEntitySmokeParticleScaleCoefficient = 1f;
-        long reloadingTimeout = Weapon.DEFAULT_RELOADING_TIMEOUT_TICKS;
+        public long reloadingTimeout = Weapon.DEFAULT_RELOADING_TIMEOUT_TICKS;
         long loadIterationTimeout = Weapon.DEFAULT_LOAD_ITERATION_TIMEOUT_TICKS;
 
         private String modId;
@@ -1268,7 +1268,7 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         PlayerWeaponInstance instance = new PlayerWeaponInstance(slot, player, itemStack);
         //state.setAmmo(Tags.getAmmo(itemStack)); // TODO: get ammo properly
         instance.setState(WeaponState.READY);
-     
+    
         instance.setRecoil(builder.recoil);
         instance.setMaxShots(builder.maxShots.get(0));
 

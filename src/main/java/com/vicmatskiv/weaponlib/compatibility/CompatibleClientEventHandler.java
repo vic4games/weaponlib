@@ -14,6 +14,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
+
+import javax.management.modelmbean.ModelMBeanNotificationInfo;
+
 import java.util.Stack;
 
 import org.lwjgl.BufferUtils;
@@ -30,12 +33,15 @@ import org.lwjgl.opengl.GL31;
 import org.lwjgl.opengl.GL43;
 import org.lwjgl.util.glu.Project;
 
+import com.google.common.reflect.Reflection;
 import com.vicmatskiv.weaponlib.ClientModContext;
 
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.PlayerWeaponInstance;
 import com.vicmatskiv.weaponlib.RenderingPhase;
+import com.vicmatskiv.weaponlib.WeaponReloadAspect;
 import com.vicmatskiv.weaponlib.WeaponRenderer;
+import com.vicmatskiv.weaponlib.WeaponState;
 import com.vicmatskiv.weaponlib.animation.AnimationModeProcessor;
 import com.vicmatskiv.weaponlib.animation.ClientValueRepo;
 import com.vicmatskiv.weaponlib.animation.MatrixHelper;
@@ -48,11 +54,19 @@ import com.vicmatskiv.weaponlib.model.Bullet556;
 import com.vicmatskiv.weaponlib.particle.DriftCloudFX;
 import com.vicmatskiv.weaponlib.render.Bloom;
 import com.vicmatskiv.weaponlib.render.Dloom;
-import com.vicmatskiv.weaponlib.render.ShellParticleTest;
-import com.vicmatskiv.weaponlib.render.ShellParticleTest.Shell;
+import com.vicmatskiv.weaponlib.render.ModernSkyRenderer;
+import com.vicmatskiv.weaponlib.render.ModernUtil;
+import com.vicmatskiv.weaponlib.render.MultisampledFBO;
 import com.vicmatskiv.weaponlib.render.ShellRenderer;
 import com.vicmatskiv.weaponlib.render.ShellRenderer2;
+import com.vicmatskiv.weaponlib.render.VAOData;
+import com.vicmatskiv.weaponlib.render.VAOLoader;
+import com.vicmatskiv.weaponlib.render.WavefrontLoader;
+import com.vicmatskiv.weaponlib.render.WavefrontModel;
 import com.vicmatskiv.weaponlib.render.qrender.QRenderer;
+import com.vicmatskiv.weaponlib.render.shells.ShellManager;
+import com.vicmatskiv.weaponlib.render.shells.ShellParticleSimulator;
+import com.vicmatskiv.weaponlib.render.shells.ShellParticleSimulator.Shell;
 import com.vicmatskiv.weaponlib.shader.jim.Shader;
 import com.vicmatskiv.weaponlib.shader.jim.ShaderManager;
 import com.vicmatskiv.weaponlib.sound.JSoundEngine;
@@ -84,6 +98,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.WorldProvider;
+import net.minecraft.world.WorldProviderSurface;
 import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.event.EntityViewRenderEvent;
 import net.minecraftforge.client.event.FOVUpdateEvent;
@@ -93,6 +109,7 @@ import net.minecraftforge.client.event.RenderHandEvent;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.client.event.TextureStitchEvent;
+import net.minecraftforge.client.model.obj.OBJLoader;
 import net.minecraftforge.client.model.obj.OBJModel;
 import net.minecraftforge.client.settings.KeyBindingMap;
 import net.minecraftforge.event.entity.living.LivingFallEvent;
@@ -107,6 +124,7 @@ import net.minecraftforge.fml.common.gameevent.TickEvent.PlayerTickEvent;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import scala.actors.threadpool.Arrays;
 
 public abstract class CompatibleClientEventHandler {
 
@@ -360,12 +378,78 @@ public abstract class CompatibleClientEventHandler {
 	
 	public static Shader shellLight = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/shells"));
 	
+	public static WavefrontModel bulletShell = WavefrontLoader.loadSubModel("boo6", "casing");
+	
+//	public static ShellParticleSimulator shells = new ShellParticleSimulator();
+	
+	public static ShellManager shellManager = new ShellManager();
+	
 	@SubscribeEvent
 	public void renderWorrldLastEvent(RenderWorldLastEvent evt) {
+		//System.out.println(shells.getShells().size());
+		if(Minecraft.getMinecraft().player.ticksExisted%1 == 0) {
+			for(int x = 0; x < 1; ++x) {
+				
+				shellManager.enqueueShell(new Shell(new Vec3d(38, 6, -328), Vec3d.ZERO, new Vec3d(-20, 0, 0)));
+				//shellManager.enqueueShell(new Shell(new Vec3d(43.856, 5.5, -331.204), new Vec3d(90,0,0), new Vec3d(-30, 0, 0)));
+				
+			}
+		}
 		
 		
 		
+		if(ClientModContext.getContext() != null && ClientModContext.getContext().getMainHeldWeapon() != null) {
+			PlayerWeaponInstance pwi = ClientModContext.getContext().getMainHeldWeapon();
+			
+			
+			//System.out.println(pwi.isMagSwapDone());
+			
+			
+			
+			//System.out.println(pwi.getWeapon().getTotalReloadingDuration());
+			
+			boolean var = Math.abs((System.currentTimeMillis()-(pwi.getReloadTimestamp()))/((double) pwi.getWeapon().getTotalReloadingDuration()*0.5)-0.5) < 0.01;
+		//	System.out.println(var);
+			//System.out.println(ClientModContext.getContext().getMainHeldWeapon().getState());
+			
+		}
 		
+		try {
+			
+			Field f = ReflectionHelper.findField(Minecraft.class, "framebufferMc");
+		
+			f.setAccessible(true);
+			
+			if(f.get(Minecraft.getMinecraft()) instanceof Framebuffer) {
+				//MultisampledFBO frameboofer = new MultisampledFBO(Minecraft.getMinecraft().getFramebuffer().framebufferWidth, Minecraft.getMinecraft().getFramebuffer().framebufferHeight, true);
+				
+				//Framebuffer frameboofer = new Framebuffer(Minecraft.getMinecraft().getFramebuffer().framebufferWidth, Minecraft.getMinecraft().getFramebuffer().framebufferHeight, true);
+				//f.set(Minecraft.getMinecraft(), frameboofer);
+				
+			}
+			
+			
+			
+			
+		} catch(Exception e) {
+			
+		}
+ 		
+		
+		
+		
+		try {
+			
+			
+			
+			
+		//	System.out.println(ClientModContext.getContext().getMainHeldWeapon().getState());
+		} catch(Exception e) {}
+		
+		if(Minecraft.getMinecraft().world.provider.getSkyRenderer() == null) {
+			Minecraft.getMinecraft().world.provider.setSkyRenderer(new ModernSkyRenderer());
+			
+		}
 		
 		
 		if(getModContext() != null) {
@@ -425,78 +509,20 @@ public abstract class CompatibleClientEventHandler {
 		DebugRenderer.destructBasicRender();
 		
 		
-		//shellLight = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/shells"));
 		
-		GlStateManager.pushMatrix();
-		
-		GlStateManager.enableTexture2D();
-	
-        EntityPlayerSP pla = Minecraft.getMinecraft().player;
-        
-        
-      
-        float interpX = (float) MatrixHelper.solveLerp(pla.prevPosX, pla.posX, Minecraft.getMinecraft().getRenderPartialTicks());
-        float interpY = (float) MatrixHelper.solveLerp(pla.prevPosY, pla.posY, Minecraft.getMinecraft().getRenderPartialTicks());
-        float interpZ = (float) MatrixHelper.solveLerp(pla.prevPosZ, pla.posZ, Minecraft.getMinecraft().getRenderPartialTicks());
-        
-        /*
-        Minecraft.getMinecraft().entityRenderer.enableLightmap();
-        RenderHelper.enableStandardItemLighting();
-		*///Minecraft.getMinecraft().entityRenderer.enableLightmap();
-       // RenderHelper.enableStandardItemLighting();
-        GlStateManager.color(1.0f, 1f, 1f, 1f);
-        GlStateManager.enableCull();
-        //GlStateManager.enableRescaleNormal();
-        //GlStateManager.enableLighting();
-        Minecraft.getMinecraft().entityRenderer.enableLightmap();
-        
-    
-       // OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, f, f1);
-        
-		Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mw" + ":" + "textures/models/bullet556.png"));
-		GlStateManager.translate(-interpX, -interpY, -interpZ);
-        
-		float fps = Minecraft.getMinecraft().gameSettings.thirdPersonView == 0 ? 0.5f : 1.0f;
-		
-		try {
-			Iterator<Shell> itr = ShellParticleTest.shells.iterator();
-			while(itr.hasNext()) {
-				Shell sh = itr.next();
-				
-				int i = Minecraft.getMinecraft().world.getCombinedLight(new BlockPos(sh.pos.x, sh.pos.y, sh.pos.z), 0);
-		        float f = (float)(i & 65535);
-		        float f1 = (float)(i >> 16);
-		        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, f, f1);
-				
-				GlStateManager.pushMatrix();
-				Vec3d iP = MatrixHelper.lerpVectors(sh.prevPos, sh.pos, Minecraft.getMinecraft().getRenderPartialTicks());
-				GlStateManager.translate(iP.x, iP.y, iP.z);
-				
-				GlStateManager.rotate((float) sh.rot.x, 1, 0, 0);
-				GlStateManager.rotate((float) sh.rot.y, 0, 1, 0);
-				GlStateManager.rotate((float) sh.rot.z, 0, 0, 1);
-				ShellParticleTest.bulletModel.render(null, 0f, 0f, 0f, 0f, 0f, 0.1f*fps);
-				GlStateManager.popMatrix();
-			}
-		} catch(Exception e) {
-			e.printStackTrace(); 
-		}
-		//RenderHelper.disableStandardItemLighting();
-		/*
-		RenderHelper.disableStandardItemLighting();
-		Minecraft.getMinecraft().entityRenderer.disableLightmap();
-		*/
-		
-		Minecraft.getMinecraft().entityRenderer.disableLightmap();
+		// Render shell
+		//CompatibleShellRenderer.render(shells.getShells());
+		shellManager.render();
 
 		PROJECTION.rewind();
 		MODELVIEW.rewind();
 		
+		/*
 		GlStateManager.disableLighting();
 		GlStateManager.disableTexture2D();
 
 		GlStateManager.popMatrix();
-		
+		*/
 		
 		//System.out.println(NEW_POS.get(0) + " | " + NEW_POS.get(1) + " | " + NEW_POS.get(2));
 
@@ -670,7 +696,9 @@ public abstract class CompatibleClientEventHandler {
 		onCompatibleClientTick(new CompatibleClientTickEvent(event));
 		if(event.phase  == Phase.START && Minecraft.getMinecraft().player != null) {
 			ClientValueRepo.ticker.update(Minecraft.getMinecraft().player.ticksExisted);
-			ShellParticleTest.update(0.05);
+			
+			shellManager.update(0.05);
+			
 		}
 		// if(Minecraft.getMinecraft().player.isSprinting()) {
 		// RayTraceResult rtr = Minecraft.getMinec

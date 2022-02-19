@@ -12,6 +12,8 @@ import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.vicmatskiv.weaponlib.melee.MeleeState;
+import com.vicmatskiv.weaponlib.melee.MeleeAttachmentAspect.ExitAttachmentModePermit;
 import com.vicmatskiv.weaponlib.network.TypeRegistry;
 import com.vicmatskiv.weaponlib.state.Aspect;
 import com.vicmatskiv.weaponlib.state.Permit;
@@ -19,6 +21,7 @@ import com.vicmatskiv.weaponlib.state.Permit.Status;
 import com.vicmatskiv.weaponlib.state.PermitManager;
 import com.vicmatskiv.weaponlib.state.StateManager;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -34,6 +37,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 	private static final long AWAIT_FURTHER_LOAD_INSTRUCTIONS_TIMEOUT = 400;
 
 	static {
+		TypeRegistry.getInstance().register(CompoundPermit.class);
 		TypeRegistry.getInstance().register(UnloadPermit.class);
 		TypeRegistry.getInstance().register(LoadPermit.class);
 		TypeRegistry.getInstance().register(PlayerWeaponInstance.class); // TODO: move it out
@@ -42,6 +46,8 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 	private static final Set<WeaponState> allowedUpdateFromStates = new HashSet<>(
 			Arrays.asList(
 			        WeaponState.AWAIT_FURTHER_LOAD_INSTRUCTIONS,
+			        WeaponState.COMPOUND_RELOAD,
+			        WeaponState.COMPOUND_RELOAD_EMPTY,
 					WeaponState.LOAD_REQUESTED,
 					WeaponState.LOAD,
 					WeaponState.LOAD_ITERATION,
@@ -54,6 +60,17 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 					WeaponState.INSPECTING,
 					WeaponState.DRAWING));
 
+	public static class CompoundPermit extends Permit<WeaponState> {
+		
+		public CompoundPermit() {}
+		
+		public CompoundPermit(WeaponState state) {
+			super(state);
+		}
+		
+	}
+	
+	
 	public static class UnloadPermit extends Permit<WeaponState> {
 
 		public UnloadPermit() {}
@@ -85,6 +102,9 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 	private static Predicate<PlayerWeaponInstance> magazineAttached =
 			weaponInstance -> WeaponAttachmentAspect.getActiveAttachment(AttachmentCategory.MAGAZINE, weaponInstance) != null;
 
+			
+	private static Predicate<PlayerWeaponInstance> hasAmmo = (i) -> i.getAmmo() != 0;
+			
 	private static Predicate<PlayerWeaponInstance> loadIterationCompleted = weaponInstance ->
 	        System.currentTimeMillis() >= weaponInstance.getStateUpdateTimestamp()
 	            + Math.max(weaponInstance.getWeapon().builder.loadIterationTimeout,
@@ -98,6 +118,13 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 		System.currentTimeMillis() >= weaponInstance.getStateUpdateTimestamp()
 			+ Math.max(weaponInstance.getWeapon().builder.reloadingTimeout,
 					weaponInstance.getWeapon().getTotalReloadingDuration() * 1.1);
+		
+	private static Predicate<PlayerWeaponInstance> magSwapCompleted = weaponInstance -> weaponInstance.isMagSwapDone();
+		
+		
+		private static Predicate<PlayerWeaponInstance> reloadMidpoint = weaponInstance ->
+		Math.abs((System.currentTimeMillis()-(weaponInstance.getReloadTimestamp()))/((double) weaponInstance.getWeapon().getTotalReloadingDuration()*0.5)-0.5) < 0.01;
+		
 	
 	private static Predicate<PlayerWeaponInstance> unloadTimeoutExpired = weaponInstance ->
 	    System.currentTimeMillis() >= weaponInstance.getStateUpdateTimestamp() + UNLOAD_TIMEOUT;
@@ -128,7 +155,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
         
     private static Predicate<PlayerWeaponInstance> drawingAnimationCompleted = weaponInstance ->
         System.currentTimeMillis() >= weaponInstance.getStateUpdateTimestamp()
-            + weaponInstance.getWeapon().getTotalDrawingDuration() * 1.1;
+            + weaponInstance.getWeapon().getTotalDrawingDuration() * 1.0;
 
 	private ModContext modContext;
 
@@ -146,13 +173,55 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 		if(permitManager == null) {
 			throw new IllegalStateException("Permit manager not initialized");
 		}
-
+		
+		
+		
+		
 		this.stateManager = stateManager
+			
 		        
 		.in(this)
 	         .change(WeaponState.READY).to(WeaponState.AWAIT_FURTHER_LOAD_INSTRUCTIONS)
 	         .manual()
+	     
+	    .in(this)
+	    .change(WeaponState.COMPOUND_RELOAD_EMPTY).to(WeaponState.COMPOUND_RELOAD_EMPTY)
+	    .when(reloadMidpoint.and(magSwapCompleted.negate()))
+	    .withAction(this::clientCompoundReload)
+	    .automatic()
+	    
+	    .in(this)
+	    .change(WeaponState.COMPOUND_RELOAD).to(WeaponState.COMPOUND_RELOAD)
+	    .when(reloadMidpoint.and(magSwapCompleted.negate()))
+	    .withAction(this::clientCompoundReload)
+	    .automatic()
 	         
+	    .in(this)
+	    
+	    	.change(WeaponState.READY).to(WeaponState.COMPOUND_RELOAD)
+	    	//.withPermit((s, es) -> new CompoundPermit(s), modContext.getPlayerItemInstanceRegistry()::update, permitManager)
+	    	//.withAction(this::clientCompoundReload)
+	    	
+	    	/*
+	    	.withPermit((s, es) -> new LoadPermit(s),
+					modContext.getPlayerItemInstanceRegistry()::update,
+					permitManager)
+	    	.withAction((c, f, t, p) -> completeClientLoad(c, (LoadPermit)p))
+	    	*/
+	    	.manual()
+	    
+	    .in(this)
+	    	.change(WeaponState.READY).to(WeaponState.COMPOUND_RELOAD_EMPTY)
+	    	
+	    	.manual()
+	    
+	    /*
+	    .in(this)
+             .change(WeaponState.AWAIT_FURTHER_LOAD_INSTRUCTIONS).to(WeaponState.LOAD)
+             .when(hasAmmo.and(magazineAttached))
+            // .withAction(this::noFurtherLoadInstructionsReceived)
+             .automatic()
+	    */
 	    .in(this)
              .change(WeaponState.AWAIT_FURTHER_LOAD_INSTRUCTIONS).to(WeaponState.READY)
              .when(awaitFurtherLoadInstructionCompleted)
@@ -163,7 +232,9 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
              .change(WeaponState.AWAIT_FURTHER_LOAD_INSTRUCTIONS).to(WeaponState.READY)
              .withAction(this::furtherLoadInstructionsReceived)
              .manual()
-            
+           
+        
+        
 		.in(this)
 			.change(WeaponState.READY).to(WeaponState.LOAD)
 			.when(supportsDirectBulletLoad.or(magazineAttached.negate()))
@@ -172,7 +243,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 					permitManager)
 			.withAction((c, f, t, p) -> completeClientLoad(c, (LoadPermit)p))
 			.manual()
-			
+		
 	     .in(this)
             .change(WeaponState.UNLOAD).to(WeaponState.LOAD)
             .when(loadAfterUnloadEnabled.and(supportsDirectBulletLoad.or(magazineAttached.negate())))
@@ -184,6 +255,18 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 			
 	    .in(this)
             .change(WeaponState.LOAD).to(WeaponState.READY)
+            .when(reloadAnimationCompleted.and(hasNextLoadIteration.negate()))
+            .automatic()
+            
+        .in(this)
+        	
+            .change(WeaponState.COMPOUND_RELOAD).to(WeaponState.READY)
+            
+            .when(reloadAnimationCompleted.and(hasNextLoadIteration.negate()))
+            .automatic()
+            
+        .in(this)
+            .change(WeaponState.COMPOUND_RELOAD_EMPTY).to(WeaponState.READY)
             .when(reloadAnimationCompleted.and(hasNextLoadIteration.negate()))
             .automatic()
             
@@ -216,6 +299,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
             .withAction(this::completeAllLoadIterations)
             .automatic()
 
+            
 		.in(this)
 			.prepare((c, f, t) -> { prepareUnload(c); }, unloadAnimationCompleted)
 			.change(WeaponState.READY).to(WeaponState.UNLOAD)
@@ -225,6 +309,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 					permitManager)
 			.withAction((c, f, t, p) -> completeClientUnload(c, (UnloadPermit)p))
 			.manual()
+			
 
 		.in(this)
 			.change(WeaponState.UNLOAD).to(WeaponState.READY)
@@ -251,15 +336,20 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
             .when(inspectTimeoutExpired)
             .automatic() 
             
+            
         .in(this)
             .change(WeaponState.READY).to(WeaponState.DRAWING)
+            
             .withAction(this::draw)
+         //   .automatic()
             .manual()
+            
             
         .in(this)
             .change(WeaponState.DRAWING).to(WeaponState.READY)
             .when(drawingAnimationCompleted)
             .automatic()
+            
         ;
 	}
 
@@ -268,6 +358,31 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 		this.permitManager = permitManager;
 		permitManager.registerEvaluator(LoadPermit.class, PlayerWeaponInstance.class, (p, c) -> { processLoadPermit(p, c); });
 		permitManager.registerEvaluator(UnloadPermit.class, PlayerWeaponInstance.class, (p, c) -> { processUnloadPermit(p, c); });
+		permitManager.registerEvaluator(CompoundPermit.class, PlayerWeaponInstance.class, (p, c) -> { processCompoundPermit(p, c); });
+	}
+		
+		public void processCompoundPermit(CompoundPermit p, PlayerWeaponInstance pwi) {
+			
+			
+			
+			processUnloadPermit(new UnloadPermit(p.getState()), pwi);
+			processLoadPermit(new LoadPermit(p.getState()), pwi);
+		}
+	
+	public void clientCompoundReload(PlayerWeaponInstance instance) {
+		
+		
+		
+		if(instance == null) return;
+		instance.completeMagSwap();
+		
+		
+		
+		permitManager.request(new CompoundPermit(instance.getState()), instance, (a, b) -> {});
+		
+		processUnloadPermit(new UnloadPermit(instance.getState()), instance);
+		processLoadPermit(new LoadPermit(instance.getState()), instance);
+		
 	}
 
 	public void reloadMainHeldItem(EntityPlayer player) {
@@ -276,26 +391,58 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 
 		
 			
+			/*
 			if(WeaponAttachmentAspect.getActiveAttachment(AttachmentCategory.MAGAZINE, instance) == null) {
 				instance.getWeapon().getRenderer().compoundReloadEmpty = false;
 				instance.getWeapon().getRenderer().compoundReload = false;
 				
 			} else {
 				if(instance.getAmmo() == 0) {
+					instance.getWeapon().getRenderer().compoundReload = false;
 					instance.getWeapon().getRenderer().compoundReloadEmpty = true;
 				} else {
+					instance.getWeapon().getRenderer().compoundReloadEmpty = false;
 					instance.getWeapon().getRenderer().compoundReload = true;
 				}
 				
-			}
-		    
+				
+				
+			}*/
 			
-//			stateManager.changeState(this, instance, WeaponState.LOAD, WeaponState.ALERT);
-		    stateManager.changeState(this, instance, WeaponState.AWAIT_FURTHER_LOAD_INSTRUCTIONS, WeaponState.READY);
+			/*
+			if(WeaponAttachmentAspect.getActiveAttachment(AttachmentCategory.MAGAZINE, instance) == null) {
+				stateManager.changeState(this, instance, WeaponState.AWAIT_FURTHER_LOAD_INSTRUCTIONS, WeaponState.READY);
+			} else {
+				if(instance.getAmmo() == 0) {
+					stateManager.changeState(this, instance, WeaponState.COMPOUND_RELOAD_EMPTY);
+				} else {
+					stateManager.changeState(this, instance, WeaponState.COMPOUND_RELOAD);
+				}
+			}
+		    */
+			
+	//		stateManager.changeState(this, instance, WeaponState.LOAD, WeaponState.ALERT);
+			
+			
+			if(WeaponAttachmentAspect.getActiveAttachment(AttachmentCategory.MAGAZINE, instance) == null) {
+				stateManager.changeState(this, instance, WeaponState.AWAIT_FURTHER_LOAD_INSTRUCTIONS, WeaponState.READY);
+			} else {
+				
+				instance.markReloadDirt();
+				instance.markMagSwapReady();
+				if(instance.getAmmo() == 0) {
+					stateManager.changeState(this, instance, WeaponState.COMPOUND_RELOAD_EMPTY);
+				} else {
+					stateManager.changeState(this, instance, WeaponState.COMPOUND_RELOAD);
+				}
+			}
+			
+		 //   stateManager.changeState(this, instance, WeaponState.AWAIT_FURTHER_LOAD_INSTRUCTIONS, WeaponState.READY);
 		}
 	}
 	
 	public void unloadMainHeldItem(EntityPlayer player) {
+	
         PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
         if(instance != null) {
         	instance.getWeapon().getRenderer().compoundReloadEmpty = false;
@@ -306,6 +453,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
     }
 
 	void updateMainHeldItem(EntityPlayer player) {
+	
 		PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
 		if(instance != null) {
 			stateManager.changeStateFromAnyOf(this, instance, allowedUpdateFromStates); // no target state specified, will trigger auto-transitions
@@ -320,14 +468,17 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
     }
 	
 	public void drawMainHeldItem(EntityPlayer player) {
+		
         PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
+       	
         if(instance != null) {
-            stateManager.changeState(this, instance, WeaponState.DRAWING);
+        	stateManager.changeState(this, instance, WeaponState.DRAWING);
         }
     }
 
 	@SuppressWarnings("unchecked")
 	private void processLoadPermit(LoadPermit p, PlayerWeaponInstance weaponInstance) {
+		System.out.println("Processing load permit " + weaponInstance.getPlayer().world.isRemote);
 		logger.debug("Processing load permit on server for {}", weaponInstance);
 
 		ItemStack weaponItemStack = weaponInstance.getItemStack();
@@ -401,6 +552,8 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 		p.setStatus(status);
 	}
 
+	
+	
 	private void prepareUnload(PlayerWeaponInstance weaponInstance) {
 		compatibility.playSound(weaponInstance.getPlayer(), weaponInstance.getWeapon().getUnloadSound(), 1.0F, 1.0F);
 	}
@@ -498,7 +651,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 	}
 	
 	public void furtherLoadInstructionsReceived(PlayerWeaponInstance weaponInstance) {
-        //System.out.println("\nFurther load instructions received!\n");
+       // System.out.println("\nFurther load instructions received!\n");
         weaponInstance.setLoadAfterUnloadEnabled(true);
         stateManager.changeState(this, weaponInstance, WeaponState.UNLOAD, WeaponState.LOAD, WeaponState.ALERT);
     }

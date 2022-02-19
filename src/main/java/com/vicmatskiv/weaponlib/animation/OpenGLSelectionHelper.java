@@ -221,7 +221,7 @@ public class OpenGLSelectionHelper {
 	}
 
 	public static void bindSelectShader(int id) {
-		select = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/select"));
+		//select = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/select"));
 
 		select.use();
 		select.uniform1i("id", id);

@@ -35,6 +35,9 @@ public class PlayerItemInstance<S extends ManagedState<S>> extends UniversalObje
 	private PlayerItemInstance<S> preparedState;
 	private long syncStartTimestamp;
 	protected long updateTimestamp;
+	
+	protected long reloadUpdateTimestamp;
+	protected boolean compoundMagSwapCompleted = false;
 
 //	private Set<PlayerItemStateListener<S>> listeners = new HashSet<>();
 
@@ -96,7 +99,11 @@ public class PlayerItemInstance<S extends ManagedState<S>> extends UniversalObje
 		item = Item.getItemById(buf.readInt());
 		itemInventoryIndex = buf.readInt();
 		updateId = buf.readLong();
+
+		//state = WeaponState.DRAWING;
 		state = TypeRegistry.getInstance().fromBytes(buf);
+		
+		
 	}
 
 	@Override
@@ -106,12 +113,19 @@ public class PlayerItemInstance<S extends ManagedState<S>> extends UniversalObje
 		buf.writeInt(itemInventoryIndex);
 		buf.writeLong(updateId);
 		TypeRegistry.getInstance().toBytes(state, buf);
+		
+		
 	}
 
 	@Override
 	public boolean setState(S state) {
+		
+		
 		this.state = state;
 		stateUpdateTimestamp = System.currentTimeMillis();
+		
+		
+		
 		markDirty();
 		if(preparedState != null) { // TODO: use comparator or equals?
 			if(preparedState.getState().commitPhase() == state) {
@@ -135,12 +149,17 @@ public class PlayerItemInstance<S extends ManagedState<S>> extends UniversalObje
 	 */
 	protected void updateWith(PlayerItemInstance<S> otherState, boolean updateManagedState) {
 		if(updateManagedState) {
+			
 			setState(otherState.getState());
 		}
 	}
 
 	@Override
 	public S getState() {
+		
+		
+		
+		
 		return state;
 	}
 
@@ -156,6 +175,14 @@ public class PlayerItemInstance<S extends ManagedState<S>> extends UniversalObje
 	public long getUpdateTimestamp() {
         return updateTimestamp;
     }
+	
+	public void markReloadDirt() {
+		reloadUpdateTimestamp = System.currentTimeMillis();
+	}
+	
+	public long getReloadTimestamp() {
+		return this.reloadUpdateTimestamp;
+	}
 
 	protected void markDirty() {
 		updateId++;
@@ -168,12 +195,25 @@ public class PlayerItemInstance<S extends ManagedState<S>> extends UniversalObje
 
 	@Override
 	public <E extends ExtendedState<S>> void prepareTransaction(E preparedExtendedState) {
+		
 		setState(preparedExtendedState.getState());
 		this.preparedState = (PlayerItemInstance<S>) preparedExtendedState;
 	}
 
 	public long getSyncStartTimestamp() {
 		return syncStartTimestamp;
+	}
+	
+	public void completeMagSwap() {
+		this.compoundMagSwapCompleted = true;
+	}
+	
+	public void markMagSwapReady() {
+		this.compoundMagSwapCompleted = false;
+	}
+	
+	public boolean isMagSwapDone() {
+		return this.compoundMagSwapCompleted;
 	}
 
 	public void setSyncStartTimestamp(long syncStartTimestamp) {

@@ -48,6 +48,9 @@ import com.vicmatskiv.weaponlib.animation.Transform;
 
 import com.vicmatskiv.weaponlib.render.Bloom;
 import com.vicmatskiv.weaponlib.render.Dloom;
+import com.vicmatskiv.weaponlib.render.GLCompatible;
+import com.vicmatskiv.weaponlib.render.MSAABuffer;
+import com.vicmatskiv.weaponlib.render.MultisampledFBO;
 import com.vicmatskiv.weaponlib.shader.jim.Shader;
 import com.vicmatskiv.weaponlib.shader.jim.ShaderManager;
 
@@ -60,6 +63,7 @@ import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.model.ModelPlayer;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.IBakedModel;
@@ -91,8 +95,8 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer implements IBakedModel {
 
-	private static final int INVENTORY_TEXTURE_WIDTH = 256;
-	private static final int INVENTORY_TEXTURE_HEIGHT = 256;
+	private static final int INVENTORY_TEXTURE_WIDTH = 128;
+	private static final int INVENTORY_TEXTURE_HEIGHT = 128;
 
 	private static final Map<String, ResourceLocation> ARMOR_TEXTURE_RES_MAP = Maps
 			.<String, ResourceLocation>newHashMap();
@@ -163,6 +167,9 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 
 	@Override
 	public List<BakedQuad> getQuads(IBlockState state, EnumFacing side, long rand) {
+		
+	
+		
 		if (transformType == TransformType.GROUND || transformType == TransformType.GUI
 				|| transformType == TransformType.FIRST_PERSON_RIGHT_HAND
 				|| transformType == TransformType.THIRD_PERSON_RIGHT_HAND
@@ -280,9 +287,12 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 	public static Shader flash = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/flash"));
 
 
+	public static MSAABuffer msaaBuffer;
 	
 	@SideOnly(Side.CLIENT)
 	public void renderItem() {
+		
+		
 
 		// System.out.println(BBLoader.loadAnimationData("HKgrip.animation.json",
 		// "animation.HKgrip.reload2", "bone4").bbTransition);
@@ -293,7 +303,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 		Integer inventoryTexture = null;
 
 		boolean inventoryTextureInitializationPhaseOn = false;
-
+		
 		Minecraft mc = Minecraft.getMinecraft();
 		final ScaledResolution scaledresolution = new ScaledResolution(mc);
 
@@ -304,15 +314,42 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 			Object textureMapKey = this; // weaponItemStack != null ? weaponItemStack : this;
 			inventoryTexture = getClientModContext().getInventoryTextureMap().get(textureMapKey);
 
+			//Minecraft.getMinecraft().getFramebuffer()
+			
 			if (inventoryTexture == null) {
 				originalFramebufferId = Framebuffers.getCurrentFramebuffer();
 
 				Framebuffers.unbindFramebuffer();
-
+				
 				inventoryTextureInitializationPhaseOn = true;
 				framebuffer = new Framebuffer(INVENTORY_TEXTURE_WIDTH, INVENTORY_TEXTURE_HEIGHT, true);
-
+				//framebuffer = new MultisampledFBO(INVENTORY_TEXTURE_WIDTH, INVENTORY_TEXTURE_HEIGHT, true);
+				
+				if(msaaBuffer == null) {
+					msaaBuffer = new MSAABuffer(INVENTORY_TEXTURE_WIDTH, INVENTORY_TEXTURE_HEIGHT, true);
+				}
+				
+				
 				framebuffer.bindFramebuffer(true);
+				
+				
+				// Setup MSAA
+				
+				/*
+				multisampleFBO  = GLCompatible.glGenFramebuffers();
+				GLCompatible.glBindFramebuffer(GLCompatible.GL_FRAMEBUFFER, multisampleFBO);
+				multiampleTexFBO = GL11.glGenTextures();
+				
+				int width = Minecraft.getMinecraft().displayWidth;
+				int height = Minecraft.getMinecraft().displayHeight;
+				
+				GL11.glBindTexture(GLCompatible.GL_TEXTURE_2D_MULTISAMPLE, multiampleTexFBO);
+				GLCompatible.glTexImage2DMultisample(GLCompatible.GL_TEXTURE_2D_MULTISAMPLE, 4, GL11.GL_RGBA8, width, height, false);*/
+				//GLCompatible.glFramebufferTexture2D(GLCompatible.GL_FRAMEBUFFER, GLCompatible.GL_COLOR_ATTACHMENT0, GLCompatible.GL_TEXTURE_2D_MULTISAMPLE, framebuffer.framebufferTexture, 0);
+			
+				
+				// End MSAA
+				
 
 				inventoryTexture = framebuffer.framebufferTexture;
 
@@ -333,6 +370,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 		
 		org.lwjgl.util.vector.Matrix4f forLater = null;
 		
+		boolean forceMSAA = false;
 		switch (transformType) {
 		case GROUND:
 			GL11.glScaled(-1F, -1F, 1F);
@@ -344,21 +382,28 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 			builder.getEntityPositioning().accept(itemStack);
 			break;
 		case GUI:
-			GL11.glScaled(-1F, -1F, 1F);
+			
+			forceMSAA = true;
+			
+			double inventoryScale = 20;
+			
+			GL11.glScaled(1, -1, 1);
 
-			// RenderHelper.enableStandardItemLighting();
-			GL11.glScalef(140f, 140f, 140f);
+			 RenderHelper.enableStandardItemLighting();
+			
 
-			if (DebugPositioner.isDebugModeEnabled()) {
-				DebugPositioner.position(Part.INVENTORY, null);
-			}
+			
+			GlStateManager.rotate(0f, 0, 0, 1);
+			GlStateManager.rotate(120f, 0, 1, 0);
+			GlStateManager.rotate(-20f, 1, 0, 0);
+			
+			GL11.glTranslatef(-150.0f, -40f, 0f);
+			
+			GlStateManager.scale(inventoryScale, inventoryScale, inventoryScale);
 
-			GL11.glRotatef(-20.000000f, 1f, 0f, 0f);
-			GL11.glRotatef(60.000000f, 0f, 1f, 0f);
-			GL11.glRotatef(15.000000f, 0f, 0f, 1f);
-			GL11.glTranslatef(-1.9f, -1.1f, 0f);
-
-			builder.getInventoryPositioning().accept(itemStack);
+			
+			
+		//	builder.getInventoryPositioning().accept(itemStack);
 			break;
 		case THIRD_PERSON_RIGHT_HAND:
 		case THIRD_PERSON_LEFT_HAND:
@@ -732,9 +777,31 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 				}
 
 			} else {
-
+				
+				if(forceMSAA) {
+					//System.out.println(framebuffer.framebufferObject);
+					//Bloom.initializeMultisample();
+					//GlStateManager.scale(20, 20, 20);
+					//System.out.println(GL11.glGetError());
+				//	msaaBuffer.bindMSAABuffer(Minecraft.getMinecraft().getFramebuffer().framebufferObject);
+					GlStateManager.enableBlend();
+					GlStateManager.enableAlpha();
+					//Bloom.initializeMultisample(framebuffer);
+					
+				}
+				//Bloom.initializeMultisample();
+				
 				renderItem(itemStack, renderContext, positioner);
-
+				//Bloom.unapplyMultisample();
+				if(forceMSAA) {
+					
+					
+					//Bloom.unapplyMultisample(framebuffer);
+					
+				//	msaaBuffer.unbindMSAABuffer(framebuffer.framebufferObject);
+					//Bloom.unapplyMultisample();
+				}
+				
 				if (OpenGLSelectionHelper.selectID == 3 && AnimationModeProcessor.getInstance().getFPSMode() && !AnimationModeProcessor.getInstance().editRotationPointMode) {
 					AnimationModeProcessor.getInstance().currentPartMatrix = MatrixHelper.captureMatrix();
 					AnimationModeProcessor.getInstance().renderTransformIndicator(1.0f);
@@ -765,8 +832,11 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 
 			// gunLightingShader.release();
 		}
+		
+	
 
 		if (transformType == TransformType.GUI && inventoryTextureInitializationPhaseOn) {
+		//	System.out.println("yo shawty");
 			framebuffer.unbindFramebuffer();
 			framebuffer.framebufferTexture = -1;
 			framebuffer.deleteFramebuffer();
@@ -903,6 +973,9 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 
 		// Undo inventory translations
 
+		GlStateManager.enableBlend();
+		GlStateManager.enableAlpha();
+		
 		GL11.glTranslatef(0.0F, 1.0F, 0.5F);
 		GL11.glScalef(0.004F, 0.004F, 0.004F);
 		GL11.glScalef(1.0F, -1.0F, 1F);
@@ -1259,10 +1332,16 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 			
 		}
 		
+		if(AnimationModeProcessor.getInstance().isLegacyMode()) {
+			modelplayer.bipedLeftArm.offsetX = 0f;
+			modelplayer.bipedLeftArm.offsetY = 0f;
+			modelplayer.bipedLeftArm.offsetZ = 0f;
+		} else {
+			modelplayer.bipedLeftArm.offsetX = -0.375f;
+			modelplayer.bipedLeftArm.offsetY = -0.125f;
+			modelplayer.bipedLeftArm.offsetZ = -0.15f;
+		}
 		
-		modelplayer.bipedLeftArm.offsetX = -0.375f;
-		modelplayer.bipedLeftArm.offsetY = -0.125f;
-		modelplayer.bipedLeftArm.offsetZ = -0.15f;
 		
 		
 		

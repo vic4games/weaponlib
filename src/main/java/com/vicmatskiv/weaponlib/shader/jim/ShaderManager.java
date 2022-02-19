@@ -23,6 +23,10 @@ public class ShaderManager {
 	
 	public static boolean enableShaders = true;
 
+	public static Shader loadVMWShader(String name) {
+		return loadShader(new ResourceLocation("mw:shaders/" + name));
+	}
+	
 	public static Shader loadShader(ResourceLocation file) {
 		
 		  if(!enableShaders)

@@ -29,7 +29,7 @@ public class BBLoader {
 	
 	
 	
-	public static double HANDDIVISOR = 17;
+	public static double HANDDIVISOR = 12.6;
 	public static double GENDIVISOR = 5;
 	
 	

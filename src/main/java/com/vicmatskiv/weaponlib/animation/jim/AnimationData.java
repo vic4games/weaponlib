@@ -31,7 +31,7 @@ public class AnimationData {
 
 	public TreeMap<Float, BlockbenchTransition> bbTransition = new TreeMap<>();
 
-	public static final float PACE = 750f;
+	public static final float PACE = 800f;
 	
 	public ArrayList<Float> timestamps = new ArrayList<>();
 
@@ -256,6 +256,7 @@ public class AnimationData {
 
 	@SuppressWarnings("unchecked")
 	public List<Transition<RenderContext<RenderableState>>> getTransitionList() {
+		
 		List<Transition<RenderContext<RenderableState>>> transitionList = new ArrayList<>();
 		for (Entry<Float, BlockbenchTransition> bb : this.bbTransition.entrySet()) {
 			transitionList.add((Transition<RenderContext<RenderableState>>) bb.getValue().createVMWTransition());
@@ -271,15 +272,22 @@ public class AnimationData {
 		
 
 		if(!isNull) {
+			
 			for (Entry<Float, BlockbenchTransition> bb : this.bbTransition.entrySet()) {
 				transitionList.add((Transition<RenderContext<RenderableState>>) bb.getValue().createVMWTransition(initial, divisor));
 			}
 		} else {
+			
 			for(int i = 0; i < this.fakeTransitions; ++i) {
 				transitionList.add(new Transition<>((renderContext) -> {}, this.fTLength));
 			}
 		}
 		
+		
+		// Swaps the last frame of the animation with
+		// the initial position (much smoother lol)
+		long curLength = transitionList.get(transitionList.size()-1).getDuration();
+		transitionList.set(transitionList.size()-1, new Transition<>(initial.getAsPosition(), curLength));
 		
 		
 		/*
@@ -332,10 +340,19 @@ public class AnimationData {
 
 		public Transition<?> createVMWTransition(Transform t, double divisor) {
 			return new Transition<>((rc) -> {
+				
+				/*
+				 * So you wanna mess with this code?
+				 * 
+				 * Warning: You will want to die. This code took like
+				 * 2 weeks for some reason. You'll put one thing out of 
+				 * order and you'll be working on it for weeks, even though
+				 * it doesn't even seem like the problem.
+				 */
 
 				
 				double tesla = 0;
-				if(divisor == 17) {
+				if(divisor == 12.6) {
 				
 					tesla = BBLoader.HANDDIVISOR;
 				} else if(divisor == 5) {
@@ -349,7 +366,7 @@ public class AnimationData {
 				double mul = 1 / tesla;
 				
 				
-				System.out.println(tesla);
+				//System.out.println(tesla);
 				
 				//if(divisor == 5) mul = 0.0000000;
 				
@@ -397,6 +414,9 @@ public class AnimationData {
 					
 				
 			}, (int) timestamp);
+			
+			
+			
 
 		}
 

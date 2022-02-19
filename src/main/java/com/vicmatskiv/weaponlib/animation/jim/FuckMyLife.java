@@ -103,7 +103,7 @@ public class FuckMyLife {
 		t.withRotationPoint(1.06, 0.12, -0.35);
 		//System.out.println(ClientModContext.getContext().getMainHeldWeapon());
 
-		double mul = 1 / 13.0;
+		double mul = 1 / 12.6;
 		// if(invert) mul = 0.0175;
 		//GL11.glTranslated(t.getPositionX(), -t.getPositionY() * mul, t.getPositionZ() * mul);
 		

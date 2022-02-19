@@ -886,6 +886,14 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
             }
             return this;
         }
+		
+		public final Builder withFirstPersonCustomPositioningUnloading(Part part, List<Transition<RenderContext<RenderableState>>> transitions) {
+			if(part instanceof DefaultPart) {
+				throw new IllegalArgumentException("Part " + part + " is not custom");
+			}
+			this.firstPersonCustomPositioningUnloading.put(part, transitions);
+			return this;
+		}
 
 		@SafeVarargs
 		public final Builder withFirstPersonCustomPositioningUnloading(Part part, Transition<RenderContext<RenderableState>> ...transitions) {
@@ -974,13 +982,13 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		
 		public void checkDefaults() {
 			if(firstPersonTransform == null) {
-				firstPersonTransform = Transform.NULL;
+				firstPersonTransform = Transform.NULL.copy();
 			} 
 			if(firstPersonLeftHandTransform == null) {
-				firstPersonLeftHandTransform = Transform.NULL;
+				firstPersonLeftHandTransform = Transform.NULL.copy();
 			}
 			if(firstPersonRightHandTransform == null) {
-				firstPersonRightHandTransform = Transform.NULL;
+				firstPersonRightHandTransform = Transform.NULL.copy();
 			}
 		}
 		
@@ -1010,6 +1018,26 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 
 		}
 		
+		
+		public Builder setupModernMagazineAnimations(String animationFile, Part...parts) {
+			// .withFirstPersonCustomPositioningReloading(Magazines.M38Mag,
+			
+			for(Part p : parts) {
+				withFirstPersonCustomPositioningReloading(p, BBLoader.getAnimation(animationFile, "load", "magazine")
+						.getTransitionList(Transform.NULL.copy(), BBLoader.HANDDIVISOR));
+				withFirstPersonCustomPositioningUnloading(p, BBLoader.getAnimation(animationFile, "unload", "magazine")
+						.getTransitionList(Transform.NULL.copy(), BBLoader.HANDDIVISOR));
+				withFirstPersonCustomPositioningCompoundReloading(p, BBLoader.getAnimation(animationFile, "reload", "magazine")
+						.getTransitionList(Transform.NULL.copy(), BBLoader.HANDDIVISOR));
+				withFirstPersonCustomPositioningCompoundReloadingEmpty(p, BBLoader.getAnimation(animationFile, "reloadempty", "magazine")
+						.getTransitionList(Transform.NULL.copy(), BBLoader.HANDDIVISOR));
+			}
+			
+			
+			return this;
+		
+		}
+		
 		public Builder setupModernAnimations(String animationFile) {
 			final String mainBoneName = "main";
 			final String leftBoneName = "lefthand";
@@ -1017,7 +1045,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			
 			setupInspectAnimations(animationFile, "inspect", mainBoneName, leftBoneName, rightBoneName);
 			setupCompoundReload(animationFile, "reload", mainBoneName, leftBoneName, rightBoneName);
-			setupReload(animationFile, "load", mainBoneName, leftBoneName, rightBoneName);
+			setupReload(animationFile, "load", mainBoneName,  leftBoneName, rightBoneName);
 			setupUnload(animationFile, "unload", mainBoneName, leftBoneName, rightBoneName);
 			setupDraw(animationFile, "draw", mainBoneName, leftBoneName, rightBoneName);
 			setupCompoundReloadEmpty(animationFile, "reloadempty", mainBoneName, leftBoneName, rightBoneName);
@@ -1125,6 +1153,15 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
             }
 
             compoundReloadContainer.getCustom().put(part, transitions);
+            return this;
+        }
+		
+		public final Builder withFirstPersonCustomPositioningCompoundReloadingEmpty(Part part, List<Transition<RenderContext<RenderableState>>> transitions) {
+            if(part instanceof DefaultPart) {
+                throw new IllegalArgumentException("Part " + part + " is not custom");
+            }
+
+            compoundReloadEmptyContainer.getCustom().put(part, transitions);
             return this;
         }
 		
@@ -1784,31 +1821,43 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				}
 
 				break;
+				
+			case COMPOUND_RELOAD_EMPTY:
+				currentState = RenderableState.COMPOUND_RELOAD_EMPTY;
+				break;
 
+			case COMPOUND_RELOAD:
+				
+				currentState = RenderableState.COMPOUND_RELOAD;
+				break;
+				
 			case UNLOAD_PREPARING: case UNLOAD_REQUESTED: case UNLOAD:
 			
 			
-				
+				/*
 				if(compoundReload) {
 					currentState = RenderableState.COMPOUND_RELOAD;
 				} else if(compoundReloadEmpty){
 					currentState = RenderableState.COMPOUND_RELOAD_EMPTY;
 				} else {
 					currentState = RenderableState.UNLOADING;
-				}
+				}*/
 				
+				currentState = RenderableState.UNLOADING;
+			
 				
 				break;
 
 			case LOAD:
 				
 				
-				
+				/*
 				if(!compoundReload && !compoundReloadEmpty) {
 					currentState = RenderableState.RELOADING;
 				} 
+				*/
 				
-				
+				currentState = RenderableState.RELOADING;
 				
 				break;
 
@@ -2249,6 +2298,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 						builder.firstPersonCustomPositioningReloading
 						);
 			case COMPOUND_RELOAD:
+				
 				return getComplexTransition(builder.compoundReloadContainer);
 			case COMPOUND_RELOAD_EMPTY:
 				return getComplexTransition(builder.compoundReloadEmptyContainer);

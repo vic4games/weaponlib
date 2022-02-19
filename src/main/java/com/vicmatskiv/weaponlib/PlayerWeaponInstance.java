@@ -145,6 +145,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 
 	@Override
 	public boolean setState(WeaponState state) {
+	
 		boolean result = super.setState(state);
 		addStateToHistory(state);
 		return result;

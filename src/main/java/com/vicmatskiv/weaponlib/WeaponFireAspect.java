@@ -16,8 +16,8 @@ import com.vicmatskiv.weaponlib.animation.ClientValueRepo;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 import com.vicmatskiv.weaponlib.network.packets.GunFXPacket;
-import com.vicmatskiv.weaponlib.render.ShellParticleTest;
-import com.vicmatskiv.weaponlib.render.ShellParticleTest.Shell;
+import com.vicmatskiv.weaponlib.render.shells.ShellParticleSimulator;
+import com.vicmatskiv.weaponlib.render.shells.ShellParticleSimulator.Shell;
 import com.vicmatskiv.weaponlib.sound.JSoundEngine;
 import com.vicmatskiv.weaponlib.state.Aspect;
 import com.vicmatskiv.weaponlib.state.PermitManager;
@@ -363,9 +363,9 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
         			CompatibleClientEventHandler.NEW_POS.get(1),
         			CompatibleClientEventHandler.NEW_POS.get(2));
         	float rotate = (float) Math.toRadians(-Minecraft.getMinecraft().player.rotationYaw);
-        	Vec3d vec = (new Vec3d(-25, -0, 0)).rotateYaw(rotate);
+        	Vec3d vec = (new Vec3d(-20, -0, 0)).rotateYaw(rotate);
         	Shell shell = new Shell(newPos.add(player.getPositionVector()), new Vec3d(-90, 0, 0).rotateYaw(rotate), vec);
-        	ShellParticleTest.shells.add(shell);
+        	CompatibleClientEventHandler.shellManager.enqueueShell(shell);
         	//System.out.println("yo");
         	/*
             EntityShellCasing entityShellCasing = weapon.builder.spawnShellWith.apply(playerWeaponInstance, player);

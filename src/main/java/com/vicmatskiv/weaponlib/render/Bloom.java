@@ -268,7 +268,7 @@ public class Bloom {
 	public static int multisampleFBO = 0;
 	public static int multiampleTexFBO = 0;
 	public static int mRes = 0;
-	
+	public static int msaaDepthTex = 0;
 	
 	public static void bindMultisample() {
 		GLCompatible.glBindFramebuffer(OpenGlHelper.GL_FRAMEBUFFER, multisampleFBO);
@@ -300,31 +300,67 @@ public class Bloom {
 		GL11.glBindTexture(GLCompatible.GL_TEXTURE_2D_MULTISAMPLE, multiampleTexFBO);
 		GLCompatible.glTexImage2DMultisample(GLCompatible.GL_TEXTURE_2D_MULTISAMPLE, 4, GL11.GL_RGBA8, width, height, false);
 		GLCompatible.glFramebufferTexture2D(GLCompatible.GL_FRAMEBUFFER, GLCompatible.GL_COLOR_ATTACHMENT0, GLCompatible.GL_TEXTURE_2D_MULTISAMPLE, multiampleTexFBO, 0);
+		
+		GlStateManager.enableDepth();
+		
+		// depth
+		
+		
+		msaaDepthTex = GL11.glGenTextures();
+		GL11.glBindTexture(GLCompatible.GL_TEXTURE_2D_MULTISAMPLE, msaaDepthTex);
+		GLCompatible.glTexImage2DMultisample(GLCompatible.GL_TEXTURE_2D_MULTISAMPLE, 4, GL14.GL_DEPTH_COMPONENT24, width, height, false);
+		GLCompatible.glFramebufferTexture2D(GLCompatible.GL_FRAMEBUFFER, GL30.GL_DEPTH_ATTACHMENT, GLCompatible.GL_TEXTURE_2D_MULTISAMPLE, msaaDepthTex, 0);
+		
+		//System.out.println(GL11.glGetError());
+		
 		multisample = true;
 		
 	}
 	
-	public static void initializeMultisample() {
-		
+	
+	public static void initializeMultisample(Framebuffer initial) {
 		if(GLCompatible.isLoaded && GLCompatible.multisampleType == -1) return;
-		int gWidth = Minecraft.getMinecraft().displayWidth;
-    	int gHeight = Minecraft.getMinecraft().displayHeight;
+		int gWidth = initial.framebufferWidth;
+		int gHeight = initial.framebufferHeight;
     	setupMultisampleBuffer();
-		GLCompatible.glBindFramebuffer(GLCompatible.GL_READ_FRAMEBUFFER, Minecraft.getMinecraft().getFramebuffer().framebufferObject);
+    	GlStateManager.enableDepth();
+    	GLCompatible.glBindFramebuffer(GLCompatible.GL_READ_FRAMEBUFFER, initial.framebufferObject);
+    	
+		//GLCompatible.glBindFramebuffer(GLCompatible.GL_READ_FRAMEBUFFER, Minecraft.getMinecraft().getFramebuffer().framebufferObject);
 		GLCompatible.glBindFramebuffer(GLCompatible.GL_DRAW_FRAMEBUFFER, multisampleFBO);
         GLCompatible.glBlitFramebuffer(0, 0, gWidth, gHeight, 0, 0, gWidth, gHeight, GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
-
+        
+        GLCompatible.glBlitFramebuffer(0, 0, gWidth, gHeight, 0, 0, gWidth, gHeight, GL11.GL_DEPTH_BUFFER_BIT, GL11.GL_NEAREST);
+        
+        
+        
         bindMultisample();
 	}
 	
+	public static void initializeMultisample() {
+		initializeMultisample(Minecraft.getMinecraft().getFramebuffer());
+	}
+	
 	public static void unapplyMultisample() {
+		unapplyMultisample(Minecraft.getMinecraft().getFramebuffer());
+	}
+	
+	public static void unapplyMultisample(Framebuffer initial) {
 		if(GLCompatible.isLoaded && GLCompatible.multisampleType == -1) return;
+		
+		/*
 		int gWidth = Minecraft.getMinecraft().displayWidth;
     	int gHeight = Minecraft.getMinecraft().displayHeight;
+    	*/
+		
+		int gWidth = initial.framebufferWidth;
+		int gHeight = initial.framebufferHeight;
+		
     	GLCompatible.glBindFramebuffer(GLCompatible.GL_READ_FRAMEBUFFER, multisampleFBO);
-    	GLCompatible.glBindFramebuffer(GLCompatible.GL_DRAW_FRAMEBUFFER, Minecraft.getMinecraft().getFramebuffer().framebufferObject);
+    	GLCompatible.glBindFramebuffer(GLCompatible.GL_DRAW_FRAMEBUFFER, initial.framebufferObject);
         GLCompatible.glBlitFramebuffer(0, 0, gWidth, gHeight, 0, 0, gWidth, gHeight, GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
-
+       // GLCompatible.glBlitFramebuffer(0, 0, gWidth, gHeight, 0, 0, gWidth, gHeight, GL11.GL_DEPTH_BUFFER_BIT, GL11.GL_NEAREST);
+        
 	}
 
 }

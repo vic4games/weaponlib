@@ -706,7 +706,7 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
 
 				   matty.transpose();
 				   matty.scale(new Vector3f((float) iS.x, (float)iS.y, (float) iS.z));
-				   
+				  
 					
 					
 			   }

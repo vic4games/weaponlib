@@ -105,10 +105,14 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 	@Override
 	public void setStateManager(StateManager<WeaponState, ? super PlayerWeaponInstance> stateManager) {
 
+		
+		
 		if(permitManager == null) {
 			throw new IllegalStateException("Permit manager not initialized");
 		}
 
+		
+		
 		this.stateManager = stateManager
 
 		.in(this)

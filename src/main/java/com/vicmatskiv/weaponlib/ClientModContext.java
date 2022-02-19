@@ -2,6 +2,7 @@ package com.vicmatskiv.weaponlib;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +45,9 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.WorldProviderSurface;
 import net.minecraftforge.client.ClientCommandHandler;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
 public class ClientModContext extends CommonModContext {
 
@@ -127,6 +130,9 @@ public class ClientModContext extends CommonModContext {
 		this.effectManager = new ClientEffectManager();
 
 		this.playerRawPitchAnimationManager = new ScreenShakingAnimationManager();
+		
+		
+		
 		
 		
 	}

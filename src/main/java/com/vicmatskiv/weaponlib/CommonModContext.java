@@ -12,6 +12,7 @@ import com.vicmatskiv.weaponlib.MagazineReloadAspect.LoadPermit;
 import com.vicmatskiv.weaponlib.WeaponAttachmentAspect.ChangeAttachmentPermit;
 import com.vicmatskiv.weaponlib.WeaponAttachmentAspect.EnterAttachmentModePermit;
 import com.vicmatskiv.weaponlib.WeaponAttachmentAspect.ExitAttachmentModePermit;
+import com.vicmatskiv.weaponlib.WeaponReloadAspect.CompoundPermit;
 import com.vicmatskiv.weaponlib.WeaponReloadAspect.UnloadPermit;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleBlockState;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
@@ -112,6 +113,7 @@ public class CommonModContext implements ModContext {
         TypeRegistry.getInstance().register(EnterAttachmentModePermit.class);
         TypeRegistry.getInstance().register(ExitAttachmentModePermit.class);
         TypeRegistry.getInstance().register(ChangeAttachmentPermit.class);
+        TypeRegistry.getInstance().register(CompoundPermit.class);
         TypeRegistry.getInstance().register(UnloadPermit.class);
         TypeRegistry.getInstance().register(LoadPermit.class);
         TypeRegistry.getInstance().register(PlayerWeaponInstance.class);
