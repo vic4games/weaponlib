@@ -279,7 +279,8 @@ public class AnimationData {
 		} else {
 			
 			for(int i = 0; i < this.fakeTransitions; ++i) {
-				transitionList.add(new Transition<>((renderContext) -> {}, this.fTLength));
+				transitionList.add(new Transition<>(initial.getAsPosition()
+				, this.fTLength));
 			}
 		}
 		

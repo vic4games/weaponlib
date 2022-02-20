@@ -1,11 +1,16 @@
 package com.vicmatskiv.weaponlib;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.function.BiConsumer;
 
 import org.lwjgl.opengl.GL11;
 
 import com.vicmatskiv.weaponlib.perspective.PerspectiveRenderer;
 import com.vicmatskiv.weaponlib.perspective.ReflexScreen;
+import com.vicmatskiv.weaponlib.render.scopes.CyclicList;
+import com.vicmatskiv.weaponlib.render.scopes.Reticle;
 
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemStack;
@@ -29,17 +34,31 @@ public class ItemScope extends ItemAttachment<Weapon> {
         private int height = DEFAULT_HEIGHT;
         
         
+         
+        public CyclicList<Reticle> reticles = new CyclicList<>();
+        public ReflexScreen screen;
+        private float radialCut = 20f;
+        /*
         public ResourceLocation reticleTexture;
         public float texScale = 0.05f;
         public float reticleCut = 0.1f;
         private boolean hasReticle = false;
         public Vec3d background;
+        */
         private BiConsumer<EntityLivingBase, ItemStack> reticlePositioning;
 
+        
+        
+        
         public Builder withZoomRange(float minZoom, float maxZoom) {
             this.minZoom = minZoom;
             this.maxZoom = maxZoom;
             return this;
+        }
+        
+        public Builder withRadialCut(float radius) {
+        	this.radialCut = radius;
+        	return this;
         }
 
         public Builder withOpticalZoom() {
@@ -60,19 +79,14 @@ public class ItemScope extends ItemAttachment<Weapon> {
         
         // reticle
         
-        public Builder withHolographicReticle() {
-        	this.hasReticle = true;
+        public Builder withHolographicReticles(Reticle...reticles) {
+        	this.reticles.addAll(Arrays.asList(reticles));
         	return this;
         }
         
-        public Builder withReticleSettings(String textureName, float texScale, float radius, Vec3d background) {
-        	this.reticleTexture = new ResourceLocation("mw" + ":" + "textures/crosshairs/" + textureName);
-        	this.texScale = texScale;
-        	this.reticleCut = radius;
-        	this.background = background;
-        	
-        	return this;
-        }
+        
+        
+     
         
         public Builder withReticlePositioning(BiConsumer<EntityLivingBase, ItemStack> reticlePositioning) {
         	this.reticlePositioning = reticlePositioning;
@@ -96,8 +110,9 @@ public class ItemScope extends ItemAttachment<Weapon> {
                 withPostRender(new PerspectiveRenderer(viewfinderPositioning));
             }
             
-            if(hasReticle) {
-            	withPostRender(new ReflexScreen(reticlePositioning, this.texScale, this.reticleCut, this.background, this.reticleTexture));
+            if(!reticles.isEmpty()) {
+            	this.screen = new ReflexScreen(reticlePositioning, radialCut, reticles);
+            	withPostRender(this.screen);
             }
 
             ItemScope itemScope = new ItemScope(this);
@@ -132,7 +147,7 @@ public class ItemScope extends ItemAttachment<Weapon> {
     }
 
     public boolean hasReticle() {
-    	return builder.hasReticle;
+    	return !builder.reticles.isEmpty();
     }
     
    
@@ -155,6 +170,10 @@ public class ItemScope extends ItemAttachment<Weapon> {
 
     public int getWidth() {
         return builder.width;
+    }
+    
+    public void switchReticle() {
+    	builder.screen.reticleList.next();
     }
     
     public int getHeight() {

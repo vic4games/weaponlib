@@ -357,6 +357,8 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
         	
         }
         
+        
+        
         if(weapon.isShellCasingEjectEnabled() && playerWeaponInstance != null)  {
         	
         	Vec3d newPos = new Vec3d(CompatibleClientEventHandler.NEW_POS.get(0), 

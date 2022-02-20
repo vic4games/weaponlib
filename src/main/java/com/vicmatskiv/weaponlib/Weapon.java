@@ -35,6 +35,7 @@ import com.vicmatskiv.weaponlib.crafting.OptionsMetadata;
 import com.vicmatskiv.weaponlib.model.Shell;
 
 import net.minecraft.client.model.ModelBase;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -216,6 +217,11 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
                 .withZRotationCoefficient(2f)
                 .withTransitionDuration(50);
             screenShakingBuilders.put(RenderableState.SHOOTING, defaultShootingStateScreenShakingBuilder);
+        }
+        
+        public Builder withWeaponType(String type) {
+        	this.gunType = type;
+        	return this;
         }
         
         public Builder useNewSystem() {
@@ -966,22 +972,30 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
             
             
             this.informationProvider = (stack) -> {
-            	 String firemodes = "";
-                 if(!firemodes.equals("")) {
-                 	
-                 	if(maxShots.contains(1)) firemodes += "Semi";
-                 	
-                 	for(Integer i : maxShots) {
-                 		if(i != Integer.MAX_VALUE && i != 1) firemodes += "Burst";
-                 	}
-                 	
-                 	if(maxShots.contains(Integer.MAX_VALUE)) firemodes += "Auto";
-                 	
-                 	
-                 }
-            	return Arrays.asList(TextFormatting.RED + "Damage: " + TextFormatting.GRAY + this.spawnEntityDamage,
-            			TextFormatting.RED + "Fire Mode: " + TextFormatting.GRAY + firemodes
-            			);
+            	
+            	
+            	TextFormatting plate = TextFormatting.GREEN;
+            	TextFormatting plain = TextFormatting.GRAY;
+            	
+            	ArrayList<String> descriptionBuilder = new ArrayList<>();
+            	
+            	descriptionBuilder.add(plate + "Type: " + plain + this.gunType);
+            	descriptionBuilder.add(plate + "Damage: " + plain + this.spawnEntityDamage);
+                 
+            	descriptionBuilder.add(plate + "Magazines:");
+            	
+            	ArrayList<ItemMagazine> mags = new ArrayList<>();
+                weapon.getCompatibleAttachments(AttachmentCategory.MAGAZINE).forEach(c -> mags.add((ItemMagazine) c.getAttachment()));
+                mags.sort((a, b) -> a.getAmmo()-b.getAmmo());
+              
+                mags.forEach(c -> descriptionBuilder.add(plain + (I18n.format(c.getUnlocalizedName() + ".name"))));
+                //mags.sort((a, b) -> a
+                 
+                 
+              // descriptionBuilder.add(plain + (I18n.format(ca.getAttachment().getUnlocalizedName() + ".name")));
+                 
+            	
+                 return descriptionBuilder;
             };
 
 

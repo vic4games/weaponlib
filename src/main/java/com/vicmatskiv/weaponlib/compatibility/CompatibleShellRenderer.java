@@ -87,7 +87,7 @@ public class CompatibleShellRenderer {
 			GlStateManager.translate(iP.x, iP.y, iP.z);
 
 			
-			if(sh.getHeight() > -3) {
+			if(sh.getHeight() > -3 && false) {
 				
 				
 				GlStateManager.enableTexture2D();
@@ -121,6 +121,8 @@ public class CompatibleShellRenderer {
 				GlStateManager.disableBlend();
 				
 			}
+			
+			GlStateManager.enableTexture2D();
 			
 		
 

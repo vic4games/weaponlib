@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.vicmatskiv.weaponlib.animation.AnimationModeProcessor;
 import com.vicmatskiv.weaponlib.melee.MeleeState;
 import com.vicmatskiv.weaponlib.melee.MeleeAttachmentAspect.ExitAttachmentModePermit;
 import com.vicmatskiv.weaponlib.network.TypeRegistry;
@@ -423,19 +424,26 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 			
 	//		stateManager.changeState(this, instance, WeaponState.LOAD, WeaponState.ALERT);
 			
-			
-			if(WeaponAttachmentAspect.getActiveAttachment(AttachmentCategory.MAGAZINE, instance) == null) {
-				stateManager.changeState(this, instance, WeaponState.AWAIT_FURTHER_LOAD_INSTRUCTIONS, WeaponState.READY);
-			} else {
+			if(AnimationModeProcessor.getInstance().isLegacyMode()) {
+				//stateManager.changeState(this, instance, WeaponState.AWAIT_FURTHER_LOAD_INSTRUCTIONS, WeaponState.READY);
+				furtherLoadInstructionsReceived(instance);
+				stateManager.changeState(this, instance, WeaponState.READY);
 				
-				instance.markReloadDirt();
-				instance.markMagSwapReady();
-				if(instance.getAmmo() == 0) {
-					stateManager.changeState(this, instance, WeaponState.COMPOUND_RELOAD_EMPTY);
+			} else {
+				if(WeaponAttachmentAspect.getActiveAttachment(AttachmentCategory.MAGAZINE, instance) == null) {
+					stateManager.changeState(this, instance, WeaponState.AWAIT_FURTHER_LOAD_INSTRUCTIONS, WeaponState.READY);
 				} else {
-					stateManager.changeState(this, instance, WeaponState.COMPOUND_RELOAD);
+					
+					instance.markReloadDirt();
+					instance.markMagSwapReady();
+					if(instance.getAmmo() == 0) {
+						stateManager.changeState(this, instance, WeaponState.COMPOUND_RELOAD_EMPTY);
+					} else {
+						stateManager.changeState(this, instance, WeaponState.COMPOUND_RELOAD);
+					}
 				}
 			}
+			
 			
 		 //   stateManager.changeState(this, instance, WeaponState.AWAIT_FURTHER_LOAD_INSTRUCTIONS, WeaponState.READY);
 		}

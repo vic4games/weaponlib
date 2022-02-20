@@ -22,6 +22,7 @@ import org.lwjgl.opengl.GLSync;
 
 import com.google.common.collect.Maps;
 import com.vicmatskiv.weaponlib.ClientModContext;
+import com.vicmatskiv.weaponlib.ModelRenderer;
 import com.vicmatskiv.weaponlib.Part;
 import com.vicmatskiv.weaponlib.PlayerWeaponInstance;
 import com.vicmatskiv.weaponlib.RenderContext;
@@ -59,7 +60,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.MusicTicker;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelBiped;
+import net.minecraft.client.model.ModelBox;
+import net.minecraft.client.model.ModelLeashKnot;
 import net.minecraft.client.model.ModelPlayer;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
@@ -502,7 +506,8 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 
 			// if(!DebugPositioner.isDebugModeEnabled())
 			positioner.position(Part.MAIN_ITEM, renderContext);
-
+			
+			
 			/*
 			AnimationData anm = BBLoader.getAnimation("real", "reload", "main");
 			//AnimationData anm = BBLoader.loadAnimationData("m16.animation.json", "animation.M16.reload", "main");
@@ -603,6 +608,9 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 
 			float forwardMov = (float) ClientValueRepo.forward * aimMultiplier * 0.7f;
 			float rise = (float) (ClientValueRepo.rise / 1f);
+			
+			
+			
 
 			forwardMov = Math.max(0, forwardMov);
 
@@ -638,7 +646,10 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 				// tickWiggle = MatrixHelper.solveLerp((float) ClientValueRepo.walkYWiggle,
 				// tickWiggle, Minecraft.getMinecraft().getRenderPartialTicks());
 
+				
+				
 				float xWiggle = (float) ((float) Math.sin(tickWiggle) * ClientValueRepo.walkingGun.getLerpedPosition());
+				
 				// xWiggle = MatrixHelper.solveLerp((float) ClientValueRepo.walkXWiggle,
 				// xWiggle, Minecraft.getMinecraft().getRenderPartialTicks());
 
@@ -648,7 +659,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 						* 0.02f;
 
 				float sway = (float) ((float) ((float) Math.sin(tickWiggle * 2)) * ClientValueRepo.forward) * 0.2f;
-
+				sway *= aimMultiplier;
 				// xWiggle = (float) ClientValueRepo.walkingGun.getLerpedPosition();
 				// xWiggle = 0f;
 				// forwardMov = 0f;
@@ -710,7 +721,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 				//	renderSpecialLeftArm(player, renderContext, positioner);
 					renderLeftArm(player, renderContext, positioner);
 
-					//renderRightArm(player, renderContext, positioner);
+					renderRightArm(player, renderContext, positioner);
 
 					if (!OpenGLSelectionHelper.isInSelectionPass && AnimationModeProcessor.getInstance().getFPSMode()) {
 
@@ -915,6 +926,8 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 		}
 
 	}
+	
+	public static final ModelRenderer bipedLeftArm = null;
 	
 	public static final Shader selectedge = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/selectedge"));
 
@@ -1134,7 +1147,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 			//GL11.glTranslatef(-0.38f, -0.12f, -0.13f);
 		}
 
-		System.out.println("hi");
+		
 		//armModel.boxList.get(0).rotateAngleY = (float) Math.toRadians(180);
 		GlStateManager.disableTexture2D();
 		//armModel.render(null, 0f, 0f, 0f, 0f, 0f, 0.0625f);
@@ -1157,6 +1170,9 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 
 		GL11.glPopMatrix();
 	}
+	
+	
+	public static ModelRenderer bipedRightArm = null;
 	
 
 	static <T> void renderLeftArm(EntityLivingBase player, RenderContext<T> renderContext,
@@ -1312,44 +1328,123 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 
 		GlStateManager.disableBlend();
 	}
+	
+	public static ModelBiped duplicateBiped(ModelBiped mb) {
+		ModelBiped newBiped = new ModelBiped();
+		
+		newBiped.textureHeight = mb.textureHeight;
+		newBiped.textureWidth = mb.textureWidth;
+		newBiped.leftArmPose = mb.leftArmPose;
+		newBiped.rightArmPose = mb.rightArmPose;
+		newBiped.swingProgress = mb.swingProgress;
+	
+		
+			
+		
+		
+		for(net.minecraft.client.model.ModelRenderer mr : mb.boxList) {
+		
+			net.minecraft.client.model.ModelRenderer newModelRenderer = cloneModelRenderer(newBiped, mr);
+			
+			if(mr.childModels != null) {
+				for(net.minecraft.client.model.ModelRenderer children : mr.childModels) {
+					newModelRenderer.childModels.add(cloneModelRenderer(newBiped, children));
+				}
+			}
+		
+			
+			
+			//newModelRenderer.cubeList.addAll(mr.cubeList);
+			
+		}
+		
+		newBiped.bipedLeftArm = cloneModelRenderer(newBiped, mb.bipedLeftArm);
+		newBiped.bipedRightArm = cloneModelRenderer(newBiped, mb.bipedLeftArm);
+		newBiped.bipedBody = cloneModelRenderer(newBiped, mb.bipedLeftArm);
+		newBiped.bipedHeadwear = cloneModelRenderer(newBiped, mb.bipedLeftArm);
+		newBiped.bipedLeftLeg = cloneModelRenderer(newBiped, mb.bipedLeftArm);
+		newBiped.bipedRightLeg = cloneModelRenderer(newBiped, mb.bipedLeftArm);
+		newBiped.bipedHead = cloneModelRenderer(newBiped, mb.bipedLeftArm);
+		
+		
+		return newBiped;
+	}
+	
+	public static net.minecraft.client.model.ModelRenderer cloneModelRenderer(ModelBase base, net.minecraft.client.model.ModelRenderer children) {
+		
+		net.minecraft.client.model.ModelRenderer newModel = new net.minecraft.client.model.ModelRenderer(base);
+		newModel.cubeList.addAll(children.cubeList);
+		
+		//newModel.boxName = children.boxName;
+		newModel.isHidden = children.isHidden;
+		newModel.mirror = children.mirror;
+		newModel.offsetX = children.offsetX;
+		newModel.offsetY = children.offsetY;
+		newModel.offsetZ = children.offsetZ;
+		newModel.rotateAngleX = children.rotateAngleX;
+		newModel.rotateAngleY = children.rotateAngleY;
+		newModel.rotateAngleZ = children.rotateAngleZ;
+		newModel.rotationPointX = children.rotationPointX;
+		newModel.rotationPointY = children.rotationPointY;
+		newModel.rotationPointZ = children.rotationPointZ;
+		newModel.showModel = children.showModel;
+		newModel.textureHeight = children.textureHeight;
+		newModel.textureWidth = children.textureWidth;
+		
+		return newModel;
+		
+	}
+	
+	
+	public static ModelBiped backupModel;
+	public static AbstractClientPlayer acp;
 
 	public static void renderLeftArm(ModelBiped modelplayer, AbstractClientPlayer clientPlayer) {
 		// GlStateManager.color(1.0F, 1.0F, 1.0F);
-		setModelVisibilities(modelplayer, clientPlayer);
+		
+		
+		if(acp == null || acp != clientPlayer) {
+			acp = clientPlayer;
+			backupModel = duplicateBiped(modelplayer);
+		}
+		
+		setModelVisibilities(backupModel, clientPlayer);
 
 		GlStateManager.enableBlend();
-		modelplayer.isSneak = false;
-		modelplayer.swingProgress = 0.0F;
-		modelplayer.setRotationAngles(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0625F, clientPlayer);
+		backupModel.isSneak = false;
+		backupModel.swingProgress = 0.0F;
+		backupModel.setRotationAngles(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0625F, clientPlayer);
 
-		if (!AnimationModeProcessor.getInstance().isLegacyMode()) {
+		if (!AnimationModeProcessor.getInstance().isLegacyMode() && Minecraft.getMinecraft().gameSettings.thirdPersonView == 0) {
 			
-			modelplayer.bipedLeftArm.rotateAngleX = (float) Math.toRadians(-90);
-			modelplayer.bipedLeftArm.rotateAngleY = 0f;
-			modelplayer.bipedLeftArm.rotateAngleZ = 0f;
+			backupModel.bipedLeftArm.rotateAngleX = (float) Math.toRadians(-90);
+			backupModel.bipedLeftArm.rotateAngleY = 0f;
+			backupModel.bipedLeftArm.rotateAngleZ = 0f;
 		} else {
-			modelplayer.bipedLeftArm.rotateAngleX = 0.0F;
+			backupModel.bipedLeftArm.rotateAngleX = 0.0F;
 			
 		}
 		
-		if(AnimationModeProcessor.getInstance().isLegacyMode()) {
-			modelplayer.bipedLeftArm.offsetX = 0f;
-			modelplayer.bipedLeftArm.offsetY = 0f;
-			modelplayer.bipedLeftArm.offsetZ = 0f;
+		
+		if(AnimationModeProcessor.getInstance().isLegacyMode() || Minecraft.getMinecraft().gameSettings.thirdPersonView != 0) {
+			
+			backupModel.bipedLeftArm.offsetX = 0f;
+			backupModel.bipedLeftArm.offsetY = 0f;
+			backupModel.bipedLeftArm.offsetZ = 0f;
 		} else {
-			modelplayer.bipedLeftArm.offsetX = -0.375f;
-			modelplayer.bipedLeftArm.offsetY = -0.125f;
-			modelplayer.bipedLeftArm.offsetZ = -0.15f;
+			
+			backupModel.bipedLeftArm.offsetX = -0.375f;
+			backupModel.bipedLeftArm.offsetY = -0.125f;
+			backupModel.bipedLeftArm.offsetZ = -0.15f;
 		}
 		
 		
 		
 		
 		
-		
-		modelplayer.bipedLeftArm.render(0.0625F);
-		if (modelplayer instanceof ModelPlayer) {
-			((ModelPlayer) modelplayer).bipedLeftArmwear.rotateAngleX = 0.0F;
+		backupModel.bipedLeftArm.render(0.0625F);
+		if (backupModel instanceof ModelPlayer) {
+			((ModelPlayer) backupModel).bipedLeftArmwear.rotateAngleX = 0.0F;
 			// ((ModelPlayer) modelplayer).bipedLeftArmwear.render(0.0625F);
 		}
 

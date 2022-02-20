@@ -341,6 +341,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			return this;
 		}
 
+		@Deprecated
 		public Builder withInventoryPositioning(Consumer<ItemStack> inventoryPositioning) {
 			this.inventoryPositioning = inventoryPositioning;
 			return this;
@@ -1022,15 +1023,21 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		public Builder setupModernMagazineAnimations(String animationFile, Part...parts) {
 			// .withFirstPersonCustomPositioningReloading(Magazines.M38Mag,
 			
+			
+			
 			for(Part p : parts) {
+				if(!(p instanceof ItemMagazine)) continue;
+				
+				Vec3d r = ((ItemMagazine) p).getRotationPoint();
+				System.out.println("ROTMAMDFKFKJF FOR MAG: " + r);
 				withFirstPersonCustomPositioningReloading(p, BBLoader.getAnimation(animationFile, "load", "magazine")
-						.getTransitionList(Transform.NULL.copy(), BBLoader.HANDDIVISOR));
+						.getTransitionList(Transform.NULL.copy().withRotationPoint(r.x, r.y, r.z), BBLoader.HANDDIVISOR));
 				withFirstPersonCustomPositioningUnloading(p, BBLoader.getAnimation(animationFile, "unload", "magazine")
-						.getTransitionList(Transform.NULL.copy(), BBLoader.HANDDIVISOR));
+						.getTransitionList(Transform.NULL.copy().withRotationPoint(r.x, r.y, r.z), BBLoader.HANDDIVISOR));
 				withFirstPersonCustomPositioningCompoundReloading(p, BBLoader.getAnimation(animationFile, "reload", "magazine")
-						.getTransitionList(Transform.NULL.copy(), BBLoader.HANDDIVISOR));
+						.getTransitionList(Transform.NULL.copy().withRotationPoint(r.x, r.y, r.z), BBLoader.HANDDIVISOR));
 				withFirstPersonCustomPositioningCompoundReloadingEmpty(p, BBLoader.getAnimation(animationFile, "reloadempty", "magazine")
-						.getTransitionList(Transform.NULL.copy(), BBLoader.HANDDIVISOR));
+						.getTransitionList(Transform.NULL.copy().withRotationPoint(r.x, r.y, r.z), BBLoader.HANDDIVISOR));
 			}
 			
 			
@@ -2597,7 +2604,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
         GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW);
         GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, PROJECTION);
         GL11.glGetInteger(GL11.GL_VIEWPORT, VIEWPORT);
-		Project.gluProject(-0.2f, -1.3f, -0.5f, MODELVIEW, PROJECTION, VIEWPORT, POSITION);
+		Project.gluProject(-0.15f, -1.5f, 1f, MODELVIEW, PROJECTION, VIEWPORT, POSITION);
 	      
 		
 		
@@ -2644,7 +2651,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		}
 		//gunLightingShader = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/gunlight"));
 	    
-		if(!OpenGLSelectionHelper.isInSelectionPass) {
+		if(!OpenGLSelectionHelper.isInSelectionPass && !AnimationGUI.getInstance().magEdit.isState()) {
+			
 			gunLightingShader.use();
 			
 			
@@ -2734,6 +2742,23 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
     private void renderCompatibleAttachment(CompatibleAttachment<?> compatibleAttachment,
 			Positioner<Part, RenderContext<RenderableState>> positioner, RenderContext<RenderableState> renderContext) {
 
+		
+		
+		if(compatibleAttachment.getAttachment() instanceof ItemMagazine && AnimationGUI.getInstance().magEdit.isState() && !OpenGLSelectionHelper.isInSelectionPass) {
+	    	ItemMagazine mag = (ItemMagazine) compatibleAttachment.getAttachment();
+	    	
+	    	
+	    	GlStateManager.pushMatrix();
+	    	
+	    	//GlStateManager.translate(mag.getRotationPoint().x, mag.getRotationPoint().y, mag.getRotationPoint().z);
+	    	GlStateManager.translate(CompatibleClientEventHandler.magRotPositioner.x, CompatibleClientEventHandler.magRotPositioner.y, CompatibleClientEventHandler.magRotPositioner.z);
+	    	GlStateManager.color(1, 0, 0);
+	    	GL11.glLineWidth(5f);
+	    	AnimationModeProcessor.getInstance().renderCross();
+	    	GlStateManager.enableTexture2D();
+	    	GlStateManager.enableLighting();
+	    	GlStateManager.popMatrix();
+	    }
 		GL11.glPushMatrix();
 		GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_CURRENT_BIT);
 
@@ -2746,6 +2771,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		ItemAttachment<?> itemAttachment = compatibleAttachment.getAttachment();
 
 
+		
+	
 		if(positioner != null) {
 			
 			if(itemAttachment instanceof Part) {
@@ -2763,6 +2790,11 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 	    }
 //	    double distanceSq = this.player != null ? renderViewEntity.getDistanceSqToEntity(this.player) : 0;
 
+	   // GlStateManager.rotate(45, 1, 0, 0);
+	    
+	    
+	    
+	    
 	   
 	    
 		for(Tuple<ModelBase, String> texturedModel: compatibleAttachment.getAttachment().getTexturedModels()) {
@@ -2771,8 +2803,30 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			GL11.glPushMatrix();
 			GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_CURRENT_BIT);
 			if(compatibleAttachment.getModelPositioning() != null) {
+			
+				/*
+				if(!(compatibleAttachment.getAttachment() instanceof ItemMagazine)) {
+					compatibleAttachment.getModelPositioning().accept(texturedModel.getU());
+				} else {
+					new Transform().withScale(1, 1, 1).withRotationPoint(CompatibleClientEventHandler.magRotPositioner.x, CompatibleClientEventHandler.magRotPositioner.y, CompatibleClientEventHandler.magRotPositioner.z)
+							.withRotation(45, 0, 0).doGLDirect();
+				}*/
+				
+				
+	
 				compatibleAttachment.getModelPositioning().accept(texturedModel.getU());
+				/*
+				if((compatibleAttachment.getAttachment() instanceof ItemMagazine)) {
+					new Transform().withScale(1, 1, 1).withRotationPoint(CompatibleClientEventHandler.magRotPositioner.x, CompatibleClientEventHandler.magRotPositioner.y, CompatibleClientEventHandler.magRotPositioner.z)
+					.withRotation(0, 0, 0).doGLDirect();
+				}
+				*/
+				
 			}
+			
+			
+			
+			
 			//if(distanceSq < 49) {
 		         texturedModel.getU().render(renderContext.getPlayer(),
 		                    renderContext.getLimbSwing(),

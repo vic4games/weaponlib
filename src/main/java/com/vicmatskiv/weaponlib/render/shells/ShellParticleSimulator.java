@@ -116,13 +116,27 @@ public class ShellParticleSimulator {
 			
 			sh.velocity = sh.velocity.addVector(0, -9.81*dt, 0);
 			
-			RayTraceResult direction = Minecraft.getMinecraft().world.rayTraceBlocks(sh.prevPos, sh.prevPos.add(sh.velocity.scale(dt)), false, true, false);
+			RayTraceResult direction = Minecraft.getMinecraft().world.rayTraceBlocks(sh.prevPos, sh.pos.add(sh.velocity.scale(dt)), false, true, false);
 			if(direction != null) {
+				
+				
+				
 				
 				double randomIntensity = 1;			
 				double newX = sh.velocity.x * -RESTITUTION + ((Math.random()*randomIntensity) - randomIntensity/2);
 				double newY = sh.velocity.y * -RESTITUTION + ((Math.random()*randomIntensity) - randomIntensity/2);
 				double newZ = sh.velocity.z * -RESTITUTION + ((Math.random()*randomIntensity) - randomIntensity/2);
+				
+				sh.rotImpulse = sh.rotImpulse.scale(-1);
+				
+				Vec3d dirTest = direction.hitVec.subtract(sh.pos);
+				
+				double eps = 0.1;
+				if(Math.abs(dirTest.x) - Math.abs(dirTest.y) > eps|| Math.abs(dirTest.z) - Math.abs(dirTest.y) > eps) {
+					//System.out.println);
+					newX *= -1;
+					newZ *= -1;
+				}
 				
 				sh.velocity = new Vec3d(newX, newY, newZ);
 			}

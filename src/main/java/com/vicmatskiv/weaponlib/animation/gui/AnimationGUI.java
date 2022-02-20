@@ -21,6 +21,7 @@ import com.vicmatskiv.weaponlib.animation.Arcball;
 import com.vicmatskiv.weaponlib.animation.DebugPositioner;
 import com.vicmatskiv.weaponlib.animation.OpenGLSelectionHelper;
 import com.vicmatskiv.weaponlib.animation.DebugPositioner.Position;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
@@ -57,7 +58,7 @@ public class AnimationGUI {
 	public Button editRotButton = new Button("Edit rotation point", true, 10, 35, 35, 20);
 	public Button moveForward = new Button("Move axis backwards", true,7,  60, 35, 20);
 	public Button leftDrag = new Button("Position drag alignment", true, 11, 135, 35, 20);
-	
+	public Button magEdit = new Button("Edit magazine rotation point", true, 12, 10, 80, 20);
 	
 	public AnimationGUI() {
 	
@@ -100,7 +101,7 @@ public class AnimationGUI {
 		// Drag rotation - 10
 		addButton(leftDrag);
 		
-		
+		addButton(magEdit);
 				
 		
 		
@@ -232,6 +233,12 @@ public class AnimationGUI {
 		//	ClientModContext.getContext().getAttachmentAspect().toggleClientAttachmentSelectionMode(Minecraft.getMinecraft().player);
 			//instance.getWeapon().toggleClientAttachmentSelectionMode(Minecraft.getMinecraft().player);
 			
+			
+			if(magEdit.isState()) {
+				System.out.println("(" + CompatibleClientEventHandler.magRotPositioner.x + ", " + CompatibleClientEventHandler.magRotPositioner.y  + ", " + CompatibleClientEventHandler.magRotPositioner.z + ")");
+				return;
+			}
+			
 			int selectID = OpenGLSelectionHelper.selectID;
     		if(ClientModContext.getContext() == null || ClientModContext.getContext().getMainHeldWeapon() == null) {
     		
@@ -261,9 +268,14 @@ public class AnimationGUI {
 			// do nothing
 			break;
 		case 9:
+			
 			PlayerWeaponInstance instance = ClientModContext.getContext().getPlayerItemInstanceRegistry().getMainHandItemInstance(Minecraft.getMinecraft().player, PlayerWeaponInstance.class);
 			ClientModContext.getContext().getAttachmentAspect().tryChange(new ChangeAttachmentPermit(AttachmentCategory.SCOPE), instance);
 			
+			break;
+		case 12:
+			
+			DebugPositioner.setDebugMode(true);
 			break;
 		}
 	}

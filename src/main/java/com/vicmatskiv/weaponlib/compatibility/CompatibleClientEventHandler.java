@@ -34,6 +34,7 @@ import org.lwjgl.opengl.GL43;
 import org.lwjgl.util.glu.Project;
 
 import com.google.common.reflect.Reflection;
+import com.vicmatskiv.weaponlib.AttachmentCategory;
 import com.vicmatskiv.weaponlib.ClientModContext;
 
 import com.vicmatskiv.weaponlib.ModContext;
@@ -88,16 +89,21 @@ import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.client.resources.I18n;
+import net.minecraft.client.resources.LanguageManager;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraft.util.text.translation.LanguageMap;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldProviderSurface;
 import net.minecraftforge.client.ForgeHooksClient;
@@ -133,6 +139,9 @@ public abstract class CompatibleClientEventHandler {
 	public static boolean freecamEnabled = false;
 	public static boolean freecamLock = false;
 	public static boolean muzzlePositioner = false;
+	
+	
+	public static Vec3d magRotPositioner = Vec3d.ZERO;
 
 	@SideOnly(Side.CLIENT)
 	@SubscribeEvent
@@ -390,7 +399,7 @@ public abstract class CompatibleClientEventHandler {
 		if(Minecraft.getMinecraft().player.ticksExisted%1 == 0) {
 			for(int x = 0; x < 1; ++x) {
 				
-				shellManager.enqueueShell(new Shell(new Vec3d(38, 6, -328), Vec3d.ZERO, new Vec3d(-20, 0, 0)));
+				//shellManager.enqueueShell(new Shell(new Vec3d(38, 6, -328), Vec3d.ZERO, new Vec3d(-20, 0, 0)));
 				//shellManager.enqueueShell(new Shell(new Vec3d(43.856, 5.5, -331.204), new Vec3d(90,0,0), new Vec3d(-30, 0, 0)));
 				
 			}
@@ -400,9 +409,23 @@ public abstract class CompatibleClientEventHandler {
 		
 		if(ClientModContext.getContext() != null && ClientModContext.getContext().getMainHeldWeapon() != null) {
 			PlayerWeaponInstance pwi = ClientModContext.getContext().getMainHeldWeapon();
-			
-			
-			//System.out.println(pwi.isMagSwapDone());
+			//System.out.println(pwi.getState());
+		//	pwi.getWeapon().getCompatibleAttachments(AttachmentCategory.MAGAZINE).forEach(c -> System.out.println(I18n.format(c.getAttachment().getUnlocalizedName() + ".name")));
+			//String unloc = pwi.getItemStack().getUnlocalizedName();
+		//	System.out.println(I18n.format(pwi.getItemStack().getUnlocalizedName() + ".name"));
+			//Minecraft.getMinecraft().getLanguageManager().getCurrentLanguage().getJavaLocale().tra
+			//System.out.println(new TextComponentTranslation(unloc, new Object[0]).getFormattedText());
+			//System.out.println(NEW_POS.get(0));
+			/*
+			Vec3d newPos = new Vec3d(CompatibleClientEventHandler.NEW_POS.get(0), 
+	    			CompatibleClientEventHandler.NEW_POS.get(1),
+	    			CompatibleClientEventHandler.NEW_POS.get(2));
+	    	float rotate = (float) Math.toRadians(-Minecraft.getMinecraft().player.rotationYaw);
+	    	Vec3d vec = (new Vec3d(-20, -0, 0)).rotateYaw(rotate);
+	    	Shell shell = new Shell(newPos.add(Minecraft.getMinecraft().player.getPositionVector()), new Vec3d(-90, 0, 0).rotateYaw(rotate), vec);
+	    	CompatibleClientEventHandler.shellManager.enqueueShell(shell);
+			*/
+	    	//System.out.println(pwi.isMagSwapDone());
 			
 			
 			
@@ -462,6 +485,29 @@ public abstract class CompatibleClientEventHandler {
 		
 		//System.out.println(Mouse.isButtonDown(0));
 	
+		if (ClientModContext.getContext().getSafeGlobals().renderingPhase.get() == RenderingPhase.RENDER_PERSPECTIVE)
+			return;
+
+		GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW);
+		GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, PROJECTION);
+		GL11.glGetInteger(GL11.GL_VIEWPORT, VIEWPORT);
+
+		Project.gluUnProject(WeaponRenderer.POSITION.get(0), WeaponRenderer.POSITION.get(1), WeaponRenderer.POSITION.get(2), MODELVIEW, PROJECTION, VIEWPORT,
+				NEW_POS);
+		
+		Vec3d newPV = new Vec3d(NEW_POS.get(0), NEW_POS.get(1), NEW_POS.get(2));
+		
+		/*
+		GL11.glPointSize(10f);
+		DebugRenderer.setupBasicRender();
+		GlStateManager.pushMatrix();
+		GlStateManager.translate(newPV.x, newPV.y, newPV.z);
+		GlStateManager.enableDepth();
+		AnimationModeProcessor.getInstance().renderCross();
+		GlStateManager.popMatrix();
+		//DebugRenderer.renderPoint(newPV, new Vec3d(1, 0, 0));
+		DebugRenderer.destructBasicRender();
+		*/
 		
 		if(AnimationModeProcessor.getInstance().getFPSMode()) {
 			Minecraft.getMinecraft().setIngameNotInFocus();
@@ -477,6 +523,7 @@ public abstract class CompatibleClientEventHandler {
 			blackScree.use();
 			Bloom.renderFboTriangle(Minecraft.getMinecraft().getFramebuffer());
 			blackScree.release();
+			
 			return;
 		}
 		
@@ -490,23 +537,7 @@ public abstract class CompatibleClientEventHandler {
 		*/
 	//	BBLoader.load();
 
-		if (ClientModContext.getContext().getSafeGlobals().renderingPhase.get() == RenderingPhase.RENDER_PERSPECTIVE)
-			return;
-
-		GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW);
-		GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, PROJECTION);
-		GL11.glGetInteger(GL11.GL_VIEWPORT, VIEWPORT);
-
-		Project.gluUnProject(WeaponRenderer.POSITION.get(0), WeaponRenderer.POSITION.get(1), WeaponRenderer.POSITION.get(2), MODELVIEW, PROJECTION, VIEWPORT,
-				NEW_POS);
 		
-		Vec3d newPV = new Vec3d(NEW_POS.get(0), NEW_POS.get(1), NEW_POS.get(2));
-		
-		
-		
-		DebugRenderer.setupBasicRender();
-		DebugRenderer.renderPoint(newPV, new Vec3d(1, 0, 0));
-		DebugRenderer.destructBasicRender();
 		
 		
 		
@@ -533,6 +564,9 @@ public abstract class CompatibleClientEventHandler {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		
+		
+		
 
 		// JSoundEngine jse = JSoundEngine.getInstance();
 

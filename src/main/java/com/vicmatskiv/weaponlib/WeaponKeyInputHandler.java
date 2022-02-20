@@ -9,6 +9,7 @@ import org.lwjgl.input.Keyboard;
 import com.vicmatskiv.weaponlib.animation.AnimationModeProcessor;
 import com.vicmatskiv.weaponlib.animation.DebugPositioner;
 import com.vicmatskiv.weaponlib.animation.OpenGLSelectionHelper;
+import com.vicmatskiv.weaponlib.animation.gui.AnimationGUI;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleExtraEntityFlags;
@@ -105,37 +106,55 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
 	    }
 	    
 	    
-	     if(DebugPositioner.isDebugModeEnabled() && KeyBindings.upArrowKey.isPressed()) {
-            DebugPositioner.incrementXRotation(5);
-        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.downArrowKey.isPressed()) {
-            DebugPositioner.incrementXRotation(-5);
-        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.leftArrowKey.isPressed()) {
-            DebugPositioner.incrementYRotation(5);
-        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.rightArrowKey.isPressed()) {
-            DebugPositioner.incrementYRotation(-5);
-        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.jDebugKey.isKeyDown()) {
-        	System.out.println("yo");
-            DebugPositioner.incrementZRotation(5);
-        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.kDebugKey.isKeyDown()) {
-            DebugPositioner.incrementZRotation(-5);
-        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.minusDebugKey.isKeyDown()) {
-        
-            DebugPositioner.incrementXPosition(-1f, altMode);
-        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.equalsDebugKey.isKeyDown()) {
-            DebugPositioner.incrementXPosition(1f, altMode);
-        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.lBracketDebugKey.isKeyDown()) {
-            DebugPositioner.incrementYPosition(-1f, altMode);
-        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.rBracketDebugKey.isKeyDown()) {
-            DebugPositioner.incrementYPosition(1f, altMode);
-        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.semicolonDebugKey.isKeyDown()) {
-            DebugPositioner.incrementZPosition(-1f, altMode);
-        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.apostropheDebugKey.isKeyDown()) {
-            DebugPositioner.incrementZPosition(1f, altMode);
-        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.deleteDebugKey.isKeyDown()) {
-            DebugPositioner.reset();
-        }
+	    if(!AnimationGUI.getInstance().magEdit.isState()) {
+	    	if(DebugPositioner.isDebugModeEnabled() && KeyBindings.upArrowKey.isPressed()) {
+	            DebugPositioner.incrementXRotation(5);
+	        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.downArrowKey.isPressed()) {
+	            DebugPositioner.incrementXRotation(-5);
+	        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.leftArrowKey.isPressed()) {
+	            DebugPositioner.incrementYRotation(5);
+	        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.rightArrowKey.isPressed()) {
+	            DebugPositioner.incrementYRotation(-5);
+	        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.jDebugKey.isKeyDown()) {
+	        	System.out.println("yo");
+	            DebugPositioner.incrementZRotation(5);
+	        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.kDebugKey.isKeyDown()) {
+	            DebugPositioner.incrementZRotation(-5);
+	        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.minusDebugKey.isKeyDown()) {
+	        
+	            DebugPositioner.incrementXPosition(-1f, altMode);
+	        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.equalsDebugKey.isKeyDown()) {
+	            DebugPositioner.incrementXPosition(1f, altMode);
+	        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.lBracketDebugKey.isKeyDown()) {
+	            DebugPositioner.incrementYPosition(-1f, altMode);
+	        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.rBracketDebugKey.isKeyDown()) {
+	            DebugPositioner.incrementYPosition(1f, altMode);
+	        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.semicolonDebugKey.isKeyDown()) {
+	            DebugPositioner.incrementZPosition(-1f, altMode);
+	        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.apostropheDebugKey.isKeyDown()) {
+	            DebugPositioner.incrementZPosition(1f, altMode);
+	        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.deleteDebugKey.isKeyDown()) {
+	            DebugPositioner.reset();
+	        }
+	    } else {
+	    	if(KeyBindings.upArrowKey.isKeyDown()) {
+	    		CompatibleClientEventHandler.magRotPositioner = CompatibleClientEventHandler.magRotPositioner.addVector(0, 0.1, 0);
+	    	} else if(KeyBindings.leftArrowKey.isKeyDown()) {
+	    		CompatibleClientEventHandler.magRotPositioner =CompatibleClientEventHandler.magRotPositioner.addVector(-0.1, 0, 0);
+	    	} else if(KeyBindings.rightArrowKey.isKeyDown()) {
+	    		CompatibleClientEventHandler.magRotPositioner =CompatibleClientEventHandler.magRotPositioner.addVector(0.1, 0, 0);
+	    	} else if(KeyBindings.downArrowKey.isKeyDown()) {
+	    		CompatibleClientEventHandler.magRotPositioner =CompatibleClientEventHandler.magRotPositioner.addVector(0, -0.1, 0);
+	    	} else if(KeyBindings.jDebugKey.isKeyDown()) {
+	    		CompatibleClientEventHandler.magRotPositioner =CompatibleClientEventHandler.magRotPositioner.addVector(0, 0, 0.1);
+	    	} else if(KeyBindings.kDebugKey.isKeyDown()) {
+	    		CompatibleClientEventHandler.magRotPositioner =CompatibleClientEventHandler.magRotPositioner.addVector(0, 0, -0.1);
+	    	}
+	    }
+	    
+	     
 
-        else if(KeyBindings.reloadKey.isPressed()) {
+         if(KeyBindings.reloadKey.isPressed()) {
             if(itemStack != null) {
                 Item item = itemStack.getItem();
                 if(item instanceof Reloadable) {

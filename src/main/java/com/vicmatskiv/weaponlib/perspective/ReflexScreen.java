@@ -5,6 +5,7 @@ package com.vicmatskiv.weaponlib.perspective;
 
 
 
+import java.util.LinkedList;
 import java.util.function.BiConsumer;
 
 import org.lwjgl.opengl.GL11;
@@ -18,6 +19,8 @@ import com.vicmatskiv.weaponlib.RenderableState;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTransformType;
 import com.vicmatskiv.weaponlib.render.Bloom;
 import com.vicmatskiv.weaponlib.render.Dloom;
+import com.vicmatskiv.weaponlib.render.scopes.CyclicList;
+import com.vicmatskiv.weaponlib.render.scopes.Reticle;
 import com.vicmatskiv.weaponlib.shader.jim.Shader;
 import com.vicmatskiv.weaponlib.shader.jim.ShaderManager;
 
@@ -35,19 +38,24 @@ import net.minecraft.util.math.Vec3d;
 public class ReflexScreen extends ModelBase implements CustomRenderer<RenderableState>{
 	private final ModelRenderer bb_main;
 
-	public BiConsumer<EntityLivingBase, ItemStack> positioning;
-	public float texScale;
-	public ResourceLocation reticle;
-	public float radius;
-	public Vec3d background;
 	
-	public ReflexScreen(BiConsumer<EntityLivingBase, ItemStack> pos, float texScale, float radius, Vec3d background, ResourceLocation reticle) {
+	// The positioning for the reticle screen
+	public BiConsumer<EntityLivingBase, ItemStack> positioning;
+	
+	// For scopes that are circular.
+	public float radius;
+	
+	// List of reticles
+	public CyclicList<Reticle> reticleList = new CyclicList<>();
+	
+	
+
+	
+	public ReflexScreen(BiConsumer<EntityLivingBase, ItemStack> pos, float radius, CyclicList<Reticle> reticles) {
 		textureWidth = 16;
 		textureHeight = 16;
 		
-		this.texScale = texScale;
-		this.background = background;
-		this.reticle = reticle;
+		this.reticleList = reticles;
 		this.radius = radius;
 		this.positioning = pos;
 
@@ -128,10 +136,12 @@ public class ReflexScreen extends ModelBase implements CustomRenderer<Renderable
 	@Override
 	public void render(RenderContext<RenderableState> renderContext) {
 		
-		reflexReticle = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/reflex"));
+		//reflexReticle = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/reflex"));
 		
 		//first
-	//	Dloom.bloomData.bindFramebuffer(true);
+	//	Dloom.bloomData.bindFramebuffer(true);\
+		
+		Reticle currentReticle = reticleList.current();
 		
 		if(renderContext.getCompatibleTransformType() != CompatibleTransformType.FIRST_PERSON_RIGHT_HAND) return;
 		GlStateManager.disableTexture2D();
@@ -139,23 +149,25 @@ public class ReflexScreen extends ModelBase implements CustomRenderer<Renderable
 		reflexReticle.use();
 		
 		// upload uniforms
-		GlStateManager.setActiveTexture(GL13.GL_TEXTURE0+4);
-		ResourceLocation loc = new ResourceLocation("mw" + ":" + "textures/crosshairs/holo.png");
-	
-		Minecraft.getMinecraft().getTextureManager().bindTexture(loc);
 		
+		// upload texture
+		GlStateManager.setActiveTexture(GL13.GL_TEXTURE0+4);
+		Minecraft.getMinecraft().getTextureManager().bindTexture(currentReticle.getReticleTexture());		
 		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
 		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
 		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
 		GlStateManager.setActiveTexture(GL13.GL_TEXTURE0);
 		GL20.glUniform1i(GL20.glGetUniformLocation(reflexReticle.getShaderId(), "ret"), 4);
 		
-		GL20.glUniform1f(GL20.glGetUniformLocation(reflexReticle.getShaderId(), "texScale"), this.texScale);
+		
+		
+		//
+		GL20.glUniform1f(GL20.glGetUniformLocation(reflexReticle.getShaderId(), "texScale"), currentReticle.getTextureScale());
 		GL20.glUniform1f(GL20.glGetUniformLocation(reflexReticle.getShaderId(), "radius"), this.radius);
 		
 		
 		
-		GL20.glUniform3f(GL20.glGetUniformLocation(reflexReticle.getShaderId(), "background"), (float) background.x, (float) background.y, (float) background.z);
+		GL20.glUniform3f(GL20.glGetUniformLocation(reflexReticle.getShaderId(), "background"), (float) currentReticle.getBackgroundColor().x, (float) currentReticle.getBackgroundColor().y, (float) currentReticle.getBackgroundColor().z);
 		GlStateManager.enableCull();
 		
 		GlStateManager.pushMatrix();
@@ -173,43 +185,7 @@ public class ReflexScreen extends ModelBase implements CustomRenderer<Renderable
 		
 		
 		
-		
-		// second\
-		Minecraft.getMinecraft().getFramebuffer().bindFramebuffer(true);
-		if(renderContext.getCompatibleTransformType() != CompatibleTransformType.FIRST_PERSON_RIGHT_HAND) return;
-		GlStateManager.disableTexture2D();
-		GlStateManager.enableBlend();
-		reflexReticle.use();
-		
-		// upload uniforms
-		GlStateManager.setActiveTexture(GL13.GL_TEXTURE0+4);
-		loc = new ResourceLocation("mw" + ":" + "textures/crosshairs/holo.png");
 	
-		Minecraft.getMinecraft().getTextureManager().bindTexture(loc);
-		
-		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
-		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
-		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
-		GlStateManager.setActiveTexture(GL13.GL_TEXTURE0);
-		GL20.glUniform1i(GL20.glGetUniformLocation(reflexReticle.getShaderId(), "ret"), 4);
-		
-		GL20.glUniform1f(GL20.glGetUniformLocation(reflexReticle.getShaderId(), "texScale"), this.texScale);
-		GL20.glUniform1f(GL20.glGetUniformLocation(reflexReticle.getShaderId(), "radius"), this.radius);
-		
-		
-		
-		GL20.glUniform3f(GL20.glGetUniformLocation(reflexReticle.getShaderId(), "background"), (float) background.x, (float) background.y, (float) background.z);
-		GlStateManager.enableCull();
-		
-		GlStateManager.pushMatrix();
-		positioning.accept(renderContext.getPlayer(), renderContext.getWeapon());
-		bb_main.render(0.065f);
-		
-		
-		GlStateManager.popMatrix();
-		reflexReticle.release();
-		GlStateManager.disableBlend();
-		GlStateManager.enableTexture2D();
 		
 		
 	}
