@@ -49,6 +49,9 @@ public class AnimationModeProcessor {
 	public Vec3d rot = Vec3d.ZERO;
 
 	private boolean fpsMode = false;
+	
+	
+	public FloatBuffer deferredMatrix = BufferUtils.createFloatBuffer(16);
 
 	public AnimationModeProcessor() {
 
@@ -68,6 +71,12 @@ public class AnimationModeProcessor {
 	
 	public boolean isLegacyMode() {
 		return this.legacyMode;
+	}
+	
+	public void captureDeferral() {
+		deferredMatrix.rewind();
+		GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, deferredMatrix);
+		deferredMatrix.rewind();
 	}
 	
 	public boolean mouseStatus = false;
@@ -581,7 +590,7 @@ public class AnimationModeProcessor {
 			
 			
 		} else if(transformMode == 2){
-			renderRotAxis(scalar);
+           renderRotAxis(scalar);
 		} else {
 			//OpenGLSelectionHelper.ballBuf.framebufferClear();
 		//	Minecraft.getMinecraft().getFramebuffer().bindFramebuffer(false);
@@ -640,11 +649,13 @@ public class AnimationModeProcessor {
 		OpenGLSelectionHelper.ballBuf.framebufferClear();
 		OpenGLSelectionHelper.ballBuf.bindFramebuffer(false);
 		
+		
 		renderAxisRing(new Vec3d(1, 0, 0), Color.RED, size, innerSize, (colorSelected == -1 || colorSelected == 1), false);
 		renderAxisRing(Vec3d.ZERO, Color.BLUE, size, innerSize, (colorSelected == -1 || colorSelected == 3), false);
 		renderAxisRing(new Vec3d(0, 1, 0), Color.GREEN, size, innerSize, (colorSelected == -1 || colorSelected == 2), false);
-
+		
 		Minecraft.getMinecraft().getFramebuffer().bindFramebuffer(false);
+		
 		Bloom.initializeMultisample();
 		
 

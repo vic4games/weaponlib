@@ -55,6 +55,7 @@ import com.vicmatskiv.weaponlib.model.Bullet556;
 import com.vicmatskiv.weaponlib.particle.DriftCloudFX;
 import com.vicmatskiv.weaponlib.render.Bloom;
 import com.vicmatskiv.weaponlib.render.Dloom;
+import com.vicmatskiv.weaponlib.render.GLCompatible;
 import com.vicmatskiv.weaponlib.render.ModernSkyRenderer;
 import com.vicmatskiv.weaponlib.render.ModernUtil;
 import com.vicmatskiv.weaponlib.render.MultisampledFBO;
@@ -409,6 +410,8 @@ public abstract class CompatibleClientEventHandler {
 		
 		if(ClientModContext.getContext() != null && ClientModContext.getContext().getMainHeldWeapon() != null) {
 			PlayerWeaponInstance pwi = ClientModContext.getContext().getMainHeldWeapon();
+			
+			//System.out.println(pwi.getWeapon().getRenderer().getStateManager(player));
 			//System.out.println(pwi.getState());
 		//	pwi.getWeapon().getCompatibleAttachments(AttachmentCategory.MAGAZINE).forEach(c -> System.out.println(I18n.format(c.getAttachment().getUnlocalizedName() + ".name")));
 			//String unloc = pwi.getItemStack().getUnlocalizedName();
@@ -439,15 +442,43 @@ public abstract class CompatibleClientEventHandler {
 		
 		try {
 			
+			//MultisampledFBO fbo = new MultisampledFBO(Minecraft.getMinecraft().getFramebuffer().framebufferWidth, Minecraft.getMinecraft().getFramebuffer().framebufferHeight, true);
+			//System.out.println(fbo);
 			Field f = ReflectionHelper.findField(Minecraft.class, "framebufferMc");
 		
 			f.setAccessible(true);
 			
 			if(f.get(Minecraft.getMinecraft()) instanceof Framebuffer) {
+				
+				
+				/*
+				Framebuffer fbo = Minecraft.getMinecraft().getFramebuffer();
+				if(Minecraft.getMinecraft().player.ticksExisted%30 == 0) {
+					
+					fbo = new Framebuffer(Minecraft.getMinecraft().displayWidth, Minecraft.getMinecraft().displayHeight, true);
+					
+					
+					f.set(Minecraft.getMinecraft(), fbo);
+				}
+				*/
+			//	
+			//	System.out.println(GL11.glIsTexture(fbo.framebufferTexture));
+				
+				
+				
+				/*
+				//fbo.framebufferTexture = GL11.glGenTextures();
+				GL11.glBindTexture(GLCompatible.GL_TEXTURE_2D_MULTISAMPLE, fbo.framebufferTexture);
+				
+				System.out.println(GL11.glGetError());
+				
+				GLCompatible.glTexImage2DMultisample(GLCompatible.GL_TEXTURE_2D_MULTISAMPLE, 4, GL11.GL_RGBA8, fbo.framebufferTextureWidth, fbo.framebufferTextureHeight, false);
+				GLCompatible.glFramebufferTexture2D(GLCompatible.GL_FRAMEBUFFER, GLCompatible.GL_COLOR_ATTACHMENT0, GLCompatible.GL_TEXTURE_2D_MULTISAMPLE, fbo.framebufferTexture, 0);
+				
+				*/
 				//MultisampledFBO frameboofer = new MultisampledFBO(Minecraft.getMinecraft().getFramebuffer().framebufferWidth, Minecraft.getMinecraft().getFramebuffer().framebufferHeight, true);
 				
-				//Framebuffer frameboofer = new Framebuffer(Minecraft.getMinecraft().getFramebuffer().framebufferWidth, Minecraft.getMinecraft().getFramebuffer().framebufferHeight, true);
-				//f.set(Minecraft.getMinecraft(), frameboofer);
+				
 				
 			}
 			
@@ -457,7 +488,7 @@ public abstract class CompatibleClientEventHandler {
 		} catch(Exception e) {
 			
 		}
- 		
+		
 		
 		
 		
@@ -509,6 +540,8 @@ public abstract class CompatibleClientEventHandler {
 		DebugRenderer.destructBasicRender();
 		*/
 		
+		
+		
 		if(AnimationModeProcessor.getInstance().getFPSMode()) {
 			Minecraft.getMinecraft().setIngameNotInFocus();
 
@@ -529,6 +562,8 @@ public abstract class CompatibleClientEventHandler {
 		
 
         
+		
+		
 		
 		
 		/*

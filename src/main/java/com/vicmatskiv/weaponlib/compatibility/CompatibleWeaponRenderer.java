@@ -37,10 +37,12 @@ import com.vicmatskiv.weaponlib.animation.DebugPositioner;
 import com.vicmatskiv.weaponlib.animation.MatrixHelper;
 import com.vicmatskiv.weaponlib.animation.MultipartPositioning;
 import com.vicmatskiv.weaponlib.animation.MultipartPositioning.Positioner;
+import com.vicmatskiv.weaponlib.animation.gui.AnimationGUI;
 import com.vicmatskiv.weaponlib.animation.jim.AnimationData;
 import com.vicmatskiv.weaponlib.animation.jim.BBLoader;
 import com.vicmatskiv.weaponlib.animation.jim.FuckMyLife;
 import com.vicmatskiv.weaponlib.animation.jim.AnimationData.BlockbenchTransition;
+import com.vicmatskiv.weaponlib.animation.movement.WeaponRotationHandler;
 import com.vicmatskiv.weaponlib.debug.DebugRenderer;
 import com.vicmatskiv.weaponlib.animation.MultipartRenderStateDescriptor;
 import com.vicmatskiv.weaponlib.animation.MultipartRenderStateManager;
@@ -105,7 +107,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 	private static final Map<String, ResourceLocation> ARMOR_TEXTURE_RES_MAP = Maps
 			.<String, ResourceLocation>newHashMap();
 
-	protected static class StateDescriptor
+	public static class StateDescriptor
 			implements MultipartRenderStateDescriptor<RenderableState, Part, RenderContext<RenderableState>> {
 		protected MultipartRenderStateManager<RenderableState, Part, RenderContext<RenderableState>> stateManager;
 		protected float rate;
@@ -202,7 +204,10 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 			int currentTextureId = Framebuffers.getCurrentTexture();
 
 			if (!AnimationModeProcessor.getInstance().getFPSMode()) {
+				
+				//Bloom.initializeMultisample();
 				renderItem();
+				//Bloom.unapplyMultisample();
 			} else {
 				GlStateManager.pushMatrix();
 				renderItem();
@@ -292,6 +297,8 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 
 
 	public static MSAABuffer msaaBuffer;
+
+	public static WeaponRotationHandler wrh = new WeaponRotationHandler();
 	
 	@SideOnly(Side.CLIENT)
 	public void renderItem() {
@@ -530,6 +537,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 			GL11.glRotated(-3.6519f, 1, 0, 0);
 			*/
 			
+			/*
 			RecoilParam parameters = renderContext.getWeaponInstance().getWeapon().getRecoilParameters();
 
 			boolean scopeFlag = true;
@@ -636,13 +644,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 				// System.out.println(Minecraft.getMinecraft().player.ticksExisted);
 				float tickWiggle = (float) (2 * Math.PI * (((ClientValueRepo.ticker.getLerpedFloat()) % 36) / 36.0));
 
-				/*
-				 * if(ClientValueRepo.prevTickTick !=
-				 * Minecraft.getMinecraft().player.ticksExisted) {
-				 * //ClientValueRepo.prevTickTick =
-				 * Minecraft.getMinecraft().player.ticksExisted; ClientValueRepo.walkYWiggle =
-				 * tickWiggle; }
-				 */
+		
 				// tickWiggle = MatrixHelper.solveLerp((float) ClientValueRepo.walkYWiggle,
 				// tickWiggle, Minecraft.getMinecraft().getRenderPartialTicks());
 
@@ -681,8 +683,11 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 						(isPistol ? -0.01 * limitedShoting : 0f) * parameters.getTranslationMultipliers().y
 								+ (rise / 35f) + yWiggle + (forwardMov / 10f),
 						0.01 * limitedShoting * min * parameters.getTranslationMultipliers().z);
-			}
-
+				
+			}*/
+			
+			this.wrh.run(renderContext, stateDescriptor);
+			
 			// AnimationModeProcessor.instance.applyCameraTransforms();
 			if (DebugPositioner.isDebugModeEnabled()) {
 
@@ -754,6 +759,10 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 		if (transformType != TransformType.GUI || inventoryTextureInitializationPhaseOn)
 
 		{
+			
+			
+			
+			
 			// gunLightingShader = ShaderManager.loadShader(new ResourceLocation("mw" + ":"
 			// + "shaders/gunlight"));
 
@@ -802,6 +811,10 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 				}
 				//Bloom.initializeMultisample();
 				
+				
+				
+				
+				
 				renderItem(itemStack, renderContext, positioner);
 				//Bloom.unapplyMultisample();
 				if(forceMSAA) {
@@ -813,10 +826,38 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 					//Bloom.unapplyMultisample();
 				}
 				
+				
+				
+				if(AnimationGUI.getInstance().magEdit.isState()) {
+					GL11.glPushMatrix();
+					AnimationModeProcessor.getInstance().deferredMatrix.rewind();
+					GL11.glLoadMatrix(AnimationModeProcessor.getInstance().deferredMatrix);
+					//GlStateManager.disableCull();
+					GlStateManager.enableDepth();
+					GlStateManager.disableTexture2D();
+					GlStateManager.disableAlpha();
+					GlStateManager.disableBlend();
+					AnimationModeProcessor.getInstance().renderCross();
+					GlStateManager.enableLighting();
+					
+					GL11.glPopMatrix();
+				}
+					
+				
+				
 				if (OpenGLSelectionHelper.selectID == 3 && AnimationModeProcessor.getInstance().getFPSMode() && !AnimationModeProcessor.getInstance().editRotationPointMode) {
 					AnimationModeProcessor.getInstance().currentPartMatrix = MatrixHelper.captureMatrix();
+					
+					AnimationModeProcessor.getInstance().transformMode = 1;
+					
+					
+					
 					AnimationModeProcessor.getInstance().renderTransformIndicator(1.0f);
+					
 				}
+				
+				
+				
 
 			}
 			
@@ -865,6 +906,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 		if (transformType == TransformType.GUI) {
 			renderCachedInventoryTexture(inventoryTexture);
 		}
+		
 		
 		
 		
@@ -924,6 +966,10 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 				AnimationModeProcessor.getInstance().tryToUpdateSelectedColor(-1);
 			}
 		}
+		
+		
+		
+		
 
 	}
 	

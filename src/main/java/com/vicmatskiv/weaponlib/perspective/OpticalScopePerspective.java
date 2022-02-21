@@ -111,7 +111,8 @@ public class OpticalScopePerspective extends FirstPersonPerspective<RenderableSt
     
     @Override
     protected void prepareRenderWorld(CompatibleRenderTickEvent event) {
-    	boolean reload = true;
+    	
+    	boolean reload = false;
     	if(reload) {
     		//System.out.println("yo");
     		//System.out.println("yo");

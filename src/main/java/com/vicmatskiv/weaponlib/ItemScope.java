@@ -7,6 +7,7 @@ import java.util.function.BiConsumer;
 
 import org.lwjgl.opengl.GL11;
 
+import com.vicmatskiv.weaponlib.electronics.ScopePerspective;
 import com.vicmatskiv.weaponlib.perspective.PerspectiveRenderer;
 import com.vicmatskiv.weaponlib.perspective.ReflexScreen;
 import com.vicmatskiv.weaponlib.render.scopes.CyclicList;
@@ -34,7 +35,8 @@ public class ItemScope extends ItemAttachment<Weapon> {
         private int height = DEFAULT_HEIGHT;
         
         
-         
+        public Reticle sniperReticle = new Reticle("holo");
+        		
         public CyclicList<Reticle> reticles = new CyclicList<>();
         public ReflexScreen screen;
         private float radialCut = 20f;
@@ -58,6 +60,11 @@ public class ItemScope extends ItemAttachment<Weapon> {
         
         public Builder withRadialCut(float radius) {
         	this.radialCut = radius;
+        	return this;
+        }
+        
+        public Builder withSniperReticle(Reticle ret) {
+        	this.sniperReticle = ret;
         	return this;
         }
 
@@ -107,7 +114,7 @@ public class ItemScope extends ItemAttachment<Weapon> {
                         GL11.glTranslatef(0.1f, 0.4f, 0.6f);
                     };
                 }
-                withPostRender(new PerspectiveRenderer(viewfinderPositioning));
+                withPostRender(new ScopePerspective(viewfinderPositioning, sniperReticle));
             }
             
             if(!reticles.isEmpty()) {

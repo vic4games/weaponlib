@@ -13,6 +13,7 @@ import com.vicmatskiv.weaponlib.RenderableState;
 import com.vicmatskiv.weaponlib.ViewfinderModel;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderTickEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTransformType;
+import com.vicmatskiv.weaponlib.render.scopes.Reticle;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.ITextureObject;
@@ -50,10 +51,10 @@ public class PerspectiveRenderer implements CustomRenderer<RenderableState> {
         }
     }
 
-    private static Perspective<RenderableState> STATIC_TEXTURE_PERSPECTIVE = new StaticTexturePerspective();
+    protected static Perspective<RenderableState> STATIC_TEXTURE_PERSPECTIVE = new StaticTexturePerspective();
 
-	private ViewfinderModel model = new ViewfinderModel();
-	private BiConsumer<EntityLivingBase, ItemStack> positioning;
+	protected ViewfinderModel model = new ViewfinderModel();
+	protected BiConsumer<EntityLivingBase, ItemStack> positioning;
 
 
 	public PerspectiveRenderer(BiConsumer<EntityLivingBase, ItemStack> positioning) {
@@ -96,6 +97,7 @@ public class PerspectiveRenderer implements CustomRenderer<RenderableState> {
 		GL11.glDisable(GL11.GL_BLEND);
 
 		GL11.glColor4f(brightness, brightness, brightness, 1f);
+		
 		model.render(renderContext.getPlayer(),
 				renderContext.getLimbSwing(),
 				renderContext.getFlimbSwingAmount(),
@@ -103,6 +105,7 @@ public class PerspectiveRenderer implements CustomRenderer<RenderableState> {
 				renderContext.getNetHeadYaw(),
 				renderContext.getHeadPitch(),
 				renderContext.getScale());
+		
 
 		compatibility.enableLightMap();
 		GL11.glPopAttrib();

@@ -1029,7 +1029,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				if(!(p instanceof ItemMagazine)) continue;
 				
 				Vec3d r = ((ItemMagazine) p).getRotationPoint();
-				System.out.println("ROTMAMDFKFKJF FOR MAG: " + r);
+				//System.out.println("ROTMAMDFKFKJF FOR MAG: " + r);
 				withFirstPersonCustomPositioningReloading(p, BBLoader.getAnimation(animationFile, "load", "magazine")
 						.getTransitionList(Transform.NULL.copy().withRotationPoint(r.x, r.y, r.z), BBLoader.HANDDIVISOR));
 				withFirstPersonCustomPositioningUnloading(p, BBLoader.getAnimation(animationFile, "unload", "magazine")
@@ -2705,6 +2705,10 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		
 		if(!OpenGLSelectionHelper.isInSelectionPass) gunLightingShader.release();
 		
+		
+		
+		
+		
 		/*
 		for(CompatibleAttachment<?> compatibleAttachment: attachments) {
 			@SuppressWarnings("unchecked")
@@ -2752,11 +2756,9 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 	    	
 	    	//GlStateManager.translate(mag.getRotationPoint().x, mag.getRotationPoint().y, mag.getRotationPoint().z);
 	    	GlStateManager.translate(CompatibleClientEventHandler.magRotPositioner.x, CompatibleClientEventHandler.magRotPositioner.y, CompatibleClientEventHandler.magRotPositioner.z);
-	    	GlStateManager.color(1, 0, 0);
-	    	GL11.glLineWidth(5f);
-	    	AnimationModeProcessor.getInstance().renderCross();
-	    	GlStateManager.enableTexture2D();
-	    	GlStateManager.enableLighting();
+	    	
+	    	AnimationModeProcessor.getInstance().captureDeferral();
+	    	
 	    	GlStateManager.popMatrix();
 	    }
 		GL11.glPushMatrix();

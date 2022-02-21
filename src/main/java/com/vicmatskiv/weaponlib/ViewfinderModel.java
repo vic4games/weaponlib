@@ -9,6 +9,7 @@ import com.vicmatskiv.weaponlib.animation.ClientValueRepo;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.FlatSurfaceModelBox;
 import com.vicmatskiv.weaponlib.perspective.OpticalScopePerspective;
+import com.vicmatskiv.weaponlib.render.scopes.Reticle;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
@@ -39,7 +40,7 @@ public class ViewfinderModel extends ModelBase {
 		setRotation(surfaceRenderer, 0F, 0F, 0F);
 	}
 
-	public void render(Entity entity, float f, float f1, float f2, float f3, float f4, float f5) {
+	public void render(Reticle ret, Entity entity, float f5) {
 		
 		
 		//super.render(entity, f, f1, f2, f3, f4, f5);
@@ -52,7 +53,8 @@ public class ViewfinderModel extends ModelBase {
 		OpticalScopePerspective.scope.use();
 		
 		GlStateManager.setActiveTexture(GL13.GL_TEXTURE0+4);
-		Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mw" + ":" + "textures/hud/reticle1.png"));
+		Minecraft.getMinecraft().getTextureManager().bindTexture(ret.getReticleTexture());
+		//Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mw" + ":" + "textures/hud/reticle1.png"));
 		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
     	GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
     	GlStateManager.setActiveTexture(GL13.GL_TEXTURE0);
