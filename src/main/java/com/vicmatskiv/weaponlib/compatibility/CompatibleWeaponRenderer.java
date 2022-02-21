@@ -848,7 +848,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 				if (OpenGLSelectionHelper.selectID == 3 && AnimationModeProcessor.getInstance().getFPSMode() && !AnimationModeProcessor.getInstance().editRotationPointMode) {
 					AnimationModeProcessor.getInstance().currentPartMatrix = MatrixHelper.captureMatrix();
 					
-					AnimationModeProcessor.getInstance().transformMode = 1;
+					//AnimationModeProcessor.getInstance().transformMode = 1;
 					
 					
 					
