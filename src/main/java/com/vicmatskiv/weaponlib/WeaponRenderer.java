@@ -56,6 +56,7 @@ import com.vicmatskiv.weaponlib.render.Dloom;
 import com.vicmatskiv.weaponlib.shader.jim.Shader;
 import com.vicmatskiv.weaponlib.shader.jim.ShaderManager;
 
+import akka.japi.Pair;
 import net.minecraft.advancements.critereon.CuredZombieVillagerTrigger;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
@@ -2526,7 +2527,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 	public static final IntBuffer VIEWPORT = GLAllocation.createDirectIntBuffer(16);
 	public static final FloatBuffer POSITION = GLAllocation.createDirectFloatBuffer(4);
     
-   
+	public static final Shader brightnessShader = ShaderManager.loadVMWShader("brightness");
 	
 	
 	@Override
@@ -2662,7 +2663,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		}
 		
     	
-
+		deferredPost.clear();
 
 		double sqDistance = 0.0;
 		
@@ -2703,9 +2704,11 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		    Interceptors.setRenderVolumeThreshold(0.0);
 		}
 		
+		
+		
 		if(!OpenGLSelectionHelper.isInSelectionPass) gunLightingShader.release();
 		
-		
+		renderPostRenderers(renderContext);
 		
 		
 		
@@ -2742,6 +2745,9 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		}
 	}
 
+	
+	private ArrayList<Pair<FloatBuffer,  CustomRenderer<RenderableState>>> deferredPost = new ArrayList<>();
+	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
     private void renderCompatibleAttachment(CompatibleAttachment<?> compatibleAttachment,
 			Positioner<Part, RenderContext<RenderableState>> positioner, RenderContext<RenderableState> renderContext) {
@@ -2852,11 +2858,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
         CustomRenderer<RenderableState> postRenderer = (CustomRenderer<RenderableState>) compatibleAttachment.getAttachment().getPostRenderer();
 		if(postRenderer != null) {
 			
-			GL11.glPushMatrix();
-			GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_CURRENT_BIT);
-			postRenderer.render(renderContext);
-			GL11.glPopAttrib();
-			GL11.glPopMatrix();
+			deferredPost.add(new Pair<>(captureCurrentModelViewMatrix(), postRenderer));
 			
 		}
 		
@@ -2867,6 +2869,28 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 
 		GL11.glPopAttrib();
 		GL11.glPopMatrix();
+	}
+	
+	public FloatBuffer captureCurrentModelViewMatrix() {
+		FloatBuffer buf = BufferUtils.createFloatBuffer(16);
+		GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, buf);
+		buf.rewind();
+		return buf;
+	}
+	
+	public void renderPostRenderers(RenderContext<RenderableState> renderContext) {
+		
+		for(Pair<FloatBuffer, CustomRenderer<RenderableState>> pair : this.deferredPost) {
+			GL11.glPushMatrix();
+			
+			GL11.glLoadMatrix(pair.first());
+			
+			GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_CURRENT_BIT);
+			pair.second().render(renderContext);
+			GL11.glPopAttrib();
+			GL11.glPopMatrix();
+		}
+		
 	}
 	
 	public boolean hasRecoilPositioning() {

@@ -41,19 +41,28 @@ public class Shader {
 	}
 	
 	public void sendMatrix4AsUniform(String name, boolean transpose, FloatBuffer mat) {
-		OpenGlHelper.glUniformMatrix4(GL20.glGetUniformLocation(shader, name),  transpose, mat);
+		OpenGlHelper.glUniformMatrix4(getLoc(name),  transpose, mat);
 	}
 	
 	public void uniform1i(String name, int i) {
-		OpenGlHelper.glUniform1i(OpenGlHelper.glGetUniformLocation(getShaderId(), name), i);
+		OpenGlHelper.glUniform1i(getLoc(name), i);
 	}
 	
 	public void uniform1f(String name, float i) {
-		GL20.glUniform1f(GL20.glGetUniformLocation(getShaderId(), name), i);
+		GL20.glUniform1f(getLoc(name), i);
 	}
 	
 	public void uniform2f(String name, float f0, float f1) {
-		GL20.glUniform2f(GL20.glGetUniformLocation(getShaderId(), name), f0, f1);
+		GL20.glUniform2f(getLoc(name), f0, f1);
+	}
+
+	public void uniform3f(String name, float f, float g, float h) {
+		GL20.glUniform3f(getLoc(name), f, g, h);
+		
+	}
+	
+	private int getLoc(String name) {
+		return OpenGlHelper.glGetUniformLocation(getShaderId(), name);
 	}
 
 }

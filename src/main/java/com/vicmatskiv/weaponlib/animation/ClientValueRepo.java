@@ -200,15 +200,15 @@ public class ClientValueRepo {
 
 			walkingGun.position += f / 2;
 
-			if (Math.random() < 0.25) {
-				double val = 15;
+			if (Math.random() < 0.5) {
+				double val = 17;
 				walkingGun.velocity += (val * Math.random()) - (val/2);
 			}
 		}
 
-		walkingGun.setSpringConstant(100);
+		walkingGun.setSpringConstant(50);
 		walkingGun.setDamping(80);
-		walkingGun.setMass(20);
+		walkingGun.setMass(10);
 		walkingGun.update(0.05);
 
 		

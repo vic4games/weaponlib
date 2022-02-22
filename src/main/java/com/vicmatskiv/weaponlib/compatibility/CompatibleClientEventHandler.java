@@ -501,7 +501,7 @@ public abstract class CompatibleClientEventHandler {
 		} catch(Exception e) {}
 		
 		if(Minecraft.getMinecraft().world.provider.getSkyRenderer() == null) {
-			Minecraft.getMinecraft().world.provider.setSkyRenderer(new ModernSkyRenderer());
+			//Minecraft.getMinecraft().world.provider.setSkyRenderer(new ModernSkyRenderer());
 			
 		}
 		
