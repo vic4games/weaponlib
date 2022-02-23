@@ -2,6 +2,9 @@ package com.vicmatskiv.weaponlib.render;
 
 import java.nio.IntBuffer;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL14;
@@ -10,6 +13,7 @@ import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL32;
 import org.lwjgl.opengl.GL40;
 
+import com.vicmatskiv.weaponlib.WeaponFireAspect;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.shader.jim.Shader;
 import com.vicmatskiv.weaponlib.shader.jim.ShaderManager;
@@ -33,6 +37,8 @@ import net.minecraft.util.ResourceLocation;
  */
 public class Bloom {
 	
+	 private static final Logger logger = LogManager.getLogger(Bloom.class);
+
 	
 	public static final Minecraft mc = Minecraft.getMinecraft();
 	
@@ -45,15 +51,19 @@ public class Bloom {
 	public static Framebuffer data;
 	
 	
-	public static Shader downsample = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/downsample"));
-	public static Shader upsample = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/upsample"));
+	public static void setupBloom() {
 	
-	public static void doBloom() {
-		if(mc.displayWidth != width || mc.displayHeight != height || !hasLoaded) {
-			
+		
+			//logger.info("Creating bloom buffer, MC's Framebuffer is {}, the world is {}", Minecraft.getMinecraft().getFramebuffer(), Minecraft.getMinecraft().world);
+		//logger.log(Level.INFO, null, message, p0, p1, p2, p3, p4, p5, p6);
 			width = mc.displayWidth;
 			height = mc.displayHeight;
 			hasLoaded = true;
+			
+		
+			logger.debug("Recreating Bloom FBOs at ({} x {})", width, height);
+			
+			//System.out.println("Creating a Bloom FX w/ " + width + "x" + height);
 			recreateFramebuffers();
 			
 			Dloom.height = -1;
@@ -63,17 +73,34 @@ public class Bloom {
 				CompatibleClientEventHandler.buf.deleteFramebuffer();
 			CompatibleClientEventHandler.buf = new Framebuffer(Minecraft.getMinecraft().displayWidth, Minecraft.getMinecraft().displayHeight, false);
 			
-		}
+		
+	}
+	
+	public static boolean shouldRecreateFBOs() {
+		return mc.displayWidth != width || mc.displayHeight != height || !hasLoaded;
+			
+	}
+	
+	public static boolean bloomNotAvaliable() {
+		return data == null;
+	}
+	
+	
+	public static void doBloom() {
+		if(shouldRecreateFBOs()) setupBloom();
 		use();
 	}
 	
 	
 	public static void bindBloomBuffer() {
+		/*
 		if(data == null) {
 			width = mc.displayWidth;
 			height = mc.displayHeight;
 			recreateFramebuffers();
-		}
+		}*/
+		if(bloomNotAvaliable()) return;
+		
 		data.bindFramebuffer(false);
 	}
 	
@@ -159,16 +186,16 @@ public class Bloom {
 	
 	public static void runDownsampler() {
 		buffers[0].bindFramebuffer(true);
-		downsample.use();
-		GL20.glUniform2f(GL20.glGetUniformLocation(downsample.getShaderId(), "texel"), 1F/(float) data.framebufferTextureWidth, 1F/(float) data.framebufferTextureHeight);
+		Shaders.downsample.use();
+		GL20.glUniform2f(GL20.glGetUniformLocation(Shaders.downsample.getShaderId(), "texel"), 1F/(float) data.framebufferTextureWidth, 1F/(float) data.framebufferTextureHeight);
 		renderFboTriangle(data, buffers[0].framebufferWidth, buffers[0].framebufferHeight);
 		for(int i = 1; i < LAYERS; i++) {
 			buffers[i].bindFramebuffer(true);
-			GL20.glUniform2f(GL20.glGetUniformLocation(downsample.getShaderId(), "texel"), 1F/(float) buffers[i-1].framebufferTextureWidth, 1F/(float) buffers[i-1].framebufferTextureHeight);
+			GL20.glUniform2f(GL20.glGetUniformLocation(Shaders.downsample.getShaderId(), "texel"), 1F/(float) buffers[i-1].framebufferTextureWidth, 1F/(float) buffers[i-1].framebufferTextureHeight);
 			renderFboTriangle(buffers[i-1], buffers[i].framebufferWidth, buffers[i].framebufferHeight);
 		}
 		
-		downsample.release();
+		Shaders.downsample.release();
 		
 		
 	}
@@ -221,13 +248,13 @@ public class Bloom {
 			GlStateManager.blendFunc(SourceFactor.ONE, DestFactor.ZERO);
 			buffers[i].bindFramebuffer(true);
 
-			upsample.use();
+			Shaders.upsample.use();
 			/*
 			GL20.glUniform2f(GL20.glGetUniformLocation(upsample.getShaderId(), "fragmentSize"), 1F/(float) buffers[i].framebufferWidth, 1F/(float) buffers[i].framebufferHeight);
 			renderFboTriangle(buffers[i], buffers[i+1].framebufferWidth, buffers[i+1].framebufferHeight);
 			*/
 			//GlStateManager.blendFunc(SourceFactor.ONE, DestFactor.ONE);
-			GL20.glUniform2f(GL20.glGetUniformLocation(upsample.getShaderId(), "fragmentSize"), 1F/(float) buffers[i].framebufferWidth, 1F/(float) buffers[i].framebufferHeight);
+			GL20.glUniform2f(GL20.glGetUniformLocation(Shaders.upsample.getShaderId(), "fragmentSize"), 1F/(float) buffers[i].framebufferWidth, 1F/(float) buffers[i].framebufferHeight);
 			
 			int tWidth, tHeight;
 			if(i == 0){

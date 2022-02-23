@@ -100,10 +100,10 @@ public class ClientValueRepo {
 		if (recoilStop > 35f) {
 			recoilStop -= 2f;
 		}
-		forward += Minecraft.getMinecraft().player.moveForward/25f;
+		forward += Minecraft.getMinecraft().player.moveForward/15f;
 	        
 		strafe *= 0.95;
-		forward *= 0.95;
+		forward *= 0.93;
 
 		randomRot = randomRot.scale(0.88);
 
@@ -192,15 +192,10 @@ public class ClientValueRepo {
 		float f1 = -(entityplayer.distanceWalkedModified + f * Minecraft.getMinecraft().getRenderPartialTicks());
 
 		if (f != 0.0 && (pwi != null && !pwi.isAimed())) {
-			// walkXWiggle = LissajousCurve.getXOffsetOnCurve(0.03, 4, 1, Math.PI/2, f1) *
-			// f*10;
-			// walkYWiggle = LissajousCurve.getXOffsetOnCurve(0.05, 5, 2, Math.PI/4, f1)*
-			// f*10;
-			//walkXWiggle += f / 2;
 
 			walkingGun.position += f / 2;
 
-			if (Math.random() < 0.5) {
+			if (Math.random() < 0.25) {
 				double val = 17;
 				walkingGun.velocity += (val * Math.random()) - (val/2);
 			}

@@ -218,7 +218,7 @@ public class Dloom {
 		
 		
 		bloomBuffers[0].bindFramebuffer(true);
-		Bloom.downsample.use();
+		Shaders.downsample.use();
 		GL20.glUniform2f(GL20.glGetUniformLocation(downsample2.getShaderId(), "texel"), 1F/(float)bloomData.framebufferTextureWidth, 1F/(float)bloomData.framebufferTextureHeight);
 		renderFboTriangle(bloomData, bloomBuffers[0].framebufferWidth, bloomBuffers[0].framebufferHeight);
 		for(int i = 1; i < bloomLayers; i ++){
@@ -226,7 +226,7 @@ public class Dloom {
 			GL20.glUniform2f(GL20.glGetUniformLocation(downsample2.getShaderId(), "texel"), 1F/(float)bloomBuffers[(i-1)*2].framebufferTextureWidth, 1F/(float)bloomBuffers[(i-1)*2].framebufferTextureHeight);
 			renderFboTriangle(bloomBuffers[(i-1)*2], bloomBuffers[i*2].framebufferWidth, bloomBuffers[i*2].framebufferHeight);
 		}
-		Bloom.downsample.release();
+		Shaders.downsample.release();
 		
 	}
 }

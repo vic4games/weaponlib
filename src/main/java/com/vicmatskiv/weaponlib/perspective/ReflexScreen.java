@@ -19,6 +19,7 @@ import com.vicmatskiv.weaponlib.RenderableState;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTransformType;
 import com.vicmatskiv.weaponlib.render.Bloom;
 import com.vicmatskiv.weaponlib.render.Dloom;
+import com.vicmatskiv.weaponlib.render.Shaders;
 import com.vicmatskiv.weaponlib.render.scopes.CyclicList;
 import com.vicmatskiv.weaponlib.render.scopes.Reticle;
 import com.vicmatskiv.weaponlib.shader.jim.Shader;
@@ -64,23 +65,19 @@ public class ReflexScreen extends ModelBase implements CustomRenderer<Renderable
 		bb_main.cubeList.add(new ModelBox(bb_main, 0, 0, -3.0F, -2.0F, 0.0F, 5, 4, 0, 0.0F, false));
 	}
 
-	public static Shader reflexReticle = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/reflex"));
 	//https://vazgriz.com/158/reflex-sight-shader-in-unity3d/
 	@Override
 	public void render(Entity entity, float f, float f1, float f2, float f3, float f4, float f5) {
-		if(true) {
-			reflexReticle = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/reflex"));
-			
-		}
+	
+		if(1+1==2) return;
 		
-		
-		
+		Shader reflexReticle = null;
 		
 		
 		GlStateManager.disableTexture2D();
 		GlStateManager.enableBlend();
 		//GlStateManager.enableAlpha();
-		reflexReticle.use();
+		//reflexReticle.use();
 		
 		GlStateManager.setActiveTexture(GL13.GL_TEXTURE0+4);
 		ResourceLocation loc = new ResourceLocation("mw" + ":" + "textures/crosshairs/okp.png");
@@ -146,7 +143,7 @@ public class ReflexScreen extends ModelBase implements CustomRenderer<Renderable
 		if(renderContext.getCompatibleTransformType() != CompatibleTransformType.FIRST_PERSON_RIGHT_HAND) return;
 		GlStateManager.disableTexture2D();
 		GlStateManager.enableBlend();
-		reflexReticle.use();
+		Shaders.reflexReticle.use();
 		
 		// upload uniforms
 		
@@ -157,17 +154,17 @@ public class ReflexScreen extends ModelBase implements CustomRenderer<Renderable
 		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
 		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
 		GlStateManager.setActiveTexture(GL13.GL_TEXTURE0);
-		GL20.glUniform1i(GL20.glGetUniformLocation(reflexReticle.getShaderId(), "ret"), 4);
+		GL20.glUniform1i(GL20.glGetUniformLocation(Shaders.reflexReticle.getShaderId(), "ret"), 4);
 		
 		
 		
 		//
-		GL20.glUniform1f(GL20.glGetUniformLocation(reflexReticle.getShaderId(), "texScale"), currentReticle.getTextureScale());
-		GL20.glUniform1f(GL20.glGetUniformLocation(reflexReticle.getShaderId(), "radius"), this.radius);
+		GL20.glUniform1f(GL20.glGetUniformLocation(Shaders.reflexReticle.getShaderId(), "texScale"), currentReticle.getTextureScale());
+		GL20.glUniform1f(GL20.glGetUniformLocation(Shaders.reflexReticle.getShaderId(), "radius"), this.radius);
 		
 		
 		
-		GL20.glUniform3f(GL20.glGetUniformLocation(reflexReticle.getShaderId(), "background"), (float) currentReticle.getBackgroundColor().x, (float) currentReticle.getBackgroundColor().y, (float) currentReticle.getBackgroundColor().z);
+		GL20.glUniform3f(GL20.glGetUniformLocation(Shaders.reflexReticle.getShaderId(), "background"), (float) currentReticle.getBackgroundColor().x, (float) currentReticle.getBackgroundColor().y, (float) currentReticle.getBackgroundColor().z);
 		GlStateManager.enableCull();
 		
 		GlStateManager.pushMatrix();
@@ -176,7 +173,7 @@ public class ReflexScreen extends ModelBase implements CustomRenderer<Renderable
 		
 		
 		GlStateManager.popMatrix();
-		reflexReticle.release();
+		Shaders.reflexReticle.release();
 		GlStateManager.disableBlend();
 		GlStateManager.enableTexture2D();
 		

@@ -4,6 +4,9 @@ import java.awt.Color;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
 import org.lwjgl.input.Mouse;
@@ -33,6 +36,7 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
 public class AnimationGUI {
@@ -42,14 +46,20 @@ public class AnimationGUI {
 	
 	public static final ResourceLocation TEXTURES = new ResourceLocation("mw" + ":" + "textures/hud/animguio.png");
 	
-	public static AnimationGUI getInstance() {
-		
-		return instance;
-	}
+	
 
-	public ArrayList<Button> buttonList = new ArrayList<>();
+	public ArrayList<Panel> panels = new ArrayList<>();
 
 	public boolean mouseStatus = false;
+	public boolean grabStatus = false;
+	public boolean guiHoverStatus = false;
+	
+	public Button resetCamera = new Button("Reset Camera", 0, 10, 10, 20);
+	public Button resetTransforms = new Button("Reset Transforms", 3, 35, 10, 20);
+	public Button forceSteveArms = new Button("Force steve arms", 1, 60, 10, 20);
+	public Button forceAlexArms = new Button("Force alex arms", 2, 85, 10, 20);
+	public Button printConsole = new Button("Print to console", 6, 10, 35, 20);
+	public Button switchScopes = new Button("Switch scopes", 8,  85, 35, 20);
 	
 	public Button axisToggle = new Button("Toggle axis indicator", true, 4, 110, 10, 20);
 	public Button forceFlash = new Button("Position muzzle flash", true, 5, 135, 10, 20);
@@ -60,49 +70,31 @@ public class AnimationGUI {
 	public Button leftDrag = new Button("Position drag alignment", true, 11, 135, 35, 20);
 	public Button magEdit = new Button("Edit magazine rotation point", true, 12, 10, 80, 20);
 	
+	
+	public static AnimationGUI getInstance() {
+		
+		return instance;
+	}
+	
 	public AnimationGUI() {
 	
+		
+		Panel cameraPanel = new Panel(this, "Functionality", 10, 10, 20);
+		
 		// cam reset 0
-		addButton(new Button("Reset Camera", 0, 10, 10, 20));
+		cameraPanel.addButtons(resetCamera, resetTransforms, forceSteveArms, forceAlexArms, switchScopes, magEdit, leftDrag, printConsole);
 		
-		// transform reset 1
-		addButton(new Button("Reset Transforms", 3, 35, 10, 20));
+		Panel renderPanel = new Panel(this, "Rendering", 10, 35, 20);
 		
-		// steve 2
-		addButton(new Button("Force steve arms", 1, 60, 10, 20));
-		
-		// alex 3
-		addButton(new Button("Force alex arms", 2, 85, 10, 20));
+		renderPanel.addButtons(axisToggle, forceFlash, editRotButton, moveForward, titleSafe);
 		
 		
-		// 4
-		addButton(axisToggle);
+
+		this.axisToggle.setState(true);
 		
 		
-		// 5
-		addButton(forceFlash);
-		
-		// 6
-		addButton(new Button("Print to console", 6, 10, 35, 20));
-		
-		// 7
-		addButton(editRotButton);
-		
-		// 8
-		addButton(moveForward);
-		
-		// 9
-		addButton(new Button("Switch scopes", 8,  85, 35, 20));
-		
-		
-		// 
-		addButton(titleSafe);
-		
-		// Drag rotation - 10
-		addButton(leftDrag);
-		
-		addButton(magEdit);
-				
+		this.panels.add(cameraPanel);
+		this.panels.add(renderPanel);
 		
 		
 	}
@@ -111,6 +103,9 @@ public class AnimationGUI {
 	
 	public void render() {
 		
+		
+		
+		
 		Minecraft mc = Minecraft.getMinecraft();
 		
 		 ScaledResolution scaledresolution = new ScaledResolution(mc);
@@ -118,15 +113,22 @@ public class AnimationGUI {
          final int scaledHeight = scaledresolution.getScaledHeight();
          int mouseX = Mouse.getX() * scaledWidth / mc.displayWidth;
          int mouseY = scaledHeight - Mouse.getY() * scaledHeight / mc.displayHeight - 1;
-     
+         but = null;
 		update(mouseX, mouseY);
 		
 		extraRender();
 		
+		
+		for(Panel p : panels) {
+			p.render(mouseX, mouseY);
+		}
+		
+		/*
 		but = null;
 		for(Button b : buttonList) {
 			b.renderButton(mouseX, mouseY);
 		}
+		*/
 		
 		if(but != null) {
 		
@@ -143,6 +145,7 @@ public class AnimationGUI {
 	
 	public void extraRender() {
 
+		
 		
 		
 		ScaledResolution sr = new ScaledResolution(Minecraft.getMinecraft());
@@ -163,10 +166,50 @@ public class AnimationGUI {
 		rotation.renderButton(0, 0);
 		//tb.renderButton(0, 0);
 		
+		GlStateManager.enableTexture2D();
+		String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("h:mm a"));
+		renderScaledString(time, sr.getScaledWidth_double()-40, 5, 1);
+		String fps = "FPS: " + Minecraft.getMinecraft().getDebugFPS();
+		renderScaledString(fps, sr.getScaledWidth_double()-45, 15, 1);
+		
+		
+		String itemPos = "";
+		
+		if(magEdit.isState()) {
+			itemPos = "Mag Rotation Point";
+		} else if(forceFlash.isState()) {
+			itemPos = "Muzzle Flash";
+		} else if(editRotButton.isState())  {
+			 itemPos = "Weapon Rotation Point";
+		} else if(OpenGLSelectionHelper.selectID == 3) {
+			itemPos = "Weapon";
+		} else if(OpenGLSelectionHelper.selectID == 1) {
+			itemPos = "Left Hand";
+		} else if(OpenGLSelectionHelper.selectID == 2) {
+			itemPos = "Right Hand";
+		}
+		
+		String currentlyPositioning = TextFormatting.WHITE + "Positioning " + TextFormatting.GOLD + itemPos;
+		
+		renderScaledString(currentlyPositioning, 5, 5, 0.5);
+		
+		
+		GlStateManager.color(1, 1, 1);
+	
+		
+		GlStateManager.disableTexture2D();
+		//GlStateManager.enableTexture2D();
 	}
 	
 	public void update(int mouseX, int mouseY) {
 		
+		
+		grabStatus = false;
+		for(Panel p : this.panels) {
+			
+			
+			if(checkIn2DBox(mouseX, mouseY, p.getPositionX(), p.getPositionY(), p.getWidth(), p.getHeight())) grabStatus = true;
+		}
 		
 		if(Mouse.isButtonDown(0) && !mouseStatus) {
 			mouseStatus = true;
@@ -178,34 +221,37 @@ public class AnimationGUI {
 			
 			
 		} else if(!Mouse.isButtonDown(0) && mouseStatus) {
+			onMouseReleased(mouseX, mouseY);
 			mouseStatus = false;
 		}
 	}
 	
+	public boolean checkIn2DBox(double a, double b, double x, double y, double width, double height) {
+		return a >= x && a <= x+width && b >= y && b <= y+height;
+	}
+	
 	public void onMouseClick(int mouseX, int mouseY) {
 		
-		for(Button b : buttonList) {
-			if(b.isMouseOver(mouseX, mouseY)) {
-				b.onMouseClick();
-				onAction(b.id);
-			}
+		for(Panel panel : this.panels) {
+			panel.handleButtonClicks(mouseX, mouseY);
 		}
 		
 	}
 	
-	public void addButton(Button b) {
-		b.id = buttonList.size();
-		buttonList.add(b);
+	public void onMouseReleased(int mouseX, int mouseY) {
+		for(Panel panel : this.panels) {
+			panel.onMouseReleased(mouseX, mouseY);
+		}
 	}
 	
-	public void onAction(int id) {
-		switch(id) {
-		case 0:
+	
+	public void onAction(Button id) {
+		
+		
+		if(id == resetCamera) {
 			AnimationModeProcessor.getInstance().rot = Vec3d.ZERO;
 			AnimationModeProcessor.getInstance().pan = Vec3d.ZERO;
-			
-			break;
-		case 1:
+		} else if(id == resetTransforms) {
 			AnimationModeProcessor amp = AnimationModeProcessor.getInstance();
 			Builder b = amp.getCurrentWeaponRenderBuilder();
 			b.firstPersonTransform.set(amp.backupFP);
@@ -213,27 +259,18 @@ public class AnimationGUI {
 			b.firstPersonRightHandTransform.set(amp.backupFPR);
 			
 			DebugPositioner.reset();
-			
-			break;
-		case 2:
+		} else if(id == forceSteveArms) {
 			forceSkin("default");
-			break;
-		case 3:
+		} else if(id == forceAlexArms) {
 			forceSkin("slim");
-			break;
-		case 4:
-			// do nothing
-			break;
-		case 5:
-			// do nothing
-			break;
-		case 6:
+		} else if(id == printConsole) {
 			
-			//instance.setState(WeaponState.MODIFYING);
-		//	ClientModContext.getContext().getAttachmentAspect().toggleClientAttachmentSelectionMode(Minecraft.getMinecraft().player);
-			//instance.getWeapon().toggleClientAttachmentSelectionMode(Minecraft.getMinecraft().player);
-			
-			
+			if(CompatibleClientEventHandler.muzzlePositioner) {
+				System.out.println("(" + CompatibleClientEventHandler.debugmuzzlePosition.x + ", " + CompatibleClientEventHandler.debugmuzzlePosition.y  + ", " + CompatibleClientEventHandler.debugmuzzlePosition.z + ")");
+				
+				return;
+			}
+
 			if(magEdit.isState()) {
 				System.out.println("(" + CompatibleClientEventHandler.magRotPositioner.x + ", " + CompatibleClientEventHandler.magRotPositioner.y  + ", " + CompatibleClientEventHandler.magRotPositioner.z + ")");
 				return;
@@ -257,27 +294,24 @@ public class AnimationGUI {
     			break;
     			
     		}
-    		break;
-		case 7:
-			if(editRotButton.isState()) {
-				moveForward.setState(false);
-			}
-			// do nothing
-			break;
-		case 8:
-			// do nothing
-			break;
-		case 9:
-			
+		} else if(id == switchScopes) {
 			PlayerWeaponInstance instance = ClientModContext.getContext().getPlayerItemInstanceRegistry().getMainHandItemInstance(Minecraft.getMinecraft().player, PlayerWeaponInstance.class);
 			ClientModContext.getContext().getAttachmentAspect().tryChange(new ChangeAttachmentPermit(AttachmentCategory.SCOPE), instance);
 			
-			break;
-		case 12:
-			
-			DebugPositioner.setDebugMode(true);
-			break;
+		} else if(id == editRotButton) {
+			if(editRotButton.isState()) {
+				moveForward.setState(false);
+			}
+		} else if(id == forceFlash) {
+			if(forceFlash.isState()) {
+				CompatibleClientEventHandler.muzzlePositioner = true;
+				
+			} else {
+				CompatibleClientEventHandler.muzzlePositioner = false;
+			}
 		}
+		
+	
 	}
 	
 	

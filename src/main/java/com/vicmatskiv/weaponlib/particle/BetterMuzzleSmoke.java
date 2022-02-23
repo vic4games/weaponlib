@@ -37,7 +37,7 @@ public class BetterMuzzleSmoke extends TurbulentSmokeParticle {
 		this.motionZ = (Math.random()-0.5)/sub;
 		
 		this.ran = (int) (2*Math.random());
-		System.out.println(this.ran);
+		//System.out.println(this.ran);
 		particleScale = 2.5f;
 		
 		this.particleAngle = (float) (Math.random()*2*Math.PI);

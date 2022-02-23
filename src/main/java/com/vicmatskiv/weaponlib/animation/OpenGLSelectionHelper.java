@@ -10,6 +10,7 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 
+import com.vicmatskiv.weaponlib.render.Shaders;
 import com.vicmatskiv.weaponlib.shader.jim.Shader;
 import com.vicmatskiv.weaponlib.shader.jim.ShaderManager;
 
@@ -26,8 +27,7 @@ public class OpenGLSelectionHelper {
 
 	private static final Minecraft mc = Minecraft.getMinecraft();
 
-	public static Shader select = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/select"));
-
+	
 	public static boolean isInSelectionPass = false;
 
 	public static int selectID = 30;
@@ -223,8 +223,9 @@ public class OpenGLSelectionHelper {
 	public static void bindSelectShader(int id) {
 		//select = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/select"));
 
-		select.use();
-		select.uniform1i("id", id);
+		
+		Shaders.select.use();
+		Shaders.select.uniform1i("id", id);
 	}
 
 }

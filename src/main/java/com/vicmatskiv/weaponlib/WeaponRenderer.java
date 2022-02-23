@@ -53,6 +53,7 @@ import com.vicmatskiv.weaponlib.config.Projectiles;
 import com.vicmatskiv.weaponlib.debug.DebugRenderer;
 import com.vicmatskiv.weaponlib.render.Bloom;
 import com.vicmatskiv.weaponlib.render.Dloom;
+import com.vicmatskiv.weaponlib.render.Shaders;
 import com.vicmatskiv.weaponlib.shader.jim.Shader;
 import com.vicmatskiv.weaponlib.shader.jim.ShaderManager;
 
@@ -2461,9 +2462,9 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 
 
 	public static void renderFlash(ItemStack weaponItemStack, boolean bloom) {
-		flash.use();
+		Shaders.flash.use();
 		
-		flash.uniform1i("bloom", bloom ? 1 : 0);
+		Shaders.flash.uniform1i("bloom", bloom ? 1 : 0);
 		
 		GlStateManager.disableLighting();
 		GlStateManager.pushMatrix();
@@ -2502,9 +2503,9 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
     	GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
     
-    	flash.uniform1i("natural", 1);
+    	Shaders.flash.uniform1i("natural", 1);
 		ClientEventHandler.renderSparks(0, 0, 0, 0.6*scale, 0.6 * scale, 0, 0, 3);
-		flash.uniform1i("natural", 0);
+		Shaders.flash.uniform1i("natural", 0);
 		Minecraft.getMinecraft().getTextureManager().bindTexture(ClientEventHandler.FLASHF);
 
 		
@@ -2518,7 +2519,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		GlStateManager.depthMask(true);
 		GlStateManager.popMatrix();
 		GlStateManager.enableLighting();
-		flash.release();
+		Shaders.flash.release();
 	}
 	
 	
@@ -2527,7 +2528,6 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 	public static final IntBuffer VIEWPORT = GLAllocation.createDirectIntBuffer(16);
 	public static final FloatBuffer POSITION = GLAllocation.createDirectFloatBuffer(4);
     
-	public static final Shader brightnessShader = ShaderManager.loadVMWShader("brightness");
 	
 	
 	@Override
@@ -2545,43 +2545,13 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		
 		if(CompatibleClientEventHandler.muzzlePositioner && !OpenGLSelectionHelper.isInSelectionPass) {
 			//Bloom.bindBloomBuffer();
-			
+			//System.out.println("yo");
 			
 			GlStateManager.pushMatrix();
 			Vec3d deb = CompatibleClientEventHandler.debugmuzzlePosition;
 			GlStateManager.translate(deb.x, deb.y, deb.z);
-			
-			DebugRenderer.setupBasicRender();
-			Tessellator t = Tessellator.getInstance();
-			BufferBuilder bb = t.getBuffer();
-			//DebugRenderer.setupBasicRender();
-			GlStateManager.disableTexture2D();
-			GlStateManager.disableLighting();
-		
-			GlStateManager.color(1f, 1f, 1f, 1);
-			bb.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION);
-			
-			bb.pos(0, -1, 0).endVertex();
-			bb.pos(0, 1, 0).endVertex();
-			
-			bb.pos(-1, 0, 0).endVertex();
-			bb.pos(1, 0, 0).endVertex();
-			
-			bb.pos(0, 0, -1).endVertex();
-			bb.pos(0, 0, 1).endVertex();
-			t.draw();
-			GlStateManager.color(1.0f, 1f, 1f);
-			GlStateManager.enableTexture2D();
-			DebugRenderer.destructBasicRender();
-			
-			AnimationModeProcessor.getInstance().renderAtlas(0.0625f);
-			GlStateManager.disableBlend();
+			CompatibleWeaponRenderer.captureAtlasPosition();
 			GlStateManager.popMatrix();
-			GlStateManager.enableTexture2D();
-			GlStateManager.enableLighting();
-			//Minecraft.getMinecraft().getFramebuffer().bindFramebuffer(false);
-			
-			GlStateManager.color(1.0f, 1.0f, 1.0f);
 		}
 		
 		
@@ -2654,15 +2624,16 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 	    
 		if(!OpenGLSelectionHelper.isInSelectionPass && !AnimationGUI.getInstance().magEdit.isState()) {
 			
-			gunLightingShader.use();
+			Shaders.gunLightingShader.use();
 			
 			
-	    	GL20.glUniform1i(GL20.glGetUniformLocation(gunLightingShader.getShaderId(), "lightmap"), 1);
-	    	GL20.glUniform1f(GL20.glGetUniformLocation(gunLightingShader.getShaderId(), "lightIntensity"), (ClientValueRepo.flash > 0) ? 5.0f : 0.0f);
+	    	GL20.glUniform1i(GL20.glGetUniformLocation(Shaders.gunLightingShader.getShaderId(), "lightmap"), 1);
+	    	GL20.glUniform1f(GL20.glGetUniformLocation(Shaders.gunLightingShader.getShaderId(), "lightIntensity"), (ClientValueRepo.flash > 0) ? 5.0f : 0.0f);
 	    	
 		}
 		
-    	
+    	// Clears out the defferal list, so that a new set can be
+		// populated in.
 		deferredPost.clear();
 
 		double sqDistance = 0.0;
@@ -2706,9 +2677,9 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		
 		
 		
-		if(!OpenGLSelectionHelper.isInSelectionPass) gunLightingShader.release();
+		if(!OpenGLSelectionHelper.isInSelectionPass) Shaders.gunLightingShader.release();
 		
-		renderPostRenderers(renderContext);
+		if(!AnimationModeProcessor.getInstance().getFPSMode()) renderPostRenderers(renderContext);
 		
 		
 		
@@ -2763,7 +2734,9 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 	    	//GlStateManager.translate(mag.getRotationPoint().x, mag.getRotationPoint().y, mag.getRotationPoint().z);
 	    	GlStateManager.translate(CompatibleClientEventHandler.magRotPositioner.x, CompatibleClientEventHandler.magRotPositioner.y, CompatibleClientEventHandler.magRotPositioner.z);
 	    	
-	    	AnimationModeProcessor.getInstance().captureDeferral();
+	    	
+	    	CompatibleWeaponRenderer.captureAtlasPosition();
+	    	//AnimationModeProcessor.getInstance().captureDeferral();
 	    	
 	    	GlStateManager.popMatrix();
 	    }

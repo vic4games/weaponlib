@@ -11,9 +11,10 @@ import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 
 public class Button {
 	
-	public int x = 0;
-	public int y = 0;
+	public double x = 0;
+	public double y = 0;
 	public String tooltip;
+
 	
 	public int id;
 	
@@ -24,12 +25,12 @@ public class Button {
 	
 	public int iconID;
 	
-	public Button(String tooltip, int id, int x, int y, int size) {
+	public Button(String tooltip, int iconID, int x, int y, int size) {
 		this.tooltip = tooltip;
 		this.x = x;
 		this.y = y;
 		this.size = size;
-		this.iconID = id;
+		this.iconID = iconID;
 	}
 	
 	public Button(String tooltip, boolean toggle, int id, int x, int y, int size) {
@@ -65,7 +66,6 @@ public class Button {
 		GlStateManager.enableTexture2D();
 		
 		
-		
 		AnimationGUI.renderTexturedRect(iconID, x+(size*0.2), y+size*0.1, size*0.6, size*0.6);
 		
 		if(isToggle()) {
@@ -86,7 +86,7 @@ public class Button {
 		
 	}
 
-	public int getX() {
+	public double getX() {
 		return x;
 	}
 
@@ -94,7 +94,7 @@ public class Button {
 		this.x = x;
 	}
 
-	public int getY() {
+	public double getY() {
 		return y;
 	}
 
@@ -135,6 +135,7 @@ public class Button {
 	}
 
 	public void onMouseClick() {
+		
 		if(isToggle) setState(!state);
 		
 	}

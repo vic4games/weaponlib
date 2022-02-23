@@ -86,6 +86,10 @@ public class AnimationModeProcessor {
 
 	public void onMouseClick() {
 
+		// If the player is hovering over the GUI, just ignore all
+		// interactions
+		if(AnimationGUI.getInstance().grabStatus) return;
+		
 		// currentPartMatrix = DebugPositioner.rotationMatrix();
 		if(OpenGLSelectionHelper.selectID > 0 && OpenGLSelectionHelper.selectID < 4) {
 			Minecraft mc = Minecraft.getMinecraft();
@@ -108,8 +112,8 @@ public class AnimationModeProcessor {
 
 		if ((colorHover != -1 || colorSelected != -1) && AnimationGUI.getInstance().axisToggle.isState()) {
 			leftLock = false;
-		} else if (OpenGLSelectionHelper.currentlyHovering > 0 && OpenGLSelectionHelper.currentlyHovering < 4) {
-
+		} else if ((OpenGLSelectionHelper.currentlyHovering > 0 && OpenGLSelectionHelper.currentlyHovering < 4) || AnimationGUI.getInstance().grabStatus) {
+			
 			OpenGLSelectionHelper.selectID = OpenGLSelectionHelper.currentlyHovering;
 			DebugPositioner.setDebugMode(true);
 			switch (OpenGLSelectionHelper.selectID) {
@@ -309,6 +313,11 @@ public class AnimationModeProcessor {
 					 DebugPositioner.incrementXPosition((float) vec.x*m, false);
 					 DebugPositioner.incrementYPosition((float) vec.y*m, false);
 					 DebugPositioner.incrementZPosition((float) vec.z*m, false);
+				} else if(AnimationGUI.getInstance().magEdit.isState()) { 
+				
+					CompatibleClientEventHandler.magRotPositioner = 
+							CompatibleClientEventHandler.magRotPositioner.addVector(vec.x*m, vec.y*m, vec.z*m);
+					
 				} else {
 					
 					if(!editRotationPointMode) {
@@ -572,7 +581,7 @@ public class AnimationModeProcessor {
 				DebugRenderer.setupBasicRender();
 				DebugRenderer.renderPoint(Vec3d.ZERO, new Vec3d(1, 0, 0));
 				DebugRenderer.destructBasicRender();
-				GlStateManager.enableDepth();
+				//GlStateManager.enableDepth();
 				//renderLightAxisRing(new Vec3d(0, 0, 1), Color.red, 0.2f, 0.1f, true, false);
 				
 				
@@ -584,6 +593,7 @@ public class AnimationModeProcessor {
 				
 				
 			} else {
+				
 				renderAtlas(scalar);
 			}
 			
@@ -658,7 +668,7 @@ public class AnimationModeProcessor {
 		
 		Bloom.initializeMultisample();
 		
-
+		GlStateManager.disableDepth();
 		GL11.glLineWidth(5f);
 		
 		renderLightAxisRing(new Vec3d(1, 0, 0), new Color(0xff3838), size, innerSize, (colorSelected == -1 || colorSelected == 1), (colorSelected == 1 || colorHover == 1));
@@ -776,7 +786,7 @@ public class AnimationModeProcessor {
 
 		GlStateManager.enableBlend();
 		
-		
+		GlStateManager.disableDepth();
 		GL11.glLineWidth((float) Math.abs(1 / pan.z) * 50);
 		OpenGLSelectionHelper.ballBuf.framebufferClear();
 		OpenGLSelectionHelper.ballBuf.bindFramebuffer(false);
@@ -792,8 +802,11 @@ public class AnimationModeProcessor {
 		
 		Minecraft.getMinecraft().getFramebuffer().bindFramebuffer(false);
 		//if(1+1==2) return;
-		GlStateManager.disableDepth();
+	//	GlStateManager.disableDepth();
+		//GlStateManager.disableDepth();
+		//System.out.println(GL11.glIsEnabled(GL11.GL_DEPTH));
 		Bloom.initializeMultisample();
+		GlStateManager.disableDepth();
 		drawArrow(new Vec3d(1, 0, 0), new Color(0xff3838), 1, 1, (colorSelected == -1 || colorSelected == 1),
 				(colorHover == 1 || colorSelected == 1));
 		drawArrow(new Vec3d(0, 1, 0), new Color(0x32ff7e), -1, 1, (colorSelected == -1 || colorSelected == 2),
@@ -801,7 +814,7 @@ public class AnimationModeProcessor {
 		drawArrow(new Vec3d(0, 0, 1), new Color(0x18dcff), 1, 1, (colorSelected == -1 || colorSelected == 3),
 				(colorHover == 3 || colorSelected == 3));
 		Bloom.unapplyMultisample();
-		GlStateManager.enableDepth();
+	//	GlStateManager.enableDepth();
 		GlStateManager.enableTexture2D();
 		GlStateManager.enableLighting();
 		GlStateManager.disableBlend();

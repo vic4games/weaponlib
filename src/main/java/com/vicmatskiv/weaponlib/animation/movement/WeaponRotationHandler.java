@@ -155,9 +155,15 @@ public class WeaponRotationHandler {
 
 			float yWiggle = (float) ((float) Math.cos(tickWiggle) * ClientValueRepo.walkingGun.getLerpedPosition())
 					* 0.02f;
+			
+			
+		
 
-			float sway = (float) ((float) ((float) Math.sin(tickWiggle * 2)) * ClientValueRepo.forward) * 0.2f;
+			float sway = (float) ((float) ((float) Math.sin(tickWiggle * (2))) * ClientValueRepo.forward) * 0.2f;
 			sway *= aimMultiplier;
+			
+			
+			
 			// xWiggle = (float) ClientValueRepo.walkingGun.getLerpedPosition();
 			// xWiggle = 0f;
 			// forwardMov = 0f;

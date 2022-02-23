@@ -54,6 +54,7 @@ import com.vicmatskiv.weaponlib.render.Dloom;
 import com.vicmatskiv.weaponlib.render.GLCompatible;
 import com.vicmatskiv.weaponlib.render.MSAABuffer;
 import com.vicmatskiv.weaponlib.render.MultisampledFBO;
+import com.vicmatskiv.weaponlib.render.Shaders;
 import com.vicmatskiv.weaponlib.shader.jim.Shader;
 import com.vicmatskiv.weaponlib.shader.jim.ShaderManager;
 
@@ -171,6 +172,8 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 		this.playerBiped.textureHeight = 64;
 	}
 
+	public static FloatBuffer atlasMatrix = BufferUtils.createFloatBuffer(16);
+	
 	@Override
 	public List<BakedQuad> getQuads(IBlockState state, EnumFacing side, long rand) {
 		
@@ -291,14 +294,16 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 		GL11.glTranslatef(xOffset, yOffset, zOffset);
 	}
 
-	public static Shader gunLightingShader = ShaderManager
-			.loadShader(new ResourceLocation("mw" + ":" + "shaders/gunlight"));
-	public static Shader flash = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/flash"));
-
+	
 
 	public static MSAABuffer msaaBuffer;
 
 	public static WeaponRotationHandler wrh = new WeaponRotationHandler();
+	
+	public static void captureAtlasPosition() {
+	
+		GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, atlasMatrix);
+	}
 	
 	@SideOnly(Side.CLIENT)
 	public void renderItem() {
@@ -736,7 +741,9 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 							GlStateManager.pushMatrix();
 							Transform t = AnimationModeProcessor.getInstance().getTransformFromSelected();
 							GlStateManager.translate(t.getPositionX(), t.getPositionY(), t.getPositionZ());
-							AnimationModeProcessor.getInstance().renderTransformIndicator(0.2f);
+							captureAtlasPosition();
+							//AnimationModeProcessor.getInstance().renderTransformIndicator(0.2f);
+							GlStateManager.enableDepth();
 							GlStateManager.popMatrix();
 						}
 					}
@@ -744,6 +751,8 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 					// gunLightingShader.release();
 
 				}
+				
+				
 
 				GL20.glUseProgram(0);
 
@@ -845,14 +854,14 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 					
 				
 				
-				if (OpenGLSelectionHelper.selectID == 3 && AnimationModeProcessor.getInstance().getFPSMode() && !AnimationModeProcessor.getInstance().editRotationPointMode) {
+				if (OpenGLSelectionHelper.selectID == 3 && AnimationModeProcessor.getInstance().getFPSMode() && !AnimationModeProcessor.getInstance().editRotationPointMode && !AnimationGUI.getInstance().magEdit.isState() ) {
 					AnimationModeProcessor.getInstance().currentPartMatrix = MatrixHelper.captureMatrix();
 					
 					//AnimationModeProcessor.getInstance().transformMode = 1;
 					
+					captureAtlasPosition();
 					
-					
-					AnimationModeProcessor.getInstance().renderTransformIndicator(1.0f);
+					//AnimationModeProcessor.getInstance().renderTransformIndicator(1.0f);
 					
 				}
 				
@@ -909,28 +918,39 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 		
 		
 		
+		if(AnimationModeProcessor.getInstance().getFPSMode() && !OpenGLSelectionHelper.isInSelectionPass) {
+			GL11.glPushMatrix();
+			GL11.glLoadMatrix(atlasMatrix);
+			GlStateManager.disableTexture2D();
+			GlStateManager.disableLighting();
+			
+			AnimationModeProcessor.getInstance().renderTransformIndicator(1.0f);
+			
+			GL11.glPopMatrix();
+		}
+		
 		
 		
 
 		if (AnimationModeProcessor.getInstance().getFPSMode()) {
 			
-			selectedge.use();
+			Shaders.selectedge.use();
 			if (OpenGLSelectionHelper.fbo != null) {
 
 				GlStateManager.setActiveTexture(GL13.GL_TEXTURE0 + 5);
 				GL11.glBindTexture(GL11.GL_TEXTURE_2D, OpenGLSelectionHelper.fbo.framebufferTexture);
-				selectedge.uniform1i("select", 5);
+				Shaders.selectedge.uniform1i("select", 5);
 			}
 			// System.out.println(OpenGLSelectionHelper.selectID);
-			selectedge.uniform1i("idSelected", OpenGLSelectionHelper.selectID);
-			selectedge.uniform2f("fragSize", (float) 1.0f / mc.displayWidth, (float) 1.0f / mc.displayHeight);
+			Shaders.selectedge.uniform1i("idSelected", OpenGLSelectionHelper.selectID);
+			Shaders.selectedge.uniform2f("fragSize", (float) 1.0f / mc.displayWidth, (float) 1.0f / mc.displayHeight);
 			GlStateManager.setActiveTexture(GL13.GL_TEXTURE0);
 
 			
 			
 			Minecraft.getMinecraft().getFramebuffer().bindFramebuffer(true);
 			Bloom.renderFboTriangle(Minecraft.getMinecraft().getFramebuffer());
-			selectedge.release();
+			Shaders.selectedge.release();
 
 			OpenGLSelectionHelper.bindBallBuf();
 			ByteBuffer buf = OpenGLSelectionHelper.readRawColor();
@@ -975,8 +995,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 	
 	public static final ModelRenderer bipedLeftArm = null;
 	
-	public static final Shader selectedge = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/selectedge"));
-
+	
 	static void fixVersionSpecificFirstPersonPositioning(TransformType transformType) {
 		int i = transformType == TransformType.FIRST_PERSON_RIGHT_HAND ? 1 : -1;
 

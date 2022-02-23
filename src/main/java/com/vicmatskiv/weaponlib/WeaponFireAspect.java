@@ -288,7 +288,7 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
             }  
         }
         ClientValueRepo.gunTick++;
-        System.out.println("Gun tick added @ " + Minecraft.getMinecraft().player.ticksExisted);
+       // System.out.println("Gun tick added @ " + Minecraft.getMinecraft().player.ticksExisted);
         //System.out.println("WFA: " + System.currentTimeMillis());
         ClientValueRepo.flash = 1;
      

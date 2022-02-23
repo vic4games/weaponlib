@@ -3,9 +3,15 @@ package com.vicmatskiv.weaponlib.compatibility;
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
 import java.io.BufferedInputStream;
+import java.io.Console;
 import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
@@ -51,6 +57,7 @@ import com.vicmatskiv.weaponlib.animation.jim.AnimationData;
 import com.vicmatskiv.weaponlib.animation.jim.AnimationData.BlockbenchTransition;
 import com.vicmatskiv.weaponlib.animation.jim.BBLoader;
 import com.vicmatskiv.weaponlib.debug.DebugRenderer;
+import com.vicmatskiv.weaponlib.debug.SysOutController;
 import com.vicmatskiv.weaponlib.model.Bullet556;
 import com.vicmatskiv.weaponlib.particle.DriftCloudFX;
 import com.vicmatskiv.weaponlib.render.Bloom;
@@ -59,6 +66,7 @@ import com.vicmatskiv.weaponlib.render.GLCompatible;
 import com.vicmatskiv.weaponlib.render.ModernSkyRenderer;
 import com.vicmatskiv.weaponlib.render.ModernUtil;
 import com.vicmatskiv.weaponlib.render.MultisampledFBO;
+import com.vicmatskiv.weaponlib.render.Shaders;
 import com.vicmatskiv.weaponlib.render.ShellRenderer;
 import com.vicmatskiv.weaponlib.render.ShellRenderer2;
 import com.vicmatskiv.weaponlib.render.VAOData;
@@ -294,7 +302,6 @@ public abstract class CompatibleClientEventHandler {
 		
 	}
 
-	public static Shader blur = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/blur"));
 	public static Framebuffer buf;
 
 	public static void postBlur() {
@@ -386,7 +393,6 @@ public abstract class CompatibleClientEventHandler {
 	public static final FloatBuffer NEW_POS = GLAllocation.createDirectFloatBuffer(4);
 
 	
-	public static Shader shellLight = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/shells"));
 	
 	public static WavefrontModel bulletShell = WavefrontLoader.loadSubModel("boo6", "casing");
 	
@@ -405,6 +411,9 @@ public abstract class CompatibleClientEventHandler {
 				
 			}
 		}
+		
+		//SysOutController.reset();
+		
 		
 		
 		
@@ -549,13 +558,12 @@ public abstract class CompatibleClientEventHandler {
 			AnimationModeProcessor.getInstance().onTick();
 			
 			Minecraft.getMinecraft().player.inventory.currentItem = 0;
-			Shader blackScree = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/black"));
+		
 			
 			
-			
-			blackScree.use();
+			Shaders.blackScreen.use();
 			Bloom.renderFboTriangle(Minecraft.getMinecraft().getFramebuffer());
-			blackScree.release();
+			Shaders.blackScreen.release();
 			
 			return;
 		}
@@ -594,11 +602,23 @@ public abstract class CompatibleClientEventHandler {
 
 		ClientValueRepo.update();
 
-		try {
-			Bloom.doBloom();
-		} catch (Exception e) {
-			e.printStackTrace();
+		
+		
+		// Bloom code
+		
+		
+		if(Minecraft.getMinecraft().player != null && Minecraft.getMinecraft().player.ticksExisted > 5) {
+			// If for some reason the player is null, don't engage.
+			try {
+				Bloom.doBloom();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			
 		}
+		
+		
+		
 		
 		
 		

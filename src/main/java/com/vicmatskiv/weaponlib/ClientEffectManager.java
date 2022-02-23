@@ -27,7 +27,7 @@ final class ClientEffectManager implements EffectManager {
 	       
 		
 		Weapon w = (Weapon) player.getHeldItemMainhand().getItem();
-		System.out.println(w.getMuzzlePosition());
+		//System.out.println(w.getMuzzlePosition());
 		
 	    if(compatibility.isShadersModEnabled()) {
 	        return;
@@ -43,7 +43,7 @@ final class ClientEffectManager implements EffectManager {
 		float scale = 5f * compatibility.getSmokeEffectScaleFactor(); // TODO: check why scale was set to 2.0 in 1.7.10
 		float positionRandomizationFactor = 0.01f;
 
-		System.out.println("yo");
+		//System.out.println("yo");
 		double posX = player.posX + (look.getXCoord() * distance) + (compatibility.world(player).rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor + (-look.getZCoord() * xOffset);
 		double posY = player.posY + (look.getYCoord() * distance) + (compatibility.world(player).rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor - yOffset;
 		double posZ = player.posZ + (look.getZCoord() * distance) + (compatibility.world(player).rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor  + (look.getXCoord() * xOffset);
