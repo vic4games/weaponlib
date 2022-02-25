@@ -607,7 +607,7 @@ public abstract class CompatibleClientEventHandler {
 		// Bloom code
 		
 		
-		if(Minecraft.getMinecraft().player != null && Minecraft.getMinecraft().player.ticksExisted > 5) {
+		if(Minecraft.getMinecraft().player != null && Minecraft.getMinecraft().player.ticksExisted > 20) {
 			// If for some reason the player is null, don't engage.
 			try {
 				Bloom.doBloom();
@@ -616,8 +616,6 @@ public abstract class CompatibleClientEventHandler {
 			}
 			
 		}
-		
-		
 		
 		
 		

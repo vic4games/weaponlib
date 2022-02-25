@@ -17,6 +17,7 @@ import com.vicmatskiv.weaponlib.vehicle.VehiclePart;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.item.Item;
 import net.minecraft.util.text.TextFormatting;
+import net.minecraftforge.client.event.ClientChatEvent;
 
 public class DebugCommand extends CompatibleCommand {
 
@@ -152,7 +153,15 @@ public class DebugCommand extends CompatibleCommand {
     
     private void processAnimMode(String[] args) {
     	if(args[1].equals("on")) {
-    		AnimationModeProcessor.getInstance().setFPSMode(true);
+    		
+    		if(!AnimationModeProcessor.getInstance().isLegacyMode()) {
+    			AnimationModeProcessor.getInstance().setFPSMode(true);
+    		} else {
+    			compatibility.addChatMessage(compatibility.clientPlayer(), getDebugPrefix() + " You cannot enter animation mode with a legacy gun!");
+    	    	
+    			
+    		}
+    		
     	} else if(args[1].equals("off")) {
     		AnimationModeProcessor.getInstance().setFPSMode(false);
     	} else if(args[1].equals("dh")) {

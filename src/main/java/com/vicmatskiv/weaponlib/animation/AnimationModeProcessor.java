@@ -242,7 +242,7 @@ public class AnimationModeProcessor {
 		if (colorSelected != -1 && Mouse.isButtonDown(0)) {
 			// transformMode = 2;
 			if (transformMode == 1) {
-				float m = 0.5f;
+				float m = 0.2f;
 				
 				if(Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)) {
 					m /= 10;
@@ -324,7 +324,7 @@ public class AnimationModeProcessor {
 						Transform t = getTransformFromSelected();
 						
 						
-						t.withPosition(t.getPositionX() + vec.x*m*0.1, t.getPositionY() + vec.y*m*0.1, t.getPositionZ() + vec.z*m*0.1);
+						t.withPosition(t.getPositionX() + vec.x*m, t.getPositionY() + vec.y*m, t.getPositionZ() + vec.z*m);
 						
 						if(AnimationGUI.getInstance().leftDrag.isState()) t.withRotation(t.getRotationX(), t.getRotationY()-vec.x*0.4, t.getRotationZ());
 						
@@ -332,7 +332,7 @@ public class AnimationModeProcessor {
 						Transform t = getTransformFromSelected();
 						
 						
-						t.withRotationPoint(t.getRotationPointX() + vec.x*m*0.1, t.getRotationPointY() + vec.y*m*0.1, t.getRotationPointZ() + vec.z*m*0.1);
+						t.withRotationPoint(t.getRotationPointX() + vec.x*m, t.getRotationPointY() + vec.y*m, t.getRotationPointZ() + vec.z*m);
 						
 					}
 					

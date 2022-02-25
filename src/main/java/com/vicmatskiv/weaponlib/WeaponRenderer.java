@@ -251,6 +251,9 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		public Transform firstPersonLeftHandTransform;
 		public Transform firstPersonRightHandTransform;
 		
+		
+
+		
 
 		public Builder withModId(String modId) {
 			this.modId = modId;

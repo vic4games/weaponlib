@@ -73,6 +73,8 @@ public class Bloom {
 				CompatibleClientEventHandler.buf.deleteFramebuffer();
 			CompatibleClientEventHandler.buf = new Framebuffer(Minecraft.getMinecraft().displayWidth, Minecraft.getMinecraft().displayHeight, false);
 			
+			
+			
 		
 	}
 	
@@ -122,6 +124,7 @@ public class Bloom {
 		GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GLCompatible.GL_RGBA16F, width, height, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_SHORT, (IntBuffer) null);
 		data.bindFramebuffer(false);
 		
+		
 		OpenGlHelper.glBindRenderbuffer(GLCompatible.GL_RENDERBUFFER, mc.getFramebuffer().depthBuffer);
 		OpenGlHelper.glFramebufferRenderbuffer(GLCompatible.GL_FRAMEBUFFER, GLCompatible.GL_DEPTH_ATTACHMENT, GLCompatible.GL_RENDERBUFFER, mc.getFramebuffer().depthBuffer);
 		
@@ -129,11 +132,14 @@ public class Bloom {
 		data.setFramebufferColor(0, 0, 0, 0);
 		data.framebufferClear();
 		
+		checkFramebufer(data.framebufferObject);
+		
 		buffers = new Framebuffer[LAYERS];
 		float bW = width;
 		float bH = height;
 		
 		for(int i = 0; i < LAYERS; ++i) {
+			System.out.println("Layer " + i + " created w/ " + bW + "x" + bH);
 			buffers[i] = new Framebuffer((int) bW, (int) bH, false);
 			buffers[i].bindFramebufferTexture();
 			GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GLCompatible.GL_RGBA16F, (int) bW, (int) bH, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_SHORT, (IntBuffer) null);
@@ -151,6 +157,10 @@ public class Bloom {
 		
 		
  	}
+	
+	public static void checkFramebufer(int buf) {
+		System.out.println("Framebuffer check: " + GL30.glCheckFramebufferStatus(buf));
+	}
 	
 	public static void renderFboTriangle(Framebuffer buf) {
 		renderFboTriangle(buf, buf.framebufferWidth, buf.framebufferHeight);

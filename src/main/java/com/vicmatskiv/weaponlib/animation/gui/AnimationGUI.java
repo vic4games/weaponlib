@@ -25,6 +25,7 @@ import com.vicmatskiv.weaponlib.animation.DebugPositioner;
 import com.vicmatskiv.weaponlib.animation.OpenGLSelectionHelper;
 import com.vicmatskiv.weaponlib.animation.DebugPositioner.Position;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponRenderer;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
@@ -340,6 +341,7 @@ public class AnimationGUI {
 				
 			}
 		}
+		CompatibleWeaponRenderer.acp = null;
 	}
 	
 	public static void renderScaledString(String str, double x, double y, double scale) {

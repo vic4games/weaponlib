@@ -884,13 +884,14 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 			}
 			
 
+			/*
 			if (renderContext.getWeaponInstance().isAimed()
 					&& ((ClientModContext) renderContext.getModContext()).getSafeGlobals().renderingPhase
 							.get() != RenderingPhase.RENDER_PERSPECTIVE) {
 				Dloom.blitDepth();
 				CompatibleClientEventHandler.postBlur();
 			}
-
+			*/
 			// gunLightingShader.release();
 		}
 		
