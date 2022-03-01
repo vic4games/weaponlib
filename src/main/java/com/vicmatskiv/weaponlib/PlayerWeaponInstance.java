@@ -166,7 +166,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 		case COMPOUND_RELOAD:
 			return getWeapon().getRenderer().getWeaponRendererBuilder().getCompoundReloadDuration();
 		case COMPOUND_RELOAD_EMPTY:
-			System.out.println(getWeapon().getRenderer().getWeaponRendererBuilder().getCompoundReloadEmptyDuration());
+			//System.out.println(getWeapon().getRenderer().getWeaponRendererBuilder().getCompoundReloadEmptyDuration());
 			//return getWeapon().getRenderer().getWeaponRendererBuilder().getCompoundReloadEmptyDuration();
 			return getWeapon().getRenderer().getWeaponRendererBuilder().getCompoundReloadEmptyDuration();
 		}

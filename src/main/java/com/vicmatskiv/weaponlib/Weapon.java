@@ -937,12 +937,6 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
             withCompatibleAttachment(SpecialAttachments.MagicMag, true, (model) -> {});
             
             for (ItemAttachment<Weapon> attachment : this.compatibleAttachments.keySet()) {
-                
-            	
-            	if(attachment == null) {
-            		logger.error("Attachment for {} is null", toString());
-            		continue;
-            	}
             	
             	attachment.addCompatibleWeapon(weapon);
             }
