@@ -421,8 +421,11 @@ public abstract class CompatibleClientEventHandler {
 		if(ClientModContext.getContext() != null && ClientModContext.getContext().getMainHeldWeapon() != null) {
 			PlayerWeaponInstance pwi = ClientModContext.getContext().getMainHeldWeapon();
 			
+			
+			
 			if(pwi.getState() == WeaponState.COMPOUND_RELOAD_FINISHED) {
 				pwi.setState(WeaponState.READY);
+				pwi.getWeapon().getRenderer().setMagicMagPermit(false);
 			}
 			
 			ItemAttachment<Weapon> i = ClientModContext.getContext().getAttachmentAspect().getActiveAttachment(AttachmentCategory.MAGAZINE, pwi);

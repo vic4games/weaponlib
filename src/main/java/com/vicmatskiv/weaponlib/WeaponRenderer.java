@@ -2806,6 +2806,12 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 
 	
 	private ArrayList<Pair<FloatBuffer,  CustomRenderer<RenderableState>>> deferredPost = new ArrayList<>();
+	private boolean magicMagPermit;
+	
+	public void setMagicMagPermit(boolean state) {
+		magicMagPermit = state;
+	}
+	
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
     private void renderCompatibleAttachment(CompatibleAttachment<?> compatibleAttachment,
@@ -2835,7 +2841,11 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				return;
 			}*/
 			
-			boolean time = System.currentTimeMillis() >= renderContext.getWeaponInstance().getStateUpdateTimestamp()
+			if(!renderContext.getWeaponInstance().getWeapon().builder.isUsingNewSystem()) return;
+			
+			
+			
+			boolean time = !magicMagPermit && System.currentTimeMillis() >= renderContext.getWeaponInstance().getStateUpdateTimestamp()
 					
 					+ Math.max(renderContext.getWeaponInstance().getWeapon().builder.reloadingTimeout,
 							getTotalReloadingDuration() * 1.1);

@@ -434,6 +434,8 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 		if(instance == null) return;
 		instance.completeMagSwap();
 		
+		instance.getWeapon().getRenderer().setMagicMagPermit(true);
+		
 		if(instance.getState() == WeaponState.COMPOUND_RELOAD) {
 			stateManager.changeState(this, instance, WeaponState.COMPOUND_RELOAD);
 		} else {
