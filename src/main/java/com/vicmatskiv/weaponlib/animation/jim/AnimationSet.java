@@ -8,7 +8,13 @@ public class AnimationSet {
 	
 	
 	
+	public HashMap<String, SingleAnimation> getAnimations() {
+		return animations;
+	}
 	
+	public boolean containsKey(String name) {
+		return animations.containsKey(name);
+	}
 	
 	public SingleAnimation getSingleAnimation(String subName) {
 		if(!animations.containsKey(subName)) return null;

@@ -9,11 +9,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonReader;
+import com.vicmatskiv.weaponlib.Weapon;
 import com.vicmatskiv.weaponlib.animation.Transform;
 import com.vicmatskiv.weaponlib.animation.jim.AnimationData.BlockbenchTransition;
 
@@ -26,7 +30,8 @@ public class BBLoader {
 	public static String directory  = "mw" + ":" + "animations/";
 	public static Gson gson = (new GsonBuilder()).create();
 	public static String version = "1.8.0";
-	
+	private static final Logger logger = LogManager.getLogger(Weapon.class);
+
 	
 	
 	public static double HANDDIVISOR = 12.6;
@@ -57,6 +62,23 @@ public class BBLoader {
 		
 	}
 	
+	public static AnimationSet getAnimationSet(String animation) {
+		
+		if(!actualAnimations.containsKey(animation)) {
+			AnimationSet set = loadAnimationFile(animation + animationSuffix);
+			if(set == null) {
+				logger.error("Could not load animation set for animation name {}", animation);
+				return null;
+			} else {
+				actualAnimations.put(animation, set);
+				return set;
+			}
+		}
+		
+		return actualAnimations.get(animation);
+	}
+	
+	
 	public static AnimationData getAnimation(String animation, String subName, String bone) {
 		
 		
@@ -83,7 +105,7 @@ public class BBLoader {
 			AnimationSet set = loadAnimationFile(animation + animationSuffix);
 			
 			if(set == null) {
-				System.err.printf("Could not load animation set for animation name {}", animation);
+				logger.error("Could not load animation set for animation name {}", animation);
 				return null;
 			} else {
 				actualAnimations.put(animation, set);
@@ -109,7 +131,7 @@ public class BBLoader {
 			ResourceLocation loc = new ResourceLocation(directory + fileName);
 			br = new BufferedReader(new InputStreamReader(Minecraft.getMinecraft().getResourceManager().getResource(loc).getInputStream()));
 		} catch(Exception e) {
-			System.err.printf("Failed to create reader for file: {}", fileName);
+			logger.error("Failed to create reader for file: {}", fileName);
 			return null;
 		}
 		
@@ -119,10 +141,12 @@ public class BBLoader {
 		// Do a basic check to make sure this is valid: has a version key, and the version key
 		// lines up. Alert the user if it's a different version so the developer can make adjustments.
 		if(!masterJSON.has("format_version")) {
-			System.err.printf("Could not locate \"format_version\" key, cannot read file {} ", fileName); 
+			
+			logger.error("Could not locate \"format_version\" key, cannot read file {} ", fileName); 
 			return null;
 		} else if(!masterJSON.get("format_version").getAsString().equals(version)){
-			System.err.printf("Warning, this file is running version {}, and this version of VMW is looking for {}", masterJSON.get("format_version").getAsString(), version);	
+			logger.error("Warning, this file is running version {}, and this version of VMW is looking for {}", masterJSON.get("format_version").getAsString(), version);
+			//System.err.printf("Warning, this file is running version {}, and this version of VMW is looking for {}", masterJSON.get("format_version").getAsString(), version);	
 		}
 		
 		
@@ -137,6 +161,10 @@ public class BBLoader {
 			SingleAnimation anim = new SingleAnimation(animationHeader);
 			
 			// load all the bone data into the single animation
+			
+			float appointedDuration = animationsJSON.get(entry.getKey()).getAsJsonObject().get("animation_length").getAsFloat();
+			System.out.println("APPOINTED DURATION: " + appointedDuration);
+			
 			JsonObject animJSON = animationsJSON.get(entry.getKey()).getAsJsonObject().get("bones").getAsJsonObject();
 			for(Entry<String, JsonElement> subEntry : animJSON.entrySet()) {
 				
@@ -145,6 +173,8 @@ public class BBLoader {
 				
 			//	anim.addBoneData(subEntry.getKey(), animJSON.get(subEntry.getKey()).getAsJsonObject());
 			}
+			
+			anim.setDuration(appointedDuration);
 			
 			// Bake the data
 			anim.bake();

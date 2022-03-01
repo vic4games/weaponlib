@@ -16,8 +16,20 @@ public class SingleAnimation {
 	private int timestampCount = 0;
 	private ArrayList<Float> timestamps;
 	
+	
+	private float duration;
+	
 	public SingleAnimation(String name) {
 		this.animationName = name;
+	}
+	
+	
+	public float getDuration() {
+		return duration;
+	}
+	
+	public void setDuration(float duration) {
+		this.duration = duration;
 	}
 	
 	
@@ -25,6 +37,9 @@ public class SingleAnimation {
 		return this.timestamps;
 	}
 	
+	public boolean hasBone(String name) {
+		return dataMap.containsKey(name);
+	}
 	
 	public void addBoneData(String name, JsonObject obj) {
 		dataMap.put(name, new AnimationData(obj));
@@ -35,6 +50,10 @@ public class SingleAnimation {
 		// Collect all keyframes
 		timestamps = new ArrayList<>();
 		for(Entry<String, AnimationData> i : dataMap.entrySet()) {
+			
+			//Also assign the time
+			i.getValue().setAppointedDuration(getDuration());
+			
 			ArrayList<Float> subList = i.getValue().getTimestamps();
 			for(float f : subList) {
 				if(!timestamps.contains(f)) timestamps.add(f);

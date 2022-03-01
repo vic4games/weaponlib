@@ -42,10 +42,23 @@ public class AnimationData {
 	private int fakeTransitions = 0;
 	private long fTLength;
 	
+	
+	// The **ACTUAL** duration of the animation as designated in the BlockBench file
+	private float appointedDuration;
+	
+	
 	protected AnimationData(ArrayList<Float> arrayList) {
 		this.isNull = true;
 		this.fakeTransitions = arrayList.size();
 		this.fTLength = (long) (arrayList.get(arrayList.size()-1)/arrayList.size());
+	}
+	
+	public void setAppointedDuration(float f) {
+		this.appointedDuration = f;
+	}
+	
+	public float getAppointedDuration() {
+		return this.appointedDuration;
 	}
 	
 	public AnimationData(JsonObject obj) {
@@ -57,7 +70,7 @@ public class AnimationData {
 		 */
 
 		// load up the rotation keyframes
-		if(obj.has("rotation")) {
+		if(obj.has("rotation") && obj.get("rotation").isJsonObject()) {
 			JsonObject rotation = obj.get("rotation").getAsJsonObject();
 			for (Entry<String, JsonElement> i : rotation.entrySet()) {
 				JsonArray ar = i.getValue().getAsJsonArray();
@@ -67,6 +80,13 @@ public class AnimationData {
 					timestamps.add(time);
 				rotationKeyframes.put(time, rotationVector);
 			}
+		} else if(!obj.has("rotation")) {
+			rotationKeyframes.put(0f, Vec3d.ZERO);
+		} else if(!obj.get("rotation").isJsonObject()) {
+			JsonArray ar = obj.get("rotation").getAsJsonArray();
+			Vec3d translationVector = new Vec3d(ar.get(0).getAsDouble(), ar.get(1).getAsDouble(),
+					ar.get(2).getAsDouble());
+			rotationKeyframes.put(0f, translationVector);
 		}
 		
 
@@ -176,6 +196,7 @@ public class AnimationData {
 
 			// System.out.println(f + " | " + new BlockbenchTransition(timeDelta,
 			// rotationKey, translationKey));
+		
 			this.bbTransition.put(f, new BlockbenchTransition(timeDelta, rotationKey, translationKey));
 
 		}

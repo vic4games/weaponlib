@@ -128,6 +128,14 @@ public class ItemAttachment<T> extends CompatibleItem implements ModelSource {
 	public List<Tuple<ModelBase, String>> getTexturedModels() {
 		return texturedModels;
 	}
+	
+	/**
+	 * For use with the "magic mag"
+	 * @param model
+	 */
+	public void setFirstModel(ItemAttachment<Weapon> model) {
+		texturedModels.set(0, model.getTexturedModels().get(0));
+	}
 
 	public String getCrosshair() {
 		return crosshair;

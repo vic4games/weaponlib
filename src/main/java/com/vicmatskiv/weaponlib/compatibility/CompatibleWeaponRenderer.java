@@ -935,6 +935,8 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 
 		if (AnimationModeProcessor.getInstance().getFPSMode()) {
 			
+			Shaders.selectedge = ShaderManager.loadVMWShader("selectedge");
+			
 			Shaders.selectedge.use();
 			if (OpenGLSelectionHelper.fbo != null) {
 

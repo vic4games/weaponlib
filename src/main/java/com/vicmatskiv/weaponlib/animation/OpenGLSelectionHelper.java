@@ -28,6 +28,9 @@ public class OpenGLSelectionHelper {
 	private static final Minecraft mc = Minecraft.getMinecraft();
 
 	
+	private static final ByteBuffer resultBuffer = BufferUtils.createByteBuffer(16);
+	private static final IntBuffer VIEWPORT = BufferUtils.createIntBuffer(16);
+	
 	public static boolean isInSelectionPass = false;
 
 	public static int selectID = 30;
@@ -84,9 +87,12 @@ public class OpenGLSelectionHelper {
 	}
 
 	public static ByteBuffer readRawColor() {
-		IntBuffer boof = BufferUtils.createIntBuffer(16);
-		GL11.glGetInteger(GL11.GL_VIEWPORT, boof);
-
+		//IntBuffer boof = BufferUtils.createIntBuffer(16);
+		/* old
+		VIEWPORT.rewind();
+		GL11.glGetInteger(GL11.GL_VIEWPORT, VIEWPORT);
+		VIEWPORT.rewind();
+		*/
 		ScaledResolution scaledResolution = new ScaledResolution(Minecraft.getMinecraft());
 
 		int width = scaledResolution.getScaledWidth();
@@ -119,11 +125,16 @@ public class OpenGLSelectionHelper {
 		mouseZ = Minecraft.getMinecraft().displayHeight - mouseZ - 1;
 
 		// System.out.println("Post: " + mouseX + " | " + mouseZ);
-		ByteBuffer buf = BufferUtils.createByteBuffer(16);
-		buf.rewind();
+		
+		// old
+		//ByteBuffer buf = BufferUtils.createByteBuffer(16);
+		//buf.rewind();
 
+		resultBuffer.rewind();
+		
 		GL20.glUseProgram(0);
-		GL11.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+		// Maybe needed?
+		//GL11.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
 		// GlStateManager.enableDepth();
 		// GL11.glClear(GL11.GL_COLOR_BUFFER_BIT);
@@ -133,8 +144,9 @@ public class OpenGLSelectionHelper {
 		 */
 		// Minecraft.getMinecraft().getFramebuffer().unbindFramebufferTexture();
 
-		GL11.glPixelStoref(GL11.GL_UNPACK_ALIGNMENT, 1);
-		GL11.glReadBuffer(GL30.GL_COLOR_ATTACHMENT0);
+		// maybe needed
+		//GL11.glPixelStoref(GL11.GL_UNPACK_ALIGNMENT, 1);
+		//GL11.glReadBuffer(GL30.GL_COLOR_ATTACHMENT0);
 
 		// System.out.println(mouseX + " | " + mouseZ);
 
@@ -142,14 +154,14 @@ public class OpenGLSelectionHelper {
 
 		// GL11.glReadPixels(mouseX+200, mouseZ+100, 1, 1, GL11.GL_RGBA,
 		// GL11.GL_UNSIGNED_BYTE, buf);
-		GL11.glReadPixels(mouseX, mouseZ, 1, 1, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, buf);
-
+		GL11.glReadPixels(mouseX, mouseZ, 1, 1, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, resultBuffer);
+		resultBuffer.rewind();
 		// test 2
 
 		// selectID = 120;
 
-		buf.rewind();
-		return buf;
+		
+		return resultBuffer;
 	}
 
 	public static ByteBuffer readScreenArea() {

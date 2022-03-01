@@ -42,10 +42,11 @@ import org.lwjgl.util.glu.Project;
 import com.google.common.reflect.Reflection;
 import com.vicmatskiv.weaponlib.AttachmentCategory;
 import com.vicmatskiv.weaponlib.ClientModContext;
-
+import com.vicmatskiv.weaponlib.ItemAttachment;
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.PlayerWeaponInstance;
 import com.vicmatskiv.weaponlib.RenderingPhase;
+import com.vicmatskiv.weaponlib.Weapon;
 import com.vicmatskiv.weaponlib.WeaponReloadAspect;
 import com.vicmatskiv.weaponlib.WeaponRenderer;
 import com.vicmatskiv.weaponlib.WeaponState;
@@ -420,8 +421,16 @@ public abstract class CompatibleClientEventHandler {
 		if(ClientModContext.getContext() != null && ClientModContext.getContext().getMainHeldWeapon() != null) {
 			PlayerWeaponInstance pwi = ClientModContext.getContext().getMainHeldWeapon();
 			
+			if(pwi.getState() == WeaponState.COMPOUND_RELOAD_FINISHED) {
+				pwi.setState(WeaponState.READY);
+			}
+			
+			ItemAttachment<Weapon> i = ClientModContext.getContext().getAttachmentAspect().getActiveAttachment(AttachmentCategory.MAGAZINE, pwi);
+			
+			
+			//System.out.println(i);
 			//System.out.println(pwi.getWeapon().getRenderer().getStateManager(player));
-			//System.out.println(pwi.getState());
+			
 		//	pwi.getWeapon().getCompatibleAttachments(AttachmentCategory.MAGAZINE).forEach(c -> System.out.println(I18n.format(c.getAttachment().getUnlocalizedName() + ".name")));
 			//String unloc = pwi.getItemStack().getUnlocalizedName();
 		//	System.out.println(I18n.format(pwi.getItemStack().getUnlocalizedName() + ".name"));

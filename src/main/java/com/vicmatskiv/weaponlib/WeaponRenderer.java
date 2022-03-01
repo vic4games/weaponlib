@@ -27,6 +27,7 @@ import org.lwjgl.opengl.GLSync;
 import org.lwjgl.util.glu.GLU;
 import org.lwjgl.util.glu.Project;
 
+
 import com.vicmatskiv.weaponlib.animation.AnimationModeProcessor;
 import com.vicmatskiv.weaponlib.animation.ClientValueRepo;
 import com.vicmatskiv.weaponlib.animation.DebugPositioner;
@@ -74,6 +75,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.Vec3d;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
 public class WeaponRenderer extends CompatibleWeaponRenderer {
 
@@ -194,6 +196,15 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		private long totalUnloadingDuration;
 		private long totalDrawingDuration;
 		private long totalLoadIterationDuration;
+		
+		
+		private long totalCompoundReloadingDuration;
+		private long totalCompoundReloadEmptyDuration;
+		private long totalTacticalReloadDuration;
+		private long totalLoadEmptyDuration;
+		private long totalLoadDuration;
+		private long totalUnloadDuration;
+		
 
 		private String modId;
 
@@ -250,11 +261,25 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		public Transform firstPersonTransform;
 		public Transform firstPersonLeftHandTransform;
 		public Transform firstPersonRightHandTransform;
-		
+
+		private boolean compoundReloadUsesTactical;
+		private boolean compoundReloadEmptyUsesTactical;
+		private boolean hasTacticalReload;
+		private boolean hasUnloadEmpty;
+		private boolean hasLoadEmpty;
 		
 
 		
 
+		
+		public long getCompoundReloadDuration() {
+			return compoundReloadContainer.getDuration();
+		}
+		
+		public long getCompoundReloadEmptyDuration() {
+			return compoundReloadEmptyContainer.getDuration();
+		}
+		
 		public Builder withModId(String modId) {
 			this.modId = modId;
 			return this;
@@ -265,21 +290,22 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			return this;
 		}
 
+		@Deprecated
 		public Builder withShootingAnimationDuration(int shootingAnimationDuration) {
 			this.shootingAnimationDuration = shootingAnimationDuration;
 			return this;
 		}
-
+		@Deprecated
 		public Builder withRecoilAnimationDuration(int recoilAnimationDuration) {
 			this.recoilAnimationDuration = recoilAnimationDuration;
 			return this;
 		}
-		
+		@Deprecated
 		public Builder withPrepareFirstLoadIterationAnimationDuration(int prepareFirstLoadIterationAnimationDuration) {
             this.prepareFirstLoadIterationAnimationDuration = prepareFirstLoadIterationAnimationDuration;
             return this;
         }
-
+		@Deprecated
         public Builder withAllLoadIterationAnimationsCompletedDuration(int allLoadIterationAnimationsCompletedDuration) {
             this.allLoadIterationAnimationsCompletedDuration = allLoadIterationAnimationsCompletedDuration;
             return this;
@@ -1041,7 +1067,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 						.getTransitionList(Transform.NULL.copy().withRotationPoint(r.x, r.y, r.z), BBLoader.HANDDIVISOR));
 				withFirstPersonCustomPositioningCompoundReloading(p, BBLoader.getAnimation(animationFile, "reload", "magazine")
 						.getTransitionList(Transform.NULL.copy().withRotationPoint(r.x, r.y, r.z), BBLoader.HANDDIVISOR));
-				withFirstPersonCustomPositioningCompoundReloadingEmpty(p, BBLoader.getAnimation(animationFile, "reloadempty", "magazine")
+				withFPSCustomCompoundReloadingEmpty(p, BBLoader.getAnimation(animationFile, "reloadempty", "magazine")
 						.getTransitionList(Transform.NULL.copy().withRotationPoint(r.x, r.y, r.z), BBLoader.HANDDIVISOR));
 			}
 			
@@ -1055,6 +1081,46 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			final String leftBoneName = "lefthand";
 			final String rightBoneName = "righthand";
 			
+			// Makes sure the file is loaded
+			
+			AnimationSet set = BBLoader.getAnimationSet(animationFile);
+			
+			/* ==============
+			 * 
+			 * Do category checks
+			 * 
+			 * ==============
+			 */
+			
+			if(set.containsKey("loadempty")) {
+				hasLoadEmpty = true;
+			}
+			if(set.containsKey("unloadempty")) {
+				hasUnloadEmpty = true;
+			}
+			if(set.containsKey("reloadtactical")) {
+				hasTacticalReload = true;
+			}
+			
+			// Check if compound & compound empty should use tactical functionality
+			SingleAnimation compound = set.getSingleAnimation("reload");
+			if(compound != null) {
+				if(compound.hasBone("magazine_extra")) {
+					if(compound.getBone("magazine_extra").bbTransition.size() > 1) {
+						compoundReloadUsesTactical = true;
+					}
+				}
+			}
+			
+			SingleAnimation compoundEmpty = set.getSingleAnimation("reloadempty");
+			if(compoundEmpty != null) {
+				if(compoundEmpty.hasBone("magazine_extra")) {
+					if(compoundEmpty.getBone("magazine_extra").bbTransition.size() > 1) {
+						compoundReloadEmptyUsesTactical = true;
+					}
+				}
+			}
+			
 			setupInspectAnimations(animationFile, "inspect", mainBoneName, leftBoneName, rightBoneName);
 			setupCompoundReload(animationFile, "reload", mainBoneName, leftBoneName, rightBoneName);
 			setupReload(animationFile, "load", mainBoneName,  leftBoneName, rightBoneName);
@@ -1065,6 +1131,11 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			return this;
 		}
 		
+		public Builder setCompoundReloadTacticalFunctionality(boolean normal, boolean empty) {
+			this.compoundReloadUsesTactical = normal;
+			this.compoundReloadEmptyUsesTactical = empty;
+			return this;
+		}
 		
 		public Builder setupInspectAnimations(String animationFile, String anim, String mainBoneName, String leftHandBoneName, String rightHandBoneName) {
 			AnimationData main = BBLoader.getAnimation(animationFile, anim, mainBoneName);
@@ -1091,6 +1162,9 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			this.compoundReloadContainer.setLeftHand(left.getTransitionList(firstPersonLeftHandTransform, BBLoader.HANDDIVISOR));
 			this.compoundReloadContainer.setRightHand(right == null ? null : right.getTransitionList(firstPersonRightHandTransform, BBLoader.HANDDIVISOR));
 			
+		
+			this.compoundReloadContainer.setDuration((long) Math.round((main.getAppointedDuration()*AnimationData.PACE)));
+			
 			//setupBBAnim(animationFile, anim, mainBoneName, leftHandBoneName, rightHandBoneName, this.compoundReloadContainer);
 			return this;
 			
@@ -1108,6 +1182,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			this.compoundReloadEmptyContainer.setLeftHand(left.getTransitionList(firstPersonLeftHandTransform, BBLoader.HANDDIVISOR));
 			this.compoundReloadEmptyContainer.setRightHand(right == null ? null : right.getTransitionList(firstPersonRightHandTransform, BBLoader.HANDDIVISOR));
 			
+			this.compoundReloadEmptyContainer.setDuration((long) Math.round((main.getAppointedDuration()*AnimationData.PACE)));
 			//setupBBAnim(animationFile, anim, mainBoneName, leftHandBoneName, rightHandBoneName, this.compoundReloadContainer);
 			return this;
 			
@@ -1168,7 +1243,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
             return this;
         }
 		
-		public final Builder withFirstPersonCustomPositioningCompoundReloadingEmpty(Part part, List<Transition<RenderContext<RenderableState>>> transitions) {
+		public final Builder withFPSCustomCompoundReloadingEmpty(Part part, List<Transition<RenderContext<RenderableState>>> transitions) {
             if(part instanceof DefaultPart) {
                 throw new IllegalArgumentException("Part " + part + " is not custom");
             }
@@ -1753,6 +1828,14 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 
 	protected void setClientModContext(ClientModContext clientModContext) {
 		this.clientModContext = clientModContext;
+	}
+	
+	public boolean isCompoundReloadTactical() {
+		return builder.compoundReloadUsesTactical;
+	}
+	
+	public boolean isCompoundReloadEmptyTactical() {
+		return builder.compoundReloadEmptyUsesTactical;
 	}
 	
 	public boolean compoundReload = false;
@@ -2463,6 +2546,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 	public static ResourceLocation SPARKS_ONE = new ResourceLocation("mw" + ":" + "textures/flashes/sparks1.png");
 	public static ResourceLocation FLASHF = new ResourceLocation("mw" + ":" + "textures/flashes/flashfront2.png");
 
+	public static ItemAttachment<Weapon> magicMagReplacement;
+
 
 	public static void renderFlash(ItemStack weaponItemStack, boolean bloom) {
 		Shaders.flash.use();
@@ -2726,6 +2811,59 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
     private void renderCompatibleAttachment(CompatibleAttachment<?> compatibleAttachment,
 			Positioner<Part, RenderContext<RenderableState>> positioner, RenderContext<RenderableState> renderContext) {
 
+		
+		
+		// Do magic mag stuff
+		if(compatibleAttachment.getAttachment().getCategory() == AttachmentCategory.MAGICMAG) {
+			
+			// If the replacement exists, swap it
+			if(magicMagReplacement != null) {
+				compatibleAttachment.getAttachment().setFirstModel(magicMagReplacement);
+			}
+			
+			WeaponState state = renderContext.getWeaponInstance().getState();
+			
+			/*
+			if(!isCompoundReloadEmptyTactical() && !isCompoundReloadTactical()) {
+				return;
+			} else if(isCompoundReloadEmptyTactical() && state != WeaponState.COMPOUND_RELOAD_EMPTY) {
+			
+				return;
+			} else if(isCompoundReloadTactical() && state != WeaponState.COMPOUND_RELOAD) {
+				return;
+			} else if(state != WeaponState.COMPOUND_RELOAD || state != WeaponState.COMPOUND_RELOAD_EMPTY){
+				return;
+			}*/
+			
+			boolean time = System.currentTimeMillis() >= renderContext.getWeaponInstance().getStateUpdateTimestamp()
+					
+					+ Math.max(renderContext.getWeaponInstance().getWeapon().builder.reloadingTimeout,
+							getTotalReloadingDuration() * 1.1);
+			
+			boolean isFinishing = state != WeaponState.COMPOUND_RELOAD_FINISHED || state != WeaponState.COMPOUND_RELOAD_FINISH;
+			if(time) {
+				
+				if(isCompoundReloadTactical() && isCompoundReloadEmptyTactical()) {
+					if(state != WeaponState.COMPOUND_RELOAD || state != WeaponState.COMPOUND_RELOAD_EMPTY || isFinishing) {
+						return;
+					}
+				} else if(!isCompoundReloadEmptyTactical() && !isCompoundReloadTactical()) {
+					return;
+				} else if(isCompoundReloadEmptyTactical() && state != WeaponState.COMPOUND_RELOAD_EMPTY && isFinishing) {
+				
+					return;
+				} else if(isCompoundReloadTactical() && state != WeaponState.COMPOUND_RELOAD && isFinishing) {
+					return;
+				}
+			}
+			
+			
+			
+			
+		
+		}
+		
+		
 		
 		
 		if(compatibleAttachment.getAttachment() instanceof ItemMagazine && AnimationGUI.getInstance().magEdit.isState() && !OpenGLSelectionHelper.isInSelectionPass) {

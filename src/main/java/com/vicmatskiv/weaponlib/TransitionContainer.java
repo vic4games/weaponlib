@@ -42,10 +42,13 @@ public class TransitionContainer {
 		}
 
 		// Define duration
+		
 		for (Transition<RenderContext<RenderableState>> t : firstPerson) {
-			duration += t.getDuration();
-			duration += t.getPause();
+			//duration += t.getDuration();
+		//	duration += 0;
 		}
+		
+		
 
 		GlStateManager.pushMatrix();
 		// Build left hand

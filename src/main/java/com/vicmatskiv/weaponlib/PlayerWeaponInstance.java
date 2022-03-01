@@ -104,6 +104,9 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 	}
 
 
+	
+	
+	
     public PlayerWeaponInstance(int itemInventoryIndex, EntityLivingBase player, ItemStack itemStack) {
 		super(itemInventoryIndex, player, itemStack);
 	}
@@ -141,6 +144,35 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 			expirationTimeout = Integer.MAX_VALUE;
 		}
 		filteredStateQueue.addFirst(new AsyncWeaponState(state, this.stateUpdateTimestamp, expirationTimeout));
+	}
+	
+	
+	public long getAnimationDuration() {
+		
+		// Give the old animations
+		if(!getWeapon().builder.isUsingNewSystem()) {
+			logger.debug("Weapon is using the old system, returning standard value");
+			return getWeapon().getTotalReloadingDuration();
+		}
+		
+		switch(getState()) {
+		
+		case LOAD:
+			return getWeapon().getTotalReloadingDuration();
+		case UNLOAD:
+			return getWeapon().getTotalUnloadingDuration();
+		case DRAWING:
+			return getWeapon().getTotalDrawingDuration();
+		case COMPOUND_RELOAD:
+			return getWeapon().getRenderer().getWeaponRendererBuilder().getCompoundReloadDuration();
+		case COMPOUND_RELOAD_EMPTY:
+			System.out.println(getWeapon().getRenderer().getWeaponRendererBuilder().getCompoundReloadEmptyDuration());
+			//return getWeapon().getRenderer().getWeaponRendererBuilder().getCompoundReloadEmptyDuration();
+			return getWeapon().getRenderer().getWeaponRendererBuilder().getCompoundReloadEmptyDuration();
+		}
+		
+		return 100L;
+		
 	}
 
 	@Override

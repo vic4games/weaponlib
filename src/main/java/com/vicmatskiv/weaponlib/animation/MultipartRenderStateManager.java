@@ -605,7 +605,7 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
 		    logger.trace("Applying position for part {}", part);
 		    
 		    
-		    progress = (float) Interpolation.SMOOTHSTEP.interpolate(progress);
+		   // progress = (float) Interpolation.SMOOTHSTEP.interpolate(progress);
 		    
 		   // progress = 0f;
 		   // progress = (float) interp.interpolate(progress);

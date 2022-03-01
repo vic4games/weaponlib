@@ -22,6 +22,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.vicmatskiv.weaponlib.animation.ScreenShakingAnimationManager;
+import com.vicmatskiv.weaponlib.animation.SpecialAttachments;
 import com.vicmatskiv.weaponlib.animation.ScreenShakeAnimation;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleBlockState;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleItem;
@@ -932,6 +933,9 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
                 ammo.addCompatibleWeapon(weapon);
             }
 
+            // Add the magic mag
+            withCompatibleAttachment(SpecialAttachments.MagicMag, true, (model) -> {});
+            
             for (ItemAttachment<Weapon> attachment : this.compatibleAttachments.keySet()) {
                 attachment.addCompatibleWeapon(weapon);
             }
@@ -1337,10 +1341,14 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
 
         compatibility.playSound(instance.getPlayer(),  modContext.getChangeFireModeSound(), 1F, 1F);
     }
+    
+   
 
     public long getTotalReloadingDuration() {
+    	
+		return builder.renderer.getTotalReloadingDuration();
         //logger.debug("Total load duration " + builder.renderer.getTotalReloadingDuration());
-        return builder.renderer.getTotalReloadingDuration();
+        
     }
     
     public long getPrepareFirstLoadIterationAnimationDuration() {

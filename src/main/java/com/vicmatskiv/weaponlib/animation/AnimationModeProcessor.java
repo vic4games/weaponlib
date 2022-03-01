@@ -27,6 +27,8 @@ import com.vicmatskiv.weaponlib.compatibility.ModernWeaponRenderer;
 import com.vicmatskiv.weaponlib.debug.DebugRenderer;
 import com.vicmatskiv.weaponlib.render.Bloom;
 import com.vicmatskiv.weaponlib.render.ModelRenderTool;
+import com.vicmatskiv.weaponlib.shader.jim.Shader;
+import com.vicmatskiv.weaponlib.shader.jim.ShaderManager;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
@@ -315,6 +317,7 @@ public class AnimationModeProcessor {
 					 DebugPositioner.incrementZPosition((float) vec.z*m, false);
 				} else if(AnimationGUI.getInstance().magEdit.isState()) { 
 				
+					
 					CompatibleClientEventHandler.magRotPositioner = 
 							CompatibleClientEventHandler.magRotPositioner.addVector(vec.x*m, vec.y*m, vec.z*m);
 					
@@ -643,6 +646,8 @@ public class AnimationModeProcessor {
 	
 	}
 	
+	public FloatBuffer VIEW_BUFFER = BufferUtils.createFloatBuffer(16);
+	
 	public void renderRotAxis(float scalar) {
 		GlStateManager.color(1, 1, 1);
 		//Bloom.initializeMultisample();
@@ -650,8 +655,65 @@ public class AnimationModeProcessor {
 		GlStateManager.disableTexture2D();
 		GlStateManager.disableLighting();
 
-		float size = (float) (AnimationModeProcessor.instance.pan.z / 5f) * scalar + 2;
-		float innerSize = (float) ((float) size - (AnimationModeProcessor.instance.pan.z) * 0.03);
+		float size = (float) ((float) 0.08f*pan.z);
+		float innerSize = (float) ((float) size - (AnimationModeProcessor.instance.pan.z) * 0.01);
+		
+		GlStateManager.pushMatrix();
+		//GlStateManager.disableDepth();
+		
+		VIEW_BUFFER.rewind();
+		GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, VIEW_BUFFER);
+		
+		FloatBuffer modifiedView = BufferUtils.createFloatBuffer(16);
+		
+		
+		Matrix4f mat = new Matrix4f();
+		VIEW_BUFFER.rewind();
+		mat.load(VIEW_BUFFER);
+		
+		mat.m30 = 0f;
+		mat.m31 = 0f;
+		mat.m32 = 0f;
+		
+		mat.invert();
+		
+
+		mat.store(modifiedView);
+		
+		//System.out.println(mat);
+		modifiedView.rewind();
+		
+		GL11.glLineWidth(2.0f);
+		GlStateManager.multMatrix(modifiedView);
+		Bloom.initializeMultisample();
+		
+		renderLightAxisRing(Vec3d.ZERO, Color.GRAY.brighter(), 0f, size*5.5f, false, false);
+		
+		
+		GlStateManager.enableDepth();
+		
+		/*
+		GlStateManager.disableDepth();
+		GlStateManager.enableBlend();
+		//GlStateManager.color(1, 1, 1, 0.2f);
+		Tessellator t = Tessellator.getInstance();
+		BufferBuilder bb = t.getBuffer();
+		bb.begin(GL11.GL_TRIANGLE_FAN, DefaultVertexFormats.POSITION);
+		
+		bb.pos(0, 0, 0).endVertex();
+		for(double i = 0; i <= 2*Math.PI; i += 2*Math.PI/31) {
+			
+			bb.pos(Math.cos(i)*size*2.5, Math.sin(i)*size*2.5, 0).endVertex();
+		}
+		
+		t.draw();
+		*/
+		
+		
+		Bloom.unapplyMultisample();
+		GlStateManager.popMatrix();
+	
+		
 
 		GlStateManager.enableBlend();
 		
@@ -668,13 +730,28 @@ public class AnimationModeProcessor {
 		
 		Bloom.initializeMultisample();
 		
-		GlStateManager.disableDepth();
-		GL11.glLineWidth(5f);
+		//GlStateManager.disableDepth();
+		GL11.glLineWidth(1.5f);
+		Shader axisShader = ShaderManager.loadVMWShader("axis");
+		axisShader.use();
+		
+		float panValue = (float) pan.lengthVector()*1.7f;
+		
+		panValue = Math.max(45f, panValue);
+		axisShader.uniform1f("zoom", panValue);
+		
+		GlStateManager.enableAlpha();
+		GlStateManager.enableBlend();
+		GlStateManager.enableDepth();
+		
+	
 		
 		renderLightAxisRing(new Vec3d(1, 0, 0), new Color(0xff3838), size, innerSize, (colorSelected == -1 || colorSelected == 1), (colorSelected == 1 || colorHover == 1));
 		renderLightAxisRing(Vec3d.ZERO, new Color(0x32ff7e), size, innerSize, (colorSelected == -1 || colorSelected == 3), (colorSelected == 3 || colorHover == 3));
 		renderLightAxisRing(new Vec3d(0, 1, 0), new Color(0x18dcff), size, innerSize, (colorSelected == -1 || colorSelected == 2), (colorSelected == 2 || colorHover == 2));
 		
+		
+		axisShader.release();
 		Bloom.unapplyMultisample();
 		/*
 		if (colorSelected == -1 || colorSelected == 3) {
@@ -708,6 +785,10 @@ public class AnimationModeProcessor {
 			GlStateManager.popMatrix();
 		}
 		*/
+		
+
+		
+		
 
 		//Bloom.unapplyMultisample();
 	}
@@ -740,7 +821,7 @@ public class AnimationModeProcessor {
 		BufferBuilder bb = t.getBuffer();
 		bb.begin(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION_COLOR);
 		
-		for(double a = 0; a <= 2*Math.PI; a += Math.PI/13) {
+		for(double a = 0; a <= 2*Math.PI; a += Math.PI/14) {
 			
 			bb.pos(Math.cos(a)*size, Math.sin(a)*size, 0).color(r, g, b, al).endVertex();
 		}
@@ -856,6 +937,27 @@ public class AnimationModeProcessor {
 
 		// Bloom.unapplyMultisample();
 	}
+	
+	
+	public void drawAlignmentWidget(float size) {
+		Tessellator t = Tessellator.getInstance();
+		BufferBuilder bb = t.getBuffer();
+		bb.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
+		
+		
+		bb.pos(0, 0, 0).color(1, 0, 0, 1).endVertex();
+		bb.pos(1, 0, 0).color(1, 0, 0, 1).endVertex();
+		
+		
+		bb.pos(0, 0, 0).color(0, 1, 0, 1).endVertex();
+		bb.pos(0, 1, 0).color(0, 1, 0, 1).endVertex();
+		
+		bb.pos(0, 0, 0).color(0, 0, 1, 1).endVertex();
+		bb.pos(0, 0, 1).color(0, 0, 1, 1).endVertex();
+		
+		t.draw();
+		
+	}
 
 	public void drawArrow(Vec3d dir, Color c, float size, float ct, boolean held, boolean hovered) {
 
@@ -963,8 +1065,8 @@ public class AnimationModeProcessor {
 			double cosI = -Math.cos(Math.toRadians(a)) * innerRadius;
 			double sinI = -Math.sin(Math.toRadians(a)) * innerRadius;
 
-			bb.pos(x + cos, y + sin, -0.4).color(red, green, blue, (float) alpha).endVertex();
-			bb.pos(x + cosI, y + sinI, 0.2).color(red, green, blue, (float) alpha).endVertex();
+			bb.pos(x + cos, y + sin, -0.05).color(red, green, blue, (float) alpha).endVertex();
+			bb.pos(x + cosI, y + sinI, 0.025).color(red, green, blue, (float) alpha).endVertex();
 
 			endAng = a;
 		}
