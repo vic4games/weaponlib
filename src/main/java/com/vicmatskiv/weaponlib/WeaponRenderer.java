@@ -2844,15 +2844,17 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			if(!renderContext.getWeaponInstance().getWeapon().builder.isUsingNewSystem()) return;
 			
 			
-			
-			boolean time = !magicMagPermit && System.currentTimeMillis() >= renderContext.getWeaponInstance().getStateUpdateTimestamp()
+			if(!magicMagPermit) return;
+			boolean time = magicMagPermit && System.currentTimeMillis() >= renderContext.getWeaponInstance().getStateUpdateTimestamp()
 					
 					+ Math.max(renderContext.getWeaponInstance().getWeapon().builder.reloadingTimeout,
 							getTotalReloadingDuration() * 1.1);
 			
+			
+			
 			boolean isFinishing = state != WeaponState.COMPOUND_RELOAD_FINISHED || state != WeaponState.COMPOUND_RELOAD_FINISH;
+			
 			if(time) {
-				
 				if(isCompoundReloadTactical() && isCompoundReloadEmptyTactical()) {
 					if(state != WeaponState.COMPOUND_RELOAD || state != WeaponState.COMPOUND_RELOAD_EMPTY || isFinishing) {
 						return;
@@ -2865,8 +2867,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				} else if(isCompoundReloadTactical() && state != WeaponState.COMPOUND_RELOAD && isFinishing) {
 					return;
 				}
-			}
 			
+			}
 			
 			
 			
