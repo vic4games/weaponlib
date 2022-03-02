@@ -16,6 +16,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 
 public class ItemMagazine extends ItemAttachment<Weapon> implements PlayerItemInstanceFactory<PlayerMagazineInstance, MagazineState>, 
@@ -56,6 +57,8 @@ Reloadable, Updatable, Part {
 			return this;
 		}
 		
+		
+		
 		@Override
 		protected ItemAttachment<Weapon> createAttachment(ModContext modContext) {
 			ItemMagazine magazine = new ItemMagazine(getModId(), getModel(), getTextureName(), ammo);
@@ -66,7 +69,7 @@ Reloadable, Updatable, Part {
 				magazine.reloadSound = modContext.registerSound(reloadSound);
 			}
 			magazine.modContext = modContext;
-			withInformationProvider((stack) -> "Ammo: " + Tags.getAmmo(stack) + "/" + ammo);
+			withInformationProvider((stack) -> TextFormatting.RED + "Ammo: " + TextFormatting.GRAY + Tags.getAmmo(stack) + "/" + ammo);
 			return magazine;
 		}
 	}

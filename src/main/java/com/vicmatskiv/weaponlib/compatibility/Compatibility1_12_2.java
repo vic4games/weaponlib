@@ -1486,4 +1486,30 @@ private Optional<Field> shadersEnabledFieldOptional;
     public ItemStack stackForEmptySlot() {
         return new ItemStack(Items.AIR);
     }
+
+	@Override
+	public ItemStack findNextBestItem(Collection<? extends Item> compatibleItems, Comparator<ItemStack> comparator,
+			EntityPlayer player) {
+		
+		        int maxSize = 1;
+//		        if(maxSize <= 0) {
+//		            return null;
+//		        }
+
+		        int i = findGreatesItemIndex(compatibleItems, comparator, player);
+
+		        if (i < 0) {
+		            return null;
+		        } else {
+		            ItemStack stackInSlot = player.inventory.getStackInSlot(i).copy();
+		            int consumedStackSize = maxSize >= getStackSize(stackInSlot) ? getStackSize(stackInSlot) : maxSize;
+		            ItemStack result = stackInSlot.splitStack(consumedStackSize);
+		            //if (getStackSize(stackInSlot) <= 0) {
+		               // player.inventory.removeStackFromSlot(i);
+		            //}
+		            return result;
+		        }
+		    
+		
+	}
 }

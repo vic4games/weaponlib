@@ -155,7 +155,13 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 			return getWeapon().getTotalReloadingDuration();
 		}
 		
-		switch(getState()) {
+		return getAnimationDuration(getState());
+
+		
+	}
+	
+	public long getAnimationDuration(WeaponState state) {
+		switch(state) {
 		
 		case LOAD:
 			return getWeapon().getTotalReloadingDuration();
@@ -164,15 +170,14 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 		case DRAWING:
 			return getWeapon().getTotalDrawingDuration();
 		case COMPOUND_RELOAD:
-			return getWeapon().getRenderer().getWeaponRendererBuilder().getCompoundReloadDuration();
+			return getWeapon().getRenderer().getWeaponRendererBuilder().getCompoundReloadDuration()/3;
 		case COMPOUND_RELOAD_EMPTY:
 			//System.out.println(getWeapon().getRenderer().getWeaponRendererBuilder().getCompoundReloadEmptyDuration());
 			//return getWeapon().getRenderer().getWeaponRendererBuilder().getCompoundReloadEmptyDuration();
 			return getWeapon().getRenderer().getWeaponRendererBuilder().getCompoundReloadEmptyDuration();
 		}
 		
-		return 100L;
-		
+	return 100L;
 	}
 
 	@Override

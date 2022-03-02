@@ -686,7 +686,7 @@ public class AnimationModeProcessor {
 		GL11.glLineWidth(2.0f);
 		GlStateManager.multMatrix(modifiedView);
 		Bloom.initializeMultisample();
-		
+		GlStateManager.disableDepth();
 		renderLightAxisRing(Vec3d.ZERO, Color.GRAY.brighter(), 0f, size*5.5f, false, false);
 		
 		
@@ -745,7 +745,7 @@ public class AnimationModeProcessor {
 		GlStateManager.enableDepth();
 		
 	
-		
+		GlStateManager.disableDepth();
 		renderLightAxisRing(new Vec3d(1, 0, 0), new Color(0xff3838), size, innerSize, (colorSelected == -1 || colorSelected == 1), (colorSelected == 1 || colorHover == 1));
 		renderLightAxisRing(Vec3d.ZERO, new Color(0x32ff7e), size, innerSize, (colorSelected == -1 || colorSelected == 3), (colorSelected == 3 || colorHover == 3));
 		renderLightAxisRing(new Vec3d(0, 1, 0), new Color(0x18dcff), size, innerSize, (colorSelected == -1 || colorSelected == 2), (colorSelected == 2 || colorHover == 2));

@@ -38,6 +38,25 @@ public class BBLoader {
 	public static double GENDIVISOR = 5;
 	
 	
+	public static final String KEY_COMPOUND_RELOAD_EMPTY = "reloadempty";
+	public static final String KEY_COMPOUND_RELOAD = "reload";
+	public static final String KEY_LOAD = "load";
+	public static final String KEY_UNLOAD = "unload";
+	public static final String KEY_TACTICAL_RELOAD = "reloadtactical";
+	public static final String KEY_DRAW = "draw";
+	public static final String KEY_INSPECT = "inspect";
+	public static final String KEY_UNLOAD_EMPTY = "unloadempty";
+	public static final String KEY_LOAD_EMPTY = "loadempty";
+	
+	public static final String KEY_MAGAZINE = "magazine";
+	public static final String KEY_MAGIC_MAGAZINE = "magazine_extra";
+	public static final String KEY_ANIMATION_LENGTH = "animation_length";
+	public static final String KEY_VERSION = "format_version";
+	public static final String KEY_ACTION = "action";
+
+
+	
+	
 	public static Transform test = new Transform()
 			.withPosition(-2, 3, -2)
 			.withRotation(0, 0, -0)

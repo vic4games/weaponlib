@@ -15,6 +15,9 @@ import org.apache.logging.log4j.Logger;
 
 import com.vicmatskiv.weaponlib.Weapon.State;
 import com.vicmatskiv.weaponlib.animation.AnimationModeProcessor;
+import com.vicmatskiv.weaponlib.animation.SpecialAttachments;
+import com.vicmatskiv.weaponlib.animation.Transform;
+import com.vicmatskiv.weaponlib.animation.jim.BBLoader;
 import com.vicmatskiv.weaponlib.melee.MeleeState;
 import com.vicmatskiv.weaponlib.melee.MeleeAttachmentAspect.ExitAttachmentModePermit;
 import com.vicmatskiv.weaponlib.network.TypeRegistry;
@@ -26,6 +29,7 @@ import com.vicmatskiv.weaponlib.state.StateManager;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.InventoryHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
@@ -51,6 +55,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 			        WeaponState.AWAIT_FURTHER_LOAD_INSTRUCTIONS,
 			        WeaponState.COMPOUND_RELOAD,
 			        WeaponState.COMPOUND_RELOAD_EMPTY,
+			        WeaponState.TACTICAL_RELOAD,
 					WeaponState.LOAD_REQUESTED,
 					WeaponState.LOAD,
 					WeaponState.LOAD_ITERATION,
@@ -133,7 +138,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 		return System.currentTimeMillis() >= weaponInstance.getStateUpdateTimestamp()
 	
 			+ Math.max(weaponInstance.getWeapon().builder.reloadingTimeout,
-					maxTime * 1.0);
+					maxTime * 0.8);
 			
 		};
 	
@@ -232,6 +237,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 	    .in(this)
 	    
 	    	.change(WeaponState.READY).to(WeaponState.COMPOUND_RELOAD)
+	
 	    	//.withAction(this::clientCompoundReload)
 	    	
 	    	/*
@@ -244,7 +250,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 	    
 	    .in(this)
 	    	.change(WeaponState.READY).to(WeaponState.COMPOUND_RELOAD_EMPTY)
-	    	
+	    
 	    	.manual()
 	    
 	    /*
@@ -414,10 +420,13 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 		
 		public void processCompoundPermit(CompoundPermit p, PlayerWeaponInstance pwi) {
 			
-			System.out.println("Obama corporation");
+		
 			processActualCompoundPermit(p, pwi);
-		//	processUnloadPermit(new UnloadPermit(p.getState()), pwi);
-		//	processLoadPermit(new LoadPermit(p.getState()), pwi);
+			
+			
+			
+			//processUnloadPermit(new UnloadPermit(p.getState()), pwi);
+			//p.setStatus(Status.GRANTED);
 			
 			previousMagazine = null;
 		}
@@ -432,6 +441,9 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 		
 		
 		if(instance == null) return;
+		
+
+		
 		instance.completeMagSwap();
 		
 		instance.getWeapon().getRenderer().setMagicMagPermit(true);
@@ -495,6 +507,8 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 			}
 		    */
 			
+			
+			
 	//		stateManager.changeState(this, instance, WeaponState.LOAD, WeaponState.ALERT);
 			
 			if(AnimationModeProcessor.getInstance().isLegacyMode()) {
@@ -507,16 +521,28 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 					stateManager.changeState(this, instance, WeaponState.AWAIT_FURTHER_LOAD_INSTRUCTIONS, WeaponState.READY);
 				} else {
 					
+					
+					
+					if(instance.getState() != WeaponState.READY) return;
+					
 					ItemAttachment<Weapon> nextAttachment = getNextMagazine(instance);
-					if(nextAttachment != null) {
-						WeaponRenderer.magicMagReplacement = nextAttachment;
-					}
+					
+					
+					System.out.println("get consumed lol");
 					
 					instance.markReloadDirt();
 					instance.markMagSwapReady();
 					if(instance.getAmmo() == 0) {
+						if(nextAttachment != null) {
+							instance.getWeapon().getRenderer().setMagicMag(instance, nextAttachment, WeaponState.COMPOUND_RELOAD_EMPTY);
+						}
+						
 						stateManager.changeState(this, instance, WeaponState.COMPOUND_RELOAD_EMPTY);
 					} else {
+						if(nextAttachment != null) {
+							instance.getWeapon().getRenderer().setMagicMag(instance, nextAttachment, WeaponState.COMPOUND_RELOAD);
+						}
+						
 						stateManager.changeState(this, instance, WeaponState.COMPOUND_RELOAD);
 					}
 				}
@@ -573,7 +599,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 		
 		if(compatibleMagazines.isEmpty()) return null;
 		
-		ItemStack magazineItemStack = compatibility.tryConsumingCompatibleItem(compatibleMagazines,
+		ItemStack magazineItemStack = compatibility.findNextBestItem(compatibleMagazines,
                 (stack1, stack2) -> Integer.compare(Tags.getAmmo(stack1), Tags.getAmmo(stack2)), player);
 		
 		if(magazineItemStack == null) return null;
@@ -585,72 +611,65 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 	
 	private void processActualCompoundPermit(CompoundPermit p, PlayerWeaponInstance instance) {
 		
-		System.out.println("Comping");
-		
-		ItemStack weaponStack = instance.getItemStack();
-		if(weaponStack == null) return;
 		
 		
+		System.out.println("hi");
+		ItemStack weaponItemStack = instance.getItemStack();
 		EntityPlayer player = (EntityPlayer) instance.getPlayer();
-		Weapon weapon = (Weapon) instance.getWeapon();
-		
-		if(compatibility.getTagCompound(weaponStack) == null) {
-		    compatibility.setTagCompound(weaponStack, new NBTTagCompound());
-		}
+		Weapon weapon = instance.getWeapon();
 		
 		List<ItemMagazine> compatibleMagazines = weapon.getCompatibleMagazines()
 		        .stream()
 		        .filter(compatibleMagazine -> WeaponAttachmentAspect.hasRequiredAttachments(
 		                compatibleMagazine, instance)).collect(Collectors.toList());
 		
-		ItemStack magazineStack = null;
-		 
-		ItemAttachment<Weapon> existing = modContext.getAttachmentAspect().getActiveAttachment(instance, AttachmentCategory.MAGAZINE);
 		
-		if(!compatibleMagazines.isEmpty()) {
-			magazineStack = compatibility.tryConsumingCompatibleItem(compatibleMagazines,
-	                (stack1, stack2) -> Integer.compare(Tags.getAmmo(stack1), Tags.getAmmo(stack2)), player);
-	       
-		} else {
-			return;
-		}
+		// Unload weapon
 		
-		
-		if(magazineStack == null) return;
-		
-		
-		// Unload
 		ItemAttachment<Weapon> attachment = modContext.getAttachmentAspect().removeAttachment(AttachmentCategory.MAGAZINE, instance);
+		
+		
+	
+	//	processUnloadPermit(new UnloadPermit(p.getState()), instance);
+		
+		int originalAmmo = instance.getAmmo();
+		
+		
+		// Mag list is empty
+		
+		
+		if(compatibleMagazines.isEmpty()) return;
+		
+		ItemStack magazineStack = compatibility.tryConsumingCompatibleItem(compatibleMagazines,
+                (stack1, stack2) -> Integer.compare(Tags.getAmmo(stack1), Tags.getAmmo(stack2)), player);
+        
+		//ItemStack magazineStack = ItemStack.EMPTY;
+		int ammo = Tags.getAmmo(magazineStack);
+        Tags.setAmmo(weaponItemStack, ammo);
+        WeaponAttachmentAspect.addAttachment((ItemAttachment<Weapon>) magazineStack.getItem(), instance);
+        instance.setAmmo(ammo);
+	
+		
+		p.setStatus(Status.GRANTED);
+		
+		
 		if(attachment == null) {
 			p.setStatus(Status.DENIED);
 			return;
-		}
-		if(attachment instanceof ItemMagazine) {
-			// Takes the attachment out of the gun and converts it to an
-			// item stack.
+		} else if(attachment instanceof ItemMagazine) {
 			ItemStack attachmentItemStack = ((ItemMagazine) attachment).createItemStack();
-			
-			Tags.setAmmo(attachmentItemStack, instance.getAmmo());
-			if(!player.inventory.addItemStackToInventory(attachmentItemStack)) {
-				logger.error("Cannot add attachment " + attachment + " for " + instance + "back to the inventory");
-			}
-			p.setStatus(Status.GRANTED);
-		} else {
-			System.out.println("Not a mag?");
+ 			Tags.setAmmo(attachmentItemStack, originalAmmo);
+ 			if(!player.inventory.addItemStackToInventory(attachmentItemStack)) {
+ 				logger.error("Cannot add attachment " + attachment + " for " + instance + "back to the inventory");
+ 			}
+ 			
+
+ 			p.setStatus(Status.GRANTED);
 		}
-		
-		
-		// Now load the new magazine
-		 int ammo = Tags.getAmmo(magazineStack);
-         Tags.setAmmo(weaponStack, ammo);
-         logger.debug("Setting server side ammo for {} to {}", instance, ammo);
-         WeaponAttachmentAspect.addAttachment((ItemAttachment<Weapon>) magazineStack.getItem(), instance);
-         instance.setAmmo(ammo);
-		
-         System.out.println("Existing: " + existing);
-         System.out.println("Original mag stack: " + (ItemAttachment<Weapon>) magazineStack.getItem());
- 		System.out.println("On gun: " + modContext.getAttachmentAspect().getActiveAttachment(instance, AttachmentCategory.MAGAZINE));
-	}
+	
+         
+         
+    }
 
 	@SuppressWarnings("unchecked")
 	private void processLoadPermit(LoadPermit p, PlayerWeaponInstance weaponInstance) {

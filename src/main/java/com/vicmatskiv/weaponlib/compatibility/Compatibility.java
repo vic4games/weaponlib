@@ -358,6 +358,9 @@ public interface Compatibility {
 
     public WorldType getWorldType(World world);
 
+    ItemStack findNextBestItem(Collection<? extends Item> compatibleItems, Comparator<ItemStack> comparator,
+            EntityPlayer player);
+    
     ItemStack tryConsumingCompatibleItem(Collection<? extends Item> compatibleItems, Comparator<ItemStack> comparator,
             EntityPlayer player);
 
