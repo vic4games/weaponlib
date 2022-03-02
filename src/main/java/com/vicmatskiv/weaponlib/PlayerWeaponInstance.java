@@ -161,6 +161,9 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 	}
 	
 	public long getAnimationDuration(WeaponState state) {
+		
+		
+		
 		switch(state) {
 		
 		case LOAD:

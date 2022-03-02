@@ -1295,60 +1295,60 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			if(hasDraw) setupDraw(animationFile, BBLoader.KEY_DRAW, mainBoneName, leftBoneName, rightBoneName);
 			if(hasCompoundReloadEmpty) setupCompoundReloadEmpty(animationFile, BBLoader.KEY_COMPOUND_RELOAD_EMPTY, mainBoneName, leftBoneName, rightBoneName);
 			
-			setupAction(action, animationFile);
+			setupCustomKeyedPart(action, animationFile, BBLoader.KEY_ACTION);
 			
 			return this;
 		}
 		
-		public void setupAction(Part action, String animationFile) {
+		public Builder setupCustomKeyedPart(Part action, String animationFile, String partKey) {
 			AnimationSet set = BBLoader.getAnimationSet(animationFile);
 			
-			if(hasLoadEmpty && set.getSingleAnimation(BBLoader.KEY_LOAD_EMPTY).hasBone(BBLoader.KEY_ACTION)) {
-				withLoadEmptyCustom(action, BBLoader.getAnimation(animationFile, BBLoader.KEY_LOAD_EMPTY, BBLoader.KEY_ACTION)
+			if(hasLoadEmpty && set.getSingleAnimation(BBLoader.KEY_LOAD_EMPTY).hasBone(partKey)) {
+				withLoadEmptyCustom(action, BBLoader.getAnimation(animationFile, BBLoader.KEY_LOAD_EMPTY, partKey)
 						.getTransitionList(Transform.NULL.copy(), BBLoader.HANDDIVISOR));
 			}
 			
-			if(hasUnloadEmpty && set.getSingleAnimation(BBLoader.KEY_UNLOAD_EMPTY).hasBone(BBLoader.KEY_ACTION)) {
-				withUnloadEmptyCustom(action, BBLoader.getAnimation(animationFile, BBLoader.KEY_UNLOAD_EMPTY, BBLoader.KEY_ACTION)
+			if(hasUnloadEmpty && set.getSingleAnimation(BBLoader.KEY_UNLOAD_EMPTY).hasBone(partKey)) {
+				withUnloadEmptyCustom(action, BBLoader.getAnimation(animationFile, BBLoader.KEY_UNLOAD_EMPTY, partKey)
 						.getTransitionList(Transform.NULL.copy(), BBLoader.HANDDIVISOR));
 			}
 			
-			if(hasCompoundReload && set.getSingleAnimation(BBLoader.KEY_COMPOUND_RELOAD).hasBone(BBLoader.KEY_ACTION)) {
-				withFirstPersonCustomPositioningCompoundReloading(action, BBLoader.getAnimation(animationFile, BBLoader.KEY_COMPOUND_RELOAD, BBLoader.KEY_ACTION)
+			if(hasCompoundReload && set.getSingleAnimation(BBLoader.KEY_COMPOUND_RELOAD).hasBone(partKey)) {
+				withFirstPersonCustomPositioningCompoundReloading(action, BBLoader.getAnimation(animationFile, BBLoader.KEY_COMPOUND_RELOAD, partKey)
 						.getTransitionList(Transform.NULL.copy(), BBLoader.HANDDIVISOR));
 			}
 			
-			if(hasCompoundReloadEmpty && set.getSingleAnimation(BBLoader.KEY_COMPOUND_RELOAD_EMPTY).hasBone(BBLoader.KEY_ACTION)) {
-				withFPSCustomCompoundReloadingEmpty(action, BBLoader.getAnimation(animationFile, BBLoader.KEY_COMPOUND_RELOAD_EMPTY, BBLoader.KEY_ACTION)
+			if(hasCompoundReloadEmpty && set.getSingleAnimation(BBLoader.KEY_COMPOUND_RELOAD_EMPTY).hasBone(partKey)) {
+				withFPSCustomCompoundReloadingEmpty(action, BBLoader.getAnimation(animationFile, BBLoader.KEY_COMPOUND_RELOAD_EMPTY, partKey)
 						.getTransitionList(Transform.NULL.copy(), BBLoader.HANDDIVISOR));
 			}
 			
-			if(hasTacticalReload && set.getSingleAnimation(BBLoader.KEY_TACTICAL_RELOAD).hasBone(BBLoader.KEY_ACTION)) {
-				withTacticalReloadCustom(action, BBLoader.getAnimation(animationFile, BBLoader.KEY_TACTICAL_RELOAD, BBLoader.KEY_ACTION)
+			if(hasTacticalReload && set.getSingleAnimation(BBLoader.KEY_TACTICAL_RELOAD).hasBone(partKey)) {
+				withTacticalReloadCustom(action, BBLoader.getAnimation(animationFile, BBLoader.KEY_TACTICAL_RELOAD, partKey)
 						.getTransitionList(Transform.NULL.copy(), BBLoader.HANDDIVISOR));
 			}
 			
-			if(hasDraw && set.getSingleAnimation(BBLoader.KEY_DRAW).hasBone(BBLoader.KEY_ACTION)) {
-				withFirstPersonCustomPositioningDrawing(action, BBLoader.getAnimation(animationFile, BBLoader.KEY_DRAW, BBLoader.KEY_ACTION)
+			if(hasDraw && set.getSingleAnimation(BBLoader.KEY_DRAW).hasBone(partKey)) {
+				withFirstPersonCustomPositioningDrawing(action, BBLoader.getAnimation(animationFile, BBLoader.KEY_DRAW, partKey)
 						.getTransitionList(Transform.NULL.copy(), BBLoader.HANDDIVISOR));
 			}
 			
-			if(hasInspect && set.getSingleAnimation(BBLoader.KEY_INSPECT).hasBone(BBLoader.KEY_ACTION)) {
-				withFirstPersonCustomPositioningInspecting(action, BBLoader.getAnimation(animationFile, BBLoader.KEY_INSPECT, BBLoader.KEY_ACTION)
+			if(hasInspect && set.getSingleAnimation(BBLoader.KEY_INSPECT).hasBone(partKey)) {
+				withFirstPersonCustomPositioningInspecting(action, BBLoader.getAnimation(animationFile, BBLoader.KEY_INSPECT, partKey)
 						.getTransitionList(Transform.NULL.copy(), BBLoader.HANDDIVISOR));
 			}
 			
-			if(hasLoad && set.getSingleAnimation(BBLoader.KEY_LOAD).hasBone(BBLoader.KEY_ACTION)) {
-				withFirstPersonCustomPositioningReloading(action, BBLoader.getAnimation(animationFile, BBLoader.KEY_LOAD, BBLoader.KEY_ACTION)
+			if(hasLoad && set.getSingleAnimation(BBLoader.KEY_LOAD).hasBone(partKey)) {
+				withFirstPersonCustomPositioningReloading(action, BBLoader.getAnimation(animationFile, BBLoader.KEY_LOAD, partKey)
 						.getTransitionList(Transform.NULL.copy(), BBLoader.HANDDIVISOR));
 			}
 			
-			if(hasUnload && set.getSingleAnimation(BBLoader.KEY_UNLOAD).hasBone(BBLoader.KEY_ACTION)) {
-				withFirstPersonCustomPositioningUnloading(action, BBLoader.getAnimation(animationFile, BBLoader.KEY_UNLOAD, BBLoader.KEY_ACTION)
+			if(hasUnload && set.getSingleAnimation(BBLoader.KEY_UNLOAD).hasBone(partKey)) {
+				withFirstPersonCustomPositioningUnloading(action, BBLoader.getAnimation(animationFile, BBLoader.KEY_UNLOAD, partKey)
 						.getTransitionList(Transform.NULL.copy(), BBLoader.HANDDIVISOR));
 			}
 			
-			
+			return this;
 			
 			
 			
@@ -2127,7 +2127,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 	// Magic Magazine Stuff
 	private boolean magicMagPermit;
 	private long magicAnimationTimer;
-	private WeaponState magicState;
+	private WeaponState magicState = WeaponState.READY;
 	
 	
 	
@@ -3230,8 +3230,11 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		if(compatibleAttachment.getAttachment().getCategory() == AttachmentCategory.MAGICMAG) {
 			
 			
+			
 			WeaponState state = renderContext.getWeaponInstance().getState();
 			if(!renderContext.getWeaponInstance().getWeapon().builder.isUsingNewSystem()) return;
+			
+			
 			
 			
 			if(magicMagReplacement != null && updateMagicMagazine) {
@@ -3240,8 +3243,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				compatibleAttachment.getAttachment().setFirstModel(magicMagReplacement);
 			}
 			
-			// If we don't have a permit cancel
-			if(!magicMagPermit) return;
+			
 			
 			
 			// The *1.2 is important so that the magazine is there until the animation is fully completed
@@ -3253,7 +3255,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			// If the times up, remove our permit
 			if(time) setMagicMagPermit(false);
 					
-			
+			// If we don't have a permit cancel
+						if(!magicMagPermit) return;
 			
 			boolean isFinishing = state != WeaponState.COMPOUND_RELOAD_FINISHED || state != WeaponState.COMPOUND_RELOAD_FINISH;
 			
@@ -3270,10 +3273,14 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 					return;
 				} else if(isCompoundReloadTactical() && state != WeaponState.COMPOUND_RELOAD && isFinishing) {
 					return;
+				} else if(!isCompoundReloadEmptyTactical() && !isCompoundReloadTactical()) {
+					return;
 				}
 				
 			
 			
+			} else if(!isCompoundReloadEmptyTactical() && !isCompoundReloadTactical() && !getBuilder().isHasTacticalReload()){
+				return;
 			}
 			
 			

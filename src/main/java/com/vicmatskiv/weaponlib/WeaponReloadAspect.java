@@ -53,6 +53,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 	private static final Set<WeaponState> allowedUpdateFromStates = new HashSet<>(
 			Arrays.asList(
 			        WeaponState.AWAIT_FURTHER_LOAD_INSTRUCTIONS,
+			        WeaponState.COMPOUND_REQUESTED,
 			        WeaponState.COMPOUND_RELOAD,
 			        WeaponState.COMPOUND_RELOAD_EMPTY,
 			        WeaponState.TACTICAL_RELOAD,
@@ -169,6 +170,9 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 	private static Predicate<PlayerWeaponInstance> awaitFurtherLoadInstructionCompleted = weaponInstance ->
         System.currentTimeMillis() >= weaponInstance.getStateUpdateTimestamp() + AWAIT_FURTHER_LOAD_INSTRUCTIONS_TIMEOUT;
 		
+  
+        
+        
     private static Predicate<PlayerWeaponInstance> loadAfterUnloadEnabled = PlayerWeaponInstance::isLoadAfterUnloadEnabled;
 		
 	private static Predicate<PlayerWeaponInstance> unloadAnimationCompleted = weaponInstance ->
@@ -220,6 +224,10 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 		.in(this)
 	         .change(WeaponState.READY).to(WeaponState.AWAIT_FURTHER_LOAD_INSTRUCTIONS)
 	         .manual()
+	         
+	         .in(this)
+	         .change(WeaponState.READY).to(WeaponState.COMPOUND_REQUESTED)
+	         .manual()
 	     
 	    .in(this)
 	    .change(WeaponState.COMPOUND_RELOAD_EMPTY).to(WeaponState.COMPOUND_RELOAD_EMPTY)
@@ -269,6 +277,18 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
         .in(this)
              .change(WeaponState.AWAIT_FURTHER_LOAD_INSTRUCTIONS).to(WeaponState.READY)
              .withAction(this::furtherLoadInstructionsReceived)
+             .manual()
+         
+             
+         .in(this)
+             .change(WeaponState.COMPOUND_REQUESTED).to(WeaponState.READY)
+             .when(awaitFurtherLoadInstructionCompleted)
+             .withAction(this::noCompoundInstructionsReceived)
+             .automatic()
+             
+        .in(this)
+             .change(WeaponState.COMPOUND_REQUESTED).to(WeaponState.READY)
+             .withAction(this::compoundInstructionsReceived)
              .manual()
            
         
@@ -518,17 +538,24 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 				
 			} else {
 				if(WeaponAttachmentAspect.getActiveAttachment(AttachmentCategory.MAGAZINE, instance) == null) {
+					ItemStack nextAttachment = getNextBestMagazineStack(instance);
+					if(instance.getWeapon().getRenderer().getBuilder().isHasLoadEmpty() && nextAttachment != null && Tags.getAmmo(nextAttachment) == 0) {
+						instance.getWeapon().getRenderer().setShouldDoEmptyVariant(true);
+					}
+					
+					
+					
 					stateManager.changeState(this, instance, WeaponState.AWAIT_FURTHER_LOAD_INSTRUCTIONS, WeaponState.READY);
 				} else {
 					
 					
 					
-					if(instance.getState() != WeaponState.READY) return;
+					if(instance.getState() != WeaponState.READY && instance.getState() != WeaponState.COMPOUND_REQUESTED) return;
 					
 					ItemAttachment<Weapon> nextAttachment = getNextMagazine(instance);
 					
 					
-					System.out.println("get consumed lol");
+					
 					
 					instance.markReloadDirt();
 					instance.markMagSwapReady();
@@ -543,7 +570,18 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 							instance.getWeapon().getRenderer().setMagicMag(instance, nextAttachment, WeaponState.COMPOUND_RELOAD);
 						}
 						
-						stateManager.changeState(this, instance, WeaponState.COMPOUND_RELOAD);
+						stateManager.changeState(this, instance, WeaponState.COMPOUND_REQUESTED, WeaponState.READY);
+						
+						if(instance.getState() == WeaponState.COMPOUND_REQUESTED) {
+							//System.out.println("yo");
+							//stateManager.changeState(this, instance, WeaponState.TACTICAL_RELOAD);
+						} else {
+						
+							
+						}
+						
+						
+						//stateManager.changeState(this, instance, WeaponState.COMPOUND_RELOAD);
 					}
 				}
 			}
@@ -560,7 +598,14 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
         	instance.getWeapon().getRenderer().compoundReloadEmpty = false;
         	instance.getWeapon().getRenderer().compoundReload = false;
             instance.setLoadAfterUnloadEnabled(false);
-            stateManager.changeState(this, instance, WeaponState.UNLOAD, WeaponState.ALERT);
+            
+            
+            ItemAttachment<Weapon> currentMagazine = modContext.getAttachmentAspect().getActiveAttachment(instance, AttachmentCategory.MAGAZINE);
+            if(instance.getWeapon().getRenderer().getBuilder().isHasUnloadEmpty() && currentMagazine != null && instance.getAmmo() == 0) {
+            	instance.getWeapon().getRenderer().setShouldDoEmptyVariant(true);
+            }
+            
+             stateManager.changeState(this, instance, WeaponState.UNLOAD, WeaponState.ALERT);
         }
     }
 
@@ -607,6 +652,25 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 		return (ItemAttachment<Weapon>) magazineItemStack.getItem();
         
 	}
+	
+	private ItemStack getNextBestMagazineStack(PlayerWeaponInstance weaponInstance) {
+		EntityPlayer player = (EntityPlayer) weaponInstance.getPlayer();
+		Weapon weapon = (Weapon) weaponInstance.getItem();
+		
+		List<ItemMagazine> compatibleMagazines = weapon.getCompatibleMagazines()
+		        .stream()
+		        .filter(compatibleMagazine -> WeaponAttachmentAspect.hasRequiredAttachments(
+		                compatibleMagazine, weaponInstance)).collect(Collectors.toList());
+		
+		if(compatibleMagazines.isEmpty()) return null;
+		
+		ItemStack magazineItemStack = compatibility.findNextBestItem(compatibleMagazines,
+                (stack1, stack2) -> Integer.compare(Tags.getAmmo(stack1), Tags.getAmmo(stack2)), player);
+		
+		return magazineItemStack;
+        
+	}
+	
 	
 	
 	private void processActualCompoundPermit(CompoundPermit p, PlayerWeaponInstance instance) {
@@ -848,6 +912,16 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 	public void completeAllLoadIterations(PlayerWeaponInstance weaponInstance) {
         compatibility.playSound(weaponInstance.getPlayer(), weaponInstance.getWeapon().getAllReloadIterationsCompletedSound(), 1.0F, 1.0F);
     }
+	
+	public void noCompoundInstructionsReceived(PlayerWeaponInstance weaponInstance) {
+		
+		stateManager.changeState(this, weaponInstance, WeaponState.COMPOUND_RELOAD);
+	}
+	
+	public void compoundInstructionsReceived(PlayerWeaponInstance weaponInstance) {
+		stateManager.changeState(this, weaponInstance, WeaponState.TACTICAL_RELOAD);
+	}
+	
 	
 	public void noFurtherLoadInstructionsReceived(PlayerWeaponInstance weaponInstance) {
 	    //System.out.println("-------No further load instructions received");
