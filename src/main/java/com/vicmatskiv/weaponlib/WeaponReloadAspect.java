@@ -41,7 +41,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 	private static final long INSPECT_TIMEOUT = 500;
 	
 	private static final long UNLOAD_TIMEOUT = 1000;
-	private static final long AWAIT_FURTHER_LOAD_INSTRUCTIONS_TIMEOUT = 400;
+	private static final long AWAIT_FURTHER_LOAD_INSTRUCTIONS_TIMEOUT = 100;
 
 	static {
 		TypeRegistry.getInstance().register(CompoundPermit.class);
@@ -168,7 +168,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 	    System.currentTimeMillis() >= weaponInstance.getStateUpdateTimestamp() + UNLOAD_TIMEOUT;
 	    
 	private static Predicate<PlayerWeaponInstance> awaitFurtherLoadInstructionCompleted = weaponInstance ->
-        System.currentTimeMillis() >= weaponInstance.getStateUpdateTimestamp() + AWAIT_FURTHER_LOAD_INSTRUCTIONS_TIMEOUT;
+        System.currentTimeMillis() >= weaponInstance.getStateUpdateTimestamp() + 180;
 		
   
         
@@ -260,6 +260,11 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 	    	.change(WeaponState.READY).to(WeaponState.COMPOUND_RELOAD_EMPTY)
 	    
 	    	.manual()
+	    	
+	    	 .in(this)
+		    	.change(WeaponState.READY).to(WeaponState.TACTICAL_RELOAD)
+		    
+		    	.manual()
 	    
 	    /*
 	    .in(this)
@@ -314,6 +319,13 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 	    .in(this)
             .change(WeaponState.LOAD).to(WeaponState.READY)
             .when(reloadAnimationCompleted.and(hasNextLoadIteration.negate()))
+            .automatic()
+            
+            
+         .in(this)	
+            .change(WeaponState.TACTICAL_RELOAD).to(WeaponState.COMPOUND_RELOAD_FINISH)
+            .when(reloadAnimationCompleted.and(hasNextLoadIteration.negate()))
+            .withAction((c, f, t, p) -> obamaCorporation(c))
             .automatic()
             
         .in(this)
@@ -572,13 +584,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 						
 						stateManager.changeState(this, instance, WeaponState.COMPOUND_REQUESTED, WeaponState.READY);
 						
-						if(instance.getState() == WeaponState.COMPOUND_REQUESTED) {
-							//System.out.println("yo");
-							//stateManager.changeState(this, instance, WeaponState.TACTICAL_RELOAD);
-						} else {
 						
-							
-						}
 						
 						
 						//stateManager.changeState(this, instance, WeaponState.COMPOUND_RELOAD);
@@ -919,6 +925,9 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 	}
 	
 	public void compoundInstructionsReceived(PlayerWeaponInstance weaponInstance) {
+		
+		weaponInstance.getWeapon().getRenderer().setMagicMag(weaponInstance, weaponInstance.getWeapon().getRenderer().magicMagReplacement, WeaponState.TACTICAL_RELOAD);
+		
 		stateManager.changeState(this, weaponInstance, WeaponState.TACTICAL_RELOAD);
 	}
 	

@@ -1159,6 +1159,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				}
 				
 				if(hasTacticalReload) {
+					System.out.println("YYEEYEY DOIN TACTICAL");
 					withTacticalReloadCustom(p, BBLoader.getAnimation(animationFile, BBLoader.KEY_TACTICAL_RELOAD, BBLoader.KEY_MAGAZINE)
 							.getTransitionList(Transform.NULL.copy().withRotationPoint(r.x, r.y, r.z), BBLoader.HANDDIVISOR));
 					
@@ -2270,6 +2271,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				break;
 
 			case TACTICAL_RELOAD:
+				
+				
 				currentState = RenderableState.TACTICAL_RELOAD;
 				break;
 				
@@ -2747,6 +2750,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			case LOAD_EMPTY:
 				return getComplexTransition(getBuilder().loadEmptyContainer);
 			case TACTICAL_RELOAD:
+				
+				
 				return getComplexTransition(getBuilder().tacticalReloadContainer);
 			case UNLOADING:
 				return getComplexTransition(getBuilder().firstPersonPositioningUnloading,
@@ -3194,14 +3199,22 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		
 		Vec3d magRotationPoint = ((ItemMagazine) weapon).getRotationPoint();
 		
-		
-		if(isCompoundReloadEmptyTactical() && nextState == WeaponState.COMPOUND_RELOAD_EMPTY) {
+		if(getBuilder().isHasTacticalReload() && nextState == WeaponState.TACTICAL_RELOAD) {
+			getWeaponRendererBuilder().tacticalReloadContainer.getCustom().put(SpecialAttachments.MagicMag.getRenderablePart(),
+					BBLoader.getAnimation(getBuilder().getAnimationFileName(), BBLoader.KEY_TACTICAL_RELOAD, BBLoader.KEY_MAGIC_MAGAZINE)
+					.getTransitionList(Transform.NULL
+							
+							.withRotationPoint(magRotationPoint.x, magRotationPoint.y, magRotationPoint.z)
+							.copy(), BBLoader.HANDDIVISOR));
+			
+			
+		} else if(isCompoundReloadEmptyTactical() && nextState == WeaponState.COMPOUND_RELOAD_EMPTY) {
 			
 			// Log
 			logger.debug("Creating a compound empty animation using the magic magazine system");
 			
 			getWeaponRendererBuilder().compoundReloadEmptyContainer.getCustom().put(SpecialAttachments.MagicMag.getRenderablePart(),
-					BBLoader.getAnimation(getBuilder().getAnimationFileName(), "reloadempty", "magazine_extra")
+					BBLoader.getAnimation(getBuilder().getAnimationFileName(), BBLoader.KEY_COMPOUND_RELOAD_EMPTY, BBLoader.KEY_MAGIC_MAGAZINE)
 					.getTransitionList(Transform.NULL
 							
 							.withRotationPoint(magRotationPoint.x, magRotationPoint.y, magRotationPoint.z)
@@ -3212,7 +3225,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			logger.debug("Creating a standard compound animation using the magic magazine system");
 			
 			getWeaponRendererBuilder().compoundReloadContainer.getCustom().put(SpecialAttachments.MagicMag.getRenderablePart(),
-					BBLoader.getAnimation(getBuilder().getAnimationFileName(), "reload", "magazine_extra")
+					BBLoader.getAnimation(getBuilder().getAnimationFileName(), BBLoader.KEY_COMPOUND_RELOAD, BBLoader.KEY_MAGIC_MAGAZINE)
 					.getTransitionList(Transform.NULL
 							.withRotationPoint(magRotationPoint.x, magRotationPoint.y, magRotationPoint.z)
 							.copy(), BBLoader.HANDDIVISOR));
@@ -3256,26 +3269,23 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			if(time) setMagicMagPermit(false);
 					
 			// If we don't have a permit cancel
-						if(!magicMagPermit) return;
+						//if(!magicMagPermit) return;
 			
 			boolean isFinishing = state != WeaponState.COMPOUND_RELOAD_FINISHED || state != WeaponState.COMPOUND_RELOAD_FINISH;
 			
+			
 			// Run checks
 			if(time) {
-				if(isCompoundReloadTactical() && isCompoundReloadEmptyTactical()) {
-					if(state != WeaponState.COMPOUND_RELOAD || state != WeaponState.COMPOUND_RELOAD_EMPTY || isFinishing) {
-						return;
-					}
-				} else if(!isCompoundReloadEmptyTactical() && !isCompoundReloadTactical()) {
+				if(!isCompoundReloadEmptyTactical() && !isCompoundReloadTactical() && !getBuilder().isHasTacticalReload())
 					return;
-				} else if(isCompoundReloadEmptyTactical() && state != WeaponState.COMPOUND_RELOAD_EMPTY && isFinishing) {
+					
+					
 				
-					return;
-				} else if(isCompoundReloadTactical() && state != WeaponState.COMPOUND_RELOAD && isFinishing) {
-					return;
-				} else if(!isCompoundReloadEmptyTactical() && !isCompoundReloadTactical()) {
+				if(state != WeaponState.COMPOUND_RELOAD_EMPTY || state != WeaponState.COMPOUND_RELOAD || state != WeaponState.TACTICAL_RELOAD || isFinishing) {
 					return;
 				}
+					
+				
 				
 			
 			

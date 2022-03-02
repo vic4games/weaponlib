@@ -178,6 +178,8 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 			//System.out.println(getWeapon().getRenderer().getWeaponRendererBuilder().getCompoundReloadEmptyDuration());
 			//return getWeapon().getRenderer().getWeaponRendererBuilder().getCompoundReloadEmptyDuration();
 			return getWeapon().getRenderer().getWeaponRendererBuilder().getCompoundReloadEmptyDuration();
+		case TACTICAL_RELOAD:
+			return 3000L;
 		}
 		
 	return 100L;
