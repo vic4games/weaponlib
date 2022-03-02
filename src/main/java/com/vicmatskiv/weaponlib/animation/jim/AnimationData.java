@@ -31,7 +31,7 @@ public class AnimationData {
 
 	public TreeMap<Float, BlockbenchTransition> bbTransition = new TreeMap<>();
 
-	public static final float PACE = 800f;
+	public static final float PACE = 750f;
 	
 	public ArrayList<Float> timestamps = new ArrayList<>();
 

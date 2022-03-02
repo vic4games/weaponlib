@@ -3271,7 +3271,15 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			// If we don't have a permit cancel
 						//if(!magicMagPermit) return;
 			
-			boolean isFinishing = state != WeaponState.COMPOUND_RELOAD_FINISHED || state != WeaponState.COMPOUND_RELOAD_FINISH;
+			boolean isFinishing = state != WeaponState.COMPOUND_RELOAD_FINISHED && state != WeaponState.COMPOUND_RELOAD_FINISH;
+			
+			if(state == WeaponState.COMPOUND_RELOAD && !isCompoundReloadTactical()) {
+				return;
+			}
+			if(state == WeaponState.COMPOUND_RELOAD_EMPTY && !isCompoundReloadEmptyTactical()) {
+				return;
+			}
+			
 			
 			
 			// Run checks
@@ -3281,10 +3289,14 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 					
 					
 				
-				if(state != WeaponState.COMPOUND_RELOAD_EMPTY || state != WeaponState.COMPOUND_RELOAD || state != WeaponState.TACTICAL_RELOAD || isFinishing) {
+				
+				
+					
+				if(state != WeaponState.COMPOUND_RELOAD_EMPTY && state != WeaponState.COMPOUND_RELOAD && state != WeaponState.TACTICAL_RELOAD && isFinishing) {
 					return;
 				}
-					
+				
+				
 				
 				
 			
