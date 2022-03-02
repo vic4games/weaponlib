@@ -926,6 +926,8 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 	
 	public void compoundInstructionsReceived(PlayerWeaponInstance weaponInstance) {
 		
+		if(!weaponInstance.getWeapon().getRenderer().getBuilder().isHasTacticalReload()) return;
+		
 		weaponInstance.getWeapon().getRenderer().setMagicMag(weaponInstance, weaponInstance.getWeapon().getRenderer().magicMagReplacement, WeaponState.TACTICAL_RELOAD);
 		
 		stateManager.changeState(this, weaponInstance, WeaponState.TACTICAL_RELOAD);
