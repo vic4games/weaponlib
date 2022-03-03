@@ -174,6 +174,10 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 	    private TransitionContainer unloadEmptyContainer = new TransitionContainer();
 	    private TransitionContainer tacticalReloadContainer = new TransitionContainer();
 	    
+	    
+	    // ADS animations
+	    private TransitionContainer compoundReloadADSContainer = new TransitionContainer();
+	    
 	    private List<Transition<RenderContext<RenderableState>>> firstPersonPositioningDrawing;
         private List<Transition<RenderContext<RenderableState>>> firstPersonLeftHandPositioningDrawing;
         private List<Transition<RenderContext<RenderableState>>> firstPersonRightHandPositioningDrawing;
@@ -1302,7 +1306,12 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			if(hasTacticalReload) setupTacticalReload(animationFile, BBLoader.KEY_TACTICAL_RELOAD, mainBoneName, leftBoneName, rightBoneName);
 			
 			if(hasInspect) setupInspectAnimations(animationFile, BBLoader.KEY_INSPECT, mainBoneName, leftBoneName, rightBoneName);
-			if(hasCompoundReload) setupCompoundReload(animationFile, BBLoader.KEY_COMPOUND_RELOAD, mainBoneName, leftBoneName, rightBoneName);
+			if(hasCompoundReload) {
+				if(firstPersonZoomingTransform != null) {
+					setupModernContainerADS(animationFile, BBLoader.KEY_COMPOUND_RELOAD, this.compoundReloadADSContainer);
+				}
+				setupCompoundReload(animationFile, BBLoader.KEY_COMPOUND_RELOAD, mainBoneName, leftBoneName, rightBoneName);
+			}
 			if(hasLoad) setupReload(animationFile, BBLoader.KEY_LOAD, mainBoneName,  leftBoneName, rightBoneName);
 			if(hasUnload) setupUnload(animationFile, BBLoader.KEY_UNLOAD, mainBoneName, leftBoneName, rightBoneName);
 			if(hasDraw) setupDraw(animationFile, BBLoader.KEY_DRAW, mainBoneName, leftBoneName, rightBoneName);
@@ -1441,6 +1450,34 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			this.unloadEmptyContainer.setDuration((long) Math.round((main.getAppointedDuration()*AnimationData.PACE)));
 			return this;
 			
+		}
+		
+		public Builder setupModernContainer(String animationFile, String anim, TransitionContainer container) {
+			AnimationData main = BBLoader.getAnimation(animationFile, anim, "main");
+			AnimationData left = BBLoader.getAnimation(animationFile, anim, "lefthand");
+			AnimationData right = BBLoader.getAnimation(animationFile, anim, "righthand");
+						
+			checkDefaults();
+			
+			container.setFirstPerson(main.getTransitionList(firstPersonTransform, BBLoader.GENDIVISOR));
+			container.setLeftHand(left.getTransitionList(firstPersonLeftHandTransform, BBLoader.HANDDIVISOR));
+			container.setRightHand(right == null ? null : right.getTransitionList(firstPersonRightHandTransform, BBLoader.HANDDIVISOR));
+			container.setDuration((long) Math.round((main.getAppointedDuration()*AnimationData.PACE)));
+			return this;
+		}
+		
+		public Builder setupModernContainerADS(String animationFile, String anim, TransitionContainer container) {
+			AnimationData main = BBLoader.getAnimation(animationFile, anim, "main");
+			AnimationData left = BBLoader.getAnimation(animationFile, anim, "lefthand");
+			AnimationData right = BBLoader.getAnimation(animationFile, anim, "righthand");
+						
+			checkDefaults();
+			
+			container.setFirstPerson(main.getTransitionList(firstPersonZoomingTransform, BBLoader.GENDIVISOR));
+			container.setLeftHand(left.getTransitionList(firstPersonLeftHandTransform, BBLoader.HANDDIVISOR));
+			container.setRightHand(right == null ? null : right.getTransitionList(firstPersonRightHandTransform, BBLoader.HANDDIVISOR));
+			container.setDuration((long) Math.round((main.getAppointedDuration()*AnimationData.PACE)));
+			return this;
 		}
 		
 		public Builder setupTacticalReload(String animationFile, String anim, String mainBoneName, String leftHandBoneName, String rightHandBoneName) {
@@ -3304,13 +3341,19 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			boolean isFinishing = state != WeaponState.COMPOUND_RELOAD_FINISHED && state != WeaponState.COMPOUND_RELOAD_FINISH;
 			
 			
-			if((state == WeaponState.COMPOUND_REQUESTED || state == WeaponState.COMPOUND_RELOAD) && !isCompoundReloadTactical()) {
-				
-				return;
+			if(magicState == WeaponState.COMPOUND_RELOAD) {
+				if((state == WeaponState.COMPOUND_REQUESTED || state == WeaponState.COMPOUND_RELOAD || state == WeaponState.COMPOUND_RELOAD_FINISHED) && !isCompoundReloadTactical()) {
+					
+					return;
+				}
 			}
-			if(state == WeaponState.COMPOUND_RELOAD_EMPTY && !isCompoundReloadEmptyTactical()) {
-				return;
+			
+			if(magicState == WeaponState.COMPOUND_RELOAD_EMPTY) {
+				if((state == WeaponState.COMPOUND_RELOAD_EMPTY) && !isCompoundReloadEmptyTactical()) {
+					return;
+				}
 			}
+			
 			
 		
 			

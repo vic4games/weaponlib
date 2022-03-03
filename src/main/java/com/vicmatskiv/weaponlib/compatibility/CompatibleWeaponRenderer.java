@@ -516,8 +516,19 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 
 			forLater = MatrixHelper.captureMatrix();
 
+			
+			Transform ads = new Transform()
+					.withPosition(0.412250f, 3.244000f, -2.175000f)
+					.withRotation(-0.262799f, -0.021703f, 0.000000f)
+					.withRotationPoint(-0.100000f, 1.000000f, 0.000000f)
+					.withScale(3.000000f, 3.000000f, 3.000000f);
+			
+			
+			
+			
 			// if(!DebugPositioner.isDebugModeEnabled())
-			positioner.position(Part.MAIN_ITEM, renderContext);
+		    positioner.position(Part.MAIN_ITEM, renderContext);
+			
 			
 			
 			/*
@@ -692,7 +703,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 			}*/
 			
 			this.wrh.run(renderContext, stateDescriptor);
-			
+			//ads.doGLDirect();
 			// AnimationModeProcessor.instance.applyCameraTransforms();
 			if (DebugPositioner.isDebugModeEnabled()) {
 

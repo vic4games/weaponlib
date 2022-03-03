@@ -414,7 +414,7 @@ public class AnimationData {
 				
 				
 				
-				Transform t = ads;
+				Transform t = normal;
 
 				
 				double rotXMult = 1.0;

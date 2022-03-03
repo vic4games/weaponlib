@@ -30,6 +30,14 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.gui.toasts.AdvancementToast;
+import net.minecraft.client.gui.toasts.GuiToast;
+import net.minecraft.client.gui.toasts.IToast;
+import net.minecraft.client.gui.toasts.SystemToast;
+import net.minecraft.client.gui.toasts.SystemToast.Type;
+import net.minecraft.client.gui.toasts.IToast.Visibility;
+import net.minecraft.client.gui.toasts.TutorialToast;
+import net.minecraft.client.gui.toasts.TutorialToast.Icons;
 import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
@@ -37,6 +45,7 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
@@ -138,6 +147,8 @@ public class AnimationGUI {
 			AnimationGUI.renderScaledString(but.tooltip, mouseX+2.5, mouseY+2, 0.9f);
 			GlStateManager.disableTexture2D();
 		}
+		
+		GlStateManager.enableTexture2D();
 		
 	}
 	
@@ -266,6 +277,8 @@ public class AnimationGUI {
 			forceSkin("slim");
 		} else if(id == printConsole) {
 			
+		
+			
 			if(CompatibleClientEventHandler.muzzlePositioner) {
 				System.out.println("(" + CompatibleClientEventHandler.debugmuzzlePosition.x + ", " + CompatibleClientEventHandler.debugmuzzlePosition.y  + ", " + CompatibleClientEventHandler.debugmuzzlePosition.z + ")");
 				
@@ -310,6 +323,8 @@ public class AnimationGUI {
 			} else {
 				CompatibleClientEventHandler.muzzlePositioner = false;
 			}
+		} else if(id == magEdit) {
+			DebugPositioner.setDebugMode(true);
 		}
 		
 	
