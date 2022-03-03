@@ -15,6 +15,7 @@ import org.lwjgl.opengl.GLSync;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.vicmatskiv.weaponlib.ClientModContext;
 import com.vicmatskiv.weaponlib.RenderContext;
 import com.vicmatskiv.weaponlib.RenderableState;
 import com.vicmatskiv.weaponlib.WeaponRenderer;
@@ -285,6 +286,44 @@ public class AnimationData {
 		return transitionList;
 
 	}
+	
+	
+	/**
+	 * Allows for ADS reloads, quite a simple set of logic instructions, basically it'll provide transitions
+	 * depending on if the player is aiming, quite nice!
+	 * 
+	 * @param normal
+	 * @param ads
+	 * @param divisor
+	 * @return
+	 */
+	public List<Transition<RenderContext<RenderableState>>> getTransitionListDual(Transform normal, Transform ads, double divisor) {
+		List<Transition<RenderContext<RenderableState>>> transitionList = new ArrayList<>();
+		
+		
+		
+		
+
+		if(!isNull) {
+			
+			for (Entry<Float, BlockbenchTransition> bb : this.bbTransition.entrySet()) {
+				transitionList.add((Transition<RenderContext<RenderableState>>) bb.getValue().createVMWTransitionWithADS(normal, ads, divisor));
+			}
+		} else {
+			
+			for(int i = 0; i < this.fakeTransitions; ++i) {
+				transitionList.add(new Transition<>(normal.getAsPosition()
+				, this.fTLength));
+			}
+		}
+		
+		
+		// Swaps the last frame of the animation with
+		// the initial position (much smoother lol)
+		long curLength = transitionList.get(transitionList.size()-1).getDuration();
+		transitionList.set(transitionList.size()-1, new Transition<>(normal.getAsPosition(), curLength));
+		return transitionList;
+	}
 
 	@SuppressWarnings("unchecked")
 	public List<Transition<RenderContext<RenderableState>>> getTransitionList(Transform initial, double divisor) {
@@ -359,6 +398,79 @@ public class AnimationData {
 			}, (int) timestamp);
 
 		}
+		
+		
+		public Transition<?> createVMWTransitionWithADS(Transform normal, Transform ads, double divisor) {
+			return new Transition<>((rc) -> {
+				
+				/*
+				 * So you wanna mess with this code?
+				 * 
+				 * Warning: You will want to die. This code took like
+				 * 2 weeks for some reason. You'll put one thing out of 
+				 * order and you'll be working on it for weeks, even though
+				 * it doesn't even seem like the problem.
+				 */
+				
+				
+				
+				Transform t = ads;
+
+				
+				double rotXMult = 1.0;
+				double rotYMult = 1.0;
+				double rotZMult = 1.0;
+				
+				if(ClientModContext.getContext().getMainHeldWeapon().isAimed()) {
+					rotXMult = 0.1;
+					rotYMult = 0.1;
+					rotZMult = 0.5;
+				}
+				
+				double tesla = 0;
+				if(divisor == 12.6) {
+				
+					tesla = BBLoader.HANDDIVISOR;
+				} else if(divisor == 5) {
+					tesla = BBLoader.GENDIVISOR;
+				} else {
+					tesla = divisor;
+				}
+
+				// Transform Multiplier (12x as small)
+				double mul = 1 / tesla;
+				
+				// Original object positioning
+				GlStateManager.translate(t.getPositionX(), t.getPositionY(), t.getPositionZ());
+
+				// Animation translation
+				GL11.glTranslated(translation.x * mul, -translation.y * mul, translation.z * mul);
+				
+				// Offset rotation point
+				GlStateManager.translate(t.getRotationPointX(), t.getRotationPointY(), t.getRotationPointZ());
+				
+				// Original object rotation (+Z, -Y, -X)
+				GL11.glRotated(t.getRotationZ(), 0, 0, 1);
+				GL11.glRotated(rotation.z*rotZMult, 0, 0, 1);
+				
+				GL11.glRotated(t.getRotationY(), 0, 1, 0);
+				GL11.glRotated(rotation.y*rotYMult, 0, 1, 0);
+				
+				GL11.glRotated(t.getRotationX(), 1, 0, 0);
+				GL11.glRotated(rotation.x*rotXMult, 1, 0, 0);
+
+				GlStateManager.translate(-t.getRotationPointX(), -t.getRotationPointY(), -t.getRotationPointZ());
+				GlStateManager.scale(t.getScaleX(), t.getScaleY(), t.getScaleZ());
+
+					
+					
+				
+			}, (int) timestamp);
+			
+			
+			
+
+		}
 
 		public Transition<?> createVMWTransition(Transform t, double divisor) {
 			return new Transition<>((rc) -> {
@@ -371,7 +483,19 @@ public class AnimationData {
 				 * order and you'll be working on it for weeks, even though
 				 * it doesn't even seem like the problem.
 				 */
+				
+				
 
+				
+				double rotXMult = 1.0;
+				double rotYMult = 1.0;
+				double rotZMult = 1.0;
+				
+				if(ClientModContext.getContext().getMainHeldWeapon().isAimed()) {
+					rotXMult = 0.1;
+					rotYMult = 0.1;
+					rotZMult = 0.5;
+				}
 				
 				double tesla = 0;
 				if(divisor == 12.6) {
@@ -402,16 +526,17 @@ public class AnimationData {
 				GlStateManager.translate(t.getRotationPointX(), t.getRotationPointY(), t.getRotationPointZ());
 
 				
+			
 				
 				// Original object rotation (+Z, -Y, -X)
 				GL11.glRotated(t.getRotationZ(), 0, 0, 1);
-				GL11.glRotated(rotation.z, 0, 0, 1);
+				GL11.glRotated(rotation.z*rotZMult, 0, 0, 1);
 				
 				GL11.glRotated(t.getRotationY(), 0, 1, 0);
-				GL11.glRotated(rotation.y, 0, 1, 0);
+				GL11.glRotated(rotation.y*rotYMult, 0, 1, 0);
 				
 				GL11.glRotated(t.getRotationX(), 1, 0, 0);
-				GL11.glRotated(rotation.x, 1, 0, 0);
+				GL11.glRotated(rotation.x*rotXMult, 1, 0, 0);
 				
 
 				// Animation rotation

@@ -18,6 +18,7 @@ import com.vicmatskiv.weaponlib.animation.AnimationModeProcessor;
 import com.vicmatskiv.weaponlib.animation.SpecialAttachments;
 import com.vicmatskiv.weaponlib.animation.Transform;
 import com.vicmatskiv.weaponlib.animation.jim.BBLoader;
+import com.vicmatskiv.weaponlib.debug.SysOutController;
 import com.vicmatskiv.weaponlib.melee.MeleeState;
 import com.vicmatskiv.weaponlib.melee.MeleeAttachmentAspect.ExitAttachmentModePermit;
 import com.vicmatskiv.weaponlib.network.TypeRegistry;
@@ -56,6 +57,8 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 			        WeaponState.COMPOUND_REQUESTED,
 			        WeaponState.COMPOUND_RELOAD,
 			        WeaponState.COMPOUND_RELOAD_EMPTY,
+			        WeaponState.COMPOUND_RELOAD_FINISH,
+			        WeaponState.COMPOUND_RELOAD_FINISHED,
 			        WeaponState.TACTICAL_RELOAD,
 					WeaponState.LOAD_REQUESTED,
 					WeaponState.LOAD,
@@ -168,7 +171,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 	    System.currentTimeMillis() >= weaponInstance.getStateUpdateTimestamp() + UNLOAD_TIMEOUT;
 	    
 	private static Predicate<PlayerWeaponInstance> awaitFurtherLoadInstructionCompleted = weaponInstance ->
-        System.currentTimeMillis() >= weaponInstance.getStateUpdateTimestamp() + 180;
+        System.currentTimeMillis() >= weaponInstance.getStateUpdateTimestamp() + 195;
 		
   
         
@@ -183,6 +186,29 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
         System.currentTimeMillis() >= weaponInstance.getStateUpdateTimestamp()
             + weaponInstance.getWeapon().getPrepareFirstLoadIterationAnimationDuration() * 1.1;	
 		
+        
+   
+        
+    private static Predicate<PlayerWeaponInstance> shouldFinishCompoundReload = weaponInstance -> {
+    
+    	
+    	if(weaponInstance.isDelayCompoundEnd()) {
+    		return true;
+    	} else {
+    		
+    		long maxTime = (long) (weaponInstance.getAnimationDuration()*1.2);
+    		
+    	
+    		return System.currentTimeMillis() >= weaponInstance.getReloadTimestamp()
+    	
+    			+ maxTime;
+
+    		
+    	}
+    	
+    
+    };
+        
 
 	private Predicate<PlayerWeaponInstance> inventoryHasFreeSlots = weaponInstance ->
 	    weaponInstance.getPlayer() instanceof EntityPlayer
@@ -350,7 +376,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
          	
          .in(this)
          	.change(WeaponState.COMPOUND_RELOAD_FINISHED).to(WeaponState.READY)
-         	.when((s) -> true)
+         	.when(shouldFinishCompoundReload)
          	.automatic()
 
             
@@ -569,19 +595,21 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 					
 					
 					
+					
 					instance.markReloadDirt();
 					instance.markMagSwapReady();
 					if(instance.getAmmo() == 0) {
 						if(nextAttachment != null) {
 							instance.getWeapon().getRenderer().setMagicMag(instance, nextAttachment, WeaponState.COMPOUND_RELOAD_EMPTY);
-						}
+						
+						} else return;
 						
 						stateManager.changeState(this, instance, WeaponState.COMPOUND_RELOAD_EMPTY);
 					} else {
 						if(nextAttachment != null) {
 							instance.getWeapon().getRenderer().setMagicMag(instance, nextAttachment, WeaponState.COMPOUND_RELOAD);
-						}
-						
+						} else return;
+						instance.setIsAwaitingCompoundInstructions(true);
 						stateManager.changeState(this, instance, WeaponState.COMPOUND_REQUESTED, WeaponState.READY);
 						
 						
@@ -713,6 +741,8 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 		ItemStack magazineStack = compatibility.tryConsumingCompatibleItem(compatibleMagazines,
                 (stack1, stack2) -> Integer.compare(Tags.getAmmo(stack1), Tags.getAmmo(stack2)), player);
         
+		if(magazineStack == null) return;
+		
 		//ItemStack magazineStack = ItemStack.EMPTY;
 		int ammo = Tags.getAmmo(magazineStack);
         Tags.setAmmo(weaponItemStack, ammo);
@@ -920,13 +950,19 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
     }
 	
 	public void noCompoundInstructionsReceived(PlayerWeaponInstance weaponInstance) {
-		
+		weaponInstance.setDelayCompoundEnd(false);
+		weaponInstance.setIsAwaitingCompoundInstructions(false);
 		stateManager.changeState(this, weaponInstance, WeaponState.COMPOUND_RELOAD);
 	}
 	
 	public void compoundInstructionsReceived(PlayerWeaponInstance weaponInstance) {
-		
-		if(!weaponInstance.getWeapon().getRenderer().getBuilder().isHasTacticalReload()) return;
+		weaponInstance.setIsAwaitingCompoundInstructions(false);
+		// If it doesn't have a tactical reload just do the normal compound
+		// reload
+		if(!weaponInstance.getWeapon().getRenderer().getBuilder().isHasTacticalReload()) {
+			stateManager.changeState(this, weaponInstance, WeaponState.COMPOUND_RELOAD);
+			return;
+		}
 		
 		weaponInstance.getWeapon().getRenderer().setMagicMag(weaponInstance, weaponInstance.getWeapon().getRenderer().magicMagReplacement, WeaponState.TACTICAL_RELOAD);
 		

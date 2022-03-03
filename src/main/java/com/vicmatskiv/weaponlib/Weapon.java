@@ -129,6 +129,8 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         boolean crosshairFullScreen = false;
         boolean crosshairZoomedFullScreen = false;
 
+        
+        
         Map<ItemAttachment<Weapon>, CompatibleAttachment<Weapon>> compatibleAttachments = new HashMap<>();
         ModelBase ammoModel;
         String ammoModelTextureName;

@@ -60,6 +60,7 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
@@ -325,6 +326,10 @@ public class CustomGui extends CompatibleGui {
 
 
 					fontRender.drawStringWithShadow(messageText, x, y, color);
+					
+					
+					//fontRender.drawStringWithShadow(TextFormatting.RED + "" + modContext.getMainHeldWeapon().getState() + "", x-100, y + 10, color);
+					
 				}
 				GL11.glPopAttrib();
 				event.setCanceled(true);

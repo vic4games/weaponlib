@@ -264,6 +264,12 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		public Transform firstPersonTransform;
 		public Transform firstPersonLeftHandTransform;
 		public Transform firstPersonRightHandTransform;
+		
+		public Transform firstPersonZoomingTransform;
+		public Transform firstPersonLeftHandZoomingTransform;
+		public Transform firstPersonRightHandZoomingTransform;
+		
+		
 
 		private boolean compoundReloadUsesTactical;
 		private boolean compoundReloadEmptyUsesTactical;
@@ -1084,6 +1090,12 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			return this;
 		}
 		
+		public Builder withFPSZooming(Transform zooming) {
+			this.firstPersonZoomingTransform = zooming;
+			this.firstPersonPositioningZooming = zooming.getAsPosition();
+			return this;
+		}
+		
 		public Builder withFirstPersonHandPositioning(Transform leftHand, Transform rightHand)
 		{
 			
@@ -1382,7 +1394,13 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 						
 			checkDefaults();
 			
-			this.compoundReloadContainer.setFirstPerson(main.getTransitionList(firstPersonTransform, BBLoader.GENDIVISOR));
+			if(firstPersonZoomingTransform != null) {
+				this.compoundReloadContainer.setFirstPerson(main.getTransitionListDual(firstPersonTransform, firstPersonZoomingTransform, BBLoader.GENDIVISOR));
+				
+			} else {
+				this.compoundReloadContainer.setFirstPerson(main.getTransitionList(firstPersonTransform, BBLoader.GENDIVISOR));
+				
+			}
 			this.compoundReloadContainer.setLeftHand(left.getTransitionList(firstPersonLeftHandTransform, BBLoader.HANDDIVISOR));
 			this.compoundReloadContainer.setRightHand(right == null ? null : right.getTransitionList(firstPersonRightHandTransform, BBLoader.HANDDIVISOR));
 
@@ -2362,7 +2380,15 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
                 break;
 
 			default:
-				if(player.isSprinting() && getBuilder().firstPersonPositioningRunning != null) {
+				if(player.isSprinting() && getBuilder().firstPersonPositioningRunning != null
+				
+				&& asyncWeaponState.getState() == WeaponState.READY
+				&& !playerWeaponInstance.isAwaitingCompoundInstructions()
+				// Prevents jumping dureing reloading
+				&& System.currentTimeMillis()-playerWeaponInstance.getStateUpdateTimestamp()  > 50
+						) {
+					
+					
 					currentState = RenderableState.RUNNING;
 				} else if(playerWeaponInstance.isAimed()) {
 					currentState = RenderableState.ZOOMING;
@@ -3232,11 +3258,15 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		} 
 	}
 	
+	private CompatibleAttachment<?> currentMagazine;
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
     private void renderCompatibleAttachment(CompatibleAttachment<?> compatibleAttachment,
 			Positioner<Part, RenderContext<RenderableState>> positioner, RenderContext<RenderableState> renderContext) {
 
+		if(compatibleAttachment.getAttachment().getCategory() == AttachmentCategory.MAGAZINE) {
+			currentMagazine = compatibleAttachment;
+		}
 		
 		
 		// Do magic mag stuff
@@ -3273,13 +3303,16 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			
 			boolean isFinishing = state != WeaponState.COMPOUND_RELOAD_FINISHED && state != WeaponState.COMPOUND_RELOAD_FINISH;
 			
-			if(state == WeaponState.COMPOUND_RELOAD && !isCompoundReloadTactical()) {
+			
+			if((state == WeaponState.COMPOUND_REQUESTED || state == WeaponState.COMPOUND_RELOAD) && !isCompoundReloadTactical()) {
+				
 				return;
 			}
 			if(state == WeaponState.COMPOUND_RELOAD_EMPTY && !isCompoundReloadEmptyTactical()) {
 				return;
 			}
 			
+		
 			
 			
 			// Run checks
@@ -3307,6 +3340,12 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			
 			
 			
+			//ItemAttachment<Weapon> exp = renderContext.getModContext().getAttachmentAspect().getActiveAttachment(renderContext.getWeaponInstance(), AttachmentCategory.MAGAZINE);
+			if(currentMagazine != null) {
+				//compatibleAttachment.getModelPositioning().accept(texturedModel.getU());
+				
+				//currentMagazine.getModelPositioning().accept(arg0);
+			}
 			
 			
 		
@@ -3385,8 +3424,16 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				}*/
 				
 				
-	
-				compatibleAttachment.getModelPositioning().accept(texturedModel.getU());
+				if(compatibleAttachment.getAttachment().getCategory() == AttachmentCategory.MAGICMAG) {
+					if(currentMagazine != null) {
+						currentMagazine.getModelPositioning().accept(texturedModel.getU());
+					}
+				} else {
+					compatibleAttachment.getModelPositioning().accept(texturedModel.getU());
+					
+				}
+				
+				
 				/*
 				if((compatibleAttachment.getAttachment() instanceof ItemMagazine)) {
 					new Transform().withScale(1, 1, 1).withRotationPoint(CompatibleClientEventHandler.magRotPositioner.x, CompatibleClientEventHandler.magRotPositioner.y, CompatibleClientEventHandler.magRotPositioner.z)

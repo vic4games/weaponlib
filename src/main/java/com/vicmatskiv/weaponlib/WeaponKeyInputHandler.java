@@ -156,6 +156,10 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
 
          if(KeyBindings.reloadKey.isPressed()) {
             if(itemStack != null) {
+           
+            	
+            	//modContext.getMainHeldWeapon().setIsAwaitingCompoundInstructions(true);
+            	
                 Item item = itemStack.getItem();
                 if(item instanceof Reloadable) {
                     ((Reloadable) item).reloadMainHeldItemForPlayer(player);

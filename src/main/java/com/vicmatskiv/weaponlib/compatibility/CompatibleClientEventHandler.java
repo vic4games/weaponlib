@@ -422,16 +422,11 @@ public abstract class CompatibleClientEventHandler {
 			PlayerWeaponInstance pwi = ClientModContext.getContext().getMainHeldWeapon();
 			
 			//if(pwi.getState() != WeaponState.READY) System.out.println(pwi.getState());
-			if(pwi.getState() == WeaponState.COMPOUND_RELOAD_FINISHED) {
 			
-				pwi.setState(WeaponState.READY);
-				
-				
-				
-				
-			}
+			//System.out.println(pwi.getState());
 			
 			if(pwi.getState() == WeaponState.READY) {
+				pwi.setDelayCompoundEnd(true);
 				pwi.getWeapon().getRenderer().setShouldDoEmptyVariant(false);
 			}
 			

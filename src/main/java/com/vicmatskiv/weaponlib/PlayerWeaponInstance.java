@@ -89,6 +89,10 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 	
 	private int loadIterationCount;
 	private boolean loadAfterUnloadEnabled;
+	private boolean isDelayCompoundEnd = true;
+	
+	private long stateReloadUpdateTimestamp;
+	private boolean isAwaitingCompoundInstructions = false;
 
 	/*
 	 * Upon adding an element to the head of the queue, all existing elements with lower priority are removed
@@ -180,6 +184,9 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 			return getWeapon().getRenderer().getWeaponRendererBuilder().getCompoundReloadEmptyDuration();
 		case TACTICAL_RELOAD:
 			return 3000L;
+		case COMPOUND_RELOAD_FINISHED:
+			return getWeapon().getRenderer().getWeaponRendererBuilder().getCompoundReloadDuration();
+			
 		}
 		
 	return 100L;
@@ -310,6 +317,17 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 			this.recoil = recoil;
 			markDirty();
 		}
+	}
+	
+	public boolean isDelayCompoundEnd() {
+		return isDelayCompoundEnd;
+	}
+	
+	public void setDelayCompoundEnd(boolean bool) {
+		if(!bool) {
+			stateReloadUpdateTimestamp = System.currentTimeMillis();
+		}
+		this.isDelayCompoundEnd = bool;
 	}
 	
 	public boolean isLoadAfterUnloadEnabled() {
@@ -447,6 +465,14 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 		    return (ItemAttachment<Weapon>) activeAttachment;
 		}
 		return null;
+	}
+	
+	public boolean isAwaitingCompoundInstructions() {
+		return this.isAwaitingCompoundInstructions;
+	}
+	
+	public void setIsAwaitingCompoundInstructions(boolean state) {
+		this.isAwaitingCompoundInstructions = state;
 	}
 
 	public float getZoom() {
