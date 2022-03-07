@@ -23,8 +23,10 @@ import org.apache.logging.log4j.Logger;
 
 import com.vicmatskiv.weaponlib.animation.ScreenShakingAnimationManager;
 import com.vicmatskiv.weaponlib.animation.SpecialAttachments;
+import com.vicmatskiv.weaponlib.BulletHoleRenderer.BulletHole;
 import com.vicmatskiv.weaponlib.animation.ScreenShakeAnimation;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleBlockState;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleItem;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
@@ -34,6 +36,7 @@ import com.vicmatskiv.weaponlib.config.Gun;
 import com.vicmatskiv.weaponlib.crafting.CraftingComplexity;
 import com.vicmatskiv.weaponlib.crafting.OptionsMetadata;
 import com.vicmatskiv.weaponlib.model.Shell;
+import com.vicmatskiv.weaponlib.render.shells.ShellParticleSimulator.Shell.Type;
 
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.resources.I18n;
@@ -43,6 +46,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
@@ -203,6 +207,9 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         public boolean isOneClickBurstAllowed;
         String flashTexture;
         
+        
+        private com.vicmatskiv.weaponlib.render.shells.ShellParticleSimulator.Shell.Type shellType = Type.ASSAULT;
+        
         private Set<AttachmentCategory> unremovableAttachmentCategories = new HashSet<>();
 //        private Map<RenderableState, ScreenShaking> screenShakings = new HashMap<>();
         private Map<RenderableState, ScreenShakeAnimation.Builder> screenShakingBuilders = new HashMap<>();
@@ -230,6 +237,11 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         public Builder useNewSystem() {
         	this.newSys = true;
         	return this;
+        }
+        
+        public Builder withShellType(Type type) {
+        	this.shellType = type;
+			return this;
         }
         
         public boolean isUsingNewSystem() {
@@ -1211,7 +1223,12 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
     }
 
     void onSpawnEntityBlockImpact(World world, EntityPlayer player, WeaponSpawnEntity entity, CompatibleRayTraceResult position) {
-        if(builder.blockImpactHandler != null) {
+       
+    	EnumFacing facing = EnumFacing.valueOf(position.getSideHit().toString());
+    	CompatibleClientEventHandler.bhr.addBulletHole(new BulletHole(new Vec3d(position.getHitVec().getXCoord(), position.getHitVec().getYCoord(), position.getHitVec().getZCoord()), facing, 0.05));
+    	
+    	if(builder.blockImpactHandler != null) {
+       
             builder.blockImpactHandler.onImpact(world, player, entity, position);
         }
     }
@@ -1467,6 +1484,10 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
 
     public float getShellCasingForwardOffset() {
         return builder.shellCasingForwardOffset;
+    }
+    
+    public Type getShellType() {
+    	return builder.shellType;
     }
 
     public float getShellCasingSideOffset() {

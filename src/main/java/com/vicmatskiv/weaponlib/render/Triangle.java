@@ -29,6 +29,7 @@ public class Triangle {
 			this.pos = pos;
 			texX = 0;
 			texY = 0;
+			
 		}
 		
 		public TexVertex(Vec3d pos, float x, float y) {

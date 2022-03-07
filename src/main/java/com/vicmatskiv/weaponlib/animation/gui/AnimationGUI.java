@@ -113,7 +113,7 @@ public class AnimationGUI {
 	
 	public void render() {
 		
-		
+		//if(1+1==2) return;
 		
 		
 		Minecraft mc = Minecraft.getMinecraft();
@@ -278,6 +278,7 @@ public class AnimationGUI {
 		} else if(id == printConsole) {
 			
 		
+			
 			
 			if(CompatibleClientEventHandler.muzzlePositioner) {
 				System.out.println("(" + CompatibleClientEventHandler.debugmuzzlePosition.x + ", " + CompatibleClientEventHandler.debugmuzzlePosition.y  + ", " + CompatibleClientEventHandler.debugmuzzlePosition.z + ")");

@@ -27,7 +27,14 @@ public class ShellManager {
 		
 	}
 	
+	public ArrayList<Shell> getShells() {
+		return this.shells;
+	}
+	
 	public void update(double dt) {
+		for(int i = 0; i < shellQueue.size(); ++i) {
+			shells.add(shellQueue.poll());
+		}
 		shellParticleSimulator.update(shells, dt);
 	}
 

@@ -599,6 +599,9 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 					instance.markReloadDirt();
 					instance.markMagSwapReady();
 					if(instance.getAmmo() == 0) {
+						
+						
+						
 						if(nextAttachment != null) {
 							instance.getWeapon().getRenderer().setMagicMag(instance, nextAttachment, WeaponState.COMPOUND_RELOAD_EMPTY);
 						
@@ -912,8 +915,11 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 			logger.error("Permit is null, something went wrong");
 			return;
 		}
-		
+		System.out.println("That's some bullshit!");
+		weaponInstance.setSlideLock(false);
 		if(permit.getStatus() == Status.GRANTED) {
+		
+			
 			compatibility.playSound(weaponInstance.getPlayer(), weaponInstance.getWeapon().getReloadSound(), 1.0F, 1.0F);
 		}
 	}

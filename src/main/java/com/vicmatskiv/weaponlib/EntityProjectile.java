@@ -182,6 +182,9 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
      * Called to update the entity's position/logic.
      */
     public void onUpdate() {
+    	
+    
+    	
         if(ticksExisted > MAX_TICKS) {
             setDead();
             return;
@@ -206,6 +209,8 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
 //
 //                return;
 //            }
+        	
+        	
 
             this.inGround = false;
             this.motionX *= (double) (this.rand.nextFloat() * 0.2F);

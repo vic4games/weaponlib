@@ -13,6 +13,7 @@ import java.util.function.Function;
 
 import com.vicmatskiv.weaponlib.ItemAttachment.ApplyHandler;
 import com.vicmatskiv.weaponlib.ItemAttachment.ApplyHandler2;
+import com.vicmatskiv.weaponlib.ItemMagazine.Builder;
 import com.vicmatskiv.weaponlib.crafting.CraftingComplexity;
 import com.vicmatskiv.weaponlib.crafting.OptionsMetadata;
 
@@ -20,6 +21,7 @@ import net.minecraft.client.model.ModelBase;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.math.Vec3d;
 
 public class AttachmentBuilder<T> {
 	
@@ -29,6 +31,9 @@ public class AttachmentBuilder<T> {
 	protected String modId;
 	protected ModelBase model;
 	protected String textureName;
+	
+	protected Vec3d rotationPoint;
+	
 	protected Consumer<ItemStack> entityPositioning;
 	protected Consumer<ItemStack> inventoryPositioning;
 	protected BiConsumer<EntityPlayer, ItemStack> thirdPersonPositioning;
@@ -76,6 +81,11 @@ public class AttachmentBuilder<T> {
 
 	public AttachmentBuilder<T> withCreativeTab(CreativeTabs tab) {
 		this.tab = tab;
+		return this;
+	}
+	
+	public AttachmentBuilder<T> withRotationPoint(double x, double y, double z) {
+		this.rotationPoint = new Vec3d(x, y, z);
 		return this;
 	}
 
@@ -247,6 +257,10 @@ public class AttachmentBuilder<T> {
 		attachment.setPostRenderer(postRenderer);
 		attachment.setName(name);
 		attachment.apply2 = apply2;
+		
+
+		if(rotationPoint != null) attachment.rotationPoint = rotationPoint;
+
 		attachment.remove2 = remove2;
 		attachment.maxStackSize = maxStackSize;
 		attachment.setRequiredAttachments(requiredAttachments);
@@ -313,6 +327,8 @@ public class AttachmentBuilder<T> {
 		    noRecipe += 1;
 			//System.err.println("!!!No recipe defined for attachment " + name);
 		}
+		
+		
 
 		return attachment;
 	}

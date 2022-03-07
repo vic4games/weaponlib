@@ -653,8 +653,10 @@ public class Compatibility1_12_2 implements Compatibility {
     @Override
     public void addBlockHitEffect(int x, int y, int z, CompatibleEnumFacing sideHit) {
         for(int i = 0; i < 6; i++) {
+        	
             Minecraft.getMinecraft().effectRenderer.addBlockHitEffects(
                     new BlockPos(x, y, z), sideHit.getEnumFacing());
+                    
         }
     }
 

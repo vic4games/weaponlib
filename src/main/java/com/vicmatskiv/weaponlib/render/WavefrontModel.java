@@ -14,6 +14,7 @@ import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL21;
 import org.lwjgl.opengl.GL30;
+import org.lwjgl.opengl.GL31;
 import org.lwjgl.opengl.GL33;
 
 import com.vicmatskiv.weaponlib.ClientModContext;
@@ -43,8 +44,11 @@ public class WavefrontModel {
 	public HashMap<String, Integer> indexVertexMap = new HashMap<>();
 	
 	// GL INTEGERS
-	private int ebo;
-	private int vbo;
+	protected int ebo = -1;
+	protected int vao = -1;
+	protected int vbo = -1;
+	
+	private boolean hasVAO;
 	
 	public static class Vertex {
 		public float[] texCoord;
@@ -85,12 +89,33 @@ public class WavefrontModel {
 	}
 	
 
+	public boolean usesVAO() {
+		return this.hasVAO;
+	}
+	
+	public int getVAOID() {
+		return this.vao;
+	}
+	
 	public Vertex buildVertexFromString(String[] array) {
 		int vertID = Integer.parseInt(array[0]);
 		int texID = Integer.parseInt(array[1]);
 		int normalID = Integer.parseInt(array[2]);
 		
-		Vertex vert = new Vertex(texcoord.get(texID-1), vertex.get(vertID-1), vertex.get(normalID-1));
+		/*
+		if(texcoord.size() <= texID-1) {
+			System.err.println("Trying to get texcoord at " + (texID-1) + " while there are only: " + texcoord.size());
+		}
+		
+		if(vertex.size() <= vertID-1) {
+			System.err.println("Trying to get texcoord at " + (texID-1) + " while there are only: " + texcoord.size());
+		}
+		
+		if(texcoord.size() <= texID-1) {
+			System.err.println("Trying to get texcoord at " + (texID-1) + " while there are only: " + texcoord.size());
+		}
+		*/
+		Vertex vert = new Vertex(texcoord.get(texID-1), vertex.get(vertID-1), normals.get(normalID-1));
 		
 		return vert;
 	}
@@ -113,6 +138,56 @@ public class WavefrontModel {
 		this.vbo = GLModelBuilder.buildVBO(this.vertices);
 		GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
 		
+	}
+	
+	public int buildVAO() {
+		
+		this.hasVAO = true;
+		int vS = (3+3+2)*4;
+		
+		// Fill the int buffer with data
+				IntBuffer intBuf = BufferUtils.createIntBuffer(indexBuffer.size());
+				for(int i : indexBuffer) {
+					intBuf.put(i);
+				}
+				intBuf.rewind();
+				
+				
+				GL11.glEnable(GL15.GL_ARRAY_BUFFER);
+				vao = GLModelBuilder.createVAO();
+				
+			
+				this.ebo = GL15.glGenBuffers();
+				GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, ebo);
+				GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, intBuf, GL15.GL_STATIC_DRAW);
+				
+				
+				this.vbo = GLModelBuilder.buildVBO(this.vertices);
+				//GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+				
+				
+			
+				GL20.glEnableVertexAttribArray(0);
+				GL20.glVertexAttribPointer(0, 3, GL11.GL_FLOAT, false, vS, 0);
+
+				
+				GL20.glEnableVertexAttribArray(1);
+				GL20.glVertexAttribPointer(1, 3, GL11.GL_FLOAT, false, vS, 20);
+				
+				GL20.glEnableVertexAttribArray(2);
+				GL20.glVertexAttribPointer(2, 2, GL11.GL_FLOAT, false, vS, 12);
+				
+				
+
+				/*
+				GL11.glVertexPointer(3, GL11.GL_FLOAT, vS, 0);
+				GL11.glNormalPointer(GL11.GL_FLOAT, vS, 20);
+				GL11.glTexCoordPointer(2, GL11.GL_FLOAT, vS, 12);
+			*/
+				//GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, 0);
+			GL30.glBindVertexArray(0);
+			GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, 0);
+		return vao;
 	}
 	
 	public void render() {

@@ -11,6 +11,8 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 
+import com.vicmatskiv.weaponlib.render.ShellRenderer2;
+import com.vicmatskiv.weaponlib.render.bgl.GLCompatible;
 import com.vicmatskiv.weaponlib.shader.DynamicShaderGroupManager;
 
 import net.minecraft.client.Minecraft;
@@ -23,11 +25,11 @@ public class ShaderManager {
 	
 	public static boolean enableShaders = true;
 
-	public static Shader loadVMWShader(String name) {
-		return loadShader(new ResourceLocation("mw:shaders/" + name));
+	public static Shader loadVMWShader(String name, Attribute...attribs) {
+		return loadShader(new ResourceLocation("mw:shaders/" + name), attribs);
 	}
 	
-	public static Shader loadShader(ResourceLocation file) {
+	public static Shader loadShader(ResourceLocation file, Attribute...attribs) {
 		
 		  if(!enableShaders)
 					return new Shader(0);
@@ -54,6 +56,17 @@ public class ShaderManager {
 				
 				GL20.glAttachShader(program, vertexShader);
 				GL20.glAttachShader(program, fragmentShader);
+			
+				if(attribs != null) {
+					for(Attribute attrib : attribs) {
+						
+						GLCompatible.glBindAttribLocation(program, attrib.getAttributeID(), attrib.getAttributeName());
+					}
+				}
+				
+				
+				
+				
 				GL20.glLinkProgram(program);
 				if(GL20.glGetProgrami(program, GL20.GL_LINK_STATUS) == GL11.GL_FALSE) {
 					logger.error(GL20.glGetProgramInfoLog(program, GL20.GL_INFO_LOG_LENGTH));

@@ -1159,8 +1159,9 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			
 			for(Part p : parts) {
 				//if(!(p instanceof ItemMagazine)) continue;
-				
-				Vec3d r = ((ItemMagazine) p).getRotationPoint();
+
+				System.out.println(p + " -> " + ((ItemAttachment<Weapon>) p).rotationPoint);
+				Vec3d r = ((ItemMagazine) p).rotationPoint;
 				//System.out.println("ROTMAMDFKFKJF FOR MAG: " + r);
 				
 				if(hasUnloadEmpty) {
@@ -3099,13 +3100,13 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		}
 		
 		
-		
+		/*
         GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW);
         GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, PROJECTION);
         GL11.glGetInteger(GL11.GL_VIEWPORT, VIEWPORT);
 		Project.gluProject(-0.15f, -1.5f, 1f, MODELVIEW, PROJECTION, VIEWPORT, POSITION);
 	      
-		
+		*/
 		
 		
 		//Project.gluProject((float) (100f*Math.random()-100), (float) (100f*Math.random()-100), (float) (100f*Math.random()-100), buf, buf2, buf3, test);
@@ -3260,7 +3261,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 
 		magicAnimationTimer = System.currentTimeMillis();
 		
-		Vec3d magRotationPoint = ((ItemMagazine) weapon).getRotationPoint();
+		Vec3d magRotationPoint = ((ItemMagazine) weapon).rotationPoint;
 		
 		if(getBuilder().isHasTacticalReload() && nextState == WeaponState.TACTICAL_RELOAD) {
 			getWeaponRendererBuilder().tacticalReloadContainer.getCustom().put(SpecialAttachments.MagicMag.getRenderablePart(),
@@ -3398,6 +3399,9 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		
 		
 		
+		
+		
+		
 		if(compatibleAttachment.getAttachment() instanceof ItemMagazine && AnimationGUI.getInstance().magEdit.isState() && !OpenGLSelectionHelper.isInSelectionPass) {
 	    	ItemMagazine mag = (ItemMagazine) compatibleAttachment.getAttachment();
 	    	
@@ -3438,6 +3442,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			}
 		}
 		
+		
+		
 		Entity renderViewEntity = Minecraft.getMinecraft().getRenderViewEntity();
 	    if(renderViewEntity == null) {
 	        renderViewEntity = Minecraft.getMinecraft().player;
@@ -3476,7 +3482,31 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 					
 				}
 				
-				
+				if(compatibleAttachment.getAttachment().getCategory() == AttachmentCategory.ACTION) {
+					GL11.glPushMatrix();
+					GL11.glTranslated(-0.125, -1, -1);
+					
+					
+					 GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW);
+				        GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, PROJECTION);
+				        GL11.glGetInteger(GL11.GL_VIEWPORT, VIEWPORT);
+						Project.gluProject(0, 0, 0, MODELVIEW, PROJECTION, VIEWPORT, POSITION);
+					      
+						
+					
+				//	AnimationModeProcessor.getInstance().renderCross();
+					
+					GL11.glPopMatrix();
+					
+					//System.out.println(renderContext.getWeaponInstance().getState());
+					//val *= val*val*val;
+					//renderContext.getWeaponInstance().setSlideLock(false);
+					//System.out.println(renderContext.getWeaponInstance().isSlideInLock);
+					if(renderContext.getWeaponInstance().isSlideLocked()) {
+						//GlStateManager.translate(0, 0, 0.4);
+					}
+					
+				}
 				/*
 				if((compatibleAttachment.getAttachment() instanceof ItemMagazine)) {
 					new Transform().withScale(1, 1, 1).withRotationPoint(CompatibleClientEventHandler.magRotPositioner.x, CompatibleClientEventHandler.magRotPositioner.y, CompatibleClientEventHandler.magRotPositioner.z)

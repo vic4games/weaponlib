@@ -16,7 +16,7 @@ public class RecoilParam {
 	
 	public RecoilParam() {}
 	
-	public RecoilParam(int group, int power, int muzzleClimbMult, Vec3d tMult, double recovModifier) {
+	public RecoilParam(int group, int power, double muzzleClimbMult, Vec3d tMult, double recovModifier) {
 		this.recoilGroup = group;
 		this.gunPower = power;
 		this.muzzleClimbMultiplier = muzzleClimbMult;

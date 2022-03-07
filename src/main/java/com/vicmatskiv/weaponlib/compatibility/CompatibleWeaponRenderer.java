@@ -51,10 +51,10 @@ import com.vicmatskiv.weaponlib.animation.Transform;
 
 import com.vicmatskiv.weaponlib.render.Bloom;
 import com.vicmatskiv.weaponlib.render.Dloom;
-import com.vicmatskiv.weaponlib.render.GLCompatible;
 import com.vicmatskiv.weaponlib.render.MSAABuffer;
 import com.vicmatskiv.weaponlib.render.MultisampledFBO;
 import com.vicmatskiv.weaponlib.render.Shaders;
+import com.vicmatskiv.weaponlib.render.bgl.GLCompatible;
 import com.vicmatskiv.weaponlib.shader.jim.Shader;
 import com.vicmatskiv.weaponlib.shader.jim.ShaderManager;
 

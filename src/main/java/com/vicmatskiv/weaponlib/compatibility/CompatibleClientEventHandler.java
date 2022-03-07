@@ -37,15 +37,20 @@ import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL31;
 import org.lwjgl.opengl.GL43;
+import org.lwjgl.opengl.GLSync;
 import org.lwjgl.util.glu.Project;
+import org.lwjgl.util.vector.Matrix4f;
 
 import com.google.common.reflect.Reflection;
 import com.vicmatskiv.weaponlib.AttachmentCategory;
+import com.vicmatskiv.weaponlib.BulletHoleRenderer;
 import com.vicmatskiv.weaponlib.ClientModContext;
 import com.vicmatskiv.weaponlib.ItemAttachment;
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.PlayerWeaponInstance;
 import com.vicmatskiv.weaponlib.RenderingPhase;
+import com.vicmatskiv.weaponlib.RopeSimulation;
+import com.vicmatskiv.weaponlib.RopeSimulation.Stick;
 import com.vicmatskiv.weaponlib.Weapon;
 import com.vicmatskiv.weaponlib.WeaponReloadAspect;
 import com.vicmatskiv.weaponlib.WeaponRenderer;
@@ -63,9 +68,9 @@ import com.vicmatskiv.weaponlib.model.Bullet556;
 import com.vicmatskiv.weaponlib.particle.DriftCloudFX;
 import com.vicmatskiv.weaponlib.render.Bloom;
 import com.vicmatskiv.weaponlib.render.Dloom;
-import com.vicmatskiv.weaponlib.render.GLCompatible;
+import com.vicmatskiv.weaponlib.render.InstancedRender;
+import com.vicmatskiv.weaponlib.render.InstancedShellObject;
 import com.vicmatskiv.weaponlib.render.ModernSkyRenderer;
-import com.vicmatskiv.weaponlib.render.ModernUtil;
 import com.vicmatskiv.weaponlib.render.MultisampledFBO;
 import com.vicmatskiv.weaponlib.render.Shaders;
 import com.vicmatskiv.weaponlib.render.ShellRenderer;
@@ -74,10 +79,14 @@ import com.vicmatskiv.weaponlib.render.VAOData;
 import com.vicmatskiv.weaponlib.render.VAOLoader;
 import com.vicmatskiv.weaponlib.render.WavefrontLoader;
 import com.vicmatskiv.weaponlib.render.WavefrontModel;
+import com.vicmatskiv.weaponlib.render.bgl.GLCompatible;
+import com.vicmatskiv.weaponlib.render.bgl.ModernUtil;
+import com.vicmatskiv.weaponlib.render.bgl.instancing.InstancedAttribute;
 import com.vicmatskiv.weaponlib.render.qrender.QRenderer;
 import com.vicmatskiv.weaponlib.render.shells.ShellManager;
 import com.vicmatskiv.weaponlib.render.shells.ShellParticleSimulator;
 import com.vicmatskiv.weaponlib.render.shells.ShellParticleSimulator.Shell;
+import com.vicmatskiv.weaponlib.render.shells.ShellParticleSimulator.Shell.Type;
 import com.vicmatskiv.weaponlib.shader.jim.Shader;
 import com.vicmatskiv.weaponlib.shader.jim.ShaderManager;
 import com.vicmatskiv.weaponlib.sound.JSoundEngine;
@@ -88,9 +97,12 @@ import com.vicmatskiv.weaponlib.vehicle.network.VehicleControlPacket;
 import com.vicmatskiv.weaponlib.vehicle.network.VehicleDataContainer;
 import com.vicmatskiv.weaponlib.vehicle.network.VehicleInteractPacket;
 
+import akka.japi.Pair;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.model.ModelBox;
+import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.GlStateManager;
@@ -395,26 +407,167 @@ public abstract class CompatibleClientEventHandler {
 
 	
 	
-	public static WavefrontModel bulletShell = WavefrontLoader.loadSubModel("boo6", "casing");
+	public static WavefrontModel bulletShell = WavefrontLoader.loadSubModel("9mmshell", "casing");
 	
 //	public static ShellParticleSimulator shells = new ShellParticleSimulator();
 	
 	public static ShellManager shellManager = new ShellManager();
+	public static BulletHoleRenderer bhr = new BulletHoleRenderer();
+	public static InstancedRender ir = new InstancedRender();
 	
+	public static ShellRenderer2 shr2;
+	
+	
+	public static InstancedShellObject iso;
 	@SubscribeEvent
 	public void renderWorrldLastEvent(RenderWorldLastEvent evt) {
-		//System.out.println(shells.getShells().size());
-		if(Minecraft.getMinecraft().player.ticksExisted%1 == 0) {
-			for(int x = 0; x < 1; ++x) {
-				
-				//shellManager.enqueueShell(new Shell(new Vec3d(38, 6, -328), Vec3d.ZERO, new Vec3d(-20, 0, 0)));
-				//shellManager.enqueueShell(new Shell(new Vec3d(43.856, 5.5, -331.204), new Vec3d(90,0,0), new Vec3d(-30, 0, 0)));
-				
-			}
+		
+		
+		//SysOutController.revealCallLocations();
+		
+		GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW);
+		GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, PROJECTION);
+		
+		GlStateManager.enableTexture2D();
+		
+		Minecraft.getMinecraft().getTextureManager()
+		.bindTexture(new ResourceLocation("mw:textures/models/assaultshell.png"));
+		
+		
+		MODELVIEW.rewind();
+		PROJECTION.rewind();
+		
+		/*
+		if(shr2 == null) {
+			shr2 = new ShellRenderer2();
+			shr2.init();
 		}
+		shr2.realRender();
+		*/
+		
+		/*
+		if(iso == null) {
+			WavefrontModel model = WavefrontLoader.loadSubModel("assaultshell", "casing", true);
+			iso = new InstancedShellObject("instanced", model, GL11.GL_TRIANGLES, 100000,
+					new InstancedAttribute("inPosition", 3, InstancedAttribute.Type.VEC3),
+					new InstancedAttribute("inQuat", 4, InstancedAttribute.Type.VEC4),
+					new InstancedAttribute("inLightmapCoords", 5, InstancedAttribute.Type.VEC2));
+		}
+		*/
+		
+		/*
+		Minecraft.getMinecraft().entityRenderer.enableLightmap();
+		
+		CompatibleShellRenderer.setupLightmapCoords(Minecraft.getMinecraft().player.getPositionVector());
+		GlStateManager.enableLighting();
+		GlStateManager.color(1, 1, 1);
+		GlStateManager.pushMatrix();
+		
+		EntityPlayer p = Minecraft.getMinecraft().player;
+		GlStateManager.translate(-p.posX, -p.posY, -p.posZ);
+		
+		iso.updateData(shellManager);
+		iso.render(shellManager.getShells().size());
+		GlStateManager.popMatrix();
+		*/
+		//if(true) return;
+		//ir.render();
+		
+		//System.out.println(shells.getShells().size());
 		
 		//SysOutController.reset();
 		
+		
+		bhr.render();
+		
+		
+		
+		/*
+		GL11.glPushMatrix();
+		
+		Minecraft.getMinecraft().getTextureManager()
+		.bindTexture(new ResourceLocation("mw:textures/models/assaultshell.png"));
+		GlStateManager.translate(0, 1.5, 0.2);
+		GlStateManager.rotate(45, 0, 0, 0);
+		GlStateManager.enableLighting();
+		Shader shad = ShaderManager.loadVMWShader("shells");
+		Minecraft.getMinecraft().entityRenderer.enableLightmap();
+		CompatibleShellRenderer.setupLightmapCoords(Minecraft.getMinecraft().player.getPositionVector());
+		
+		
+		shad.use();
+		shad.uniform1i("lightmap", 1);
+		
+		WavefrontModel model  = WavefrontLoader.loadSubModel("assaultshell", "casing");
+		model.render();
+		shad.release();
+		*/
+		/*
+		GlStateManager.disableTexture2D();
+		
+		
+		
+		Tessellator t = Tessellator.getInstance();
+		BufferBuilder bb2 = t.getBuffer();
+		bb2.begin(GL11.GL_TRIANGLES, DefaultVertexFormats.POSITION);
+		GlStateManager.disableCull();
+		GlStateManager.color(0.8f, 0.7f, 0, 1);
+		GlStateManager.disableTexture2D();
+		//GlStateManager.disableBlend();
+		GlStateManager.disableLighting();
+		double shScaleX = 0.02;
+		double shScaleY = 0.12;
+		double shScaleZ = 0.02;
+		for(int i = 0; i < g_vertex_buffer_data.length-3; i += 3) {
+			//System.out.println(i);
+			bb2.pos(g_vertex_buffer_data[i]*shScaleX, g_vertex_buffer_data[i+1]*shScaleY, g_vertex_buffer_data[i+2]*shScaleZ).endVertex();
+		}
+		
+		t.draw();
+		*/
+		
+		
+		
+		//CompatibleShellRenderer.renderDegenerateModel();
+		
+		
+
+		
+		
+		//GL11.glPopMatrix();
+		
+		
+		
+		GlStateManager.pushMatrix();
+		EntityPlayer pla = Minecraft.getMinecraft().player;
+		
+		double iPosX = pla.prevPosX + (pla.posX - pla.prevPosX)*Minecraft.getMinecraft().getRenderPartialTicks();
+		double iPosY = pla.prevPosY + (pla.posY - pla.prevPosY)*Minecraft.getMinecraft().getRenderPartialTicks();
+		double iPosZ = pla.prevPosZ + (pla.posZ - pla.prevPosZ)*Minecraft.getMinecraft().getRenderPartialTicks();
+		GlStateManager.translate(-iPosX, -iPosY, -iPosZ);
+		GlStateManager.disableTexture2D();
+		GL11.glPointSize(10f);
+		Tessellator tes  = Tessellator.getInstance();
+		BufferBuilder bb = tes.getBuffer();
+		GlStateManager.disableCull();
+		Vec3d lol = new Vec3d(120.7, 4.01, -343);
+		
+		GlStateManager.enableTexture2D();
+		ResourceLocation rl = new ResourceLocation("mw:textures/entity/bullethole.png");
+		Minecraft.getMinecraft().getTextureManager().bindTexture(rl);
+		
+		
+		GL14.glBlendEquation(GL14.GL_FUNC_SUBTRACT);
+		GlStateManager.enableBlend();
+		double size = 0.05;
+		bb.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
+		bb.pos(lol.x+size, lol.y, lol.z+size).tex(0, 0).endVertex();
+		bb.pos(lol.x-size, lol.y, lol.z+size).tex(1, 0).endVertex();
+		bb.pos(lol.x-size, lol.y, lol.z-size).tex(1, 1).endVertex();
+		bb.pos(lol.x+size, lol.y, lol.z-size).tex(0, 1).endVertex();
+		tes.draw();
+		
+		GlStateManager.popMatrix();
 		
 		
 		
@@ -549,7 +702,27 @@ public abstract class CompatibleClientEventHandler {
 		Project.gluUnProject(WeaponRenderer.POSITION.get(0), WeaponRenderer.POSITION.get(1), WeaponRenderer.POSITION.get(2), MODELVIEW, PROJECTION, VIEWPORT,
 				NEW_POS);
 		
-		Vec3d newPV = new Vec3d(NEW_POS.get(0), NEW_POS.get(1), NEW_POS.get(2));
+		Vec3d newPV = new Vec3d(NEW_POS.get(0), NEW_POS.get(1), NEW_POS.get(2)).scale(1);
+		
+		
+		Vec3d offset = new Vec3d(-0.2, -0.2, -0.5);
+		/*
+		if(ClientModContext.getContext().getMainHeldWeapon().isAimed()) {
+			offset = new Vec3d(-0.0, -0.1, -0.5);
+		}*/
+		Vec3d posAdd = offset.rotatePitch((float) -Math.toRadians(Minecraft.getMinecraft().player.rotationPitch)).rotateYaw((float) -Math.toRadians(Minecraft.getMinecraft().player.rotationYaw));
+		
+		Vec3d outwardPos = newPV.subtract(Minecraft.getMinecraft().player.getPositionEyes(1.0f)).normalize().rotatePitch((float) -Math.toRadians(Minecraft.getMinecraft().player.rotationPitch)).rotateYaw((float) Math.toRadians(-Minecraft.getMinecraft().player.rotationYaw)).scale(1.5).add(Minecraft.getMinecraft().player.getPositionEyes(1.0f));
+		newPV = outwardPos.add(posAdd);
+		
+		
+		Vec3d velocity = new Vec3d(-0.4, 0, 0.0);
+		velocity = velocity.rotateYaw((float) Math.toRadians(-Minecraft.getMinecraft().player.rotationYaw));
+		
+		
+		EntityPlayer player = Minecraft.getMinecraft().player;
+		//shellManager.enqueueShell(new Shell(new Vec3d(newPV.x, newPV.y, newPV.z), new Vec3d(90, 0, 0), velocity));
+		
 		
 		/*
 		GL11.glPointSize(10f);
@@ -565,22 +738,7 @@ public abstract class CompatibleClientEventHandler {
 		
 		
 		
-		if(AnimationModeProcessor.getInstance().getFPSMode()) {
-			Minecraft.getMinecraft().setIngameNotInFocus();
-
-			//Minecraft.getMinecraft().mouseHelper.ungrabMouseCursor();
-			AnimationModeProcessor.getInstance().onTick();
-			
-			Minecraft.getMinecraft().player.inventory.currentItem = 0;
 		
-			
-			
-			Shaders.blackScreen.use();
-			Bloom.renderFboTriangle(Minecraft.getMinecraft().getFramebuffer());
-			Shaders.blackScreen.release();
-			
-			return;
-		}
 		
 
         
@@ -632,7 +790,22 @@ public abstract class CompatibleClientEventHandler {
 		}
 		
 		
+		if(AnimationModeProcessor.getInstance().getFPSMode()) {
+			Minecraft.getMinecraft().setIngameNotInFocus();
+
+			//Minecraft.getMinecraft().mouseHelper.ungrabMouseCursor();
+			AnimationModeProcessor.getInstance().onTick();
+			
+			Minecraft.getMinecraft().player.inventory.currentItem = 0;
 		
+			
+			
+			Shaders.blackScreen.use();
+			Bloom.renderFboTriangle(Minecraft.getMinecraft().getFramebuffer());
+			Shaders.blackScreen.release();
+			
+			return;
+		}
 		
 
 		// JSoundEngine jse = JSoundEngine.getInstance();
@@ -790,17 +963,53 @@ public abstract class CompatibleClientEventHandler {
 
 		}
 	}
+	
+	public static ArrayList<RopeSimulation> ropeSIm = new ArrayList<>();
 
+	
 	@SideOnly(Side.CLIENT)
 	@SubscribeEvent
 	public final void onClientTick(TickEvent.ClientTickEvent event) {
 		onCompatibleClientTick(new CompatibleClientTickEvent(event));
 		if(event.phase  == Phase.START && Minecraft.getMinecraft().player != null) {
 			ClientValueRepo.ticker.update(Minecraft.getMinecraft().player.ticksExisted);
-			
+
 			shellManager.update(0.05);
 			
+			
 		}
+		//System.out.println(shellManager.getShells().size());
+		if(Minecraft.getMinecraft().player != null && Minecraft.getMinecraft().player.ticksExisted%1 == 0 && event.phase == Phase.START) {
+			for(int i = 0; i < 0; ++i) {
+				
+				shellManager.enqueueShell(new Shell(Type.ASSAULT, new Vec3d(188, 6, -395.45), new Vec3d(90,0,0), new Vec3d(Math.random()/2-0.25, Math.random()/2-0.25, Math.random()/2-0.25)));
+				
+			}
+			
+		}
+		
+		if(Minecraft.getMinecraft().world != null && event.phase == Phase.START) {
+			//ropeSIm.clear();
+			
+			if(Minecraft.getMinecraft().player.ticksExisted%100 == 0) {
+				ropeSIm.clear();
+			}
+			
+			if(ropeSIm.isEmpty()) {
+				RopeSimulation rs = new RopeSimulation();
+				rs.newPoint(new Vec3d(90.5, 5.81, -359.6), false);
+				rs.newPoint(new Vec3d(90.4, 5.6, -359.6), false);
+				rs.connect(rs.points.get(0), rs.points.get(1));
+				ropeSIm.add(rs);
+			}
+			
+			
+			for(RopeSimulation rope : ropeSIm) {
+				rope.simulate(0.1);
+			}
+		}
+		
+		
 		// if(Minecraft.getMinecraft().player.isSprinting()) {
 		// RayTraceResult rtr = Minecraft.getMinec
 		// }

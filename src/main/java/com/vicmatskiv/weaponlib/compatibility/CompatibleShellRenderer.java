@@ -1,21 +1,40 @@
 package com.vicmatskiv.weaponlib.compatibility;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map.Entry;
 import java.util.concurrent.SynchronousQueue;
 
-import org.lwjgl.opengl.GL11;
+import javax.vecmath.Vector3d;
 
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL20;
+
+import com.vicmatskiv.weaponlib.animation.ClientValueRepo;
 import com.vicmatskiv.weaponlib.animation.MatrixHelper;
+import com.vicmatskiv.weaponlib.compatibility.shells.ShellRegistry;
+import com.vicmatskiv.weaponlib.render.InstancedShellObject;
+import com.vicmatskiv.weaponlib.render.Shaders;
+import com.vicmatskiv.weaponlib.render.WavefrontLoader;
+import com.vicmatskiv.weaponlib.render.WavefrontModel;
+import com.vicmatskiv.weaponlib.render.bgl.instancing.InstancedAttribute;
 import com.vicmatskiv.weaponlib.render.shells.ShellParticleSimulator;
 import com.vicmatskiv.weaponlib.render.shells.ShellParticleSimulator.Shell;
+import com.vicmatskiv.weaponlib.render.shells.ShellParticleSimulator.Shell.Type;
+import com.vicmatskiv.weaponlib.shader.jim.Shader;
+import com.vicmatskiv.weaponlib.shader.jim.ShaderManager;
 
+import akka.japi.Pair;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.model.ModelBox;
 import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
@@ -23,30 +42,129 @@ import net.minecraft.util.math.Vec3d;
 
 public class CompatibleShellRenderer {
 	
-	
 
 	private static final Minecraft mc = Minecraft.getMinecraft();
-	
-	
+	private static HashMap<Shell.Type, InstancedShellObject> shellObjMap = new HashMap<>();
+	private static Shader legacyShader = ShaderManager.loadVMWShader("shells");
 
 	private static int shadowDisplayList = -1;
 	
+	// CREDIT: http://www.opengl-tutorial.org/beginners-tutorials/tutorial-4-a-colored-cube/
+	public static final float[] g_vertex_buffer_data = {
+		    -1.0f,-1.0f,-1.0f, // triangle 1 : begin
+		    -1.0f,-1.0f, 1.0f,
+		    -1.0f, 1.0f, 1.0f, // triangle 1 : end
+		    1.0f, 1.0f,-1.0f, // triangle 2 : begin
+		    -1.0f,-1.0f,-1.0f,
+		    -1.0f, 1.0f,-1.0f, // triangle 2 : end
+		    1.0f,-1.0f, 1.0f,
+		    -1.0f,-1.0f,-1.0f,
+		    1.0f,-1.0f,-1.0f,
+		    1.0f, 1.0f,-1.0f,
+		    1.0f,-1.0f,-1.0f,
+		    -1.0f,-1.0f,-1.0f,
+		    -1.0f,-1.0f,-1.0f,
+		    -1.0f, 1.0f, 1.0f,
+		    -1.0f, 1.0f,-1.0f,
+		    1.0f,-1.0f, 1.0f,
+		    -1.0f,-1.0f, 1.0f,
+		    -1.0f,-1.0f,-1.0f,
+		    -1.0f, 1.0f, 1.0f,
+		    -1.0f,-1.0f, 1.0f,
+		    1.0f,-1.0f, 1.0f,
+		    1.0f, 1.0f, 1.0f,
+		    1.0f,-1.0f,-1.0f,
+		    1.0f, 1.0f,-1.0f,
+		    1.0f,-1.0f,-1.0f,
+		    1.0f, 1.0f, 1.0f,
+		    1.0f,-1.0f, 1.0f,
+		    1.0f, 1.0f, 1.0f,
+		    1.0f, 1.0f,-1.0f,
+		    -1.0f, 1.0f,-1.0f,
+		    1.0f, 1.0f, 1.0f,
+		    -1.0f, 1.0f,-1.0f,
+		    -1.0f, 1.0f, 1.0f,
+		    1.0f, 1.0f, 1.0f,
+		    -1.0f, 1.0f, 1.0f,
+		    1.0f,-1.0f, 1.0f
+		};
 	
+	static {
+		addInstancedOperator(Type.ASSAULT, "assaultshell");
+		addInstancedOperator(Type.SHOTGUN, "12gaugeshell");
+		addInstancedOperator(Type.PISTOL, "9mmshell");
+	}
+	
+	
+	public static void addInstancedOperator(Shell.Type type, String name) {
+		WavefrontModel model = WavefrontLoader.loadSubModel(name, "casing", true);
+		InstancedShellObject iso = new InstancedShellObject(type, "instanced", model, GL11.GL_TRIANGLES, 10000,
+				new InstancedAttribute("inPosition", 3, InstancedAttribute.Type.VEC3),
+				new InstancedAttribute("inQuat", 4, InstancedAttribute.Type.VEC4),
+				new InstancedAttribute("inLightmapCoords", 5, InstancedAttribute.Type.VEC2));
+		shellObjMap.put(type, iso);
+	}
+	
+	public static void setupLightmapCoords(Vector3d pos) {
+		setupLightmapCoords(new Vec3d(pos.x, pos.y, pos.z));
+	}
 	
 	/**
 	 * Sets the lightmap texture coordinates
 	 */
-	public static void setupLightmapCoords(Vec3d position) {
-		int i = Minecraft.getMinecraft().world.getCombinedLight(new BlockPos(position.x, position.y, position.z), 0);
+	public static void setupLightmapCoords(Vec3d pos) {
+		int i = Minecraft.getMinecraft().world.getCombinedLight(new BlockPos(pos.x, pos.y, pos.z), 0);
 		float f = (float) (i & 65535);
 		float f1 = (float) (i >> 16);
 		OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, f, f1);
 
 	}
+	
+	
+	public static double getDistanceFromPlayer(Vector3d vec) {
+		
+		Vec3d player = Minecraft.getMinecraft().player.getPositionVector();
+		double d0 = vec.x - player.x;
+        double d1 = vec.y - player.y;
+        double d2 = vec.z - player.z;
+        return d0 * d0 + d1 * d1 + d2 * d2;
+	}
 
+	
+	
+	private static int degenDisplayOne = -1; 
+	
+	public static void renderDegenerateModel() {
+		if(degenDisplayOne == -1) {
+		
+			degenDisplayOne = GLAllocation.generateDisplayLists(1);
+			GlStateManager.glNewList(degenDisplayOne, 4864);
+			Tessellator t = Tessellator.getInstance();
+			BufferBuilder bb2 = t.getBuffer();
+			bb2.begin(GL11.GL_TRIANGLES, DefaultVertexFormats.POSITION);
+			//GlStateManager.disableCull();
+			GlStateManager.color(0.78f, 0.65f, 0.33f, 1);
+			GlStateManager.disableTexture2D();
+			
+			GlStateManager.disableLighting();
+			double shScaleX = 0.02;
+			double shScaleY = 0.12;
+			double shScaleZ = 0.02;
+			for(int i = 0; i < g_vertex_buffer_data.length-3; i += 3) {
+				bb2.pos(g_vertex_buffer_data[i]*shScaleX, g_vertex_buffer_data[i+1]*shScaleY, g_vertex_buffer_data[i+2]*shScaleZ).endVertex();
+			}
+			
+			t.draw();
+			GlStateManager.glEndList();
+ 		} else {
+ 		
+ 			GlStateManager.callList(degenDisplayOne);
+ 		}
+	}
+	
 	public static void render(ArrayList<Shell> shells) {
 		
-		
+	
 		
 		GlStateManager.pushMatrix();
 
@@ -64,13 +182,29 @@ public class CompatibleShellRenderer {
 		GlStateManager.translate(-interpX, -interpY, -interpZ);
 		
 		
+		renderInstanced(shells);
+		GlStateManager.color(1, 1, 1);
+		GlStateManager.popMatrix();
+
+	}
+	
+	public static void renderInstanced(ArrayList<Shell> shells) {
+		for(Entry<Type, InstancedShellObject> i : shellObjMap.entrySet()) {
+			Minecraft.getMinecraft().getTextureManager().bindTexture(ShellRegistry.getShellTexture(i.getKey()));
+			i.getValue().updateData(shells);
+			i.getValue().render(shells.size());
+		}
 		
+		
+	}
+	
+	public void renderNonInstanced(ArrayList<Shell> shells) {
 		GlStateManager.enableCull();
 		GlStateManager.color(1, 1, 1, 1);
 		Minecraft.getMinecraft().entityRenderer.enableLightmap();
-
 		
-	
+		
+		//System.out.println(shells.size());
 		for (Shell sh : shells) {
 
 			GlStateManager.pushMatrix();
@@ -86,57 +220,41 @@ public class CompatibleShellRenderer {
 			// translate last
 			GlStateManager.translate(iP.x, iP.y, iP.z);
 
-			
-			if(sh.getHeight() > -3 && false) {
-				
-				
-				GlStateManager.enableTexture2D();
-				ResourceLocation shadow = new ResourceLocation("textures/misc/shadow.png");
-				Minecraft.getMinecraft().getTextureManager().bindTexture(shadow);
-
-				GlStateManager.enableBlend();
-				Tessellator t = Tessellator.getInstance();
-				BufferBuilder bb = t.getBuffer();
-				bb.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-				double yOff = sh.getHeight();
-				if (yOff != 0) {
-					yOff += 0.01;
-				} else {
-					yOff -= 0.03;
-				}
-
-				double shadowSize = Math.max(0.05 * (-yOff * 5), 0.06);
-
-				GlStateManager.color(0, 0, 0, (float) (1f - shadowSize) * 0.5f);
-
-				bb.pos(1 * shadowSize, yOff, 1 * shadowSize).tex(0, 0).endVertex();
-				bb.pos(1 * shadowSize, yOff, -1 * shadowSize).tex(1, 0).endVertex();
-				bb.pos(-1 * shadowSize, yOff, -1 * shadowSize).tex(1, 1).endVertex();
-				bb.pos(-1 * shadowSize, yOff, 1 * shadowSize).tex(0, 1).endVertex();
-
-				t.draw();
-				
-				GlStateManager.enableTexture2D();
-				GlStateManager.color(1, 1, 1, 1);
-				GlStateManager.disableBlend();
-				
-			}
-			
-			GlStateManager.enableTexture2D();
+	
 			
 		
+			
 
-			Minecraft.getMinecraft().getTextureManager()
-					.bindTexture(new ResourceLocation("mw:textures/entity/boo6.png"));
-
-			GlStateManager.rotate((float) iR.x, 1, 0, 0);
+			GlStateManager.rotate((float) iR.x, 0, 0, 1);
 			GlStateManager.rotate((float) iR.y, 0, 1, 0);
-			GlStateManager.rotate((float) iR.z, 0, 0, 1);
-			//GlStateManager.scale(0.1, 0.1, 0.01);
+			GlStateManager.rotate((float) iR.z, 1, 0, 0);
 			
-			CompatibleClientEventHandler.bulletShell.render();
+			double shellScale = 0.8;
+			GlStateManager.scale(shellScale, shellScale, shellScale);
 			
-			//ShellParticleSimulator.bulletModel.render(null, 0f, 0f, 0f, 0f, 0f, 1f);
+			
+			
+			
+			//GlStateManager.disableLighting();
+			
+			//System.out.println(GL11.glIsEnabled(cap));
+			GlStateManager.enableLighting();
+			GlStateManager.enableTexture2D();
+			
+			
+			if(getDistanceFromPlayer(sh.pos) < 120) {
+				
+				legacyShader.use();
+				legacyShader.uniform1i("lightmap", 1);
+				Minecraft.getMinecraft().getTextureManager().bindTexture(ShellRegistry.getShellTexture(sh.getType()));
+				ShellRegistry.getShellModel(sh.getType()).render();
+				legacyShader.release();
+			} else {
+				
+				
+				renderDegenerateModel();
+			}
+			
 			
 			
 			GlStateManager.disableLighting();
@@ -149,8 +267,8 @@ public class CompatibleShellRenderer {
 			
 
 		}
+	
 		Minecraft.getMinecraft().entityRenderer.disableLightmap();
-		GlStateManager.popMatrix();
-
+		//GlStateManager.popMatrix();
 	}
 }

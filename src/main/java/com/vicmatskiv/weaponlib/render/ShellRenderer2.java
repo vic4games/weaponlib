@@ -10,10 +10,13 @@ import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL31;
 import org.lwjgl.opengl.GL33;
 import org.lwjgl.util.vector.Matrix4f;
+import org.lwjgl.util.vector.Quaternion;
 
 import com.vicmatskiv.weaponlib.ClientEventHandler;
+import com.vicmatskiv.weaponlib.animation.MatrixHelper;
 import com.vicmatskiv.weaponlib.model.Bullet556;
 import com.vicmatskiv.weaponlib.render.ModelRenderTool.VertexData;
+import com.vicmatskiv.weaponlib.shader.jim.Attribute;
 import com.vicmatskiv.weaponlib.shader.jim.Shader;
 import com.vicmatskiv.weaponlib.shader.jim.ShaderManager;
 
@@ -23,14 +26,12 @@ import scala.actors.threadpool.Arrays;
 
 public class ShellRenderer2 {
 	
-	public static final int MAX = 10;
+	public static final int MAX = 10000;
 	public static final float[] VERTICES = { 0f, 0f, 0f,
 			0f, 1f, 0f,
-			0f, 0f, 1f,
-			1f, 0f, 0f,
-			1f, 1f, 0f,
-			1f, 0f, 1f};
-	public static final int INSTANCE_DATA_LENGTH = 3;
+			0f, 0f, 1f
+			};
+	public static final int INSTANCE_DATA_LENGTH = 3 + 4;
 	
 	public static int vbo;
 	
@@ -44,39 +45,48 @@ public class ShellRenderer2 {
 	
 	public static Shader shader = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/instanced"));
 	
+	public static WavefrontModel wavModel;
 	
 	public static void init() {
 		if(made) return;
 		made = true;
 		
 		
-	
+		WavefrontModel model = WavefrontLoader.loadSubModel("assaultshell", "casing", true);
+		VAOData da = new VAOData(model.vao, model.vertices.size());
+		
+		
+		//vbo = model.vbo;
 		vbo = createEmptyVBO(INSTANCE_DATA_LENGTH*MAX);
-		
-		Triangle[] tris = ModelRenderTool.triangulate((new Bullet556()).boxList.get(0).cubeList.get(0), new Matrix4f());
-		VertexData vd = ModelRenderTool.compress(tris);
-		float[] vets = vd.vertexArray();
-		
-		data = VAOLoader.loadToVAO(VERTICES);
-		addInstancedAttribute(data.getVaoID(), vbo, 1, 3, INSTANCE_DATA_LENGTH, 0);
+		data = da;
+		wavModel = model;
+		//data = VAOLoader.loadToVAO(VERTICES);
+		GL30.glBindVertexArray(da.getVaoID());
+		addInstancedAttribute(data.getVaoID(), vbo, 3, 3, INSTANCE_DATA_LENGTH, 0);
+		addInstancedAttribute(data.getVaoID(), vbo, 4, 4, INSTANCE_DATA_LENGTH, 3);
+		GL30.glBindVertexArray(0);
 	}
 	
 	public static void realRender() {
 		//shader = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/instanced"));
+	
 		
-		Triangle[] tris = ModelRenderTool.triangulate((new Bullet556()).boxList.get(0).cubeList.get(0), new Matrix4f());
-		VertexData vd = ModelRenderTool.compress(tris);
-		float[] vets = vd.vertexArray();
+
 		
-		for(int x = 0; x < vets.length; x++) {
-			vets[x] *= 0.2f;
-		}
-		System.out.println(Arrays.toString(vets));
-		data = VAOLoader.loadToVAO(vets);
-		addInstancedAttribute(data.getVaoID(), vbo, 1, 3, INSTANCE_DATA_LENGTH, 0);
+		//data = VAOLoader.loadToVAO(VERTICES);
 		
+		//addInstancedAttribute(data.getVaoID(), vbo, 1, 3, INSTANCE_DATA_LENGTH, 0);
+		
+		/*
+		bindAttribute(shader.getShaderId(), 0, "pos");
+		//bindAttribute(shader.getShaderId(), 1, "normal");
+		bindAttribute(shader.getShaderId(), 2, "aTexCoord");
+		bindAttribute(shader.getShaderId(), 3, "inPosition");
+		*/
+		shader = ShaderManager.loadVMWShader("instanced", new Attribute("pos", 0), new Attribute("aTexCoord", 2), new Attribute("inPosition", 3), new Attribute("inQuat", 4));
 		shader.use();
-		bindAttribute(shader.getShaderId(), 1, "posy");
+		//bindAttribute(shader.getShaderId(), 2, "tex_coord");
+		
 		
 		shader.sendMatrix4AsUniform("projection", false, ClientEventHandler.PROJECTION);
 		shader.sendMatrix4AsUniform("modelView", false, ClientEventHandler.MODELVIEW);
@@ -85,20 +95,33 @@ public class ShellRenderer2 {
 		GL30.glBindVertexArray(data.getVaoID());
 		GL20.glEnableVertexAttribArray(0);
 		GL20.glEnableVertexAttribArray(1);
+		GL20.glEnableVertexAttribArray(2);
+		GL20.glEnableVertexAttribArray(3);
+		GL20.glEnableVertexAttribArray(4);
+		//GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, wavModel.ebo);
+		
+		//GL20.glEnableVertexAttribArray(2);
 		
 		
 		pointer = 0;
 		float[] vboData = new float[MAX*INSTANCE_DATA_LENGTH];
 		fillData(vboData);
-		
+		//System.out.println(Arrays.toString(vboData));
 		VAOLoader.updateVBO(vbo, vboData, buffer);
-		GL31.glDrawArraysInstanced(GL11.GL_TRIANGLES, 0, data.getVertexCount(), MAX);
+		
+
+	//	GL11.glDrawElements(GL11.GL_TRIANGLES, indexBuffer.size(), GL11.GL_UNSIGNED_INT, 0);
+		GL31.glDrawElementsInstanced(GL11.GL_TRIANGLES, wavModel.indexBuffer.size(), GL11.GL_UNSIGNED_INT, 0, MAX);
+		//GL31.glDrawArraysInstanced(GL11.GL_TRIANGLES, 0, data.getVertexCount(), MAX);
 		
 		
 		
 		// post
 		GL20.glDisableVertexAttribArray(0);
 		GL20.glDisableVertexAttribArray(1);
+		GL20.glDisableVertexAttribArray(2);
+		GL20.glDisableVertexAttribArray(3);
+		GL20.glDisableVertexAttribArray(4);
 		GL30.glBindVertexArray(0);
 		
 		shader.release();
@@ -106,11 +129,24 @@ public class ShellRenderer2 {
 	}
 	
 	public static void fillData(float[] data) {
-		for(int i = 0; i < (data.length/3); ++i) {
+		
+		
+		for(int i = 0; i < (data.length/INSTANCE_DATA_LENGTH); ++i) {
+		
+			data[pointer++] = pointer/1000f;
 			data[pointer++] = 0;
-			data[pointer++] = pointer;
 			data[pointer++] = 0;
+			
+			Quaternion quat = MatrixHelper.fromEulerAngles(Math.toRadians(90), Math.toRadians(0), 0);
+			
+			data[pointer++] = quat.w;
+			data[pointer++] = quat.x;
+			data[pointer++] = quat.y;
+			data[pointer++] = quat.z;
+			
+			
 		}
+		
 	}
 	
 	public static void bindAttribute(int shaderID, int attribID, String variableName) {
@@ -136,6 +172,7 @@ public class ShellRenderer2 {
 
 	public static void addInstancedAttribute(int vao, int vbo, int attribute, int dataSize, int instancedDataLength,
 			int offset) {
+		//GL11.glEnable(GL15.GL_ARRAY_BUFFER);
 		GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbo);
 		GL30.glBindVertexArray(vao);
 		GL20.glVertexAttribPointer(attribute, dataSize, GL11.GL_FLOAT, false, instancedDataLength * 4, offset * 4); 

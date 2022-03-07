@@ -12,6 +12,7 @@ import net.minecraft.client.model.ModelBase;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.math.Vec3d;
 
 public class ItemAttachment<T> extends CompatibleItem implements ModelSource {
 
@@ -38,6 +39,9 @@ public class ItemAttachment<T> extends CompatibleItem implements ModelSource {
 	private List<ItemAttachment<T>> requiredAttachments = new ArrayList<>();
 
 	protected String textureName;
+	
+	public Vec3d rotationPoint = Vec3d.ZERO;
+	
 
 	public static interface ApplyHandler<T> {
 		public void apply(ItemAttachment<T> itemAttachment, T target, EntityLivingBase player);
@@ -81,6 +85,10 @@ public class ItemAttachment<T> extends CompatibleItem implements ModelSource {
 	public Item setTextureName(String name) {
 		return this;
 	}
+	
+
+	
+
 
 	public Part getRenderablePart() {
 		return renderablePart;

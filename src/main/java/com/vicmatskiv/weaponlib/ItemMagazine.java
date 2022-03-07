@@ -30,18 +30,14 @@ Reloadable, Updatable, Part {
 		private Set<ItemBullet> compatibleBullets = new HashSet<>();
 		private String reloadSound;
 		
-		private Vec3d rotPoint = Vec3d.ZERO;
+
 		
 		public Builder withAmmo(int ammo) {
 			this.ammo = ammo;
 			return this;
 		}
 		 
-		public Builder withRotationPoint(double x, double y, double z) {
-			rotPoint = new Vec3d(x, y, z);
-			return this;
-		}
-		
+
 		public Builder withReloadingTimeout(int reloadingTimeout) {
 			this.reloadingTimeout = reloadingTimeout;
 			return this;
@@ -63,7 +59,7 @@ Reloadable, Updatable, Part {
 		protected ItemAttachment<Weapon> createAttachment(ModContext modContext) {
 			ItemMagazine magazine = new ItemMagazine(getModId(), getModel(), getTextureName(), ammo);
 			magazine.reloadingTimeout = reloadingTimeout;
-			magazine.rotPoint = this.rotPoint;
+	
 			magazine.compatibleBullets = new ArrayList<>(compatibleBullets);
 			if(reloadSound != null) {
 				magazine.reloadSound = modContext.registerSound(reloadSound);
@@ -97,9 +93,7 @@ Reloadable, Updatable, Part {
 		setMaxStackSize(DEFAULT_MAX_STACK_SIZE);
 	}
 	
-	public Vec3d getRotationPoint() {
-		return this.rotPoint;
-	}
+
 	
 	ItemStack createItemStack() {
 		ItemStack attachmentItemStack = new ItemStack(this);

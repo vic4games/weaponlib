@@ -94,6 +94,10 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 	private long stateReloadUpdateTimestamp;
 	private boolean isAwaitingCompoundInstructions = false;
 
+	
+	public boolean isSlideInLock = false;
+	
+	
 	/*
 	 * Upon adding an element to the head of the queue, all existing elements with lower priority are removed
 	 * from the queue. Elements with the same priority are not removed.
@@ -210,6 +214,14 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 
 	public int getAmmo() {
 		return ammo;
+	}
+	
+	public boolean isSlideLocked() {
+		return this.isSlideInLock;
+	}
+	
+	public void setSlideLock(boolean state) {
+		this.isSlideInLock = state;
 	}
 
 	public void setAmmo(int ammo) {

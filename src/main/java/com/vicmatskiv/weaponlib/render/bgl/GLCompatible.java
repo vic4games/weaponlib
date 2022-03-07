@@ -1,11 +1,15 @@
-package com.vicmatskiv.weaponlib.render;
+package com.vicmatskiv.weaponlib.render.bgl;
 
 import org.lwjgl.opengl.APPLEFloatPixels;
 import org.lwjgl.opengl.ARBColorBufferFloat;
+import org.lwjgl.opengl.ARBComputeShader;
 import org.lwjgl.opengl.ARBDrawInstanced;
 import org.lwjgl.opengl.ARBFramebufferObject;
 import org.lwjgl.opengl.ARBTextureFloat;
 import org.lwjgl.opengl.ARBTextureMultisample;
+import org.lwjgl.opengl.ARBVertexArrayObject;
+import org.lwjgl.opengl.ARBVertexAttrib64bit;
+import org.lwjgl.opengl.ARBVertexAttribBinding;
 import org.lwjgl.opengl.ATITextureFloat;
 import org.lwjgl.opengl.ContextCapabilities;
 import org.lwjgl.opengl.EXTFramebufferBlit;
@@ -13,6 +17,7 @@ import org.lwjgl.opengl.EXTFramebufferMultisample;
 import org.lwjgl.opengl.EXTFramebufferMultisampleBlitScaled;
 import org.lwjgl.opengl.EXTFramebufferObject;
 import org.lwjgl.opengl.EXTFramebufferSRGB;
+import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL32;
 import org.lwjgl.opengl.GLContext;
@@ -27,6 +32,7 @@ public class GLCompatible {
 	public static int fboType = -1;
 	public static int msaaType = -1;
 	public static int multisampleType = -1;
+	public static int vertexAttribBinding = -1;
 
 	public static int GL_READ_FRAMEBUFFER;
 	public static int GL_DRAW_FRAMEBUFFER;
@@ -40,12 +46,25 @@ public class GLCompatible {
 
 	public static boolean isLoaded = false;
 
+	
+	static {
+		init();
+	}
+	
 	public static void init() {
 		if(isLoaded) return;
 		isLoaded = true;
 	
 		ContextCapabilities cap = GLContext.getCapabilities();
 
+		
+		if(cap.OpenGL20) {
+			
+		} else if(cap.GL_ARB_vertex_attrib_binding) {
+			
+		}
+		
+		
 		if (cap.OpenGL30) {
 			fboType = 0;
 			GL_READ_FRAMEBUFFER = GL30.GL_READ_FRAMEBUFFER;
@@ -174,6 +193,11 @@ public class GLCompatible {
 					filter);
 			break;
 		}
+	}
+	
+	// GL20.glBindAttribLocation(shaderID, attribID, variableName);
+	public static void glBindAttribLocation(int shaderID, int attribID, String variableName) {
+		GL20.glBindAttribLocation(shaderID, attribID, variableName);
 	}
 
 }

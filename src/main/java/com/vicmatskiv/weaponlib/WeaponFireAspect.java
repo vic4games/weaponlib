@@ -263,6 +263,12 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
         int currentAmmo = weaponInstance.getAmmo();
         if(currentAmmo == 1 && weapon.getEndOfShootSound() != null) {
             compatibility.playSound(player, weapon.getEndOfShootSound(), 1F, 1F);
+           
+        }
+        
+       
+        if(currentAmmo == 1) {
+        	 weaponInstance.setSlideLock(true);
         }
         
         player.rotationPitch = player.rotationPitch - weaponInstance.getRecoil();
@@ -310,6 +316,7 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
         }
         weaponInstance.setLastFireTimestamp(System.currentTimeMillis());
         weaponInstance.setAmmo(currentAmmo - 1);
+        
     }
 
     private void ejectSpentRound(PlayerWeaponInstance weaponInstance) {
@@ -364,9 +371,25 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
         	Vec3d newPos = new Vec3d(CompatibleClientEventHandler.NEW_POS.get(0), 
         			CompatibleClientEventHandler.NEW_POS.get(1),
         			CompatibleClientEventHandler.NEW_POS.get(2));
-        	float rotate = (float) Math.toRadians(-Minecraft.getMinecraft().player.rotationYaw);
-        	Vec3d vec = (new Vec3d(-20, -0, 0)).rotateYaw(rotate);
-        	Shell shell = new Shell(newPos.add(player.getPositionVector()), new Vec3d(-90, 0, 0).rotateYaw(rotate), vec);
+        	
+        	
+        	Vec3d offset = new Vec3d(-0.2, -0.2, 0.5);
+    		if(playerWeaponInstance.isAimed()) {
+    			offset = new Vec3d(0.2, -0.1, 0.5);
+    		}
+    		Vec3d posAdd = offset.rotatePitch((float) -Math.toRadians(Minecraft.getMinecraft().player.rotationPitch)).rotateYaw((float) -Math.toRadians(Minecraft.getMinecraft().player.rotationYaw));
+    		
+    		Vec3d outwardPos = newPos.subtract(Minecraft.getMinecraft().player.getPositionEyes(1.0f)).normalize().rotatePitch((float) -Math.toRadians(Minecraft.getMinecraft().player.rotationPitch)).rotateYaw((float) Math.toRadians(-Minecraft.getMinecraft().player.rotationYaw)).scale(0.5).add(Minecraft.getMinecraft().player.getPositionEyes(1.0f));
+    		newPos = outwardPos.add(posAdd);
+    		
+    		
+    		Vec3d velocity = new Vec3d(-0.3, 0.1, 0.0);
+    		velocity = velocity.rotateYaw((float) Math.toRadians(-Minecraft.getMinecraft().player.rotationYaw));
+    		
+    		
+    		
+
+        	Shell shell = new Shell(playerWeaponInstance.getWeapon().getShellType(), new Vec3d(newPos.x, newPos.y, newPos.z), new Vec3d(90, 0, 90), velocity);
         	CompatibleClientEventHandler.shellManager.enqueueShell(shell);
         	//System.out.println("yo");
         	/*

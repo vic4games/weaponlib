@@ -100,6 +100,7 @@ public class CustomGui extends CompatibleGui {
 		
 		
 		
+		
 		// animation on
 		if(AnimationModeProcessor.getInstance().getFPSMode()) {
 			event.setCanceled(true);

@@ -2,6 +2,8 @@ package com.vicmatskiv.weaponlib.animation;
 
 import java.nio.FloatBuffer;
 
+import javax.vecmath.Vector3d;
+
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Matrix3f;
@@ -176,6 +178,10 @@ public class MatrixHelper {
 		mat.m22 *= (float) scale.z;
 		
 		return scale;
+	}
+	
+	public static Vec3d lerpVectors(Vector3d a, Vector3d b, float t) {
+		return lerpVectors(new Vec3d(a.x, a.y, a.z), new Vec3d(b.x, b.y, b.z), t);
 	}
 	
 	public static Vec3d lerpVectors(Vec3d a, Vec3d b, float t) {

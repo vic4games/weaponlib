@@ -29,8 +29,12 @@ public class WavefrontLoader {
 	public static WavefrontModel load(String modelName) {
 		return load(new ResourceLocation(OBJ_MODEL_LOCATION + modelName + ".obj"));
 	}
-
+	
 	public static WavefrontModel loadSubModel(String model, String subModel) {
+		return loadSubModel(model, subModel, false);
+	}
+
+	public static WavefrontModel loadSubModel(String model, String subModel, boolean vaoMode) {
 		BufferedReader br = createBufferedReader(new ResourceLocation(OBJ_MODEL_LOCATION + model + ".obj"));
 		
 		boolean startRead = false;
@@ -44,11 +48,17 @@ public class WavefrontLoader {
 							startRead = true;
 						} else {
 							break;
+						//	startRead = false;
 							
 						}
 						startRead = true;
 					}
 					if(startRead) lines.add(line);
+					
+					if(!startRead &&
+							(line.startsWith("v") || line.startsWith("vn") || line.startsWith("vt"))) {
+							lines.add(line);
+					}
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -59,7 +69,7 @@ public class WavefrontLoader {
 			e.printStackTrace();
 		}
 		
-		return process(lines);
+		return process(lines, vaoMode);
 		
 	}
 	
@@ -85,7 +95,7 @@ public class WavefrontLoader {
 		}
 		
 
-		return process(lines);
+		return process(lines, false);
 
 	}
 	
@@ -103,7 +113,7 @@ public class WavefrontLoader {
 		
 	}
 
-	private static WavefrontModel process(ArrayList<String> unprocessed) {
+	private static WavefrontModel process(ArrayList<String> unprocessed, boolean vaoMode) {
 		WavefrontModel model = new WavefrontModel();
 		ArrayList<String[]> preprocesFace = new ArrayList<>();
 		
@@ -172,7 +182,12 @@ public class WavefrontLoader {
 		// model.buildFace(ar);
 	}
 
-	model.build();
+	if(!vaoMode) {
+		model.build();
+	} else {
+		model.buildVAO();
+	}
+	 
 
 	return model;
 
