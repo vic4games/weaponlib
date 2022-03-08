@@ -20,6 +20,7 @@ import org.lwjgl.opengl.GL33;
 import com.vicmatskiv.weaponlib.ClientModContext;
 import com.vicmatskiv.weaponlib.WeaponState;
 import com.vicmatskiv.weaponlib.debug.DebugRenderer;
+import com.vicmatskiv.weaponlib.render.bgl.GLCompatible;
 
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
@@ -185,7 +186,7 @@ public class WavefrontModel {
 				GL11.glTexCoordPointer(2, GL11.GL_FLOAT, vS, 12);
 			*/
 				//GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, 0);
-			GL30.glBindVertexArray(0);
+			GLCompatible.glBindVertexArray(0);
 			GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, 0);
 		return vao;
 	}

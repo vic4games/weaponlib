@@ -38,6 +38,9 @@ public class GLCompatible {
 	public static final int APPLE = 3;
 	public static final int ATI = 4;
 
+	// Support
+	public static boolean supportsInstancing = true;
+	
 	// methods
 	public static int fboType = -1;
 	public static int msaaType = -1;
@@ -61,6 +64,11 @@ public class GLCompatible {
 
 	public static boolean isLoaded = false;
 
+	
+	public static boolean doesSupportInstancing() {
+		return supportsInstancing;
+	}
+	
 	/*
 	 * Vertex Array Objects (VAOs)
 	 */
@@ -182,6 +190,8 @@ public class GLCompatible {
 			instancingType = ARB;
 		} else if (cap.GL_EXT_draw_instanced) {
 			instancingType = EXT;
+		} else {
+			supportsInstancing = false;
 		}
 		
 

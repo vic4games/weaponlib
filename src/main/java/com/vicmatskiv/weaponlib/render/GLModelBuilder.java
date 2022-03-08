@@ -15,6 +15,7 @@ import org.lwjgl.opengl.GL30;
 
 
 import com.vicmatskiv.weaponlib.render.WavefrontModel.Vertex;
+import com.vicmatskiv.weaponlib.render.bgl.GLCompatible;
 
 import net.minecraft.client.renderer.GlStateManager;
 import scala.actors.threadpool.Arrays;
@@ -58,8 +59,8 @@ public class GLModelBuilder {
 	 * @return VAO handle
 	 */
 	public static int createVAO() {
-		int vaoID = GL30.glGenVertexArrays();
-		GL30.glBindVertexArray(vaoID);
+		int vaoID = GLCompatible.glGenVertexArrays();
+		GLCompatible.glBindVertexArray(vaoID);
 		return vaoID;
 	}
 	
@@ -117,7 +118,7 @@ public class GLModelBuilder {
 	 * Unbinds the current vertex array object (by binding 0)
 	 */
 	public static void unbindVAO() {
-		GL30.glBindVertexArray(0);
+		GLCompatible.glBindVertexArray(0);
 	}
 
 }

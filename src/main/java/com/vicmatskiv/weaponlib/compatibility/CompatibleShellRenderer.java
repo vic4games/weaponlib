@@ -17,6 +17,7 @@ import com.vicmatskiv.weaponlib.render.InstancedShellObject;
 import com.vicmatskiv.weaponlib.render.Shaders;
 import com.vicmatskiv.weaponlib.render.WavefrontLoader;
 import com.vicmatskiv.weaponlib.render.WavefrontModel;
+import com.vicmatskiv.weaponlib.render.bgl.GLCompatible;
 import com.vicmatskiv.weaponlib.render.bgl.instancing.InstancedAttribute;
 import com.vicmatskiv.weaponlib.render.shells.ShellParticleSimulator;
 import com.vicmatskiv.weaponlib.render.shells.ShellParticleSimulator.Shell;
@@ -90,9 +91,12 @@ public class CompatibleShellRenderer {
 		};
 	
 	static {
-		addInstancedOperator(Type.ASSAULT, "assaultshell");
-		addInstancedOperator(Type.SHOTGUN, "12gaugeshell");
-		addInstancedOperator(Type.PISTOL, "9mmshell");
+		if(GLCompatible.doesSupportInstancing()) {
+			addInstancedOperator(Type.ASSAULT, "assaultshell");
+			addInstancedOperator(Type.SHOTGUN, "12gaugeshell");
+			addInstancedOperator(Type.PISTOL, "9mmshell");
+		}
+		
 	}
 	
 	
@@ -181,8 +185,12 @@ public class CompatibleShellRenderer {
 				Minecraft.getMinecraft().getRenderPartialTicks());
 		GlStateManager.translate(-interpX, -interpY, -interpZ);
 		
+		if(GLCompatible.doesSupportInstancing()) {
+			renderInstanced(shells);
+		} else {
+			renderNonInstanced(shells);
+		}
 		
-		renderInstanced(shells);
 		GlStateManager.color(1, 1, 1);
 		GlStateManager.popMatrix();
 
@@ -198,7 +206,7 @@ public class CompatibleShellRenderer {
 		
 	}
 	
-	public void renderNonInstanced(ArrayList<Shell> shells) {
+	public static void renderNonInstanced(ArrayList<Shell> shells) {
 		GlStateManager.enableCull();
 		GlStateManager.color(1, 1, 1, 1);
 		Minecraft.getMinecraft().entityRenderer.enableLightmap();

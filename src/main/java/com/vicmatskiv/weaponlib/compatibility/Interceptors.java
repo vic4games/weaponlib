@@ -28,6 +28,7 @@ import com.vicmatskiv.weaponlib.RenderContext;
 import com.vicmatskiv.weaponlib.RenderableState;
 import com.vicmatskiv.weaponlib.SpreadableExposure;
 import com.vicmatskiv.weaponlib.Weapon;
+import com.vicmatskiv.weaponlib.WeaponState;
 import com.vicmatskiv.weaponlib.animation.AnimationModeProcessor;
 import com.vicmatskiv.weaponlib.animation.ClientValueRepo;
 import com.vicmatskiv.weaponlib.animation.MatrixHelper;
@@ -35,6 +36,7 @@ import com.vicmatskiv.weaponlib.animation.MultipartRenderStateManager;
 import com.vicmatskiv.weaponlib.animation.ScreenShakingAnimationManager;
 import com.vicmatskiv.weaponlib.inventory.CustomPlayerInventory;
 import com.vicmatskiv.weaponlib.numerical.LissajousCurve;
+import com.vicmatskiv.weaponlib.render.cam.NaturalCamera;
 import com.vicmatskiv.weaponlib.vehicle.EntityVehicle;
 import com.vicmatskiv.weaponlib.vehicle.RenderVehicle2;
 import com.vicmatskiv.weaponlib.vehicle.VehicleSuspensionStrategy;
@@ -80,10 +82,13 @@ public class Interceptors {
     public static boolean is3dRenderableItem(Item item) {
         return compatibility.is3dRenderable(item);
     }
+    
+    public static NaturalCamera nc = new NaturalCamera();
 
     public static void setupCameraTransformAfterHurtCameraEffect(float partialTicks) {
     	//if(1+1==2) return;
     	
+    	//if(true) return;
     	
     	
     	//GlStateManager.rotate((float) -ClientValueRepo.walkingGun.getLerpedPosition()*4, 0, 0, 1);
@@ -345,6 +350,15 @@ public class Interceptors {
     	//GlStateManager.rotate(10f, 0, 1, 0);
        
     	
+    	if(weaponInstance != null) {
+    		if(weaponInstance.getState() != WeaponState.READY) {
+    			
+    		}
+    	
+    		nc.update();
+    	}
+    	
+    	
         if(weaponInstance != null ) {
             ClientModContext context = (ClientModContext) weaponInstance.getWeapon().getModContext();
             MultipartRenderStateManager<RenderableState, Part, RenderContext<RenderableState>> stateManager = weaponInstance.getWeapon().getRenderer().getStateManager(player);
@@ -393,6 +407,12 @@ public class Interceptors {
         	
     	}
     	
+    	
+    	if(ClientModContext.getContext() != null && ClientModContext.getContext().getMainHeldWeapon() != null) {
+    		//PlayerWeaponInstance pwi
+    		
+    		//System.out.println(ClientModContext.getContext());
+    	}
     	
     	
     	//GlStateManager.translate(0, ClientValueRepo.rise, 0);
