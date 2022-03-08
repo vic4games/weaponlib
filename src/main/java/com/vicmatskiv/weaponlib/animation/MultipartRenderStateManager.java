@@ -27,6 +27,7 @@ import org.lwjgl.util.vector.Vector4f;
 
 import com.vicmatskiv.weaponlib.DefaultPart;
 import com.vicmatskiv.weaponlib.RenderableState;
+import com.vicmatskiv.weaponlib.compatibility.Interceptors;
 
 import akka.japi.Pair;
 import net.minecraft.client.Minecraft;
@@ -219,6 +220,9 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
 
 			float currentProgress = (float)currentOffset / currentDuration;
 
+			
+			
+			
 			if(currentProgress > 1f) {
 				currentProgress = 1f;
 			}
@@ -252,13 +256,14 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
 								beizer = revertFlag ? targetState.beizer.scale(1.25) : targetState.beizer;
 							}
 							
-							
 							applyOnceNewBeizer(part, context,
 									partData.matrices.get(currentIndex - 1),
 							        partData.matrices.get(currentIndex),
 							        partData.attachedTo,
 							        1f, beizer, revertFlag, interpolation);
 						} else {
+							
+							
 							applyOnce2(part, context,
 							        partData.matrices.get(currentIndex - 1),
 							        partData.matrices.get(currentIndex),
@@ -282,6 +287,12 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
 				@Override
 				public void position(Part part, Context context) {
 					PartData partData = getPartData(part, context);
+					
+					
+					
+					//System.out.println(partData.matrices.get(currentIndex));
+					Interceptors.nc.feedMatrix(partData.matrices.get(currentIndex+1));
+					
 					
 					boolean revertFlag = (toState == RenderableState.NORMAL && fromState == RenderableState.ZOOMING);
 					

@@ -368,14 +368,17 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
         
         if(weapon.isShellCasingEjectEnabled() && playerWeaponInstance != null)  {
         	
+        	/*
         	Vec3d newPos = new Vec3d(CompatibleClientEventHandler.NEW_POS.get(0), 
         			CompatibleClientEventHandler.NEW_POS.get(1),
         			CompatibleClientEventHandler.NEW_POS.get(2));
         	
+        	*/
         	
-        	Vec3d offset = new Vec3d(-0.2, -0.2, 0.5);
+        	Vec3d newPos = Vec3d.ZERO;
+        	Vec3d offset = new Vec3d(-0.4, -0.2, 0.5);
     		if(playerWeaponInstance.isAimed()) {
-    			offset = new Vec3d(0.2, -0.1, 0.5);
+    			offset = new Vec3d(-0.2, -0.1, 0.5);
     		}
     		Vec3d posAdd = offset.rotatePitch((float) -Math.toRadians(Minecraft.getMinecraft().player.rotationPitch)).rotateYaw((float) -Math.toRadians(Minecraft.getMinecraft().player.rotationYaw));
     		
