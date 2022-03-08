@@ -10,6 +10,7 @@ import org.lwjgl.opengl.ARBComputeShader;
 import org.lwjgl.opengl.ARBDrawInstanced;
 import org.lwjgl.opengl.ARBFramebufferObject;
 import org.lwjgl.opengl.ARBInstancedArrays;
+import org.lwjgl.opengl.ARBMultisample;
 import org.lwjgl.opengl.ARBTextureFloat;
 import org.lwjgl.opengl.ARBTextureMultisample;
 import org.lwjgl.opengl.ARBVertexArrayObject;
@@ -272,29 +273,33 @@ public class GLCompatible {
 			System.out.println("Floating point texture component not supported");
 		}
 
-		if (cap.OpenGL32) {
-			multisampleType = 0;
+		
+		 if (cap.GL_ARB_texture_multisample) {
+				multisampleType = ARB;
+				GL_TEXTURE_2D_MULTISAMPLE = ARBTextureMultisample.GL_TEXTURE_2D_MULTISAMPLE;
+			} else if (cap.OpenGL32) {
+			multisampleType = NORMAL;
 			GL_TEXTURE_2D_MULTISAMPLE = GL32.GL_TEXTURE_2D_MULTISAMPLE;
-		} else if (cap.GL_ARB_texture_multisample) {
-			multisampleType = 1;
-			GL_TEXTURE_2D_MULTISAMPLE = ARBTextureMultisample.GL_TEXTURE_2D_MULTISAMPLE;
 		}
+		
+		
+		
+	
 
 	}
 
 	public static void glTexImage2DMultisample(int target, int samples, int internalformat, int width, int height,
 			boolean fixedsamplelocations) {
 
-		init();
-
 		switch (multisampleType) {
-		case NORMAL:
-			GL32.glTexImage2DMultisample(target, samples, internalformat, width, height, fixedsamplelocations);
-			break;
-		case ARB:
-			ARBTextureMultisample.glTexImage2DMultisample(target, samples, internalformat, width, height,
-					fixedsamplelocations);
-			break;
+			case NORMAL:
+				GL32.glTexImage2DMultisample(target, samples, internalformat, width, height, fixedsamplelocations);
+				break;
+			case ARB:
+				
+				ARBTextureMultisample.glTexImage2DMultisample(target, samples, internalformat, width, height,
+						fixedsamplelocations);
+				break;
 		}
 
 	}

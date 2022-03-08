@@ -296,8 +296,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 
 	
 
-	public static MSAABuffer msaaBuffer;
-
+	
 	public static WeaponRotationHandler wrh = new WeaponRotationHandler();
 	
 	public static void captureAtlasPosition() {
@@ -341,9 +340,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 				framebuffer = new Framebuffer(INVENTORY_TEXTURE_WIDTH, INVENTORY_TEXTURE_HEIGHT, true);
 				//framebuffer = new MultisampledFBO(INVENTORY_TEXTURE_WIDTH, INVENTORY_TEXTURE_HEIGHT, true);
 				
-				if(msaaBuffer == null) {
-					msaaBuffer = new MSAABuffer(INVENTORY_TEXTURE_WIDTH, INVENTORY_TEXTURE_HEIGHT, true);
-				}
+		
 				
 				
 				framebuffer.bindFramebuffer(true);
@@ -845,6 +842,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 				//	msaaBuffer.unbindMSAABuffer(framebuffer.framebufferObject);
 					//Bloom.unapplyMultisample();
 				}
+			
 				
 				
 				
