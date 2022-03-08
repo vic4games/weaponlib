@@ -11,6 +11,7 @@ import org.lwjgl.opengl.GL31;
 
 import com.vicmatskiv.weaponlib.render.VAOData;
 import com.vicmatskiv.weaponlib.render.WavefrontModel;
+import com.vicmatskiv.weaponlib.render.bgl.GLCompatible;
 import com.vicmatskiv.weaponlib.shader.jim.Attribute;
 import com.vicmatskiv.weaponlib.shader.jim.Shader;
 import com.vicmatskiv.weaponlib.shader.jim.ShaderManager;
@@ -45,7 +46,7 @@ public class ModelInstancedObject<K> extends BasicInstancedObject<K> {
 		
 		preRender();
 		
-		GL31.glDrawElementsInstanced(getRenderMode(), model.indexBuffer.size(), GL11.GL_UNSIGNED_INT, 0, primCount);
+		GLCompatible.glDrawElementsInstanced(getRenderMode(), model.indexBuffer.size(), GL11.GL_UNSIGNED_INT, 0, primCount);
 		
 		
 		postRender();

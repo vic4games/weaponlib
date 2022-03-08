@@ -13,6 +13,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
@@ -28,6 +29,7 @@ import java.util.Stack;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
+import org.lwjgl.opengl.ARBVertexArrayObject;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL13;
@@ -41,6 +43,7 @@ import org.lwjgl.opengl.GLSync;
 import org.lwjgl.util.glu.Project;
 import org.lwjgl.util.vector.Matrix4f;
 
+import com.google.common.reflect.ClassPath;
 import com.google.common.reflect.Reflection;
 import com.vicmatskiv.weaponlib.AttachmentCategory;
 import com.vicmatskiv.weaponlib.BulletHoleRenderer;
@@ -61,6 +64,7 @@ import com.vicmatskiv.weaponlib.animation.MatrixHelper;
 import com.vicmatskiv.weaponlib.animation.OpenGLSelectionHelper;
 import com.vicmatskiv.weaponlib.animation.jim.AnimationData;
 import com.vicmatskiv.weaponlib.animation.jim.AnimationData.BlockbenchTransition;
+import com.vicmatskiv.weaponlib.compatibility.graph.CompatibilityClassGenerator;
 import com.vicmatskiv.weaponlib.animation.jim.BBLoader;
 import com.vicmatskiv.weaponlib.debug.DebugRenderer;
 import com.vicmatskiv.weaponlib.debug.SysOutController;
@@ -413,14 +417,31 @@ public abstract class CompatibleClientEventHandler {
 	
 	public static ShellManager shellManager = new ShellManager();
 	public static BulletHoleRenderer bhr = new BulletHoleRenderer();
-	public static InstancedRender ir = new InstancedRender();
+	//public static InstancedRender ir = new InstancedRender();
 	
-	public static ShellRenderer2 shr2;
+
 	
-	
+	public static CompatibilityClassGenerator ccg = new CompatibilityClassGenerator();
 	public static InstancedShellObject iso;
 	@SubscribeEvent
 	public void renderWorrldLastEvent(RenderWorldLastEvent evt) {
+		
+		
+		
+		//if(true) return;
+		//System.out.println("Start");
+
+		/* Generate methods for glCommands
+		ArrayList<Pair<Class<?>, Method>> ar = ccg.findStandardOpenGLMethod("glGenVertexArrays");
+		for(Pair<Class<?>, Method> pair : ar) {
+			System.out.println("\n" + ccg.buildOutMethod(pair, "glGenVertexArrays"));
+		}
+		\
+		
+		
+		//System.out.println("end");
+		if(true) return;
+		
 		
 		
 		//SysOutController.revealCallLocations();

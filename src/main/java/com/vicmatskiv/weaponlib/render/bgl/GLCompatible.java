@@ -1,6 +1,9 @@
 package com.vicmatskiv.weaponlib.render.bgl;
 
+import java.nio.IntBuffer;
+
 import org.lwjgl.opengl.APPLEFloatPixels;
+import org.lwjgl.opengl.APPLEVertexArrayObject;
 import org.lwjgl.opengl.ARBColorBufferFloat;
 import org.lwjgl.opengl.ARBComputeShader;
 import org.lwjgl.opengl.ARBDrawInstanced;
@@ -11,7 +14,9 @@ import org.lwjgl.opengl.ARBVertexArrayObject;
 import org.lwjgl.opengl.ARBVertexAttrib64bit;
 import org.lwjgl.opengl.ARBVertexAttribBinding;
 import org.lwjgl.opengl.ATITextureFloat;
+import org.lwjgl.opengl.ATIVertexArrayObject;
 import org.lwjgl.opengl.ContextCapabilities;
+import org.lwjgl.opengl.EXTDrawInstanced;
 import org.lwjgl.opengl.EXTFramebufferBlit;
 import org.lwjgl.opengl.EXTFramebufferMultisample;
 import org.lwjgl.opengl.EXTFramebufferMultisampleBlitScaled;
@@ -19,20 +24,27 @@ import org.lwjgl.opengl.EXTFramebufferObject;
 import org.lwjgl.opengl.EXTFramebufferSRGB;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
+import org.lwjgl.opengl.GL31;
 import org.lwjgl.opengl.GL32;
 import org.lwjgl.opengl.GLContext;
 import org.lwjgl.opengl.NVTextureMultisample;
 
 public class GLCompatible {
 
+	// Types
 	public static final int NORMAL = 0;
 	public static final int ARB = 1;
 	public static final int EXT = 2;
+	public static final int APPLE = 3;
+	public static final int ATI = 4;
 
+	// methods
 	public static int fboType = -1;
 	public static int msaaType = -1;
-	public static int multisampleType = -1;
-	public static int vertexAttribBinding = -1;
+	public static int vaoType = -1;
+	public static int instancingType = -1;
+
+	public static int multisampleType;
 
 	public static int GL_READ_FRAMEBUFFER;
 	public static int GL_DRAW_FRAMEBUFFER;
@@ -44,27 +56,148 @@ public class GLCompatible {
 
 	public static int GL_TEXTURE_2D_MULTISAMPLE;
 
+	// Vertex array object
+	public static int GL_VERTEX_ARRAY_BINDING;
+
 	public static boolean isLoaded = false;
 
+	/*
+	 * Vertex Array Objects (VAOs)
+	 */
+
+	public static int glGenVertexArrays() {
+		switch (vaoType) {
+		case APPLE:
+			return APPLEVertexArrayObject.glGenVertexArraysAPPLE();
+		case ARB:
+			return ARBVertexArrayObject.glGenVertexArrays();
+		case NORMAL:
+			return GL30.glGenVertexArrays();
+		}
+		return 0;
+	}
+
+	public static void glBindVertexArray(int arg0) {
+		switch(vaoType) {
+			case APPLE:
+				APPLEVertexArrayObject.glBindVertexArrayAPPLE(arg0);
+				break;
+			case ARB:
+				ARBVertexArrayObject.glBindVertexArray(arg0);
+				break;
+			case NORMAL:
+				GL30.glBindVertexArray(arg0);
+				break;
+		}
+	}
+
+	public static boolean glIsVertexArray(int arg0) {
+		switch (vaoType) {
+		case APPLE:
+			return APPLEVertexArrayObject.glIsVertexArrayAPPLE(arg0);
+		case ARB:
+			return ARBVertexArrayObject.glIsVertexArray(arg0);
+		case NORMAL:
+			return GL30.glIsVertexArray(arg0);
+		}
+		return false;
+	}
+
+	public static void glDeleteVertexArrays(int arg0) {
+		switch(vaoType) {
+			case APPLE:
+				APPLEVertexArrayObject.glDeleteVertexArraysAPPLE(arg0);
+	break;
+			case ARB:
+				ARBVertexArrayObject.glDeleteVertexArrays(arg0);
+	break;
+			case NORMAL:
+				GL30.glDeleteVertexArrays(arg0);
+	break;
+		}
+		return;
+	}
+
+
+
+	/*
+	 * Vertex Attributes
+	 */
+
+	/*
+	 * Instancing
+	 */
 	
+	public static void glDrawElementsInstanced(int arg0, int arg1, int arg2, long arg3, int arg4) {
+		switch(instancingType) {
+			case ARB:
+				ARBDrawInstanced.glDrawElementsInstancedARB(arg0, arg1, arg2, arg3, arg4);
+	break;
+			case EXT:
+				EXTDrawInstanced.glDrawElementsInstancedEXT(arg0, arg1, arg2, arg3, arg4);
+	break;
+			case NORMAL:
+				GL31.glDrawElementsInstanced(arg0, arg1, arg2, arg3, arg4);
+	break;
+		}
+		return;
+	}
+	
+
+	public static void glDrawArraysInstanced(int mode, int first, int count, int primcount) {
+		switch (instancingType) {
+		case NORMAL:
+			GL31.glDrawArraysInstanced(mode, first, count, primcount);
+			break;
+		case ARB:
+			
+			ARBDrawInstanced.glDrawArraysInstancedARB(mode, first, count, primcount);
+			break;
+		case EXT:
+			EXTDrawInstanced.glDrawArraysInstancedEXT(mode, first, count, primcount);
+			break;
+		}
+	}
+
 	static {
 		init();
 	}
-	
+
 	public static void init() {
-		if(isLoaded) return;
+		if (isLoaded)
+			return;
 		isLoaded = true;
-	
+
 		ContextCapabilities cap = GLContext.getCapabilities();
 
-		
-		if(cap.OpenGL20) {
-			
-		} else if(cap.GL_ARB_vertex_attrib_binding) {
-			
+		if (cap.OpenGL20) {
+
+		} else if (cap.GL_ARB_vertex_attrib_binding) {
+
+		}
+
+		if (cap.OpenGL31) {
+			instancingType = NORMAL;
+		} else if (cap.GL_ARB_draw_instanced) {
+			instancingType = ARB;
+		} else if (cap.GL_EXT_draw_instanced) {
+			instancingType = EXT;
 		}
 		
-		
+
+		// Vertex array objects
+		if (cap.OpenGL30) {
+			vaoType = NORMAL;
+			GL_VERTEX_ARRAY_BINDING = GL30.GL_VERTEX_ARRAY_BINDING;
+		} else if (cap.GL_ARB_vertex_array_object) {
+			vaoType = ARB;
+			GL_VERTEX_ARRAY_BINDING = ARBVertexArrayObject.GL_VERTEX_ARRAY_BINDING;
+		} else if (cap.GL_APPLE_vertex_array_object) {
+			GL_VERTEX_ARRAY_BINDING = APPLEVertexArrayObject.GL_VERTEX_ARRAY_BINDING_APPLE;
+			vaoType = APPLE;
+		}
+		System.out.println("VAO TYPE: " + vaoType);
+
 		if (cap.OpenGL30) {
 			fboType = 0;
 			GL_READ_FRAMEBUFFER = GL30.GL_READ_FRAMEBUFFER;
@@ -118,7 +251,7 @@ public class GLCompatible {
 			boolean fixedsamplelocations) {
 
 		init();
-		
+
 		switch (multisampleType) {
 		case NORMAL:
 			GL32.glTexImage2DMultisample(target, samples, internalformat, width, height, fixedsamplelocations);
@@ -194,7 +327,7 @@ public class GLCompatible {
 			break;
 		}
 	}
-	
+
 	// GL20.glBindAttribLocation(shaderID, attribID, variableName);
 	public static void glBindAttribLocation(int shaderID, int attribID, String variableName) {
 		GL20.glBindAttribLocation(shaderID, attribID, variableName);

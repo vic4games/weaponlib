@@ -30,11 +30,11 @@ public class ModernUtil {
 			int offset) {
 		//GL11.glEnable(GL15.GL_ARRAY_BUFFER);
 		GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbo);
-		GL30.glBindVertexArray(vao);
+		GLCompatible.glBindVertexArray(vao);
 		GL20.glVertexAttribPointer(attribute, dataSize, GL11.GL_FLOAT, false, instancedDataLength * 4, offset * 4); 
 		GL33.glVertexAttribDivisor(attribute, 1);
 		GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
-		GL30.glBindVertexArray(0);
+		GLCompatible.glBindVertexArray(0);
 	}
 	
 	public static int createEmptyVBO(int floatCount) {

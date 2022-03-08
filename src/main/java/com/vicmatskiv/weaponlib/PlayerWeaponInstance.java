@@ -310,6 +310,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 		setSelectedAttachmentIndexes(otherWeaponInstance.selectedAttachmentIndexes);
 		setActiveAttachmentIds(otherWeaponInstance.activeAttachmentIds);
 		setActiveTextureIndex(otherWeaponInstance.activeTextureIndex);
+		//setSlideLock(otherWeaponInstance.isSlideInLock);
 		setLaserOn(otherWeaponInstance.laserOn);
 		setMaxShots(otherWeaponInstance.maxShots);
 		setLoadIterationCount(otherWeaponInstance.loadIterationCount);

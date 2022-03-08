@@ -2,6 +2,14 @@ package com.vicmatskiv.weaponlib.command;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+
 import com.vicmatskiv.weaponlib.ClientModContext;
 import com.vicmatskiv.weaponlib.ItemAttachment;
 import com.vicmatskiv.weaponlib.Part;
@@ -10,10 +18,13 @@ import com.vicmatskiv.weaponlib.animation.AnimationModeProcessor;
 import com.vicmatskiv.weaponlib.animation.DebugPositioner;
 import com.vicmatskiv.weaponlib.animation.OpenGLSelectionHelper;
 import com.vicmatskiv.weaponlib.animation.jim.BBLoader;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleClassInfoProvider;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleCommand;
+import com.vicmatskiv.weaponlib.compatibility.graph.CompatibilityClassGenerator;
 import com.vicmatskiv.weaponlib.vehicle.VehiclePart;
 
+import akka.japi.Pair;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.item.Item;
 import net.minecraft.util.text.TextFormatting;
@@ -37,6 +48,7 @@ public class DebugCommand extends CompatibleCommand {
     
     private static final String DEBUG_FREECAM = "freecam";
     private static final String DEBUG_MUZZLE_POS = "muzzle";
+    private static final String DEBUG_COMPAT = "compat";
 
     private String modId;
 
@@ -142,13 +154,62 @@ public class DebugCommand extends CompatibleCommand {
             case DEBUG_ANIM_MODE:
             	processAnimMode(args);
             	break;
-             
+            case DEBUG_COMPAT:
+            	processCompatMode(args);
+            	break;
             default:
                 compatibility.addChatMessage(compatibility.clientPlayer(), getCompatibleUsage(sender));
             }
         } else {
             compatibility.addChatMessage(compatibility.clientPlayer(), getCompatibleUsage(sender));
         }
+    }
+    
+    public CompatibilityClassGenerator ccg = new CompatibilityClassGenerator();
+    public ArrayList<String> compatList = new ArrayList<>();
+    
+    private void processCompatMode(String[] args) {
+    	if(args[1].equals("new")) {
+    		compatList.clear();
+    		ccg.setup();
+    		compatibility.addChatMessage(compatibility.clientPlayer(), getDebugPrefix() + " Started writing new compat method set");
+    	} else if(args[1].equals("add")) {
+    		ArrayList<Pair<Class<?>, Method>> list = ccg.findStandardOpenGLMethod(args[2]);
+    		for(Pair<Class<?>, Method> pair : list) {
+    			//ccg.buildOutMethod(original, searchTerm)
+    			compatList.add(ccg.buildOutMethod(pair, args[2]).toString());
+    		}
+    	} else if(args[1].equals("build")) {
+    		File f = new File("debugcompat\\output.txt");
+    		System.out.println(f.getAbsolutePath());
+    		try {
+				f.createNewFile();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+    		f.mkdirs();
+    		try {
+				f.createNewFile();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+    		try {
+				BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(f));
+				for(String s : compatList) {
+					bos.write(s.getBytes());
+				}
+				bos.close();
+				
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+    	}
     }
     
     private void processAnimMode(String[] args) {

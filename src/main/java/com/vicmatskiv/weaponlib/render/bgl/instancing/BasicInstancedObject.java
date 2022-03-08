@@ -8,6 +8,7 @@ import org.lwjgl.opengl.GL31;
 
 import com.vicmatskiv.weaponlib.render.VAOData;
 import com.vicmatskiv.weaponlib.render.VAOLoader;
+import com.vicmatskiv.weaponlib.render.bgl.GLCompatible;
 import com.vicmatskiv.weaponlib.render.bgl.ModernUtil;
 import com.vicmatskiv.weaponlib.shader.jim.Shader;
 
@@ -64,7 +65,7 @@ public abstract class BasicInstancedObject<K> {
 		
 		
 		// Add instanced attributes
-		GL30.glBindVertexArray(vao.getVaoID());
+		GLCompatible.glBindVertexArray(vao.getVaoID());
 		int offset = 0;
 		if(attribs != null) {
 			for(InstancedAttribute attr : attribs) {
@@ -80,18 +81,18 @@ public abstract class BasicInstancedObject<K> {
 				}
 			}
 		}
-		GL30.glBindVertexArray(0);
+		GLCompatible.glBindVertexArray(0);
 	}
 	
 	protected void preRender() {
 		renderShader.use();
-		GL30.glBindVertexArray(vao.getVaoID());
+		GLCompatible.glBindVertexArray(vao.getVaoID());
 		ModernUtil.enableVertexAttribRange(0, this.largestAttribute);
 	}
 	
 	protected void postRender() {
 		ModernUtil.disableVertexAttribRange(0, this.largestAttribute);
-		GL30.glBindVertexArray(0);
+		GLCompatible.glBindVertexArray(0);
 		renderShader.release();
 	}
 	
@@ -104,7 +105,7 @@ public abstract class BasicInstancedObject<K> {
 		preRender();
 		
 		// Render elements
-		GL31.glDrawArraysInstanced(this.renderMode, 0, vao.getVertexCount(), primCount);
+		GLCompatible.glDrawArraysInstanced(this.renderMode, 0, vao.getVertexCount(), primCount);
 		
 		// Tidy up render
 		postRender();

@@ -3502,8 +3502,16 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 					//val *= val*val*val;
 					//renderContext.getWeaponInstance().setSlideLock(false);
 					//System.out.println(renderContext.getWeaponInstance().isSlideInLock);
+				
+					
+					GlStateManager.translate(0, 0, ClientValueRepo.gunPow/50);
+					
+					if(renderContext.getWeaponInstance().getAmmo() != 0) {
+						renderContext.getWeaponInstance().setSlideLock(false);
+					}
+					//System.out.println(renderContext.getWeaponInstance());
 					if(renderContext.getWeaponInstance().isSlideLocked()) {
-						//GlStateManager.translate(0, 0, 0.4);
+						GlStateManager.translate(0, 0, 0.43);
 					}
 					
 				}

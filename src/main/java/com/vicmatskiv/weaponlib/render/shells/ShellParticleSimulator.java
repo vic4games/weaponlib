@@ -308,7 +308,7 @@ public class ShellParticleSimulator {
 					sh.pos.y = b.maxY;
 				
 					// Is this good?
-					sh.prevPos = sh.pos;
+					//sh.prevPos = sh.pos;
 					
 					
 					
