@@ -8,6 +8,7 @@ import org.lwjgl.opengl.ARBColorBufferFloat;
 import org.lwjgl.opengl.ARBComputeShader;
 import org.lwjgl.opengl.ARBDrawInstanced;
 import org.lwjgl.opengl.ARBFramebufferObject;
+import org.lwjgl.opengl.ARBInstancedArrays;
 import org.lwjgl.opengl.ARBTextureFloat;
 import org.lwjgl.opengl.ARBTextureMultisample;
 import org.lwjgl.opengl.ARBVertexArrayObject;
@@ -26,6 +27,7 @@ import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL31;
 import org.lwjgl.opengl.GL32;
+import org.lwjgl.opengl.GL33;
 import org.lwjgl.opengl.GLContext;
 import org.lwjgl.opengl.NVTextureMultisample;
 
@@ -47,6 +49,8 @@ public class GLCompatible {
 	public static int vaoType = -1;
 	public static int instancingType = -1;
 
+	public static int attribDivisorType = -1;
+	
 	public static int multisampleType;
 
 	public static int GL_READ_FRAMEBUFFER;
@@ -131,6 +135,19 @@ public class GLCompatible {
 	/*
 	 * Vertex Attributes
 	 */
+	
+	public static void glVertexAttribDivisor(int arg0, int arg1) {
+		switch(attribDivisorType) {
+	
+			case ARB:
+				ARBInstancedArrays.glVertexAttribDivisorARB(arg0, arg1);
+	break;
+			case NORMAL:
+				GL33.glVertexAttribDivisor(arg0, arg1);
+	break;
+		}
+		return;
+	}
 
 	/*
 	 * Instancing
@@ -178,10 +195,12 @@ public class GLCompatible {
 
 		ContextCapabilities cap = GLContext.getCapabilities();
 
-		if (cap.OpenGL20) {
-
-		} else if (cap.GL_ARB_vertex_attrib_binding) {
-
+		if(cap.OpenGL33) {
+			attribDivisorType = NORMAL;
+		} else if(cap.GL_ARB_instanced_arrays) {
+			attribDivisorType = ARB;
+		} else {
+			supportsInstancing = false;
 		}
 
 		if (cap.OpenGL31) {

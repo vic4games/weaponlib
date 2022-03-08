@@ -14,6 +14,7 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GLSync;
 import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
@@ -355,29 +356,16 @@ public class Interceptors {
     			
     		}
     	
-    		nc.update();
+    		//nc.update();
     	}
     	
     	
-        if(weaponInstance != null ) {
+    	if(weaponInstance != null ) {
             ClientModContext context = (ClientModContext) weaponInstance.getWeapon().getModContext();
             MultipartRenderStateManager<RenderableState, Part, RenderContext<RenderableState>> stateManager = weaponInstance.getWeapon().getRenderer().getStateManager(player);
-//            if(stateManager != null) {
-//                RenderableState lastState = stateManager.getLastState();
-//                if(lastState != RenderableState.NORMAL && lastState != RenderableState.ZOOMING) {
-//                    System.out.println("Last state " + lastState);
-//                }
-//            }
-            
            
             ScreenShakingAnimationManager yawPitchAnimationManager = context.getPlayerRawPitchAnimationManager();
             yawPitchAnimationManager.update(player, weaponInstance, stateManager != null ? stateManager.getLastState() : null);
-//            if(weaponInstance.isAimed() && !isProning(player)) {
-//                yawPitchAnimationManager.update(player, stateManager != null ? stateManager.getLastState() : null);
-////                GL11.glRotatef(5f * partialTicks, 1.0F, 0.0F, 1.0F);
-//            } else {
-//                yawPitchAnimationManager.reset(player, stateManager != null ? stateManager.getLastState() : null);
-//            }
         }
     }
     
@@ -408,9 +396,10 @@ public class Interceptors {
     	}
     	
     	
+    	
     	if(ClientModContext.getContext() != null && ClientModContext.getContext().getMainHeldWeapon() != null) {
     		//PlayerWeaponInstance pwi
-    		
+    		nc.update();
     		//System.out.println(ClientModContext.getContext());
     	}
     	

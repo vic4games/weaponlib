@@ -9,6 +9,8 @@ import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL33;
 
+import com.vicmatskiv.weaponlib.render.bgl.GLCompatible;
+
 public class VAOLoader {
 	
 	public static VAOData loadToVAO(float[] positions) {
@@ -68,11 +70,11 @@ public class VAOLoader {
 	
 	public void addInstancedAttribute(int vao, int vbo, int attribute, int dataSize, int instancedDataLength, int offset) {
 		GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbo);
-		GL30.glBindVertexArray(vao);
+		GLCompatible.glBindVertexArray(vao);
 		GL20.glVertexAttribPointer(attribute, dataSize, GL11.GL_FLOAT , false, instancedDataLength*4, offset*4);
-		GL33.glVertexAttribDivisor(attribute, 1);
+		GLCompatible.glVertexAttribDivisor(attribute, 1);
 		GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
-		GL30.glBindVertexArray(0);
+		GLCompatible.glBindVertexArray(0);
 	}
 
 }
