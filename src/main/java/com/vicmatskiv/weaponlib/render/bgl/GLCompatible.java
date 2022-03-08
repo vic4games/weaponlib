@@ -2,6 +2,7 @@ package com.vicmatskiv.weaponlib.render.bgl;
 
 import java.nio.IntBuffer;
 
+import org.apache.commons.lang3.SystemUtils;
 import org.lwjgl.opengl.APPLEFloatPixels;
 import org.lwjgl.opengl.APPLEVertexArrayObject;
 import org.lwjgl.opengl.ARBColorBufferFloat;
@@ -213,6 +214,11 @@ public class GLCompatible {
 			supportsInstancing = false;
 		}
 		
+		
+		// Please fix ;(
+		if(SystemUtils.IS_OS_MAC) {
+			supportsInstancing = false;
+		}
 
 		// Vertex array objects
 		if (cap.OpenGL30) {

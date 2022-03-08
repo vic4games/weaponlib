@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.lwjgl.BufferUtils;
+import org.lwjgl.opengl.ARBDrawElementsBaseVertex;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL14;
@@ -158,6 +159,9 @@ public class WavefrontModel {
 				vao = GLModelBuilder.createVAO();
 				
 			
+				
+				
+				
 				this.ebo = GL15.glGenBuffers();
 				GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, ebo);
 				GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, intBuf, GL15.GL_STATIC_DRAW);

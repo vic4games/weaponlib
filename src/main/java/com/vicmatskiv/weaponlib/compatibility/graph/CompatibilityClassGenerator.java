@@ -184,7 +184,7 @@ public class CompatibilityClassGenerator {
 				builder.append("\n\t\t\treturn " + genericName + "." + pair.second().getName() + parameterBuilder.toString() + ";");
 			} else {
 				builder.append("\n\t\t\t" + genericName + "." + pair.second().getName() + parameterBuilder.toString() + ";");
-				builder.append("\nbreak;");
+				builder.append("\n\t\t\tbreak;");
 			}
 			
 		}
