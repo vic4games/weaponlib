@@ -157,7 +157,7 @@ public class CompatibleShellRenderer {
 			for(int i = 0; i < g_vertex_buffer_data.length-3; i += 3) {
 				bb2.pos(g_vertex_buffer_data[i]*shScaleX, g_vertex_buffer_data[i+1]*shScaleY, g_vertex_buffer_data[i+2]*shScaleZ).endVertex();
 			}
-			
+			GlStateManager.color(1, 1, 1);
 			t.draw();
 			GlStateManager.glEndList();
  		} else {

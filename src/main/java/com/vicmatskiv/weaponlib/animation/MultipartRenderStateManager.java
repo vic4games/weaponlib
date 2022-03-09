@@ -291,7 +291,11 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
 					
 					
 					//System.out.println(partData.matrices.get(currentIndex));
-					Interceptors.nc.feedMatrix(partData.matrices.get(currentIndex+1));
+					
+					if(part == DefaultPart.MAIN_ITEM) {
+						Interceptors.nc.addToMatrixStack(partData.matrices.get(currentIndex+1));
+						
+					}
 					
 					
 					boolean revertFlag = (toState == RenderableState.NORMAL && fromState == RenderableState.ZOOMING);

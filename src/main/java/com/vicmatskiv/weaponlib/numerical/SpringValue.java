@@ -35,6 +35,12 @@ public class SpringValue {
 	public double getSpringConstant() {
 		return springConstant;
 	}
+	
+	public void configure(double k, double mass, double dampening) {
+		this.springConstant = k;
+		this.mass = mass;
+		this.damping = dampening;
+	}
 
 	public void setSpringConstant(double springConstant) {
 		this.springConstant = springConstant;

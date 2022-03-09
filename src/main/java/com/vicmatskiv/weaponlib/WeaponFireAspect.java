@@ -376,9 +376,10 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
         	*/
         	
         	Vec3d newPos = Vec3d.ZERO;
-        	Vec3d offset = new Vec3d(-0.4, -0.2, 0.5);
+        	Vec3d offset = new Vec3d(-0.5, -0.25, 0.5);
+        //	Vec3d offset = new Vec3d(-0.0, -0.25, 0.5);
     		if(playerWeaponInstance.isAimed()) {
-    			offset = new Vec3d(-0.2, -0.1, 0.5);
+    			//offset = new Vec3d(0.1, -0.2, 0.5);
     		}
     		Vec3d posAdd = offset.rotatePitch((float) -Math.toRadians(Minecraft.getMinecraft().player.rotationPitch)).rotateYaw((float) -Math.toRadians(Minecraft.getMinecraft().player.rotationYaw));
     		
@@ -390,6 +391,7 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
     		velocity = velocity.rotateYaw((float) Math.toRadians(-Minecraft.getMinecraft().player.rotationYaw));
     		
     		
+    		//CompatibleClientEventHandler.testPos = newPos;
     		
 
         	Shell shell = new Shell(playerWeaponInstance.getWeapon().getShellType(), new Vec3d(newPos.x, newPos.y, newPos.z), new Vec3d(90, 0, 90), velocity);

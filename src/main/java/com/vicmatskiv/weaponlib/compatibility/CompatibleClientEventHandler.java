@@ -420,12 +420,55 @@ public abstract class CompatibleClientEventHandler {
 	public static BulletHoleRenderer bhr = new BulletHoleRenderer();
 	//public static InstancedRender ir = new InstancedRender();
 	
+	
+	public static Vec3d testPos = Vec3d.ZERO;
 
 	
 	public static CompatibilityClassGenerator ccg = new CompatibilityClassGenerator();
 	public static InstancedShellObject iso;
+	
+	public static Vec3d getInterpolatedPlayerCoords() {
+		EntityPlayer p = Minecraft.getMinecraft().player;
+		float interpX = (float) MatrixHelper.solveLerp(p.prevPosX, p.posX,
+				Minecraft.getMinecraft().getRenderPartialTicks());
+		float interpY = (float) MatrixHelper.solveLerp(p.prevPosY, p.posY,
+				Minecraft.getMinecraft().getRenderPartialTicks());
+		float interpZ = (float) MatrixHelper.solveLerp(p.prevPosZ, p.posZ,
+				Minecraft.getMinecraft().getRenderPartialTicks());
+
+		
+		return new Vec3d(interpX, interpY, interpZ);
+	}
+	
 	@SubscribeEvent
 	public void renderWorrldLastEvent(RenderWorldLastEvent evt) {
+		
+		if(ClientModContext.getContext().getMainHeldWeapon() != null) {
+			PlayerWeaponInstance playerWeaponInstance = ClientModContext.getContext().getMainHeldWeapon();
+			Vec3d newPos = Vec3d.ZERO;
+	    	Vec3d offset = new Vec3d(-0.5, -0.25, 0.5);
+			if(playerWeaponInstance.isAimed()) {
+			//	offset = new Vec3d(0.1, -0.2, 0.5);
+			}
+			Vec3d posAdd = offset.rotatePitch((float) -Math.toRadians(Minecraft.getMinecraft().player.rotationPitch)).rotateYaw((float) -Math.toRadians(Minecraft.getMinecraft().player.rotationYaw));
+			
+			Vec3d outwardPos = newPos.subtract(Minecraft.getMinecraft().player.getPositionEyes(1.0f)).normalize().rotatePitch((float) -Math.toRadians(Minecraft.getMinecraft().player.rotationPitch)).rotateYaw((float) Math.toRadians(-Minecraft.getMinecraft().player.rotationYaw)).scale(0.5).add(Minecraft.getMinecraft().player.getPositionEyes(1.0f));
+			testPos = outwardPos.add(posAdd);
+			
+			
+			GlStateManager.pushMatrix();
+			Vec3d iP = getInterpolatedPlayerCoords();
+			GlStateManager.translate(-iP.x, -iP.y, -iP.z);
+			GlStateManager.disableTexture2D();
+			Tessellator t = Tessellator.getInstance();
+			BufferBuilder bb2 = t.getBuffer();
+			GL11.glPointSize(10f);
+			bb2.begin(GL11.GL_POINTS, DefaultVertexFormats.POSITION);
+			bb2.pos(testPos.x, testPos.y, testPos.z).endVertex();
+			t.draw();
+			
+			GlStateManager.popMatrix();
+		}
 		
 		
 		
