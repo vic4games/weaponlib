@@ -3100,13 +3100,13 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		}
 		
 		
-		/*
+		
         GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW);
         GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, PROJECTION);
         GL11.glGetInteger(GL11.GL_VIEWPORT, VIEWPORT);
-		Project.gluProject(-0.15f, -1.5f, 1f, MODELVIEW, PROJECTION, VIEWPORT, POSITION);
+		Project.gluProject(-1.15f, -1.5f, -1f, MODELVIEW, PROJECTION, VIEWPORT, POSITION);
 	      
-		*/
+		
 		
 		
 		//Project.gluProject((float) (100f*Math.random()-100), (float) (100f*Math.random()-100), (float) (100f*Math.random()-100), buf, buf2, buf3, test);

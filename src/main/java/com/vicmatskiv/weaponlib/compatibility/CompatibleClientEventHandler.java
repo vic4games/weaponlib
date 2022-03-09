@@ -444,6 +444,7 @@ public abstract class CompatibleClientEventHandler {
 	public void renderWorrldLastEvent(RenderWorldLastEvent evt) {
 		
 		if(ClientModContext.getContext().getMainHeldWeapon() != null) {
+			/*
 			PlayerWeaponInstance playerWeaponInstance = ClientModContext.getContext().getMainHeldWeapon();
 			Vec3d newPos = Vec3d.ZERO;
 	    	Vec3d offset = new Vec3d(-0.5, -0.25, 0.5);
@@ -454,7 +455,11 @@ public abstract class CompatibleClientEventHandler {
 			
 			Vec3d outwardPos = newPos.subtract(Minecraft.getMinecraft().player.getPositionEyes(1.0f)).normalize().rotatePitch((float) -Math.toRadians(Minecraft.getMinecraft().player.rotationPitch)).rotateYaw((float) Math.toRadians(-Minecraft.getMinecraft().player.rotationYaw)).scale(0.5).add(Minecraft.getMinecraft().player.getPositionEyes(1.0f));
 			testPos = outwardPos.add(posAdd);
+			*/
 			
+			testPos = new Vec3d(CompatibleClientEventHandler.NEW_POS.get(0), 
+        			CompatibleClientEventHandler.NEW_POS.get(1),
+        			CompatibleClientEventHandler.NEW_POS.get(2)).add(Minecraft.getMinecraft().player.getPositionVector());
 			
 			GlStateManager.pushMatrix();
 			Vec3d iP = getInterpolatedPlayerCoords();
@@ -467,6 +472,7 @@ public abstract class CompatibleClientEventHandler {
 			bb2.pos(testPos.x, testPos.y, testPos.z).endVertex();
 			t.draw();
 			
+			//System.out.println(testPos);
 			GlStateManager.popMatrix();
 		}
 		

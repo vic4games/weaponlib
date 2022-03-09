@@ -373,7 +373,7 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
         			CompatibleClientEventHandler.NEW_POS.get(1),
         			CompatibleClientEventHandler.NEW_POS.get(2));
         	
-        	*/
+        	
         	
         	Vec3d newPos = Vec3d.ZERO;
         	Vec3d offset = new Vec3d(-0.5, -0.25, 0.5);
