@@ -23,7 +23,7 @@ import com.vicmatskiv.weaponlib.WeaponRenderer.Builder;
 import com.vicmatskiv.weaponlib.animation.DebugPositioner.Position;
 import com.vicmatskiv.weaponlib.animation.gui.AnimationGUI;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
-import com.vicmatskiv.weaponlib.compatibility.ModernWeaponRenderer;
+
 import com.vicmatskiv.weaponlib.debug.DebugRenderer;
 import com.vicmatskiv.weaponlib.render.Bloom;
 import com.vicmatskiv.weaponlib.render.ModelRenderTool;

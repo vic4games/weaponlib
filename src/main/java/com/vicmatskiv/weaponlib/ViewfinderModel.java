@@ -10,6 +10,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.FlatSurfaceModelBox;
 import com.vicmatskiv.weaponlib.perspective.OpticalScopePerspective;
 import com.vicmatskiv.weaponlib.render.scopes.Reticle;
+import com.vicmatskiv.weaponlib.shader.jim.ShaderManager;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
@@ -49,6 +50,7 @@ public class ViewfinderModel extends ModelBase {
 		GlStateManager.enableAlpha();
 		
 		
+		OpticalScopePerspective.scope = ShaderManager.loadVMWShader("vignette");
 		
 		OpticalScopePerspective.scope.use();
 		
@@ -90,6 +92,9 @@ public class ViewfinderModel extends ModelBase {
     		//OpticalScopePerspective.scope.uniform1i("cancel", ClientModContext.getContext().getMainHeldWeapon().isAimed() ? 0 : 1);
         	
     	}
+    	
+    	ClientValueRepo.scopeX = 0;
+    	ClientValueRepo.scopeY = 0;
     	    	
     	GL20.glUniform1i(GL20.glGetUniformLocation(OpticalScopePerspective.scope.getShaderId(), "reticle"), 4);
      	GL20.glUniform1i(GL20.glGetUniformLocation(OpticalScopePerspective.scope.getShaderId(), "dirt"), 6);

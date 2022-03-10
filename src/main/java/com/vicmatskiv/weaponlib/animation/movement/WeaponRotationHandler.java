@@ -40,6 +40,8 @@ public class WeaponRotationHandler {
 		boolean isAssault = parameters.getRecoilGroup() == 0;
 		
 		
+		double gunPower = ClientValueRepo.gunPow.getLerpedFloat();
+		double recovery = ClientValueRepo.recovery.getLerpedFloat();
 		
 		float min = (isAssault && renderContext.getWeaponInstance().isAimed()) ? 0.2f : 1f;
 		if (renderContext.getWeaponInstance().getScope() != null
@@ -50,13 +52,13 @@ public class WeaponRotationHandler {
 			// System.out.println("yo");
 		}
 		float maxAngle = (float) (2 * Math.PI);
-		float time = (float) (35f - (ClientValueRepo.gunPow / 400));
+		float time = (float) (35f - (gunPower / 400));
 		if (min != 1.0)
 			time = 35f;
 		float tick = (float) ((float) maxAngle * ((Minecraft.getMinecraft().player.ticksExisted % time) / time))
 				- (maxAngle / 2);
 
-		double amp = 0.07 + (ClientValueRepo.gunPow / 700);
+		double amp = 0.07 + (gunPower / 700);
 		double a = 1;
 		double b = 2;
 		double c = Math.PI;
@@ -69,13 +71,13 @@ public class WeaponRotationHandler {
 
 		RenderableState sus = stateDescriptor.getStateManager().getLastState();
 
-		float shoting = (float) ClientValueRepo.gunPow;
+		float shoting = (float) gunPower;
 		if (scopeFlag)
 			shoting *= 0.2f;
 
 		float recoilStop = (float) ClientValueRepo.recoilStop / 1.5f;
 
-		float zRot = (float) ((float) -ClientValueRepo.gunPow / 25f + ((float) 0)) * min;
+		float zRot = (float) ((float) -gunPower / 25f + ((float) 0)) * min;
 
 		float pistol = 25;
 		float pR = isPistol ? (float) ClientValueRepo.randomRot.y : 0f;
@@ -92,9 +94,9 @@ public class WeaponRotationHandler {
 
 		float wavyBoi = 0f;
 		if (!isPistol) {
-			wavyBoi = (float) Math.pow(Math.sin(ClientValueRepo.recovery * 0.048 + shoting * 0.015), 3) * 2;
+			wavyBoi = (float) Math.pow(Math.sin(recovery * 0.048 + shoting * 0.015), 3) * 2;
 		} else {
-			wavyBoi = (float) Math.pow(-Math.sin((ClientValueRepo.recovery - ClientValueRepo.gunPow) * 0.2), 1) * 2;
+			wavyBoi = (float) Math.pow(-Math.sin((recovery - gunPower) * 0.2), 1) * 2;
 
 		}
 		wavyBoi *= min;
@@ -102,8 +104,8 @@ public class WeaponRotationHandler {
 		// System.out.println(wavyBoi);
 		// System.out.println(System.currentTimeMillis());
 
-		// float muzzleDown = ClientValueRepo.gunPow > 30 ? (float)
-		// (ClientValueRepo.gunPow-30f)/5f : 0f;
+		// float muzzleDown = gunPower > 30 ? (float)
+		// (gunPower-30f)/5f : 0f;
 		// System.out.println(shoting);
 
 		float aimMultiplier = renderContext.getWeaponInstance().isAimed() ? 0.1f : 1.0f;
@@ -171,10 +173,10 @@ public class WeaponRotationHandler {
 			// Gun inertia
 
 			applyRotationAtPoint(0.0f, 0.0f, 0.0f,
-					(float) ClientValueRepo.yInertia + fight + (isPistol ? -muzzleRiser : 0f) + forwardMov
+					(float) ClientValueRepo.yInertia.getLerpedPosition() + fight + (isPistol ? -muzzleRiser : 0f) + forwardMov
 							+ (rise / 1f) + (yWiggle * 3),
-					(float) -ClientValueRepo.xInertia - fight + pR + strafe - (forwardMov * 3) + (sway * 10),
-					(float) ClientValueRepo.xInertia + fight + xWiggle + (forwardMov * 10));
+					(float) -ClientValueRepo.xInertia.getLerpedPosition() - fight + pR + strafe - (forwardMov * 3) + (sway * 10),
+					(float) ClientValueRepo.xInertia.getLerpedPosition() + fight + xWiggle + (forwardMov * 10));
 
 			if (!isPistol)
 				applyRotationAtPoint(0.0f, 0.0f, -1.0f, -muzzleRiser, 0.0f, 0.0f);

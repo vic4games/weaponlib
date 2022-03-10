@@ -293,7 +293,9 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
                 
             }  
         }
-        ClientValueRepo.gunTick++;
+        
+       
+        ClientValueRepo.gunPow.currentValue += 100;
        // System.out.println("Gun tick added @ " + Minecraft.getMinecraft().player.ticksExisted);
         //System.out.println("WFA: " + System.currentTimeMillis());
         ClientValueRepo.flash = 1;
@@ -368,6 +370,27 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
         
         if(weapon.isShellCasingEjectEnabled() && playerWeaponInstance != null)  {
         	
+        	
+        	
+        	// Change the raw position
+        	Vec3d rawPosition = new Vec3d(CompatibleClientEventHandler.NEW_POS.get(0), CompatibleClientEventHandler.NEW_POS.get(1), CompatibleClientEventHandler.NEW_POS.get(2));
+        	
+        	
+        	// Calculate the final position of the bullet spawn point
+        	// by changing it's position along its own vector
+        	double distance = 0.5;
+			Vec3d eyePos = Minecraft.getMinecraft().player.getPositionEyes(1.0f);
+			Vec3d finalPosition = rawPosition.subtract(eyePos).normalize().scale(distance).add(eyePos);
+			
+        	// Calculate velocity as 90 degrees to player
+			Vec3d velocity = new Vec3d(-0.3, 0.1, 0.0);
+    		velocity = velocity.rotateYaw((float) Math.toRadians(-Minecraft.getMinecraft().player.rotationYaw));
+    		
+    		// Spawn in shell
+    		Shell shell = new Shell(playerWeaponInstance.getWeapon().getShellType(), new Vec3d(finalPosition.x, finalPosition.y, finalPosition.z), new Vec3d(90, 0, 90), velocity);
+        	CompatibleClientEventHandler.shellManager.enqueueShell(shell);
+        	
+			
         	/*
         	Vec3d newPos = new Vec3d(CompatibleClientEventHandler.NEW_POS.get(0), 
         			CompatibleClientEventHandler.NEW_POS.get(1),

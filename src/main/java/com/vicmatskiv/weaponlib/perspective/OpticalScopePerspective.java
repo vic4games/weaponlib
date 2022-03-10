@@ -118,6 +118,7 @@ public class OpticalScopePerspective extends FirstPersonPerspective<RenderableSt
     		//System.out.println("yo");
     		scope = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/vignette"));
     	}
+    	
     	//GlStateManager.enableAlpha();
     	//scope.use();
     	/*

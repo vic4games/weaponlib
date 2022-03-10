@@ -50,7 +50,6 @@ import com.vicmatskiv.weaponlib.animation.gui.AnimationGUI;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponRenderer;
 import com.vicmatskiv.weaponlib.compatibility.Interceptors;
-import com.vicmatskiv.weaponlib.compatibility.ModernWeaponRenderer;
 import com.vicmatskiv.weaponlib.config.Projectiles;
 import com.vicmatskiv.weaponlib.debug.DebugRenderer;
 import com.vicmatskiv.weaponlib.render.Bloom;
@@ -3101,12 +3100,11 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		
 		
 		
-        GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW);
-        GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, PROJECTION);
-        GL11.glGetInteger(GL11.GL_VIEWPORT, VIEWPORT);
-		Project.gluProject(-1.15f, -1.5f, -1f, MODELVIEW, PROJECTION, VIEWPORT, POSITION);
-	      
-		
+		 GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW);
+	        GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, PROJECTION);
+	        GL11.glGetInteger(GL11.GL_VIEWPORT, VIEWPORT);
+			Project.gluProject(-0.2f, -1.4f, 0, MODELVIEW, PROJECTION, VIEWPORT, POSITION);
+		      
 		
 		
 		//Project.gluProject((float) (100f*Math.random()-100), (float) (100f*Math.random()-100), (float) (100f*Math.random()-100), buf, buf2, buf3, test);
@@ -3487,6 +3485,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 					GL11.glTranslated(-0.125, -1, -1);
 					
 					
+					/*
 					 GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW);
 				        GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, PROJECTION);
 				        GL11.glGetInteger(GL11.GL_VIEWPORT, VIEWPORT);
@@ -3494,8 +3493,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 					      
 						
 					
-				//	AnimationModeProcessor.getInstance().renderCross();
-					
+					AnimationModeProcessor.getInstance().renderCross();
+					*/
 					GL11.glPopMatrix();
 					
 					//System.out.println(renderContext.getWeaponInstance().getState());
@@ -3504,7 +3503,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 					//System.out.println(renderContext.getWeaponInstance().isSlideInLock);
 				
 					
-					GlStateManager.translate(0, 0, ClientValueRepo.gunPow/50);
+				//	GlStateManager.translate(0, 0, ClientValueRepo.gunPow.getLerpedPosition()/50f);
 					
 					if(renderContext.getWeaponInstance().getAmmo() != 0) {
 						renderContext.getWeaponInstance().setSlideLock(false);

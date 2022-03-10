@@ -444,6 +444,17 @@ public abstract class CompatibleClientEventHandler {
 	public void renderWorrldLastEvent(RenderWorldLastEvent evt) {
 		
 		if(ClientModContext.getContext().getMainHeldWeapon() != null) {
+			
+			GlStateManager.pushMatrix();
+			Vec3d iP2 = getInterpolatedPlayerCoords();
+			GlStateManager.translate(-iP2.x, -iP2.y, -iP2.z);
+			GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW);
+			GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, PROJECTION);
+			GL11.glGetInteger(GL11.GL_VIEWPORT, VIEWPORT);
+
+			Project.gluUnProject(WeaponRenderer.POSITION.get(0), WeaponRenderer.POSITION.get(1), WeaponRenderer.POSITION.get(2), MODELVIEW, PROJECTION, VIEWPORT,
+					NEW_POS);
+			GlStateManager.popMatrix();
 			/*
 			PlayerWeaponInstance playerWeaponInstance = ClientModContext.getContext().getMainHeldWeapon();
 			Vec3d newPos = Vec3d.ZERO;
@@ -457,10 +468,17 @@ public abstract class CompatibleClientEventHandler {
 			testPos = outwardPos.add(posAdd);
 			*/
 			
+			
+			/*
 			testPos = new Vec3d(CompatibleClientEventHandler.NEW_POS.get(0), 
         			CompatibleClientEventHandler.NEW_POS.get(1),
-        			CompatibleClientEventHandler.NEW_POS.get(2)).add(Minecraft.getMinecraft().player.getPositionVector());
+        			CompatibleClientEventHandler.NEW_POS.get(2));
 			
+			
+			double distance = 0.5;
+			Vec3d eyePos = Minecraft.getMinecraft().player.getPositionEyes(1.0f);
+			Vec3d newVec = testPos.subtract(eyePos).normalize().scale(distance).add(eyePos);
+			//testPos = testPos.add(Minecraft.getMinecraft().player.getPositionVector());
 			GlStateManager.pushMatrix();
 			Vec3d iP = getInterpolatedPlayerCoords();
 			GlStateManager.translate(-iP.x, -iP.y, -iP.z);
@@ -469,11 +487,15 @@ public abstract class CompatibleClientEventHandler {
 			BufferBuilder bb2 = t.getBuffer();
 			GL11.glPointSize(10f);
 			bb2.begin(GL11.GL_POINTS, DefaultVertexFormats.POSITION);
-			bb2.pos(testPos.x, testPos.y, testPos.z).endVertex();
+			bb2.pos(newVec.x, newVec.y, newVec.z).endVertex();
 			t.draw();
 			
 			//System.out.println(testPos);
 			GlStateManager.popMatrix();
+			
+			
+			shellManager.enqueueShell(new Shell(Type.ASSAULT, newVec, Vec3d.ZERO, new Vec3d(0.2, 0 , 0)));
+			*/
 		}
 		
 		
@@ -766,13 +788,14 @@ public abstract class CompatibleClientEventHandler {
 		if (ClientModContext.getContext().getSafeGlobals().renderingPhase.get() == RenderingPhase.RENDER_PERSPECTIVE)
 			return;
 
+		/*
 		GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW);
 		GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, PROJECTION);
 		GL11.glGetInteger(GL11.GL_VIEWPORT, VIEWPORT);
 
 		Project.gluUnProject(WeaponRenderer.POSITION.get(0), WeaponRenderer.POSITION.get(1), WeaponRenderer.POSITION.get(2), MODELVIEW, PROJECTION, VIEWPORT,
 				NEW_POS);
-		
+		*/
 		Vec3d newPV = new Vec3d(NEW_POS.get(0), NEW_POS.get(1), NEW_POS.get(2)).scale(1);
 		
 		
@@ -843,7 +866,7 @@ public abstract class CompatibleClientEventHandler {
 		
 		//System.out.println(NEW_POS.get(0) + " | " + NEW_POS.get(1) + " | " + NEW_POS.get(2));
 
-		ClientValueRepo.update();
+		
 
 		
 		
@@ -1042,7 +1065,14 @@ public abstract class CompatibleClientEventHandler {
 	@SubscribeEvent
 	public final void onClientTick(TickEvent.ClientTickEvent event) {
 		onCompatibleClientTick(new CompatibleClientTickEvent(event));
+		
+		
+		if(event.phase == Phase.START && Minecraft.getMinecraft().player != null && getModContext() != null && getModContext().getMainHeldWeapon() != null) {
+			ClientValueRepo.update(getModContext());
+		}
+		
 		if(event.phase  == Phase.START && Minecraft.getMinecraft().player != null) {
+			
 			ClientValueRepo.ticker.update(Minecraft.getMinecraft().player.ticksExisted);
 
 			shellManager.update(0.05);

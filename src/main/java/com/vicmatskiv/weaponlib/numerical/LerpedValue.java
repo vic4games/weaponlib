@@ -15,9 +15,30 @@ public class LerpedValue {
 		
 	}
 	
+	
+	/**
+	 * Called before changes are made, sets the previous value to the
+	 * current one.
+	 */
+	public void updatePrevious() {
+		previousValue = currentValue;
+	}
+	
 	public void update(double newValue) {
 		this.previousValue = this.currentValue;
 		this.currentValue = newValue;
+	}
+	
+	public void add(double value) {
+		this.currentValue += value;
+	}
+	
+	public double getValue() {
+		return this.currentValue;
+	}
+	
+	public double getPreviousValue() {
+		return this.previousValue;
 	}
 	
 	public double getLerped() {

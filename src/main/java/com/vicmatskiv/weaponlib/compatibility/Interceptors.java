@@ -416,9 +416,14 @@ public class Interceptors {
         }
         
         float scalar = 0.0f;
+        if(ClientValueRepo.gunPow.currentValue > 30) {
+        	scalar = (float) ((ClientValueRepo.gunPow.getLerpedFloat()-30f)/50f);
+        }
+        /*
         if(ClientValueRepo.gunPow > 30) {
         	scalar = (float) (ClientValueRepo.gunPow-30)/50f;
         }
+        */
         
         GlStateManager.rotate(-2f*scalar, 0, 0, 1);
        // System.out.println(scalar);
@@ -764,9 +769,12 @@ public class Interceptors {
     	
     	
     	
+    	//ClientValueRepo.gunPow.velocity += yawDelta*0.02;
     	
-    	ClientValueRepo.xInertia += yawDelta*0.02;
-    	ClientValueRepo.yInertia += pitchDelta*0.04;
+    	ClientValueRepo.xInertia.velocity += yawDelta;
+    	ClientValueRepo.yInertia.velocity += pitchDelta;
+    	//ClientValueRepo.xInertia += yawDelta*0.02;
+    	//ClientValueRepo.yInertia += pitchDelta*0.04;
     	
     	//ClientValueRepo.scopeX += (yawDelta*(0.01));
     	//ClientValueRepo.scopeY += pitchDelta*(0.01);

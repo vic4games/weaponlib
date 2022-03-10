@@ -1,6 +1,7 @@
 package com.vicmatskiv.weaponlib.animation;
 
 import com.vicmatskiv.weaponlib.ClientModContext;
+import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.PlayerWeaponInstance;
 import com.vicmatskiv.weaponlib.Weapon;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
@@ -32,7 +33,12 @@ public class ClientValueRepo {
 	public static double shock = 0;
 
 	public static SpringValue jumpingSpring = new SpringValue(400, 40, 90);
-	public static SpringValue walkingGun = new SpringValue(400, 60, 50);
+	
+
+	
+	public static SpringValue walkingGun = new SpringValue(50, 10, 80);
+	
+	//public static SpringValue walkingGun = new SpringValue(400, 60, 50);
 
 	public static boolean shouldContinueRunning = false;
 
@@ -41,21 +47,62 @@ public class ClientValueRepo {
 	public static double scopeY = 0.0;
 	public static double scopeZ = 0.0;
 
-	public static double gunPow = 0.0;
-	public static double recovery = 0.0;
+	public static LerpedValue gunPow = new LerpedValue();
+	public static LerpedValue recovery = new LerpedValue();
+	
+	
+	
+	//public static double recovery = 0.0;
 	public static Vec3d randomRot = Vec3d.ZERO;
 
+	public static SpringValue xInertia, yInertia;
+	
+	/*
 	public static double xInertia = 0.0;
 	public static double yInertia = 0.0;
+	*/
 	public static int flash = 0;
 
 	public static double recoilStop = 35f;
 
 	public static int gunTick = 0;
 
-	public static void update() {
+	public static void update(ModContext context) {
+		//if(Math.abs(gunPow.position) > 1000) {
+			//gunPow = new SpringValue(500, 50, 100);
+		//}
+		
+		//System.out.println(gunPow.getPosition());
+		//gunPow.setPosition(1);
+		/*
+		gunPow.setDamping(2000);
+		gunPow.setMass(50);
+		gunPow.setSpringConstant(10000);
+		*/
+		
+		gunPow.updatePrevious();
+		recovery.updatePrevious();
+		boolean reload = false;
+		if(reload) {
+			xInertia = null;
+			yInertia = null;
+		}
+		
+		
+		
+		if(xInertia == null) {
+			xInertia = new SpringValue(500, 50, 100);
+		}
+		if(yInertia == null) {
+			yInertia = new SpringValue(500, 50, 100);
+		}
+		xInertia.setSpringConstant(10000);
+		yInertia.setSpringConstant(10000);
+		
+	xInertia.setDamping(700);
+	yInertia.setDamping(700);
 		// System.out.println("Called: " + System.currentTimeMillis());
-		PlayerWeaponInstance pwi = ClientModContext.getContext().getMainHeldWeapon();
+		PlayerWeaponInstance pwi = context.getMainHeldWeapon();
 		boolean isPistol = false;
 		float recoveryMod = 0.0f;
 		RecoilParam param = null;
@@ -65,25 +112,33 @@ public class ClientValueRepo {
 			recoveryMod = (float) param.getRecoveryModifier();
 		}
 
+		/*
 		if (gunTick == 1) {
 			gunTick++;
 
 		} else if (gunTick >= 1) {
+		*/
+		if(gunTick == 1) {
+			/*
 			float power = 50;
 			if (param != null)
 				power = (float) param.getGunPower();
 
-			ClientValueRepo.gunPow += power;
+			gunPow.velocity += power;
+			//ClientValueRepo.gunPow += power;
 
-			if (ClientValueRepo.recovery > 1) {
-				ClientValueRepo.recovery += power / (ClientValueRepo.recovery / 2);
+			if (recovery.getValue() > 1) {
+				recovery.add(power/(recovery.getValue()/2));
+				//ClientValueRepo.recovery += power / (ClientValueRepo.recovery / 2);
 			} else {
-				ClientValueRepo.recovery += power;
+				recovery.add(power);
+				//ClientValueRepo.recovery += power;
 			}
 
 			randomRot = randomRot.addVector(30 * Math.random(), 5 * Math.random(), 30 * Math.random());
 
 			gunTick = 0;
+			*/
 		}
 
 		// xInertia = 0;
@@ -112,13 +167,26 @@ public class ClientValueRepo {
 		 */
 
 		if (!isPistol) {
-			gunPow *= 0.90 - recoveryMod;
-			recovery *= 0.95 - (recoveryMod / 2);
+			
+			
+			gunPow.currentValue *= 0.5 - recoveryMod;
+			recovery.currentValue *= 0.7 - (recoveryMod / 2f);
+			
+			//gunPow *= 0.90 - recoveryMod;
+			//recovery *= 0.95 - (recoveryMod / 2);
 		} else {
-			gunPow *= 0.80 - recoveryMod;
-			recovery *= 0.90 - (recoveryMod / 2);
+			
+			gunPow.currentValue *= 0.80 - recoveryMod;
+			recovery.currentValue *= 0.90 - (recoveryMod / 2f);
+			
+			//gunPow *= 0.80 - recoveryMod;
+			//recovery *= 0.90 - (recoveryMod / 2);
 		}
 
+		//gunPow.update(0.05);
+		
+		//recovery.currentValue = 0;
+		/* GOOD
 		double add = Math.sin(xInertia * 0.02);
 
 		xInertia += 2 * -Math.abs(add) * Math.signum(xInertia);
@@ -136,6 +204,11 @@ public class ClientValueRepo {
 		} else {
 			yInertia *= 0.95;
 		}
+		*/
+		xInertia.update(0.05);
+		yInertia.update(0.05);
+		//gunPow.update(0.05);
+		
 		if (pwi != null) {
 			if (pwi.isAimed()) {
 				// Handle scope values
@@ -201,9 +274,6 @@ public class ClientValueRepo {
 			}
 		}
 
-		walkingGun.setSpringConstant(50);
-		walkingGun.setDamping(80);
-		walkingGun.setMass(10);
 		walkingGun.update(0.05);
 
 		

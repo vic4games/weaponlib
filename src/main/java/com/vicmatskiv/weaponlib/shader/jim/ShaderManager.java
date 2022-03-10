@@ -58,8 +58,9 @@ public class ShaderManager {
 				GL20.glAttachShader(program, fragmentShader);
 			
 				if(attribs != null) {
+					
 					for(Attribute attrib : attribs) {
-						
+						//System.out.println("hi");
 						GLCompatible.glBindAttribLocation(program, attrib.getAttributeID(), attrib.getAttributeName());
 					}
 				}
