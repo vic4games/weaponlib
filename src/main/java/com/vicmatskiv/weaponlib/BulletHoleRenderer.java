@@ -73,7 +73,7 @@ public class BulletHoleRenderer {
 		Minecraft.getMinecraft().getTextureManager().bindTexture(rl);
 		
 	
-		GL14.glBlendEquation(GL14.GL_FUNC_ADD);
+	//	GL14.glBlendEquation(GL14.GL_FUNC_ADD);
 		GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
 		GlStateManager.enableBlend();
 		double size = 0.05;
@@ -128,9 +128,9 @@ public class BulletHoleRenderer {
 			
 		}
 		
-		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+		//GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		
-		
+		GlStateManager.disableBlend();
 		
 		tes.draw();
 		

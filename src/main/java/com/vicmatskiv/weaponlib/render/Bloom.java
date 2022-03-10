@@ -67,6 +67,8 @@ public class Bloom {
 			//System.out.println("Creating a Bloom FX w/ " + width + "x" + height);
 			recreateFramebuffers();
 			
+			
+			
 			Dloom.height = -1;
 			
 			// blur
@@ -118,29 +120,32 @@ public class Bloom {
 				f.deleteFramebuffer();
 			}
 		}
+		
+
 		if(data != null) data.deleteFramebuffer();
+		
 		
 		data = new Framebuffer(width, height, true);
 		data.bindFramebufferTexture();
 		GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GLCompatible.GL_RGBA16F, width, height, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_SHORT, (IntBuffer) null);
 		data.bindFramebuffer(false);
 		
-		
+
 		OpenGlHelper.glBindRenderbuffer(GLCompatible.GL_RENDERBUFFER, mc.getFramebuffer().depthBuffer);
 		OpenGlHelper.glFramebufferRenderbuffer(GLCompatible.GL_FRAMEBUFFER, GLCompatible.GL_DEPTH_ATTACHMENT, GLCompatible.GL_RENDERBUFFER, mc.getFramebuffer().depthBuffer);
-		
+
 		data.setFramebufferFilter(GL11.GL_LINEAR);
 		data.setFramebufferColor(0, 0, 0, 0);
 		data.framebufferClear();
-		
+
 		checkFramebufer(data.framebufferObject);
-		
+
 		buffers = new Framebuffer[LAYERS];
 		float bW = width;
 		float bH = height;
 		
 		for(int i = 0; i < LAYERS; ++i) {
-			System.out.println("Layer " + i + " created w/ " + bW + "x" + bH);
+			
 			buffers[i] = new Framebuffer((int) bW, (int) bH, false);
 			buffers[i].bindFramebufferTexture();
 			GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GLCompatible.GL_RGBA16F, (int) bW, (int) bH, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_SHORT, (IntBuffer) null);
@@ -156,11 +161,39 @@ public class Bloom {
 			
 		}
 		
+		logger.debug("Refreshed Bloom buffer succesfully!");
+		
 		
  	}
 	
 	public static void checkFramebufer(int buf) {
-		System.out.println("Framebuffer check: " + GL30.glCheckFramebufferStatus(buf));
+		int i = OpenGlHelper.glCheckFramebufferStatus(OpenGlHelper.GL_FRAMEBUFFER);
+		//System.out.println("hi " + (i == GL30.GL_FRAMEBUFFER_COMPLETE));
+        if (i != OpenGlHelper.GL_FRAMEBUFFER_COMPLETE)
+        {
+        	
+            if (i == OpenGlHelper.GL_FB_INCOMPLETE_ATTACHMENT)
+            {
+                throw new RuntimeException("GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
+            }
+            else if (i == OpenGlHelper.GL_FB_INCOMPLETE_MISS_ATTACH)
+            {
+                throw new RuntimeException("GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT");
+            }
+            else if (i == OpenGlHelper.GL_FB_INCOMPLETE_DRAW_BUFFER)
+            {
+                throw new RuntimeException("GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER");
+            }
+            else if (i == OpenGlHelper.GL_FB_INCOMPLETE_READ_BUFFER)
+            {
+                throw new RuntimeException("GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER");
+            }
+            else
+            {
+                throw new RuntimeException("glCheckFramebufferStatus returned unknown status:" + i);
+            }
+        }
+		//System.out.println("Framebuffer check: " + (GL30.glCheckFramebufferStatus(buf) == GL30.GL_FRAMEBUFFER_COMPLETE));
 	}
 	
 	public static void renderFboTriangle(Framebuffer buf) {

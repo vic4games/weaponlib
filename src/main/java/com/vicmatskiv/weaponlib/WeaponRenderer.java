@@ -1782,9 +1782,14 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				
 				
 				firstPersonPositioningRunning = (rc) -> {
-					new Transform()
-					.withPosition(-1.875000f, 4.725000f, -4.600000f).withRotation(21.175000f, -63.189999f, 0.000000f).withRotationPoint(-0.100000f, 1.000000f, 0.000000f).withScale(3.000000f, 3.000000f, 3.000000f)
-					.doGLDirect();
+					if(rc.getWeaponInstance().getWeapon().builder.isUsingNewSystem()) { 
+						new Transform().withPosition(-0.5, 0, 0.5).withRotation(15, -5, 15).withScale(1, 1, 1).doGLDirect();
+						
+					} else {
+						new Transform().withPosition(-0.5, 0, 0.5).withRotation(15, -5, 15).withScale(1, 1, 1).doGLDirect();
+						
+					}
+					
 				};
 			}
 

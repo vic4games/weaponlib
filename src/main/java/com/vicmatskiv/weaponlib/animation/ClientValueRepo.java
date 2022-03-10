@@ -43,9 +43,9 @@ public class ClientValueRepo {
 	public static boolean shouldContinueRunning = false;
 
 	// scope
-	public static double scopeX = 0.0;
-	public static double scopeY = 0.0;
-	public static double scopeZ = 0.0;
+	public static LerpedValue scopeX = new LerpedValue();
+	public static LerpedValue scopeY = new LerpedValue();
+
 
 	public static LerpedValue gunPow = new LerpedValue();
 	public static LerpedValue recovery = new LerpedValue();
@@ -79,7 +79,8 @@ public class ClientValueRepo {
 		gunPow.setMass(50);
 		gunPow.setSpringConstant(10000);
 		*/
-		
+		scopeX.updatePrevious();
+		scopeY.updatePrevious();
 		gunPow.updatePrevious();
 		recovery.updatePrevious();
 		boolean reload = false;
@@ -212,11 +213,20 @@ public class ClientValueRepo {
 		if (pwi != null) {
 			if (pwi.isAimed()) {
 				// Handle scope values
+				scopeX.currentValue *= 0.2;
+				scopeY.currentValue *= 0.2;
+				/*
 				scopeX *= 0.7;
 				scopeY *= 0.7;
+				*/
 			} else {
+				scopeX.add(-0.5);
+				scopeY.add(0.5);
+				
+				/*
 				scopeX -= 0.5;
 				scopeY += 0.5;
+				*/
 			}
 		}
 		// rise = Minecraft.getMinecraft().player.moveVertical*10;
@@ -268,12 +278,24 @@ public class ClientValueRepo {
 
 			walkingGun.position += f / 2;
 
-			if (Math.random() < 0.25) {
-				double val = 17;
-				walkingGun.velocity += (val * Math.random()) - (val/2);
+			if(!entityplayer.isSprinting()) {
+				walkingGun.setSpringConstant(50);
+				if (Math.random() < 0.25) {
+					double val = 17;
+					walkingGun.velocity += (val * Math.random()) - (val/2);
+				}
+			} else {
+				walkingGun.setSpringConstant(500);
+				if (Math.random() < 0.25) {
+					double val = 200;
+					walkingGun.velocity += (val * Math.random()) - (val/2);
+				}
 			}
+			
 		}
 
+		
+		
 		walkingGun.update(0.05);
 
 		

@@ -791,16 +791,26 @@ public class Interceptors {
     		
     		double scalar = 0.005*(1-weaponInstance.getZoom());
     		
+    		/*
     		ClientValueRepo.scopeX += (yawDelta*(0.005+scalar));
     		ClientValueRepo.scopeY += pitchDelta*(0.005+scalar);
-        	
+        	*/
+    		
+    		ClientValueRepo.scopeX.add((yawDelta*(0.005+scalar)));
+    		ClientValueRepo.scopeY.add(pitchDelta*(0.005+scalar));
+    		
         	if(weaponInstance.getZoom() < 0.2f) {
     			yawDelta *= weaponInstance.getZoom()*3;
             	pitchDelta *= weaponInstance.getZoom()*3;
     		}
     	} else {
+    		/*
     		ClientValueRepo.scopeX += (yawDelta*(0.005));
     		ClientValueRepo.scopeY += pitchDelta*(0.005);
+    		*/
+    		ClientValueRepo.scopeX.add(yawDelta*(0.005));
+    		ClientValueRepo.scopeY.add(pitchDelta*(0.005));
+    		
     	}
     	
     	

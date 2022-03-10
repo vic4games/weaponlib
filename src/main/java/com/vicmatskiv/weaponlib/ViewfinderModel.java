@@ -84,7 +84,7 @@ public class ViewfinderModel extends ModelBase {
     		float pwi = ClientModContext.getContext().getMainHeldWeapon().getZoom();
     		///System.out.println(ClientModContext.getContext().getMainHeldWeapon().state);
     		if(ClientModContext.getContext().getMainHeldWeapon().state != WeaponState.READY && ClientModContext.getContext().getMainHeldWeapon().state != WeaponState.PAUSED && ClientModContext.getContext().getMainHeldWeapon().state != WeaponState.EJECT_REQUIRED && ClientModContext.getContext().getMainHeldWeapon().state != WeaponState.ALERT) {
-        		ClientValueRepo.scopeY = 1;
+        		ClientValueRepo.scopeY.currentValue = 1;
         	}
     		//System.out.println(pwi);
     		OpticalScopePerspective.scope.uniform1f("reticleZoom", (pwi+0.86f));
@@ -93,14 +93,16 @@ public class ViewfinderModel extends ModelBase {
         	
     	}
     	
+    	/*
     	ClientValueRepo.scopeX = 0;
     	ClientValueRepo.scopeY = 0;
     	    	
+    	*/
     	GL20.glUniform1i(GL20.glGetUniformLocation(OpticalScopePerspective.scope.getShaderId(), "reticle"), 4);
      	GL20.glUniform1i(GL20.glGetUniformLocation(OpticalScopePerspective.scope.getShaderId(), "dirt"), 6);
      	GL20.glUniform1i(GL20.glGetUniformLocation(OpticalScopePerspective.scope.getShaderId(), "holo"), 7);
     	GL20.glUniform2f(GL20.glGetUniformLocation(OpticalScopePerspective.scope.getShaderId(), "Velocity"),
-    			(float) ClientValueRepo.scopeX, (float) ClientValueRepo.scopeY);
+    			(float) ClientValueRepo.scopeX.getLerpedFloat(), (float) ClientValueRepo.scopeY.getLerpedFloat());
     	OpticalScopePerspective.scope.uniform2f("resolution", Minecraft.getMinecraft().displayWidth, Minecraft.getMinecraft().displayHeight);
     	//	GL20.glUniform1f(GL20.glGetUniformLocation(OpticalScopePerspective.scope.getShaderId(), "Radius"),
     //			0.55f);

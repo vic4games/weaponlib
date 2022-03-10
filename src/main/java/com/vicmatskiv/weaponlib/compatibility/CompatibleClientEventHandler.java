@@ -443,6 +443,10 @@ public abstract class CompatibleClientEventHandler {
 	@SubscribeEvent
 	public void renderWorrldLastEvent(RenderWorldLastEvent evt) {
 		
+		
+		
+		
+		
 		if(ClientModContext.getContext().getMainHeldWeapon() != null) {
 			
 			GlStateManager.pushMatrix();
@@ -630,7 +634,7 @@ public abstract class CompatibleClientEventHandler {
 		//GL11.glPopMatrix();
 		
 		
-		
+		/*
 		GlStateManager.pushMatrix();
 		EntityPlayer pla = Minecraft.getMinecraft().player;
 		
@@ -662,7 +666,7 @@ public abstract class CompatibleClientEventHandler {
 		
 		GlStateManager.popMatrix();
 		
-		
+		*/
 		
 		if(ClientModContext.getContext() != null && ClientModContext.getContext().getMainHeldWeapon() != null) {
 			PlayerWeaponInstance pwi = ClientModContext.getContext().getMainHeldWeapon();
@@ -708,6 +712,7 @@ public abstract class CompatibleClientEventHandler {
 			//System.out.println(ClientModContext.getContext().getMainHeldWeapon().getState());
 			
 		}
+		
 		
 		try {
 			
@@ -782,6 +787,7 @@ public abstract class CompatibleClientEventHandler {
 				AnimationModeProcessor.getInstance().legacyMode = true;
 			}
 		}
+	
 		
 		//System.out.println(Mouse.isButtonDown(0));
 	
@@ -871,19 +877,16 @@ public abstract class CompatibleClientEventHandler {
 		
 		
 		// Bloom code
+		Bloom.doBloom();
 		
-		
-		if(Minecraft.getMinecraft().player != null && Minecraft.getMinecraft().player.ticksExisted > 20) {
-			// If for some reason the player is null, don't engage.
-			try {
-				Bloom.doBloom();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-			
-		}
-		
-		
+		// If for some reason the player is null, don't engage.
+		/*
+					try {
+						Bloom.doBloom();
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+		*/
 		if(AnimationModeProcessor.getInstance().getFPSMode()) {
 			Minecraft.getMinecraft().setIngameNotInFocus();
 

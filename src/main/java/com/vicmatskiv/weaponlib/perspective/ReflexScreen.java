@@ -12,6 +12,7 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL30;
 
 import com.vicmatskiv.weaponlib.CustomRenderer;
 import com.vicmatskiv.weaponlib.RenderContext;
@@ -30,6 +31,7 @@ import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelBox;
 import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemStack;
@@ -129,22 +131,21 @@ public class ReflexScreen extends ModelBase implements CustomRenderer<Renderable
 		modelRenderer.rotateAngleY = y;
 		modelRenderer.rotateAngleZ = z;
 	}
-
-	@Override
-	public void render(RenderContext<RenderableState> renderContext) {
+	
+	public void renderReticle(RenderContext<RenderableState> renderContext, boolean bloom) {
+Reticle currentReticle = reticleList.current();
 		
-		//reflexReticle = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/reflex"));
 		
-		//first
-	//	Dloom.bloomData.bindFramebuffer(true);\
-		
-		Reticle currentReticle = reticleList.current();
+		Shaders.reflexReticle = ShaderManager.loadVMWShader("reflex");
 		
 		if(renderContext.getCompatibleTransformType() != CompatibleTransformType.FIRST_PERSON_RIGHT_HAND) return;
 		GlStateManager.disableTexture2D();
 		GlStateManager.enableBlend();
 		Shaders.reflexReticle.use();
 		
+		
+		//Minecraft.getMinecraft().getFramebuffer().bindFramebuffer(true);
+
 		// upload uniforms
 		
 		// upload texture
@@ -156,7 +157,7 @@ public class ReflexScreen extends ModelBase implements CustomRenderer<Renderable
 		GlStateManager.setActiveTexture(GL13.GL_TEXTURE0);
 		GL20.glUniform1i(GL20.glGetUniformLocation(Shaders.reflexReticle.getShaderId(), "ret"), 4);
 		
-		
+		GL20.glUniform1i(GL20.glGetUniformLocation(Shaders.reflexReticle.getShaderId(), "isBloom"), bloom ? 1 : 0);
 		
 		//
 		GL20.glUniform1f(GL20.glGetUniformLocation(Shaders.reflexReticle.getShaderId(), "texScale"), currentReticle.getTextureScale());
@@ -166,6 +167,11 @@ public class ReflexScreen extends ModelBase implements CustomRenderer<Renderable
 		
 		GL20.glUniform3f(GL20.glGetUniformLocation(Shaders.reflexReticle.getShaderId(), "background"), (float) currentReticle.getBackgroundColor().x, (float) currentReticle.getBackgroundColor().y, (float) currentReticle.getBackgroundColor().z);
 		GlStateManager.enableCull();
+	
+		
+		OpenGlHelper.glFramebufferTexture2D(OpenGlHelper.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT1, GL11.GL_TEXTURE_2D, Bloom.data.framebufferTexture, 0);
+		
+		//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gAlbedoSpec, 0);
 		
 		GlStateManager.pushMatrix();
 		positioning.accept(renderContext.getPlayer(), renderContext.getWeapon());
@@ -174,8 +180,27 @@ public class ReflexScreen extends ModelBase implements CustomRenderer<Renderable
 		
 		GlStateManager.popMatrix();
 		Shaders.reflexReticle.release();
-		GlStateManager.disableBlend();
+		GlStateManager.disableCull();
+		//GlStateManager.disableBlend();
 		GlStateManager.enableTexture2D();
+	}
+
+	@Override
+	public void render(RenderContext<RenderableState> renderContext) {
+		
+		Bloom.bindBloomBuffer();
+		renderReticle(renderContext, true);
+		
+		Minecraft.getMinecraft().getFramebuffer().bindFramebuffer(true);
+		renderReticle(renderContext, false);
+		
+		
+
+		//reflexReticle = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/reflex"));
+		//first
+	//	Dloom.bloomData.bindFramebuffer(true);\
+		
+		
 		
 		
 		

@@ -524,8 +524,8 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 			
 			
 			// if(!DebugPositioner.isDebugModeEnabled())
-		    positioner.position(Part.MAIN_ITEM, renderContext);
-			
+		   positioner.position(Part.MAIN_ITEM, renderContext);
+			//new Transform().withPosition(-0.5, 0, 0.5).withRotation(15, -5, 15).withScale(1, 1, 1).doGLDirect();
 			
 			
 			/*
