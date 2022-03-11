@@ -23,14 +23,11 @@ public class ClientValueRepo {
 	public static double walkXWiggle = 0;
 	public static double walkYWiggle = 0;
 
-	public static double strafe = 0;
-	public static double forward = 0;
+	public static SpringValue strafe = new SpringValue(0, 0, 0);
+	public static LerpedValue forward = new LerpedValue();
 	
 	public static int prevTickTick = 0;
 
-	public static double rise = 0;
-	public static double coRise = 0;
-	public static double shock = 0;
 
 	public static SpringValue jumpingSpring = new SpringValue(400, 40, 90);
 	
@@ -82,6 +79,7 @@ public class ClientValueRepo {
 		scopeX.updatePrevious();
 		scopeY.updatePrevious();
 		gunPow.updatePrevious();
+		forward.updatePrevious();
 		recovery.updatePrevious();
 		boolean reload = false;
 		if(reload) {
@@ -156,11 +154,15 @@ public class ClientValueRepo {
 		if (recoilStop > 35f) {
 			recoilStop -= 2f;
 		}
-		forward += Minecraft.getMinecraft().player.moveForward/15f;
-	        
+		forward.currentValue *= 0.7;
+		forward.add(Minecraft.getMinecraft().player.moveForward/2);
+		
+	      
+		/*
 		strafe *= 0.95;
 		forward *= 0.93;
-
+		*/
+		
 		randomRot = randomRot.scale(0.88);
 
 		/*
@@ -250,24 +252,15 @@ public class ClientValueRepo {
 		 * 
 		 * rise *= 0.8;
 		 */
-
+		
+		jumpingSpring.setSpringConstant(2000);
+		jumpingSpring.setDamping(400);
+		
 		if (!Minecraft.getMinecraft().player.onGround) {
-			rise += Minecraft.getMinecraft().player.motionY / 2;
-			// coRise += Minecraft.getMinecraft().player.motionY*;
+			jumpingSpring.velocity += Minecraft.getMinecraft().player.motionY*10;
 		}
 
-		if (Minecraft.getMinecraft().player.onGround || 1 + 1 == 2) {
-			double k = 400;
-			double mass = 40;
-			double damping = 90;
-
-			double force = -k * (rise);
-			double dampingForce = damping * coRise;
-			double appliedForce = force + (mass * 0) - dampingForce;
-			double acceleration = appliedForce / mass;
-			coRise += acceleration * 0.05;
-			rise += coRise * 0.05;
-		}
+		
 
 		EntityPlayer entityplayer = Minecraft.getMinecraft().player;
 
@@ -293,11 +286,20 @@ public class ClientValueRepo {
 			}
 			
 		}
+		
+		//strafe = new SpringValue(0, 0, 0);
+		//forward = new SpringValue(0, 0, 0);
+		strafe.setSpringConstant(2000);
+		strafe.setDamping(250);
+		strafe.setMass(25);
+		
+
 
 		
-		
+		strafe.update(0.05);
+		//forward.update(0.05);
 		walkingGun.update(0.05);
-
+		jumpingSpring.update(0.05);
 		
 		 
 		//walkYWiggle = (2*Math.PI*((Minecraft.getMinecraft().player.ticksExisted%36)/36.0));

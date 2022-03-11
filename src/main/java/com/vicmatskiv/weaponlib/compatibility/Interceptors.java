@@ -410,7 +410,7 @@ public class Interceptors {
     	
     	//GlStateManager.translate(0, ClientValueRepo.rise, 0);
     	
-    	GlStateManager.rotate((float) (ClientValueRepo.coRise/2), 1, 0, 0);
+    	GlStateManager.rotate((float) ClientValueRepo.jumpingSpring.getLerpedPosition(), 1, 0, 0);
         if(!(compatibility.getRenderViewEntity() instanceof EntityPlayer)) {
             return true;
         }
@@ -434,7 +434,7 @@ public class Interceptors {
        
         EntityPlayer entityplayer = (EntityPlayer)compatibility.getRenderViewEntity();
 
-        ClientValueRepo.strafe += Minecraft.getMinecraft().player.moveStrafing/25f;
+        ClientValueRepo.strafe.velocity += Minecraft.getMinecraft().player.moveStrafing;
         //ClientValueRepo.forward += Minecraft.getMinecraft().player.moveForward/25f;
         
         
@@ -771,7 +771,7 @@ public class Interceptors {
     	
     	//ClientValueRepo.gunPow.velocity += yawDelta*0.02;
     	
-    	compatibility.addChatMessage(Minecraft.getMinecraft().player, "Working");
+    	//compatibility.addChatMessage(Minecraft.getMinecraft().player, "Working " + Minecraft.getMinecraft().player.ticksExisted);
     	
     	
     	ClientValueRepo.xInertia.velocity += yawDelta;

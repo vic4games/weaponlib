@@ -110,10 +110,10 @@ public class WeaponRotationHandler {
 
 		float aimMultiplier = renderContext.getWeaponInstance().isAimed() ? 0.1f : 1.0f;
 
-		float strafe = (float) ClientValueRepo.strafe * aimMultiplier * 0.7f;
+		float strafe = (float) ClientValueRepo.strafe.getLerpedPosition() * aimMultiplier * 0.7f;
 
-		float forwardMov = (float) ClientValueRepo.forward * aimMultiplier * 0.7f;
-		float rise = (float) (ClientValueRepo.rise / 1f);
+		float forwardMov = (float) ClientValueRepo.forward.getLerpedFloat() * aimMultiplier * 0.7f;
+		float rise = (float) (ClientValueRepo.jumpingSpring.getLerpedPosition());
 		
 		
 		
@@ -161,7 +161,7 @@ public class WeaponRotationHandler {
 			
 		
 
-			float sway = (float) ((float) ((float) Math.sin(tickWiggle * (2))) * ClientValueRepo.forward) * 0.2f;
+			float sway = (float) ((float) ((float) Math.sin(tickWiggle * (2))) * ClientValueRepo.forward.getLerpedFloat()) * 0.2f;
 			sway *= aimMultiplier;
 			
 			

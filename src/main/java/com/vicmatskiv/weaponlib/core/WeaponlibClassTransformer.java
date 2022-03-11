@@ -550,6 +550,8 @@ public class WeaponlibClassTransformer implements IClassTransformer {
 
         public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
         	
+        	System.out.println(name);
+        	
         	if(classname.equals("paulscode/sound/libraries/SourceLWJGLOpenAL")) {
         		if(name.equals("play")) {
         			System.out.println("SIG: " + desc);

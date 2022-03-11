@@ -1048,9 +1048,6 @@ public abstract class CompatibleClientEventHandler {
 	@SubscribeEvent
 	public void fallEvent(LivingFallEvent event) {
 
-		if (event.getEntity() instanceof EntityPlayer && event.getEntity().world.isRemote) {
-			ClientValueRepo.shock += event.getDistance();
-		}
 	}
 
 	@SubscribeEvent
