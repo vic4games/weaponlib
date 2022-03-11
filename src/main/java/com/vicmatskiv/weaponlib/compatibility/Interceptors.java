@@ -771,6 +771,9 @@ public class Interceptors {
     	
     	//ClientValueRepo.gunPow.velocity += yawDelta*0.02;
     	
+    	compatibility.addChatMessage(Minecraft.getMinecraft().player, "Working");
+    	
+    	
     	ClientValueRepo.xInertia.velocity += yawDelta;
     	ClientValueRepo.yInertia.velocity += pitchDelta;
     	//ClientValueRepo.xInertia += yawDelta*0.02;
