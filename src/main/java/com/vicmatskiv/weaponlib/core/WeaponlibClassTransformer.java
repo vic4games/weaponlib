@@ -82,6 +82,10 @@ public class WeaponlibClassTransformer implements IClassTransformer {
     }
     
     public byte[] transform(String par1, String className, byte[] bytecode) {
+    	
+    	
+    	System.out.println("STARTING TRANSFORM!");
+    	
     	/*
     	if(par1.contains("SoundSystemStarterThread")) {
     		System.out.println("ALERT: " + par1);
@@ -519,6 +523,9 @@ public class WeaponlibClassTransformer implements IClassTransformer {
 //            if(entityRendererClassInfo.classMatches(name)) {
 //                
 //            }
+            
+            System.out.println("VISIT LOL");
+            
             this.cv.visit(version, access, name, signature, superName, interfaces);
         }
         
@@ -549,6 +556,8 @@ public class WeaponlibClassTransformer implements IClassTransformer {
 //        }
 
         public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
+        	
+        	  System.out.println("VISIT LOL 2");
         	
         	System.out.println(name);
         	
