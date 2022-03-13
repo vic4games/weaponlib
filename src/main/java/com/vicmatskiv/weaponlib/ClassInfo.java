@@ -103,16 +103,21 @@ public class ClassInfo {
             String methodSignature)
     {
     	
+    
+    	
+    	/*
+    	System.out.println("Checking @ " + methodName + " w/ expected  " + expectedMcpMethodName + " w/ expected sig " + expectedMcpMethodSignature);
+    	System.out.println("Virtual method names & sigs -> " + methodName + " -> " + methodSignature);
+    	System.out.println("MCP Class name: " + mcpClassName + " vs. " + methodOwnerClassName);
+    	System.out.println("Notch class names: " + notchClassName + " vs. " + methodOwnerClassName);
+       	*/
         if(!expectedMcpMethodSignature.equals(methodSignature) 
                 && !methodSignature.equals(notchSignatureMap.get(new MethodSignature(expectedMcpMethodName, expectedMcpMethodSignature)))) {
             return false;
         }
         
-        // this is terrible practice don't do this lol
-        if(methodName.equals(expectedMcpMethodName) && methodSignature.equals(expectedMcpMethodSignature)) {
-        	//System.out.println("Success!");
-        	return true;
-        }
+  
+      //  System.out.println("Passed first flag.");
         
 
         if(mcpClassName.equals(methodOwnerClassName)) {
@@ -120,10 +125,14 @@ public class ClassInfo {
                     || methodName.equals(mcpMethodInfoMap.get(new MethodSignature(expectedMcpMethodName, expectedMcpMethodSignature)));
         }
         
+      //  System.out.println("Passed second flag.");
+        
 
         if(!notchClassName.equals(methodOwnerClassName)) {
             return false;
         }
+        
+       // System.out.println("Passed third flag.");
         
 
         String notchMethodName = notchMethodInfoMap.get(new MethodSignature(expectedMcpMethodName, expectedMcpMethodSignature));

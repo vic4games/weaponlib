@@ -52,8 +52,8 @@ public class ClientValueRepo {
 	//public static double recovery = 0.0;
 	public static Vec3d randomRot = Vec3d.ZERO;
 
-	public static SpringValue xInertia, yInertia;
-	
+	public static SpringValue xInertia = new SpringValue(0, 0 ,0);
+	public static SpringValue yInertia = new SpringValue(0, 0 ,0);
 	/*
 	public static double xInertia = 0.0;
 	public static double yInertia = 0.0;
@@ -97,7 +97,8 @@ public class ClientValueRepo {
 		}
 		xInertia.setSpringConstant(10000);
 		yInertia.setSpringConstant(10000);
-		
+		xInertia.setMass(50);
+		yInertia.setMass(50);
 	xInertia.setDamping(700);
 	yInertia.setDamping(700);
 		// System.out.println("Called: " + System.currentTimeMillis());

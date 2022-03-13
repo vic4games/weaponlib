@@ -58,8 +58,10 @@ public class CompatibleClassInfoProvider {
                 .addFieldInfo("inventory", "Lnet/minecraft/entity/player/InventoryPlayer;", "field_71071_by", "Laec;")
                 );
         
-        classInfoMap.put("net/minecraft/client/entity/EntityPlayerSP", 
-                new ClassInfo("net/minecraft/client/entity/EntityPlayerSP", "bnn")
+        classInfoMap.put("net/minecraft/client/entity/EntityPlayerSP",
+        		
+        		new ClassInfo("net/minecraft/client/entity/EntityPlayerSP", "bud")
+                //new ClassInfo("net/minecraft/client/entity/EntityPlayerSP", "bnn")
                 .addMethodInfo2("isSneaking", "()Z", "aM", "()Z")
                 .addMethodInfo2("updateEntityActionState", "()V", "cr", "()V")
                 .addMethodInfo2("turn", "(FF)V", "c", "(FF)V")

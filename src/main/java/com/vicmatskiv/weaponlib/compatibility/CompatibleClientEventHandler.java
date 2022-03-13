@@ -48,6 +48,7 @@ import com.google.common.reflect.ClassPath;
 import com.google.common.reflect.Reflection;
 import com.vicmatskiv.weaponlib.AttachmentCategory;
 import com.vicmatskiv.weaponlib.BulletHoleRenderer;
+import com.vicmatskiv.weaponlib.ClassInfo;
 import com.vicmatskiv.weaponlib.ClientModContext;
 import com.vicmatskiv.weaponlib.ItemAttachment;
 import com.vicmatskiv.weaponlib.ModContext;
@@ -443,9 +444,8 @@ public abstract class CompatibleClientEventHandler {
 	@SubscribeEvent
 	public void renderWorrldLastEvent(RenderWorldLastEvent evt) {
 		
-		
-		
-		
+
+		//System.out.println("hi");
 		
 		if(ClientModContext.getContext().getMainHeldWeapon() != null) {
 			
@@ -1044,6 +1044,8 @@ public abstract class CompatibleClientEventHandler {
 		t.draw();
 		GlStateManager.popMatrix();
 	}
+	
+	
 
 	@SubscribeEvent
 	public void fallEvent(LivingFallEvent event) {

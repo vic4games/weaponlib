@@ -71,7 +71,7 @@ public class WeaponlibClassTransformer implements IClassTransformer {
         
         @Override
         public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
-            if (entityPlayerSPClassInfo.methodMatches("turn", "(FF)V", owner, name, desc)) {
+        	if (entityPlayerSPClassInfo.methodMatches("turn", "(FF)V", owner, name, desc)) {
                 mv.visitMethodInsn(Opcodes.INVOKESTATIC, 
                         "com/vicmatskiv/weaponlib/compatibility/Interceptors", "turn", 
                         "(Lnet/minecraft/entity/player/EntityPlayer;FF)V", false);
@@ -84,7 +84,7 @@ public class WeaponlibClassTransformer implements IClassTransformer {
     public byte[] transform(String par1, String className, byte[] bytecode) {
     	
     	
-    	System.out.println("STARTING TRANSFORM!");
+
     	
     	/*
     	if(par1.contains("SoundSystemStarterThread")) {
@@ -380,6 +380,8 @@ public class WeaponlibClassTransformer implements IClassTransformer {
             super.visitFieldInsn(opcode, owner, name, desc);
             if(opcode == Opcodes.GETFIELD && (owner.equals("bnl") || owner.equals("net/minecraft/util/MovementInput"))
                     && (name.equals("jump") || name.equals("g"))) {
+            	
+            	
                 Label l6 = new Label();
                 mv.visitJumpInsn(Opcodes.IFEQ, l6);
                 mv.visitVarInsn(Opcodes.ALOAD, 0);
@@ -524,7 +526,7 @@ public class WeaponlibClassTransformer implements IClassTransformer {
 //                
 //            }
             
-            System.out.println("VISIT LOL");
+            //System.out.println("VISIT LOL");
             
             this.cv.visit(version, access, name, signature, superName, interfaces);
         }
@@ -557,18 +559,8 @@ public class WeaponlibClassTransformer implements IClassTransformer {
 
         public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
         	
-        	  System.out.println("VISIT LOL 2");
-        	
-        	System.out.println(name);
-        	
-        	if(classname.equals("paulscode/sound/libraries/SourceLWJGLOpenAL")) {
-        		if(name.equals("play")) {
-        			System.out.println("SIG: " + desc);
-        			System.out.println("CI: " + playSoundClassInfo);
-        			boolean f = playSoundClassInfo.methodMatches("play", "(Lpaulscode/sound/Channel;)V", classname, name, desc);
-        			System.out.println("RESULT: " + f);
-        		}
-        	}
+        	  //System.out.println("VISIT LOL 2");
+
         	
             if(entityRendererClassInfo.methodMatches("setupCameraTransform", "(FI)V", classname, name, desc)) {
                 return new SetupCameraTransformMethodVisitor(cv.visitMethod(access, name, desc, signature, exceptions));

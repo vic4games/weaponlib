@@ -756,7 +756,6 @@ public class Interceptors {
     
     public static void turn(EntityPlayer player, float yawDelta, float pitchDelta) {
     	//if(1+1==2) return;
-
     	
     	//Animation mdoe on
     	if(AnimationModeProcessor.getInstance().getFPSMode() && Mouse.isButtonDown(0)) {
