@@ -192,15 +192,15 @@ public class Transform {
 		
 		
 		StringBuilder result = new StringBuilder();
-		result.append(String.format("new Transform().\n"));
-		result.append(String.format(".withPosition(%ff, %ff, %ff)", getPositionX(), getPositionY(),
+		result.append(String.format("new Transform()"));
+		result.append(String.format("\n.withPosition(%ff, %ff, %ff)", getPositionX(), getPositionY(),
 				getPositionZ()));
-		result.append(String.format(".withRotation(%ff, %ff, %ff)", getRotationX(), getRotationY(),
+		result.append(String.format("\n.withRotation(%ff, %ff, %ff)", getRotationX(), getRotationY(),
 				getRotationZ()));
 		
 	
-		result.append(String.format(".withRotationPoint(%ff, %ff, %ff)", getRotationPointX(), getRotationPointY(), getRotationPointZ()));
-		result.append(String.format(".withScale(%ff, %ff, %ff)", getScaleX(), getScaleY(), getScaleZ()));
+		result.append(String.format("\n.withRotationPoint(%ff, %ff, %ff)", getRotationPointX(), getRotationPointY(), getRotationPointZ()));
+		result.append(String.format("\n.withScale(%ff, %ff, %ff)", getScaleX(), getScaleY(), getScaleZ()));
 		
 		System.out.println("\n" + result);
 	}

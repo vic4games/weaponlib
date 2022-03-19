@@ -286,6 +286,13 @@ public class MatrixHelper {
 		return (float) (Math.pow(1 - t, 2) * a + 2 * t * (1 - t) * b + t*t * c);
 	}
 	
+	public static Vec3d solveBeizer(Vec3d before, Vec3d after, Vec3d beizer, double t) {
+		double x = solveBeizer((float) before.x,(float)  beizer.x,(float)  after.x, (float) t);
+		double y = solveBeizer((float) before.y,(float)  beizer.y,(float)  after.y, (float) t);
+		double z = solveBeizer((float) before.z,(float)  beizer.z,(float)  after.z, (float) t);
+		return new Vec3d(x, y, z);
+	}
+	
 	public static float solveLerp(float a, float b, float t) {
 		return a + (b-a)*t;
 	}

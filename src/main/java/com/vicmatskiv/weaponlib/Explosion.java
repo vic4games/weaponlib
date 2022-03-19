@@ -73,6 +73,9 @@ public class Explosion {
                 isSmoking, particleAgeCoefficient, smokeParticleAgeCoefficient, explosionParticleScaleCoefficient, smokeParticleScaleCoefficient,
                 explosionParticleTextureName, smokeParticleTextureName, explosionSound);
 
+        
+        
+        isDestroyingBlocks = true;
         explosion.doExplosionA();
         explosion.doExplosionB(false, isDestroyingBlocks);
 

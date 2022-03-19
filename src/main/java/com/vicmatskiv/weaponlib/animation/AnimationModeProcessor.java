@@ -2,8 +2,11 @@ package com.vicmatskiv.weaponlib.animation;
 
 import java.awt.Color;
 import java.nio.FloatBuffer;
+import java.util.HashMap;
+import java.util.Map.Entry;
 
 import javax.management.modelmbean.ModelMBeanNotificationBroadcaster;
+import javax.print.attribute.HashAttributeSet;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.input.Keyboard;
@@ -15,6 +18,7 @@ import org.lwjgl.util.vector.Quaternion;
 import org.lwjgl.util.vector.Vector3f;
 import org.lwjgl.util.vector.Vector4f;
 
+import com.vicmatskiv.weaponlib.AttachmentCategory;
 import com.vicmatskiv.weaponlib.ClientModContext;
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.Part;
@@ -42,6 +46,20 @@ import scala.actors.threadpool.Arrays;
 
 public class AnimationModeProcessor {
 
+	
+
+	private static HashMap<Integer, AttachmentCategory> extraIDRegistry = new HashMap<>();
+	
+	
+	static {
+		extraIDRegistry.put(4, AttachmentCategory.ACTION);
+	}
+	
+	 
+	private HashMap<AttachmentCategory, Boolean> shouldRender = new HashMap<>();
+	private AttachmentCategory activeCategory;
+	private AttachmentCategory exclusionCategory;
+	
 	private static AnimationModeProcessor instance = new AnimationModeProcessor();
 
 	public boolean legacyMode = false;
@@ -57,6 +75,46 @@ public class AnimationModeProcessor {
 
 	public AnimationModeProcessor() {
 
+		for(Entry<Integer, AttachmentCategory> i : extraIDRegistry.entrySet()) {
+			shouldRender.put(i.getValue(), true);
+		}
+		
+	}
+	
+	public void setExcludedCategory(AttachmentCategory category) {
+		this.exclusionCategory = category;
+	}
+	
+	public AttachmentCategory getExcludedCategory() {
+		return this.exclusionCategory;
+	}
+	
+	public void setActiveCategory(AttachmentCategory category) {
+		this.activeCategory = category;
+	}
+	
+	public boolean shouldIsolateCategory() {
+		return this.activeCategory != null;
+	}
+	
+	public AttachmentCategory getIsolatedCategory() {
+		return this.activeCategory;
+	}
+	
+	public void flagRender(AttachmentCategory category, boolean status) {
+		if(!shouldRender.containsKey(category)) {
+			return;
+		}
+		shouldRender.put(category, status);
+	}
+	
+	public boolean queryRender(AttachmentCategory category) {
+		if(!shouldRender.containsKey(category)) {
+			// If we should not concern ourselves with
+			// it, just render it.
+			return true;
+		}
+		return shouldRender.get(category);
 	}
 	
 	public boolean getFPSMode() {
@@ -93,7 +151,7 @@ public class AnimationModeProcessor {
 		if(AnimationGUI.getInstance().grabStatus) return;
 		
 		// currentPartMatrix = DebugPositioner.rotationMatrix();
-		if(OpenGLSelectionHelper.selectID > 0 && OpenGLSelectionHelper.selectID < 4) {
+		if(OpenGLSelectionHelper.selectID > 0 && OpenGLSelectionHelper.selectID < 5) {
 			Minecraft mc = Minecraft.getMinecraft();
 			ScaledResolution scaledresolution = new ScaledResolution(mc);
 	        final int scaledWidth = scaledresolution.getScaledWidth();
@@ -114,7 +172,7 @@ public class AnimationModeProcessor {
 
 		if ((colorHover != -1 || colorSelected != -1) && AnimationGUI.getInstance().axisToggle.isState()) {
 			leftLock = false;
-		} else if ((OpenGLSelectionHelper.currentlyHovering > 0 && OpenGLSelectionHelper.currentlyHovering < 4) || AnimationGUI.getInstance().grabStatus) {
+		} else if ((OpenGLSelectionHelper.currentlyHovering > 0 && OpenGLSelectionHelper.currentlyHovering < 5) || AnimationGUI.getInstance().grabStatus) {
 			
 			OpenGLSelectionHelper.selectID = OpenGLSelectionHelper.currentlyHovering;
 			DebugPositioner.setDebugMode(true);
@@ -154,6 +212,8 @@ public class AnimationModeProcessor {
 		return ClientModContext.getContext().getMainHeldWeapon().getWeapon().getRenderer().getWeaponRendererBuilder();
 	}
 	
+	public Transform slideTransform = Transform.NULL.copy();
+	
 	public Transform getTransformFromSelected() {
 		int i = OpenGLSelectionHelper.selectID;
 		Builder b = getCurrentWeaponRenderBuilder();
@@ -165,6 +225,8 @@ public class AnimationModeProcessor {
 			return b.firstPersonRightHandTransform;
 		case 3:
 			return b.firstPersonTransform;
+		case 4:
+			return slideTransform;
 		}
 		return null;
 		 
@@ -345,6 +407,8 @@ public class AnimationModeProcessor {
 				
 				 
 			} else {
+				
+				
 
 				Vec3d vec = Vec3d.ZERO;
 				switch (colorSelected) {
@@ -411,23 +475,20 @@ public class AnimationModeProcessor {
 
 				} else {
 					Builder i = ClientModContext.getContext().getMainHeldWeapon().getWeapon().getRenderer().getWeaponRendererBuilder();
-					Transform t = null;
-					if(OpenGLSelectionHelper.selectID == 1) {
-						t = i.firstPersonLeftHandTransform;
-					} else if(OpenGLSelectionHelper.selectID == 2) {
-						t = i.firstPersonRightHandTransform;
-					} else if(OpenGLSelectionHelper.selectID == 3) {
-						t = i.firstPersonTransform;
-					} 
+					Transform t = getTransformFromSelected();
 					
 					
 					
 					
-				if(atGrab != null)	t.withRotation(atGrab.getRotationX() + Math.toDegrees(quangles[0])*vec.x, atGrab.getRotationY() + Math.toDegrees(quangles[1])*vec.y, atGrab.getRotationZ() + -Math.toDegrees(quangles[2])*vec.z);
 					
+				if(atGrab != null)	{
+					t.withRotation(atGrab.getRotationX() + Math.toDegrees(quangles[0])*vec.x, atGrab.getRotationY() + Math.toDegrees(quangles[1])*vec.y, atGrab.getRotationZ() + -Math.toDegrees(quangles[2])*vec.z);
+				}
+				t.printTransform();
 					//t.withRotation(t.getRotationX() + vec.x*m*0.1, t.getRotationY() + vec.y*m*0.1, t.getRotationZ() + vec.z*m*0.1);
 					
 				}
+				
 				
 			
 				// System.out.println(currentPartMatrix);

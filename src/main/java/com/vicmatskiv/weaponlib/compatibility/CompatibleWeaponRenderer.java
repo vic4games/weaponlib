@@ -21,6 +21,7 @@ import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GLSync;
 
 import com.google.common.collect.Maps;
+import com.vicmatskiv.weaponlib.AttachmentCategory;
 import com.vicmatskiv.weaponlib.ClientModContext;
 import com.vicmatskiv.weaponlib.ModelRenderer;
 import com.vicmatskiv.weaponlib.Part;
@@ -488,10 +489,12 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 				GlStateManager.pushMatrix();
 				ResourceLocation loc = new ResourceLocation("mw" + ":" + "textures/hud/grid.png");
 
+				Shader grid = Shaders.grid;
 				// GlStateManager.rotate(45f, 0, 1, 0);
 				// GlStateManager.disableTexture2D();
-				Minecraft.getMinecraft().getTextureManager().bindTexture(loc);
+				//Minecraft.getMinecraft().getTextureManager().bindTexture(loc);
 				// GlStateManager.disableDepth();
+				grid.use();
 				GlStateManager.disableCull();
 				Tessellator t = Tessellator.getInstance();
 				BufferBuilder bb = t.getBuffer();
@@ -506,6 +509,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 
 				GlStateManager.enableDepth();
 				GlStateManager.popMatrix();
+				grid.release();
 			}
 			GlStateManager.enableDepth();
 			
@@ -810,8 +814,24 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 			if (OpenGLSelectionHelper.isInSelectionPass) {
 				if (OpenGLSelectionHelper.shouldRender(3)) {
 					OpenGLSelectionHelper.bindSelectShader(3);
+					AnimationModeProcessor.getInstance().setExcludedCategory(AttachmentCategory.ACTION);
+					
 					renderItem(itemStack, renderContext, positioner);
+					
+					AnimationModeProcessor.getInstance().setExcludedCategory(null);
+					
+					
+				} else if(OpenGLSelectionHelper.shouldRender(4)) {
+					
 				}
+				
+				OpenGLSelectionHelper.bindSelectShader(4);
+				AnimationModeProcessor.getInstance().setActiveCategory(AttachmentCategory.ACTION);
+				//renderItem(itemStack, renderContext, positioner);
+				renderItem(itemStack, renderContext, positioner);
+				
+				AnimationModeProcessor.getInstance().setActiveCategory(null);
+			
 
 			} else {
 				
@@ -831,8 +851,23 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 				
 				
 				
+				if(AnimationModeProcessor.getInstance().getFPSMode()) {
+					
+					AnimationModeProcessor.getInstance().setActiveCategory(AttachmentCategory.ACTION);
+					renderItem(itemStack, renderContext, positioner);
+					AnimationModeProcessor.getInstance().setActiveCategory(null);
+					
+					
+					AnimationModeProcessor.getInstance().setExcludedCategory(AttachmentCategory.ACTION);
+					renderItem(itemStack, renderContext, positioner);
+					AnimationModeProcessor.getInstance().setExcludedCategory(null);
+					
+					
+				} else {
+					renderItem(itemStack, renderContext, positioner);
+				}
 				
-				renderItem(itemStack, renderContext, positioner);
+				
 				//Bloom.unapplyMultisample();
 				if(forceMSAA) {
 					
@@ -944,7 +979,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 
 		if (AnimationModeProcessor.getInstance().getFPSMode()) {
 			
-			Shaders.selectedge = ShaderManager.loadVMWShader("selectedge");
+			Shaders.selectedge = Shaders.selectedge;
 			
 			Shaders.selectedge.use();
 			if (OpenGLSelectionHelper.fbo != null) {

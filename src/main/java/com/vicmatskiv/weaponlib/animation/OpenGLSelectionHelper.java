@@ -225,6 +225,7 @@ public class OpenGLSelectionHelper {
 		// " + buf.get(3));
 		int red = buf.get(0) & 0xFF;
 		currentlyHovering = red;
+		
 		// System.out.println(currentlyHovering);
 		// selectID = 20;
 

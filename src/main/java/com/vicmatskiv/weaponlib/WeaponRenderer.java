@@ -47,6 +47,7 @@ import com.vicmatskiv.weaponlib.animation.SpecialAttachments;
 import com.vicmatskiv.weaponlib.animation.Transform;
 import com.vicmatskiv.weaponlib.animation.Transition;
 import com.vicmatskiv.weaponlib.animation.gui.AnimationGUI;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleAchievement;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponRenderer;
 import com.vicmatskiv.weaponlib.compatibility.Interceptors;
@@ -1159,7 +1160,6 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			for(Part p : parts) {
 				//if(!(p instanceof ItemMagazine)) continue;
 
-				System.out.println(p + " -> " + ((ItemAttachment<Weapon>) p).rotationPoint);
 				Vec3d r = ((ItemMagazine) p).rotationPoint;
 				//System.out.println("ROTMAMDFKFKJF FOR MAG: " + r);
 				
@@ -1231,7 +1231,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		
 		
 		
-		public Builder setupModernAnimations(String animationFile, Part action) {
+		public Builder setupModernAnimations(String animationFile, ItemAttachment<Weapon> aR15Action) {
 			final String mainBoneName = "main";
 			final String leftBoneName = "lefthand";
 			final String rightBoneName = "righthand";
@@ -1317,57 +1317,62 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			if(hasDraw) setupDraw(animationFile, BBLoader.KEY_DRAW, mainBoneName, leftBoneName, rightBoneName);
 			if(hasCompoundReloadEmpty) setupCompoundReloadEmpty(animationFile, BBLoader.KEY_COMPOUND_RELOAD_EMPTY, mainBoneName, leftBoneName, rightBoneName);
 			
-			setupCustomKeyedPart(action, animationFile, BBLoader.KEY_ACTION);
+			setupCustomKeyedPart(aR15Action, animationFile, BBLoader.KEY_ACTION);
 			
 			return this;
 		}
 		
-		public Builder setupCustomKeyedPart(Part action, String animationFile, String partKey) {
+		public Builder setupCustomKeyedPart(ItemAttachment<Weapon> action, String animationFile, String partKey) {
 			AnimationSet set = BBLoader.getAnimationSet(animationFile);
 			
+			
+			Vec3d rotPoint = action.rotationPoint;
+			
+			Part aR15Action = action.getRenderablePart();
+			
 			if(hasLoadEmpty && set.getSingleAnimation(BBLoader.KEY_LOAD_EMPTY).hasBone(partKey)) {
-				withLoadEmptyCustom(action, BBLoader.getAnimation(animationFile, BBLoader.KEY_LOAD_EMPTY, partKey)
-						.getTransitionList(Transform.NULL.copy(), BBLoader.HANDDIVISOR));
+				withLoadEmptyCustom(aR15Action, BBLoader.getAnimation(animationFile, BBLoader.KEY_LOAD_EMPTY, partKey)
+						.getTransitionList(Transform.NULL.copy().withRotationPoint(rotPoint.x, rotPoint.y, rotPoint.z), BBLoader.HANDDIVISOR));
 			}
 			
 			if(hasUnloadEmpty && set.getSingleAnimation(BBLoader.KEY_UNLOAD_EMPTY).hasBone(partKey)) {
-				withUnloadEmptyCustom(action, BBLoader.getAnimation(animationFile, BBLoader.KEY_UNLOAD_EMPTY, partKey)
-						.getTransitionList(Transform.NULL.copy(), BBLoader.HANDDIVISOR));
+				withUnloadEmptyCustom(aR15Action, BBLoader.getAnimation(animationFile, BBLoader.KEY_UNLOAD_EMPTY, partKey)
+						.getTransitionList(Transform.NULL.copy().withRotationPoint(rotPoint.x, rotPoint.y, rotPoint.z), BBLoader.HANDDIVISOR));
 			}
 			
 			if(hasCompoundReload && set.getSingleAnimation(BBLoader.KEY_COMPOUND_RELOAD).hasBone(partKey)) {
-				withFirstPersonCustomPositioningCompoundReloading(action, BBLoader.getAnimation(animationFile, BBLoader.KEY_COMPOUND_RELOAD, partKey)
-						.getTransitionList(Transform.NULL.copy(), BBLoader.HANDDIVISOR));
+				withFirstPersonCustomPositioningCompoundReloading(aR15Action, BBLoader.getAnimation(animationFile, BBLoader.KEY_COMPOUND_RELOAD, partKey)
+						.getTransitionList(Transform.NULL.copy().withRotationPoint(rotPoint.x, rotPoint.y, rotPoint.z), BBLoader.HANDDIVISOR));
 			}
 			
 			if(hasCompoundReloadEmpty && set.getSingleAnimation(BBLoader.KEY_COMPOUND_RELOAD_EMPTY).hasBone(partKey)) {
-				withFPSCustomCompoundReloadingEmpty(action, BBLoader.getAnimation(animationFile, BBLoader.KEY_COMPOUND_RELOAD_EMPTY, partKey)
-						.getTransitionList(Transform.NULL.copy(), BBLoader.HANDDIVISOR));
+				withFPSCustomCompoundReloadingEmpty(aR15Action, BBLoader.getAnimation(animationFile, BBLoader.KEY_COMPOUND_RELOAD_EMPTY, partKey)
+						.getTransitionList(Transform.NULL.copy().withRotationPoint(rotPoint.x, rotPoint.y, rotPoint.z), BBLoader.HANDDIVISOR));
 			}
 			
 			if(hasTacticalReload && set.getSingleAnimation(BBLoader.KEY_TACTICAL_RELOAD).hasBone(partKey)) {
-				withTacticalReloadCustom(action, BBLoader.getAnimation(animationFile, BBLoader.KEY_TACTICAL_RELOAD, partKey)
-						.getTransitionList(Transform.NULL.copy(), BBLoader.HANDDIVISOR));
+				withTacticalReloadCustom(aR15Action, BBLoader.getAnimation(animationFile, BBLoader.KEY_TACTICAL_RELOAD, partKey)
+						.getTransitionList(Transform.NULL.copy().withRotationPoint(rotPoint.x, rotPoint.y, rotPoint.z), BBLoader.HANDDIVISOR));
 			}
 			
 			if(hasDraw && set.getSingleAnimation(BBLoader.KEY_DRAW).hasBone(partKey)) {
-				withFirstPersonCustomPositioningDrawing(action, BBLoader.getAnimation(animationFile, BBLoader.KEY_DRAW, partKey)
-						.getTransitionList(Transform.NULL.copy(), BBLoader.HANDDIVISOR));
+				withFirstPersonCustomPositioningDrawing(aR15Action, BBLoader.getAnimation(animationFile, BBLoader.KEY_DRAW, partKey)
+						.getTransitionList(Transform.NULL.copy().withRotationPoint(rotPoint.x, rotPoint.y, rotPoint.z), BBLoader.HANDDIVISOR));
 			}
 			
 			if(hasInspect && set.getSingleAnimation(BBLoader.KEY_INSPECT).hasBone(partKey)) {
-				withFirstPersonCustomPositioningInspecting(action, BBLoader.getAnimation(animationFile, BBLoader.KEY_INSPECT, partKey)
-						.getTransitionList(Transform.NULL.copy(), BBLoader.HANDDIVISOR));
+				withFirstPersonCustomPositioningInspecting(aR15Action, BBLoader.getAnimation(animationFile, BBLoader.KEY_INSPECT, partKey)
+						.getTransitionList(Transform.NULL.copy().withRotationPoint(rotPoint.x, rotPoint.y, rotPoint.z), BBLoader.HANDDIVISOR));
 			}
 			
 			if(hasLoad && set.getSingleAnimation(BBLoader.KEY_LOAD).hasBone(partKey)) {
-				withFirstPersonCustomPositioningReloading(action, BBLoader.getAnimation(animationFile, BBLoader.KEY_LOAD, partKey)
-						.getTransitionList(Transform.NULL.copy(), BBLoader.HANDDIVISOR));
+				withFirstPersonCustomPositioningReloading(aR15Action, BBLoader.getAnimation(animationFile, BBLoader.KEY_LOAD, partKey)
+						.getTransitionList(Transform.NULL.copy().withRotationPoint(rotPoint.x, rotPoint.y, rotPoint.z), BBLoader.HANDDIVISOR));
 			}
 			
 			if(hasUnload && set.getSingleAnimation(BBLoader.KEY_UNLOAD).hasBone(partKey)) {
-				withFirstPersonCustomPositioningUnloading(action, BBLoader.getAnimation(animationFile, BBLoader.KEY_UNLOAD, partKey)
-						.getTransitionList(Transform.NULL.copy(), BBLoader.HANDDIVISOR));
+				withFirstPersonCustomPositioningUnloading(aR15Action, BBLoader.getAnimation(animationFile, BBLoader.KEY_UNLOAD, partKey)
+						.getTransitionList(Transform.NULL.copy().withRotationPoint(rotPoint.x, rotPoint.y, rotPoint.z), BBLoader.HANDDIVISOR));
 			}
 			
 			return this;
@@ -2430,8 +2435,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				&& System.currentTimeMillis()-playerWeaponInstance.getStateUpdateTimestamp()  > 50
 						) {
 					
-					
-					currentState = RenderableState.RUNNING;
+					currentState = RenderableState.NORMAL;
+					//currentState = RenderableState.RUNNING;
 				} else if(playerWeaponInstance.isAimed()) {
 					currentState = RenderableState.ZOOMING;
 					rate = getBuilder().zoomRandomizingRate;
@@ -3063,6 +3068,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
     
 	
 	
+	
 	@Override
 	public void renderItem(ItemStack weaponItemStack, RenderContext<RenderableState> renderContext,
 			Positioner<Part, RenderContext<RenderableState>> positioner) {
@@ -3189,13 +3195,16 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		
 		Interceptors.setRenderVolumeThreshold(volumeThreshold);
 		try {
-		    getBuilder().getModel().render(this.player,
-	                renderContext.getLimbSwing(),
-	                renderContext.getFlimbSwingAmount(),
-	                renderContext.getAgeInTicks(),
-	                renderContext.getNetHeadYaw(),
-	                renderContext.getHeadPitch(),
-	                renderContext.getScale());
+			if(!AnimationModeProcessor.getInstance().shouldIsolateCategory()) {
+				getBuilder().getModel().render(this.player,
+		                renderContext.getLimbSwing(),
+		                renderContext.getFlimbSwingAmount(),
+		                renderContext.getAgeInTicks(),
+		                renderContext.getNetHeadYaw(),
+		                renderContext.getHeadPitch(),
+		                renderContext.getScale());
+			}
+		    
 
 		    if(sqDistance < 900) {
 		    	    Interceptors.setRenderVolumeThreshold(volumeThreshold);
@@ -3310,6 +3319,16 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		}
 		
 		
+		if(AnimationModeProcessor.getInstance().getExcludedCategory() == compatibleAttachment.getAttachment().getCategory()) return;
+		
+		
+		
+		
+		// For animation mode
+		if(AnimationModeProcessor.getInstance().shouldIsolateCategory()) {
+			if(AnimationModeProcessor.getInstance().getIsolatedCategory() != compatibleAttachment.getAttachment().getCategory());
+			
+		}
 		// Do magic mag stuff
 		if(compatibleAttachment.getAttachment().getCategory() == AttachmentCategory.MAGICMAG) {
 			
@@ -3465,6 +3484,17 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 					+ ":textures/models/" + texturedModel.getV()));
 			GL11.glPushMatrix();
 			GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_CURRENT_BIT);
+			
+			
+			if(compatibleAttachment.getAttachment().getCategory() == AttachmentCategory.ACTION) {
+				if(AnimationModeProcessor.getInstance().getFPSMode()) {
+					AnimationModeProcessor.getInstance().slideTransform.doGLDirect();
+				
+					CompatibleWeaponRenderer.captureAtlasPosition();
+				}
+			}
+			
+			
 			if(compatibleAttachment.getModelPositioning() != null) {
 			
 				/*
@@ -3527,7 +3557,6 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				*/
 				
 			}
-			
 			
 			
 			

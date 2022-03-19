@@ -48,6 +48,7 @@ public class NaturalCamera {
 	}
 
 	public void update() {
+		if(true) return;
 		if (Double.isNaN(shockVector.getShockVector().x)) {
 			shockVector = new ShockVector();
 		}

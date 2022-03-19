@@ -6,14 +6,32 @@ import com.vicmatskiv.weaponlib.RenderContext;
 import com.vicmatskiv.weaponlib.RenderableState;
 import com.vicmatskiv.weaponlib.animation.AnimationModeProcessor;
 import com.vicmatskiv.weaponlib.animation.ClientValueRepo;
+import com.vicmatskiv.weaponlib.animation.Interpolation;
+import com.vicmatskiv.weaponlib.animation.MatrixHelper;
+import com.vicmatskiv.weaponlib.animation.jim.BBLoader;
+import com.vicmatskiv.weaponlib.animation.jim.KeyedAnimation;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponRenderer.StateDescriptor;
+import com.vicmatskiv.weaponlib.numerical.LerpedValue;
+import com.vicmatskiv.weaponlib.numerical.LissajousCurve;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponRenderer;
 import com.vicmatskiv.weaponlib.compatibility.RecoilParam;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.math.Vec3d;
 
 public class WeaponRotationHandler {
+	
+	public double currentInVal;
+	public double previousInVal;
+	
+	public LerpedValue runningDepth = new LerpedValue();
+	
+	public KeyedAnimation walkingAnimation = new KeyedAnimation(BBLoader.getAnimation("universal", "walkforward", "main"));
+	public KeyedAnimation runningAnimation = new KeyedAnimation(BBLoader.getAnimation("universal", "running", "main"));
+	public KeyedAnimation strafingAnimation = new KeyedAnimation(BBLoader.getAnimation("universal", "walk", "main"));
+	public double springTransition;
 	
 	
 	public static void applyRotationAtPoint(float xOffset, float yOffset, float zOffset, float xRotation,
@@ -27,7 +45,79 @@ public class WeaponRotationHandler {
 		GL11.glTranslatef(xOffset, yOffset, zOffset);
 	}
 	
+	
+
+	
+	public void runze(RenderContext<RenderableState> renderContext, StateDescriptor stateDescriptor) {
+
+		
+	
+		
+		//System.out.println(keyAnim.max);
+		
+		float mag = ClientValueRepo.forward.getLerpedFloat();
+		if(renderContext.getWeaponInstance().isAimed()) {
+			mag /= 100;
+		}
+		
+		
+		if(Minecraft.getMinecraft().player.isSprinting()) {
+			springTransition += 0.01;
+		} else {
+			springTransition *= 0.8;
+		}
+		
+		springTransition = Math.max(Math.min(springTransition, 1), 0);
+		
+	
+	//	System.out.println(runningAnimation.max);
+		
+		
+		
+	
+		//GlStateManager.pushMatrix();
+		//GlStateManager.translate(0, -1, 0);
+		Vec3d rotationPoint = new Vec3d(-0.10, -1, 0);
+		walkingAnimation.doPositioning((float) Math.max(mag-(springTransition), 0), rotationPoint);
+		runningAnimation.doPositioning((float) Math.max(mag-(1.0-springTransition), 0), rotationPoint);
+		
+		//System.out.println(mag);
+		//runningAnimation.doPositioning((float) mag, rotationPoint);
+		//GlStateManager.popMatrix();
+		if(true) return;
+		
+		// update previous
+		runningDepth.updatePrevious();
+		
+		// Calculate current value
+		currentInVal += 1;
+		double ticks = previousInVal + (currentInVal - previousInVal)*Minecraft.getMinecraft().getRenderPartialTicks();
+		previousInVal = currentInVal;
+		
+		
+		runningDepth.currentValue *= 0.95;
+		
+		if(Math.round(currentInVal)%100 < 10) { 
+			runningDepth.currentValue += 0.1;
+			
+		}
+		
+		double n = Math.sin(ticks*0.05)*0.5+0.5;
+		
+		double scale = 0.5;
+		//Vec3d i = MatrixHelper.solveBeizer(Vec3d.ZERO, new Vec3d(1.0, -1, 0.0), new Vec3d(1.2, 0.2, 0), 1-runningDepth.getLerpedFloat());
+		//GlStateManager.translate(i.x*scale, i.y*scale, i.z*scale);
+		
+		//double downRotation = LissajousCurve.getXOffsetOnCurve(-5*runningDepth.getLerpedFloat(), 0.2, Math.PI, 0, ticks);
+		
+		
+		applyRotationAtPoint(0.0f, 0.8f, 0.1f, 0f, (float) Math.sin(ticks*0.5)*5, 0);
+		GlStateManager.translate(0, runningDepth.getLerpedFloat(), 0);
+	}
+	
 	public void run(RenderContext<RenderableState> renderContext, StateDescriptor stateDescriptor) {
+		runze(renderContext, stateDescriptor);
+		if(true) return;
 		
 		// Get parameters
 		RecoilParam parameters = renderContext.getWeaponInstance().getWeapon().getRecoilParameters();

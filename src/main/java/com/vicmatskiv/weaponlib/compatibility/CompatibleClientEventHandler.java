@@ -1071,7 +1071,14 @@ public abstract class CompatibleClientEventHandler {
 		
 		if(event.phase == Phase.START && Minecraft.getMinecraft().player != null && getModContext() != null && getModContext().getMainHeldWeapon() != null) {
 			ClientValueRepo.update(getModContext());
+			
+		
+			CompatibleWeaponRenderer.wrh.runningAnimation.update(0.08f);
+			CompatibleWeaponRenderer.wrh.walkingAnimation.update(0.08f);
 		}
+		
+		
+		
 		
 		if(event.phase  == Phase.START && Minecraft.getMinecraft().player != null) {
 			

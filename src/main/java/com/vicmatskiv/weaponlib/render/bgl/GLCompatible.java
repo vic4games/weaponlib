@@ -274,13 +274,16 @@ public class GLCompatible {
 		}
 
 		
-		 if (cap.GL_ARB_texture_multisample) {
-				multisampleType = ARB;
-				GL_TEXTURE_2D_MULTISAMPLE = ARBTextureMultisample.GL_TEXTURE_2D_MULTISAMPLE;
-			} else if (cap.OpenGL32) {
+		
+		if(cap.OpenGL32) {
 			multisampleType = NORMAL;
 			GL_TEXTURE_2D_MULTISAMPLE = GL32.GL_TEXTURE_2D_MULTISAMPLE;
+		} else if(cap.GL_ARB_texture_multisample) {
+			multisampleType = ARB;
+			GL_TEXTURE_2D_MULTISAMPLE = ARBTextureMultisample.GL_TEXTURE_2D_MULTISAMPLE;
+			
 		}
+
 		
 		
 		
@@ -291,6 +294,8 @@ public class GLCompatible {
 	public static void glTexImage2DMultisample(int target, int samples, int internalformat, int width, int height,
 			boolean fixedsamplelocations) {
 
+		init();
+		
 		switch (multisampleType) {
 			case NORMAL:
 				GL32.glTexImage2DMultisample(target, samples, internalformat, width, height, fixedsamplelocations);
@@ -300,6 +305,8 @@ public class GLCompatible {
 				ARBTextureMultisample.glTexImage2DMultisample(target, samples, internalformat, width, height,
 						fixedsamplelocations);
 				break;
+				
+
 		}
 
 	}

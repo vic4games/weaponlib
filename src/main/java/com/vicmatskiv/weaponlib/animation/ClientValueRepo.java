@@ -155,7 +155,9 @@ public class ClientValueRepo {
 		if (recoilStop > 35f) {
 			recoilStop -= 2f;
 		}
-		forward.currentValue *= 0.7;
+		
+		
+		forward.currentValue *= 0.5;
 		forward.add(Minecraft.getMinecraft().player.moveForward/2);
 		
 	      

@@ -270,6 +270,8 @@ public class AnimationGUI {
 			b.firstPersonLeftHandTransform.set(amp.backupFPL);
 			b.firstPersonRightHandTransform.set(amp.backupFPR);
 			
+			AnimationModeProcessor.getInstance().slideTransform.withPosition(0, 0, 0).withRotation(0, 0, 0).withRotationPoint(0, 0, 0);
+			
 			DebugPositioner.reset();
 		} else if(id == forceSteveArms) {
 			forceSkin("default");
@@ -278,6 +280,7 @@ public class AnimationGUI {
 		} else if(id == printConsole) {
 			
 		
+			
 			
 			
 			if(CompatibleClientEventHandler.muzzlePositioner) {
@@ -306,6 +309,9 @@ public class AnimationGUI {
     			break;
     		case 3:
     			i.firstPersonTransform.printTransform();
+    			break;
+    		case 4:
+    			AnimationModeProcessor.getInstance().slideTransform.printTransform();
     			break;
     			
     		}

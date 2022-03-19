@@ -22,6 +22,7 @@ public class Shaders {
 	public static Shader flash = ShaderManager.loadVMWShader("flash");
 	public static Shader selectedge = ShaderManager.loadVMWShader("selectedge");
 	public static Shader reflexReticle = ShaderManager.loadVMWShader("reflex");
+	public static Shader grid = ShaderManager.loadVMWShader("grid");
 	
 	
 	public static Shader downsample = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/downsample"));
