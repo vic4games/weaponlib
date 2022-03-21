@@ -53,7 +53,7 @@ public class GLCompatible {
 
 	public static int attribDivisorType = -1;
 	
-	public static int multisampleType;
+	public static int multisampleType = -1;
 
 	public static int GL_READ_FRAMEBUFFER;
 	public static int GL_DRAW_FRAMEBUFFER;

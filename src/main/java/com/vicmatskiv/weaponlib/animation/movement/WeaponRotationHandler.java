@@ -2,24 +2,30 @@ package com.vicmatskiv.weaponlib.animation.movement;
 
 import org.lwjgl.opengl.GL11;
 
+import com.vicmatskiv.weaponlib.PlayerWeaponInstance;
 import com.vicmatskiv.weaponlib.RenderContext;
 import com.vicmatskiv.weaponlib.RenderableState;
 import com.vicmatskiv.weaponlib.animation.AnimationModeProcessor;
 import com.vicmatskiv.weaponlib.animation.ClientValueRepo;
 import com.vicmatskiv.weaponlib.animation.Interpolation;
 import com.vicmatskiv.weaponlib.animation.MatrixHelper;
+import com.vicmatskiv.weaponlib.animation.gui.AnimationGUI;
 import com.vicmatskiv.weaponlib.animation.jim.BBLoader;
 import com.vicmatskiv.weaponlib.animation.jim.KeyedAnimation;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponRenderer.StateDescriptor;
 import com.vicmatskiv.weaponlib.numerical.LerpedValue;
 import com.vicmatskiv.weaponlib.numerical.LissajousCurve;
+import com.vicmatskiv.weaponlib.numerical.RandomVector;
+import com.vicmatskiv.weaponlib.numerical.SpringValue;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponRenderer;
 import com.vicmatskiv.weaponlib.compatibility.RecoilParam;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.Vec3d;
+import scala.actors.threadpool.helpers.FIFOWaitQueue;
 
 public class WeaponRotationHandler {
 	
@@ -32,6 +38,8 @@ public class WeaponRotationHandler {
 	public KeyedAnimation runningAnimation = new KeyedAnimation(BBLoader.getAnimation("universal", "running", "main"));
 	public KeyedAnimation strafingAnimation = new KeyedAnimation(BBLoader.getAnimation("universal", "walk", "main"));
 	public double springTransition;
+	
+	
 	
 	
 	public static void applyRotationAtPoint(float xOffset, float yOffset, float zOffset, float xRotation,
@@ -48,73 +56,107 @@ public class WeaponRotationHandler {
 	
 
 	
-	public void runze(RenderContext<RenderableState> renderContext, StateDescriptor stateDescriptor) {
-
-		
-	
-		
-		//System.out.println(keyAnim.max);
-		
-		float mag = ClientValueRepo.forward.getLerpedFloat();
-		if(renderContext.getWeaponInstance().isAimed()) {
-			mag /= 100;
-		}
-		
-		
-		if(Minecraft.getMinecraft().player.isSprinting()) {
-			springTransition += 0.01;
-		} else {
-			springTransition *= 0.8;
-		}
-		
-		springTransition = Math.max(Math.min(springTransition, 1), 0);
-		
-	
-	//	System.out.println(runningAnimation.max);
-		
-		
-		
-	
-		//GlStateManager.pushMatrix();
-		//GlStateManager.translate(0, -1, 0);
+	public void run(RenderContext<RenderableState> renderContext, StateDescriptor stateDescriptor) {
 		Vec3d rotationPoint = new Vec3d(-0.10, -1, 0);
-		walkingAnimation.doPositioning((float) Math.max(mag-(springTransition), 0), rotationPoint);
-		runningAnimation.doPositioning((float) Math.max(mag-(1.0-springTransition), 0), rotationPoint);
-		
-		//System.out.println(mag);
-		//runningAnimation.doPositioning((float) mag, rotationPoint);
-		//GlStateManager.popMatrix();
-		if(true) return;
-		
-		// update previous
-		runningDepth.updatePrevious();
-		
-		// Calculate current value
-		currentInVal += 1;
-		double ticks = previousInVal + (currentInVal - previousInVal)*Minecraft.getMinecraft().getRenderPartialTicks();
-		previousInVal = currentInVal;
 		
 		
-		runningDepth.currentValue *= 0.95;
+		PlayerWeaponInstance pwi = renderContext.getWeaponInstance();
+		RecoilParam params = pwi.getRecoilParameters();
 		
-		if(Math.round(currentInVal)%100 < 10) { 
-			runningDepth.currentValue += 0.1;
+		// Handle the basic animations
+		float forwardMagnitude = ClientValueRepo.forward.getLerpedFloat();
+		float strafeMagnitude = ClientValueRepo.strafe.getLerpedFloat();
+		float runningMagnitude = ClientValueRepo.running.getLerpedFloat();
+		
+		
+		// Sway & walk
+		float swayAmplitude = 0.2f;
+		float walkingSwayAmplitude = strafeMagnitude/30f + forwardMagnitude/30f;
+		
+		
+		// Recoil
+		float recoilAmplitude = ClientValueRepo.gunPow.getLerpedFloat();
+		float weaponRecoveryAmplitude = ClientValueRepo.weaponRecovery.getLerpedFloat()/15f;
+		float muzzleClimbDivisor = (float) params.getMuzzleClimbDivisor();
+		float rotationYDivisor = (float) params.getWeaponRotationX();
+		float rotationZDivisor = (float) params.getWeaponRotationY();
+		
+		SpringValue recoverySpring = ClientValueRepo.weaponRecovery;
+		recoverySpring.setDamping(3);
+		recoverySpring.setSpringConstant(50);
+		recoverySpring.setMass(1);
+		
+		
+		if(renderContext.getWeaponInstance().isAimed()) {
+			float divisorMultiplier = 1f;
+			if(renderContext.getWeaponInstance().getScope() != null && renderContext.getWeaponInstance().getScope().isOptical()) {
+				divisorMultiplier = 3f;
+			}
+			
+			// The spring is more obvious in first person
+			// so, by increasing the damping we can make
+			// it look better.
+			recoverySpring.setDamping(5);
+			
+			forwardMagnitude /= 5*divisorMultiplier;
+			strafeMagnitude /= 3*divisorMultiplier;
+			recoilAmplitude /= 3*divisorMultiplier;
+			weaponRecoveryAmplitude /= 2*divisorMultiplier;
 			
 		}
 		
-		double n = Math.sin(ticks*0.05)*0.5+0.5;
-		
-		double scale = 0.5;
-		//Vec3d i = MatrixHelper.solveBeizer(Vec3d.ZERO, new Vec3d(1.0, -1, 0.0), new Vec3d(1.2, 0.2, 0), 1-runningDepth.getLerpedFloat());
-		//GlStateManager.translate(i.x*scale, i.y*scale, i.z*scale);
-		
-		//double downRotation = LissajousCurve.getXOffsetOnCurve(-5*runningDepth.getLerpedFloat(), 0.2, Math.PI, 0, ticks);
-		
-		
-		applyRotationAtPoint(0.0f, 0.8f, 0.1f, 0f, (float) Math.sin(ticks*0.5)*5, 0);
-		GlStateManager.translate(0, runningDepth.getLerpedFloat(), 0);
-	}
 	
+		strafingAnimation.doPositioning((float) strafeMagnitude, rotationPoint);	
+		walkingAnimation.doPositioning((float) Math.max(forwardMagnitude-(springTransition+runningMagnitude), 0), rotationPoint);
+		runningAnimation.doPositioning((float) Math.max(runningMagnitude, 0), rotationPoint);
+
+		
+		// Add sway
+		
+		
+		
+		double gunSwayX = LissajousCurve.getXOffsetOnCurve(swayAmplitude, 0.25, Math.PI, 0, ClientValueRepo.ticker.getLerpedFloat());
+		double gunSwayY = LissajousCurve.getXOffsetOnCurve(swayAmplitude, 0.5,Math.PI, Math.PI/2, ClientValueRepo.ticker.getLerpedFloat());
+		
+		
+		double walkSwayX = LissajousCurve.getXOffsetOnCurve(walkingSwayAmplitude, 0.5, Math.PI, 0, ClientValueRepo.ticker.getLerpedFloat());
+		double walkSwayY = LissajousCurve.getXOffsetOnCurve(walkingSwayAmplitude, 0.25,Math.PI, Math.PI/2, ClientValueRepo.ticker.getLerpedFloat());
+		
+		
+		GlStateManager.translate(walkSwayY, walkSwayX, 0);
+		applyRotationAtPoint(0f, 0f, 1.5f, (float)gunSwayX, (float) gunSwayY, 0f);
+		
+				GlStateManager.rotate((float) ClientValueRepo.xInertia.getLerpedPosition(), 0, 1, 0);
+				GlStateManager.rotate((float) ClientValueRepo.yInertia.getLerpedPosition(), 1, 0, 0);
+				
+
+		
+		
+		
+		//weaponRecoveryAmplitude = 1;
+		double recoveryX = LissajousCurve.getXOffsetOnCurve(weaponRecoveryAmplitude, 1, Math.PI, 0, ClientValueRepo.ticker.getLerpedFloat());
+		double recoveryY = LissajousCurve.getXOffsetOnCurve(weaponRecoveryAmplitude, 0.5, Math.PI, Math.PI/2, ClientValueRepo.ticker.getLerpedFloat());
+		double recoveryZ = LissajousCurve.getXOffsetOnCurve(weaponRecoveryAmplitude, 2, Math.PI, Math.PI/2, ClientValueRepo.ticker.getLerpedFloat());
+		
+		//System.out.println(weaponRecoveryAmplitude);
+	
+		GlStateManager.translate(0, weaponRecoveryAmplitude/5f, weaponRecoveryAmplitude);
+		GlStateManager.rotate(weaponRecoveryAmplitude*5f, 1, 0, 0);
+		/*
+		GlStateManager.rotate((float) recoil/15f, 0, 0, 1);
+		GlStateManager.rotate((float)-recoil/25, 1, 0, 0);
+		*/
+		Vec3d strezz = ClientValueRepo.stressVec.getInterpolatedVector(1.0);
+		//GlStateManager.translate(strezz.x, strezz.y, strezz.z);
+		GlStateManager.translate(0, 0, recoilAmplitude*0.008);
+		
+		
+		applyRotationAtPoint(0.0f, 1.0f, 0, -recoilAmplitude/muzzleClimbDivisor, recoilAmplitude*rotationYDivisor, recoilAmplitude*rotationZDivisor);
+		//applyRotationAtPoint(0.0f, 1.0f, 0, -recoilAmplitude*1.5f, 0, recoilAmplitude/25);
+		
+		
+	}
+	/*
 	public void run(RenderContext<RenderableState> renderContext, StateDescriptor stateDescriptor) {
 		runze(renderContext, stateDescriptor);
 		if(true) return;
@@ -200,7 +242,7 @@ public class WeaponRotationHandler {
 
 		float aimMultiplier = renderContext.getWeaponInstance().isAimed() ? 0.1f : 1.0f;
 
-		float strafe = (float) ClientValueRepo.strafe.getLerpedPosition() * aimMultiplier * 0.7f;
+		float strafe = (float) ClientValueRepo.strafe.getLerpedFloat() * aimMultiplier * 0.7f;
 
 		float forwardMov = (float) ClientValueRepo.forward.getLerpedFloat() * aimMultiplier * 0.7f;
 		float rise = (float) (ClientValueRepo.jumpingSpring.getLerpedPosition());
@@ -279,6 +321,6 @@ public class WeaponRotationHandler {
 					0.01 * limitedShoting * min * parameters.getTranslationMultipliers().z);
 			
 		}
-	}
+	}*/
 
 }

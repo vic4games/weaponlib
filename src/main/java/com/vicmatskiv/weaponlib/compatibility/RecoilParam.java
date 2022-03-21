@@ -3,67 +3,87 @@ package com.vicmatskiv.weaponlib.compatibility;
 import net.minecraft.util.math.Vec3d;
 
 public class RecoilParam {
-	/**
-	 * Assault Rifle = 0
-	 * Pistol = 1
-	 * Shotgun/Sniper = 2
-	 */
-	public int recoilGroup = 0;
-	public double gunPower = 50;
-	public double muzzleClimbMultiplier = 1;
-	public Vec3d translationMultipliers = new Vec3d(1, 1, 1);
-	public double recoveryModifier = 0.00;
 	
-	public RecoilParam() {}
+	private double weaponPower, muzzleClimbDivisor, stockLength, powerRecoveryNormalRate, powerRecoveryStockRate, weaponRotationX, weaponRotationY;
 	
-	public RecoilParam(int group, int power, double muzzleClimbMult, Vec3d tMult, double recovModifier) {
-		this.recoilGroup = group;
-		this.gunPower = power;
-		this.muzzleClimbMultiplier = muzzleClimbMult;
-		this.translationMultipliers = tMult;
-		this.recoveryModifier = recovModifier;
-		
+	
+	public RecoilParam() {
+		this.weaponPower = 50;
+		this.muzzleClimbDivisor = 25;
+		this.stockLength = 50;
+		this.powerRecoveryNormalRate = 0.7;
+		this.powerRecoveryStockRate = 0.8;
+		this.weaponRotationX = 0;
+		this.weaponRotationY = 0;
+	}
+	
+	public RecoilParam(double weaponPower, double muzzleClimbDivisor, double stockLength, double prnr, double prnsr, double weaponRotX, double weaponRotY) {
+		this.weaponPower = weaponPower;
+		this.muzzleClimbDivisor = muzzleClimbDivisor;
+		this.stockLength = stockLength;
+		this.powerRecoveryNormalRate = prnr;
+		this.powerRecoveryStockRate = prnsr;
+		this.weaponRotationX = weaponRotX;
+		this.weaponRotationY = weaponRotY;
+	}
+	
+	public double getWeaponPower() {
+		return weaponPower;
 	}
 
-	public int getRecoilGroup() {
-		return recoilGroup;
+	public void setWeaponPower(double weaponPower) {
+		this.weaponPower = weaponPower;
 	}
 
-	public void setRecoilGroup(int recoilGroup) {
-		this.recoilGroup = recoilGroup;
+	public double getMuzzleClimbDivisor() {
+		return muzzleClimbDivisor;
 	}
 
-	public double getGunPower() {
-		return gunPower;
+	public void setMuzzleClimbDivisor(double muzzleClimbDivisor) {
+		this.muzzleClimbDivisor = muzzleClimbDivisor;
 	}
 
-	public void setGunPower(double gunPower) {
-		this.gunPower = gunPower;
+	public double getStockLength() {
+		return stockLength;
 	}
 
-	public double getMuzzleClimbMultiplier() {
-		return muzzleClimbMultiplier;
+	public void setStockLength(double stockLength) {
+		this.stockLength = stockLength;
 	}
 
-	public void setMuzzleClimbMultiplier(double muzzleClimbMultiplier) {
-		this.muzzleClimbMultiplier = muzzleClimbMultiplier;
+	public double getPowerRecoveryNormalRate() {
+		return powerRecoveryNormalRate;
 	}
 
-	public Vec3d getTranslationMultipliers() {
-		return translationMultipliers;
+	public void setPowerRecoveryNormalRate(double powerRecoveryNormalRate) {
+		this.powerRecoveryNormalRate = powerRecoveryNormalRate;
 	}
 
-	public void setTranslationMultipliers(Vec3d translationMultipliers) {
-		this.translationMultipliers = translationMultipliers;
+	public double getPowerRecoveryStockRate() {
+		return powerRecoveryStockRate;
 	}
 
-	public double getRecoveryModifier() {
-		return recoveryModifier;
+	public void setPowerRecoveryStockRate(double powerRecoveryStockRate) {
+		this.powerRecoveryStockRate = powerRecoveryStockRate;
 	}
 
-	public void setRecoveryModifier(double recoveryModifier) {
-		this.recoveryModifier = recoveryModifier;
+	public double getWeaponRotationX() {
+		return weaponRotationX;
 	}
+
+	public void setWeaponRotationX(double weaponRotationX) {
+		this.weaponRotationX = weaponRotationX;
+	}
+
+	public double getWeaponRotationY() {
+		return weaponRotationY;
+	}
+
+	public void setWeaponRotationY(double weaponRotationY) {
+		this.weaponRotationY = weaponRotationY;
+	}
+
+	
 	
 	
 

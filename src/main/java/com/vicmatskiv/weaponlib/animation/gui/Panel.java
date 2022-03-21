@@ -16,6 +16,9 @@ public class Panel {
 	private static final int BUFFER = 5;
 	
 	private ArrayList<Button> buttonList = new ArrayList<>();
+	
+	private ArrayList<IElement> elements = new ArrayList<>();
+	
 	private String title;
 	private AnimationGUI gui;
 	
@@ -40,6 +43,10 @@ public class Panel {
 		this.buttonSize = buttonSize;
 	}
 	
+	public boolean isClosed() {
+		return this.closed;
+	}
+	
 	
 	public void handleButtonClicks(int mouseX, int mouseY) {
 		
@@ -58,6 +65,11 @@ public class Panel {
 			}
 		}
 		
+		for(IElement e : elements) {
+			if(e.cancelGrab(mouseX, mouseY)) {
+				clickedButton = true;
+			}
+		}
 		
 		
 		if(!clickedButton) {
@@ -115,6 +127,13 @@ public class Panel {
 		buttonList.add(b);
 	}
 	
+	public void addElement(IElement e) {
+		if(!elements.isEmpty()) {
+			e.push(elements.get(elements.size()-1).getPush()+15);
+		}
+		elements.add(e);
+	}
+	
 	public void render(int mouseX, int mouseY) {
 		
 		if(this.grabbed) {
@@ -152,6 +171,10 @@ public class Panel {
 				b.y = (this.positionY + BUFFER*2);
 				b.renderButton(mouseX, mouseY);
 			}
+			
+			for(IElement e : elements) {
+				e.render(this.positionX, this.positionY, mouseX, mouseY);
+			}
 		}
 		
 		
@@ -163,6 +186,10 @@ public class Panel {
 	}
 
 
+	public String getTitle() {
+		return this.title;
+	}
+	
 	public ArrayList<Button> getButtonList() {
 		return buttonList;
 	}
@@ -219,6 +246,7 @@ public class Panel {
 
 
 	public void setHeight(double height) {
+		actualHeight = height;
 		this.height = height;
 	}
 

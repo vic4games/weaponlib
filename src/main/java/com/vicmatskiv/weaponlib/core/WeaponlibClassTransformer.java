@@ -154,7 +154,7 @@ public class WeaponlibClassTransformer implements IClassTransformer {
         public SoundInterceptorMethodVistor(MethodVisitor mv) {
         	
             super(Opcodes.ASM4, mv);
-            System.out.println("wassup bro");
+
         }
         
         @Override
@@ -612,9 +612,9 @@ public class WeaponlibClassTransformer implements IClassTransformer {
                     && modelRendererClassInfo.methodMatches("render", "(F)V", classname, name, desc)) {
                 return new ModelRendererRenderMethodVisitor(
                         cv.visitMethod(access, name, desc, signature, exceptions), !name.equals("render"));
-            } else if(playSoundClassInfo != null && playSoundClassInfo.methodMatches("play", "(Lpaulscode/sound/Channel;)V", classname, name, desc)) {
+            } /*else if(playSoundClassInfo != null && playSoundClassInfo.methodMatches("play", "(Lpaulscode/sound/Channel;)V", classname, name, desc)) {
                 return new SoundInterceptorMethodVistor(cv.visitMethod(access, name, desc, signature, exceptions));
-            }
+            }*/
 
             return this.cv.visitMethod(access, name, desc, signature, exceptions);
         }

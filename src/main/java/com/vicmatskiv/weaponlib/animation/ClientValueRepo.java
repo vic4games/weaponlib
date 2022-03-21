@@ -1,16 +1,21 @@
 package com.vicmatskiv.weaponlib.animation;
 
+import javax.print.StreamPrintService;
+
 import com.vicmatskiv.weaponlib.ClientModContext;
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.PlayerWeaponInstance;
 import com.vicmatskiv.weaponlib.Weapon;
+import com.vicmatskiv.weaponlib.animation.gui.AnimationGUI;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.RecoilParam;
 import com.vicmatskiv.weaponlib.numerical.LerpedValue;
 import com.vicmatskiv.weaponlib.numerical.LissajousCurve;
+import com.vicmatskiv.weaponlib.numerical.RandomVector;
 import com.vicmatskiv.weaponlib.numerical.SpringValue;
 import com.vicmatskiv.weaponlib.shader.jim.ShaderManager;
 
+import net.java.games.input.Mouse;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.Vec3d;
@@ -18,22 +23,31 @@ import net.minecraft.util.math.Vec3d;
 public class ClientValueRepo {
 
 	
+	
+	public static double oldGunPow = 0;
+	
 	public static LerpedValue ticker = new LerpedValue();
 	
 	public static double walkXWiggle = 0;
 	public static double walkYWiggle = 0;
 
-	public static SpringValue strafe = new SpringValue(0, 0, 0);
+	public static LerpedValue strafe = new LerpedValue();
 	public static LerpedValue forward = new LerpedValue();
+	public static LerpedValue running = new LerpedValue();
 	
 	public static int prevTickTick = 0;
 
 
 	public static SpringValue jumpingSpring = new SpringValue(400, 40, 90);
-	
+	public static RandomVector stressVec = new RandomVector();
 
 	
 	public static SpringValue walkingGun = new SpringValue(50, 10, 80);
+	
+	
+	// Recoil
+	public static LerpedValue gunPow = new LerpedValue();
+	public static SpringValue weaponRecovery = new SpringValue(1, 1, 1);
 	
 	//public static SpringValue walkingGun = new SpringValue(400, 60, 50);
 
@@ -44,7 +58,9 @@ public class ClientValueRepo {
 	public static LerpedValue scopeY = new LerpedValue();
 
 
-	public static LerpedValue gunPow = new LerpedValue();
+	
+	
+	
 	public static LerpedValue recovery = new LerpedValue();
 	
 	
@@ -63,11 +79,47 @@ public class ClientValueRepo {
 	public static double recoilStop = 35f;
 
 	public static int gunTick = 0;
+	
+	
+	public static void fireWeapon(PlayerWeaponInstance pwi) {
+		
+		RecoilParam params = pwi.getRecoilParameters();
+		
+		double power = params.getWeaponPower();
+		
+		if(gunPow.currentValue < 10) {
+		
+			power *= 2;
+		} else if(gunPow.currentValue > params.getStockLength()	) {
+			power /= 2;
+			
+		} else {
+			
+			
+		}
+		
+		weaponRecovery.velocity += power/4;
+		
+		gunPow.currentValue += power;
+
+		stressVec.getVector();
+		
+		
+	}
 
 	public static void update(ModContext context) {
+		PlayerWeaponInstance pwi = context.getMainHeldWeapon();
+		
+		
+		// Recoil constants
+		RecoilParam recoilParameters = pwi.getRecoilParameters();
+		
+		
 		//if(Math.abs(gunPow.position) > 1000) {
 			//gunPow = new SpringValue(500, 50, 100);
 		//}
+		
+		//double stockLength = AnimationGUI.getInstance().stockLength.getValue();
 		
 		//System.out.println(gunPow.getPosition());
 		//gunPow.setPosition(1);
@@ -76,11 +128,19 @@ public class ClientValueRepo {
 		gunPow.setMass(50);
 		gunPow.setSpringConstant(10000);
 		*/
+		running.updatePrevious();
+		strafe.updatePrevious();
 		scopeX.updatePrevious();
 		scopeY.updatePrevious();
 		gunPow.updatePrevious();
 		forward.updatePrevious();
 		recovery.updatePrevious();
+		ticker.updatePrevious();
+		//weaponRecovery.updatePrevious();
+		
+		
+		ticker.currentValue += 0.01;
+		
 		boolean reload = false;
 		if(reload) {
 			xInertia = null;
@@ -95,22 +155,40 @@ public class ClientValueRepo {
 		if(yInertia == null) {
 			yInertia = new SpringValue(500, 50, 100);
 		}
-		xInertia.setSpringConstant(10000);
-		yInertia.setSpringConstant(10000);
-		xInertia.setMass(50);
-		yInertia.setMass(50);
-	xInertia.setDamping(700);
-	yInertia.setDamping(700);
+		xInertia.setSpringConstant(4000);
+		yInertia.setSpringConstant(4000);
+		xInertia.setMass(15);
+		yInertia.setMass(15);
+	xInertia.setDamping(400);
+	yInertia.setDamping(400);
+	
+	
+	
+	
+	
+	
 		// System.out.println("Called: " + System.currentTimeMillis());
-		PlayerWeaponInstance pwi = context.getMainHeldWeapon();
-		boolean isPistol = false;
-		float recoveryMod = 0.0f;
-		RecoilParam param = null;
-		if (pwi != null && pwi.getWeapon() != null) {
-			param = pwi.getWeapon().getRecoilParameters();
-			isPistol = param.getRecoilGroup() == 1;
-			recoveryMod = (float) param.getRecoveryModifier();
+		
+
+		
+		
+		if(Minecraft.getMinecraft().player.moveForward < 0) {
+			strafe.currentValue += Minecraft.getMinecraft().player.moveForward/3f;
+			
 		}
+		strafe.currentValue += Minecraft.getMinecraft().player.moveStrafing/2;
+		
+		xInertia.velocity += strafe.currentValue;
+		
+		strafe.currentValue *= 0.7;
+	
+		
+		if(Minecraft.getMinecraft().player.isSprinting()) {
+			running.currentValue += 0.5;
+		}
+		running.currentValue *= 0.6;
+		//System.out.println(running.currentValue);
+		
 
 		/*
 		if (gunTick == 1) {
@@ -140,6 +218,19 @@ public class ClientValueRepo {
 			gunTick = 0;
 			*/
 		}
+		
+		
+		
+		if(gunPow.currentValue > recoilParameters.getStockLength()) {
+			gunPow.currentValue *= recoilParameters.getPowerRecoveryStockRate();
+		} else {
+			gunPow.currentValue *= recoilParameters.getPowerRecoveryNormalRate();
+		}
+
+
+		weaponRecovery.update(0.05);
+		
+		//gunPow.update(0.05);
 
 		// xInertia = 0;
 		Minecraft mc = Minecraft.getMinecraft();
@@ -157,10 +248,13 @@ public class ClientValueRepo {
 		}
 		
 		
-		forward.currentValue *= 0.5;
-		forward.add(Minecraft.getMinecraft().player.moveForward/2);
+		if(Minecraft.getMinecraft().player.moveForward > 0) {
+			forward.add(Minecraft.getMinecraft().player.moveForward/4);
+		}
+		forward.currentValue *= 0.7;
 		
 	      
+	stressVec.update(1, 0.05);
 		/*
 		strafe *= 0.95;
 		forward *= 0.93;
@@ -171,7 +265,7 @@ public class ClientValueRepo {
 		/*
 		 * assault rifle gunPow *= 0.92; recovery *= 0.96;
 		 */
-
+		/*
 		if (!isPistol) {
 			
 			
@@ -188,6 +282,9 @@ public class ClientValueRepo {
 			//gunPow *= 0.80 - recoveryMod;
 			//recovery *= 0.90 - (recoveryMod / 2);
 		}
+		*/
+		
+		
 
 		//gunPow.update(0.05);
 		
@@ -292,14 +389,11 @@ public class ClientValueRepo {
 		
 		//strafe = new SpringValue(0, 0, 0);
 		//forward = new SpringValue(0, 0, 0);
-		strafe.setSpringConstant(2000);
-		strafe.setDamping(250);
-		strafe.setMass(25);
+	
 		
 
 
-		
-		strafe.update(0.05);
+
 		//forward.update(0.05);
 		walkingGun.update(0.05);
 		jumpingSpring.update(0.05);
@@ -323,6 +417,12 @@ public class ClientValueRepo {
 		// xInertia *= 0.92;
 		// yInertia *= 0.92;
 
+		
+
+	}
+	
+	public static boolean isGunPowDecreasing() {
+		return gunPow.previousValue-gunPow.currentValue > 0.1;
 	}
 
 }

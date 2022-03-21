@@ -12,7 +12,10 @@ import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
 
+import com.vicmatskiv.weaponlib.animation.AnimationModeProcessor;
+import com.vicmatskiv.weaponlib.animation.gui.AnimationGUI;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
+import com.vicmatskiv.weaponlib.compatibility.RecoilParam;
 import com.vicmatskiv.weaponlib.network.TypeRegistry;
 import com.vicmatskiv.weaponlib.perspective.OpticalScopePerspective;
 import com.vicmatskiv.weaponlib.perspective.Perspective;
@@ -126,6 +129,13 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 	@Override
 	protected int getSerialVersion() {
 		return SERIAL_VERSION;
+	}
+	
+	public RecoilParam getRecoilParameters() {
+		if(AnimationModeProcessor.getInstance().getFPSMode()) {
+			return AnimationGUI.getInstance().getRecoilParams();
+		}
+		return getWeapon().builder.recoilParam;
 	}
 
 	private void addStateToHistory(WeaponState state) {

@@ -45,6 +45,7 @@ public class DebugCommand extends CompatibleCommand {
     private static final String DEBUG_ARG_STEP = "step";
     private static final String DEBUG_ARG_AUTOROTATE = "ar";
     private static final String DEBUG_ANIM_MODE = "anim";
+    private static final String DEBUG_WEAPON = "weapon";
     
     private static final String DEBUG_FREECAM = "freecam";
     private static final String DEBUG_MUZZLE_POS = "muzzle";
@@ -157,6 +158,8 @@ public class DebugCommand extends CompatibleCommand {
             case DEBUG_COMPAT:
             	processCompatMode(args);
             	break;
+            case DEBUG_WEAPON:
+            	processWeapon(args);
             default:
                 compatibility.addChatMessage(compatibility.clientPlayer(), getCompatibleUsage(sender));
             }
@@ -167,6 +170,20 @@ public class DebugCommand extends CompatibleCommand {
     
     public CompatibilityClassGenerator ccg = new CompatibilityClassGenerator();
     public ArrayList<String> compatList = new ArrayList<>();
+    
+    private static boolean isInfiniteAmmo;
+    
+    public static boolean isInfiniteAmmo() {
+    	return isInfiniteAmmo;
+    }
+    
+    private void processWeapon(String[] args) {
+    	if(args[1].equals("infinite")) {
+    		isInfiniteAmmo = !isInfiniteAmmo;
+    		compatibility.addChatMessage(compatibility.clientPlayer(), getDebugPrefix() + " Infinite ammo mode is " + (isInfiniteAmmo ? "on" : "off"));
+        	
+    	}
+    }
     
     private void processCompatMode(String[] args) {
     	if(args[1].equals("new")) {

@@ -26,6 +26,7 @@ import com.vicmatskiv.weaponlib.animation.OpenGLSelectionHelper;
 import com.vicmatskiv.weaponlib.animation.DebugPositioner.Position;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponRenderer;
+import com.vicmatskiv.weaponlib.compatibility.RecoilParam;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
@@ -81,9 +82,44 @@ public class AnimationGUI {
 	public Button magEdit = new Button("Edit magazine rotation point", true, 12, 10, 80, 20);
 	
 	
+	/*
+	 * RECOIL
+	 */
+	public  Slider weaponPower = new Slider("Weapon Power", false, 0, 200);
+	public  Slider muzzleClimbDivisor = new Slider("Muzzle Climb Divisor", false, 0, 30);
+	public  Slider stockLength = new Slider("Stock Length", false, 0, 100);
+	public  Slider powerRecoveryNormalRate = new Slider("Power Recovery", false, 0, 1.0);
+	public  Slider powerRecoveryStockRate = new Slider("Power Recovery @ Stock", false, 0.0, 1.0);
+	public  Slider weaponRotationX = new Slider("Recoil Rotation (Y)", false, 0, 1.0);
+	public  Slider weaponRotationY = new Slider("Recoil Rotation (Z)", false, 0, 1.0);
+	public Slider debugFireRate = new Slider("Debug Fire Rate", false, 1, 25);
+	
+	
 	public static AnimationGUI getInstance() {
-		
+		//instance = new AnimationGUI();
 		return instance;
+	}
+	
+	public boolean isPanelClosed(String name) {
+		for(Panel panel : this.panels) {
+			if(panel.getTitle().equals(name)) return panel.isClosed();
+		}
+		return false;
+	}
+	
+	public void setRecoilDefaults(RecoilParam param) {
+		weaponPower.setValue(param.getWeaponPower());
+		muzzleClimbDivisor.setValue(param.getMuzzleClimbDivisor());
+		stockLength.setValue(param.getStockLength());
+		powerRecoveryNormalRate.setValue(param.getPowerRecoveryNormalRate());
+		powerRecoveryStockRate.setValue(param.getPowerRecoveryStockRate());
+		weaponRotationX.setValue(param.getWeaponRotationX());
+		weaponRotationY.setValue(param.getWeaponRotationY());
+	}
+	
+	public RecoilParam getRecoilParams() { 
+		return new RecoilParam(weaponPower.getValue(), muzzleClimbDivisor.getValue(), stockLength.getValue(), powerRecoveryNormalRate.getValue(), powerRecoveryStockRate.getValue(), weaponRotationX.getValue(), weaponRotationY.getValue());
+		
 	}
 	
 	public AnimationGUI() {
@@ -94,15 +130,33 @@ public class AnimationGUI {
 		// cam reset 0
 		cameraPanel.addButtons(resetCamera, resetTransforms, forceSteveArms, forceAlexArms, switchScopes, magEdit, leftDrag, printConsole);
 		
-		Panel renderPanel = new Panel(this, "Rendering", 10, 35, 20);
+		Panel renderPanel = new Panel(this, "Rendering", 10, 45, 20);
 		
 		renderPanel.addButtons(axisToggle, forceFlash, editRotButton, moveForward, titleSafe);
 		
+		Panel recoilPanel = new Panel(this, "Recoil", 10, 100, 20);
+		recoilPanel.setWidth(100);
+		recoilPanel.setHeight(200);
+		
+		//System.out.println("CHECKEROO: " + weaponPower);
+		
+		setRecoilDefaults(new RecoilParam());
+		debugFireRate.setValue(10);
+		debugFireRate.push(25);
+		
+		recoilPanel.addElement(weaponPower);
+		recoilPanel.addElement(muzzleClimbDivisor);
+		recoilPanel.addElement(stockLength);
+		recoilPanel.addElement(powerRecoveryNormalRate);
+		recoilPanel.addElement(powerRecoveryStockRate);
+		recoilPanel.addElement(weaponRotationX);
+		recoilPanel.addElement(weaponRotationY);
+		recoilPanel.addElement(debugFireRate);
 		
 
 		this.axisToggle.setState(true);
 		
-		
+		this.panels.add(recoilPanel);
 		this.panels.add(cameraPanel);
 		this.panels.add(renderPanel);
 		
@@ -315,6 +369,29 @@ public class AnimationGUI {
     			break;
     			
     		}
+    		
+    		
+    		if(!isPanelClosed("Recoil")) {
+    			StringBuilder builder = new StringBuilder();
+    			builder.append("\n.withRecoilParam(new RecoilParam(\n");
+    			builder.append("\t\t// The weapon power\n");
+    			builder.append("\t\t" + weaponPower.getValue() + ",\n");
+    			builder.append("\t\t// Muzzle climb divisor\n");
+    			builder.append("\t\t" +muzzleClimbDivisor.getValue() + ",\n");
+    			builder.append("\t\t// \"Stock Length\"\n");
+    			builder.append("\t\t" +stockLength.getValue() + ",\n");
+    			builder.append("\t\t// Recovery rate from initial shot\n");
+    			builder.append("\t\t" +powerRecoveryNormalRate.getValue() + ",\n");
+    			builder.append("\t\t// Recovery rate @ \"stock\"\n");
+    			builder.append("\t\t" +powerRecoveryStockRate.getValue() + ",\n");
+    			builder.append("\t\t// Recoil rotation (Y)\n");
+    			builder.append("\t\t" +weaponRotationX.getValue() + ",\n");
+    			builder.append("\t\t// Recoil rotation (Z)\n");
+    			builder.append("\t\t" +weaponRotationY.getValue() + "\n");
+    			builder.append("))");
+    			System.out.println(builder.toString());
+    		}
+    		
 		} else if(id == switchScopes) {
 			PlayerWeaponInstance instance = ClientModContext.getContext().getPlayerItemInstanceRegistry().getMainHandItemInstance(Minecraft.getMinecraft().player, PlayerWeaponInstance.class);
 			ClientModContext.getContext().getAttachmentAspect().tryChange(new ChangeAttachmentPermit(AttachmentCategory.SCOPE), instance);

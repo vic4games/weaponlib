@@ -361,6 +361,7 @@ public class Interceptors {
     	
     	
     	if(weaponInstance != null ) {
+    		
             ClientModContext context = (ClientModContext) weaponInstance.getWeapon().getModContext();
             MultipartRenderStateManager<RenderableState, Part, RenderContext<RenderableState>> stateManager = weaponInstance.getWeapon().getRenderer().getStateManager(player);
            
@@ -416,9 +417,7 @@ public class Interceptors {
         }
         
         float scalar = 0.0f;
-        if(ClientValueRepo.gunPow.currentValue > 30) {
-        	scalar = (float) ((ClientValueRepo.gunPow.getLerpedFloat()-30f)/50f);
-        }
+     
         /*
         if(ClientValueRepo.gunPow > 30) {
         	scalar = (float) (ClientValueRepo.gunPow-30)/50f;
@@ -434,16 +433,20 @@ public class Interceptors {
        
         EntityPlayer entityplayer = (EntityPlayer)compatibility.getRenderViewEntity();
 
-        ClientValueRepo.strafe.velocity += Minecraft.getMinecraft().player.moveStrafing;
         //ClientValueRepo.forward += Minecraft.getMinecraft().player.moveForward/25f;
         
         
         PlayerWeaponInstance pwi = ClientModContext.getContext().getMainHeldWeapon();
         
+        
+        
+      
+        
         if(pwi == null || !pwi.isAimed()) {
         	
-        	float sMult = Minecraft.getMinecraft().player.isSprinting() ? 2.0f : 1.0f;
-        	float speed = sMult/1.8f;
+        	
+        	float sMult = 1.0f;
+        	float speed = sMult/1.0f;
         	
         	float f =entityplayer.distanceWalkedModified - entityplayer.prevDistanceWalkedModified;
             float f1 = -(entityplayer.distanceWalkedModified + f * partialTicks);
@@ -774,7 +777,7 @@ public class Interceptors {
     	
     	
     	ClientValueRepo.xInertia.velocity += yawDelta;
-    	ClientValueRepo.yInertia.velocity += pitchDelta;
+    	ClientValueRepo.yInertia.velocity += -pitchDelta*2;
     	//ClientValueRepo.xInertia += yawDelta*0.02;
     	//ClientValueRepo.yInertia += pitchDelta*0.04;
     	

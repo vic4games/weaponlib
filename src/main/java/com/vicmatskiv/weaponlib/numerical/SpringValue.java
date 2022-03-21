@@ -77,6 +77,10 @@ public class SpringValue {
 	public double getLerpedPosition() {
 		return MatrixHelper.solveLerp((float) this.prevPosition, (float) this.position, Minecraft.getMinecraft().getRenderPartialTicks());
 	}
+	
+	public float getLerpedFloat() {
+		return (float) getLerpedPosition();
+	}
 
 	public void setPosition(double position) {
 		this.position = position;

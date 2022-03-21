@@ -64,6 +64,7 @@ import com.vicmatskiv.weaponlib.animation.AnimationModeProcessor;
 import com.vicmatskiv.weaponlib.animation.ClientValueRepo;
 import com.vicmatskiv.weaponlib.animation.MatrixHelper;
 import com.vicmatskiv.weaponlib.animation.OpenGLSelectionHelper;
+import com.vicmatskiv.weaponlib.animation.gui.AnimationGUI;
 import com.vicmatskiv.weaponlib.animation.jim.AnimationData;
 import com.vicmatskiv.weaponlib.animation.jim.AnimationData.BlockbenchTransition;
 import com.vicmatskiv.weaponlib.compatibility.graph.CompatibilityClassGenerator;
@@ -1072,13 +1073,21 @@ public abstract class CompatibleClientEventHandler {
 		if(event.phase == Phase.START && Minecraft.getMinecraft().player != null && getModContext() != null && getModContext().getMainHeldWeapon() != null) {
 			ClientValueRepo.update(getModContext());
 			
-		
+			CompatibleWeaponRenderer.wrh.strafingAnimation.update(0.08f);
 			CompatibleWeaponRenderer.wrh.runningAnimation.update(0.08f);
 			CompatibleWeaponRenderer.wrh.walkingAnimation.update(0.08f);
 		}
 		
 		
-		
+		if(event.phase == Phase.START) {
+			int ticksRequired = (int) Math.round(AnimationGUI.getInstance().debugFireRate.getValue());
+			if(Minecraft.getMinecraft().player != null && Minecraft.getMinecraft().player.ticksExisted%ticksRequired == 0 && AnimationModeProcessor.getInstance().getFPSMode() && !AnimationGUI.getInstance().isPanelClosed("Recoil")) {
+				
+	
+				ClientValueRepo.fireWeapon(getModContext().getMainHeldWeapon());
+			}
+			
+		}
 		
 		if(event.phase  == Phase.START && Minecraft.getMinecraft().player != null) {
 			

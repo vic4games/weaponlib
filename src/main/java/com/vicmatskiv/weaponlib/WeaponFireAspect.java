@@ -13,6 +13,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.vicmatskiv.weaponlib.animation.ClientValueRepo;
+import com.vicmatskiv.weaponlib.command.DebugCommand;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 import com.vicmatskiv.weaponlib.network.packets.GunFXPacket;
@@ -295,7 +296,8 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
         }
         
        
-        ClientValueRepo.gunPow.currentValue += 100;
+        //ClientValueRepo.gunPow.prevPosition = ClientValueRepo.gunPow.position;
+        ClientValueRepo.fireWeapon(weaponInstance);
        // System.out.println("Gun tick added @ " + Minecraft.getMinecraft().player.ticksExisted);
         //System.out.println("WFA: " + System.currentTimeMillis());
         ClientValueRepo.flash = 1;
@@ -318,6 +320,7 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
         }
         weaponInstance.setLastFireTimestamp(System.currentTimeMillis());
         weaponInstance.setAmmo(currentAmmo - 1);
+        
         
     }
 
