@@ -222,7 +222,7 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         private float zoom;
         
         
-        protected Pair<Double, Double> screenShakingParameters = new Pair<Double, Double>(1000.0, 1.0);
+        protected Pair<Double, Double> screenShakingParameters = new Pair<Double, Double>(100.0, 1.0);
         
         private boolean newSys = false;
         
