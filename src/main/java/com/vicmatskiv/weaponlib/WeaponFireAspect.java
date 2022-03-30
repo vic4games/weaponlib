@@ -16,9 +16,11 @@ import com.vicmatskiv.weaponlib.animation.ClientValueRepo;
 import com.vicmatskiv.weaponlib.command.DebugCommand;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
+import com.vicmatskiv.weaponlib.network.packets.BulletShellClient;
 import com.vicmatskiv.weaponlib.network.packets.GunFXPacket;
 import com.vicmatskiv.weaponlib.render.shells.ShellParticleSimulator;
 import com.vicmatskiv.weaponlib.render.shells.ShellParticleSimulator.Shell;
+import com.vicmatskiv.weaponlib.render.shells.ShellParticleSimulator.Shell.Type;
 import com.vicmatskiv.weaponlib.sound.JSoundEngine;
 import com.vicmatskiv.weaponlib.state.Aspect;
 import com.vicmatskiv.weaponlib.state.PermitManager;
@@ -212,15 +214,21 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
 
     private void fire(PlayerWeaponInstance weaponInstance) {
     	
-    	
+    
         EntityLivingBase player = weaponInstance.getPlayer();
         Weapon weapon = (Weapon) weaponInstance.getItem();
         Random random = player.getRNG();
 
+        
+        //if(true) return;
         modContext.getChannel().getChannel().sendToServer(new TryFireMessage(true, 
                 oneClickBurstEnabled.test(weaponInstance) && weaponInstance.getSeriesShotCount() ==  0));
 
+        
+    	
         boolean silencerOn = modContext.getAttachmentAspect().isSilencerOn(weaponInstance);
+        
+        
         
         CompatibleSound shootSound = null;
         /*
@@ -272,9 +280,11 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
         	 weaponInstance.setSlideLock(true);
         }
         
+        
         player.rotationPitch = player.rotationPitch - weaponInstance.getRecoil();
         float rotationYawFactor = -1.0f + random.nextFloat() * 2.0f;
         player.rotationYaw = player.rotationYaw + weaponInstance.getRecoil() * rotationYawFactor;
+		
 
         Boolean muzzleFlash = modContext.getConfigurationManager().getProjectiles().isMuzzleEffects();
         if(muzzleFlash == null || muzzleFlash) {
@@ -309,6 +319,38 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
                     compatibility.getEffectOffsetY() + weapon.builder.smokeOffsetY.get()+0.3f);
         }
 
+        if(weapon.isShellCasingEjectEnabled() && weaponInstance != null)  {
+        	
+        	
+        	/*
+        	
+        	// Change the raw position
+        	Vec3d rawPosition = new Vec3d(CompatibleClientEventHandler.NEW_POS.get(0), CompatibleClientEventHandler.NEW_POS.get(1), CompatibleClientEventHandler.NEW_POS.get(2));
+        	
+        	
+        	// Calculate the final position of the bullet spawn point
+        	// by changing it's position along its own vector
+        	double distance = 0.5;
+			Vec3d eyePos = Minecraft.getMinecraft().player.getPositionEyes(1.0f);
+			Vec3d finalPosition = rawPosition.subtract(eyePos).normalize().scale(distance).add(eyePos);
+			
+        	// Calculate velocity as 90 degrees to player
+			Vec3d velocity = new Vec3d(-0.3, 0.1, 0.0);
+    		velocity = velocity.rotateYaw((float) Math.toRadians(-Minecraft.getMinecraft().player.rotationYaw));
+    		
+    		// Spawn in shell
+    		Shell shell = new Shell(weaponInstance.getWeapon().getShellType(), new Vec3d(finalPosition.x, finalPosition.y, finalPosition.z), new Vec3d(90, 0, 90), velocity);
+        	CompatibleClientEventHandler.shellManager.enqueueShell(shell);
+        	*/
+        	
+        	
+        	
+        	
+        	
+        }
+        
+       
+        
         int seriesShotCount = weaponInstance.getSeriesShotCount();
         if(seriesShotCount == 0) {
             weaponInstance.setSeriesResetAllowed(false);
@@ -367,78 +409,16 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
 
         if(playerWeaponInstance != null) {
         	
-        }
-        
-        
-        
-        if(weapon.isShellCasingEjectEnabled() && playerWeaponInstance != null)  {
-        	
-        	
-        	
-        	// Change the raw position
-        	Vec3d rawPosition = new Vec3d(CompatibleClientEventHandler.NEW_POS.get(0), CompatibleClientEventHandler.NEW_POS.get(1), CompatibleClientEventHandler.NEW_POS.get(2));
-        	
-        	
-        	// Calculate the final position of the bullet spawn point
-        	// by changing it's position along its own vector
-        	double distance = 0.5;
-			Vec3d eyePos = Minecraft.getMinecraft().player.getPositionEyes(1.0f);
-			Vec3d finalPosition = rawPosition.subtract(eyePos).normalize().scale(distance).add(eyePos);
-			
-        	// Calculate velocity as 90 degrees to player
-			Vec3d velocity = new Vec3d(-0.3, 0.1, 0.0);
-    		velocity = velocity.rotateYaw((float) Math.toRadians(-Minecraft.getMinecraft().player.rotationYaw));
-    		
-    		// Spawn in shell
-    		Shell shell = new Shell(playerWeaponInstance.getWeapon().getShellType(), new Vec3d(finalPosition.x, finalPosition.y, finalPosition.z), new Vec3d(90, 0, 90), velocity);
-        	CompatibleClientEventHandler.shellManager.enqueueShell(shell);
-        	
-			
-        	/*
-        	Vec3d newPos = new Vec3d(CompatibleClientEventHandler.NEW_POS.get(0), 
-        			CompatibleClientEventHandler.NEW_POS.get(1),
-        			CompatibleClientEventHandler.NEW_POS.get(2));
-        	
-        	
-        	
-        	Vec3d newPos = Vec3d.ZERO;
-        	Vec3d offset = new Vec3d(-0.5, -0.25, 0.5);
-        //	Vec3d offset = new Vec3d(-0.0, -0.25, 0.5);
-    		if(playerWeaponInstance.isAimed()) {
-    			//offset = new Vec3d(0.1, -0.2, 0.5);
-    		}
-    		Vec3d posAdd = offset.rotatePitch((float) -Math.toRadians(Minecraft.getMinecraft().player.rotationPitch)).rotateYaw((float) -Math.toRadians(Minecraft.getMinecraft().player.rotationYaw));
-    		
-    		Vec3d outwardPos = newPos.subtract(Minecraft.getMinecraft().player.getPositionEyes(1.0f)).normalize().rotatePitch((float) -Math.toRadians(Minecraft.getMinecraft().player.rotationPitch)).rotateYaw((float) Math.toRadians(-Minecraft.getMinecraft().player.rotationYaw)).scale(0.5).add(Minecraft.getMinecraft().player.getPositionEyes(1.0f));
-    		newPos = outwardPos.add(posAdd);
-    		
-    		
-    		Vec3d velocity = new Vec3d(-0.3, 0.1, 0.0);
-    		velocity = velocity.rotateYaw((float) Math.toRadians(-Minecraft.getMinecraft().player.rotationYaw));
-    		
-    		
-    		//CompatibleClientEventHandler.testPos = newPos;
-    		
+        	Vec3d velocity = new Vec3d(-0.3, 0.1, 0.0);
+    		velocity = velocity.rotateYaw((float) Math.toRadians(-player.rotationYaw));
+        	modContext.getChannel().getChannel().sendToAllAround(new BulletShellClient(playerWeaponInstance.getWeapon().getShellType(), player.getPositionEyes(1.0f), velocity), tp);
+             
 
-        	Shell shell = new Shell(playerWeaponInstance.getWeapon().getShellType(), new Vec3d(newPos.x, newPos.y, newPos.z), new Vec3d(90, 0, 90), velocity);
-        	CompatibleClientEventHandler.shellManager.enqueueShell(shell);
-        	//System.out.println("yo");
-        	/*
-            EntityShellCasing entityShellCasing = weapon.builder.spawnShellWith.apply(playerWeaponInstance, player);
-            if(entityShellCasing != null) {
-            	
-            	System.out.println(entityShellCasing.posX + " | " + entityShellCasing.posY + " | " + entityShellCasing.posZ);
-            	
-            	entityShellCasing.posX = CompatibleClientEventHandler.NEW_POS.get(0) + player.posX;
-            	entityShellCasing.posY = CompatibleClientEventHandler.NEW_POS.get(1) + player.posY;
-            	
-            	entityShellCasing.posZ = CompatibleClientEventHandler.NEW_POS.get(2) + player.posZ;
-            	
-            	System.out.println("After: " + entityShellCasing.posX + " | " + entityShellCasing.posY + " | " + entityShellCasing.posZ);
-            	
-                compatibility.spawnEntity(player, entityShellCasing);
-            }*/
         }
+        
+        
+        
+        
         
         CompatibleSound shootSound = null;
         

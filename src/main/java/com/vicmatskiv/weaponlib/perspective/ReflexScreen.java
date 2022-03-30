@@ -133,10 +133,12 @@ public class ReflexScreen extends ModelBase implements CustomRenderer<Renderable
 	}
 	
 	public void renderReticle(RenderContext<RenderableState> renderContext, boolean bloom) {
-Reticle currentReticle = reticleList.current();
+
+		//if(true) return;
+		Reticle currentReticle = reticleList.current();
 		
 		
-		Shaders.reflexReticle = ShaderManager.loadVMWShader("reflex");
+		//Shaders.reflexReticle = ShaderManager.loadVMWShader("reflex");
 		
 		if(renderContext.getCompatibleTransformType() != CompatibleTransformType.FIRST_PERSON_RIGHT_HAND) return;
 		GlStateManager.disableTexture2D();

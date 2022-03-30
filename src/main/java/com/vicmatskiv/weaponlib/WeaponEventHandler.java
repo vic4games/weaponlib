@@ -11,6 +11,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.Interceptors;
 import com.vicmatskiv.weaponlib.grenade.PlayerGrenadeInstance;
 import com.vicmatskiv.weaponlib.melee.PlayerMeleeInstance;
+import com.vicmatskiv.weaponlib.render.Bloom;
 import com.vicmatskiv.weaponlib.vehicle.EntityVehicle;
 
 import net.minecraft.client.Minecraft;
@@ -156,6 +157,7 @@ public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 	    	event.setCanceled(true);
 	    }
 	    
+	  
 	    
 	    //System.out.println("Render player");
 	}

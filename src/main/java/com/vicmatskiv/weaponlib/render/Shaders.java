@@ -30,6 +30,6 @@ public class Shaders {
 	
 	
 	public static  Shader brightnessShader = ShaderManager.loadVMWShader("brightness");
-	
+	public static Shader bloomTest = ShaderManager.loadVMWShader("bTest");
 
 }

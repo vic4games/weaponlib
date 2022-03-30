@@ -14,6 +14,7 @@ import org.lwjgl.opengl.GL20;
 
 import com.vicmatskiv.weaponlib.animation.AnimationModeProcessor;
 import com.vicmatskiv.weaponlib.animation.gui.AnimationGUI;
+import com.vicmatskiv.weaponlib.command.DebugCommand;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.RecoilParam;
 import com.vicmatskiv.weaponlib.network.TypeRegistry;
@@ -23,6 +24,7 @@ import com.vicmatskiv.weaponlib.shader.DynamicShaderGroupSource;
 import com.vicmatskiv.weaponlib.shader.DynamicShaderGroupSourceProvider;
 import com.vicmatskiv.weaponlib.shader.DynamicShaderPhase;
 
+import akka.japi.Pair;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
@@ -136,6 +138,13 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 			return AnimationGUI.getInstance().getRecoilParams();
 		}
 		return getWeapon().builder.recoilParam;
+	}
+	
+	public Pair<Double, Double> getScreenShakeParameters() {
+		if(DebugCommand.isWorkingOnScreenShake()) {
+			return DebugCommand.screenShakeParam;
+		}
+		return getWeapon().getModernScreenShakeParameters();
 	}
 
 	private void addStateToHistory(WeaponState state) {

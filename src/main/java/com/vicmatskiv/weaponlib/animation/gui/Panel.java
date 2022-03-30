@@ -47,6 +47,12 @@ public class Panel {
 		return this.closed;
 	}
 	
+	public void setClosed(boolean bool) {
+		this.closed = bool;
+	}
+	
+	
+	
 	
 	public void handleButtonClicks(int mouseX, int mouseY) {
 		

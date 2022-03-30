@@ -5,16 +5,21 @@ import javax.print.StreamPrintService;
 import com.vicmatskiv.weaponlib.ClientModContext;
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.PlayerWeaponInstance;
+import com.vicmatskiv.weaponlib.RenderableState;
 import com.vicmatskiv.weaponlib.Weapon;
 import com.vicmatskiv.weaponlib.animation.gui.AnimationGUI;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
+import com.vicmatskiv.weaponlib.compatibility.Interceptors;
 import com.vicmatskiv.weaponlib.compatibility.RecoilParam;
+import com.vicmatskiv.weaponlib.numerical.FrameValue;
 import com.vicmatskiv.weaponlib.numerical.LerpedValue;
 import com.vicmatskiv.weaponlib.numerical.LissajousCurve;
 import com.vicmatskiv.weaponlib.numerical.RandomVector;
 import com.vicmatskiv.weaponlib.numerical.SpringValue;
+import com.vicmatskiv.weaponlib.numerical.SynchronizedSimulator;
 import com.vicmatskiv.weaponlib.shader.jim.ShaderManager;
 
+import akka.japi.Pair;
 import net.java.games.input.Mouse;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
@@ -40,6 +45,7 @@ public class ClientValueRepo {
 
 	public static SpringValue jumpingSpring = new SpringValue(400, 40, 90);
 	public static RandomVector stressVec = new RandomVector();
+	public static RandomVector recoilRotationVector = new RandomVector();
 
 	
 	public static SpringValue walkingGun = new SpringValue(50, 10, 80);
@@ -64,12 +70,17 @@ public class ClientValueRepo {
 	public static LerpedValue recovery = new LerpedValue();
 	
 	
+	public static long lastShotStamp = System.nanoTime();
 	
 	//public static double recovery = 0.0;
 	public static Vec3d randomRot = Vec3d.ZERO;
 
 	public static SpringValue xInertia = new SpringValue(0, 0 ,0);
 	public static SpringValue yInertia = new SpringValue(0, 0 ,0);
+	
+	// Slide pumping
+	public static FrameValue slidePumpValue = new FrameValue(0.2);
+	public static SynchronizedSimulator slidePump = new SynchronizedSimulator(slidePumpValue, 1/60.0);
 	/*
 	public static double xInertia = 0.0;
 	public static double yInertia = 0.0;
@@ -82,29 +93,42 @@ public class ClientValueRepo {
 	
 	
 	public static void fireWeapon(PlayerWeaponInstance pwi) {
-		
+	
 		RecoilParam params = pwi.getRecoilParameters();
+		
+		Pair<Double, Double> screenShakeParam = pwi.getScreenShakeParameters();
+		
+		//System.out.println(pwi.getWeapon().getScreenShakeAnimationBuilder(RenderableState.SHOOTING).build());
 		
 		double power = params.getWeaponPower();
 		
 		if(gunPow.currentValue < 10) {
-		
+			
+			Interceptors.nsm.impulse(screenShakeParam.first());
 			power *= 2;
 		} else if(gunPow.currentValue > params.getStockLength()	) {
 			power /= 2;
-			
+			Interceptors.nsm.impulse(screenShakeParam.first()/3);
 		} else {
-			
+			Interceptors.nsm.impulse(screenShakeParam.first());
 			
 		}
 		
+		lastShotStamp = System.currentTimeMillis();
 		weaponRecovery.velocity += power/4;
 		
 		gunPow.currentValue += power;
 
-		stressVec.getVector();
+		stressVec.callRandom(0.2);
+		recoilRotationVector.callRandom(15);
 		
+		slidePumpValue.value += 1.0;
+	
 		
+	}
+	
+	public static void renderUpdate(ModContext context) {
+		slidePump.update();
 	}
 
 	public static void update(ModContext context) {
@@ -118,6 +142,9 @@ public class ClientValueRepo {
 		//if(Math.abs(gunPow.position) > 1000) {
 			//gunPow = new SpringValue(500, 50, 100);
 		//}
+		
+		slidePumpValue.speed = 0.2;
+
 		
 		//double stockLength = AnimationGUI.getInstance().stockLength.getValue();
 		
@@ -163,8 +190,7 @@ public class ClientValueRepo {
 	yInertia.setDamping(400);
 	
 	
-	
-	
+
 	
 	
 		// System.out.println("Called: " + System.currentTimeMillis());
@@ -218,15 +244,19 @@ public class ClientValueRepo {
 			gunTick = 0;
 			*/
 		}
-		
-		
-		
 		if(gunPow.currentValue > recoilParameters.getStockLength()) {
 			gunPow.currentValue *= recoilParameters.getPowerRecoveryStockRate();
 		} else {
 			gunPow.currentValue *= recoilParameters.getPowerRecoveryNormalRate();
 		}
-
+		
+		/*
+		if(gunPow.currentValue > recoilParameters.getStockLength()) {
+			gunPow.currentValue *= recoilParameters.getPowerRecoveryStockRate();
+		} else {
+			gunPow.currentValue *= recoilParameters.getPowerRecoveryNormalRate();
+		}
+		*/
 
 		weaponRecovery.update(0.05);
 		
@@ -254,7 +284,8 @@ public class ClientValueRepo {
 		forward.currentValue *= 0.7;
 		
 	      
-	stressVec.update(1, 0.05);
+	stressVec.update(0.2, 0.6);
+	recoilRotationVector.update(0.2, 0.6);
 		/*
 		strafe *= 0.95;
 		forward *= 0.93;

@@ -37,7 +37,11 @@ import com.vicmatskiv.weaponlib.animation.MultipartRenderStateManager;
 import com.vicmatskiv.weaponlib.animation.ScreenShakingAnimationManager;
 import com.vicmatskiv.weaponlib.inventory.CustomPlayerInventory;
 import com.vicmatskiv.weaponlib.numerical.LissajousCurve;
+import com.vicmatskiv.weaponlib.render.Bloom;
+import com.vicmatskiv.weaponlib.render.NewScreenshakingManager;
 import com.vicmatskiv.weaponlib.render.cam.NaturalCamera;
+import com.vicmatskiv.weaponlib.shader.jim.Shader;
+import com.vicmatskiv.weaponlib.shader.jim.ShaderManager;
 import com.vicmatskiv.weaponlib.vehicle.EntityVehicle;
 import com.vicmatskiv.weaponlib.vehicle.RenderVehicle2;
 import com.vicmatskiv.weaponlib.vehicle.VehicleSuspensionStrategy;
@@ -55,6 +59,7 @@ import net.minecraft.client.model.ModelPlayer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms.TransformType;
 import net.minecraft.client.renderer.entity.RenderLivingBase;
+import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
@@ -359,15 +364,21 @@ public class Interceptors {
     		//nc.update();
     	}
     	
+    	nsm.applyWorld();
     	
-    	if(weaponInstance != null ) {
-    		
-            ClientModContext context = (ClientModContext) weaponInstance.getWeapon().getModContext();
-            MultipartRenderStateManager<RenderableState, Part, RenderContext<RenderableState>> stateManager = weaponInstance.getWeapon().getRenderer().getStateManager(player);
-           
-            ScreenShakingAnimationManager yawPitchAnimationManager = context.getPlayerRawPitchAnimationManager();
-            yawPitchAnimationManager.update(player, weaponInstance, stateManager != null ? stateManager.getLastState() : null);
-        }
+    	/*
+    	if(weaponInstance != null) {
+      		   ClientModContext context = (ClientModContext) weaponInstance.getWeapon().getModContext();
+              MultipartRenderStateManager<RenderableState, Part, RenderContext<RenderableState>> stateManager = weaponInstance.getWeapon().getRenderer().getStateManager(player);
+             
+              ScreenShakingAnimationManager yawPitchAnimationManager = context.getPlayerRawPitchAnimationManager();
+              yawPitchAnimationManager.update(player, weaponInstance, stateManager != null ? stateManager.getLastState() : null);
+         }
+    		*/
+    	
+    	
+    	
+    	
     }
     
     private static PlayerWeaponInstance getPlayerWeaponInstance() {
@@ -396,8 +407,7 @@ public class Interceptors {
         	
     	}
     	
-    	
-    	
+    
     	if(ClientModContext.getContext() != null && ClientModContext.getContext().getMainHeldWeapon() != null) {
     		PlayerWeaponInstance pwi = ClientModContext.getContext().getMainHeldWeapon();
     		
@@ -580,10 +590,27 @@ public class Interceptors {
             RenderVehicle2.captureCameraTransform(null);
         }
         
-       
+        
+        nsm.applyHead();
+        //nsm.update();
+        
+        Bloom.doBloom();
+		GlStateManager.disableLighting();
+		GlStateManager.disableBlend();
+		
+		//GlStateManager.enableBlend();
+		/*
+		Shader shad = ShaderManager.loadVMWShader("post");
+		shad.use();
+		Framebuffer boof = Minecraft.getMinecraft().getFramebuffer();
+		Bloom.renderFboTriangle(boof, boof.framebufferWidth, boof.framebufferHeight);
+		shad.release();
+		*/
         
         return false;
     }
+    
+    public static NewScreenshakingManager nsm = new NewScreenshakingManager();
     
     public static boolean hurtCameraEffect(float partialTicks) {
 //	    if(1+1==2) return false;  

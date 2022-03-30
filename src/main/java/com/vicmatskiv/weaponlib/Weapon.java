@@ -35,9 +35,11 @@ import com.vicmatskiv.weaponlib.compatibility.RecoilParam;
 import com.vicmatskiv.weaponlib.config.Gun;
 import com.vicmatskiv.weaponlib.crafting.CraftingComplexity;
 import com.vicmatskiv.weaponlib.crafting.OptionsMetadata;
+import com.vicmatskiv.weaponlib.jim.util.VMWHooksHandler;
 import com.vicmatskiv.weaponlib.model.Shell;
 import com.vicmatskiv.weaponlib.render.shells.ShellParticleSimulator.Shell.Type;
 
+import akka.japi.Pair;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.creativetab.CreativeTabs;
@@ -50,6 +52,8 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class Weapon extends CompatibleItem implements PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, 
 AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
@@ -88,6 +92,7 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         int ammoCapacity = 0;
         float recoil = 1.0F;
 
+        private boolean hasFlashPedals = false;
         
         private String shootSound;
         private String silencedShootSound;
@@ -217,6 +222,8 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         private float zoom;
         
         
+        protected Pair<Double, Double> screenShakingParameters = new Pair<Double, Double>(1000.0, 1.0);
+        
         private boolean newSys = false;
         
         public Builder() {
@@ -231,6 +238,11 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         
         public Builder withWeaponType(String type) {
         	this.gunType = type;
+        	return this;
+        }
+        
+        public Builder hasFlashPedals() {
+        	this.hasFlashPedals = true;
         	return this;
         }
         
@@ -565,7 +577,9 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
             return this;
         }
 
+        
         public Builder withRenderer(WeaponRenderer renderer) {
+        	//if(VMWHooksHandler.isOnServer()) return this;
             this.renderer = renderer;
             return this;
         }
@@ -793,6 +807,11 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
                     .withTransitionDuration(50);
             screenShakingBuilders.put(RenderableState.SHOOTING, defaultShootingStateScreenShakingBuilder);
             return this;
+        }
+        
+        public Builder withModernScreenShaking(double intensity, double speedModifier) {
+        	this.screenShakingParameters = new Pair<Double, Double>(intensity, speedModifier);
+        	return this;
         }
         
         public Builder withScreenShaking(RenderableState state, float xRotationCoefficient, float yRotationCoefficient, float zRotationCoefficient) {
@@ -1224,8 +1243,11 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
 
     void onSpawnEntityBlockImpact(World world, EntityPlayer player, WeaponSpawnEntity entity, CompatibleRayTraceResult position) {
        
-    	EnumFacing facing = EnumFacing.valueOf(position.getSideHit().toString());
-    	CompatibleClientEventHandler.bhr.addBulletHole(new BulletHole(new Vec3d(position.getHitVec().getXCoord(), position.getHitVec().getYCoord(), position.getHitVec().getZCoord()), facing, 0.05));
+    	if(world.isRemote) {
+    		EnumFacing facing = EnumFacing.valueOf(position.getSideHit().toString());
+        	CompatibleClientEventHandler.bhr.addBulletHole(new BulletHole(new Vec3d(position.getHitVec().getXCoord(), position.getHitVec().getYCoord(), position.getHitVec().getZCoord()), facing, 0.05));
+        	
+    	}
     	
     	if(builder.blockImpactHandler != null) {
        
@@ -1395,6 +1417,15 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         return builder.renderer.hasRecoilPositioning();
     }
     
+    /**
+     * Only for debugging purposes
+     * @param param
+     * @return
+     */
+    public void setRecoilParameters(RecoilParam param) {
+    	this.builder.recoilParam = param;
+    }
+    
     public RecoilParam getRecoilParameters() {
     	return builder.recoilParam;
     }
@@ -1513,6 +1544,10 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
     public float getShootSoundVolume() {
         return builder.shootSoundVolume;
     }
+    
+    public boolean hasFlashPedals() {
+    	return builder.hasFlashPedals;
+    }
 
     public boolean hasIteratedLoad() {
         return builder.hasIteratedLoad;
@@ -1557,6 +1592,10 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
 //    public ScreenShaking getScreenShaking(RenderableState state) {
 //        return builder.screenShakings.get(state);
 //    }
+    
+    public Pair<Double, Double> getModernScreenShakeParameters() {
+    	return this.builder.screenShakingParameters;
+    }
     
     public ScreenShakeAnimation.Builder getScreenShakeAnimationBuilder(RenderableState renderableState) {
         return builder.screenShakingBuilders.get(renderableState);

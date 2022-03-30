@@ -7,6 +7,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
+import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL14;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
@@ -93,7 +94,10 @@ public class Bloom {
 	
 	public static void doBloom() {
 		if(shouldRecreateFBOs()) setupBloom();
+		renderHDRToBuffer();
 		use();
+	
+		
 	}
 	
 	
@@ -194,6 +198,25 @@ public class Bloom {
             }
         }
 		//System.out.println("Framebuffer check: " + (GL30.glCheckFramebufferStatus(buf) == GL30.GL_FRAMEBUFFER_COMPLETE));
+	}
+	
+	
+	public static void renderHDRToBuffer() {
+
+		
+		//data.framebufferClear();
+		
+		GlStateManager.setActiveTexture(GL13.GL_TEXTURE0+4);
+		GlStateManager.bindTexture(Minecraft.getMinecraft().getFramebuffer().framebufferTexture);
+		GlStateManager.setActiveTexture(GL13.GL_TEXTURE0);
+		
+		data.bindFramebuffer(false);
+		GlStateManager.enableBlend();
+		Shaders.bloomTest.use();
+		Shaders.bloomTest.uniform1i("real", 4);
+		renderFboTriangle(data, data.framebufferWidth, data.framebufferHeight);
+		Shaders.bloomTest.release();
+		GlStateManager.disableBlend();
 	}
 	
 	public static void renderFboTriangle(Framebuffer buf) {

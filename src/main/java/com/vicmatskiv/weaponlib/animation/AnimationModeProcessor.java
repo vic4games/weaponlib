@@ -122,6 +122,7 @@ public class AnimationModeProcessor {
 	}
 	
 	public void setFPSMode(boolean state) {
+		
 		this.fpsMode = state;
 	}
 

@@ -80,6 +80,8 @@ public class AnimationGUI {
 	public Button moveForward = new Button("Move axis backwards", true,7,  60, 35, 20);
 	public Button leftDrag = new Button("Position drag alignment", true, 11, 135, 35, 20);
 	public Button magEdit = new Button("Edit magazine rotation point", true, 12, 10, 80, 20);
+	public Button forceADS = new Button("Force ADS", true, 13, 10, 80, 20);
+	
 	
 	
 	/*
@@ -92,6 +94,8 @@ public class AnimationGUI {
 	public  Slider powerRecoveryStockRate = new Slider("Power Recovery @ Stock", false, 0.0, 1.0);
 	public  Slider weaponRotationX = new Slider("Recoil Rotation (Y)", false, 0, 1.0);
 	public  Slider weaponRotationY = new Slider("Recoil Rotation (Z)", false, 0, 1.0);
+	public  Slider adsSimilarity = new Slider("ADS Similarity", false, 1.0, 10);
+	
 	public Slider debugFireRate = new Slider("Debug Fire Rate", false, 1, 25);
 	
 	
@@ -117,18 +121,21 @@ public class AnimationGUI {
 		weaponRotationY.setValue(param.getWeaponRotationY());
 	}
 	
+
+	
 	public RecoilParam getRecoilParams() { 
-		return new RecoilParam(weaponPower.getValue(), muzzleClimbDivisor.getValue(), stockLength.getValue(), powerRecoveryNormalRate.getValue(), powerRecoveryStockRate.getValue(), weaponRotationX.getValue(), weaponRotationY.getValue());
+		return new RecoilParam(weaponPower.getValue(), muzzleClimbDivisor.getValue(), stockLength.getValue(), powerRecoveryNormalRate.getValue(), powerRecoveryStockRate.getValue(), weaponRotationX.getValue(), weaponRotationY.getValue(), adsSimilarity.getValue());
 		
 	}
 	
 	public AnimationGUI() {
 	
 		
+		
 		Panel cameraPanel = new Panel(this, "Functionality", 10, 10, 20);
 		
 		// cam reset 0
-		cameraPanel.addButtons(resetCamera, resetTransforms, forceSteveArms, forceAlexArms, switchScopes, magEdit, leftDrag, printConsole);
+		cameraPanel.addButtons(resetCamera, resetTransforms, forceSteveArms, forceAlexArms, switchScopes, magEdit, leftDrag, printConsole, forceADS);
 		
 		Panel renderPanel = new Panel(this, "Rendering", 10, 45, 20);
 		
@@ -137,7 +144,7 @@ public class AnimationGUI {
 		Panel recoilPanel = new Panel(this, "Recoil", 10, 100, 20);
 		recoilPanel.setWidth(100);
 		recoilPanel.setHeight(200);
-		
+		recoilPanel.setClosed(true);
 		//System.out.println("CHECKEROO: " + weaponPower);
 		
 		setRecoilDefaults(new RecoilParam());
@@ -151,6 +158,7 @@ public class AnimationGUI {
 		recoilPanel.addElement(powerRecoveryStockRate);
 		recoilPanel.addElement(weaponRotationX);
 		recoilPanel.addElement(weaponRotationY);
+		recoilPanel.addElement(adsSimilarity);
 		recoilPanel.addElement(debugFireRate);
 		
 
@@ -370,6 +378,8 @@ public class AnimationGUI {
     			
     		}
     		
+    		PlayerWeaponInstance instance = ClientModContext.getContext().getMainHeldWeapon();
+    		instance.getWeapon().setRecoilParameters(getRecoilParams());
     		
     		if(!isPanelClosed("Recoil")) {
     			StringBuilder builder = new StringBuilder();
@@ -387,7 +397,9 @@ public class AnimationGUI {
     			builder.append("\t\t// Recoil rotation (Y)\n");
     			builder.append("\t\t" +weaponRotationX.getValue() + ",\n");
     			builder.append("\t\t// Recoil rotation (Z)\n");
-    			builder.append("\t\t" +weaponRotationY.getValue() + "\n");
+    			builder.append("\t\t" +weaponRotationY.getValue() + ",\n");
+    			builder.append("\t\t// Ads similarity divisor\n");
+    			builder.append("\t\t" +adsSimilarity.getValue() + "\n");
     			builder.append("))");
     			System.out.println(builder.toString());
     		}
@@ -409,6 +421,13 @@ public class AnimationGUI {
 			}
 		} else if(id == magEdit) {
 			DebugPositioner.setDebugMode(true);
+		} else if(id == forceADS) {
+			PlayerWeaponInstance instance = ClientModContext.getContext().getPlayerItemInstanceRegistry().getMainHandItemInstance(Minecraft.getMinecraft().player, PlayerWeaponInstance.class);
+			
+			if(id.isState()) {
+				instance.setAimed(true);
+			} else instance.setAimed(false);
+			
 		}
 		
 	

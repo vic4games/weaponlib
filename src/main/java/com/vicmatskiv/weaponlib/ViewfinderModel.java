@@ -50,7 +50,7 @@ public class ViewfinderModel extends ModelBase {
 		GlStateManager.enableAlpha();
 		
 		
-		OpticalScopePerspective.scope = ShaderManager.loadVMWShader("vignette");
+		//OpticalScopePerspective.scope = ShaderManager.loadVMWShader("vignette");
 		
 		OpticalScopePerspective.scope.use();
 		

@@ -23,6 +23,7 @@ public class SpringValue {
 	public void update(double dt) {
 		double force = -springConstant*(position);
 		double dampingForce = damping*velocity;
+	//	dampingForce = 5000;
 		double appliedForce = force - dampingForce;
 		double acceleration = appliedForce/mass;
 		
@@ -30,6 +31,8 @@ public class SpringValue {
 		
 		velocity += acceleration*dt;
 		position += velocity*dt;
+		
+	//	System.out.println(appliedForce);
 	}
 
 	public double getSpringConstant() {
@@ -75,8 +78,14 @@ public class SpringValue {
 	}
 	
 	public double getLerpedPosition() {
+		return getLerpedPosition(Minecraft.getMinecraft().getRenderPartialTicks());
+	}
+	
+	public double getLerpedPosition(double mu) {
 		return MatrixHelper.solveLerp((float) this.prevPosition, (float) this.position, Minecraft.getMinecraft().getRenderPartialTicks());
 	}
+	
+	
 	
 	public float getLerpedFloat() {
 		return (float) getLerpedPosition();

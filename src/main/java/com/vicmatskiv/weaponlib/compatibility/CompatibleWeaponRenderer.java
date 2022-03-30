@@ -848,8 +848,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 				}
 				//Bloom.initializeMultisample();
 				
-				
-				
+			
 				
 				if(AnimationModeProcessor.getInstance().getFPSMode()) {
 					
@@ -864,9 +863,21 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 					
 					
 				} else {
+					/*
+					Bloom.bindBloomBuffer();
+				//	renderItem(itemStack, renderContext, positioner);
+					Shader bruh = ShaderManager.loadVMWShader("block");
+					bruh.use();
 					renderItem(itemStack, renderContext, positioner);
+					bruh.release();
+					*/
+					
+					
+					renderItem(itemStack, renderContext, positioner);
+					
 				}
 				
+			
 				
 				//Bloom.unapplyMultisample();
 				if(forceMSAA) {
@@ -939,6 +950,11 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 			// gunLightingShader.release();
 		}
 		
+
+		if(!OpenGLSelectionHelper.isInSelectionPass && !AnimationModeProcessor.getInstance().getFPSMode()) {
+			//Bloom.doBloom();
+		}
+		
 	
 
 		if (transformType == TransformType.GUI && inventoryTextureInitializationPhaseOn) {
@@ -950,6 +966,8 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 			restoreInventoryRendering(scaledresolution);
 		}
 
+	
+		
 		GL11.glPopMatrix();
 
 		if (originalFramebufferId >= 0) {
@@ -960,6 +978,8 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 		if (transformType == TransformType.GUI) {
 			renderCachedInventoryTexture(inventoryTexture);
 		}
+		
+		
 		
 		
 		
@@ -1033,7 +1053,6 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 				AnimationModeProcessor.getInstance().tryToUpdateSelectedColor(-1);
 			}
 		}
-		
 		
 		
 		
@@ -1402,6 +1421,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 
 	public static void renderRightArm(ModelBiped modelplayer, AbstractClientPlayer clientPlayer) {
 		float f = 1.0F;
+		
 		GlStateManager.color(f, f, f);
 		// ModelPlayer modelplayer = renderPlayer.getMainModel();
 		// Can ignore private method setModelVisibilities since it was already called
@@ -1555,9 +1575,9 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 		
 		
 		backupModel.bipedLeftArm.render(0.0625F);
-		if (backupModel instanceof ModelPlayer) {
-			((ModelPlayer) backupModel).bipedLeftArmwear.rotateAngleX = 0.0F;
-			// ((ModelPlayer) modelplayer).bipedLeftArmwear.render(0.0625F);
+		if (modelplayer instanceof ModelPlayer) {
+			((ModelPlayer) modelplayer).bipedLeftArmwear.rotateAngleX = 0.0F;
+			 ((ModelPlayer) modelplayer).bipedLeftArmwear.render(0.0625F);
 		}
 
 		GlStateManager.disableBlend();

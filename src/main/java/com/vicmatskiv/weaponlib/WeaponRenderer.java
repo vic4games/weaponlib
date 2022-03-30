@@ -39,6 +39,7 @@ import com.vicmatskiv.weaponlib.animation.jim.AnimationSet;
 import com.vicmatskiv.weaponlib.animation.jim.BBLoader;
 import com.vicmatskiv.weaponlib.animation.jim.SingleAnimation;
 import com.vicmatskiv.weaponlib.animation.jim.AnimationData.BlockbenchTransition;
+import com.vicmatskiv.weaponlib.command.DebugCommand;
 import com.vicmatskiv.weaponlib.animation.MultipartRenderStateManager;
 import com.vicmatskiv.weaponlib.animation.MultipartTransition;
 import com.vicmatskiv.weaponlib.animation.MultipartTransitionProvider;
@@ -53,8 +54,10 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponRenderer;
 import com.vicmatskiv.weaponlib.compatibility.Interceptors;
 import com.vicmatskiv.weaponlib.config.Projectiles;
 import com.vicmatskiv.weaponlib.debug.DebugRenderer;
+import com.vicmatskiv.weaponlib.jim.util.VMWHooksHandler;
 import com.vicmatskiv.weaponlib.render.Bloom;
 import com.vicmatskiv.weaponlib.render.Dloom;
+import com.vicmatskiv.weaponlib.render.MuzzleFlashRenderer;
 import com.vicmatskiv.weaponlib.render.Shaders;
 import com.vicmatskiv.weaponlib.shader.jim.Shader;
 import com.vicmatskiv.weaponlib.shader.jim.ShaderManager;
@@ -76,7 +79,12 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.Vec3d;
+import net.minecraftforge.client.ForgeHooksClient;
+import net.minecraftforge.common.ForgeHooks;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class WeaponRenderer extends CompatibleWeaponRenderer {
 
@@ -362,8 +370,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		
 		
 
-		
-
+		protected ItemAttachment<Weapon>[] actionPiece; 
+		protected Transform actionPieceTransform;
 		
 		public long getCompoundReloadDuration() {
 			return compoundReloadContainer.getDuration();
@@ -380,6 +388,16 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 
 		public Builder withModel(ModelBase model) {
 			this.model = model;
+			return this;
+		}
+		
+		public Builder withActionPiece(ItemAttachment<Weapon>... attachment) {
+			this.actionPiece = attachment;
+			return this;
+		}
+		
+		public Builder withActionTransform(Transform transform) {
+			this.actionPieceTransform = transform;
 			return this;
 		}
 
@@ -1229,9 +1247,14 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		
 		}
 		
+		public static boolean isOnServer() {
+			return FMLCommonHandler.instance().getMinecraftServerInstance().getServerOwner() != null;
+		}
 		
 		
 		public Builder setupModernAnimations(String animationFile, ItemAttachment<Weapon> aR15Action) {
+			if(VMWHooksHandler.isOnServer()) return this;
+			
 			final String mainBoneName = "main";
 			final String leftBoneName = "lefthand";
 			final String rightBoneName = "righthand";
@@ -3094,11 +3117,20 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		}
 		
 		
-		
+		boolean shot = false;
 		if(renderContext.getPlayer() != null && (ClientEventHandler.checkShot(renderContext.getPlayer().getEntityId()) || AnimationGUI.getInstance().forceFlash.isState())) {
-			
+			shot = true;
 			//flash = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/flash"));
 			
+		//	Bloom.bindBloomBuffer();
+		//	MuzzleFlashRenderer.renderFlash(renderContext.getPlayer().getEntityId(), weaponItemStack, true);
+			//Minecraft.getMinecraft().getFramebuffer().bindFramebuffer(false);
+			MuzzleFlashRenderer.renderFlash(renderContext.getPlayer().getEntityId(), weaponItemStack, false);
+			
+			
+			
+			
+			/*
 			Bloom.bindBloomBuffer();
 			
 			
@@ -3106,11 +3138,11 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			renderFlash(weaponItemStack, true);
 			Minecraft.getMinecraft().getFramebuffer().bindFramebuffer(false);
 			renderFlash(weaponItemStack, false);
-			
+			*/
 		}
 		
 		
-		
+		//Bloom.doBloom();
 		 GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW);
 	        GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, PROJECTION);
 	        GL11.glGetInteger(GL11.GL_VIEWPORT, VIEWPORT);
@@ -3161,12 +3193,13 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		//gunLightingShader = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/gunlight"));
 	    
 		if(!OpenGLSelectionHelper.isInSelectionPass && !AnimationGUI.getInstance().magEdit.isState()) {
+		
 			
 			Shaders.gunLightingShader.use();
 			
 			
 	    	GL20.glUniform1i(GL20.glGetUniformLocation(Shaders.gunLightingShader.getShaderId(), "lightmap"), 1);
-	    	GL20.glUniform1f(GL20.glGetUniformLocation(Shaders.gunLightingShader.getShaderId(), "lightIntensity"), (ClientValueRepo.flash > 0) ? 5.0f : 0.0f);
+	    	GL20.glUniform1f(GL20.glGetUniformLocation(Shaders.gunLightingShader.getShaderId(), "lightIntensity"), shot ? 1.5f + ((float) Math.random()) : 0.0f);
 	    	
 		}
 		
@@ -3194,6 +3227,9 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		double volumeThreshold = sqDistance * renderOptimization;
 		
 		Interceptors.setRenderVolumeThreshold(volumeThreshold);
+		
+		//Interceptors.setRenderVolumeThreshold(0.0);
+		
 		try {
 			if(!AnimationModeProcessor.getInstance().shouldIsolateCategory()) {
 				getBuilder().getModel().render(this.player,
@@ -3207,7 +3243,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		    
 
 		    if(sqDistance < 900) {
-		    	    Interceptors.setRenderVolumeThreshold(volumeThreshold);
+		    	   Interceptors.setRenderVolumeThreshold(volumeThreshold);
 		        if(attachments != null) {
 		            renderAttachments(positioner, renderContext, attachments);
 		        }
@@ -3215,6 +3251,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		} finally {
 		    Interceptors.setRenderVolumeThreshold(0.0);
 		}
+		
+		
 		
 		
 		
@@ -3246,12 +3284,16 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		
 		for(CompatibleAttachment<?> compatibleAttachment: attachments) {
 			if(compatibleAttachment != null && !(compatibleAttachment.getAttachment() instanceof ItemSkin) && !(compatibleAttachment.getAttachment() instanceof ItemScope)) {
+				
+				if(AnimationModeProcessor.getInstance().shouldIsolateCategory() && compatibleAttachment.getAttachment().getCategory() != AnimationModeProcessor.getInstance().getIsolatedCategory()) continue;
 				renderCompatibleAttachment(compatibleAttachment, positioner, renderContext);
 			}
 		}
 		
 		for(CompatibleAttachment<?> compatibleAttachment: attachments) {
 			if(compatibleAttachment != null && !(compatibleAttachment.getAttachment() instanceof ItemSkin) && (compatibleAttachment.getAttachment() instanceof ItemScope)) {
+				if(AnimationModeProcessor.getInstance().shouldIsolateCategory() && compatibleAttachment.getAttachment().getCategory() != AnimationModeProcessor.getInstance().getIsolatedCategory()) continue;
+				
 				renderCompatibleAttachment(compatibleAttachment, positioner, renderContext);
 			}
 		}
@@ -3314,6 +3356,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
     private void renderCompatibleAttachment(CompatibleAttachment<?> compatibleAttachment,
 			Positioner<Part, RenderContext<RenderableState>> positioner, RenderContext<RenderableState> renderContext) {
 
+		//if(true) return;
+		
 		if(compatibleAttachment.getAttachment().getCategory() == AttachmentCategory.MAGAZINE) {
 			currentMagazine = compatibleAttachment;
 		}
@@ -3515,46 +3559,66 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 					
 				}
 				
+				/*
 				if(compatibleAttachment.getAttachment().getCategory() == AttachmentCategory.ACTION) {
-					GL11.glPushMatrix();
-					GL11.glTranslated(-0.125, -1, -1);
-					
-					
-					/*
-					 GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW);
-				        GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, PROJECTION);
-				        GL11.glGetInteger(GL11.GL_VIEWPORT, VIEWPORT);
-						Project.gluProject(0, 0, 0, MODELVIEW, PROJECTION, VIEWPORT, POSITION);
-					      
-						
-					
-					AnimationModeProcessor.getInstance().renderCross();
-					*/
-					GL11.glPopMatrix();
-					
-					//System.out.println(renderContext.getWeaponInstance().getState());
-					//val *= val*val*val;
-					//renderContext.getWeaponInstance().setSlideLock(false);
-					//System.out.println(renderContext.getWeaponInstance().isSlideInLock);
-				
-					
-				//	GlStateManager.translate(0, 0, ClientValueRepo.gunPow.getLerpedPosition()/50f);
-					
+
+					//System.out.println("hi");
 					if(renderContext.getWeaponInstance().getAmmo() != 0) {
 						renderContext.getWeaponInstance().setSlideLock(false);
 					}
+					
+					WeaponState state = renderContext.getWeaponInstance().getState();
 					//System.out.println(renderContext.getWeaponInstance());
-					if(renderContext.getWeaponInstance().isSlideLocked()) {
+					if(renderContext.getWeaponInstance().isSlideLocked() && (state == WeaponState.READY || state == WeaponState.ALERT)) {
 						GlStateManager.translate(0, 0, 0.43);
 					}
 					
+					double slideKickback = ClientValueRepo.gunPow.getLerpedFloat()/32f;
+					
+					slideKickback *= slideKickback*slideKickback;
+					slideKickback = Math.min(slideKickback, 0.5);
+					
+					GlStateManager.translate(0, 0, slideKickback);
+					
 				}
+				*/
 				/*
 				if((compatibleAttachment.getAttachment() instanceof ItemMagazine)) {
 					new Transform().withScale(1, 1, 1).withRotationPoint(CompatibleClientEventHandler.magRotPositioner.x, CompatibleClientEventHandler.magRotPositioner.y, CompatibleClientEventHandler.magRotPositioner.z)
 					.withRotation(0, 0, 0).doGLDirect();
 				}
 				*/
+			//	System.out.println(ClientValueRepo.slidePump.getLerpedFloat());
+				
+				ItemAttachment<Weapon>[] possibleActionList = renderContext.getWeaponInstance().getWeapon().getRenderer().getBuilder().actionPiece;
+				
+				if(possibleActionList != null && possibleActionList.length > 0) {
+					for(ItemAttachment<Weapon> part : possibleActionList) {
+						if(compatibleAttachment.getAttachment() == part) {
+							
+							float mu = (float) ClientValueRepo.slidePumpValue.value;
+							Transform t = renderContext.getWeaponInstance().getWeapon().getRenderer().getBuilder().actionPieceTransform;
+							
+							if(DebugCommand.isDebuggingActionPosition()) {
+								//System.out.println("hi");
+								t = DebugCommand.debugSlideTransform;
+								//System.out.println(t.getPositionZ());
+								mu = 1f;
+							}
+							if(t == null) break;
+							
+							
+							GlStateManager.translate(t.getPositionX()*mu, t.getPositionY()*mu, t.getPositionZ()*mu);
+							
+							break;
+						}
+					}
+				}
+				
+				
+			
+				
+				//System.out.println(compatibleAttachment.getAttachment());
 				
 			}
 			

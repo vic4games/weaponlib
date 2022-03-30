@@ -16,24 +16,41 @@ public class RandomVector {
 	private double x, y, z;
 	private double prevX, prevY, prevZ;
 	
+	// value between 0.0-1.0
+	private double agressiveness = 0.2;
+	
 	public RandomVector() {
 		
 	}
 	
 	
-	public void update(double speed, double dt) {
+	public void update(double speed, double dampening) {
+		
 		
 		prevX = x; 
 		prevY = y;
 		prevZ = z;
 		
-		x *= 0.6;
-		y *= 0.5;
+		x += dirX*speed;
+		y += dirY*speed;
+		z += dirZ*speed;
+		
+		dirX *= dampening;
+		dirY *= dampening;
+		dirZ *= dampening;
+		
+		x *= dampening;
+		y *= dampening;
+		z *= dampening;
 		
 	}
 	
 	public double getX() {
 		return this.x;
+	}
+	
+	public void setAgressiveness(double agr) {
+		this.agressiveness = agr;
 	}
 	
 	public double getY() {
@@ -44,22 +61,18 @@ public class RandomVector {
 		return this.z;
 	}
 	
-	public Vec3d getVector() {
+	public void callRandom(double mag) {
 		
-		if(Math.random() < 0.2) {
-			double mag =  0.2;
-			this.dirX = Math.random()*mag - (mag/2);
-			this.dirY = Math.random()*mag - (mag/2);
+		double halfMag = mag/2;
+		
+		if(Math.random() < agressiveness) {
+			this.dirX = Math.random()*mag - halfMag;
+			this.dirY = Math.random()*mag - halfMag;
+			this.dirZ = Math.random()*mag - halfMag;
 		}
 		
 		
-		this.x += this.dirX*0.5;
-		this.y += this.dirY*0.5;
 	
-		
-		
-		
-		return null;
 	}
 	
 	public Vec3d getVector(double amplitude) {

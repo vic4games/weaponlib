@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 
+import javax.transaction.TransactionRequiredException;
+
 import com.vicmatskiv.weaponlib.ClientModContext;
 import com.vicmatskiv.weaponlib.ItemAttachment;
 import com.vicmatskiv.weaponlib.Part;
@@ -17,6 +19,8 @@ import com.vicmatskiv.weaponlib.WeaponRenderer.Builder;
 import com.vicmatskiv.weaponlib.animation.AnimationModeProcessor;
 import com.vicmatskiv.weaponlib.animation.DebugPositioner;
 import com.vicmatskiv.weaponlib.animation.OpenGLSelectionHelper;
+import com.vicmatskiv.weaponlib.animation.Transform;
+import com.vicmatskiv.weaponlib.animation.gui.AnimationGUI;
 import com.vicmatskiv.weaponlib.animation.jim.BBLoader;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClassInfoProvider;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
@@ -172,6 +176,18 @@ public class DebugCommand extends CompatibleCommand {
     public ArrayList<String> compatList = new ArrayList<>();
     
     private static boolean isInfiniteAmmo;
+    private static boolean isDebuggingActionPosition;
+    private static boolean isWorkingOnScreenShake;
+    public static Transform debugSlideTransform = new Transform();
+    public static Pair<Double, Double> screenShakeParam = new Pair<Double, Double>(0.0, 0.0);
+    
+    public static boolean isDebuggingActionPosition() {
+    	return isDebuggingActionPosition;
+    }
+    
+    public static boolean isWorkingOnScreenShake() {
+    	return isWorkingOnScreenShake;
+    }
     
     public static boolean isInfiniteAmmo() {
     	return isInfiniteAmmo;
@@ -182,6 +198,27 @@ public class DebugCommand extends CompatibleCommand {
     		isInfiniteAmmo = !isInfiniteAmmo;
     		compatibility.addChatMessage(compatibility.clientPlayer(), getDebugPrefix() + " Infinite ammo mode is " + (isInfiniteAmmo ? "on" : "off"));
         	
+    	} else if(args[1].equals("slide")) {
+    		if(args[2].equals("edit")) {
+    			isDebuggingActionPosition = !isDebuggingActionPosition;
+    			compatibility.addChatMessage(compatibility.clientPlayer(), getDebugPrefix() + " Slide editor mode is " + (isDebuggingActionPosition ? "on" : "off"));
+            	
+    		}else if(args[2].equals("setpos")) {
+    			System.out.println("hi");
+    			double x = Double.parseDouble(args[3]);
+    			double y = Double.parseDouble(args[4]);
+    			double z = Double.parseDouble(args[5]);
+    			debugSlideTransform.withPosition(x, y, z);
+    		}
+    	} else if(args[1].equals("shake")) {
+    		if(args[2].equals("edit")) {
+    			isWorkingOnScreenShake = !isWorkingOnScreenShake;
+    			compatibility.addChatMessage(compatibility.clientPlayer(), getDebugPrefix() + " Shake editor mode is " + (isWorkingOnScreenShake ? "on" : "off"));
+    		} else if(args[2].equals("set")) {
+    			double intensity = Double.parseDouble(args[3]);
+    			double lengthModifier = Double.parseDouble(args[4]);
+    			screenShakeParam = new Pair<Double, Double>(intensity, lengthModifier);
+    		}
     	}
     }
     
@@ -234,6 +271,7 @@ public class DebugCommand extends CompatibleCommand {
     		
     		if(!AnimationModeProcessor.getInstance().isLegacyMode()) {
     			AnimationModeProcessor.getInstance().setFPSMode(true);
+    		
     		} else {
     			compatibility.addChatMessage(compatibility.clientPlayer(), getDebugPrefix() + " You cannot enter animation mode with a legacy gun!");
     	    	

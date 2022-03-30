@@ -214,6 +214,11 @@ public class CustomGui extends CompatibleGui {
 				}
 			}
 		}
+		
+		
+		 //GlStateManager.disableAlpha();
+		 
+	
 	}
 
 	@Override

@@ -67,6 +67,7 @@ import com.vicmatskiv.weaponlib.animation.OpenGLSelectionHelper;
 import com.vicmatskiv.weaponlib.animation.gui.AnimationGUI;
 import com.vicmatskiv.weaponlib.animation.jim.AnimationData;
 import com.vicmatskiv.weaponlib.animation.jim.AnimationData.BlockbenchTransition;
+import com.vicmatskiv.weaponlib.command.DebugCommand;
 import com.vicmatskiv.weaponlib.compatibility.graph.CompatibilityClassGenerator;
 import com.vicmatskiv.weaponlib.animation.jim.BBLoader;
 import com.vicmatskiv.weaponlib.debug.DebugRenderer;
@@ -75,15 +76,18 @@ import com.vicmatskiv.weaponlib.model.Bullet556;
 import com.vicmatskiv.weaponlib.particle.DriftCloudFX;
 import com.vicmatskiv.weaponlib.render.Bloom;
 import com.vicmatskiv.weaponlib.render.Dloom;
+import com.vicmatskiv.weaponlib.render.HDRFramebuffer;
 import com.vicmatskiv.weaponlib.render.InstancedRender;
 import com.vicmatskiv.weaponlib.render.InstancedShellObject;
 import com.vicmatskiv.weaponlib.render.ModernSkyRenderer;
 import com.vicmatskiv.weaponlib.render.MultisampledFBO;
+import com.vicmatskiv.weaponlib.render.MuzzleFlashRenderer;
 import com.vicmatskiv.weaponlib.render.Shaders;
 import com.vicmatskiv.weaponlib.render.ShellRenderer;
 import com.vicmatskiv.weaponlib.render.ShellRenderer2;
 import com.vicmatskiv.weaponlib.render.VAOData;
 import com.vicmatskiv.weaponlib.render.VAOLoader;
+import com.vicmatskiv.weaponlib.render.VMWFrameTimer;
 import com.vicmatskiv.weaponlib.render.WavefrontLoader;
 import com.vicmatskiv.weaponlib.render.WavefrontModel;
 import com.vicmatskiv.weaponlib.render.bgl.GLCompatible;
@@ -245,14 +249,17 @@ public abstract class CompatibleClientEventHandler {
 
 	public static Vec3d debugmuzzlePosition = new Vec3d(0, -1, -6.5);
 
-	public static HashMap<Integer, Stack<Boolean>> muzzleFlashMap = new HashMap<>();
+	public static HashMap<Integer, Stack<Long>> muzzleFlashMap = new HashMap<>();
 
 	public static boolean checkShot(int entityID) {
 		if (muzzleFlashMap.isEmpty() || !muzzleFlashMap.containsKey(entityID)
 				|| (muzzleFlashMap.get(entityID).isEmpty())) {
 			return false;
 		} else {
-			muzzleFlashMap.get(entityID).pop();
+			if(System.currentTimeMillis()-muzzleFlashMap.get(entityID).peek() > 25) {
+				muzzleFlashMap.get(entityID).pop();
+			}
+			
 			return true;
 
 		}
@@ -260,10 +267,10 @@ public abstract class CompatibleClientEventHandler {
 
 	public static void uploadFlash(int entityID) {
 		if (muzzleFlashMap.containsKey(entityID)) {
-			muzzleFlashMap.get(entityID).push(true);
+			muzzleFlashMap.get(entityID).push(System.currentTimeMillis());
 		} else {
-			Stack<Boolean> stack = new Stack<>();
-			stack.push(true);
+			Stack<Long> stack = new Stack<>();
+			stack.push(System.currentTimeMillis());
 			muzzleFlashMap.put(entityID, stack);
 		}
 
@@ -442,11 +449,55 @@ public abstract class CompatibleClientEventHandler {
 		return new Vec3d(interpX, interpY, interpZ);
 	}
 	
+	public VMWFrameTimer frametimer = new VMWFrameTimer();
+	
 	@SubscribeEvent
 	public void renderWorrldLastEvent(RenderWorldLastEvent evt) {
+		frametimer.markFrame();
+		
+		ClientValueRepo.renderUpdate(getModContext());
+		
+
+	
+		double divisor = 120/frametimer.getFramerate()*0.05;
+		divisor = Math.min(0.08, divisor);
+		Interceptors.nsm.update();
+		
+		
+		
+		//Interceptors.nsm.update(1/divisor);
+	
 		
 
 		//System.out.println("hi");
+		/*
+		if(ClientModContext.getContext() != null && ClientModContext.getContext().getMainHeldWeapon() != null) {
+			GlStateManager.pushMatrix();
+			
+			Vec3d playI = getInterpolatedPlayerCoords();
+			GlStateManager.translate(-playI.x, -playI.y, -playI.z);
+			
+			GlStateManager.translate(-1447, 6, 327);
+			//DebugRenderer.setupBasicRender();
+			//GL11.glPointSize(10f);
+			//DebugRenderer.renderPoint(Vec3d.ZERO, Vec3d.ZERO);
+			//DebugRenderer.destructBasicRender();
+			
+			
+			MuzzleFlashRenderer mfr = new MuzzleFlashRenderer();
+			ItemStack weaponItemStack = ClientModContext.getContext().getMainHeldWeapon().getItemStack();
+			
+			
+			//Bloom.bindBloomBuffer();
+			//mfr.renderFlash(weaponItemStack, true);
+			GlStateManager.enableTexture2D();
+			Minecraft.getMinecraft().getFramebuffer().bindFramebuffer(false);
+			mfr.renderFlash(weaponItemStack, false);
+			
+			GlStateManager.popMatrix();
+		}*/
+		
+		
 		
 		if(ClientModContext.getContext().getMainHeldWeapon() != null) {
 			
@@ -715,53 +766,18 @@ public abstract class CompatibleClientEventHandler {
 		}
 		
 		
+		// Hot swaps the Minecraft framebuffer
+		// for an HDR one.
 		try {
-			
-			//MultisampledFBO fbo = new MultisampledFBO(Minecraft.getMinecraft().getFramebuffer().framebufferWidth, Minecraft.getMinecraft().getFramebuffer().framebufferHeight, true);
-			//System.out.println(fbo);
-			Field f = ReflectionHelper.findField(Minecraft.class, "framebufferMc");
-		
-			f.setAccessible(true);
-			
-			if(f.get(Minecraft.getMinecraft()) instanceof Framebuffer) {
-				
-				
-				/*
-				Framebuffer fbo = Minecraft.getMinecraft().getFramebuffer();
-				if(Minecraft.getMinecraft().player.ticksExisted%30 == 0) {
-					
-					fbo = new Framebuffer(Minecraft.getMinecraft().displayWidth, Minecraft.getMinecraft().displayHeight, true);
-					
-					
-					f.set(Minecraft.getMinecraft(), fbo);
-				}
-				*/
-			//	
-			//	System.out.println(GL11.glIsTexture(fbo.framebufferTexture));
-				
-				
-				
-				/*
-				//fbo.framebufferTexture = GL11.glGenTextures();
-				GL11.glBindTexture(GLCompatible.GL_TEXTURE_2D_MULTISAMPLE, fbo.framebufferTexture);
-				
-				System.out.println(GL11.glGetError());
-				
-				GLCompatible.glTexImage2DMultisample(GLCompatible.GL_TEXTURE_2D_MULTISAMPLE, 4, GL11.GL_RGBA8, fbo.framebufferTextureWidth, fbo.framebufferTextureHeight, false);
-				GLCompatible.glFramebufferTexture2D(GLCompatible.GL_FRAMEBUFFER, GLCompatible.GL_COLOR_ATTACHMENT0, GLCompatible.GL_TEXTURE_2D_MULTISAMPLE, fbo.framebufferTexture, 0);
-				
-				*/
-				//MultisampledFBO frameboofer = new MultisampledFBO(Minecraft.getMinecraft().getFramebuffer().framebufferWidth, Minecraft.getMinecraft().getFramebuffer().framebufferHeight, true);
-				
-				
-				
+			Framebuffer current = Minecraft.getMinecraft().getFramebuffer();
+			if(!(current instanceof HDRFramebuffer)) {
+				Field f = ReflectionHelper.findField(Minecraft.class, "framebufferMc");
+				f.setAccessible(true);
+				Framebuffer fbo = new HDRFramebuffer(current.framebufferWidth, current.framebufferHeight, true);
+				f.set(Minecraft.getMinecraft(), fbo);
 			}
-			
-			
-			
-			
 		} catch(Exception e) {
-			
+			e.printStackTrace();
 		}
 		
 		
@@ -878,7 +894,11 @@ public abstract class CompatibleClientEventHandler {
 		
 		
 		// Bloom code
-		Bloom.doBloom();
+		if(!Minecraft.getMinecraft().isGuiEnabled() || (getModContext() != null && getModContext().getMainHeldWeapon() == null)) {
+			
+		}
+		
+		//Bloom.doBloom();
 		
 		// If for some reason the player is null, don't engage.
 		/*
@@ -971,6 +991,14 @@ public abstract class CompatibleClientEventHandler {
 		 * GL11.GL_ONE_MINUS_SRC_ALPHA); GlStateManager.enableDepth();
 		 * GlStateManager.disableBlend(); GlStateManager.enableTexture2D();
 		 */
+
+		//GlStateManager.enableBlend();
+		Shader bruhmomento = ShaderManager.loadVMWShader("btest");
+		bruhmomento.use();
+
+		//Bloom.renderFboTriangle(Minecraft.getMinecraft().getFramebuffer());
+		bruhmomento.release();
+		
 	}
 
 	public static void renderMuzzleFlash(MuzzleFlash flash) {
@@ -1064,6 +1092,8 @@ public abstract class CompatibleClientEventHandler {
 	public static ArrayList<RopeSimulation> ropeSIm = new ArrayList<>();
 
 	
+
+	
 	@SideOnly(Side.CLIENT)
 	@SubscribeEvent
 	public final void onClientTick(TickEvent.ClientTickEvent event) {
@@ -1080,10 +1110,18 @@ public abstract class CompatibleClientEventHandler {
 		
 		
 		if(event.phase == Phase.START) {
+			//Interceptors.nsm.update();
 			int ticksRequired = (int) Math.round(AnimationGUI.getInstance().debugFireRate.getValue());
+			
+		//	ticksRequired = 2000;
+			
+			if(DebugCommand.isWorkingOnScreenShake() && Minecraft.getMinecraft().player != null && Minecraft.getMinecraft().player.ticksExisted%20 == 0 && getModContext().getMainHeldWeapon() != null) {
+				CompatibleClientEventHandler.uploadFlash(Minecraft.getMinecraft().player.getEntityId());
+				ClientValueRepo.fireWeapon(getModContext().getMainHeldWeapon());
+			}
+			
 			if(Minecraft.getMinecraft().player != null && Minecraft.getMinecraft().player.ticksExisted%ticksRequired == 0 && AnimationModeProcessor.getInstance().getFPSMode() && !AnimationGUI.getInstance().isPanelClosed("Recoil")) {
 				
-	
 				ClientValueRepo.fireWeapon(getModContext().getMainHeldWeapon());
 			}
 			

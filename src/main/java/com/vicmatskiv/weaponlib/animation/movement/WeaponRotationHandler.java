@@ -2,6 +2,7 @@ package com.vicmatskiv.weaponlib.animation.movement;
 
 import org.lwjgl.opengl.GL11;
 
+import com.vicmatskiv.weaponlib.ClientModContext;
 import com.vicmatskiv.weaponlib.PlayerWeaponInstance;
 import com.vicmatskiv.weaponlib.RenderContext;
 import com.vicmatskiv.weaponlib.RenderableState;
@@ -74,8 +75,41 @@ public class WeaponRotationHandler {
 		float walkingSwayAmplitude = strafeMagnitude/30f + forwardMagnitude/30f;
 		
 		
+		
+		/*
+		if(gunPow.currentValue > recoilParameters.getStockLength()) {
+			gunPow.currentValue *= recoilParameters.getPowerRecoveryStockRate();
+		} else {
+			gunPow.currentValue *= recoilParameters.getPowerRecoveryNormalRate();
+		}
+		*/
+		
 		// Recoil
 		float recoilAmplitude = ClientValueRepo.gunPow.getLerpedFloat();
+		
+		
+		if(ClientModContext.getContext() != null && ClientModContext.getContext().getMainHeldWeapon() != null) {
+			LerpedValue gunPow = ClientValueRepo.gunPow;
+			RecoilParam recoilParameters = new RecoilParam();
+			if(ClientModContext.getContext() != null) {
+				recoilParameters = ClientModContext.getContext().getMainHeldWeapon().getRecoilParameters();
+			}
+			/*
+			if(gunPow.currentValue > recoilParameters.getStockLength()) {
+				gunPow.currentValue *= recoilParameters.getPowerRecoveryStockRate();
+			} else {
+				gunPow.currentValue *= recoilParameters.getPowerRecoveryNormalRate();
+			}
+			*/
+		}
+		/*
+		float delta = (System.currentTimeMillis()-ClientValueRepo.lastShotStamp)/50f;
+		delta = Math.min(delta, 1);
+		//System.out.println(delta);
+		recoilAmplitude = 50*(1-delta);
+		*/
+		
+		
 		float weaponRecoveryAmplitude = ClientValueRepo.weaponRecovery.getLerpedFloat()/15f;
 		float muzzleClimbDivisor = (float) params.getMuzzleClimbDivisor();
 		float rotationYDivisor = (float) params.getWeaponRotationX();
@@ -92,6 +126,8 @@ public class WeaponRotationHandler {
 			if(renderContext.getWeaponInstance().getScope() != null && renderContext.getWeaponInstance().getScope().isOptical()) {
 				divisorMultiplier = 3f;
 			}
+			
+			divisorMultiplier /= params.getADSSimilarity();
 			
 			// The spring is more obvious in first person
 			// so, by increasing the damping we can make
@@ -146,10 +182,15 @@ public class WeaponRotationHandler {
 		GlStateManager.rotate((float) recoil/15f, 0, 0, 1);
 		GlStateManager.rotate((float)-recoil/25, 1, 0, 0);
 		*/
-		Vec3d strezz = ClientValueRepo.stressVec.getInterpolatedVector(1.0);
-		//GlStateManager.translate(strezz.x, strezz.y, strezz.z);
+		Vec3d strezz = ClientValueRepo.stressVec.getInterpolatedVector(2.0);
+		Vec3d recoilRotation = ClientValueRepo.recoilRotationVector.getInterpolatedVector(1.0);
+		
+		//System.out.println(recoilRotation);
+		
+		GlStateManager.translate(strezz.x, strezz.y, strezz.z);
 		GlStateManager.translate(0, 0, recoilAmplitude*0.008);
 		
+		applyRotationAtPoint(0.0f, 1.0f, 0, (float) recoilRotation.x,  (float) recoilRotation.y,  (float) recoilRotation.z);
 		
 		applyRotationAtPoint(0.0f, 1.0f, 0, -recoilAmplitude/muzzleClimbDivisor, recoilAmplitude*rotationYDivisor, recoilAmplitude*rotationZDivisor);
 		//applyRotationAtPoint(0.0f, 1.0f, 0, -recoilAmplitude*1.5f, 0, recoilAmplitude/25);

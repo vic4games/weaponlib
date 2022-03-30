@@ -78,6 +78,7 @@ import com.vicmatskiv.weaponlib.mission.PlayerMissionSyncMessage;
 import com.vicmatskiv.weaponlib.network.NetworkPermitManager;
 import com.vicmatskiv.weaponlib.network.PermitMessage;
 import com.vicmatskiv.weaponlib.network.TypeRegistry;
+import com.vicmatskiv.weaponlib.network.packets.BulletShellClient;
 import com.vicmatskiv.weaponlib.network.packets.GunFXPacket;
 import com.vicmatskiv.weaponlib.particle.SpawnParticleMessage;
 import com.vicmatskiv.weaponlib.particle.SpawnParticleMessageHandler;
@@ -360,6 +361,10 @@ public class CommonModContext implements ModContext {
         
         channel.registerMessage(new GunFXPacket.GunFXPacketHandler(),
         		GunFXPacket.class, 37, CompatibleSide.CLIENT);
+        
+        channel.registerMessage(new BulletShellClient.GunFXPacketHandler(),
+        		BulletShellClient.class, 38, CompatibleSide.CLIENT);
+        
         
         
 		ServerEventHandler serverHandler = new ServerEventHandler(this, modId);
