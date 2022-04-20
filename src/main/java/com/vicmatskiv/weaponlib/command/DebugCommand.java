@@ -26,9 +26,13 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleClassInfoProvider;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleCommand;
 import com.vicmatskiv.weaponlib.compatibility.graph.CompatibilityClassGenerator;
+import com.vicmatskiv.weaponlib.render.WeaponSpritesheetBuilder;
 import com.vicmatskiv.weaponlib.vehicle.VehiclePart;
 
+import akka.io.Udp.SimpleSender;
 import akka.japi.Pair;
+import net.minecraft.client.renderer.entity.layers.LayerArmorBase;
+import net.minecraft.client.renderer.entity.layers.LayerBipedArmor;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.item.Item;
 import net.minecraft.util.text.TextFormatting;
@@ -67,7 +71,7 @@ public class DebugCommand extends CompatibleCommand {
     }
     
     public String getDebugPrefix() {
-    	return TextFormatting.RED + "" + TextFormatting.RED + "(" + TextFormatting.DARK_GRAY + "MW" + TextFormatting.RED + ") ";
+    	return TextFormatting.GOLD + "[" + TextFormatting.DARK_GRAY + "VMW DEBUG" + TextFormatting.GOLD + "] ";
     }
     
     public String getDefaultPrefix() {
@@ -76,9 +80,13 @@ public class DebugCommand extends CompatibleCommand {
 
     @Override
     public String getCompatibleUsage(ICommandSender sender) {
-        return getDebugPrefix() + "/" + COMMAND_DEBUG + " <options>";
+        return getDebugPrefix() + "/" + COMMAND_DEBUG + " (options) or type /wdb help";
     }
 
+    public void sendDebugMessage(String message) {
+    	compatibility.addChatMessage(compatibility.clientPlayer(), getDebugPrefix() + message);
+    }
+    
     private String getSubCommandDebugUsage() {
         return "/" + COMMAND_DEBUG + " <" + DEBUG_ARG_ON + "|" + DEBUG_ARG_OFF + ">";
     }
@@ -164,6 +172,7 @@ public class DebugCommand extends CompatibleCommand {
             	break;
             case DEBUG_WEAPON:
             	processWeapon(args);
+            	break;
             default:
                 compatibility.addChatMessage(compatibility.clientPlayer(), getCompatibleUsage(sender));
             }
@@ -178,6 +187,7 @@ public class DebugCommand extends CompatibleCommand {
     private static boolean isInfiniteAmmo;
     private static boolean isDebuggingActionPosition;
     private static boolean isWorkingOnScreenShake;
+    private static boolean isForceLiveRenderGUI;
     public static Transform debugSlideTransform = new Transform();
     public static Pair<Double, Double> screenShakeParam = new Pair<Double, Double>(0.0, 0.0);
     
@@ -193,6 +203,10 @@ public class DebugCommand extends CompatibleCommand {
     	return isInfiniteAmmo;
     }
     
+    public static boolean isForceLiveRenderGUI() {
+    	return isForceLiveRenderGUI;
+    }
+    
     private void processWeapon(String[] args) {
     	if(args[1].equals("infinite")) {
     		isInfiniteAmmo = !isInfiniteAmmo;
@@ -204,7 +218,6 @@ public class DebugCommand extends CompatibleCommand {
     			compatibility.addChatMessage(compatibility.clientPlayer(), getDebugPrefix() + " Slide editor mode is " + (isDebuggingActionPosition ? "on" : "off"));
             	
     		}else if(args[2].equals("setpos")) {
-    			System.out.println("hi");
     			double x = Double.parseDouble(args[3]);
     			double y = Double.parseDouble(args[4]);
     			double z = Double.parseDouble(args[5]);
@@ -219,6 +232,24 @@ public class DebugCommand extends CompatibleCommand {
     			double lengthModifier = Double.parseDouble(args[4]);
     			screenShakeParam = new Pair<Double, Double>(intensity, lengthModifier);
     		}
+    	} else if(args[1].equals("buildsheet")) {
+    		
+    		sendDebugMessage("Checking to see if a sprite sheet can be built...");
+    		
+    		WeaponSpritesheetBuilder.build();
+    		
+    		sendDebugMessage("Generating icon sheet as... " + TextFormatting.GREEN + " guniconsheet.png");
+    	
+    		
+    	} else if(args[1].equals("liverender")) {
+    		if(args[2].equals("toggle")) {
+    			isForceLiveRenderGUI = !isForceLiveRenderGUI;
+    			sendDebugMessage("Live render is now " + TextFormatting.DARK_GRAY + (isForceLiveRenderGUI ? "on" : "off"));
+    		} else if(args[2].equals("?")) {
+    			sendDebugMessage("Live render causes weapons to switch off of the icon sheet and directly render into the inventory. This should only ever be used for debugging.");
+    			//LayerBipedArmor
+    		}
+    		
     	}
     }
     

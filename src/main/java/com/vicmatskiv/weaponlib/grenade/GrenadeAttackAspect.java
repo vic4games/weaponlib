@@ -184,6 +184,8 @@ public class GrenadeAttackAspect implements Aspect<GrenadeState, PlayerGrenadeIn
                 if(remainingTimeUntilExplosion < 0) {
                     remainingTimeUntilExplosion = 0;
                 }
+                
+                
                 String message = compatibility.getLocalizedString("gui.grenadeExplodes",
                         Math.round(remainingTimeUntilExplosion / 1000f));
                 modContext.getStatusMessageCenter().addAlertMessage(message, 1, 1000, 0);
@@ -195,7 +197,7 @@ public class GrenadeAttackAspect implements Aspect<GrenadeState, PlayerGrenadeIn
 
     public void serverThrowGrenade(EntityPlayer player, PlayerGrenadeInstance instance, long activationTimestamp) {
         logger.debug("Throwing grenade");
-        
+       
         //boolean isSmokeGrenade = instance.getWeapon().isSmokeOnly();
         
         serverThrowGrenade(modContext, player, instance, activationTimestamp);
@@ -205,6 +207,8 @@ public class GrenadeAttackAspect implements Aspect<GrenadeState, PlayerGrenadeIn
 
     public static void serverThrowGrenade(ModContext modContext, EntityLivingBase player, PlayerGrenadeInstance instance,
             long activationTimestamp) {
+    	
+    
         if(activationTimestamp == 0 && instance.getWeapon().getType() == Type.REGULAR) {
             // explode immediately
 

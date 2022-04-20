@@ -11,6 +11,7 @@ import java.util.function.Consumer;
 
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GLSync;
+import org.lwjgl.util.vector.Quaternion;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -22,17 +23,20 @@ import com.vicmatskiv.weaponlib.WeaponRenderer;
 import com.vicmatskiv.weaponlib.animation.MatrixHelper;
 import com.vicmatskiv.weaponlib.animation.Transform;
 import com.vicmatskiv.weaponlib.animation.Transition;
+import com.vicmatskiv.weaponlib.render.bgl.math.AngleKit.EulerAngle;
+import com.vicmatskiv.weaponlib.render.bgl.math.AngleKit.Format;
 import com.vicmatskiv.weaponlib.animation.DebugPositioner.Position;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.math.Vec3d;
+import scala.actors.threadpool.Arrays;
 
 public class AnimationData {
 
 	public TreeMap<Float, BlockbenchTransition> bbTransition = new TreeMap<>();
 
-	public static final float PACE = 750f;
+	public static final float PACE = 833f;
 	
 	public ArrayList<Float> timestamps = new ArrayList<>();
 
@@ -135,7 +139,9 @@ public class AnimationData {
 				timeDelta = (f - timestamps.get(i - 1)) * PACE;
 				// System.out.println("Delta for " + f + ": " +timeDelta);
 			} else {
-				timeDelta = (timestamps.get(i + 1) - f) * PACE;
+				//System.out.println("yo bo");
+				timeDelta = 1f;
+				//timeDelta = (timestamps.get(i + 1) - f) * PACE;
 			}
 			
 			
@@ -158,7 +164,7 @@ public class AnimationData {
 					 * = beforeKey; rotationKey = MatrixHelper.lerpVectors(beforeKey, afterKey,
 					 * alpha); }
 					 */
-					rotationKey = buildKeyframe(rotationKeyframes, f);
+					rotationKey = buildRotationKeyframe(rotationKeyframes, f);
 					rotationKeyframes.put(f, rotationKey);
 				} else {
 					rotationKey = rotationKeyframes.get(f);
@@ -205,15 +211,68 @@ public class AnimationData {
 	}
 	
 	public float getDelta(TreeMap<Float, Vec3d> map, float f) {
+		
+		
 		if(map.floorKey(f) != null) {
 			return (f-map.floorKey(f))*PACE;
 		} else if(map.ceilingKey(f) != null) {
+			//System.out.println("CALLED FOR DELTA!");
 			return (f-map.ceilingKey(f))*PACE;
+			//return 2456;
 		} else {
+		
 			return 100f;
 		}
 		
 	}
+	
+	public Vec3d buildRotationKeyframe(TreeMap<Float, Vec3d> keyList, float timestamp) {
+		// Keylist is empty, just return a zero vector
+		
+				if (keyList.isEmpty())
+					return Vec3d.ZERO;
+				if (keyList.ceilingKey(timestamp) == null) {
+					// There is no keyframe ahead, so there's nothing to interpolate
+					// between. Just grab the last keyframe and use that.
+					
+					return keyList.get(keyList.floorKey(timestamp));
+				} else if (keyList.floorKey(timestamp) == null) {
+					// There is no keyframe before this. Just grab the next one and use
+					// that.
+					
+					
+					return keyList.get(keyList.ceilingKey(timestamp));
+				} else {
+					// Otherwise just interpolate a new one
+					
+					float fromDelta = keyList.floorKey(timestamp);
+					float toDeltaDelta = keyList.ceilingKey(timestamp);
+					float alpha = (timestamp - fromDelta) / (toDeltaDelta - fromDelta);
+
+					Vec3d beforeKey = keyList.floorEntry(timestamp).getValue();
+					Vec3d afterKey = keyList.ceilingEntry(timestamp).getValue();
+					if (afterKey == null)
+						afterKey = beforeKey;
+					
+					/*
+					Quaternion q1 = MatrixHelper.fromEulerAngles(Math.toRadians(beforeKey.z), Math.toRadians(beforeKey.x), Math.toRadians(beforeKey.y));
+					Quaternion q2 = MatrixHelper.fromEulerAngles(Math.toRadians(afterKey.z), Math.toRadians(afterKey.x), Math.toRadians(afterKey.y));
+					// roll pitch yaw
+					double[] result = MatrixHelper.toEulerAngles(MatrixHelper.slerp(q1, q2, alpha));
+					System.out.println("TEST: " + Arrays.toString(result));
+					//return new Vec3d(Math.toDegrees(result[1]), Math.toDegrees(result[2]), Math.toDegrees(result[0]));
+					*/
+					
+					EulerAngle beforeAngle = new EulerAngle(Format.DEGREES, beforeKey.x, beforeKey.y, beforeKey.z);
+					EulerAngle afterAngle = new EulerAngle(Format.DEGREES, afterKey.x, afterKey.y, afterKey.z);
+					EulerAngle resultant = beforeAngle.slerp(afterAngle, alpha);
+					return new Vec3d(resultant.getX(), resultant.getY(), resultant.getZ());
+					
+					
+					//return MatrixHelper.lerpVectors(beforeKey, afterKey, alpha);
+				}
+	}
+		
 
 	public Vec3d buildKeyframe(TreeMap<Float, Vec3d> keyList, float timestamp) {
 		// Keylist is empty, just return a zero vector
@@ -249,7 +308,7 @@ public class AnimationData {
 	public void bakeKeyframes(float timeStamp) {
 	
 		// Build keyframes
-		Vec3d rotation = buildKeyframe(rotationKeyframes, timeStamp);
+		Vec3d rotation = buildRotationKeyframe(rotationKeyframes, timeStamp);
 		Vec3d translation = buildKeyframe(translateKeyframes, timeStamp);
 		
 		
@@ -484,6 +543,7 @@ public class AnimationData {
 				 * it doesn't even seem like the problem.
 				 */
 				
+				//System.out.println("hi " + " | " + timestamp + " | " + (int) timestamp);
 				
 
 				
@@ -560,7 +620,7 @@ public class AnimationData {
 					
 					
 				
-			}, (int) timestamp);
+			}, (int) Math.round(timestamp));
 			
 			
 			

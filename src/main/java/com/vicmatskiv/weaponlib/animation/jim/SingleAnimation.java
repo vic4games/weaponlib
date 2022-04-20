@@ -9,6 +9,8 @@ import javax.print.attribute.HashAttributeSet;
 
 import com.google.gson.JsonObject;
 
+import net.minecraft.util.datafix.fixes.TotemItemRename;
+
 public class SingleAnimation {
 	
 	private String animationName;
@@ -60,7 +62,7 @@ public class SingleAnimation {
 			}
 		}
 		Collections.sort(timestamps);
-		System.out.println("[" + this.animationName + "] Created animation w/ " + timestamps.size() + " keyframes.");
+		//System.out.println("[" + this.animationName + "] Created animation w/ " + timestamps.size() + " keyframes.");
 		this.timestampCount = timestamps.size();
 		
 		// Bake keyframes
@@ -72,6 +74,29 @@ public class SingleAnimation {
 			}
 		}
 		
+	
+		// Fix timestamps
+		for(Entry<String, AnimationData> i : dataMap.entrySet()) {
+			AnimationData data = i.getValue();
+			
+			for(int t = 0; t < getTimestamps().size(); ++t) {
+				if(t == 0) {
+					data.bbTransition.get(getTimestamps().get(t)).setTimestamp(1.0f);
+				} else {
+					float trueDelta = AnimationData.PACE*(getTimestamps().get(t) - getTimestamps().get(t - 1));
+					
+					System.out.println("(" + getTimestamps().get(t-1) + ") -> (" + getTimestamps().get(t) + ") " + trueDelta);
+					data.bbTransition.get(getTimestamps().get(t)).setTimestamp(trueDelta);
+				}
+			}
+			
+			/*
+			for(float f : timestamps) {
+				if(!i.getValue().getTimestamps().contains(f)) {
+					i.getValue().bakeKeyframes(f);
+				}
+			}*/
+		}
 		
 		//System.out.println("Total # of transitions: " + timestamps.size());
 		

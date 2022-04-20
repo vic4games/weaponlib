@@ -212,6 +212,9 @@ public class Bloom {
 		
 		data.bindFramebuffer(false);
 		GlStateManager.enableBlend();
+		
+		//Shaders.bloomTest = ShaderManager.loadVMWShader("btest");
+		
 		Shaders.bloomTest.use();
 		Shaders.bloomTest.uniform1i("real", 4);
 		renderFboTriangle(data, data.framebufferWidth, data.framebufferHeight);

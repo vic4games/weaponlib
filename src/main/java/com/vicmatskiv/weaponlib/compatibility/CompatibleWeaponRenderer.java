@@ -1,14 +1,21 @@
 package com.vicmatskiv.weaponlib.compatibility;
 
 import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.annotation.Nullable;
+import javax.imageio.ImageIO;
 import javax.vecmath.Matrix4f;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -44,6 +51,7 @@ import com.vicmatskiv.weaponlib.animation.jim.BBLoader;
 import com.vicmatskiv.weaponlib.animation.jim.FuckMyLife;
 import com.vicmatskiv.weaponlib.animation.jim.AnimationData.BlockbenchTransition;
 import com.vicmatskiv.weaponlib.animation.movement.WeaponRotationHandler;
+import com.vicmatskiv.weaponlib.command.DebugCommand;
 import com.vicmatskiv.weaponlib.debug.DebugRenderer;
 import com.vicmatskiv.weaponlib.animation.MultipartRenderStateDescriptor;
 import com.vicmatskiv.weaponlib.animation.MultipartRenderStateManager;
@@ -52,9 +60,14 @@ import com.vicmatskiv.weaponlib.animation.Transform;
 
 import com.vicmatskiv.weaponlib.render.Bloom;
 import com.vicmatskiv.weaponlib.render.Dloom;
+import com.vicmatskiv.weaponlib.render.ImageCaptureUtil;
 import com.vicmatskiv.weaponlib.render.MSAABuffer;
 import com.vicmatskiv.weaponlib.render.MultisampledFBO;
+import com.vicmatskiv.weaponlib.render.ResourceManager;
 import com.vicmatskiv.weaponlib.render.Shaders;
+import com.vicmatskiv.weaponlib.render.SpriteSheetTools;
+import com.vicmatskiv.weaponlib.render.SpriteSheetTools.Sprite;
+import com.vicmatskiv.weaponlib.render.WeaponSpritesheetBuilder;
 import com.vicmatskiv.weaponlib.render.bgl.GLCompatible;
 import com.vicmatskiv.weaponlib.shader.jim.Shader;
 import com.vicmatskiv.weaponlib.shader.jim.ShaderManager;
@@ -71,12 +84,14 @@ import net.minecraft.client.model.ModelLeashKnot;
 import net.minecraft.client.model.ModelPlayer;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms.TransformType;
+import net.minecraft.client.renderer.debug.DebugRendererNeighborsUpdate;
 import net.minecraft.client.renderer.block.model.ItemOverride;
 import net.minecraft.client.renderer.block.model.ItemOverrideList;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
@@ -84,7 +99,9 @@ import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.client.renderer.texture.TextureUtil;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
@@ -96,10 +113,12 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHandSide;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.ScreenShotHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+
 
 public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer implements IBakedModel {
 
@@ -325,14 +344,16 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 
 		int originalFramebufferId = -1;
 
-		if (transformType == TransformType.GUI) {
+		if (transformType == TransformType.GUI && DebugCommand.isForceLiveRenderGUI()) {
 
+			
 			Object textureMapKey = this; // weaponItemStack != null ? weaponItemStack : this;
 			inventoryTexture = getClientModContext().getInventoryTextureMap().get(textureMapKey);
-
+ 
 			//Minecraft.getMinecraft().getFramebuffer()
 			
 			if (inventoryTexture == null) {
+				
 				originalFramebufferId = Framebuffers.getCurrentFramebuffer();
 
 				Framebuffers.unbindFramebuffer();
@@ -345,6 +366,8 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 				
 				
 				framebuffer.bindFramebuffer(true);
+				
+				
 				
 				
 				// Setup MSAA
@@ -399,22 +422,49 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 			
 			forceMSAA = true;
 			
-			double inventoryScale = 20;
+			double inventoryScale = 30;
 			
 			GL11.glScaled(1, -1, 1);
 
 			 RenderHelper.enableStandardItemLighting();
 			
 
-			
+			/*
 			GlStateManager.rotate(0f, 0, 0, 1);
 			GlStateManager.rotate(120f, 0, 1, 0);
 			GlStateManager.rotate(-20f, 1, 0, 0);
 			
 			GL11.glTranslatef(-150.0f, -40f, 0f);
+			*/
+			
+			 /*
+			GlStateManager.translate(50.0, -50.0, 0.0);
+			//GlStateManager.rotate(180f, 1, 0, 0);
+			GlStateManager.rotate(90f, 0, 0, 1);
 			
 			GlStateManager.scale(inventoryScale, inventoryScale, inventoryScale);
+			*/
+			new Transform()
+			.withPosition(75, -85, 0)
+			.withRotation(20, 130, 120)
+			.withScale(inventoryScale, inventoryScale, inventoryScale)
+			.doGLDirect();
+			{
+				StateDescriptor thirdPersonStateDescriptor = getThirdPersonStateDescriptor(player, itemStack);
+				renderContext.setPlayerItemInstance(thirdPersonStateDescriptor.instance);
+				MultipartPositioning<Part, RenderContext<RenderableState>> multipartPositioning = thirdPersonStateDescriptor.stateManager
+						.nextPositioning();
 
+				renderContext.setTransitionProgress(multipartPositioning.getProgress());
+
+				renderContext.setFromState(multipartPositioning.getFromState(RenderableState.class));
+
+				renderContext.setToState(multipartPositioning.getToState(RenderableState.class));
+
+				positioner = multipartPositioning.getPositioner();
+
+				positioner.position(Part.MAIN_ITEM, renderContext);
+			}
 			
 			
 		//	builder.getInventoryPositioning().accept(itemStack);
@@ -976,7 +1026,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 		}
 
 		if (transformType == TransformType.GUI) {
-			renderCachedInventoryTexture(inventoryTexture);
+			renderCachedInventoryTexture(renderContext, inventoryTexture);
 		}
 		
 		
@@ -995,11 +1045,12 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 		}
 		
 		
+	
 		
 
 		if (AnimationModeProcessor.getInstance().getFPSMode()) {
 			
-			Shaders.selectedge = Shaders.selectedge;
+			//Shaders.selectedge = Shaders.selectedge;
 			
 			Shaders.selectedge.use();
 			if (OpenGLSelectionHelper.fbo != null) {
@@ -1055,7 +1106,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 		}
 		
 		
-		
+	
 
 	}
 	
@@ -1103,38 +1154,88 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 		GL11.glOrtho(0.0D, scaledresolution.getScaledWidth_double(), scaledresolution.getScaledHeight_double(), 0.0D,
 				1000.0D, 3000.0D);
 		GL11.glMatrixMode(GL11.GL_MODELVIEW);
+		
+	
 
 //        GlStateManager.loadIdentity();
 //        GlStateManager.translate(0.0F, 0.0F, -2000.0F);
 	}
 
-	private void renderCachedInventoryTexture(Integer inventoryTexture) {
+	private void renderCachedInventoryTexture(RenderContext<RenderableState> renderContext, Integer inventoryTexture) {
 
-		// RenderHelper.enableGUIStandardItemLighting();
 
-		GL11.glPushMatrix();
-		GL11.glPushAttrib(GL11.GL_ENABLE_BIT);
+		if(getClientModContext() != null) {
+			WeaponSpritesheetBuilder.provideModContext(getClientModContext());
+		}
+	
 
-		// Undo inventory translations
-
-		GlStateManager.enableBlend();
-		GlStateManager.enableAlpha();
+		if(!DebugCommand.isForceLiveRenderGUI()) {
+			PlayerWeaponInstance pwi = renderContext.getWeaponInstance();
+			
+			if(!WeaponSpritesheetBuilder.hasSpriteID(pwi.getWeapon().getName())) return;
 		
-		GL11.glTranslatef(0.0F, 1.0F, 0.5F);
-		GL11.glScalef(0.004F, 0.004F, 0.004F);
-		GL11.glScalef(1.0F, -1.0F, 1F);
-		GlStateManager.translate(-8.0F, -8.0F, 0.0F);
+			GlStateManager.pushMatrix();
+			GL11.glPushAttrib(GL11.GL_ENABLE_BIT);
+			GlStateManager.enableBlend();
+			GlStateManager.enableAlpha();
+			GlStateManager.disableLighting();
+			
+			GL11.glTranslatef(0.0F, 1.0F, 0.5F);
+			GL11.glScalef(0.004F, 0.004F, 0.004F);
+			GL11.glScalef(1.0F, -1.0F, 1F);
+			GlStateManager.translate(-8.0F, -8.0F, 0.0F);
+			
+			Minecraft.getMinecraft().getTextureManager().bindTexture(ResourceManager.GUN_ICON_SHEET);
+			
+			int id = WeaponSpritesheetBuilder.getSpriteID(pwi.getWeapon().getName());
+			Sprite sprite = SpriteSheetTools.getSquareSprite(id, 128, 1664, 1664);
 
-		GlStateManager.bindTexture(inventoryTexture);
-		// Minecraft.getMinecraft().getTextureManager().bindTexture(new
-		// ResourceLocation(CALIBRATION_TEXTURE));
+			
+			CompatibleTessellator tessellator = CompatibleTessellator.getInstance();
+			tessellator.startDrawingQuads();
 
-		drawTexturedQuadFit(0, 0, 256, 256, 0);
+			tessellator.addVertexWithUV(0, 256, 0, sprite.getMinU(), sprite.getMaxV());
+			tessellator.addVertexWithUV(256, 256, 0, sprite.getMaxU(), sprite.getMaxV());
+			tessellator.addVertexWithUV(256, 0, 0, sprite.getMaxU(), sprite.getMinV());
+			tessellator.addVertexWithUV(0, 0, 0, sprite.getMinU(), sprite.getMinV());
+			tessellator.draw();
+			
 
-//        GlStateManager.enableLighting();
-		GL11.glPopAttrib();
+			GL11.glPopAttrib();
+			GlStateManager.enableLighting();
+			GlStateManager.popMatrix();
+			GlStateManager.enableTexture2D();
+		} else {
+			GL11.glPushMatrix();
+			GL11.glPushAttrib(GL11.GL_ENABLE_BIT);
 
-		GL11.glPopMatrix();
+
+			GlStateManager.enableBlend();
+			GlStateManager.enableAlpha();
+			//GlStateManager.disableTexture2D();
+			
+			
+			GL11.glTranslatef(0.0F, 1.0F, 0.5F);
+			GL11.glScalef(0.004F, 0.004F, 0.004F);
+			GL11.glScalef(1.0F, -1.0F, 1F);
+			GlStateManager.translate(-8.0F, -8.0F, 0.0F);
+			
+
+			GlStateManager.bindTexture(inventoryTexture);
+
+			drawTexturedQuadFit(0, 0, 256, 256, 0);
+
+
+			GL11.glPopAttrib();
+
+			GL11.glPopMatrix();
+		}
+		
+		/*
+		
+		*/
+		
+		
 	}
 
 	private static void drawTexturedQuadFit(double x, double y, double width, double height, double zLevel) {

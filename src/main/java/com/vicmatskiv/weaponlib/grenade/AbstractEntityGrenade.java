@@ -71,6 +71,7 @@ public abstract class AbstractEntityGrenade extends EntityBounceable {
 
     @Override
     public void onBounce(CompatibleRayTraceResult movingobjectposition) {
+    	
         if(movingobjectposition.getTypeOfHit() == Type.BLOCK && itemGrenade != null) {
             CompatibleSound bounceHardSound = itemGrenade.getBounceHardSound();
             if(bounceHardSound != null) {

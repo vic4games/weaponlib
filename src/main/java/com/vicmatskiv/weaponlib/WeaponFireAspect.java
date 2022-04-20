@@ -321,6 +321,7 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
 
         if(weapon.isShellCasingEjectEnabled() && weaponInstance != null)  {
         	
+        	//Shell
         	
         	/*
         	

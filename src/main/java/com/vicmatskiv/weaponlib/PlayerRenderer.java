@@ -161,7 +161,7 @@ public class PlayerRenderer {
     }
 
     public void renderModel(ModelBiped modelPlayer, EntityPlayer player, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scale) {
-    	
+     
     	newFlags = CompatibleExtraEntityFlags.getFlags(player);
         if(newFlags != currentFlags) {
             renderingStartTimestamp = System.currentTimeMillis();

@@ -69,12 +69,14 @@ public class WeaponRotationHandler {
 		float strafeMagnitude = ClientValueRepo.strafe.getLerpedFloat();
 		float runningMagnitude = ClientValueRepo.running.getLerpedFloat();
 		
+	
+		
 		
 		// Sway & walk
 		float swayAmplitude = 0.2f;
 		float walkingSwayAmplitude = strafeMagnitude/30f + forwardMagnitude/30f;
 		
-		
+		// System.out.println(BBLoader.getTotalAnimations());
 		
 		/*
 		if(gunPow.currentValue > recoilParameters.getStockLength()) {

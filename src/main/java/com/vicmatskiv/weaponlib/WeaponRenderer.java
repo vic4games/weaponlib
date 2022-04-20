@@ -23,6 +23,7 @@ import org.apache.logging.log4j.Logger;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GLSync;
 import org.lwjgl.util.glu.GLU;
 import org.lwjgl.util.glu.Project;
@@ -59,6 +60,8 @@ import com.vicmatskiv.weaponlib.render.Bloom;
 import com.vicmatskiv.weaponlib.render.Dloom;
 import com.vicmatskiv.weaponlib.render.MuzzleFlashRenderer;
 import com.vicmatskiv.weaponlib.render.Shaders;
+import com.vicmatskiv.weaponlib.render.WeaponSpritesheetBuilder;
+import com.vicmatskiv.weaponlib.render.bgl.PostProcessPipeline;
 import com.vicmatskiv.weaponlib.shader.jim.Shader;
 import com.vicmatskiv.weaponlib.shader.jim.ShaderManager;
 
@@ -1681,7 +1684,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				entityPositioning = itemStack -> {
 				};
 			}
-
+			
+			 
 			WeaponRenderer renderer = new WeaponRenderer(this);
 
 			/*
@@ -3125,10 +3129,19 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		//	Bloom.bindBloomBuffer();
 		//	MuzzleFlashRenderer.renderFlash(renderContext.getPlayer().getEntityId(), weaponItemStack, true);
 			//Minecraft.getMinecraft().getFramebuffer().bindFramebuffer(false);
+			
+			
+			//Vec3d iP  = CompatibleClientEventHandler.getInterpolatedPlayerCoords();
+			//PostProcessPipeline.getLightManager().addLight((float) iP.x, (float) iP.y, (float) iP.z, 1.0f, 0.623f, 0.262f, 0.1f, 0.009f, 0.032f);
+			
+			
+			
 			MuzzleFlashRenderer.renderFlash(renderContext.getPlayer().getEntityId(), weaponItemStack, false);
 			
 			
+			Vec3d distortPos = new Vec3d(0, 0, 1).rotateYaw((float) -Math.toRadians(Minecraft.getMinecraft().player.rotationYaw)).add(Minecraft.getMinecraft().player.getPositionEyes(1.0f));
 			
+			PostProcessPipeline.createDistortionPoint((float) distortPos.x, (float) distortPos.y, (float) distortPos.z, 1f, 300);
 			
 			/*
 			Bloom.bindBloomBuffer();
@@ -3193,14 +3206,14 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		//gunLightingShader = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/gunlight"));
 	    
 		if(!OpenGLSelectionHelper.isInSelectionPass && !AnimationGUI.getInstance().magEdit.isState()) {
-		
+			
+			//Shaders.gunLightingShader = ShaderManager.loadVMWShader("gunlight");
+			
+			//OpenGlHelper.glFramebufferTexture2D(OpenGlHelper.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT1, GL11.GL_TEXTURE_2D, PostProcessPipeline.maskingBuffer.framebufferTexture, 0);
 			
 			Shaders.gunLightingShader.use();
-			
-			
 	    	GL20.glUniform1i(GL20.glGetUniformLocation(Shaders.gunLightingShader.getShaderId(), "lightmap"), 1);
 	    	GL20.glUniform1f(GL20.glGetUniformLocation(Shaders.gunLightingShader.getShaderId(), "lightIntensity"), shot ? 1.5f + ((float) Math.random()) : 0.0f);
-	    	
 		}
 		
     	// Clears out the defferal list, so that a new set can be
@@ -3351,6 +3364,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 	}
 	
 	private CompatibleAttachment<?> currentMagazine;
+
+	public String name;
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
     private void renderCompatibleAttachment(CompatibleAttachment<?> compatibleAttachment,

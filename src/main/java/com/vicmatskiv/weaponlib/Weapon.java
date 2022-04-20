@@ -29,6 +29,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleBlockState;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleItem;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleReflection;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTargetPoint;
 import com.vicmatskiv.weaponlib.compatibility.RecoilParam;
@@ -37,9 +38,11 @@ import com.vicmatskiv.weaponlib.crafting.CraftingComplexity;
 import com.vicmatskiv.weaponlib.crafting.OptionsMetadata;
 import com.vicmatskiv.weaponlib.jim.util.VMWHooksHandler;
 import com.vicmatskiv.weaponlib.model.Shell;
+import com.vicmatskiv.weaponlib.render.WeaponSpritesheetBuilder;
 import com.vicmatskiv.weaponlib.render.shells.ShellParticleSimulator.Shell.Type;
 
 import akka.japi.Pair;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.creativetab.CreativeTabs;
@@ -878,6 +881,15 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
                     return bullet;
                 };
             }
+            
+         //  System.out.println("ARE WE ON SERVER SIDE: " + CompatibleReflection.isOnServer());
+            if(!CompatibleReflection.isOnServer()) {
+            	// Register in spritesheet builder
+                WeaponSpritesheetBuilder.registerSprite(this.name);
+                this.renderer.name = this.name;
+            }
+            
+           
 
             if(shellCasingModel == null) {
                 shellCasingModel = new Shell();

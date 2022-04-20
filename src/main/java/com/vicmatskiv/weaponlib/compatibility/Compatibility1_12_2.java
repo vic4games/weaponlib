@@ -789,6 +789,8 @@ public class Compatibility1_12_2 implements Compatibility {
     @Override
     public void spawnParticle(World world, String particleName, double xCoord, double yCoord, double zCoord,
             double xSpeed, double ySpeed, double zSpeed) {
+    	
+    	
         EnumParticleTypes particleType = EnumParticleTypes.getByName(particleName);
         if(particleType != null) {
             world.spawnParticle(particleType, xCoord, yCoord, zCoord, xSpeed, ySpeed, zSpeed);

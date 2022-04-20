@@ -66,6 +66,7 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
 
     public EntityProjectile(World world, EntityLivingBase thrower, float velocity, float gravityVelocity, float inaccuracy) {
         this(world);
+   
         this.thrower = thrower;
         this.velocity = velocity;
         this.gravityVelocity = gravityVelocity;

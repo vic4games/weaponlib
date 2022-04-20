@@ -9,6 +9,7 @@ import org.lwjgl.opengl.GLSync;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTessellator;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTransformType;
 import com.vicmatskiv.weaponlib.render.Bloom;
+import com.vicmatskiv.weaponlib.render.Shaders;
 import com.vicmatskiv.weaponlib.shader.jim.Shader;
 import com.vicmatskiv.weaponlib.shader.jim.ShaderManager;
 
@@ -78,10 +79,10 @@ public class LaserBeamRenderer implements CustomRenderer {
 			GlStateManager.disableLighting();
 			if(positioning != null) positioning.accept(renderContext.getPlayer(), renderContext.getWeapon());
 			
-			Shader brightShader = ShaderManager.loadVMWShader("brightness");
-			brightShader.use();
-			brightShader.uniform1f("brightness", 2f);
-			brightShader.uniform3f("color", 0f, 1f, 0f);
+			//Shader brightShader = ShaderManager.loadVMWShader("brightness");
+			Shaders.brightnessShader.use();
+			Shaders.brightnessShader.uniform1f("brightness", 2f);
+			Shaders.brightnessShader.uniform3f("color", 0f, 1f, 0f);
 			
 			
 			Bloom.bindBloomBuffer();
@@ -101,7 +102,7 @@ public class LaserBeamRenderer implements CustomRenderer {
 			tes.draw();
 			
 			
-			brightShader.release();
+			Shaders.brightnessShader.release();
 			
 			
 			GlStateManager.enableLighting();

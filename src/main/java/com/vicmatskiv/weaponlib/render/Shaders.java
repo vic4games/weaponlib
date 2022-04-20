@@ -24,6 +24,7 @@ public class Shaders {
 	public static Shader reflexReticle = ShaderManager.loadVMWShader("reflex");
 	public static Shader grid = ShaderManager.loadVMWShader("grid");
 	
+	public static Shader axis = ShaderManager.loadVMWShader("axis");
 	
 	public static Shader downsample = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/downsample"));
 	public static Shader upsample = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/upsample"));
@@ -31,5 +32,14 @@ public class Shaders {
 	
 	public static  Shader brightnessShader = ShaderManager.loadVMWShader("brightness");
 	public static Shader bloomTest = ShaderManager.loadVMWShader("bTest");
+	public static Shader post = ShaderManager.loadVMWShader("post");
+	public static Shader billboard = ShaderManager.loadVMWShader("billboard");
+	
+	
+	// Post processing shaders
+	public static Shader postFlat = ShaderManager.loadVMWShader("postflat");
+	public static Shader postWorld = ShaderManager.loadVMWShader("postworld");
+	
+	
 
 }

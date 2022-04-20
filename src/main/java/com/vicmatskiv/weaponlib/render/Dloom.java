@@ -40,15 +40,17 @@ public class Dloom {
     
     public static void blitDepth(){
     	
-    	
+    	//depthFrameBuffer = -1;
     	
     	if(height != Minecraft.getMinecraft().displayHeight || width != Minecraft.getMinecraft().displayWidth || depthFrameBuffer == -1){
-    		
+    		System.out.println("CREATED DEPTH BOOFER");
     		height = Minecraft.getMinecraft().displayHeight;
     		width = Minecraft.getMinecraft().displayWidth;
     		
+    		
     		GL11.glDeleteTextures(depthTexture);
     		OpenGlHelper.glDeleteFramebuffers(depthFrameBuffer);
+    		
     		
     		depthFrameBuffer = OpenGlHelper.glGenFramebuffers();
     		OpenGlHelper.glBindFramebuffer(OpenGlHelper.GL_FRAMEBUFFER, depthFrameBuffer);
@@ -64,13 +66,16 @@ public class Dloom {
 			if(bruh != OpenGlHelper.GL_FRAMEBUFFER_COMPLETE){
 				System.out.println("Failed to create depth texture framebuffer! This is an error!");
 			}
+			
+			
+			
+    		
     	}
     	
     
     	
     	OpenGlHelper.glBindFramebuffer(GLCompatible.GL_READ_FRAMEBUFFER, Minecraft.getMinecraft().getFramebuffer().framebufferObject);
     	OpenGlHelper.glBindFramebuffer(GLCompatible.GL_DRAW_FRAMEBUFFER, depthFrameBuffer);
-    	
     	GLCompatible.glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL11.GL_DEPTH_BUFFER_BIT, GL11.GL_NEAREST);
     	
     	Minecraft.getMinecraft().getFramebuffer().bindFramebuffer(false);

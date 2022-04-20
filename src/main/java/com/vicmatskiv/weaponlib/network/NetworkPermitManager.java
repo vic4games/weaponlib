@@ -38,6 +38,7 @@ implements PermitManager, CompatibleMessageHandler<PermitMessage, CompatibleMess
 	@Override
 	public <S extends ManagedState<S>, P extends Permit<S>, E extends ExtendedState<S>> void request(
 			P permit, E extendedState, BiConsumer<P, E> callback) {
+		
 		permitCallbacks.put(permit.getUuid(), callback);
 		modContext.getChannel().getChannel().sendToServer(new PermitMessage(permit, extendedState));
 	}
@@ -72,6 +73,7 @@ implements PermitManager, CompatibleMessageHandler<PermitMessage, CompatibleMess
 					evaluator.accept(permit, extendedState);
 				}
 				PermitMessage message = new PermitMessage(permit, extendedState);
+				//System.out.println("Sending out permit");
 				modContext.getChannel().getChannel().sendTo(message, (EntityPlayerMP) ctx.getPlayer());
 			});
 		} else {

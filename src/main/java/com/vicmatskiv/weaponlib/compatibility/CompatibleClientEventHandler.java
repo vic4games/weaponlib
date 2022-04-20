@@ -43,6 +43,7 @@ import org.lwjgl.opengl.GL43;
 import org.lwjgl.opengl.GLSync;
 import org.lwjgl.util.glu.Project;
 import org.lwjgl.util.vector.Matrix4f;
+import org.lwjgl.util.vector.Quaternion;
 
 import com.google.common.reflect.ClassPath;
 import com.google.common.reflect.Reflection;
@@ -92,7 +93,9 @@ import com.vicmatskiv.weaponlib.render.WavefrontLoader;
 import com.vicmatskiv.weaponlib.render.WavefrontModel;
 import com.vicmatskiv.weaponlib.render.bgl.GLCompatible;
 import com.vicmatskiv.weaponlib.render.bgl.ModernUtil;
+import com.vicmatskiv.weaponlib.render.bgl.PostProcessPipeline;
 import com.vicmatskiv.weaponlib.render.bgl.instancing.InstancedAttribute;
+import com.vicmatskiv.weaponlib.render.bgl.math.AngleKit;
 import com.vicmatskiv.weaponlib.render.qrender.QRenderer;
 import com.vicmatskiv.weaponlib.render.shells.ShellManager;
 import com.vicmatskiv.weaponlib.render.shells.ShellParticleSimulator;
@@ -113,6 +116,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.model.ModelBox;
+import net.minecraft.client.model.ModelChest;
 import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GLAllocation;
@@ -129,6 +133,7 @@ import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.launchwrapper.Launch;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
@@ -453,12 +458,17 @@ public abstract class CompatibleClientEventHandler {
 	
 	@SubscribeEvent
 	public void renderWorrldLastEvent(RenderWorldLastEvent evt) {
+		PostProcessPipeline.captureMatricesIntoBuffers();
 		frametimer.markFrame();
-		
+		/*
+		System.out.println("DEOBF: " + Launch.blackboard.get("fml.deobfuscatedEnvironment"));
+		System.out.println();
+		*/
 		ClientValueRepo.renderUpdate(getModContext());
 		
 
-	
+		PostProcessPipeline.setWorldElements();
+		
 		double divisor = 120/frametimer.getFramerate()*0.05;
 		divisor = Math.min(0.08, divisor);
 		Interceptors.nsm.update();
@@ -468,7 +478,24 @@ public abstract class CompatibleClientEventHandler {
 		//Interceptors.nsm.update(1/divisor);
 	
 		
-
+		try {
+			//AnimationData susData = BBLoader.getAnimation("mp5", "inspect", "main");
+			//System.out.println(susData.getTimestamps());
+			
+			/*
+			System.out.println("===== START =====");
+			for(Entry<Float, BlockbenchTransition> bbt : susData.bbTransition.entrySet()) {
+				System.out.println("(" + bbt.getKey() + ") -> " + bbt.getValue().getTimestamp());
+			}
+			System.out.println("===== END =====");
+			*/
+			//System.out.println(susData.timestamps.size());
+		
+		} catch(Exception e) {
+			//e.printStackTrace();
+		}
+		//System.out.println(susData);
+		
 		//System.out.println("hi");
 		/*
 		if(ClientModContext.getContext() != null && ClientModContext.getContext().getMainHeldWeapon() != null) {
@@ -497,8 +524,36 @@ public abstract class CompatibleClientEventHandler {
 			GlStateManager.popMatrix();
 		}*/
 		
+	/*
+		GlStateManager.pushMatrix();
+		Vec3d iP = getInterpolatedPlayerCoords();
+		
+		Quaternion q = MatrixHelper.fromEulerAngles(Math.toRadians(0), Math.toRadians(0), Math.toRadians(45));
+		double[] angles = MatrixHelper.toEulerAngles(q);
+		
+		FloatBuffer boof = BufferUtils.createFloatBuffer(16);
+		GlStateManager.quatToGlMatrix(boof, q);
 		
 		
+		//float[] axisAngle = new AngleKit().convertEulerToAxisAngle((float) Math.toRadians(45), 0, 0);
+		
+		//System.out.println(Math.toDegrees(axisAngle[0]) + " -> (" +  axisAngle[1] + ", " + axisAngle[2] + ", " + axisAngle[3] + ")");
+		
+		//GlStateManager.multMatrix(boof);
+		//angles[0] -= Math.PI;
+		//angles[2] *= -1;
+		
+		//System.out.println(Math.toDegrees(angles[0]) + " | " + Math.toDegrees(angles[1]) +  " | " + Math.toDegrees(angles[2]));
+		
+		
+		GlStateManager.rotate(45f, 0, 1, 0);
+		new ModelChest().renderAll();
+		
+		
+		
+		GlStateManager.popMatrix();
+		
+		*/
 		if(ClientModContext.getContext().getMainHeldWeapon() != null) {
 			
 			GlStateManager.pushMatrix();
@@ -767,11 +822,15 @@ public abstract class CompatibleClientEventHandler {
 		
 		
 		// Hot swaps the Minecraft framebuffer
+		
+	
 		// for an HDR one.
+		/*
 		try {
 			Framebuffer current = Minecraft.getMinecraft().getFramebuffer();
 			if(!(current instanceof HDRFramebuffer)) {
-				Field f = ReflectionHelper.findField(Minecraft.class, "framebufferMc");
+				Field f = CompatibleReflection.findField(Minecraft.class,"framebufferMc", "field_147124_at");
+				//System.out.println("FOUND");
 				f.setAccessible(true);
 				Framebuffer fbo = new HDRFramebuffer(current.framebufferWidth, current.framebufferHeight, true);
 				f.set(Minecraft.getMinecraft(), fbo);
@@ -780,21 +839,9 @@ public abstract class CompatibleClientEventHandler {
 			e.printStackTrace();
 		}
 		
+		*/
 		
-		
-		
-		try {
-			
-			
-			
-			
-		//	System.out.println(ClientModContext.getContext().getMainHeldWeapon().getState());
-		} catch(Exception e) {}
-		
-		if(Minecraft.getMinecraft().world.provider.getSkyRenderer() == null) {
-			//Minecraft.getMinecraft().world.provider.setSkyRenderer(new ModernSkyRenderer());
-			
-		}
+
 		
 		
 		if(getModContext() != null) {
@@ -804,110 +851,19 @@ public abstract class CompatibleClientEventHandler {
 				AnimationModeProcessor.getInstance().legacyMode = true;
 			}
 		}
-	
-		
-		//System.out.println(Mouse.isButtonDown(0));
+
 	
 		if (ClientModContext.getContext().getSafeGlobals().renderingPhase.get() == RenderingPhase.RENDER_PERSPECTIVE)
 			return;
-
-		/*
-		GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW);
-		GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, PROJECTION);
-		GL11.glGetInteger(GL11.GL_VIEWPORT, VIEWPORT);
-
-		Project.gluUnProject(WeaponRenderer.POSITION.get(0), WeaponRenderer.POSITION.get(1), WeaponRenderer.POSITION.get(2), MODELVIEW, PROJECTION, VIEWPORT,
-				NEW_POS);
-		*/
-		Vec3d newPV = new Vec3d(NEW_POS.get(0), NEW_POS.get(1), NEW_POS.get(2)).scale(1);
-		
-		
-		Vec3d offset = new Vec3d(-0.2, -0.2, -0.5);
-		/*
-		if(ClientModContext.getContext().getMainHeldWeapon().isAimed()) {
-			offset = new Vec3d(-0.0, -0.1, -0.5);
-		}*/
-		Vec3d posAdd = offset.rotatePitch((float) -Math.toRadians(Minecraft.getMinecraft().player.rotationPitch)).rotateYaw((float) -Math.toRadians(Minecraft.getMinecraft().player.rotationYaw));
-		
-		Vec3d outwardPos = newPV.subtract(Minecraft.getMinecraft().player.getPositionEyes(1.0f)).normalize().rotatePitch((float) -Math.toRadians(Minecraft.getMinecraft().player.rotationPitch)).rotateYaw((float) Math.toRadians(-Minecraft.getMinecraft().player.rotationYaw)).scale(1.5).add(Minecraft.getMinecraft().player.getPositionEyes(1.0f));
-		newPV = outwardPos.add(posAdd);
-		
-		
-		Vec3d velocity = new Vec3d(-0.4, 0, 0.0);
-		velocity = velocity.rotateYaw((float) Math.toRadians(-Minecraft.getMinecraft().player.rotationYaw));
-		
-		
-		EntityPlayer player = Minecraft.getMinecraft().player;
-		//shellManager.enqueueShell(new Shell(new Vec3d(newPV.x, newPV.y, newPV.z), new Vec3d(90, 0, 0), velocity));
-		
-		
-		/*
-		GL11.glPointSize(10f);
-		DebugRenderer.setupBasicRender();
-		GlStateManager.pushMatrix();
-		GlStateManager.translate(newPV.x, newPV.y, newPV.z);
-		GlStateManager.enableDepth();
-		AnimationModeProcessor.getInstance().renderCross();
-		GlStateManager.popMatrix();
-		//DebugRenderer.renderPoint(newPV, new Vec3d(1, 0, 0));
-		DebugRenderer.destructBasicRender();
-		*/
-		
-		
-		
 		
 		
 
-        
-		
-		
-		
-		
-		/*
-		AnimationData test = BBLoader.loadAnimationData("emfour.animation.json", "animation.M4A1.test", "main");
-		System.out.println(test.getTransitionList().size());
-		*/
-	//	BBLoader.load();
-
-		
-		
-		
-		
-		// Render shell
-		//CompatibleShellRenderer.render(shells.getShells());
 		shellManager.render();
 
 		PROJECTION.rewind();
 		MODELVIEW.rewind();
-		
-		/*
-		GlStateManager.disableLighting();
-		GlStateManager.disableTexture2D();
-
-		GlStateManager.popMatrix();
-		*/
-		
-		//System.out.println(NEW_POS.get(0) + " | " + NEW_POS.get(1) + " | " + NEW_POS.get(2));
 
 		
-
-		
-		
-		// Bloom code
-		if(!Minecraft.getMinecraft().isGuiEnabled() || (getModContext() != null && getModContext().getMainHeldWeapon() == null)) {
-			
-		}
-		
-		//Bloom.doBloom();
-		
-		// If for some reason the player is null, don't engage.
-		/*
-					try {
-						Bloom.doBloom();
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-		*/
 		if(AnimationModeProcessor.getInstance().getFPSMode()) {
 			Minecraft.getMinecraft().setIngameNotInFocus();
 
@@ -924,80 +880,14 @@ public abstract class CompatibleClientEventHandler {
 			
 			return;
 		}
+	
 		
+		
+		PostProcessPipeline.blitDepth();
+		PostProcessPipeline.setupDistortionBufferEffects();
 
-		// JSoundEngine jse = JSoundEngine.getInstance();
-
-		// JSoundEngine.getInstance().killALData();
-
-		// GlStateManager.enableDepth();
-		//
-
-		// Dloom.doPost();
-
-		// GlStateManager.enableDepth();
-		// Bloom.use();
-		/*
-		 * if(1+1==2) return; Minecraft mc = Minecraft.getMinecraft(); EntityPlayer p =
-		 * mc.player; GL11.glPointSize(2f); // GlStateManager.disableTexture2D();
-		 * GlStateManager.enableBlend(); GlStateManager.enableAlpha();
-		 * 
-		 * 
-		 * Vec3d bruh = new Vec3d(-0.13, 0, 1.5).rotatePitch((float)
-		 * Math.toRadians(-p.rotationPitch)).rotateYaw((float)
-		 * Math.toRadians(-p.rotationYaw)); //bruh = Vec3d.ZERO;
-		 * //GlStateManager.disableTexture2D(); GL11.glBegin(GL11.GL_POINTS);
-		 * GL11.glVertex3d(bruh.x, bruh.y+1.5, bruh.z); GL11.glEnd();
-		 * 
-		 * 
-		 * // if(p.ticksExisted%10 != 0) return;
-		 * 
-		 * // GlStateManager.enableDepth(); GlStateManager.disableCull();
-		 * //GlStateManager.disableDepth();
-		 * 
-		 * double ix = p.lastTickPosX + (p.posX - p.lastTickPosX) *
-		 * mc.getRenderPartialTicks(); double iy = p.lastTickPosY + (p.posY -
-		 * p.lastTickPosY) * mc.getRenderPartialTicks(); double iz = p.lastTickPosZ +
-		 * (p.posZ - p.lastTickPosZ) * mc.getRenderPartialTicks();
-		 * 
-		 * GlStateManager.color(1f, 1f, 1f, 0.99f); GlStateManager.translate(-ix, -iy,
-		 * -iz);
-		 * 
-		 * // GlStateManager.translate(-20, 5, 29);
-		 * 
-		 * //GlStateManager.translate(0, 1.5, 0);
-		 * GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
-		 * mc.getTextureManager().bindTexture(FLASH);
-		 * 
-		 * double xOffset = -0.05; double yOffset = -0.06; double distance = 3.0; double
-		 * fposX = ix + (p.getLookVec().x * distance) +
-		 * (compatibility.world(p).rand.nextFloat() * 2.0f - 1) * 0 + (-p.getLookVec().z
-		 * * xOffset); double fposY = iy + (p.getLookVec().y * distance) +
-		 * (compatibility.world(p).rand.nextFloat() * 2.0f - 1) * 0 - yOffset; double
-		 * fposZ = iz + (p.getLookVec().z * distance) +
-		 * (compatibility.world(p).rand.nextFloat() * 2.0f - 1) * 0 + (p.getLookVec().x
-		 * * xOffset);
-		 * 
-		 * MuzzleFlash flash = new MuzzleFlash(new Vec3d(fposX, fposY, fposZ),
-		 * Vec3d.ZERO, p.rotationYaw, p.rotationPitch, 1.0);
-		 * 
-		 * //muzzleFlashStack.push(flash);
-		 * //System.out.println(muzzleFlashStack.size());
-		 * GlStateManager.depthMask(false); while(!muzzleFlashStack.isEmpty()) {
-		 * renderMuzzleFlash(muzzleFlashStack.pop()); } GlStateManager.depthMask(true);
-		 * 
-		 * 
-		 * GlStateManager.enableCull(); GlStateManager.blendFunc(GL11.GL_SRC_ALPHA,
-		 * GL11.GL_ONE_MINUS_SRC_ALPHA); GlStateManager.enableDepth();
-		 * GlStateManager.disableBlend(); GlStateManager.enableTexture2D();
-		 */
-
-		//GlStateManager.enableBlend();
-		Shader bruhmomento = ShaderManager.loadVMWShader("btest");
-		bruhmomento.use();
-
-		//Bloom.renderFboTriangle(Minecraft.getMinecraft().getFramebuffer());
-		bruhmomento.release();
+		PostProcessPipeline.doWorldProcessing();
+		
 		
 	}
 
@@ -1098,6 +988,12 @@ public abstract class CompatibleClientEventHandler {
 	@SubscribeEvent
 	public final void onClientTick(TickEvent.ClientTickEvent event) {
 		onCompatibleClientTick(new CompatibleClientTickEvent(event));
+		
+		
+		// Run recalculations for the weather renderer
+		if(PostProcessPipeline.getWeatherRenderer() != null && Minecraft.getMinecraft().player != null && PostProcessPipeline.getWeatherRenderer().shouldRecalculateRainVectors(Minecraft.getMinecraft().player)) PostProcessPipeline.getWeatherRenderer().recalculateRainVectors(Minecraft.getMinecraft().player, getInterpolatedPlayerCoords());
+						
+		
 		
 		
 		if(event.phase == Phase.START && Minecraft.getMinecraft().player != null && getModContext() != null && getModContext().getMainHeldWeapon() != null) {

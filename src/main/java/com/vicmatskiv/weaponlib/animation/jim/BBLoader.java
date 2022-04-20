@@ -81,6 +81,10 @@ public class BBLoader {
 		
 	}
 	
+	public static int getTotalAnimations() {
+		return actualAnimations.size();
+	}
+	
 	public static AnimationSet getAnimationSet(String animation) {
 		
 		if(!actualAnimations.containsKey(animation)) {
@@ -110,6 +114,10 @@ public class BBLoader {
 			
 			AnimationSet set = actualAnimations.get(animation);
 			SingleAnimation single = set.getSingleAnimation(subName);
+			//System.out.println(single.getTimestamps());
+			//System.out.println("START");
+			//single.bake();
+			//System.out.println("END");
 			if(single == null) {
 				return null;
 			}
@@ -192,6 +200,8 @@ public class BBLoader {
 				
 			//	anim.addBoneData(subEntry.getKey(), animJSON.get(subEntry.getKey()).getAsJsonObject());
 			}
+			
+			
 			
 			anim.setDuration(appointedDuration);
 			

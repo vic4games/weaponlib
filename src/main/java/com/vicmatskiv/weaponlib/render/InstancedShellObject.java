@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.util.vector.Quaternion;
 
+import com.google.gson.JsonObject;
 import com.vicmatskiv.weaponlib.animation.MatrixHelper;
 import com.vicmatskiv.weaponlib.render.bgl.GLCompatible;
 import com.vicmatskiv.weaponlib.render.bgl.ModernUtil;
@@ -19,6 +20,7 @@ import com.vicmatskiv.weaponlib.shader.jim.Uniform;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
 public class InstancedShellObject extends ModelInstancedObject<ShellManager> {
 	private Type type;

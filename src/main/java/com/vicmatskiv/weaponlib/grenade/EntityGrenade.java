@@ -106,6 +106,7 @@ public class EntityGrenade extends AbstractEntityGrenade {
 
     private EntityGrenade(ModContext modContext, ItemGrenade itemGrenade, EntityLivingBase thrower, float velocity, float gravityVelocity, float rotationSlowdownFactor) {
         super(modContext, itemGrenade, thrower, velocity, gravityVelocity, rotationSlowdownFactor);
+        
     }
 
     public EntityGrenade(World world) {
@@ -132,9 +133,11 @@ public class EntityGrenade extends AbstractEntityGrenade {
 
     @Override
     public void onGrenadeUpdate() {
+    	  
         if (!compatibility.world(this).isRemote && explosionTimeout > 0
                 && System.currentTimeMillis() > activationTimestamp + explosionTimeout) {
-            explode();
+        
+          explode();
             return;
         }
     }
@@ -150,6 +153,7 @@ public class EntityGrenade extends AbstractEntityGrenade {
 
     private void explode() {
 
+    		
         logger.debug("Exploding {}", this);
 
         Explosion.createServerSideExplosion(modContext, compatibility.world(this), this,

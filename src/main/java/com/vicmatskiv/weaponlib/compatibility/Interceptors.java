@@ -14,6 +14,8 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL12;
+import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GLSync;
 import org.lwjgl.util.vector.Matrix4f;
@@ -39,6 +41,8 @@ import com.vicmatskiv.weaponlib.inventory.CustomPlayerInventory;
 import com.vicmatskiv.weaponlib.numerical.LissajousCurve;
 import com.vicmatskiv.weaponlib.render.Bloom;
 import com.vicmatskiv.weaponlib.render.NewScreenshakingManager;
+import com.vicmatskiv.weaponlib.render.Shaders;
+import com.vicmatskiv.weaponlib.render.bgl.PostProcessPipeline;
 import com.vicmatskiv.weaponlib.render.cam.NaturalCamera;
 import com.vicmatskiv.weaponlib.shader.jim.Shader;
 import com.vicmatskiv.weaponlib.shader.jim.ShaderManager;
@@ -67,6 +71,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 //import net.minecraft.util.MathHelper;
 import net.minecraft.util.EnumHandSide;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.gen.NoiseGeneratorImproved;
@@ -599,13 +604,9 @@ public class Interceptors {
 		GlStateManager.disableBlend();
 		
 		//GlStateManager.enableBlend();
-		/*
-		Shader shad = ShaderManager.loadVMWShader("post");
-		shad.use();
-		Framebuffer boof = Minecraft.getMinecraft().getFramebuffer();
-		Bloom.renderFboTriangle(boof, boof.framebufferWidth, boof.framebufferHeight);
-		shad.release();
-		*/
+		
+		PostProcessPipeline.doPostProcess();
+		
         
         return false;
     }

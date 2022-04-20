@@ -31,6 +31,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.debug.DebugRenderer;
 import com.vicmatskiv.weaponlib.render.Bloom;
 import com.vicmatskiv.weaponlib.render.ModelRenderTool;
+import com.vicmatskiv.weaponlib.render.Shaders;
 import com.vicmatskiv.weaponlib.shader.jim.Shader;
 import com.vicmatskiv.weaponlib.shader.jim.ShaderManager;
 
@@ -794,13 +795,13 @@ public class AnimationModeProcessor {
 		
 		//GlStateManager.disableDepth();
 		GL11.glLineWidth(1.5f);
-		Shader axisShader = ShaderManager.loadVMWShader("axis");
-		axisShader.use();
+		
+		Shaders.axis.use();
 		
 		float panValue = (float) pan.lengthVector()*1.7f;
 		
 		panValue = Math.max(45f, panValue);
-		axisShader.uniform1f("zoom", panValue);
+		Shaders.axis.uniform1f("zoom", panValue);
 		
 		GlStateManager.enableAlpha();
 		GlStateManager.enableBlend();
@@ -813,7 +814,7 @@ public class AnimationModeProcessor {
 		renderLightAxisRing(new Vec3d(0, 1, 0), new Color(0x18dcff), size, innerSize, (colorSelected == -1 || colorSelected == 2), (colorSelected == 2 || colorHover == 2));
 		
 		
-		axisShader.release();
+		Shaders.axis.release();
 		Bloom.unapplyMultisample();
 		/*
 		if (colorSelected == -1 || colorSelected == 3) {
