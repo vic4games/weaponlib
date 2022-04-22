@@ -3121,6 +3121,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		}
 		
 		
+		//ClientEventHandler.uploadFlash(Minecraft.getMinecraft().player.getEntityId());
+		
 		boolean shot = false;
 		if(renderContext.getPlayer() != null && (ClientEventHandler.checkShot(renderContext.getPlayer().getEntityId()) || AnimationGUI.getInstance().forceFlash.isState())) {
 			shot = true;

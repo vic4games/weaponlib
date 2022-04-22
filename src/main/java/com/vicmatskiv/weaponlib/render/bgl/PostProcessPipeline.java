@@ -14,6 +14,8 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.ARBDepthTexture;
 import org.lwjgl.opengl.ARBTextureBorderClamp;
 import org.lwjgl.opengl.ARBTextureMirrorClampToEdge;
+import org.lwjgl.opengl.ARBTextureRectangle;
+import org.lwjgl.opengl.ARBTextureRg;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL13;
@@ -102,6 +104,7 @@ public class PostProcessPipeline {
 
 	private static int depthBuffer = -1;
 	private static int depthTexture = -1;
+	private static int fauxColorTexture = -1;
 
 	private static final ModernWeatherRenderer modernWeatherRenderer = new ModernWeatherRenderer();
 
@@ -254,30 +257,102 @@ public class PostProcessPipeline {
 		if (depthTexture == -1)
 			depthTexture = GL11.glGenTextures();
 
+		if(fauxColorTexture == -1)
+			fauxColorTexture = GL11.glGenTextures();
+		
+		//GL11.glDrawBuffer(GL11.GL_NONE);
 		// System.out.println(depthBuffer);
 		depthBuffer = OpenGlHelper.glGenFramebuffers();
 		OpenGlHelper.glBindFramebuffer(OpenGlHelper.GL_FRAMEBUFFER, depthBuffer);
-
+		//System.out.println("Flag 1: " + GL11.glGetError());
 		
+		//GL11.glDrawBuffer(mode);
 		
 		GlStateManager.bindTexture(depthTexture);
 		GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GLCompatible.GL_DEPTH_COMPONENT24, width, height, 0, GL11.GL_DEPTH_COMPONENT,
 				GL11.GL_FLOAT, (FloatBuffer) null);
+	
+		
+		/*
+		int fuckyou = GL11.glGenTextures();
+		//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+		
+		GlStateManager.bindTexture(fuckyou);
+		GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGB, width, height, 0, GL11.GL_RGB,
+				GL11.GL_FLOAT, (FloatBuffer) null);
+		OpenGlHelper.glFramebufferTexture2D(OpenGlHelper.GL_FRAMEBUFFER, OpenGlHelper.GL_COLOR_ATTACHMENT0, GL11.GL_TEXTURE_2D, fuckyou, 0);
+		*/
+		
+		//System.out.println("Flag 2: " + GL11.glGetError());
+		
+		
 		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
 		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
 		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
 		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
 		OpenGlHelper.glFramebufferTexture2D(OpenGlHelper.GL_FRAMEBUFFER, OpenGlHelper.GL_DEPTH_ATTACHMENT,
 				GL11.GL_TEXTURE_2D, depthTexture, 0);
-		int bruh = OpenGlHelper.glCheckFramebufferStatus(OpenGlHelper.GL_FRAMEBUFFER);
+		
+	
+		// Stupid OpenGL spec requires this
+		// for older computers
+		GlStateManager.bindTexture(fauxColorTexture);
+		GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGB, width, height, 0, GL11.GL_RGB,
+				GL11.GL_FLOAT, (FloatBuffer) null);
+		OpenGlHelper.glFramebufferTexture2D(OpenGlHelper.GL_FRAMEBUFFER, OpenGlHelper.GL_COLOR_ATTACHMENT0, GL11.GL_TEXTURE_2D, fauxColorTexture, 0);
+		
+		
+		
+		
+		//GL30.GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER
+		//System.out.println("Flag 3: " + GL11.glGetError());
+		//int bruh = OpenGlHelper.glCheckFramebufferStatus(OpenGlHelper.GL_FRAMEBUFFER);
+		 int i = OpenGlHelper.glCheckFramebufferStatus(OpenGlHelper.GL_FRAMEBUFFER);
+
+	        if (i != OpenGlHelper.GL_FRAMEBUFFER_COMPLETE)
+	        {
+	            if (i == OpenGlHelper.GL_FB_INCOMPLETE_ATTACHMENT)
+	            {
+	            	System.out.println("Fucking incomplete framebuffer shit");
+	                //throw new RuntimeException("GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
+	            }
+	            else if (i == OpenGlHelper.GL_FB_INCOMPLETE_MISS_ATTACH)
+	            {
+	            	System.out.println("Stupid fucking missing attachment");
+	               // throw new RuntimeException("GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT");
+	            }
+	            else if (i == OpenGlHelper.GL_FB_INCOMPLETE_DRAW_BUFFER)
+	            {
+	            	System.out.println("i'm fucking stupid and can't draw");
+	               // throw new RuntimeException("GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER");
+	            }
+	            else if (i == OpenGlHelper.GL_FB_INCOMPLETE_READ_BUFFER)
+	            {
+	            	System.out.println("im fuking illerate and can't read buffer lol lmao");
+	              //  throw new RuntimeException("GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER");
+	            }
+	            else
+	            {
+	            	System.out.println("Unknown status because fuck you");
+	               // throw new RuntimeException("glCheckFramebufferStatus returned unknown status:" + i);
+	            }
+	        } else {
+	        	System.out.println("Absolute fucking success, fuck you Apple.");
+	        }
+	        
+	      //  GL11.glGetError();
+		/*
 		if (bruh != OpenGlHelper.GL_FRAMEBUFFER_COMPLETE) {
 			System.out.println("Failed to create depth texture framebuffer! This is an error!");
+		} else {
+			System.out.println("Succesfully created DEPTH framebuffer!");
 		}
 
+		*/
 	}
 
 	public static void blitDepth() {
-
+		
 		if (depthBuffer == -1)
 			recreateDepthFramebuffer();
 		// recreateDepthFramebuffer();

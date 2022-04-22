@@ -236,7 +236,7 @@ public class GLCompatible {
 			GL_VERTEX_ARRAY_BINDING = APPLEVertexArrayObject.GL_VERTEX_ARRAY_BINDING_APPLE;
 			vaoType = APPLE;
 		}
-		System.out.println("VAO TYPE: " + vaoType);
+		//System.out.println("VAO TYPE: " + vaoType);
 
 		if (cap.OpenGL30) {
 			fboType = 0;

@@ -599,7 +599,7 @@ public class Interceptors {
         nsm.applyHead();
         //nsm.update();
         
-      //  Bloom.doBloom();
+        Bloom.doBloom();
 		GlStateManager.disableLighting();
 		GlStateManager.disableBlend();
 		
