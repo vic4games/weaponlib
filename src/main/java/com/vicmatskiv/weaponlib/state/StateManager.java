@@ -177,7 +177,7 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 						(s, f, t, p) -> {
 							
 							//System.out.println("hi gamers " + (p != null));
-							System.out.println(t);
+							//System.out.println(t);
 							permitManager.request(
 								p != null ? p : permitProvider.apply(t, safeCast(s)), s, this::applyPermit);
 								return null;

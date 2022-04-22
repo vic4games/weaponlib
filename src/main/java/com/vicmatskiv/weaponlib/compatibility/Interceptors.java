@@ -599,7 +599,7 @@ public class Interceptors {
         nsm.applyHead();
         //nsm.update();
         
-        Bloom.doBloom();
+      //  Bloom.doBloom();
 		GlStateManager.disableLighting();
 		GlStateManager.disableBlend();
 		
@@ -797,6 +797,17 @@ public class Interceptors {
         	pitchDelta = 0;
     	}
     	
+    
+    	
+    	if(ClientValueRepo.recoilWoundY > 0) {
+    		ClientValueRepo.recoilWoundY -= Math.abs(pitchDelta) * 0.15;
+    		if(ClientValueRepo.recoilWoundY < 0) {
+    			ClientValueRepo.recoilWoundY = 0;
+    		}
+    	}
+    	
+    //	System.out.println(ClientValueRepo.recoilWoundY);
+    //	ClientValueRepo.recoilWoundY -= pitchDelta*0.2;
     	
     	
     	//ClientValueRepo.gunPow.velocity += yawDelta*0.02;

@@ -91,6 +91,8 @@ public class ClientValueRepo {
 
 	public static int gunTick = 0;
 	
+	public static double recoilWoundX, recoilWoundY;
+	
 	
 	public static void fireWeapon(PlayerWeaponInstance pwi) {
 	

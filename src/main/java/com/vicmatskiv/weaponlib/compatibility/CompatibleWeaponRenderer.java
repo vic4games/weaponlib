@@ -30,7 +30,7 @@ import org.lwjgl.opengl.GLSync;
 import com.google.common.collect.Maps;
 import com.vicmatskiv.weaponlib.AttachmentCategory;
 import com.vicmatskiv.weaponlib.ClientModContext;
-import com.vicmatskiv.weaponlib.ModelRenderer;
+
 import com.vicmatskiv.weaponlib.Part;
 import com.vicmatskiv.weaponlib.PlayerWeaponInstance;
 import com.vicmatskiv.weaponlib.RenderContext;
@@ -82,6 +82,7 @@ import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.model.ModelBox;
 import net.minecraft.client.model.ModelLeashKnot;
 import net.minecraft.client.model.ModelPlayer;
+import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
@@ -118,7 +119,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-
+		
 
 public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer implements IBakedModel {
 
@@ -1250,6 +1251,9 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 
 	static <T> void renderRightArm(EntityLivingBase player, RenderContext<T> renderContext,
 			Positioner<Part, RenderContext<T>> positioner) {
+		
+		
+		
 		Render<AbstractClientPlayer> entityRenderObject = Minecraft.getMinecraft().getRenderManager()
 				.getEntityRenderObject((AbstractClientPlayer) player);
 		RenderPlayer render = (RenderPlayer) entityRenderObject;
@@ -1410,6 +1414,8 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 	static <T> void renderLeftArm(EntityLivingBase player, RenderContext<T> renderContext,
 			Positioner<Part, RenderContext<T>> positioner) {
 
+		//if(true) return;
+		
 		Render<AbstractClientPlayer> entityRenderObject = Minecraft.getMinecraft().getRenderManager()
 				.getEntityRenderObject((AbstractClientPlayer) player);
 		RenderPlayer render = (RenderPlayer) entityRenderObject;
@@ -1503,14 +1509,26 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 		ItemStack itemstack = getItemStackFromSlot(player, EntityEquipmentSlot.CHEST);
 
 		if (itemstack != null && itemstack.getItem() instanceof ItemArmor) {
-			// ItemArmor itemarmor = (ItemArmor)itemstack.getItem();
 			render.bindTexture(getArmorResource(player, itemstack, EntityEquipmentSlot.CHEST, null));
-
 			ModelBiped armorModel = getArmorModelHook(player, itemstack, EntityEquipmentSlot.CHEST, null);
 			if (armorModel != null) {
 				renderLeftArm(armorModel, (AbstractClientPlayer) player);
 			}
 		}
+		
+		/*
+		 * 	ItemStack itemstack = getItemStackFromSlot(player, EntityEquipmentSlot.CHEST);
+
+		if (itemstack != null && itemstack.getItem() instanceof ItemArmor) {
+			// ItemArmor itemarmor = (ItemArmor)itemstack.getItem();
+			render.bindTexture(getArmorResource(player, itemstack, EntityEquipmentSlot.CHEST, null));
+
+			ModelBiped armorModel = getArmorModelHook(player, itemstack, EntityEquipmentSlot.CHEST, null);
+			if (armorModel != null) {
+				renderRightArm(armorModel, (AbstractClientPlayer) player);
+			}
+		}
+		 */
 
 		// GlStateManager.enableTexture2D();
 
@@ -1603,6 +1621,49 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 		return newBiped;
 	}
 	
+	public static class ModelRendererPreset {
+		public boolean isHidden, mirror, showModel;
+		public float offsetX, offsetY, offsetZ;
+		public float rotateAngleX, rotateAngleY, rotateAngleZ;
+		public float rotationPointX, rotationPointY, rotationPointZ;
+		public float textureHeight, textureWidth;
+		
+		public ModelRendererPreset(ModelRenderer mr) {
+			isHidden = mr.isHidden;
+			showModel = mr.showModel;
+			mirror = mr.mirror;
+			offsetX = mr.offsetX;
+			offsetY = mr.offsetY;
+			offsetZ = mr.offsetZ;
+			rotateAngleX = mr.rotateAngleX;
+			rotateAngleY = mr.rotateAngleY;
+			rotateAngleZ = mr.rotateAngleZ;
+			rotationPointX = mr.rotationPointX;
+			rotationPointY = mr.rotationPointY;
+			rotationPointZ = mr.rotationPointZ;
+			textureHeight = mr.textureHeight;
+			textureWidth = mr.textureWidth;
+		}
+		
+		public void set(ModelRenderer mr) {
+			mr.isHidden = isHidden;
+			mr.showModel = showModel;
+			mr.mirror = mirror;
+			mr.offsetX = offsetX;
+			mr.offsetY = offsetY;
+			mr.offsetZ = offsetZ;
+			mr.rotateAngleX = rotateAngleX;
+			mr.rotateAngleY = rotateAngleY;
+			mr.rotateAngleZ = rotateAngleZ;
+			mr.rotationPointX = rotationPointX;
+			mr.rotationPointY = rotationPointY;
+			mr.rotationPointZ = rotationPointZ;
+			mr.textureHeight = textureHeight;
+			mr.textureWidth = textureWidth;
+		}
+	}
+ 	
+	
 	public static net.minecraft.client.model.ModelRenderer cloneModelRenderer(ModelBase base, net.minecraft.client.model.ModelRenderer children) {
 		
 		net.minecraft.client.model.ModelRenderer newModel = new net.minecraft.client.model.ModelRenderer(base);
@@ -1635,51 +1696,65 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 	public static void renderLeftArm(ModelBiped modelplayer, AbstractClientPlayer clientPlayer) {
 		// GlStateManager.color(1.0F, 1.0F, 1.0F);
 		
-		
+		/*
 		if(acp == null || acp != clientPlayer) {
 			acp = clientPlayer;
 			backupModel = duplicateBiped(modelplayer);
-		}
+		}*/
 		
-		setModelVisibilities(backupModel, clientPlayer);
+		ModelRendererPreset preset = new ModelRendererPreset(modelplayer.bipedLeftArm);
+		
+		ModelBiped toRender = modelplayer;
+		//if(!(modelplayer instanceof ModelPlayer)) backupModel = modelplayer;
+		
+		setModelVisibilities(toRender, clientPlayer);
 
 		GlStateManager.enableBlend();
-		backupModel.isSneak = false;
-		backupModel.swingProgress = 0.0F;
-		backupModel.setRotationAngles(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0625F, clientPlayer);
+		toRender.isSneak = false;
+		toRender.swingProgress = 0.0F;
+		toRender.setRotationAngles(0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0625F, clientPlayer);
 
 		if (!AnimationModeProcessor.getInstance().isLegacyMode() && Minecraft.getMinecraft().gameSettings.thirdPersonView == 0) {
 			
-			backupModel.bipedLeftArm.rotateAngleX = (float) Math.toRadians(-90);
-			backupModel.bipedLeftArm.rotateAngleY = 0f;
-			backupModel.bipedLeftArm.rotateAngleZ = 0f;
+			toRender.bipedLeftArm.rotateAngleX = (float) Math.toRadians(-90);
+			toRender.bipedLeftArm.rotateAngleY = 0f;
+			toRender.bipedLeftArm.rotateAngleZ = 0f;
 		} else {
-			backupModel.bipedLeftArm.rotateAngleX = 0.0F;
+			toRender.bipedLeftArm.rotateAngleX = 0.0F;
 			
 		}
 		
 		
 		if(AnimationModeProcessor.getInstance().isLegacyMode() || Minecraft.getMinecraft().gameSettings.thirdPersonView != 0) {
 			
-			backupModel.bipedLeftArm.offsetX = 0f;
-			backupModel.bipedLeftArm.offsetY = 0f;
-			backupModel.bipedLeftArm.offsetZ = 0f;
+			toRender.bipedLeftArm.offsetX = 0f;
+			toRender.bipedLeftArm.offsetY = 0f;
+			toRender.bipedLeftArm.offsetZ = 0f;
 		} else {
 			
-			backupModel.bipedLeftArm.offsetX = -0.375f;
-			backupModel.bipedLeftArm.offsetY = -0.125f;
-			backupModel.bipedLeftArm.offsetZ = -0.15f;
+			toRender.bipedLeftArm.offsetX = -0.375f;
+			toRender.bipedLeftArm.offsetY = -0.125f;
+			toRender.bipedLeftArm.offsetZ = -0.15f;
 		}
 		
 		
+		//modelplayer.bipedLeftArm.render(0.0625F);
+
 		
+		//System.out.println(modelplayer instanceof ModelPlayer);
+		toRender.bipedLeftArm.render(0.0625F);
 		
+		preset.set(toRender.bipedLeftArm);
 		
-		backupModel.bipedLeftArm.render(0.0625F);
 		if (modelplayer instanceof ModelPlayer) {
-			((ModelPlayer) modelplayer).bipedLeftArmwear.rotateAngleX = 0.0F;
-			 ((ModelPlayer) modelplayer).bipedLeftArmwear.render(0.0625F);
+			//System.out.println("USSY");
+			//((ModelPlayer) modelplayer).bipedLeftArmwear.rotateAngleX = 0.0F;
+			 //((ModelPlayer) modelplayer).bipedLeftArmwear.render(0.0625F);
 		}
+		
+		//((ModelPlayer) modelplayer).bipedLeftArmwear.rotateAngleX = 0.0F;
+		//((ModelPlayer) modelplayer).bipedLeftArmwear.render(0.0625F);
+	
 
 		GlStateManager.disableBlend();
 	}

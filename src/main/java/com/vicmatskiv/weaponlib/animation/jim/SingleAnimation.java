@@ -85,7 +85,7 @@ public class SingleAnimation {
 				} else {
 					float trueDelta = AnimationData.PACE*(getTimestamps().get(t) - getTimestamps().get(t - 1));
 					
-					System.out.println("(" + getTimestamps().get(t-1) + ") -> (" + getTimestamps().get(t) + ") " + trueDelta);
+					//System.out.println("(" + getTimestamps().get(t-1) + ") -> (" + getTimestamps().get(t) + ") " + trueDelta);
 					data.bbTransition.get(getTimestamps().get(t)).setTimestamp(trueDelta);
 				}
 			}

@@ -7,6 +7,7 @@ import org.lwjgl.opengl.APPLEFloatPixels;
 import org.lwjgl.opengl.APPLEVertexArrayObject;
 import org.lwjgl.opengl.ARBColorBufferFloat;
 import org.lwjgl.opengl.ARBComputeShader;
+import org.lwjgl.opengl.ARBDepthTexture;
 import org.lwjgl.opengl.ARBDrawInstanced;
 import org.lwjgl.opengl.ARBFramebufferObject;
 import org.lwjgl.opengl.ARBInstancedArrays;
@@ -25,6 +26,7 @@ import org.lwjgl.opengl.EXTFramebufferMultisample;
 import org.lwjgl.opengl.EXTFramebufferMultisampleBlitScaled;
 import org.lwjgl.opengl.EXTFramebufferObject;
 import org.lwjgl.opengl.EXTFramebufferSRGB;
+import org.lwjgl.opengl.GL14;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL31;
@@ -62,6 +64,8 @@ public class GLCompatible {
 	public static int GL_DEPTH_ATTACHMENT;
 	public static int GL_RENDERBUFFER;
 	public static int GL_RGBA16F;
+	
+	public static int GL_DEPTH_COMPONENT24;
 
 	public static int GL_TEXTURE_2D_MULTISAMPLE;
 
@@ -272,6 +276,14 @@ public class GLCompatible {
 		} else {
 			System.out.println("Floating point texture component not supported");
 		}
+		
+		
+		
+		if(cap.OpenGL14) {
+			GL_DEPTH_COMPONENT24 = GL14.GL_DEPTH_COMPONENT24;
+		} else if(cap.GL_ARB_depth_texture) {
+			GL_DEPTH_COMPONENT24 = ARBDepthTexture.GL_DEPTH_COMPONENT24_ARB;
+		} 
 
 		
 		

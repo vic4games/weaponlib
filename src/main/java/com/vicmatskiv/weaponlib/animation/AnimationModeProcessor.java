@@ -249,6 +249,7 @@ public class AnimationModeProcessor {
 			if(this.pwi == null || pwi != ClientModContext.getContext().getMainHeldWeapon()) {
 				Builder builder = getCurrentWeaponRenderBuilder();
 				pwi = ClientModContext.getContext().getMainHeldWeapon();
+				//System.out.println("BUILDER: " + builder + " | PWI: " + pwi);
 				backupFP = builder.firstPersonTransform.copy();
 				backupFPL = builder.firstPersonLeftHandTransform.copy();
 				backupFPR = builder.firstPersonRightHandTransform.copy();

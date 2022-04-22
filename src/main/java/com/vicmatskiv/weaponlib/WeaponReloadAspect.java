@@ -171,7 +171,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 	    System.currentTimeMillis() >= weaponInstance.getStateUpdateTimestamp() + UNLOAD_TIMEOUT;
 	    
 	private static Predicate<PlayerWeaponInstance> awaitFurtherLoadInstructionCompleted = weaponInstance ->
-        System.currentTimeMillis() >= weaponInstance.getStateUpdateTimestamp() + 195;
+        System.currentTimeMillis() >= weaponInstance.getStateUpdateTimestamp() + 295;
 		
   
         
@@ -284,13 +284,11 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 	    
 	    .in(this)
 	    	.change(WeaponState.READY).to(WeaponState.COMPOUND_RELOAD_EMPTY)
-	    
 	    	.manual()
 	    	
-	    	 .in(this)
-		    	.change(WeaponState.READY).to(WeaponState.TACTICAL_RELOAD)
-		    
-		    	.manual()
+	    .in(this)
+		    .change(WeaponState.READY).to(WeaponState.TACTICAL_RELOAD)
+		    .manual()
 	    
 	    /*
 	    .in(this)
@@ -714,7 +712,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 		
 		
 		
-		System.out.println("hi");
+		//System.out.println("hi");
 		ItemStack weaponItemStack = instance.getItemStack();
 		EntityPlayer player = (EntityPlayer) instance.getPlayer();
 		Weapon weapon = instance.getWeapon();
@@ -776,7 +774,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 
 	@SuppressWarnings("unchecked")
 	private void processLoadPermit(LoadPermit p, PlayerWeaponInstance weaponInstance) {
-		System.out.println("Processing load permit " + weaponInstance.getPlayer().world.isRemote);
+	//	System.out.println("Processing load permit " + weaponInstance.getPlayer().world.isRemote);
 		logger.debug("Processing load permit on server for {}", weaponInstance);
 
 		ItemStack weaponItemStack = weaponInstance.getItemStack();
@@ -873,7 +871,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 		Weapon weapon = (Weapon) weaponItemStack.getItem();
 		if (compatibility.getTagCompound(weaponItemStack) != null /* && !player.isSprinting()*/) {
 			ItemAttachment<Weapon> attachment = modContext.getAttachmentAspect().removeAttachment(AttachmentCategory.MAGAZINE, weaponInstance);
-			System.out.println("Unloading " + attachment);
+			//System.out.println("Unloading " + attachment);
 			if(attachment == null) {
 			    // Attachment can be null if it's in use and cannot be removed
 			    p.setStatus(Status.DENIED);

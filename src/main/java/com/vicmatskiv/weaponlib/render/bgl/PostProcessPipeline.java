@@ -11,16 +11,21 @@ import java.util.ArrayList;
 import javax.management.modelmbean.ModelMBeanNotificationBroadcaster;
 
 import org.lwjgl.BufferUtils;
+import org.lwjgl.opengl.ARBDepthTexture;
+import org.lwjgl.opengl.ARBTextureBorderClamp;
+import org.lwjgl.opengl.ARBTextureMirrorClampToEdge;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL14;
+import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GLSync;
 import org.lwjgl.util.glu.GLU;
 import org.lwjgl.util.glu.Project;
 import org.lwjgl.util.vector.Matrix4f;
 
+import com.vicmatskiv.weaponlib.animation.AnimationModeProcessor;
 import com.vicmatskiv.weaponlib.animation.ClientValueRepo;
 import com.vicmatskiv.weaponlib.animation.gui.AnimationGUI;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
@@ -253,8 +258,10 @@ public class PostProcessPipeline {
 		depthBuffer = OpenGlHelper.glGenFramebuffers();
 		OpenGlHelper.glBindFramebuffer(OpenGlHelper.GL_FRAMEBUFFER, depthBuffer);
 
+		
+		
 		GlStateManager.bindTexture(depthTexture);
-		GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL14.GL_DEPTH_COMPONENT24, width, height, 0, GL11.GL_DEPTH_COMPONENT,
+		GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GLCompatible.GL_DEPTH_COMPONENT24, width, height, 0, GL11.GL_DEPTH_COMPONENT,
 				GL11.GL_FLOAT, (FloatBuffer) null);
 		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
 		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
@@ -474,6 +481,8 @@ public class PostProcessPipeline {
 		
 		//if(true) return;
 		
+		//Shaders.postWorld = ShaderManager.loadVMWShader("postworld");
+		
 		// Check if buffers need to be remade
 		if (shouldRecreateFramebuffer())
 			recreateFramebuffers();
@@ -492,20 +501,28 @@ public class PostProcessPipeline {
 		fillGLBuffers();
 
 		// Copy the Minecraft framebuffer to the secondary world buffer
-		GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, mc.getFramebuffer().framebufferObject);
-		GL30.glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, secondaryWorldBuffer.framebufferObject);
-		GL30.glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
+		OpenGlHelper.glBindFramebuffer(GLCompatible.GL_READ_FRAMEBUFFER, mc.getFramebuffer().framebufferObject);
+		OpenGlHelper.glBindFramebuffer(GLCompatible.GL_DRAW_FRAMEBUFFER, secondaryWorldBuffer.framebufferObject);
+		GLCompatible.glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
 
 		Shaders.postWorld.use();
 		Shaders.postWorld.uniform1i("depthBuf", 6);
 		Shaders.postWorld.uniform1f("fogIntensity", fogIntensity);
 		Shaders.postWorld.uniform3f("baseFogColor", 0.6f, 0.6f, 0.6f);
-
+		//Shaders.postWorld.uniform1f("help", 0.2f);
+		//Shaders.postWorld.uniform1f("joe[0]", 1.0f);
+		
+		//GL20.glUniform1f(GL20.getloc, v0);
+		
+		
+		
+		//Shaders.post.uniform3f("fk3f[0]", 5f, 0f, 0f);
+		
+		//Shaders.post.uniform1f("help", 0.0f);
 		// Send light data to the shader and
 		// update the light manager
 		lightManager.updateUniforms(Shaders.postWorld);
 		lightManager.update();
-		
 		
 		Vec3d interpolatedPosition = CompatibleClientEventHandler.getInterpolatedPlayerCoords();
 		Shaders.postWorld.uniform3f("cameraPosition", (float) interpolatedPosition.x, (float) interpolatedPosition.y,
@@ -517,7 +534,7 @@ public class PostProcessPipeline {
 		
 
 		// Render framebuffer back to main
-		GL30.glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, mc.getFramebuffer().framebufferObject);
+		OpenGlHelper.glBindFramebuffer(GLCompatible.GL_DRAW_FRAMEBUFFER, mc.getFramebuffer().framebufferObject);
 		secondaryWorldBuffer.framebufferRender(mc.displayWidth, mc.displayHeight);
 		Shaders.postWorld.release();
 
@@ -740,7 +757,10 @@ public class PostProcessPipeline {
 	 */
 	public static void doPostProcess() {
 
-	
+		//if(true) return;
+		
+		if(AnimationModeProcessor.getInstance().getFPSMode()) return;
+		
 		// Checks to see if the framebuffers
 		// should be remade in the case of
 		// a screen resize
@@ -774,6 +794,9 @@ public class PostProcessPipeline {
 
 		Shaders.post.use();
 
+		
+		
+		
 		// Send buffers as uniforms
 		Shaders.post.uniform1i("rainBuf", 3);
 		Shaders.post.uniform1i("distortionTex", 4);

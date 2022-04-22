@@ -271,7 +271,7 @@ public class Bloom {
 	}
 	
 	public static void use() {
-		
+	// 	System.out.println("hi");
 		/*
 		runDownsampler();
 		GlStateManager.enableBlend();

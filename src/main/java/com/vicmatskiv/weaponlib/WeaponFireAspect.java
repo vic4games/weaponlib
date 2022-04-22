@@ -285,6 +285,8 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
         float rotationYawFactor = -1.0f + random.nextFloat() * 2.0f;
         player.rotationYaw = player.rotationYaw + weaponInstance.getRecoil() * rotationYawFactor;
 		
+        ClientValueRepo.recoilWoundY += weaponInstance.getRecoil();
+        
 
         Boolean muzzleFlash = modContext.getConfigurationManager().getProjectiles().isMuzzleEffects();
         if(muzzleFlash == null || muzzleFlash) {
@@ -410,13 +412,17 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
 
         if(playerWeaponInstance != null) {
         	
+        	Vec3d pos = player.getPositionEyes(1.0f);
+        	Vec3d weaponDir = new Vec3d(0, -0.1, 1).rotatePitch((float) Math.toRadians(-player.rotationPitch)).rotateYaw((float) Math.toRadians(-player.rotationYaw));
+        	
         	Vec3d velocity = new Vec3d(-0.3, 0.1, 0.0);
     		velocity = velocity.rotateYaw((float) Math.toRadians(-player.rotationYaw));
-        	modContext.getChannel().getChannel().sendToAllAround(new BulletShellClient(playerWeaponInstance.getWeapon().getShellType(), player.getPositionEyes(1.0f), velocity), tp);
+        	modContext.getChannel().getChannel().sendToAllAround(new BulletShellClient(playerWeaponInstance.getWeapon().getShellType(), pos.add(weaponDir), velocity), tp);
              
 
         }
         
+       
         
         
         

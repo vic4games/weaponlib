@@ -190,7 +190,7 @@ public class BBLoader {
 			// load all the bone data into the single animation
 			
 			float appointedDuration = animationsJSON.get(entry.getKey()).getAsJsonObject().get("animation_length").getAsFloat();
-			System.out.println("APPOINTED DURATION: " + appointedDuration);
+			//System.out.println("APPOINTED DURATION: " + appointedDuration);
 			
 			JsonObject animJSON = animationsJSON.get(entry.getKey()).getAsJsonObject().get("bones").getAsJsonObject();
 			for(Entry<String, JsonElement> subEntry : animJSON.entrySet()) {

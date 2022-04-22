@@ -30,6 +30,7 @@ import org.apache.commons.lang3.SystemUtils;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
+import org.lwjgl.opencl.CLKernel;
 import org.lwjgl.opengl.ARBVertexArrayObject;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
@@ -465,7 +466,7 @@ public abstract class CompatibleClientEventHandler {
 		System.out.println();
 		*/
 		ClientValueRepo.renderUpdate(getModContext());
-		
+		//System.out.println(Minecraft.getMinecraft().getFramebuffer() instanceof HDRFramebuffer);
 
 		PostProcessPipeline.setWorldElements();
 		
@@ -825,7 +826,7 @@ public abstract class CompatibleClientEventHandler {
 		
 	
 		// for an HDR one.
-		/*
+		
 		try {
 			Framebuffer current = Minecraft.getMinecraft().getFramebuffer();
 			if(!(current instanceof HDRFramebuffer)) {
@@ -839,7 +840,7 @@ public abstract class CompatibleClientEventHandler {
 			e.printStackTrace();
 		}
 		
-		*/
+		
 		
 
 		
@@ -990,8 +991,16 @@ public abstract class CompatibleClientEventHandler {
 		onCompatibleClientTick(new CompatibleClientTickEvent(event));
 		
 		
+		EntityPlayer player = Minecraft.getMinecraft().player;
+		if(player != null && event.phase == Phase.END) {
+			double yAmount = ClientValueRepo.recoilWoundY * 0.2;
+			player.rotationPitch += yAmount;
+			ClientValueRepo.recoilWoundY -= yAmount;
+			
+		}
+		
 		// Run recalculations for the weather renderer
-		if(PostProcessPipeline.getWeatherRenderer() != null && Minecraft.getMinecraft().player != null && PostProcessPipeline.getWeatherRenderer().shouldRecalculateRainVectors(Minecraft.getMinecraft().player)) PostProcessPipeline.getWeatherRenderer().recalculateRainVectors(Minecraft.getMinecraft().player, getInterpolatedPlayerCoords());
+		if(event.phase == Phase.START && PostProcessPipeline.getWeatherRenderer() != null && Minecraft.getMinecraft().player != null && PostProcessPipeline.getWeatherRenderer().shouldRecalculateRainVectors(Minecraft.getMinecraft().player)) PostProcessPipeline.getWeatherRenderer().recalculateRainVectors(Minecraft.getMinecraft().player, getInterpolatedPlayerCoords());
 						
 		
 		
