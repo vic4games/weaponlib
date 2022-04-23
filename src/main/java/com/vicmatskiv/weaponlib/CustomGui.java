@@ -34,6 +34,7 @@ import com.vicmatskiv.weaponlib.electronics.ItemWirelessCamera;
 import com.vicmatskiv.weaponlib.grenade.ItemGrenade;
 import com.vicmatskiv.weaponlib.render.Bloom;
 import com.vicmatskiv.weaponlib.render.ScreenRenderer;
+import com.vicmatskiv.weaponlib.render.bgl.PostProcessPipeline;
 import com.vicmatskiv.weaponlib.vehicle.EntityVehicle;
 import com.vicmatskiv.weaponlib.vehicle.GearShiftPattern;
 import com.vicmatskiv.weaponlib.vehicle.SimpleAnimationTimer;
@@ -62,6 +63,8 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
 public class CustomGui extends CompatibleGui {
@@ -98,7 +101,16 @@ public class CustomGui extends CompatibleGui {
 	public void onCompatibleRenderHud(RenderGameOverlayEvent.Pre event) {
 		
 		
+		if(compatibility.getEventType(event) == ElementType.HELMET) {
+			
+			//PostProcessPipeline.drawRainBuffer();
+			//System.out.println("hi");
+			//drawString(mc.fontRenderer, "FUCKL", 30, 30, 0xff113a);
+		//	System.out.println("hi");
+		}
+	//	drawGradientRect(0, 0, 30, 30, 0xdfffff, 0xfffff);
 		
+		//PostProcessPipeline.drawRainBuffer();
 		
 		
 		// animation on

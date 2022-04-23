@@ -52,9 +52,9 @@ public class LightManager {
 		
 		for(Entry<Integer, Stack<Long>> registry : ClientEventHandler.muzzleFlashMap.entrySet()) {
 			
-			if(!registry.getValue().empty() && System.currentTimeMillis()-registry.getValue().peek() > 25) {
+			if(!registry.getValue().empty() /*&& System.currentTimeMillis()-registry.getValue().peek() > 25*/) {
 				EntityPlayer player = (EntityPlayer) Minecraft.getMinecraft().world.getEntityByID(registry.getKey());
-				addLight((float) player.posX, (float) player.posY, (float) player.posZ, 1.0f, 0.623f, 0.262f, 0.05f, 0.009f, 0.032f);
+				addLight((float) player.posX, (float) player.posY, (float) player.posZ, 1.0f, 0.623f, 0.262f, 0.03f, 0.009f, 0.032f);
 			}
 			
 			
@@ -70,7 +70,7 @@ public class LightManager {
 			float lightlevel = Minecraft.getMinecraft().world.getLight(new BlockPos(x, y, z));
 			
 			// bad correction maths
-			if(lightlevel != 0.0) constant *= lightlevel;
+			if(lightlevel != 0.0) constant *= lightlevel*8;
 			lights.add(new PointLight(x, y, z, r, g, b, constant, linear, quadratic));
 		}
 	}

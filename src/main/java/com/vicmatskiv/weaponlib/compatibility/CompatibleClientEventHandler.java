@@ -258,6 +258,8 @@ public abstract class CompatibleClientEventHandler {
 	public static HashMap<Integer, Stack<Long>> muzzleFlashMap = new HashMap<>();
 
 	public static boolean checkShot(int entityID) {
+		//muzzleFlashMap.clear();
+		//System.out.println(muzzleFlashMap);
 		if (muzzleFlashMap.isEmpty() || !muzzleFlashMap.containsKey(entityID)
 				|| (muzzleFlashMap.get(entityID).isEmpty())) {
 			return false;
@@ -265,8 +267,8 @@ public abstract class CompatibleClientEventHandler {
 			if(System.currentTimeMillis()-muzzleFlashMap.get(entityID).peek() > 25) {
 				muzzleFlashMap.get(entityID).pop();
 			}
-			
 			return true;
+			//return true;
 
 		}
 	}

@@ -83,6 +83,7 @@ public class MuzzleFlashRenderer {
 		// as it looks nice.
     	double size = Math.random()*0.5+1.0;
     	
+    	//isPetalFlash = true;
     	
     	// Get sprite sheet ID's
     	int mainBodyID = 0;

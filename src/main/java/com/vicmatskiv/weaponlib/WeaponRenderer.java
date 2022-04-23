@@ -3155,7 +3155,9 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			renderFlash(weaponItemStack, false);
 			*/
 		}
+ 		//System.out.println("hi " + CompatibleClientEventHandler.muzzleFlashMap.size());
 		
+		//CompatibleClientEventHandler.uploadFlash(Minecraft.getMinecraft().player.getEntityId());
 		
 		//Bloom.doBloom();
 		 GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW);

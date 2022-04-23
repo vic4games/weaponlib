@@ -3,13 +3,19 @@ package com.vicmatskiv.weaponlib.render.bgl;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.DoubleBuffer;
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 
 import javax.management.modelmbean.ModelMBeanNotificationBroadcaster;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.Marker;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.ARBDepthTexture;
 import org.lwjgl.opengl.ARBTextureBorderClamp;
@@ -31,6 +37,7 @@ import com.vicmatskiv.weaponlib.animation.AnimationModeProcessor;
 import com.vicmatskiv.weaponlib.animation.ClientValueRepo;
 import com.vicmatskiv.weaponlib.animation.gui.AnimationGUI;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleReflection;
 import com.vicmatskiv.weaponlib.debug.DebugRenderer;
 import com.vicmatskiv.weaponlib.grenade.GrenadeAttackAspect;
 import com.vicmatskiv.weaponlib.render.Bloom;
@@ -47,6 +54,7 @@ import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleManager;
 import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.Tessellator;
@@ -75,6 +83,8 @@ import scala.reflect.internal.Trees.This;
  */
 public class PostProcessPipeline {
 
+	private static Logger logger = LogManager.getLogger("POST PROCESS PIPELINE");
+
 	private static Minecraft mc = Minecraft.getMinecraft();
 	private static int width = -1;
 	private static int height = -1;
@@ -91,12 +101,13 @@ public class PostProcessPipeline {
 
 	private static final FloatBuffer PROJECTION_MATRIX_BUFFER = BufferUtils.createFloatBuffer(16);
 	private static final FloatBuffer MODELVIEW_MATRIX_BUFFER = BufferUtils.createFloatBuffer(16);
-	//private static final FloatBuffer INVERSE_VIEW_PROJECTION_BUFFER = BufferUtils.createFloatBuffer(16);
+	// private static final FloatBuffer INVERSE_VIEW_PROJECTION_BUFFER =
+	// BufferUtils.createFloatBuffer(16);
 
 	private static LightManager lightManager = new LightManager();
 
 	public static Framebuffer distortionBuffer;
-	//public static Framebuffer maskingBuffer;
+	// public static Framebuffer maskingBuffer;
 	public static Framebuffer rainBuffer;
 	public static Framebuffer secondaryWorldBuffer;
 
@@ -108,13 +119,10 @@ public class PostProcessPipeline {
 
 	private static final ModernWeatherRenderer modernWeatherRenderer = new ModernWeatherRenderer();
 
-
 	private static final float ALPHA_MULTIPLIER_DISTORTION = 0.5f;
 
 	// Constants
 	private static final int MAX_RAINDROPS_ON_SCREEN = 16;
-
-	
 
 	/**
 	 * This is a useful tool to easily render things to the distortion buffer
@@ -170,13 +178,14 @@ public class PostProcessPipeline {
 		}
 
 	}
+
 	/**
-	 * Creates a distortion point at the set coordinates with a certain
-	 * size and life
+	 * Creates a distortion point at the set coordinates with a certain size and
+	 * life
 	 * 
-	 * @param x - (X) coordinate in the world
-	 * @param y - (Y) coordinate in the world
-	 * @param z - (Z) coordinate in the world
+	 * @param x    - (X) coordinate in the world
+	 * @param y    - (Y) coordinate in the world
+	 * @param z    - (Z) coordinate in the world
 	 * @param size - size of distortion circle
 	 * @param life - how much time it lasts
 	 */
@@ -185,8 +194,7 @@ public class PostProcessPipeline {
 	}
 
 	/**
-	 * Returns the game's light manager, this
-	 * handles all the dyanmic world lights
+	 * Returns the game's light manager, this handles all the dyanmic world lights
 	 * 
 	 * @return light manager
 	 */
@@ -202,7 +210,7 @@ public class PostProcessPipeline {
 	public static ModernWeatherRenderer getWeatherRenderer() {
 		return modernWeatherRenderer;
 	}
-	
+
 	/**
 	 * Static method that changes the world's weather renderer
 	 */
@@ -212,13 +220,13 @@ public class PostProcessPipeline {
 	}
 
 	/**
-	 * Obtains the current modelview & projection matrices, inverts
-	 * them, and stores them in a float buffer for later shader use.
+	 * Obtains the current modelview & projection matrices, inverts them, and stores
+	 * them in a float buffer for later shader use.
 	 */
 	public static void fillGLBuffers() {
 
 		// Create base matrices
-	//	Matrix4f inverseProjView = new Matrix4f();
+		// Matrix4f inverseProjView = new Matrix4f();
 		Matrix4f modelViewMatrix = new Matrix4f();
 		Matrix4f projectionMatrix = new Matrix4f();
 
@@ -228,7 +236,6 @@ public class PostProcessPipeline {
 		modelViewMatrix.invert();
 		projectionMatrix.invert();
 
-		
 		PROJECTION_MATRIX_BUFFER.rewind();
 		MODELVIEW_MATRIX_BUFFER.rewind();
 
@@ -237,122 +244,92 @@ public class PostProcessPipeline {
 
 		PROJECTION_MATRIX_BUFFER.rewind();
 		MODELVIEW_MATRIX_BUFFER.rewind();
-		
-		/* Inverse view projection matrix
-		Matrix4f.mul(projectionMatrix, modelViewMatrix, inverseProjView);
-		INVERSE_VIEW_PROJECTION_BUFFER.rewind();
-		inverseProjView.store(INVERSE_VIEW_PROJECTION_BUFFER);
-		INVERSE_VIEW_PROJECTION_BUFFER.rewind();
-		*/
+
+		/*
+		 * Inverse view projection matrix Matrix4f.mul(projectionMatrix,
+		 * modelViewMatrix, inverseProjView); INVERSE_VIEW_PROJECTION_BUFFER.rewind();
+		 * inverseProjView.store(INVERSE_VIEW_PROJECTION_BUFFER);
+		 * INVERSE_VIEW_PROJECTION_BUFFER.rewind();
+		 */
 
 	}
 
 	public static void recreateDepthFramebuffer() {
 
-		OpenGlHelper.glDeleteFramebuffers(depthBuffer);
-		// GL11.glDeleteTextures(depthTexture);
-		// System.out.println(depthTexture);
-		// depthTexture = GL11.glGenTextures();
+		// If there is a depth buffer, delete it
+		if (depthBuffer != -1)
+			OpenGlHelper.glDeleteFramebuffers(depthBuffer);
 
+		// Generate depth texture
 		if (depthTexture == -1)
 			depthTexture = GL11.glGenTextures();
 
-		if(fauxColorTexture == -1)
+		// Create color attachment
+		if (fauxColorTexture == -1)
 			fauxColorTexture = GL11.glGenTextures();
-		
-		//GL11.glDrawBuffer(GL11.GL_NONE);
-		// System.out.println(depthBuffer);
+
+		// Depth buffer
 		depthBuffer = OpenGlHelper.glGenFramebuffers();
 		OpenGlHelper.glBindFramebuffer(OpenGlHelper.GL_FRAMEBUFFER, depthBuffer);
-		//System.out.println("Flag 1: " + GL11.glGetError());
-		
-		//GL11.glDrawBuffer(mode);
-		
+
 		GlStateManager.bindTexture(depthTexture);
-		GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GLCompatible.GL_DEPTH_COMPONENT24, width, height, 0, GL11.GL_DEPTH_COMPONENT,
-				GL11.GL_FLOAT, (FloatBuffer) null);
-	
-		
-		/*
-		int fuckyou = GL11.glGenTextures();
-		//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-		
-		GlStateManager.bindTexture(fuckyou);
-		GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGB, width, height, 0, GL11.GL_RGB,
-				GL11.GL_FLOAT, (FloatBuffer) null);
-		OpenGlHelper.glFramebufferTexture2D(OpenGlHelper.GL_FRAMEBUFFER, OpenGlHelper.GL_COLOR_ATTACHMENT0, GL11.GL_TEXTURE_2D, fuckyou, 0);
-		*/
-		
-		//System.out.println("Flag 2: " + GL11.glGetError());
-		
-		
-		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
-		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
-		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
-		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
+		GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GLCompatible.GL_DEPTH_COMPONENT24, width, height, 0,
+				GL11.GL_DEPTH_COMPONENT, GL11.GL_FLOAT, (FloatBuffer) null);
+		GlStateManager.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
+		GlStateManager.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
+		GlStateManager.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
+		GlStateManager.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
 		OpenGlHelper.glFramebufferTexture2D(OpenGlHelper.GL_FRAMEBUFFER, OpenGlHelper.GL_DEPTH_ATTACHMENT,
 				GL11.GL_TEXTURE_2D, depthTexture, 0);
-		
-	
+
 		// Stupid OpenGL spec requires this
 		// for older computers
-		GlStateManager.bindTexture(fauxColorTexture);
-		GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGB, width, height, 0, GL11.GL_RGB,
-				GL11.GL_FLOAT, (FloatBuffer) null);
-		OpenGlHelper.glFramebufferTexture2D(OpenGlHelper.GL_FRAMEBUFFER, OpenGlHelper.GL_COLOR_ATTACHMENT0, GL11.GL_TEXTURE_2D, fauxColorTexture, 0);
-		
-		
-		
-		
-		//GL30.GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER
-		//System.out.println("Flag 3: " + GL11.glGetError());
-		//int bruh = OpenGlHelper.glCheckFramebufferStatus(OpenGlHelper.GL_FRAMEBUFFER);
-		 int i = OpenGlHelper.glCheckFramebufferStatus(OpenGlHelper.GL_FRAMEBUFFER);
 
-	        if (i != OpenGlHelper.GL_FRAMEBUFFER_COMPLETE)
-	        {
-	            if (i == OpenGlHelper.GL_FB_INCOMPLETE_ATTACHMENT)
-	            {
-	            	System.out.println("Fucking incomplete framebuffer shit");
-	                //throw new RuntimeException("GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
-	            }
-	            else if (i == OpenGlHelper.GL_FB_INCOMPLETE_MISS_ATTACH)
-	            {
-	            	System.out.println("Stupid fucking missing attachment");
-	               // throw new RuntimeException("GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT");
-	            }
-	            else if (i == OpenGlHelper.GL_FB_INCOMPLETE_DRAW_BUFFER)
-	            {
-	            	System.out.println("i'm fucking stupid and can't draw");
-	               // throw new RuntimeException("GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER");
-	            }
-	            else if (i == OpenGlHelper.GL_FB_INCOMPLETE_READ_BUFFER)
-	            {
-	            	System.out.println("im fuking illerate and can't read buffer lol lmao");
-	              //  throw new RuntimeException("GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER");
-	            }
-	            else
-	            {
-	            	System.out.println("Unknown status because fuck you");
-	               // throw new RuntimeException("glCheckFramebufferStatus returned unknown status:" + i);
-	            }
-	        } else {
-	        	System.out.println("Absolute fucking success, fuck you Apple.");
-	        }
-	        
-	      //  GL11.glGetError();
-		/*
-		if (bruh != OpenGlHelper.GL_FRAMEBUFFER_COMPLETE) {
-			System.out.println("Failed to create depth texture framebuffer! This is an error!");
+		GlStateManager.bindTexture(fauxColorTexture);
+		GlStateManager.glTexImage2D(3553, 0, 32856, width, height, 0, 6408, 5121, (IntBuffer) null);
+
+		// GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGB, width, height, 0,
+		// GL11.GL_RGB,
+		// GL11.GL_UNSIGNED_BYTE, (IntBuffer) null);
+		OpenGlHelper.glFramebufferTexture2D(OpenGlHelper.GL_FRAMEBUFFER, OpenGlHelper.GL_COLOR_ATTACHMENT0,
+				GL11.GL_TEXTURE_2D, fauxColorTexture, 0);
+
+		// (new org.apache.logging.log4j.core.Logger()).setl
+
+		// GL30.GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER
+		// System.out.println("Flag 3: " + GL11.glGetError());
+		// int bruh =
+		// OpenGlHelper.glCheckFramebufferStatus(OpenGlHelper.GL_FRAMEBUFFER);
+
+		int status = OpenGlHelper.glCheckFramebufferStatus(OpenGlHelper.GL_FRAMEBUFFER);
+
+		if (status != OpenGlHelper.GL_FRAMEBUFFER_COMPLETE) {
+			if (status == OpenGlHelper.GL_FB_INCOMPLETE_ATTACHMENT) {
+				logger.error("Depth framebuffer creation returned an incomplete attachment error.");
+			} else if (status == OpenGlHelper.GL_FB_INCOMPLETE_MISS_ATTACH) {
+				logger.error("Depth framebuffer creation returned a missing attachment error.");
+			} else if (status == OpenGlHelper.GL_FB_INCOMPLETE_DRAW_BUFFER) {
+				logger.error("Depth framebuffer creation returned an incomplete draw buffer error.");
+			} else if (status == OpenGlHelper.GL_FB_INCOMPLETE_READ_BUFFER) {
+				logger.error("Depth framebuffer creation returned an incomplete read buffer error.");
+			} else {
+				logger.error("Depth framebuffer creation returned an unknown status");
+			}
 		} else {
-			System.out.println("Succesfully created DEPTH framebuffer!");
+			logger.debug("Succesfully created depth buffer.");
 		}
 
-		*/
+		// GL11.glGetError();
+		/*
+		 * if (bruh != OpenGlHelper.GL_FRAMEBUFFER_COMPLETE) { System.out.
+		 * println("Failed to create depth texture framebuffer! This is an error!"); }
+		 * else { System.out.println("Succesfully created DEPTH framebuffer!"); }
+		 * 
+		 */
 	}
 
 	public static void blitDepth() {
-		
+
 		if (depthBuffer == -1)
 			recreateDepthFramebuffer();
 		// recreateDepthFramebuffer();
@@ -370,9 +347,8 @@ public class PostProcessPipeline {
 	}
 
 	/**
-	 * Checks to see if the screen size has changed, or if
-	 * we are just initializing these buffers in order to determine
-	 * if they must be recreated
+	 * Checks to see if the screen size has changed, or if we are just initializing
+	 * these buffers in order to determine if they must be recreated
 	 * 
 	 * @return true if the framebuffers need to be remade
 	 */
@@ -401,7 +377,6 @@ public class PostProcessPipeline {
 			distortionBuffer.deleteFramebuffer();
 		distortionBuffer = new Framebuffer(width, height, true);
 
-
 		if (rainBuffer != null)
 			rainBuffer.deleteFramebuffer();
 		rainBuffer = new Framebuffer(width, height, false);
@@ -410,11 +385,12 @@ public class PostProcessPipeline {
 			secondaryWorldBuffer.deleteFramebuffer();
 		secondaryWorldBuffer = new HDRFramebuffer(width, height, true);
 
-
 	}
 
 	/**
-	 * Transforms a 3-dimensional vector according to a 4x4 matrix (i.e. OpenGL matrices)
+	 * Transforms a 3-dimensional vector according to a 4x4 matrix (i.e. OpenGL
+	 * matrices)
+	 * 
 	 * @param vec - A 3-component vector
 	 * @param mat - A [4x4] matrix
 	 * @return Transformed vector
@@ -536,7 +512,6 @@ public class PostProcessPipeline {
 
 	}
 
-	
 	public static void captureMatricesIntoBuffers() {
 		GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW_MATRIX_BUFFER);
 		GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, PROJECTION_MATRIX_BUFFER);
@@ -545,19 +520,17 @@ public class PostProcessPipeline {
 		MODELVIEW_MATRIX_BUFFER.rewind();
 
 	}
-	
 
 	/**
-	 * Called at the end of the world render,
-	 * copies the framebuffer into a second buffer, applies post effects,
-	 * and renders it back
+	 * Called at the end of the world render, copies the framebuffer into a second
+	 * buffer, applies post effects, and renders it back
 	 */
 	public static void doWorldProcessing() {
-		
-		//if(true) return;
-		
-		//Shaders.postWorld = ShaderManager.loadVMWShader("postworld");
-		
+
+		// if(true) return;
+
+		// Shaders.postWorld = ShaderManager.loadVMWShader("postworld");
+
 		// Check if buffers need to be remade
 		if (shouldRecreateFramebuffer())
 			recreateFramebuffers();
@@ -578,35 +551,35 @@ public class PostProcessPipeline {
 		// Copy the Minecraft framebuffer to the secondary world buffer
 		OpenGlHelper.glBindFramebuffer(GLCompatible.GL_READ_FRAMEBUFFER, mc.getFramebuffer().framebufferObject);
 		OpenGlHelper.glBindFramebuffer(GLCompatible.GL_DRAW_FRAMEBUFFER, secondaryWorldBuffer.framebufferObject);
-		GLCompatible.glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
+	
+		GLCompatible.glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL11.GL_COLOR_BUFFER_BIT,
+				GL11.GL_NEAREST);
 
 		Shaders.postWorld.use();
 		Shaders.postWorld.uniform1i("depthBuf", 6);
 		Shaders.postWorld.uniform1f("fogIntensity", fogIntensity);
 		Shaders.postWorld.uniform3f("baseFogColor", 0.6f, 0.6f, 0.6f);
-		//Shaders.postWorld.uniform1f("help", 0.2f);
-		//Shaders.postWorld.uniform1f("joe[0]", 1.0f);
-		
-		//GL20.glUniform1f(GL20.getloc, v0);
-		
-		
-		
-		//Shaders.post.uniform3f("fk3f[0]", 5f, 0f, 0f);
-		
-		//Shaders.post.uniform1f("help", 0.0f);
+		// Shaders.postWorld.uniform1f("help", 0.2f);
+		// Shaders.postWorld.uniform1f("joe[0]", 1.0f);
+
+		// GL20.glUniform1f(GL20.getloc, v0);
+
+		// Shaders.post.uniform3f("fk3f[0]", 5f, 0f, 0f);
+
+		// Shaders.post.uniform1f("help", 0.0f);
 		// Send light data to the shader and
 		// update the light manager
 		lightManager.updateUniforms(Shaders.postWorld);
 		lightManager.update();
-		
+
 		Vec3d interpolatedPosition = CompatibleClientEventHandler.getInterpolatedPlayerCoords();
 		Shaders.postWorld.uniform3f("cameraPosition", (float) interpolatedPosition.x, (float) interpolatedPosition.y,
 				(float) interpolatedPosition.z);
-		
+
+		//System.out.println("obama");
 		// Send inverse matrices to shader
 		Shaders.postWorld.sendMatrix4AsUniform("inverseViewMatrix", false, MODELVIEW_MATRIX_BUFFER);
 		Shaders.postWorld.sendMatrix4AsUniform("inverseProjectionMatrix", false, PROJECTION_MATRIX_BUFFER);
-		
 
 		// Render framebuffer back to main
 		OpenGlHelper.glBindFramebuffer(GLCompatible.GL_DRAW_FRAMEBUFFER, mc.getFramebuffer().framebufferObject);
@@ -615,19 +588,20 @@ public class PostProcessPipeline {
 
 		// Rebind the MC Framebuffer
 		mc.getFramebuffer().bindFramebuffer(false);
+
+		drawRainBuffer();
+
 	}
 
-	
-
 	/**
-	 * Prepares the rain buffer by setting up
-	 * an orthographic matrix in order to render
-	 * to screen coordinates
+	 * Prepares the rain buffer by setting up an orthographic matrix in order to
+	 * render to screen coordinates
 	 */
 	public static void prepareRainBuffer() {
 		rainBuffer.framebufferClear();
 		rainBuffer.bindFramebuffer(false);
 		GlStateManager.pushMatrix();
+
 		ScaledResolution scaledresolution = new ScaledResolution(mc);
 		GlStateManager.matrixMode(5889);
 		GlStateManager.loadIdentity();
@@ -636,8 +610,10 @@ public class PostProcessPipeline {
 		GlStateManager.matrixMode(5888);
 		GlStateManager.loadIdentity();
 		GlStateManager.translate(0.0F, 0.0F, -2000.0F);
-		GlStateManager.alphaFunc(GL11.GL_GREATER, 0.0f);
+		GlStateManager.enableAlpha();
 		GlStateManager.enableBlend();
+		GlStateManager.alphaFunc(GL11.GL_GREATER, 0.0f);
+
 	}
 
 	/*
@@ -769,11 +745,11 @@ public class PostProcessPipeline {
 	/**
 	 * Draws a rain drop on the screen with a certain stretch and size factor
 	 * 
-	 * @param x - X-coordinate for raindrop
-	 * @param y - Y-coordinate for raindrop
-	 * @param size - Size of raindrop
+	 * @param x       - X-coordinate for raindrop
+	 * @param y       - Y-coordinate for raindrop
+	 * @param size    - Size of raindrop
 	 * @param stretch - Stretch factor for raindrop
-	 * @param alpha - Opacity of raindrop
+	 * @param alpha   - Opacity of raindrop
 	 */
 	public static void drawRaindrop(double x, double y, double size, double stretch, float alpha) {
 
@@ -805,19 +781,44 @@ public class PostProcessPipeline {
 
 		t.draw();
 	}
-	
-	
+
 	/**
 	 * Changes back to perspective rendering
 	 */
 	public static void endRainBufferRender() {
+
 		GlStateManager.matrixMode(5889);
 		GlStateManager.loadIdentity();
 
-		float fpt = (float) (mc.gameSettings.renderDistanceChunks * 16);
+		try {
+			float fpt = CompatibleReflection.findField(EntityRenderer.class, "farPlaneDistance", "field_78530_s")
+					.getFloat(mc.entityRenderer);
+			Method fovMod = CompatibleReflection.findMethod(EntityRenderer.class, "getFOVModifier", "func_78481_a",
+					float.class, boolean.class);
 
-		Project.gluPerspective(mc.gameSettings.fovSetting, (float) mc.displayWidth / (float) mc.displayHeight, 0.05F,
-				fpt * 2.0f);
+			float fovModValue = (float) fovMod.invoke(mc.entityRenderer, mc.getRenderPartialTicks(), false);
+
+			Project.gluPerspective(fovModValue, (float) mc.displayWidth / (float) mc.displayHeight, 0.05F, fpt * 2.0F);
+
+			// Project.gluPerspective(fovModValue, (float) mc.displayWidth / (float)
+			// mc.displayHeight, 0.05F, fpt * MathHelper.SQRT_2);
+
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+		} catch (InvocationTargetException e) {
+			e.printStackTrace();
+		}
+
+		// Project.gluPerspective(mc.gameSettings.fovSetting, (float) mc.displayWidth /
+		// (float) mc.displayHeight, 0.05F,
+		// fpt * 2.0f);
+
+		// Project.gluPerspective(this.getFOVModifier(partialTicks, true),
+		// (float)this.mc.displayWidth / (float)this.mc.displayHeight, 0.05F,
+		// this.farPlaneDistance * MathHelper.SQRT_2);
+
 		GlStateManager.matrixMode(5888);
 		GlStateManager.alphaFunc(GL11.GL_GREATER, 0.1f);
 		GlStateManager.popMatrix();
@@ -825,25 +826,26 @@ public class PostProcessPipeline {
 	}
 
 	/**
-	 * Should be called at the end of rendering,
-	 * applies to all rendering including the hand.
-	 * This effects are effects that transcend things like
-	 * the world, and are flat (i.e. film grain)
+	 * Should be called at the end of rendering, applies to all rendering including
+	 * the hand. This effects are effects that transcend things like the world, and
+	 * are flat (i.e. film grain)
 	 */
 	public static void doPostProcess() {
 
-		//if(true) return;
-		
-		if(AnimationModeProcessor.getInstance().getFPSMode()) return;
-		
+		// if(true) return;
+
+		if (AnimationModeProcessor.getInstance().getFPSMode())
+			return;
+
 		// Checks to see if the framebuffers
 		// should be remade in the case of
 		// a screen resize
 		if (shouldRecreateFramebuffer())
 			recreateFramebuffers();
 
+		// Minecraft.getMinecraft().player.world.play
 		// Draws rain droplets
-		drawRainBuffer();
+		// drawRainBuffer();
 
 		GlStateManager.enableBlend();
 		GlStateManager.disableAlpha();
@@ -869,9 +871,6 @@ public class PostProcessPipeline {
 
 		Shaders.post.use();
 
-		
-		
-		
 		// Send buffers as uniforms
 		Shaders.post.uniform1i("rainBuf", 3);
 		Shaders.post.uniform1i("distortionTex", 4);
@@ -888,6 +887,8 @@ public class PostProcessPipeline {
 		Bloom.renderFboTriangle(boof, boof.framebufferWidth, boof.framebufferHeight);
 
 		Shaders.post.release();
+
+		// drawRainBuffer();
 
 	}
 
