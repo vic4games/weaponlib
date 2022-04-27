@@ -54,7 +54,7 @@ public class LightManager {
 			
 			if(!registry.getValue().empty() /*&& System.currentTimeMillis()-registry.getValue().peek() > 25*/) {
 				EntityPlayer player = (EntityPlayer) Minecraft.getMinecraft().world.getEntityByID(registry.getKey());
-				addLight((float) player.posX, (float) player.posY, (float) player.posZ, 1.0f, 0.623f, 0.262f, 0.03f, 0.009f, 0.032f);
+				addLight((float) player.posX, (float) player.posY + 0.6f, (float) player.posZ, 1.0f, 0.623f, 0.262f, 0.05f, 0.009f, 0.032f);
 			}
 			
 			
@@ -67,10 +67,24 @@ public class LightManager {
 		lights.clear();
 		if(lights.size() < 1) {
 			//System.out.println("yo");
-			float lightlevel = Minecraft.getMinecraft().world.getLight(new BlockPos(x, y, z));
 			
+			float lightlevel = 0.0f;
+			
+			lightlevel = Minecraft.getMinecraft().world.getLight(new BlockPos(x, y, z)) * Minecraft.getMinecraft().world.getSunBrightness(1.0f);
+			//System.out.println(lightlevel);
+			if(lightlevel > 8) return;
+			
+			//float lightlevel = Minecraft.getMinecraft().world.getLight(new BlockPos(x, y, z));
+		//	System.out.println(lightlevel);
 			// bad correction maths
-			if(lightlevel != 0.0) constant *= lightlevel*8;
+			
+		//	System.out.println(lightlevel);
+			float mult = 1.0f / (4*lightlevel);
+			if(Double.isInfinite(mult)) mult = 1.0f;
+			//System.out.println(lightlevel + " | " + mult);
+			constant /= mult;
+			
+			//if(lightlevel != 0.0) constant *= lightlevel*8;
 			lights.add(new PointLight(x, y, z, r, g, b, constant, linear, quadratic));
 		}
 	}

@@ -1,11 +1,18 @@
 package com.vicmatskiv.weaponlib.render;
 
+import java.nio.IntBuffer;
+
+import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL30;
 
 import com.vicmatskiv.weaponlib.ClientEventHandler;
 import com.vicmatskiv.weaponlib.Weapon;
 import com.vicmatskiv.weaponlib.animation.AnimationModeProcessor;
+import com.vicmatskiv.weaponlib.animation.ClientValueRepo;
 import com.vicmatskiv.weaponlib.animation.gui.AnimationGUI;
+import com.vicmatskiv.weaponlib.animation.movement.WeaponRotationHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.debug.DebugRenderer;
 import com.vicmatskiv.weaponlib.render.SpriteSheetTools.Sprite;
@@ -15,6 +22,7 @@ import com.vicmatskiv.weaponlib.shader.jim.ShaderManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.player.EntityPlayer;
@@ -44,14 +52,20 @@ public class MuzzleFlashRenderer {
 		
 		boolean isPetalFlash = weapon.hasFlashPedals();
 		
+		
+
+		OpenGlHelper.glFramebufferTexture2D(OpenGlHelper.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT1, GL11.GL_TEXTURE_2D, Bloom.data.framebufferTexture, 0);
+		//
+		//GL20.glDrawBuffers(intBuf);
+		
 		// Turn on all of the GL states
 		GlStateManager.pushMatrix();
-		GlStateManager.depthMask(false);
+		//GlStateManager.depthMask(false);
 		GlStateManager.disableLighting();
 		GlStateManager.enableBlend();
 		GlStateManager.enableAlpha();
 		GlStateManager.disableCull();
-		
+		GlStateManager.enableDepth();
 		
 		// Translate to muzzle position
 		Vec3d muzzle = weapon.getMuzzlePosition();
@@ -70,6 +84,8 @@ public class MuzzleFlashRenderer {
 			GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
 	    	GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
 		}
+	
+		//ClientValueRepo
 		
 		// Shaders.flash = ShaderManager.loadVMWShader("flash");
 				Shaders.flash.use();
@@ -114,6 +130,7 @@ public class MuzzleFlashRenderer {
 		Shaders.flash.release();
 		GlStateManager.popMatrix();
 		
+		//GL20.glDrawBuffers(GL30.GL_COLOR_ATTACHMENT0);
 		
 		// Return all the GL states to normal
 		GlStateManager.alphaFunc(GL11.GL_GREATER, 0.1F);

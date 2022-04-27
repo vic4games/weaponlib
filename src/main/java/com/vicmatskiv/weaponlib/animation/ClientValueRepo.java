@@ -121,7 +121,12 @@ public class ClientValueRepo {
 		
 		gunPow.currentValue += power;
 
-		stressVec.callRandom(0.2);
+		double stress = 0.2;
+		if(pwi.isAimed()) {
+			stress /= 2;
+		}
+		
+		stressVec.callRandom(pwi.isAimed() ? 0.05 : 0.2);
 		recoilRotationVector.callRandom(15);
 		
 		slidePumpValue.value += 1.0;

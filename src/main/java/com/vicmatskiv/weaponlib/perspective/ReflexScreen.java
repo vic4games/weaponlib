@@ -5,14 +5,20 @@ package com.vicmatskiv.weaponlib.perspective;
 
 
 
+import java.nio.IntBuffer;
 import java.util.LinkedList;
 import java.util.function.BiConsumer;
 
+import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL13;
+import org.lwjgl.opengl.GL14;
+import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
+import org.lwjgl.opengl.GL42;
+import org.lwjgl.opengl.GL44;
 
 import com.vicmatskiv.weaponlib.CustomRenderer;
 import com.vicmatskiv.weaponlib.RenderContext;
@@ -140,6 +146,8 @@ public class ReflexScreen extends ModelBase implements CustomRenderer<Renderable
 		
 		//Shaders.reflexReticle = ShaderManager.loadVMWShader("reflex");
 		
+		
+		
 		if(renderContext.getCompatibleTransformType() != CompatibleTransformType.FIRST_PERSON_RIGHT_HAND) return;
 		GlStateManager.disableTexture2D();
 		GlStateManager.enableBlend();
@@ -170,8 +178,9 @@ public class ReflexScreen extends ModelBase implements CustomRenderer<Renderable
 		GL20.glUniform3f(GL20.glGetUniformLocation(Shaders.reflexReticle.getShaderId(), "background"), (float) currentReticle.getBackgroundColor().x, (float) currentReticle.getBackgroundColor().y, (float) currentReticle.getBackgroundColor().z);
 		GlStateManager.enableCull();
 	
-		
+
 		OpenGlHelper.glFramebufferTexture2D(OpenGlHelper.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT1, GL11.GL_TEXTURE_2D, Bloom.data.framebufferTexture, 0);
+		//GL20.glDrawBuffers(intBuf);
 		
 		//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gAlbedoSpec, 0);
 		
@@ -185,13 +194,16 @@ public class ReflexScreen extends ModelBase implements CustomRenderer<Renderable
 		GlStateManager.disableCull();
 		//GlStateManager.disableBlend();
 		GlStateManager.enableTexture2D();
+		
+		//GL20.glDrawBuffers(GL30.GL_COLOR_ATTACHMENT0);
+		
 	}
 
 	@Override
 	public void render(RenderContext<RenderableState> renderContext) {
-		
-		Bloom.bindBloomBuffer();
-		renderReticle(renderContext, true);
+		//System.out.println("hi");
+		//Bloom.bindBloomBuffer();
+		//renderReticle(renderContext, true);
 		
 		Minecraft.getMinecraft().getFramebuffer().bindFramebuffer(true);
 		renderReticle(renderContext, false);

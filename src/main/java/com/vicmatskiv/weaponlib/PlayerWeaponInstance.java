@@ -200,7 +200,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 		case DRAWING:
 			return getWeapon().getTotalDrawingDuration();
 		case COMPOUND_RELOAD:
-			return getWeapon().getRenderer().getWeaponRendererBuilder().getCompoundReloadDuration()/3;
+			return getWeapon().getRenderer().getWeaponRendererBuilder().getCompoundReloadDuration()/2;
 		case COMPOUND_RELOAD_EMPTY:
 			//System.out.println(getWeapon().getRenderer().getWeaponRendererBuilder().getCompoundReloadEmptyDuration());
 			//return getWeapon().getRenderer().getWeaponRendererBuilder().getCompoundReloadEmptyDuration();

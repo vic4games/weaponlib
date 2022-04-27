@@ -413,6 +413,7 @@ public class PostProcessPipeline {
 
 		distortionBuffer.framebufferClear();
 
+		/*
 		OpenGlHelper.glBindFramebuffer(GLCompatible.GL_READ_FRAMEBUFFER,
 				Minecraft.getMinecraft().getFramebuffer().framebufferObject);
 		OpenGlHelper.glBindFramebuffer(GLCompatible.GL_DRAW_FRAMEBUFFER,
@@ -421,8 +422,10 @@ public class PostProcessPipeline {
 		GLCompatible.glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL11.GL_DEPTH_BUFFER_BIT,
 				GL11.GL_NEAREST);
 
+	
 		distortionBuffer.bindFramebuffer(false);
 
+		*/
 		distortionList.removeIf((s) -> (System.currentTimeMillis() - s.getBirthTime() > s.getLife()));
 
 		for (DistortionPoint dp : distortionList)
@@ -869,6 +872,8 @@ public class PostProcessPipeline {
 		// Return to default texture unit
 		GlStateManager.setActiveTexture(GL13.GL_TEXTURE0);
 
+		
+		//Shaders.post = ShaderManager.loadVMWShader("post");
 		Shaders.post.use();
 
 		// Send buffers as uniforms

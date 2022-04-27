@@ -476,6 +476,54 @@ public abstract class CompatibleClientEventHandler {
 		divisor = Math.min(0.08, divisor);
 		Interceptors.nsm.update();
 		
+		//EntityPlayer p = Minecraft.getMinecraft().player;
+		//PostProcessPipeline.createDistortionPoint((float) p.posX,(float)  p.posY, (float) p.posZ, 15f, 5f);
+		
+		/*
+		
+		GlStateManager.pushMatrix();
+		
+		
+		Shader shad = ShaderManager.loadVMWShader("cloud");
+		shad.use();
+		for(int i = 0; i < 5; ++i) {
+			GlStateManager.setActiveTexture(GL13.GL_TEXTURE0 + 3 + i);
+			Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mw:textures/environment/fbm" + (i+1) + ".png"));
+			GlStateManager.setActiveTexture(GL13.GL_TEXTURE0);
+			//System.out.println("mw:textures/environment/fbm" + i + ".png");
+			shad.uniform1i("fbm[" + i + "]", 3 + i);
+		}
+		
+		
+		
+		
+		GlStateManager.enableBlend();
+		shad.uniform1i("cloud", 3);
+		shad.uniform1f("timer", ClientValueRepo.ticker.getLerpedFloat());
+		Vec3d pti = getInterpolatedPlayerCoords();
+		//GlStateManager.translate(-pti.x, -pti.y, -pti.z);
+		double size = 30;
+		GlStateManager.translate(0, 10, 0);
+		//GlStateManager.disableTexture2D();
+		GlStateManager.enableTexture2D();
+		
+		//Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mw:textures/environment/cloud.png"));
+		Tessellator t = Tessellator.getInstance();
+		BufferBuilder bb = t.getBuffer();
+		bb.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
+
+		bb.pos(-1*size, 0, -1*size).tex(0, 0).endVertex();
+		bb.pos(1*size, 0, -1*size).tex(1, 0).endVertex();
+		bb.pos(1*size, 0, 1*size).tex(1, 1).endVertex();
+		bb.pos(-1*size, 0, size).tex(0, 1).endVertex();
+		
+		t.draw();
+		shad.release();
+		GlStateManager.popMatrix();
+		*/
+		//float light = Minecraft.getMinecraft().world.getLight(Minecraft.getMinecraft().player.getPosition()) * Minecraft.getMinecraft().world.getSunBrightness(1.0f);
+		
+		//System.out.println(light);
 		
 		
 		//Interceptors.nsm.update(1/divisor);

@@ -56,6 +56,7 @@ import com.vicmatskiv.weaponlib.compatibility.Interceptors;
 import com.vicmatskiv.weaponlib.config.Projectiles;
 import com.vicmatskiv.weaponlib.debug.DebugRenderer;
 import com.vicmatskiv.weaponlib.jim.util.VMWHooksHandler;
+import com.vicmatskiv.weaponlib.perspective.ReflexScreen;
 import com.vicmatskiv.weaponlib.render.Bloom;
 import com.vicmatskiv.weaponlib.render.Dloom;
 import com.vicmatskiv.weaponlib.render.MuzzleFlashRenderer;
@@ -2369,7 +2370,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				break;
 				
 			case COMPOUND_RELOAD:
-				
+				//ReflexScreen
 				currentState = RenderableState.COMPOUND_RELOAD;
 				break;
 				
@@ -3156,7 +3157,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			*/
 		}
  		//System.out.println("hi " + CompatibleClientEventHandler.muzzleFlashMap.size());
-		
+		//CompatibleClientEventHandler.muzzleFlashMap.clear();
 		//CompatibleClientEventHandler.uploadFlash(Minecraft.getMinecraft().player.getEntityId());
 		
 		//Bloom.doBloom();
@@ -3616,8 +3617,13 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 						if(compatibleAttachment.getAttachment() == part) {
 							
 							float mu = (float) ClientValueRepo.slidePumpValue.value;
+							
+							mu = Math.min(mu, 1.0f);
+							
 							Transform t = renderContext.getWeaponInstance().getWeapon().getRenderer().getBuilder().actionPieceTransform;
 							
+							
+						//	mu = 1f;
 							if(DebugCommand.isDebuggingActionPosition()) {
 								//System.out.println("hi");
 								t = DebugCommand.debugSlideTransform;

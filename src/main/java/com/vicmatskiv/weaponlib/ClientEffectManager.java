@@ -49,6 +49,10 @@ final class ClientEffectManager implements EffectManager {
 		double posZ = player.posZ + (look.getZCoord() * distance) + (compatibility.world(player).rand.nextFloat() * 2.0f - 1) * positionRandomizationFactor  + (look.getXCoord() * xOffset);
 
 		
+
+		
+		
+		
 		//posX += w.getMuzzlePosition().x;
 		//posY += w.getMuzzlePosition().y;
 		//posZ += w.getMuzzlePosition().z;

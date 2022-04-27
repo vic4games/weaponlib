@@ -316,6 +316,7 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
      
        ClientValueRepo.recoilStop = 50f;
         if(weapon.isSmokeEnabled()) {
+        	
             modContext.getEffectManager().spawnSmokeParticle(player, compatibility.getEffectOffsetX()
                     + weapon.builder.smokeOffsetX.get(),
                     compatibility.getEffectOffsetY() + weapon.builder.smokeOffsetY.get()+0.3f);
