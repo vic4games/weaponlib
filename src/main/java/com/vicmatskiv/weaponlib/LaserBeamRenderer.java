@@ -81,7 +81,7 @@ public class LaserBeamRenderer implements CustomRenderer {
 			
 			//Shader brightShader = ShaderManager.loadVMWShader("brightness");
 			Shaders.brightnessShader.use();
-			Shaders.brightnessShader.uniform1f("brightness", 2f);
+			Shaders.brightnessShader.uniform1f("brightness", 4f);
 			Shaders.brightnessShader.uniform3f("color", 0f, 1f, 0f);
 			
 			

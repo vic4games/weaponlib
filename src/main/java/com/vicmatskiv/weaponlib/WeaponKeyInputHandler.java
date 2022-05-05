@@ -116,7 +116,7 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
 	        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.rightArrowKey.isPressed()) {
 	            DebugPositioner.incrementYRotation(-5);
 	        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.jDebugKey.isKeyDown()) {
-	        	System.out.println("yo");
+	        //	System.out.println("yo");
 	            DebugPositioner.incrementZRotation(5);
 	        } else if(DebugPositioner.isDebugModeEnabled() && KeyBindings.kDebugKey.isKeyDown()) {
 	            DebugPositioner.incrementZRotation(-5);
@@ -215,6 +215,11 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
         else if(KeyBindings.attachmentKey.isPressed()) {
             if(itemStack != null && itemStack.getItem() instanceof Modifiable /* && itemStack.getItem() instanceof Weapon*/) {
                 ((Modifiable) itemStack.getItem()).toggleClientAttachmentSelectionMode(player);
+                
+               if(!Minecraft.getMinecraft().inGameHasFocus) {
+            	   Minecraft.getMinecraft().setIngameFocus();
+               }
+                
             }
         }
         

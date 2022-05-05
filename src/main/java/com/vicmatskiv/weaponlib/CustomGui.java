@@ -6,8 +6,10 @@ import java.awt.Color;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 
 import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.ARBMultisample;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
@@ -17,9 +19,11 @@ import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL21;
 import org.lwjgl.opengl.GL33;
 import org.lwjgl.opengl.GL44;
+import org.lwjgl.opengl.GLSync;
 import org.lwjgl.opengl.NVMultisampleFilterHint;
 
 import com.vicmatskiv.weaponlib.StatusMessageCenter.Message;
+import com.vicmatskiv.weaponlib.WeaponAttachmentAspect.FlaggedAttachment;
 import com.vicmatskiv.weaponlib.animation.AnimationModeProcessor;
 import com.vicmatskiv.weaponlib.animation.gui.AnimationGUI;
 import com.vicmatskiv.weaponlib.animation.gui.Button;
@@ -33,6 +37,8 @@ import com.vicmatskiv.weaponlib.debug.DebugRenderer;
 import com.vicmatskiv.weaponlib.electronics.ItemWirelessCamera;
 import com.vicmatskiv.weaponlib.grenade.ItemGrenade;
 import com.vicmatskiv.weaponlib.render.Bloom;
+import com.vicmatskiv.weaponlib.render.ModificationGUI;
+import com.vicmatskiv.weaponlib.render.ModificationGUI.ModificationGroup;
 import com.vicmatskiv.weaponlib.render.ScreenRenderer;
 import com.vicmatskiv.weaponlib.render.bgl.PostProcessPipeline;
 import com.vicmatskiv.weaponlib.vehicle.EntityVehicle;
@@ -53,15 +59,21 @@ import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.ItemRenderer;
+import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.block.model.ItemCameraTransforms.TransformType;
 import net.minecraft.client.renderer.GlStateManager.DestFactor;
 import net.minecraft.client.renderer.GlStateManager.SourceFactor;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.init.Items;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.translation.I18n;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
@@ -102,6 +114,9 @@ public class CustomGui extends CompatibleGui {
 		
 		
 		if(compatibility.getEventType(event) == ElementType.HELMET) {
+			
+			
+			
 			
 			//PostProcessPipeline.drawRainBuffer();
 			//System.out.println("hi");
@@ -272,13 +287,20 @@ public class CustomGui extends CompatibleGui {
                 
                 this.mc.renderEngine.bindTexture(new ResourceLocation(crosshair));
 
+                
+                
+                
                 if (isInAltModifyingState(weaponInstance)) {
 
+                	//ModificationGUI.getInstance().setGroup(ModificationGroup.MODIFICATION);
+                	ModificationGUI.getInstance().render(modContext);
+                	
+                	/*
                     String changeScopeMessage = compatibility.getLocalizedString(
                             "gui.attachmentMode.changeRailing",
                             Keyboard.getKeyName(KeyBindings.upArrowKey.getKeyCode()));
                     fontRender.drawStringWithShadow(changeScopeMessage, width / 2 - 40, 60, color);
-
+*/
 //                    String changeBarrelRigMessage = compatibility.getLocalizedString(
 //                            "gui.attachmentMode.changeBarrelRig",
 //                            Keyboard.getKeyName(KeyBindings.leftArrowKey.getKeyCode()));
@@ -301,6 +323,59 @@ public class CustomGui extends CompatibleGui {
 
                 } else if(isInModifyingState(weaponInstance) /*Weapon.isModifying(itemStack)*/ /*weaponItem.getState(weapon) == Weapon.STATE_MODIFYING*/) {
 
+                	
+                //	ModificationGUI.getInstance().setGroup(ModificationGroup.ATTACHMENT);
+                	ModificationGUI.getInstance().render(modContext);
+                	/*
+                	GlStateManager.pushMatrix();
+                	GlStateManager.scale(4, 4, 4);
+                	ArrayList<FlaggedAttachment> testList = modContext.getAttachmentAspect().getInventoryAttachments(AttachmentCategory.SCOPE, weaponInstance);
+                 	if(testList != null) {
+                 		int i = 0;
+                 		for(FlaggedAttachment attach : testList) {
+                 			RenderHelper.enableGUIStandardItemLighting();
+                    		mc.getRenderItem().renderItemIntoGUI(attach.getAttachment().getDefaultInstance(), 30 + i, 30);
+                    		RenderHelper.disableStandardItemLighting();
+                    		
+                    		if(attach.requiresAnyParts()) {
+                    			double y = 0;
+                    			for(ItemAttachment<Weapon> requirement : attach.getRequiredParts()) {
+                    				GlStateManager.pushMatrix();
+                        			GlStateManager.translate(37.5 + i, 45 + y, 0);
+                        			
+                        			GlStateManager.scale(0.2, 0.2, 0.2);
+                        			
+                        		
+                        			
+                        			String string = new TextComponentTranslation(requirement.getUnlocalizedName() + ".name", new Object[0]).getFormattedText();
+                        			//String string = I18n.translateToLocal(requirement.getUnlocalizedName() + ".name");
+                        			
+                        			drawCenteredString(mc.fontRenderer, string, 0, 0, 0xfffff);
+                        			GlStateManager.popMatrix();
+                        			y += 2;
+                    			}
+                    			
+                    		}
+                    		
+                    		i += 20;
+                 		}
+                 	}
+                 	
+                 	
+                 	
+                 	GlStateManager.popMatrix();
+                	*/
+                	
+                	ItemAttachment attach = weaponInstance.getAttachmentItemWithCategory(AttachmentCategory.MAGAZINE);
+                	if(attach != null) {
+                		RenderHelper.enableGUIStandardItemLighting();
+                		mc.getRenderItem().renderItemIntoGUI(attach.getDefaultInstance(), 30, 30);
+                		RenderHelper.disableStandardItemLighting();
+                    	
+                	}
+                	//mc.getRenderItem().renderItemIntoGUI(mc.player.getHeldItemMainhand(), 30, 30);
+                	
+                	/*
 				    String changeScopeMessage = compatibility.getLocalizedString(
 				            "gui.attachmentMode.changeScope",
 				            Keyboard.getKeyName(KeyBindings.upArrowKey.getKeyCode()));
@@ -325,7 +400,7 @@ public class CustomGui extends CompatibleGui {
                             "gui.attachmentMode.applyLaser",
                             Keyboard.getKeyName(KeyBindings.laserAttachmentKey.getKeyCode()));
                     fontRender.drawStringWithShadow(applyLaser, 150, height - 100, color);
-
+					*/
 				} else {
 					Message message = modContext.getStatusMessageCenter().nextMessage();
 					String messageText;
@@ -433,6 +508,8 @@ public class CustomGui extends CompatibleGui {
 		}
 	}
 
+	
+	
 
     private void drawShieldIndicator(CustomArmor armor, double capacity, double screenWidth, double screenHeight) {
         
@@ -549,14 +626,14 @@ public class CustomGui extends CompatibleGui {
 	}
 
 
-	private boolean isInModifyingState(PlayerWeaponInstance weaponInstance) {
+	public static boolean isInModifyingState(PlayerWeaponInstance weaponInstance) {
 		return (weaponInstance.getState() == WeaponState.MODIFYING && !weaponInstance.isAltMofificationModeEnabled())
 				|| weaponInstance.getState() == WeaponState.MODIFYING_REQUESTED
 				|| weaponInstance.getState() == WeaponState.NEXT_ATTACHMENT
 				|| weaponInstance.getState() == WeaponState.NEXT_ATTACHMENT_REQUESTED;
 	}
 	
-	private boolean isInAltModifyingState(PlayerWeaponInstance weaponInstance) {
+	public static boolean isInAltModifyingState(PlayerWeaponInstance weaponInstance) {
         return weaponInstance.isAltMofificationModeEnabled()
                 && (weaponInstance.getState() == WeaponState.MODIFYING
                 || weaponInstance.getState() == WeaponState.MODIFYING_REQUESTED

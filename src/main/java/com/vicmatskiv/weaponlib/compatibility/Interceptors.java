@@ -23,6 +23,7 @@ import org.lwjgl.util.vector.Vector3f;
 
 import com.vicmatskiv.weaponlib.OptimizedCubeList;
 import com.vicmatskiv.weaponlib.ClientModContext;
+import com.vicmatskiv.weaponlib.CustomGui;
 import com.vicmatskiv.weaponlib.KeyBindings;
 import com.vicmatskiv.weaponlib.Part;
 import com.vicmatskiv.weaponlib.PlayerRenderer;
@@ -786,7 +787,15 @@ public class Interceptors {
     }
     
     public static void turn(EntityPlayer player, float yawDelta, float pitchDelta) {
-    	//if(1+1==2) return;
+    	//if(1+1==2) return;'
+    	
+    	if(ClientModContext.getContext() != null && ClientModContext.getContext().getMainHeldWeapon() != null) {
+    		PlayerWeaponInstance pwi = ClientModContext.getContext().getMainHeldWeapon();
+    		if(CustomGui.isInModifyingState(pwi) || CustomGui.isInAltModifyingState(pwi)) {
+    			yawDelta *= 0.01f;
+    			pitchDelta *= 0.01f;
+    		}
+    	}
     	
     	//Animation mdoe on
     	if(AnimationModeProcessor.getInstance().getFPSMode() && Mouse.isButtonDown(0)) {
