@@ -1,6 +1,8 @@
 package com.vicmatskiv.weaponlib.render;
 
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.TimerTask;
 
 import javax.jws.soap.SOAPBinding.Use;
 
@@ -15,6 +17,10 @@ import com.vicmatskiv.weaponlib.PlayerWeaponInstance;
 import com.vicmatskiv.weaponlib.Weapon;
 import com.vicmatskiv.weaponlib.WeaponAttachmentAspect;
 import com.vicmatskiv.weaponlib.WeaponAttachmentAspect.FlaggedAttachment;
+import com.vicmatskiv.weaponlib.debug.SysOutController;
+import com.vicmatskiv.weaponlib.render.gui.ColorPalette;
+import com.vicmatskiv.weaponlib.render.gui.GUIRenderHelper;
+import com.vicmatskiv.weaponlib.render.gui.GUIRenderHelper.StringAlignment;
 import com.vicmatskiv.weaponlib.shader.jim.Shader;
 import com.vicmatskiv.weaponlib.shader.jim.ShaderManager;
 
@@ -35,34 +41,101 @@ import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.util.text.TextFormatting;
 import scala.util.Random;
 
+/**
+ * Singleton modification GUI render & logic class
+ * 
+ * @author James R. Holden, 2022 [HRC]
+ */
 public class ModificationGUI {
 
+	// Static variables
 	public static ModificationGUI instance = new ModificationGUI();
 	private static final Minecraft mc = Minecraft.getMinecraft();
+	
+	// Tabs are constant b/w weapons
 	private static ArrayList<ModificationTab> tabList = new ArrayList<>();
 
-	private static final ModificationTab SCOPE_TAB = new ModificationTab("Sight", AttachmentCategory.SCOPE, 131, 200,
+	
+	// Texture for gui
+	private static final ResourceLocation MODIFICATION_GUI_TEXTURES = new ResourceLocation("mw:textures/gui/modificationguisheet.png");
+
+	
+	private static final double SIDEBAR_SCALE = 0.8;
+	private static final double SIDEBAR_ALPHA = 0.3;
+	
+	private static final double TAB_SCALE = 0.3;
+	
+	private static final float TAB_ALPHA = 0.7f;
+	private static final float TAB_TRANSPARENT_ALPHA = 0.3f;
+	
+	
+	private static final int SHEET_SIZE = 768;
+	
+
+	
+	private static final int TOOLTIP_COL_ERROR = 0x702b2b;
+	private static final int TOOLTIP_COL_NORMAL = 0x00000;
+	
+	
+	// Attachments tabs
+	private static final ModificationTab SCOPE_TAB = new ModificationTab("Sight", AttachmentCategory.SCOPE, -50, 50,
 			ModificationGroup.ATTACHMENT);
-	private static final ModificationTab BARREL_TAB = new ModificationTab("Muzzle", AttachmentCategory.SILENCER, 131,
-			200, ModificationGroup.ATTACHMENT);
-	private static final ModificationTab LASER_TAB = new ModificationTab("Laser", AttachmentCategory.LASER, 131, 200,
+	private static final ModificationTab BARREL_TAB = new ModificationTab("Muzzle", AttachmentCategory.SILENCER, 120, 75, ModificationGroup.ATTACHMENT);
+	private static final ModificationTab LASER_TAB = new ModificationTab("Laser", AttachmentCategory.LASER, 150, 0,
 			ModificationGroup.ATTACHMENT);
-	private static final ModificationTab GRIP_TAB = new ModificationTab("Grip", AttachmentCategory.GRIP, 131, 200,
+	private static final ModificationTab GRIP_TAB = new ModificationTab("Grip", AttachmentCategory.GRIP, 100, -50,
 			ModificationGroup.ATTACHMENT);
 
-	private static final ModificationTab HANDGUARD_TAB = new ModificationTab("Handguard", AttachmentCategory.GUARD, 131,
-			200, ModificationGroup.MODIFICATION);
+	
+	// Modifications tabs
+	private static final ModificationTab HANDGUARD_TAB = new ModificationTab("Handguard", AttachmentCategory.GUARD, 145, 0, ModificationGroup.MODIFICATION);
 	private static final ModificationTab FRONT_SIGHT_TAB = new ModificationTab("Front Sight",
-			AttachmentCategory.FRONTSIGHT, 131, 200, ModificationGroup.MODIFICATION);
+			AttachmentCategory.FRONTSIGHT, 120, 50, ModificationGroup.MODIFICATION);
 	private static final ModificationTab RECEIVER_TAB = new ModificationTab("Receiver", AttachmentCategory.RECEIVER,
-			131, 200, ModificationGroup.MODIFICATION);
+			-50, 50, ModificationGroup.MODIFICATION);
 	private static final ModificationTab REAR_GRIP_TAB = new ModificationTab("Rear Grip", AttachmentCategory.BACKGRIP,
-			131, 200, ModificationGroup.MODIFICATION);
-	private static final ModificationTab STOCK_TAB = new ModificationTab("Stock", AttachmentCategory.STOCK, 131, 200,
+			0, -50, ModificationGroup.MODIFICATION);
+	private static final ModificationTab STOCK_TAB = new ModificationTab("Stock", AttachmentCategory.STOCK, -100, -50,
+			ModificationGroup.MODIFICATION);
+	private static final ModificationTab RAILING_TAB = new ModificationTab("Railing", AttachmentCategory.RAILING, 50, 100,
 			ModificationGroup.MODIFICATION);
 
-	private ModificationTab activeTab;
+	
+	
+	// 
+	
+	
+	/**
+	 *  =====[ STATIC GUI ELEMENTS ]=====
+	 * 
+	 * Note to any developers trying to change this code:
+	 * I highly recommend just foregoing the static version temporarily
+	 * and making a temporary new TexturedRect in order to position it,
+	 * as it will be much easier.
+	 */
+	private static final TexturedRect PRIMARY_ELEMENT = new TexturedRect(0, 0, 0, 0, 311, 108,  1);
+	private static final TexturedRect RED_ELEMENT = new TexturedRect(0, 0, 311, 0, 311, 108,1);
 
+	private static final TexturedRect DROPDOWN_SELECT_ELEMENT = new TexturedRect(0, 111, 40, 254, 109, 28,  1)
+			.withSelectedVariant(188, 254);
+	
+	private static final TexturedRect DROPDOWN_SELECT_RED_ELEMENT = new TexturedRect(0, 111, 350, 300, 109, 28, 1)
+			.withSelectedVariant(350, 328);
+	private static final TexturedRect DROPDOWN_MENU_ELEMENT = new TexturedRect(0, 140, 0, 108, 434, 109, 1)
+			.withSelectedVariant(0, 478);
+	
+	private static final TexturedRect DROPDOWN_SAFE_BOX = new TexturedRect(0, 140, 0, 108, 434, 140, 1)
+			.withSelectedVariant(0, 478);
+	private static final TexturedRect DROPDOWN_BAR_ELEMENT = new TexturedRect(0, 250, 0, 222, 435, 32,  1)
+			.withSelectedVariant(0, 592);
+	private static final TexturedRect LEFT_ARROW_ELEMENT = new TexturedRect(165, 256.5, 0, 254, 40, 46, 0.4);
+	private static final TexturedRect RIGHT_ARROW_ELEMENT = new TexturedRect(255, 256.5, 149, 254, 39, 46, 0.4);
+	private static final TexturedRect MORE_ITEMS_ALERT_ELEMENT = new TexturedRect(75, 114, 0, 713, 26, 26, 0.8);
+	private static final TexturedRect PRIMARY_SELECTOR_ELEMENT = new TexturedRect(11, 10, 0, 389, 89, 89, 1);
+	private static final TexturedRect LOCK_OUT_ELEMENT = new TexturedRect(11, 10, 0, 624, 89, 89, 1);
+
+	
+	
 	static {
 
 		// attachment
@@ -77,28 +150,67 @@ public class ModificationGUI {
 		tabList.add(RECEIVER_TAB);
 		tabList.add(REAR_GRIP_TAB);
 		tabList.add(STOCK_TAB);
+		tabList.add(RAILING_TAB);
 
 		// customization
 	}
+	
+	// Useful to see what tab has it's dropdown
+	// active, as this will allow us to make the other
+	// tabs transparent
+	private ModificationTab activeTab;
+	
+	
+	// Current group selected, defaults to ATTACHMENT
+	private ModificationGroup currentGroup = ModificationGroup.ATTACHMENT;
 
+
+
+	// Essentially functions as a latch, allowing us
+	// to detect the first instant the mouse is clicked
 	private boolean waitingForMouseRelease = true;
+	
+	// Persistent variable that tells us if this is 
+	// a "click run" (i.e. should it treat it as if it
+	// were clicked on)
 	private boolean isInClick = false;
 	
+
 	private boolean dropdownCancel = false;
 	
 	// Integer of side tab hovered (i.e. mod/attach mode)
 	private int tabHovered = -1;
 
-	private ModificationGroup currentGroup = ModificationGroup.MODIFICATION;
+	
 
-	public double getGUIScale() {
+	// Radar chart
+	public RadarChart radarChart = new RadarChart("3", 0x1abc9c, 0.5f, 50, 5)
+			.withTitles(new String[] { "Damage", "Recoil", "Inaccuracy", "Firerate", "Velocity" });
 
-		return 0.3;
+	
+	/**
+	 * Returns instance of the {@link ModificationGUI}
+	 */
+	public static ModificationGUI getInstance() {
+		return instance;
 	}
 
+	
+
+	/**
+	 * Modification group enumerable, serves
+	 * to provide easy string formatting capabilities
+	 */
 	public static enum ModificationGroup {
 		ATTACHMENT, MODIFICATION, CUSTOMIZATION;
 
+		/**
+		 * Returns the modification group based on the ID
+		 * (Attachment = 0, Modification = 1, Customization = 2)
+		 * 
+		 * @param ID (0-2)
+		 * @return Modification group
+		 */
 		public static ModificationGroup fromID(int id) {
 			switch (id) {
 			case 0:
@@ -110,36 +222,116 @@ public class ModificationGUI {
 			}
 			return ATTACHMENT;
 		}
+		
+		/**
+		 * While this is easy to do with string manipulation,
+		 * faster to just look it up here.
+		 * (Attachment = 0, Modification = 1, Customization = 2)
+		 * 
+		 * @param ID (0-2)
+		 * @return String with first letter capatilized
+		 */
+		public static String getName(int id) {
+			switch(id) {
+			case 0:
+				return "Attachment";
+			case 1:
+				return "Modification";
+			case 2:
+				return "Customization";
+			}
+			return "";
+		}
 	}
 
-	public static String translate(String unlocalized) {
-		return new TextComponentTranslation(unlocalized + ".name").getFormattedText();
-	}
+	
 
+	/**
+	 * Tooltip builder class for easily creating &
+	 * rendering simple tooltips.
+	 * 
+	 * @author homer
+	 *
+	 */
 	private static class TooltipBuilder {
 		private StringBuilder sb = new StringBuilder();
+		private int color;
+		
+		/**
+		 * Sets tooltip builder's color
+		 * @param Hex color code
+		 */
+		public void setColor(int color) {
+			this.color = color;
+		}
 
+		/**
+		 * Adds a line with a bullet point in front of it
+		 * @param line
+		 */
+		public void addBulletPoint(String text) {
+			addLine("• " + text);
+		}
+		
+		/**
+		 * Adds a line of text to the tooltip
+		 * @param line
+		 */
 		public void addLine(String line) {
 			sb.append(line + "\n");
 		}
 
+		/**
+		 * Returns color as hexadecimal integer
+		 * @return Hex color
+		 */
+		public int getColor() {
+			return this.color;
+		}
+		
+		/**
+		 * In order to render sequentially,
+		 * returns lines as String[]
+		 * @return String array of lines split @ newline
+		 */
 		public String[] getLines() {
 			return getText().split("\n");
 		}
 
+		/**
+		 * Returns unmodified/unsplit text
+		 * @return Builder text
+		 */
 		public String getText() {
 			return sb.toString();
 		}
 
 	}
 
+	/**
+	 * Textured rect drawing and selection class
+	 */
 	private static class TexturedRect {
 		private double x, y, u, v, textureWidth, textureHeight, width, height, scale;
 
 		
+		// Alternate texture UV for the selected version
 		private int selectedU, selectedV;
 		
 		
+		/**
+		 *  Creates a new textured rect object
+		 * 
+		 * @param x What x coord to draw the rectangle at
+		 * @param y What y coord to draw the rectangle at
+		 * @param u X coordinate (actual pixel coord) of image top left
+		 * @param v Y coordinate (actual pixel coord) of image top left
+		 * @param width Width of drawing
+		 * @param height Height of drawing
+		 * @param textureWidth Width of image
+		 * @param textureHeight Height of image
+		 * @param scale
+		 */
 		public TexturedRect(double x, double y, double u, double v, double width, double height, double textureWidth,
 				double textureHeight, double scale) {
 			this.x = x;
@@ -153,6 +345,10 @@ public class ModificationGUI {
 			this.textureWidth = textureWidth;
 		}
 		
+		public TexturedRect(double x, double y, double u, double v, double width, double height, double scale) {
+			this(x, y, u, v, width, height, SHEET_SIZE, SHEET_SIZE, scale);
+		}
+		
 		
 		public TexturedRect withSelectedVariant(int u, int v) {
 			this.selectedU = u;
@@ -161,19 +357,29 @@ public class ModificationGUI {
 		}
 
 		public void render() {
-
-			// 149, 254
-			drawTexturedScaledRect(x, y, (float) u, (float) v, width, height, textureWidth, textureHeight, scale);
-			// drawTexturedRect(x, y, u, v, width, height, textureWidth, textureHeight);
+			GUIRenderHelper.drawTexturedScaledRect(x, y, (float) u, (float) v, width, height, textureWidth, textureHeight, scale);
 		}
 		
+		/**
+		 * Renders selected variant of the textured rectangle
+		 */
 		public void renderSelected() {
-			drawTexturedScaledRect(x, y, (float) selectedU, (float) selectedV, width, height, textureWidth, textureHeight, scale);
+			GUIRenderHelper.drawTexturedScaledRect(x, y, (float) selectedU, (float) selectedV, width, height, textureWidth, textureHeight, scale);
 	
 		}
 
+		/**
+		 * Checks if mouse within GUI boundings
+		 * 
+		 * @param guiX Top left X-coord of GUI
+		 * @param guiY Top left Y-coord of GUI
+		 * @param mouseX Mouse coordinate
+		 * @param mouseY Mouse coordinate
+		 * @param guiScale Scale of the gui
+		 * @return
+		 */
 		public boolean checkBounding(double guiX, double guiY, int mouseX, int mouseY, double guiScale) {
-			return checkInBox(mouseX, mouseY, guiX + this.x * guiScale, guiY + this.y * guiScale,
+			return GUIRenderHelper.checkInBox(mouseX, mouseY, guiX + this.x * guiScale, guiY + this.y * guiScale,
 					this.width * scale * guiScale, this.height * scale * guiScale);
 		}
 	}
@@ -201,8 +407,9 @@ public class ModificationGUI {
 		}
 
 		public void nextPage(int max) {
-
-			// System.out.println(max);
+			// Page cannot be lower than zero,
+			// and page count is determined by max/4
+			// as there are 4 items per page
 			if (page + 1 > max / 4) {
 				page = 0;
 			} else {
@@ -224,15 +431,52 @@ public class ModificationGUI {
 		}
 
 	}
+	
+	
+	/**
+	 * Translates an unlocalized name via {@link TextComponentTranslation}
+	 * 
+	 * @param Unlocalized item name
+	 * @return Localized item name
+	 */
+	public static String translate(String unlocalized) {
+		return new TextComponentTranslation(unlocalized + ".name").getFormattedText();
+	}
+	
+	public double getGUIScale() {
 
-	public static ModificationGUI getInstance() {
-		return instance;
+		return 0.3;
+	}
+	
+	
+	/**
+	 * Allows the class to update things like alpha without losing track of the initial color
+	 */
+	private float[] persistentColorState = new float[] {1.0f, 1.0f, 1.0f, 1.0f};
+	
+	private void setRGB(float r, float g, float b) {
+		persistentColorState[0] = r;
+		persistentColorState[1] = g;
+		persistentColorState[2] = b;
+		callPersistentState();
+	}
+	
+	private void callPersistentState() {
+		GlStateManager.color(persistentColorState[0], persistentColorState[1], persistentColorState[2], persistentColorState[3]);
+	}
+	
+	private void clearRGB() {
+		setRGB(1.0f, 1.0f, 1.0f);
+		callPersistentState();
+	}
+	
+	private void setAlpha(float alpha) {
+		persistentColorState[3] = alpha;
+		callPersistentState();
 	}
 
-	public static double radarMappings[] = new double[] { 1, 4, 6, 5, 8, 9, 7, 5 };
-
-	public RadarChart radarChart = new RadarChart("3", 0x1abc9c, 0.5f, 50, 5)
-			.withTitles(new String[] { "Damage", "Recoil", "Inaccuracy", "Firerate", "Velocity" });
+	
+	
 
 	public void setGroup(ModificationGroup group) {
 		this.currentGroup = group;
@@ -240,6 +484,11 @@ public class ModificationGUI {
 
 	public void render(ModContext modContext) {
 
+		
+		PlayerWeaponInstance weaponInstance = modContext.getMainHeldWeapon();
+		Weapon weapon = weaponInstance.getWeapon();
+		
+		// Gets scaled screen coordinates and mouse coordinaties
 		ScaledResolution scaledresolution = new ScaledResolution(mc);
 		final int scaledWidth = scaledresolution.getScaledWidth();
 		final int scaledHeight = scaledresolution.getScaledHeight();
@@ -247,291 +496,179 @@ public class ModificationGUI {
 		int mouseY = scaledHeight - Mouse.getY() * scaledHeight / mc.displayHeight - 1;
 
 		GlStateManager.pushMatrix();
-
 		mc.setIngameNotInFocus();
-		/*
-		 * ResourceLocation modifiTex = new
-		 * ResourceLocation("mw:textures/gui/modificationguisheet.png");
-		 * GlStateManager.enableAlpha(); GlStateManager.enableBlend();
-		 * 
-		 * 
-		 * GlStateManager.pushMatrix(); GlStateManager.translate(30, 30, 0);
-		 */
 
-		// Item item =
-		// modContext.getMainHeldWeapon().getAttachmentItemWithCategory(AttachmentCategory.RAILING);
 
-		// if(item == null) item = Items.DIAMOND;
-
-		// quickItemRender(item, 6, 6, 1.5);
-		// GlStateManager.enableTexture2D();
-
-		// mc.getTextureManager().bindTexture(modifiTex);
-
-		/*
-		 * GlStateManager.scale(0.3, 0.3, 0.3);
-		 * 
-		 * GlStateManager.enableBlend(); GlStateManager.color(1, 1, 1, 0.8f);
-		 * drawTexturedRect(0, 0, 0, 0, 311, 108, 512, 512);
-		 * 
-		 * 
-		 * GlStateManager.color(1.0f, 0.8f, 0.5f, 1); drawTexturedRect(0, 111, 40, 240,
-		 * 109, 28, 512, 512);
-		 * 
-		 * //mc.getRenderItem().
-		 * 
-		 * 
-		 * GlStateManager.popMatrix();
-		 */
-
-		// drawScaledString("Railing", 30, 15, 1, 0xffffff);
-		// GlStateManager.p
-
+		// Handle mouse clicks
 		if (!waitingForMouseRelease && Mouse.isButtonDown(0)) {
-			// System.out.println("hi");
 			waitingForMouseRelease = true;
 			isInClick = true;
 		} else if (!Mouse.isButtonDown(0)) {
 			waitingForMouseRelease = false;
 		}
 
-		SCOPE_TAB.setPos(-50, 50);
-		BARREL_TAB.setPos(120, 75);
-		LASER_TAB.setPos(150, 0);
-		GRIP_TAB.setPos(100, -50);
+		
 
-		RECEIVER_TAB.setPos(-50, 50);
-		FRONT_SIGHT_TAB.setPos(120, 50);
-		HANDGUARD_TAB.setPos(145, 0);
-		REAR_GRIP_TAB.setPos(0, -50);
-		STOCK_TAB.setPos(-100, -50);
 
-		if (activeTab != null) {
+		if (activeTab != null && !tabList.isEmpty() && tabList.get(tabList.size()-1) != activeTab) {
+			// Ensures this tab always renders very last
 			tabList.remove(activeTab);
 			tabList.add(activeTab);
 		}
 
+		// Draws all the tabs
 		for (ModificationTab mt : tabList) {
 			if (mt.group != currentGroup)
 				continue;
-			// if(mt == activeTab) continue;
-			if (mt == activeTab) {
-			//	 GlStateManager.translate(0, 0, 1000);
-			}
-		
-			drawModificationTab(scaledresolution, mt, mouseX, mouseY, modContext.getMainHeldWeapon(), mt.category,
-					modContext, mt == activeTab);
-		
-			if (mt == activeTab) {
-			//	 GlStateManager.translate(0, 0, -1000);
-			}
+			drawModificationTab(scaledresolution, mt, mouseX, mouseY, modContext.getMainHeldWeapon(), modContext);
 		}
-		if (activeTab != null) {
-			// drawModificationTab(scaledresolution, activeTab, mouseX, mouseY,
-			// modContext.getMainHeldWeapon(), activeTab.category, modContext);
-		}
-
-		// ItemAttachment<Weapon> attach =
-		// modContext.getMainHeldWeapon().getAttachmentItemWithCategory(AttachmentCategory.GUARD);
-
-		// boolean result = WeaponAttachmentAspect.isAttachmentInUse(attach,
-		// modContext.getMainHeldWeapon());
-		// System.out.println(result);
-		// drawTexturedRect(0, 0, 0, 0, width, height, textureWidth, textureHeight);
-
-		// System.out.println(SCOPE_TAB.category);
-		// drawTexturedModalRect(30, 30, 0, 0, 311, 109);
 
 		
 
 		GlStateManager.popMatrix();
-
 		GlStateManager.pushMatrix();
-		double scale = 0.8;
-		GlStateManager.scale(scale, scale, scale);
+		GlStateManager.scale(SIDEBAR_SCALE, SIDEBAR_SCALE, SIDEBAR_SCALE);
 
 		GlStateManager.disableTexture2D();
-		drawColoredRectangle(20, 20, 115, 175, 0.3, 0x000000);
-		drawColoredRectangle(140.5, 20, 7.5, 175, 0.3, 0x000000);
 		
-		drawColoredRectangle(20, 200, 128, 125, 0.3, 0x000000);
+		// Draws background rectangles
+		GUIRenderHelper.drawColoredRectangle(20, 20, 115, 175, SIDEBAR_ALPHA, ColorPalette.BLACK);
+		GUIRenderHelper.drawColoredRectangle(140.5, 20, 7.5, 175, SIDEBAR_ALPHA, ColorPalette.BLACK);
+		GUIRenderHelper.drawColoredRectangle(20, 200, 128, 125, SIDEBAR_ALPHA, ColorPalette.BLACK);
 
 		
 
 		if (Minecraft.getMinecraft().player.ticksExisted % 50 == 0) {
-			// System.out.println("UPLOADED");
-			
-			
-			
-			float firerate = modContext.getMainHeldWeapon().getFireRate();
-			float inaccuracy = modContext.getMainHeldWeapon().getWeapon().getInaccuracy()/10f;
-			float damage = modContext.getMainHeldWeapon().getWeapon().getSpawnEntityDamage()/20;
-			float recoil = modContext.getMainHeldWeapon().getRecoil()/10f;
+
+			float firerate = weaponInstance.getFireRate();
+			float inaccuracy = weaponInstance.getWeapon().getInaccuracy()/10f;
+			float damage = weaponInstance.getWeapon().getSpawnEntityDamage()/20;
+			float recoil = weaponInstance.getRecoil()/10f;
 			
 			damage = Math.min(damage, 1.0f);
 			
-			//float norm = MathHelper.sqrt(firerate*firerate + inaccuracy*inaccuracy + damage*damage + recoil*recoil + 0.14*0.14);
-			
-			
-			//norm = 20f;
-			//float norm = (firerate + inaccuracy + damage + recoil)/4f;
-		//	firerate /= norm;
-			//inaccuracy /= norm;
-			//damage /= norm;
-			//recoil /= norm;
-			
-		//	firerate = 0.9f;
 			
 			radarChart.uploadSet(new float[] { damage, recoil, inaccuracy, firerate, 0.14f });
 		}
 
+		
+		// Render radar chart on screen
 		GlStateManager.disableTexture2D();
-		radarChart.render(84, 275.5, mouseX, mouseY, scale);
-
+		radarChart.render(84, 275.5, mouseX, mouseY, SIDEBAR_SCALE);
 		GlStateManager.enableTexture2D();
 		
-		drawScaledString(
-				TextFormatting.GOLD + "Weapon Stats",
-				30, 205, 1.0, 0xffffff);
 		
-		drawScaledString(
-				TextFormatting.GOLD + new TextComponentTranslation(modContext.getMainHeldWeapon().getWeapon().getUnlocalizedName() + ".name")
-						.getFormattedText(),
-				30, 30, 1.0, 0xffffff);
-		drawScaledString(
-				"Damage :: " + TextFormatting.GOLD + modContext.getMainHeldWeapon().getWeapon().getSpawnEntityDamage(),
-				30, 60, 1, 0xffffff);
-		drawScaledString("Recoil :: " + TextFormatting.GOLD + modContext.getMainHeldWeapon().getWeapon().getRecoil(),
-				30, 75, 1, 0xffffff);
-		drawScaledString("Firerate :: " + TextFormatting.GOLD + modContext.getMainHeldWeapon().getFireRate(), 30, 90, 1,
-				0xffffff);
-		drawScaledString(
-				"Inaccuracy :: " + TextFormatting.GOLD + modContext.getMainHeldWeapon().getWeapon().getInaccuracy(), 30,
-				105, 1, 0xffffff);
+		// Write titles in
+		GUIRenderHelper.drawScaledString(
+				TextFormatting.GOLD + "Weapon Stats",
+				30, 205, 1.0, ColorPalette.WHITE);
+		
+		GUIRenderHelper.drawScaledString(
+				TextFormatting.GOLD + translate(weapon.getUnlocalizedName()),
+				30, 30, 1.0, ColorPalette.WHITE);
+		GUIRenderHelper.drawScaledString(
+				"Damage :: " + TextFormatting.GOLD + weapon.getSpawnEntityDamage(),
+				30, 60, 1, ColorPalette.WHITE);
+		GUIRenderHelper.drawScaledString("Recoil :: " + TextFormatting.GOLD + weapon.getRecoil(),
+				30, 75, 1, ColorPalette.WHITE);
+		GUIRenderHelper.drawScaledString("Firerate :: " + TextFormatting.GOLD + weaponInstance.getFireRate(), 30, 90, 1,
+				ColorPalette.WHITE);
+		GUIRenderHelper.drawScaledString(
+				"Inaccuracy :: " + TextFormatting.GOLD + weapon.getInaccuracy(), 30,
+				105, 1, ColorPalette.WHITE);
 
 		GlStateManager.popMatrix();
-
-		GlStateManager.disableTexture2D();
-		ResourceLocation modifiTex = new ResourceLocation("mw:textures/gui/modificationguisheet.png");
-
 		
-		tabHovered = -1;
-		GlStateManager.color(1, 1, 1);
+		mc.getTextureManager().bindTexture(MODIFICATION_GUI_TEXTURES);
+		
+		//tabHovered = -1;
+		
+		boolean nullHoverTab = false;
+		
+		clearRGB();
+		setAlpha(1.0f);
 		for (int groupID = 0; groupID < 2; ++groupID) {
 			GlStateManager.disableTexture2D();
-			drawColoredRectangle(scaledresolution.getScaledWidth_double() - 15,
+			GUIRenderHelper.drawColoredRectangle(scaledresolution.getScaledWidth_double() - 15,
 					scaledresolution.getScaledHeight_double() - 75 - (18 * groupID), 15, 15, 0.5, 0x00000);
 
+			mc.getTextureManager().bindTexture(MODIFICATION_GUI_TEXTURES);
+			
 			GlStateManager.enableTexture2D();
-			mc.getTextureManager().bindTexture(modifiTex);
 			TexturedRect groupSelector = new TexturedRect(scaledresolution.getScaledWidth_double() - 13,
 					scaledresolution.getScaledHeight_double() - 73.5 - (18 * groupID), 413, 356, 46, 46, 768, 768,
 					0.25);
-			// drawTexturedScaledRect(scaledresolution.getScaledWidth_double()-13,
-			// scaledresolution.getScaledHeight_double()- 73.5 - yOffset, 413, 356, 46, 46,
-			// 768, 768, 0.25);
-			groupSelector.render();
 
-			if (groupSelector.checkBounding(0, 0, mouseX, mouseY, 1.0) || (tabHovered == -1 && ModificationGroup.fromID(groupID) == currentGroup)) {
+			groupSelector.render();
+			if(groupSelector.checkBounding(0, 0, mouseX, mouseY, 1.0)) {
+				nullHoverTab = true;
 				tabHovered = groupID;
+			}
+			
+			
+			if (groupSelector.checkBounding(0, 0, mouseX, mouseY, 1.0) || (tabHovered == -1 && ModificationGroup.fromID(groupID) == currentGroup)) {
+				
+				
+				
 				TexturedRect groupSelector2 = new TexturedRect(scaledresolution.getScaledWidth_double() - 13,
 						scaledresolution.getScaledHeight_double() - 73.5 - (18 * groupID), 413, 402, 46, 46, 768, 768,
 						0.25);
-				// drawTexturedScaledRect(scaledresolution.getScaledWidth_double()-13,
-				// scaledresolution.getScaledHeight_double()- 73.5 - yOffset, 413, 356, 46, 46,
-				// 768, 768, 0.25);
+
 				groupSelector2.render();
-				String text = ModificationGroup.fromID(groupID).toString();
-				text = text.toLowerCase();
-				text = text.substring(0, 1).toUpperCase() + text.substring(1);
-				text += " Mode";
-				
-				
-				//GlStateManager.pushMatrix();
-				GlStateManager.color(1, 1, 1, 0.5f);
-				mc.getTextureManager().bindTexture(modifiTex);
-				drawTexturedScaledRect(scaledresolution.getScaledWidth_double() - 134, scaledresolution.getScaledHeight_double() - 74.5 - (18 * groupID), 90, 624, 390, 45, 768, 768, 0.3);
-				GlStateManager.color(1, 1, 1, 1);
+				String text = ModificationGroup.getName(groupID) + " Mode";
+				setAlpha(0.5f);
+			    GUIRenderHelper.drawTexturedScaledRect(scaledresolution.getScaledWidth_double() - 134, scaledresolution.getScaledHeight_double() - 74.5 - (18 * groupID), 90, 624, 390, 45, 768, 768, 0.3);
+				setAlpha(1.0f);
 
 				
-				drawScaledString(text,
-						scaledresolution.getScaledWidth_double() - 3 - mc.fontRenderer.getStringWidth(text),
-						scaledresolution.getScaledHeight_double() - 75 - (18 * groupID) + mc.fontRenderer.FONT_HEIGHT/2.0, scale, 0xffffff);
-
+				GUIRenderHelper.drawAlignedString(text, StringAlignment.RIGHT, true, scaledresolution.getScaledWidth_double() - 18, scaledresolution.getScaledHeight_double() - 75 - (18 * groupID), SIDEBAR_SCALE, ColorPalette.WHITE);
+		
 				
 				if(isInClick) {
-					
-					activeTab = null;
+					// Click on a certain group
 					currentGroup = ModificationGroup.fromID(groupID);
+					
+					weaponInstance.setAltModificationModeEnabled(currentGroup == ModificationGroup.MODIFICATION);
+					
 				}
 			}
 		}
+		if(!nullHoverTab) tabHovered = -1;
 
-		/*
-		 * for(double yOffset = 0; yOffset < 40; yOffset += 16) {
-		 * GlStateManager.disableTexture2D();
-		 * //drawColoredRectangle(scaledresolution.getScaledWidth_double()-15,
-		 * scaledresolution.getScaledHeight_double()-75 - yOffset, 15, 15, 0.5,
-		 * 0x00000); GlStateManager.enableTexture2D(); GlStateManager.color(1f, 1f, 1f);
-		 * mc.getTextureManager().bindTexture(modifiTex);
-		 * 
-		 * drawTexturedScaledRect(scaledresolution.getScaledWidth_double()-13,
-		 * scaledresolution.getScaledHeight_double()- 73.5 - yOffset, 413, 356, 46, 46,
-		 * 768, 768, 0.25); }
-		 */
 
 		// Reset click detection
-				isInClick = false;
+		// (Rememeber they stay persistent)
+		isInClick = false;
 		
 		GlStateManager.enableTexture2D();
 	}
 
-	public static boolean checkInBox(double tX, double tY, double x, double y, double width, double height) {
-		return tX >= x && tX <= x + width && tY >= y && tY <= y + height;
-	}
-
-	public static boolean checkInRadius(double tX, double tY, double x, double y, double r) {
-		double x1 = x - tX;
-		double y1 = y - tY;
-		return Math.sqrt(x1 * x1 + y1 * y1) <= r;
-	}
+	
 
 	public void drawModificationTab(ScaledResolution sr, ModificationTab tab, int mouseX, int mouseY,
-			PlayerWeaponInstance pwi, AttachmentCategory category, ModContext modcontext, boolean primary) {
+			PlayerWeaponInstance pwi, ModContext modcontext) {
 
-		float guiTransparency = 0.7f;
-
+		
+		// Set transparency value
+		float guiTransparency = TAB_ALPHA;
 		if (activeTab != null && tab != activeTab) {
-			guiTransparency = 0.3f;
+			guiTransparency = TAB_TRANSPARENT_ALPHA;
 		}
 
-		double scale = 0.3;
+		double scale = TAB_SCALE;
 		double x = sr.getScaledWidth_double() / 2 - tab.x;
 		double y = sr.getScaledHeight_double() / 2 - tab.y;
 		String title = tab.title;
-		category = tab.category;
+		AttachmentCategory category = tab.category;
 
-		double sheetSize = 768;
+		//System.out.println(mc.displayHeight - (y/scale + 200));
+		if(tab.isDropDownOpen && sr.getScaledHeight_double() < (y + 100)) {
+			y -= 30;
+		}
+		
 
 		// Set up layout
-		TexturedRect primaryElement = new TexturedRect(0, 0, 0, 0, 311, 108, sheetSize, sheetSize, 1);
-		TexturedRect redElement = new TexturedRect(0, 0, 311, 0, 311, 108, sheetSize, sheetSize, 1);
-
-		TexturedRect dropdownSelect = new TexturedRect(0, 111, 40, 254, 109, 28, sheetSize, sheetSize, 1)
-				.withSelectedVariant(188, 254);
 		
-		TexturedRect dropdownSelectRed = new TexturedRect(0, 111, 350, 300, 109, 28, sheetSize, sheetSize, 1)
-				.withSelectedVariant(350, 328);
-		
-		//TexturedRect dropdownSelectHovered = new TexturedRect(0, 111, 188, 254, 109, 28, sheetSize, sheetSize, 1);
-
-		TexturedRect dropdownMenu = new TexturedRect(0, 140, 0, 108, 434, 109, sheetSize, sheetSize, 1)
-				.withSelectedVariant(0, 478);
-		TexturedRect dropdownBar = new TexturedRect(0, 250, 0, 222, 435, 32, sheetSize, sheetSize, 1)
-				.withSelectedVariant(0, 592);
-		TexturedRect leftArrow = new TexturedRect(165, 256.5, 0, 254, 40, 46, sheetSize, sheetSize, 0.4);
-		TexturedRect rightArrow = new TexturedRect(255, 256.5, 149, 254, 39, 46, sheetSize, sheetSize, 0.4);
-
 		ArrayList<FlaggedAttachment> inventory = modcontext.getAttachmentAspect().getInventoryAttachments(category,
 				pwi);
 
@@ -547,11 +684,10 @@ public class ModificationGUI {
 		if (inventory.isEmpty())
 			allInventoryRequired = false;
 
-		boolean dropdownHovered = dropdownSelect.checkBounding(x, y, mouseX, mouseY, scale);
+		boolean dropdownHovered = DROPDOWN_SELECT_ELEMENT.checkBounding(x, y, mouseX, mouseY, scale);
 
 		// Bind texture
-		ResourceLocation modifiTex = new ResourceLocation("mw:textures/gui/modificationguisheet.png");
-		mc.getTextureManager().bindTexture(modifiTex);
+		mc.getTextureManager().bindTexture(MODIFICATION_GUI_TEXTURES);
 
 		GlStateManager.pushMatrix();
 		GlStateManager.translate(x, y, 0.0);
@@ -559,19 +695,18 @@ public class ModificationGUI {
 
 		// Set color & slight transparency
 		GlStateManager.enableBlend();
-		GlStateManager.color(1, 1, 1, guiTransparency);
+		clearRGB();
+		setAlpha(guiTransparency);
 
-		// System.out.println(isInClick);
+		// Tries to open the tab
 		if (dropdownHovered && isInClick) {
 			tab.isDropDownOpen = !tab.isDropDownOpen;
 			if (tab.isDropDownOpen) {
 				activeTab = tab;
-
 				for (ModificationTab mt : tabList) {
 					if (mt != tab)
 						mt.isDropDownOpen = false;
 				}
-
 			} else {
 				activeTab = null;
 			}
@@ -582,28 +717,27 @@ public class ModificationGUI {
 		boolean requiresTooltip = false;
 
 		// TexturedRect dropdownMenu = new TexturedRect
-		// GlStateManager.color(1, 0.4f, 0.2f, 0.8f);
+		// GlStateManager.fcolor(1, 0.4f, 0.2f, 0.8f);
 		if (allInventoryRequired) {
-			redElement.render();
+			RED_ELEMENT.render();
 		} else {
-			primaryElement.render();
+			PRIMARY_ELEMENT.render();
 		}
 		ItemAttachment<Weapon> primaryAttachment = pwi.getAttachmentItemWithCategory(category);
 
+		
+		// Does something require this attachment?
 		boolean lockOutState = WeaponAttachmentAspect.isRequired(primaryAttachment, modcontext.getMainHeldWeapon());
 
-		// primaryElement.render();
-		// GlStateManager.color(1, 1f, 1f, 0.8f);
-
-		TexturedRect primarySelector = new TexturedRect(11, 10, 0, 389, 89, 89, sheetSize, sheetSize, 1);
-		TexturedRect lockOut = new TexturedRect(11, 10, 0, 624, 89, 89, sheetSize, sheetSize, 1);
-
+		
 	//	System.out.println(dropdownCancel);
-		if (!dropdownCancel && primaryAttachment != null && primarySelector.checkBounding(x, y, mouseX, mouseY, scale)) {
-			GlStateManager.color(1, 1, 1, 0.5f);
+		if (!dropdownCancel && primaryAttachment != null && PRIMARY_SELECTOR_ELEMENT.checkBounding(x, y, mouseX, mouseY, scale)) {
+			
+			setAlpha(0.5f);
 			if (!lockOutState)
-				primarySelector.render();
+				PRIMARY_SELECTOR_ELEMENT.render();
 
+			tooltip.color = TOOLTIP_COL_NORMAL;
 			requiresTooltip = true;
 			tooltip.addLine(
 					new TextComponentTranslation(primaryAttachment.getUnlocalizedName() + ".name").getFormattedText());
@@ -613,8 +747,7 @@ public class ModificationGUI {
 						pwi);
 				tooltip.addLine(TextFormatting.BOLD + "Is Required By:");
 				for (ItemAttachment<Weapon> req : requirees)
-					tooltip.addLine(
-							"• " + new TextComponentTranslation(req.getUnlocalizedName() + ".name").getFormattedText());
+					tooltip.addBulletPoint(translate(req.getUnlocalizedName()));
 			}
 
 			if (isInClick) {
@@ -622,66 +755,48 @@ public class ModificationGUI {
 						ItemStack.EMPTY);
 
 			}
-			GlStateManager.color(1, 1, 1, guiTransparency);
+			setAlpha(guiTransparency);
+	
 
 		}
 
-		if (lockOutState) {
-			GlStateManager.color(1, 1, 1, 0.9f);
-
-			lockOut.render();
-			GlStateManager.color(1, 1, 1, guiTransparency);
-
-		}
-		// Render tab
-		// drawTexturedRect(0, 0, 0, 0, 311, 108, 512, 512);
-
-		// Render dropdown
 		
+		// Reset RGB state
+		clearRGB();
+		if (lockOutState) {
+			setAlpha(0.9f);
+			LOCK_OUT_ELEMENT.render();
+			setAlpha(guiTransparency);
+		}
+
+		
+		// Render the dropdown depending on
+		// if it should be red or not
 		if(!allInventoryRequired) {
 			if (!dropdownHovered) {
-				dropdownSelect.render();
-				// GlStateManager.color(1.0f, 1.0f, 1.0f, 0.8f);
-			} else {
-				dropdownSelect.renderSelected();
-				//dropdownSelectHovered.render();
-				// GlStateManager.color(1.0f, 0.8f, 0.7f, 0.8f);
-			}
+				DROPDOWN_SELECT_ELEMENT.render();
+			} else DROPDOWN_SELECT_ELEMENT.renderSelected();
+			
 		} else {
 			if (!dropdownHovered) {
-				dropdownSelectRed.render();
-				// GlStateManager.color(1.0f, 1.0f, 1.0f, 0.8f);
-			} else {
-				dropdownSelectRed.renderSelected();
-				//dropdownSelectHovered.render();
-				// GlStateManager.color(1.0f, 0.8f, 0.7f, 0.8f);
-			}
+				DROPDOWN_SELECT_RED_ELEMENT.render();
+			} else DROPDOWN_SELECT_RED_ELEMENT.renderSelected();
 		}
 		
-		
-
-		/*
-		TexturedRect permanencyAlert = new TexturedRect(118, 50, 26, 713, 26, 26, sheetSize, sheetSize, 1.4);
-		if (!modcontext.getMainHeldWeapon().getWeapon().isCategoryRemovable(category))
-			permanencyAlert.render();
-
-		if (permanencyAlert.checkBounding(x, y, mouseX, mouseY, scale)) {
-			requiresTooltip = true;
-			tooltip.addLine("Permanent Category");
-			tooltip.addLine(TextFormatting.ITALIC + "Can never be empty");
-		}
-		*/
-
-		TexturedRect moreItemsAlert = new TexturedRect(75, 114, 0, 713, 26, 26, sheetSize, sheetSize, 0.8);
+		// 
 		if (inventory.size() > 0)
-			moreItemsAlert.render();
+			MORE_ITEMS_ALERT_ELEMENT.render();
 
-		// drawTexturedRect(0, 111, 40, 254, 109, 28, 512, 512);
-		GlStateManager.color(1.0f, 1.0f, 1.0f, guiTransparency);
-
+		
+		
+		
+		setAlpha(guiTransparency);
 		if(activeTab == tab) {
 			dropdownCancel = false;
-			if(tab.isDropDownOpen && dropdownMenu.checkBounding(x, y, mouseX, mouseY, scale)) {
+			
+
+			
+			if(tab.isDropDownOpen && DROPDOWN_SAFE_BOX.checkBounding(x, y, mouseX, mouseY, scale)) {
 				dropdownCancel = true;
 			}
 		}
@@ -693,95 +808,62 @@ public class ModificationGUI {
 			GlStateManager.pushMatrix();
 			GlStateManager.translate(0, 0, 100);
 			if(!allInventoryRequired) {
-				dropdownMenu.render();
-			} else {
-				dropdownMenu.renderSelected();
-			}
+				DROPDOWN_MENU_ELEMENT.render();
+			} else DROPDOWN_MENU_ELEMENT.renderSelected();
 			GlStateManager.popMatrix();
-			//GlStateManager.translate(0, 0, -1000);
-			
-			// drawTexturedRect(0, 140, 0, 108, 434, 109, 512, 512);
-			// drawTexturedRect(0, 250, 0, 222, 435, 32, 512, 512);
+
 			if(!allInventoryRequired) {
-				dropdownBar.render();
-			} else {
-				dropdownBar.renderSelected();
-			}
-			//dropdownBar.render();
+				DROPDOWN_BAR_ELEMENT.render();
+			} else DROPDOWN_BAR_ELEMENT.renderSelected();
 
-			if (leftArrow.checkBounding(x, y, mouseX, mouseY, scale)) {
-
+			// Draw the two arrows
+			
+			if (LEFT_ARROW_ELEMENT.checkBounding(x, y, mouseX, mouseY, scale)) {
 				if (isInClick)
 					tab.previousPage();
-				GlStateManager.color(1.0f, 1.0f, 1.0f, 0.5f);
-
+				setAlpha(0.5f);
 			}
-			leftArrow.render();
-			GlStateManager.color(1, 1, 1, 1);
-			/*
-			 * if(!checkInBox(mouseX, mouseY, x + 165*scale, y + 256.5*scale, 40*0.4*scale,
-			 * 46*0.4*scale)) { drawTexturedScaledRect(165, 256.5, 0, 254, 40, 46, 512, 512,
-			 * 0.4);
-			 * 
-			 * }
-			 */
-			if (rightArrow.checkBounding(x, y, mouseX, mouseY, scale)) {
+			
+			
+			LEFT_ARROW_ELEMENT.render();
+			setAlpha(1.0f);
+
+			if (RIGHT_ARROW_ELEMENT.checkBounding(x, y, mouseX, mouseY, scale)) {
 				if (isInClick)
 					tab.nextPage(inventory.size());
-
-				GlStateManager.color(1.0f, 1.0f, 1.0f, 0.5f);
-
+				setAlpha(0.5f);
 			}
-			rightArrow.render();
-			GlStateManager.color(1, 1, 1, 1);
-			if (!checkInBox(mouseX, mouseY, x + 255 * scale, y + 256.5, 40 * 0.4 * scale, 46 * 0.4 * scale)) {
-				// drawTexturedScaledRect(255, 256.5, 149, 254, 40, 46, 512, 512, 0.4);
+			
+			RIGHT_ARROW_ELEMENT.render();
+			setAlpha(1.0f);
 
-			}
-
-			drawScaledString("Pg. " + (tab.page + 1), 188.5, 256.5, 2.5, 0xffffff);
+			GUIRenderHelper.drawScaledString("Pg. " + (tab.page + 1), 188.5, 256.5, 2.5, ColorPalette.WHITE);
 
 		}
 
 		GlStateManager.enableBlend();
-		GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
-		GlStateManager.color(0.5f, 1, 1, 0.3f);
+	//	setRGB(0.5f, 1.0f, 1.0f);
+		setAlpha(0.3f);
 
 		if (dropdownHovered) {
-			drawScaledString(title, 125, 10, 2.5, 0xfeca57);
-
+			GUIRenderHelper.drawScaledString(title, 125, 10, 2.5, 0xfeca57);
 		} else {
-			// GlStateManager.color(0.5f, 1, 1, 0.3f);
-			drawScaledString(title, 125, 10, 2.5, 0xffffff);
-
+			GUIRenderHelper.drawScaledString(title, 125, 10, 2.5, ColorPalette.WHITE);
 		}
 
 		// Primary item render
 		ItemAttachment<Weapon> current = pwi.getAttachmentItemWithCategory(category);
 	
 		if (current != null) {
-			GlStateManager.color(1, 1, 1, 1);
+			clearRGB();
+			setAlpha(1.0f);
 			
-			//Shader shadla = ShaderManager.loadVMWShader("alpha");
-			//shadla.use();
 			
-			boolean obscurityCheck = false;
-			for(ModificationTab mt : this.tabList) {
-				if(activeTab == null) break;
-				if(mt == tab || tab == activeTab) continue;
-				//System.out.println(tab.y - mt.y);
-				if(tab.y < mt.y) {
-					obscurityCheck = true;
-					break;
-				}
-			}
 			
-			obscurityCheck = false;
 			GlStateManager.pushMatrix();
 			GlStateManager.translate(0, 0, -15);
-			quickItemRender(current, 13, 13, 5, obscurityCheck);
+			GUIRenderHelper.quickItemRender(current, 13, 13, 5);
 			GlStateManager.popMatrix();
-			//shadla.release();
 			
 		}
 
@@ -798,41 +880,40 @@ public class ModificationGUI {
 				FlaggedAttachment flag = inventory.get(g);
 
 				
-				quickItemRender(flag.getAttachment(), i + 13, 150, 5, false);
+				GUIRenderHelper.quickItemRender(flag.getAttachment(), i + 13, 150, 5);
 
 				// RenderHelper.disableStandardItemLighting();
 				GlStateManager.enableBlend();
 				GlStateManager.enableAlpha();
-				mc.getTextureManager().bindTexture(modifiTex);
+				mc.getTextureManager().bindTexture(MODIFICATION_GUI_TEXTURES);
 
 				// TexturedRect redBlockade = new TexturedRect(i + 11, 150, 0, 300, 89, 89, 512,
 				// 512, 1);
 
 				if (flag.requiresAnyParts()) {
-					TexturedRect redBlockade = new TexturedRect(i + 11, 150, 0, 300, 89, 89, sheetSize, sheetSize, 1);
+					TexturedRect redBlockade = new TexturedRect(i + 11, 150, 0, 300, 89, 89, 1);
 					redBlockade.render();
 
 					if (redBlockade.checkBounding(x, y, mouseX, mouseY, scale)) {
 						requiresTooltip = true;
 
-						tooltip.addLine(
-								new TextComponentTranslation(flag.getAttachment().getUnlocalizedName() + ".name")
-										.getFormattedText());
+						
+						tooltip.color = TOOLTIP_COL_ERROR;
+						tooltip.addBulletPoint(translate(flag.getAttachment().getUnlocalizedName()));
 						tooltip.addLine(TextFormatting.BOLD + "Required Mods: ");
-
 						for (ItemAttachment<Weapon> required : flag.getRequiredParts()) {
-							tooltip.addLine("• " + new TextComponentTranslation(required.getUnlocalizedName() + ".name")
-									.getFormattedText());
+							tooltip.addBulletPoint(translate(required.getUnlocalizedName()));
 						}
 					}
 					// drawTexturedRect(i+11, 150, 0, 300, 89, 89, 512, 512);
 
 				} else {
-					TexturedRect selector = new TexturedRect(i + 11, 150, 0, 389, 89, 89, sheetSize, sheetSize, 1);
+					TexturedRect selector = new TexturedRect(i + 11, 150, 0, 389, 89, 89, 1);
 					if (selector.checkBounding(x, y, mouseX, mouseY, scale)) {
-						GlStateManager.color(1, 1, 1, 0.5f);
+						setAlpha(0.5f);
 						selector.render();
 
+						tooltip.color = TOOLTIP_COL_NORMAL;
 						requiresTooltip = true;
 						tooltip.addLine(
 								new TextComponentTranslation(flag.getAttachment().getUnlocalizedName() + ".name")
@@ -841,17 +922,9 @@ public class ModificationGUI {
 						if (isInClick) {
 							modcontext.getAttachmentAspect().forceAttachment(category, modcontext.getMainHeldWeapon(),
 									flag.getItemStack());
-
 						}
 					}
-					// if(redBlockade)
 				}
-				// checkInBox(mouseX, mouseY, x + i*scale + 11*scale, y + 150*scale, 89*scale,
-				// 89*scale)
-
-				// if(checkInBox(mouseX, mouseY, x + (i + 11), y + 150, 89, 89)) {
-				// }
-
 				i += 108;
 
 			}
@@ -860,7 +933,7 @@ public class ModificationGUI {
 		GlStateManager.popMatrix();
 
 		if (allInventoryRequired) {
-			drawScaledString("Mods required", 119, 50, 3.0, 0xff3f34);
+			GUIRenderHelper.drawScaledString("Mods required", 119, 50, 3.0, 0xff3f34);
 		}
 
 		GlStateManager.popMatrix();
@@ -874,8 +947,8 @@ public class ModificationGUI {
 			// tooltip.addLine("fuck off");
 
 			// Bind tooltip texture
-			mc.getTextureManager().bindTexture(modifiTex);
-			GlStateManager.color(1.0f, 1.0f, 1.0f, 0.5f);
+			mc.getTextureManager().bindTexture(MODIFICATION_GUI_TEXTURES);
+			setAlpha(0.5f);
 
 			String[] args = tooltip.getLines();
 
@@ -893,7 +966,7 @@ public class ModificationGUI {
 			// Draw tooltip background
 			GlStateManager.disableTexture2D();
 			
-			drawColoredRectangle(mouseX, mouseY, maxStringWidth, maxStringHeight, 0.5, 0x2f3640);
+			GUIRenderHelper.drawColoredRectangle(mouseX, mouseY, maxStringWidth, maxStringHeight, 0.5, tooltip.color);
 			//drawTexturedScaledRect(mouseX, mouseY, 89, 300, maxStringWidth, maxStringHeight, sheetSize, sheetSize, 0.5);
 
 			// System.out.println(tooltip.getText());
@@ -901,97 +974,18 @@ public class ModificationGUI {
 			GlStateManager.enableTexture2D();
 			int space = 0;
 			for (String splitted : args) {
-				drawScaledString(splitted, mouseX + 2, mouseY + 2 + space, 1.0, 0xffffff);
+				GUIRenderHelper.drawScaledString(splitted, mouseX + 2, mouseY + 2 + space, 1.0, ColorPalette.WHITE);
 				space += 10;
 			}
 
-			
+			setAlpha(1.0f);
+			clearRGB();
 			GlStateManager.popMatrix();
 		}
 
 	}
 
-	public void drawScaledString(String text, double x, double y, double scale, int color) {
-		GlStateManager.pushMatrix();
-		GlStateManager.translate(x, y, 0);
-		GlStateManager.scale(scale, scale, scale);
-
-		mc.fontRenderer.drawStringWithShadow(text, 0, 0, color);
-
-		GlStateManager.popMatrix();
-	}
-
-	public static void quickItemRender(Item item, double x, double y, double scale, boolean depthUse) {
-		GlStateManager.pushMatrix();
-
-		
-		
-		
-		if(depthUse) GlStateManager.disableDepth();
 	
-		GlStateManager.translate(x, y, 0);
-		GlStateManager.scale(scale, scale, 1.0);
-		RenderHelper.enableGUIStandardItemLighting();
-		Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(new ItemStack(item), 0, 0);
-		RenderHelper.disableStandardItemLighting();
-		
-		
-		if(depthUse) GlStateManager.enableDepth();
-		
-		GlStateManager.popMatrix();
-	}
-
-	public static void drawTexturedRect(double x, double y, float u, float v, double width, double height,
-			double textureWidth, double textureHeight) {
-		float f = (float) (1.0F / textureWidth);
-		float f1 = (float) (1.0F / textureHeight);
-		Tessellator tessellator = Tessellator.getInstance();
-		BufferBuilder bufferbuilder = tessellator.getBuffer();
-		bufferbuilder.begin(7, DefaultVertexFormats.POSITION_TEX);
-		bufferbuilder.pos((double) x, (double) (y + height), 0.0D)
-				.tex((double) (u * f), (double) ((v + (float) height) * f1)).endVertex();
-		bufferbuilder.pos((double) (x + width), (double) (y + height), 0.0D)
-				.tex((double) ((u + (float) width) * f), (double) ((v + (float) height) * f1)).endVertex();
-		bufferbuilder.pos((double) (x + width), (double) y, 0.0D)
-				.tex((double) ((u + (float) width) * f), (double) (v * f1)).endVertex();
-		bufferbuilder.pos((double) x, (double) y, 0.0D).tex((double) (u * f), (double) (v * f1)).endVertex();
-		tessellator.draw();
-
-	}
-
-	public static void drawColoredRectangle(double x, double y, double width, double height, double alpha, int color) {
-
-		float r = (float) (((color & 0xFF0000) >> 16) / 255.0);
-		float g = (float) (((color & 0xFF00) >> 8) / 255.0);
-		float b = (float) ((color & 0xFF) / 255.0);
-
-		Tessellator tessellator = Tessellator.getInstance();
-		BufferBuilder bufferbuilder = tessellator.getBuffer();
-		bufferbuilder.begin(7, DefaultVertexFormats.POSITION_COLOR);
-		bufferbuilder.pos((double) x, (double) (y + height), 0.0D).color(r, g, b, (float) alpha).endVertex();
-		bufferbuilder.pos((double) (x + width), (double) (y + height), 0.0D).color(r, g, b, (float) alpha).endVertex();
-		bufferbuilder.pos((double) (x + width), (double) y, 0.0D).color(r, g, b, (float) alpha).endVertex();
-		bufferbuilder.pos((double) x, (double) y, 0.0D).color(r, g, b, (float) alpha).endVertex();
-		tessellator.draw();
-	}
-
-	public static void drawTexturedScaledRect(double x, double y, float u, float v, double width, double height,
-			double textureWidth, double textureHeight, double scale) {
-		float f = (float) (1.0F / textureWidth);
-		float f1 = (float) (1.0F / textureHeight);
-		Tessellator tessellator = Tessellator.getInstance();
-		BufferBuilder bufferbuilder = tessellator.getBuffer();
-		bufferbuilder.begin(7, DefaultVertexFormats.POSITION_TEX);
-		bufferbuilder.pos((double) x, (double) (y + height * scale), 0.0D)
-				.tex((double) (u * f), (double) ((v + (float) height) * f1)).endVertex();
-		bufferbuilder.pos((double) (x + width * scale), (double) (y + height * scale), 0.0D)
-				.tex((double) ((u + (float) width) * f), (double) ((v + (float) height) * f1)).endVertex();
-		bufferbuilder.pos((double) (x + width * scale), (double) y, 0.0D)
-				.tex((double) ((u + (float) width) * f), (double) (v * f1)).endVertex();
-		bufferbuilder.pos((double) x, (double) y, 0.0D).tex((double) (u * f), (double) (v * f1)).endVertex();
-		tessellator.draw();
-	}
-
 	/*
 	 * RENDER TOOLS
 	 */

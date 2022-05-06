@@ -365,14 +365,7 @@ public class CustomGui extends CompatibleGui {
                  	
                  	GlStateManager.popMatrix();
                 	*/
-                	
-                	ItemAttachment attach = weaponInstance.getAttachmentItemWithCategory(AttachmentCategory.MAGAZINE);
-                	if(attach != null) {
-                		RenderHelper.enableGUIStandardItemLighting();
-                		mc.getRenderItem().renderItemIntoGUI(attach.getDefaultInstance(), 30, 30);
-                		RenderHelper.disableStandardItemLighting();
-                    	
-                	}
+               
                 	//mc.getRenderItem().renderItemIntoGUI(mc.player.getHeldItemMainhand(), 30, 30);
                 	
                 	/*

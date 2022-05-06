@@ -150,6 +150,8 @@ public class RadarChart {
 		
 
 		
+		GlStateManager.enableBlend();
+		GlStateManager.disableTexture2D();
 		bb.begin(GL11.GL_TRIANGLE_FAN, DefaultVertexFormats.POSITION_COLOR);
 		bb.pos(0, 0, 0).color(color[0], color[1], color[2], color[3]).endVertex();
 		for(double a = 0; a < 2*Math.PI; a += increment) {
