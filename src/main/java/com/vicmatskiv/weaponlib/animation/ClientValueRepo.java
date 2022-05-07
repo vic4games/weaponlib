@@ -150,7 +150,7 @@ public class ClientValueRepo {
 			//gunPow = new SpringValue(500, 50, 100);
 		//}
 		
-		slidePumpValue.speed = 0.2;
+		slidePumpValue.speed = 0.1;
 
 		
 		//double stockLength = AnimationGUI.getInstance().stockLength.getValue();

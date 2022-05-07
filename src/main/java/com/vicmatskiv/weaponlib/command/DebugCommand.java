@@ -26,6 +26,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleClassInfoProvider;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleCommand;
 import com.vicmatskiv.weaponlib.compatibility.graph.CompatibilityClassGenerator;
+import com.vicmatskiv.weaponlib.render.ModificationGUI;
 import com.vicmatskiv.weaponlib.render.WeaponSpritesheetBuilder;
 import com.vicmatskiv.weaponlib.vehicle.VehiclePart;
 
@@ -188,6 +189,7 @@ public class DebugCommand extends CompatibleCommand {
     private static boolean isDebuggingActionPosition;
     private static boolean isWorkingOnScreenShake;
     private static boolean isForceLiveRenderGUI;
+    private static boolean isEditingGUI;
     public static Transform debugSlideTransform = new Transform();
     public static Pair<Double, Double> screenShakeParam = new Pair<Double, Double>(0.0, 0.0);
     
@@ -201,6 +203,10 @@ public class DebugCommand extends CompatibleCommand {
     
     public static boolean isInfiniteAmmo() {
     	return isInfiniteAmmo;
+    }
+    
+    public static boolean isEditingGUI() {
+    	return isEditingGUI;
     }
     
     public static boolean isForceLiveRenderGUI() {
@@ -248,6 +254,17 @@ public class DebugCommand extends CompatibleCommand {
     		} else if(args[2].equals("?")) {
     			sendDebugMessage("Live render causes weapons to switch off of the icon sheet and directly render into the inventory. This should only ever be used for debugging.");
     			//LayerBipedArmor
+    		}
+    		
+    	} else if(args[1].equals("gui")) {
+    		if(args[2].equals("print")) {
+    			sendDebugMessage("Printing locations to console (or log)");
+    			
+    			 ModificationGUI.getInstance().printTabLocations();
+    		} else {
+    			isEditingGUI = !isEditingGUI;
+        		sendDebugMessage("GUI editing mode: " + TextFormatting.DARK_GRAY + (isEditingGUI ? "on" : "off"));
+    			
     		}
     		
     	}
@@ -330,15 +347,18 @@ public class DebugCommand extends CompatibleCommand {
     private void processFreecamAndMuzzleSubCommands(String[] args) {
     	switch(args[0].toLowerCase()) {
     	case DEBUG_FREECAM:
-    		if(CompatibleClientEventHandler.freecamEnabled) {
-    			CompatibleClientEventHandler.freecamEnabled = false;
-    			compatibility.addChatMessage(compatibility.clientPlayer(), getDebugPrefix() + "Freecam disabled");
-     	       
+    		if(args.length > 1 && args[1].equals("lock")) {
+    			CompatibleClientEventHandler.freecamLock = !CompatibleClientEventHandler.freecamLock;
+    			sendDebugMessage("Freecam lock " + TextFormatting.DARK_GRAY + (CompatibleClientEventHandler.freecamLock ? "enabled" : "disabled"));
+    			
     		} else {
-    			CompatibleClientEventHandler.freecamEnabled = true;
-    			compatibility.addChatMessage(compatibility.clientPlayer(), getDebugPrefix() + "Freecam enabled");
-     	       
+    			
+    			CompatibleClientEventHandler.freecamEnabled = !CompatibleClientEventHandler.freecamEnabled;
+    			sendDebugMessage("Freecam " + TextFormatting.DARK_GRAY + (CompatibleClientEventHandler.freecamEnabled ? "enabled" : "disabled"));
+    			
+    		
     		}
+    		
     		 
     		break;
     	case DEBUG_MUZZLE_POS:

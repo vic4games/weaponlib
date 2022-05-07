@@ -99,6 +99,8 @@ final class ClientEffectManager implements EffectManager {
 	        return;
 	    }
 
+	    
+	    Weapon w = (Weapon) player.getHeldItemMainhand().getItem();
 	   
 		//float distance = 0.6f;
 
@@ -128,10 +130,17 @@ final class ClientEffectManager implements EffectManager {
 		
 		//MuzzleFlash flash = new MuzzleFlash(bruh, player.rotationYaw, player.rotationPitch, 1.0);
 		
+		
+	
+		
 		MuzzleFlash flash = new MuzzleFlash(new Vec3d(posX, posY, posZ), bruh, player.rotationYaw, player.rotationPitch, 1.0);
 		ClientEventHandler.muzzleFlashStack.push(flash);
 		
-		ClientEventHandler.uploadFlash(player.getEntityId());
+		
+		if(Math.random() < 0.6/w.builder.fireRate) {
+			ClientEventHandler.uploadFlash(player.getEntityId());
+		}
+		
 		
 		if(player instanceof EntityPlayer) {
             if(player.isSneaking()) {

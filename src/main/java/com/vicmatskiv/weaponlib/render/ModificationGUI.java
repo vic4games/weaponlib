@@ -10,13 +10,17 @@ import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
 import com.vicmatskiv.weaponlib.AttachmentCategory;
+import com.vicmatskiv.weaponlib.AttachmentContainer;
 import com.vicmatskiv.weaponlib.ClientModContext;
+import com.vicmatskiv.weaponlib.CompatibleAttachment;
 import com.vicmatskiv.weaponlib.ItemAttachment;
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.PlayerWeaponInstance;
 import com.vicmatskiv.weaponlib.Weapon;
 import com.vicmatskiv.weaponlib.WeaponAttachmentAspect;
 import com.vicmatskiv.weaponlib.WeaponAttachmentAspect.FlaggedAttachment;
+import com.vicmatskiv.weaponlib.animation.DebugPositioner;
+import com.vicmatskiv.weaponlib.command.DebugCommand;
 import com.vicmatskiv.weaponlib.debug.SysOutController;
 import com.vicmatskiv.weaponlib.render.gui.ColorPalette;
 import com.vicmatskiv.weaponlib.render.gui.GUIRenderHelper;
@@ -31,6 +35,7 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -77,29 +82,34 @@ public class ModificationGUI {
 	private static final int TOOLTIP_COL_NORMAL = 0x00000;
 	
 	
+	private static final int[][] DEFAULT_POSITION = new int[][] {{-50, 50}, {120, 75}, {150, 0}, {100, -50},
+		{145, 0}, {120, 50}, {-50, 50}, {0, -50}, {-100, -50}, {50, 100}, {50, 100}};
+	
 	// Attachments tabs
-	private static final ModificationTab SCOPE_TAB = new ModificationTab("Sight", AttachmentCategory.SCOPE, -50, 50,
+	private static final ModificationTab SCOPE_TAB = new ModificationTab(0, "Sight", AttachmentCategory.SCOPE, -50, 50,
 			ModificationGroup.ATTACHMENT);
-	private static final ModificationTab BARREL_TAB = new ModificationTab("Muzzle", AttachmentCategory.SILENCER, 120, 75, ModificationGroup.ATTACHMENT);
-	private static final ModificationTab LASER_TAB = new ModificationTab("Laser", AttachmentCategory.LASER, 150, 0,
+	private static final ModificationTab BARREL_TAB = new ModificationTab(1, "Muzzle", AttachmentCategory.SILENCER, 120, 75, ModificationGroup.ATTACHMENT);
+	private static final ModificationTab LASER_TAB = new ModificationTab(2, "Laser", AttachmentCategory.LASER, 150, 0,
 			ModificationGroup.ATTACHMENT);
-	private static final ModificationTab GRIP_TAB = new ModificationTab("Grip", AttachmentCategory.GRIP, 100, -50,
+	private static final ModificationTab GRIP_TAB = new ModificationTab(3, "Grip", AttachmentCategory.GRIP, 100, -50,
 			ModificationGroup.ATTACHMENT);
 
 	
 	// Modifications tabs
-	private static final ModificationTab HANDGUARD_TAB = new ModificationTab("Handguard", AttachmentCategory.GUARD, 145, 0, ModificationGroup.MODIFICATION);
-	private static final ModificationTab FRONT_SIGHT_TAB = new ModificationTab("Front Sight",
+	private static final ModificationTab HANDGUARD_TAB = new ModificationTab(4, "Handguard", AttachmentCategory.GUARD, 145, 0, ModificationGroup.MODIFICATION);
+	private static final ModificationTab FRONT_SIGHT_TAB = new ModificationTab(5, "Front Sight",
 			AttachmentCategory.FRONTSIGHT, 120, 50, ModificationGroup.MODIFICATION);
-	private static final ModificationTab RECEIVER_TAB = new ModificationTab("Receiver", AttachmentCategory.RECEIVER,
+	private static final ModificationTab RECEIVER_TAB = new ModificationTab(6, "Receiver", AttachmentCategory.RECEIVER,
 			-50, 50, ModificationGroup.MODIFICATION);
-	private static final ModificationTab REAR_GRIP_TAB = new ModificationTab("Rear Grip", AttachmentCategory.BACKGRIP,
+	private static final ModificationTab REAR_GRIP_TAB = new ModificationTab(7, "Rear Grip", AttachmentCategory.BACKGRIP,
 			0, -50, ModificationGroup.MODIFICATION);
-	private static final ModificationTab STOCK_TAB = new ModificationTab("Stock", AttachmentCategory.STOCK, -100, -50,
+	private static final ModificationTab STOCK_TAB = new ModificationTab(8, "Stock", AttachmentCategory.STOCK, -100, -50,
 			ModificationGroup.MODIFICATION);
-	private static final ModificationTab RAILING_TAB = new ModificationTab("Railing", AttachmentCategory.RAILING, 50, 100,
+	private static final ModificationTab RAILING_TAB = new ModificationTab(9, "Railing", AttachmentCategory.RAILING, 50, 100,
 			ModificationGroup.MODIFICATION);
 
+	private static final ModificationTab WEAPON_SKIN_TAB = new ModificationTab(10, "Skin", AttachmentCategory.SKIN, 50, 100,
+			ModificationGroup.CUSTOMIZATION);
 	
 	
 	// 
@@ -153,6 +163,7 @@ public class ModificationGUI {
 		tabList.add(RAILING_TAB);
 
 		// customization
+		tabList.add(WEAPON_SKIN_TAB);
 	}
 	
 	// Useful to see what tab has it's dropdown
@@ -389,12 +400,20 @@ public class ModificationGUI {
 		private AttachmentCategory category;
 		private double x, y;
 
+		
+		
 		private boolean isDropDownOpen = false;
 		private int page;
-
+		private int id;
+		
+		private boolean hidden = false;
+		
 		private ModificationGroup group;
+		
+		
 
-		public ModificationTab(String title, AttachmentCategory category, double x, double y, ModificationGroup group) {
+		public ModificationTab(int id, String title, AttachmentCategory category, double x, double y, ModificationGroup group) {
+			this.id = id;
 			this.x = x;
 			this.y = y;
 			this.group = group;
@@ -482,8 +501,65 @@ public class ModificationGUI {
 		this.currentGroup = group;
 	}
 
+	private int grabbedX;
+	private int grabbedY;
+	
+	private int originalMouseX;
+	private int originalMouseY;
+	
+	private ModificationTab grabbedTab;
+	
+	// In case you log into the game w/
+	// the modificaiton menu already up
+	private boolean hasBeenSetup = false;
+	
+	public void printTabLocations() {
+		tabList.sort((a, b) -> a.id - b.id);
+		
+		StringBuilder sb = new StringBuilder();
+		sb.append("{");
+		for(int i = 0; i < tabList.size(); ++i) {
+			ModificationTab tab = tabList.get(i);
+			sb.append("{" + ((int) tab.x) + ", " + ((int) tab.y) + "}");
+			if(i < tabList.size()-1) {
+				sb.append(",");
+			}
+		}
+		sb.append("}");
+		System.out.println(sb.toString());
+	}
+	
+	
+	public void setupForWeapon(PlayerWeaponInstance pwi) {
+		hasBeenSetup = true;
+		
+		
+		int[][] guiPositions = pwi.getWeapon().builder.getGUIPositions();
+		for(ModificationTab tab : tabList) {
+			// Update custom GUI positionings
+			tab.setPos(guiPositions[tab.id][0], guiPositions[tab.id][1]);
+			
+			// Hide empty categories
+			if(pwi.getWeapon().getCompatibleAttachments(tab.category).isEmpty()) {
+				tab.hidden = true;
+			} else {
+				tab.hidden = false;
+			}
+		
+		}
+		
+		
+		
+	}
+	
 	public void render(ModContext modContext) {
 
+		
+		if(!hasBeenSetup) {
+			setupForWeapon(modContext.getMainHeldWeapon());
+		}
+		
+		
 		
 		PlayerWeaponInstance weaponInstance = modContext.getMainHeldWeapon();
 		Weapon weapon = weaponInstance.getWeapon();
@@ -500,7 +576,7 @@ public class ModificationGUI {
 
 
 		// Handle mouse clicks
-		if (!waitingForMouseRelease && Mouse.isButtonDown(0)) {
+		if (!waitingForMouseRelease && Mouse.isButtonDown(0) && mc.currentScreen == null) {
 			waitingForMouseRelease = true;
 			isInClick = true;
 		} else if (!Mouse.isButtonDown(0)) {
@@ -518,7 +594,7 @@ public class ModificationGUI {
 
 		// Draws all the tabs
 		for (ModificationTab mt : tabList) {
-			if (mt.group != currentGroup)
+			if (mt.group != currentGroup || mt.hidden)
 				continue;
 			drawModificationTab(scaledresolution, mt, mouseX, mouseY, modContext.getMainHeldWeapon(), modContext);
 		}
@@ -587,7 +663,7 @@ public class ModificationGUI {
 		
 		clearRGB();
 		setAlpha(1.0f);
-		for (int groupID = 0; groupID < 2; ++groupID) {
+		for (int groupID = 0; groupID < 3; ++groupID) {
 			GlStateManager.disableTexture2D();
 			GUIRenderHelper.drawColoredRectangle(scaledresolution.getScaledWidth_double() - 15,
 					scaledresolution.getScaledHeight_double() - 75 - (18 * groupID), 15, 15, 0.5, 0x00000);
@@ -630,6 +706,7 @@ public class ModificationGUI {
 					
 					weaponInstance.setAltModificationModeEnabled(currentGroup == ModificationGroup.MODIFICATION);
 					
+					activeTab = null;
 				}
 			}
 		}
@@ -666,11 +743,39 @@ public class ModificationGUI {
 			y -= 30;
 		}
 		
+		boolean creativeMode = ((EntityPlayer) pwi.getPlayer()).isCreative();
 
 		// Set up layout
 		
-		ArrayList<FlaggedAttachment> inventory = modcontext.getAttachmentAspect().getInventoryAttachments(category,
-				pwi);
+		ArrayList<FlaggedAttachment> inventory;
+		if(!creativeMode) {
+			inventory = modcontext.getAttachmentAspect().getInventoryAttachments(category,
+					pwi);
+		} else {
+			inventory = new ArrayList<>();
+			for(CompatibleAttachment<? extends AttachmentContainer> compat : modcontext.getMainHeldWeapon().getWeapon().getCompatibleAttachments(category)) {
+				
+				FlaggedAttachment flaggedAttachment = new FlaggedAttachment(new ItemStack(compat.getAttachment()), (ItemAttachment<Weapon>) compat.getAttachment());
+				
+				// Check proper category, if it is not
+				// we do not care about it
+				if (compat.getAttachment().getCategory() != category)
+					continue;
+
+				// If this is not a compatible attachment,
+				// we do not care either
+				if (!modcontext.getAttachmentAspect().isCompatibleAttachment((ItemAttachment<Weapon>) compat.getAttachment(), pwi))
+					continue;
+
+				// We do want to display if it is a potential attachment
+				// but there are conditions to be met
+				if (!modcontext.getAttachmentAspect().hasRequiredAttachments((ItemAttachment<Weapon>) compat.getAttachment(), pwi)) {
+					flaggedAttachment.setRequiredParts(modcontext.getAttachmentAspect().getRequiredParts((ItemAttachment<Weapon>) compat.getAttachment(), pwi));
+				}
+				
+				inventory.add(flaggedAttachment);
+			}
+		}
 
 		// Checks to see if they all
 		// require parts
@@ -723,6 +828,27 @@ public class ModificationGUI {
 		} else {
 			PRIMARY_ELEMENT.render();
 		}
+		
+		
+		if(DebugCommand.isEditingGUI()) {
+			if(!Mouse.isButtonDown(0)) grabbedTab = null;
+			
+			if(Mouse.isButtonDown(0) && grabbedTab == tab) {
+				tab.x = grabbedX + (originalMouseX - mouseX);
+				tab.y = grabbedY + (originalMouseY - mouseY);
+			}
+			
+
+			if(isInClick && PRIMARY_ELEMENT.checkBounding(x, y, mouseX, mouseY, scale)) {
+				grabbedX = (int) tab.x;
+				grabbedY = (int) tab.y;
+				grabbedTab = tab;
+				originalMouseX = mouseX;
+				originalMouseY = mouseY;
+				
+			}
+		}
+		
 		ItemAttachment<Weapon> primaryAttachment = pwi.getAttachmentItemWithCategory(category);
 
 		
@@ -911,7 +1037,11 @@ public class ModificationGUI {
 					TexturedRect selector = new TexturedRect(i + 11, 150, 0, 389, 89, 89, 1);
 					if (selector.checkBounding(x, y, mouseX, mouseY, scale)) {
 						setAlpha(0.5f);
+					
+						
+						GlStateManager.translate(0, 0, 50);
 						selector.render();
+						GlStateManager.translate(0, 0, -50);
 
 						tooltip.color = TOOLTIP_COL_NORMAL;
 						requiresTooltip = true;

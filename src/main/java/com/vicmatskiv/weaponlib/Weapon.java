@@ -38,6 +38,7 @@ import com.vicmatskiv.weaponlib.crafting.CraftingComplexity;
 import com.vicmatskiv.weaponlib.crafting.OptionsMetadata;
 import com.vicmatskiv.weaponlib.jim.util.VMWHooksHandler;
 import com.vicmatskiv.weaponlib.model.Shell;
+import com.vicmatskiv.weaponlib.render.ModificationGUI;
 import com.vicmatskiv.weaponlib.render.WeaponSpritesheetBuilder;
 import com.vicmatskiv.weaponlib.render.shells.ShellParticleSimulator.Shell.Type;
 
@@ -229,6 +230,9 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         
         private boolean newSys = false;
         
+        private int[][] guiPositions = new int[][] {{-43, 86},{97, 96},{92, 34},{14, -55},{164, -26},{145, 67},{60, 110},{0, -50},{-100, -50},{-29, 44},{50, 100}};
+    		
+        
         public Builder() {
             ScreenShakeAnimation.Builder defaultShootingStateScreenShakingBuilder = new ScreenShakeAnimation.Builder()
                 .withState(ScreenShakingAnimationManager.State.SHOOTING)
@@ -242,6 +246,16 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         public Builder withWeaponType(String type) {
         	this.gunType = type;
         	return this;
+        }
+        
+        
+        public Builder hasGUIPositions(int[][] gp) {
+        	this.guiPositions = gp;
+        	return this;
+        }
+        
+        public int[][] getGUIPositions() {
+        	return this.guiPositions;
         }
         
         public Builder hasFlashPedals() {

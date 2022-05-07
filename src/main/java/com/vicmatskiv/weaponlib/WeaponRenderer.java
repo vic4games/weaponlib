@@ -22,6 +22,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GLSync;
@@ -3175,17 +3176,21 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 	//	System.out.println(POSITION.get(0) + " | " + POSITION.get(1) + " | " + POSITION.get(2) + " | " + POSITION.get(3));
 		//GLU.gluUnProject(winx, winy, winz, modelMatrix, projMatrix, viewport, obj_pos)
 		
-		
+		//ItemSkin
+			
+			
 		List<CompatibleAttachment<? extends AttachmentContainer>> attachments = null;
 		if(getBuilder().getModel() instanceof ModelWithAttachments) {
 			attachments = ((Weapon) weaponItemStack.getItem()).getActiveAttachments(renderContext.getPlayer(), weaponItemStack);
 		}
 
 		if(getBuilder().getTextureName() != null) {
+			
 			Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(getBuilder().getModId()
 					+ ":textures/models/" + getBuilder().getTextureName()));
 		} else {
 			String textureName = null;
+			/*
 			CompatibleAttachment<?> compatibleSkin = attachments.stream()
 					.filter(ca -> ca.getAttachment() instanceof ItemSkin).findAny().orElse(null);
 			if(compatibleSkin != null) {
@@ -3198,7 +3203,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 								+ ".png";
 					}
 				}
-			}
+			}*/
 
 			if(textureName == null) {
 				Weapon weapon = ((Weapon) weaponItemStack.getItem());
@@ -3216,7 +3221,30 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			
 			//OpenGlHelper.glFramebufferTexture2D(OpenGlHelper.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT1, GL11.GL_TEXTURE_2D, PostProcessPipeline.maskingBuffer.framebufferTexture, 0);
 			
+			
+			ItemAttachment<Weapon> skin = renderContext.getWeaponInstance().getAttachmentItemWithCategory(AttachmentCategory.SKIN);
+			boolean useSkin = skin != null; 
+			
+			if(useSkin) {
+		
+				ItemSkin itemSkin = (ItemSkin) skin;
+				GlStateManager.setActiveTexture(GL13.GL_TEXTURE0 + 3);
+				Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation(clientModContext.getModId() + ":textures/models/" + itemSkin.getTextureName() + ".png"));
+				
+				GlStateManager.setActiveTexture(GL13.GL_TEXTURE0);
+			}
+			
+			
+			
 			Shaders.gunLightingShader.use();
+			
+			if(useSkin) {
+				Shaders.gunLightingShader.uniform1i("skin", 3);
+				
+			}
+			Shaders.gunLightingShader.uniform1i("useSkin", useSkin ? 1 : 0);
+			
+			
 	    	GL20.glUniform1i(GL20.glGetUniformLocation(Shaders.gunLightingShader.getShaderId(), "lightmap"), 1);
 	    	GL20.glUniform1f(GL20.glGetUniformLocation(Shaders.gunLightingShader.getShaderId(), "lightIntensity"), shot ? 1.5f + ((float) Math.random()) : 0.0f);
 		}
@@ -3250,6 +3278,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		
 		try {
 			if(!AnimationModeProcessor.getInstance().shouldIsolateCategory()) {
+			
+				//Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mw:textures/items/sexmoiv.png"));
 				getBuilder().getModel().render(this.player,
 		                renderContext.getLimbSwing(),
 		                renderContext.getFlimbSwingAmount(),

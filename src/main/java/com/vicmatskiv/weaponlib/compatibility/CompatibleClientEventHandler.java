@@ -53,6 +53,7 @@ import com.vicmatskiv.weaponlib.BulletHoleRenderer;
 import com.vicmatskiv.weaponlib.ClassInfo;
 import com.vicmatskiv.weaponlib.ClientModContext;
 import com.vicmatskiv.weaponlib.ItemAttachment;
+import com.vicmatskiv.weaponlib.ItemSkin;
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.PlayerWeaponInstance;
 import com.vicmatskiv.weaponlib.RenderingPhase;
@@ -231,17 +232,36 @@ public abstract class CompatibleClientEventHandler {
 		}
 		
 		
-		// System.out.println("hi");
-		if (Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) && freecamEnabled && !freecamLock) {
-			// System.out.println("hi");
-			e.setYaw((float) (freeYaw));
-			e.setPitch((float) (freePitch));
-		} else {
+		if(Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) && freecamEnabled) {
+			freeYaw += yawDelta;
+			freePitch += pitchDelta;
+		} else if(!freecamLock) {
 			freeYaw = 0;
 			freePitch = 0;
 		}
-		freeYaw += yawDelta;
-		freePitch += pitchDelta;
+		if(freecamEnabled) {
+			
+			e.setYaw((float) (freeYaw));
+			e.setPitch((float) (freePitch));
+		}
+		
+		/*
+		// System.out.println("hi");
+		if (Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) && freecamEnabled) {
+			// System.out.println("hi");
+			freeYaw += yawDelta;
+			freePitch += pitchDelta;
+			
+		} else if(!freecamLock) {
+			freeYaw = 0;
+			freePitch = 0;
+		}
+		
+		if(freecamEnabled) {
+			e.setYaw((float) (freeYaw));
+			e.setPitch((float) (freePitch));
+		}*/
+		
 
 		yawDelta = 0;
 		pitchDelta = 0;
@@ -467,6 +487,11 @@ public abstract class CompatibleClientEventHandler {
 		System.out.println("DEOBF: " + Launch.blackboard.get("fml.deobfuscatedEnvironment"));
 		System.out.println();
 		*/
+		
+		
+	
+		
+		
 		ClientValueRepo.renderUpdate(getModContext());
 		//System.out.println(Minecraft.getMinecraft().getFramebuffer() instanceof HDRFramebuffer);
 

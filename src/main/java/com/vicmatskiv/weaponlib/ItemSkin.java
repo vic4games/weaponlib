@@ -8,6 +8,7 @@ import org.lwjgl.opengl.GL11;
 import com.vicmatskiv.weaponlib.model.FlatModel;
 
 import net.minecraft.client.model.ModelBase;
+import net.minecraft.client.renderer.GlStateManager;
 
 public class ItemSkin extends ItemAttachment<Weapon> {
 
@@ -18,6 +19,7 @@ public class ItemSkin extends ItemAttachment<Weapon> {
 			for(String s: textureVariantNames) {
 				this.textureVariants.add(stripFileExtension(s.toLowerCase(), ".png"));
 			}
+		
 			return this;
 		}
 
@@ -38,11 +40,20 @@ public class ItemSkin extends ItemAttachment<Weapon> {
 			}
 			if(inventoryPositioning == null) {
 				withInventoryPositioning((itemStack) -> {
-					GL11.glRotatef(20F, 1f, 0f, 0f);
+					
+					/*
+					GlStateManager.scale(0.5, 0.5, 0.5);
+					GlStateManager.translate(-0.5, -0.25, 0);
+					GlStateManager.rotate(45f, 1, 0, 0);
+					*/
+					
+					
+					GL11.glRotatef(30F, 1f, 0f, 0f);
 					GL11.glRotatef(-45F, 0f, 1f, 0f);
 					GL11.glRotatef(0F, 0f, 0f, 1f);
-					GL11.glTranslatef(-0.6f, -0.6f, 0F);
-					GL11.glScaled(15F, 15F, 15f);
+					GL11.glTranslatef(-0.75f, -0.6f, 0F);
+					GL11.glScaled(15f, 15f, 15f);
+					
 				});
 			}
 			return super.build(modContext, target);

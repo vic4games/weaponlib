@@ -40,6 +40,7 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 	private static class AttachmentLookupResult {
 		CompatibleAttachment<Weapon> compatibleAttachment;
 		int index = -1;
+		boolean isCreative;
 	}
 
 	public static class EnterAttachmentModePermit extends Permit<WeaponState> {
@@ -402,16 +403,19 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 			}
 		}
 		
+	
 		
 		
 		AttachmentLookupResult lookupResult;
 		if(permit.attachment != null) {
 			// Forced
-			lookupResult = findForcedAttach(permit.attachment, currentAttachment, attachmentCategory, weaponInstance);
+			lookupResult = findForcedAttach(permit.attachment, currentAttachment, attachmentCategory, weaponInstance, ((EntityPlayer) weaponInstance.getPlayer()).isCreative());
 		} else {
 			// Next
 			lookupResult = next(attachmentCategory, currentAttachment, weaponInstance);
 		}
+		
+		
 		
 		if (currentAttachment != null) {
 			// Need to apply removal functions first before applying addition functions
@@ -422,6 +426,7 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 				currentAttachment.getRemove2().apply(currentAttachment, weaponInstance);
 			}
 		}
+		
 		
 	
 	
@@ -447,6 +452,23 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 			compatibility.consumeInventoryItemFromSlot(player, lookupResult.index);
 			
 			activeAttachmentIds[attachmentCategory.ordinal()] = Item.getIdFromItem(nextAttachment);
+		} else if(lookupResult.isCreative) {
+			ItemAttachment<Weapon> nextAttachment = (ItemAttachment<Weapon>) lookupResult.compatibleAttachment.getAttachment();
+
+			if (nextAttachment.getApply() != null) {
+				nextAttachment.getApply().apply(nextAttachment, weaponInstance.getWeapon(), player);
+			} else if (nextAttachment.getApply2() != null) {
+				nextAttachment.getApply2().apply(nextAttachment, weaponInstance);
+			} else if (lookupResult.compatibleAttachment.getApplyHandler() != null) {
+				lookupResult.compatibleAttachment.getApplyHandler().apply(nextAttachment, weaponInstance);
+			} else {
+				ApplyHandler2<Weapon> handler = weaponInstance.getWeapon().getEquivalentHandler(attachmentCategory);
+				if (handler != null) {
+					handler.apply(null, weaponInstance);
+				}
+			}
+			activeAttachmentIds[attachmentCategory.ordinal()] = Item.getIdFromItem(nextAttachment);
+			
 		} else if (weaponInstance.getWeapon().isCategoryRemovable(attachmentCategory)) {
 			
 			activeAttachmentIds[attachmentCategory.ordinal()] = -1;
@@ -454,12 +476,16 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 			if (handler != null) {
 				handler.apply(null, weaponInstance);
 			}
+			
 		} else {
 			
 			return;
 		}
 
-		if (currentAttachment != null) {
+		
+		
+		
+		if (currentAttachment != null && !player.isCreative()) {
 			// Item must be added to the same spot the next attachment comes from or to any
 			// spot if there is no next attachment
 			compatibility.addItemToPlayerInventory(player, currentAttachment, lookupResult.index);
@@ -470,7 +496,7 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 	}
 
 	private AttachmentLookupResult findForcedAttach(ItemStack stack, Item currentAttachment,
-			AttachmentCategory category, PlayerWeaponInstance weaponInstance) {
+			AttachmentCategory category, PlayerWeaponInstance weaponInstance, boolean isCreative) {
 
 		
 		
@@ -479,6 +505,21 @@ public final class WeaponAttachmentAspect implements Aspect<WeaponState, PlayerW
 		if(stack.isEmpty()) {
 			result.index = -1;
 			return result;
+		}
+		
+		
+	
+		if(isCreative) {
+			CompatibleAttachment<Weapon> compatibleAttachment = weaponInstance.getWeapon().getCompatibleAttachments().get(stack.getItem());
+			if(compatibleAttachment != null) {
+				
+				result.compatibleAttachment = compatibleAttachment;
+				result.isCreative = true;
+			}
+			return result;
+			
+			
+			
 		}
 		
 		//System.out.println("Search..");

@@ -73,8 +73,11 @@ public class WeaponRotationHandler {
 		
 		
 		// Sway & walk
-		float swayAmplitude = 0.2f;
+		float swayAmplitude = 0.1f;
 		float walkingSwayAmplitude = strafeMagnitude/30f + forwardMagnitude/30f;
+		
+		
+		
 		
 		// System.out.println(BBLoader.getTotalAnimations());
 		
@@ -125,8 +128,10 @@ public class WeaponRotationHandler {
 		
 		if(renderContext.getWeaponInstance().isAimed()) {
 			float divisorMultiplier = 1f;
+			swayAmplitude /= 3;
 			if(renderContext.getWeaponInstance().getScope() != null && renderContext.getWeaponInstance().getScope().isOptical()) {
 				divisorMultiplier = 3f;
+				swayAmplitude /= 3;
 			}
 			
 			divisorMultiplier /= params.getADSSimilarity();

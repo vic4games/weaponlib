@@ -290,7 +290,7 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
 
         Boolean muzzleFlash = modContext.getConfigurationManager().getProjectiles().isMuzzleEffects();
         if(muzzleFlash == null || muzzleFlash) {
-            if(weapon.builder.flashIntensity > 0 && !silencerOn && Math.random() <= 1.0) {
+            if(weapon.builder.flashIntensity > 0 ) {
             	
             	
             	

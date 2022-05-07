@@ -20,6 +20,7 @@ import com.vicmatskiv.weaponlib.inventory.GuiHandler;
 import com.vicmatskiv.weaponlib.inventory.OpenCustomPlayerInventoryGuiMessage;
 import com.vicmatskiv.weaponlib.melee.MeleeState;
 import com.vicmatskiv.weaponlib.melee.PlayerMeleeInstance;
+import com.vicmatskiv.weaponlib.render.ModificationGUI;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
@@ -215,6 +216,15 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
         else if(KeyBindings.attachmentKey.isPressed()) {
             if(itemStack != null && itemStack.getItem() instanceof Modifiable /* && itemStack.getItem() instanceof Weapon*/) {
                 ((Modifiable) itemStack.getItem()).toggleClientAttachmentSelectionMode(player);
+                
+                if(modContext.getMainHeldWeapon() != null) {
+                	if((modContext.getMainHeldWeapon() .getState() == WeaponState.MODIFYING)
+            				|| modContext.getMainHeldWeapon() .getState() == WeaponState.MODIFYING_REQUESTED
+            				|| modContext.getMainHeldWeapon() .getState() == WeaponState.NEXT_ATTACHMENT
+            				|| modContext.getMainHeldWeapon() .getState() == WeaponState.NEXT_ATTACHMENT_REQUESTED) {
+                		ModificationGUI.getInstance().setupForWeapon(modContext.getMainHeldWeapon());
+                	}
+                }
                 
                if(!Minecraft.getMinecraft().inGameHasFocus) {
             	   Minecraft.getMinecraft().setIngameFocus();

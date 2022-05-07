@@ -226,6 +226,8 @@ public class StaticModelSourceRenderer extends CompatibleStaticModelSourceRender
     
     public void renderCustomEquipped(EntityPlayer player, ItemStack itemStack) {
         
+    	
+    	
         RenderContext<RenderableState> renderContext = new RenderContext<>(getModContext(), player, itemStack);
         
         GL11.glPushMatrix();
