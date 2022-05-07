@@ -58,6 +58,9 @@ public class WeaponRotationHandler {
 
 	
 	public void run(RenderContext<RenderableState> renderContext, StateDescriptor stateDescriptor) {
+		
+		
+		
 		Vec3d rotationPoint = new Vec3d(-0.10, -1, 0);
 		
 		
@@ -132,6 +135,7 @@ public class WeaponRotationHandler {
 			if(renderContext.getWeaponInstance().getScope() != null && renderContext.getWeaponInstance().getScope().isOptical()) {
 				divisorMultiplier = 3f;
 				swayAmplitude /= 3;
+				walkingSwayAmplitude /= 3f;
 			}
 			
 			divisorMultiplier /= params.getADSSimilarity();
@@ -145,14 +149,17 @@ public class WeaponRotationHandler {
 			strafeMagnitude /= 3*divisorMultiplier;
 			recoilAmplitude /= 3*divisorMultiplier;
 			weaponRecoveryAmplitude /= 2*divisorMultiplier;
+			walkingSwayAmplitude /= 4*divisorMultiplier;
 			
 		}
 		
-	
+
+		
+		
 		strafingAnimation.doPositioning((float) strafeMagnitude, rotationPoint);	
 		walkingAnimation.doPositioning((float) Math.max(forwardMagnitude-(springTransition+runningMagnitude), 0), rotationPoint);
 		runningAnimation.doPositioning((float) Math.max(runningMagnitude, 0), rotationPoint);
-
+		
 		
 		// Add sway
 		

@@ -276,8 +276,8 @@ public class ServerEventHandler extends CompatibleServerEventHandler {
         	if(hit != null) {
         		Vec3d eyes = e.getEntityLiving().getPositionEyes(1.0f);
             	if(hit.hitVec.distanceTo(eyes) < 0.6f) {
-            		System.out.println("hit!!");
-            		e.setAmount(e.getAmount()*1.5f);
+            		
+            		e.setAmount(e.getAmount()*2.5f);
             	}
         	}
         	

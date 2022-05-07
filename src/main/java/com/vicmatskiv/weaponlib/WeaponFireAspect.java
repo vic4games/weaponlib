@@ -404,6 +404,8 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
             spawnEntityWith = weapon.builder.spawnEntityWith;
         }
         
+        
+        
         for(int i = 0; i < weapon.builder.pellets; i++) {
             WeaponSpawnEntity spawnEntity = spawnEntityWith.apply(weapon, player);
             compatibility.spawnEntity(player, spawnEntity);

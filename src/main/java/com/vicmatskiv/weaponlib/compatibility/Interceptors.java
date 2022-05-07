@@ -39,6 +39,7 @@ import com.vicmatskiv.weaponlib.animation.MatrixHelper;
 import com.vicmatskiv.weaponlib.animation.MultipartRenderStateManager;
 import com.vicmatskiv.weaponlib.animation.ScreenShakingAnimationManager;
 import com.vicmatskiv.weaponlib.inventory.CustomPlayerInventory;
+import com.vicmatskiv.weaponlib.jim.util.HitUtil;
 import com.vicmatskiv.weaponlib.numerical.LissajousCurve;
 import com.vicmatskiv.weaponlib.render.Bloom;
 import com.vicmatskiv.weaponlib.render.NewScreenshakingManager;
@@ -492,16 +493,19 @@ public class Interceptors {
         } else {
         	
         	
+        	
         		
-        	 float f =entityplayer.distanceWalkedModified - entityplayer.prevDistanceWalkedModified;
-             float f1 = -(entityplayer.distanceWalkedModified + f * partialTicks);
-             float f2 = entityplayer.prevCameraYaw + (entityplayer.cameraYaw - entityplayer.prevCameraYaw) * partialTicks;
-             float f3 = entityplayer.prevCameraPitch + (entityplayer.cameraPitch - entityplayer.prevCameraPitch) * partialTicks;
-             GL11.glTranslatef(CompatibleMathHelper.sin(f1 * (float)Math.PI) * f2 * 0.2F, -Math.abs(CompatibleMathHelper.cos(f1 * (float)Math.PI) * f2)*0.2f, 0.0F);
-             GL11.glRotatef(CompatibleMathHelper.sin(f1 * (float)Math.PI) * f2 * 3.0F, 0.0F, 0.0F, 1.0F);
-             GL11.glRotatef(Math.abs(CompatibleMathHelper.cos(f1 * (float)Math.PI - 0.2F) * f2) * 5.0F, 1.0F, 0.0F, 0.0F);
-            
-             GL11.glRotatef(f3, 1.0F, 0.0F, 0.0F);
+        			 float f =entityplayer.distanceWalkedModified - entityplayer.prevDistanceWalkedModified;
+                     float f1 = -(entityplayer.distanceWalkedModified + f * partialTicks);
+                     float f2 = entityplayer.prevCameraYaw + (entityplayer.cameraYaw - entityplayer.prevCameraYaw) * partialTicks;
+                     float f3 = entityplayer.prevCameraPitch + (entityplayer.cameraPitch - entityplayer.prevCameraPitch) * partialTicks;
+                     GL11.glTranslatef(CompatibleMathHelper.sin(f1 * (float)Math.PI) * f2 * 0.2F, -Math.abs(CompatibleMathHelper.cos(f1 * (float)Math.PI) * f2)*0.2f, 0.0F);
+                     GL11.glRotatef(CompatibleMathHelper.sin(f1 * (float)Math.PI) * f2 * 3.0F, 0.0F, 0.0F, 1.0F);
+                     GL11.glRotatef(Math.abs(CompatibleMathHelper.cos(f1 * (float)Math.PI - 0.2F) * f2) * 5.0F, 1.0F, 0.0F, 0.0F);
+                    
+                     GL11.glRotatef(f3, 1.0F, 0.0F, 0.0F);
+        		
+        	
         }
         
         
@@ -842,15 +846,15 @@ public class Interceptors {
     		
     		
     		
-    		double scalar = 0.005*(1-weaponInstance.getZoom());
+    		double scalar = 0.001*(1-weaponInstance.getZoom());
     		
     		/*
     		ClientValueRepo.scopeX += (yawDelta*(0.005+scalar));
     		ClientValueRepo.scopeY += pitchDelta*(0.005+scalar);
         	*/
     		
-    		ClientValueRepo.scopeX.add((yawDelta*(0.005+scalar)));
-    		ClientValueRepo.scopeY.add(pitchDelta*(0.005+scalar));
+    		ClientValueRepo.scopeX.add((yawDelta*(0.001+scalar)));
+    		ClientValueRepo.scopeY.add(pitchDelta*(0.001+scalar));
     		
         	if(weaponInstance.getZoom() < 0.2f) {
     			yawDelta *= weaponInstance.getZoom()*3;

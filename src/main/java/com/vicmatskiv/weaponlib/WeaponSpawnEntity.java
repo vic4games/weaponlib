@@ -73,6 +73,7 @@ public class WeaponSpawnEntity extends EntityProjectile {
 		super(world, player, speed, gravityVelocity, inaccuracy);
 		this.weapon = weapon;
 		this.damage = damage;
+		
 		this.explosionRadius = explosionRadius;
 		this.isDestroyingBlocks = isDestroyingBlocks;
 		this.explosionParticleAgeCoefficient = explosionParticleAgeCoefficient;
@@ -81,6 +82,8 @@ public class WeaponSpawnEntity extends EntityProjectile {
 		this.smokeParticleScaleCoefficient = smokeParticleScaleCoefficient;
 		this.explosionParticleTextureId = explosionParticleTextureId;
 		this.smokeParticleTextureId = smokeParticleTextureId;
+		
+		this.setSize(0.30F, 0.30F);
 	}
 
 	@Override

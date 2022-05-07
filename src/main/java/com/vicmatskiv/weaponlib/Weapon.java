@@ -83,7 +83,7 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
     	
     	public static int noRecipe = 0;
 
-        private static final float DEFAULT_SPAWN_ENTITY_SPEED = 120f;
+        private static final float DEFAULT_SPAWN_ENTITY_SPEED = 150f;
         private static final float DEFAULT_INACCURACY = 0f;
         private static final String DEFAULT_SHELL_CASING_TEXTURE_NAME = "weaponlib:/com/vicmatskiv/weaponlib/resources/shell.png";
         private static final float DEFAULT_SHELL_CASING_VELOCITY = 0.1f;
@@ -879,6 +879,13 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
                 spawnEntityClass = WeaponSpawnEntity.class;
             }
 
+            
+            for(ItemSkin skin : CommonRegistry.gunSkins) {
+            	 withCompatibleAttachment(skin, (c) -> {});
+            }
+            
+           
+            
             if (spawnEntityWith == null) {
                 
 

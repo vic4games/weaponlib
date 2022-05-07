@@ -80,7 +80,7 @@ public class ClientValueRepo {
 	
 	// Slide pumping
 	public static FrameValue slidePumpValue = new FrameValue(0.2);
-	public static SynchronizedSimulator slidePump = new SynchronizedSimulator(slidePumpValue, 1/60.0);
+	public static SynchronizedSimulator slidePump = new SynchronizedSimulator(slidePumpValue, 1/200.0);
 	/*
 	public static double xInertia = 0.0;
 	public static double yInertia = 0.0;
@@ -135,7 +135,11 @@ public class ClientValueRepo {
 	}
 	
 	public static void renderUpdate(ModContext context) {
+		
+		//slidePump = new SynchronizedSimulator(slidePumpValue, 1/200.0);
+		
 		slidePump.update();
+		slidePumpValue.speed = 0.1;
 	}
 
 	public static void update(ModContext context) {
@@ -149,8 +153,8 @@ public class ClientValueRepo {
 		//if(Math.abs(gunPow.position) > 1000) {
 			//gunPow = new SpringValue(500, 50, 100);
 		//}
+		//slidePump = new SynchronizedSimulator(slidePumpValue, 1/10.0);
 		
-		slidePumpValue.speed = 0.1;
 
 		
 		//double stockLength = AnimationGUI.getInstance().stockLength.getValue();
