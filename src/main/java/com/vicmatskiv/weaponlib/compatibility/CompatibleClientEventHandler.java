@@ -127,6 +127,7 @@ import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.resources.LanguageManager;
@@ -164,9 +165,11 @@ import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.eventhandler.Event.Result;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.PlayerTickEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -202,8 +205,11 @@ public abstract class CompatibleClientEventHandler {
 	@SubscribeEvent
 	public void keyInputEvent(KeyboardInputEvent kie) {
 		
+		
+		
+	
 		if(Keyboard.isKeyDown(Keyboard.KEY_HOME)) {
-			System.out.println("bro");
+	
 			freecamLock = !freecamLock;
 		}
 	}
@@ -487,7 +493,6 @@ public abstract class CompatibleClientEventHandler {
 		System.out.println("DEOBF: " + Launch.blackboard.get("fml.deobfuscatedEnvironment"));
 		System.out.println();
 		*/
-		
 		
 	
 		
@@ -967,6 +972,7 @@ public abstract class CompatibleClientEventHandler {
 		
 	}
 
+
 	public static void renderMuzzleFlash(MuzzleFlash flash) {
 
 		Minecraft.getMinecraft().getTextureManager().bindTexture(FLASH);
@@ -1066,8 +1072,14 @@ public abstract class CompatibleClientEventHandler {
 		onCompatibleClientTick(new CompatibleClientTickEvent(event));
 		
 		
+		
+ 		
+		
 		EntityPlayer player = Minecraft.getMinecraft().player;
 		if(player != null && event.phase == Phase.END) {
+			
+			
+			
 			double yAmount = ClientValueRepo.recoilWoundY * 0.2;
 			player.rotationPitch += yAmount;
 			ClientValueRepo.recoilWoundY -= yAmount;

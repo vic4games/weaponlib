@@ -72,7 +72,9 @@ import net.minecraft.world.IWorldEventListener;
 import net.minecraft.world.biome.Biome;
 import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.client.settings.KeyBindingMap;
+import net.minecraftforge.common.ForgeModContainer;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
+import net.minecraftforge.gradle.GradleStartCommon;
 import scala.reflect.internal.Trees.This;
 
 /**
@@ -564,6 +566,9 @@ public class PostProcessPipeline {
 		Shaders.postWorld.uniform3f("baseFogColor", 0.6f, 0.6f, 0.6f);
 		// Shaders.postWorld.uniform1f("help", 0.2f);
 		// Shaders.postWorld.uniform1f("joe[0]", 1.0f);
+		
+		
+	
 
 		// GL20.glUniform1f(GL20.getloc, v0);
 
@@ -592,7 +597,7 @@ public class PostProcessPipeline {
 		// Rebind the MC Framebuffer
 		mc.getFramebuffer().bindFramebuffer(false);
 
-		drawRainBuffer();
+	drawRainBuffer();
 
 	}
 

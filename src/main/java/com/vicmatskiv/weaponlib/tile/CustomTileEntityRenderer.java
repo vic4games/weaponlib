@@ -28,10 +28,12 @@ public class CustomTileEntityRenderer extends CompatibleTileEntitySpecialRendere
     @Override
     public void render(CustomTileEntity<?> tileEntity, double posX, double posY, double posZ, float partialTicks, int destroyStage,
             float alpha) {
+    	
+    	
         GL11.glPushMatrix();
         this.bindTexture(textureResource);
         
-        GL11.glEnable(GL12.GL_RESCALE_NORMAL);
+      //  GL11.glEnable(GL12.GL_RESCALE_NORMAL);
         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
         GL11.glTranslatef((float)posX, (float)posY + 1.0F, (float)posZ + 1.0F);
         GL11.glScalef(1.0F, -1.0F, -1.0F);
@@ -49,7 +51,7 @@ public class CustomTileEntityRenderer extends CompatibleTileEntitySpecialRendere
         //GL11.glEnable(GL11.GL_CULL_FACE);
         model.render((Entity)null, 0f, 0f, 0f, 0f, 0f, 0.0625f);
         
-        GL11.glDisable(GL12.GL_RESCALE_NORMAL);
+      //  GL11.glDisable(GL12.GL_RESCALE_NORMAL);
         GL11.glPopMatrix();
     }
 }

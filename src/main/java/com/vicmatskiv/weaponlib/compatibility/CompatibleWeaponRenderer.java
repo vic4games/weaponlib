@@ -117,6 +117,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.ScreenShotHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 		
@@ -200,7 +201,8 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 		
 	
 		
-		if (transformType == TransformType.GROUND || transformType == TransformType.GUI
+		if (transformType == TransformType.GROUND
+				|| transformType == TransformType.GUI
 				|| transformType == TransformType.FIRST_PERSON_RIGHT_HAND
 				|| transformType == TransformType.THIRD_PERSON_RIGHT_HAND
 				|| transformType == TransformType.FIRST_PERSON_LEFT_HAND
@@ -231,6 +233,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 				
 				//Bloom.initializeMultisample();
 				renderItem();
+				RenderHelper.enableStandardItemLighting();
 				//Bloom.unapplyMultisample();
 			} else {
 				GlStateManager.pushMatrix();
@@ -1533,6 +1536,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 		// GlStateManager.enableTexture2D();
 
 		GL11.glPopMatrix();
+		 
 	}
 
 	protected abstract void renderItem(ItemStack weaponItemStack, RenderContext<RenderableState> renderContext,

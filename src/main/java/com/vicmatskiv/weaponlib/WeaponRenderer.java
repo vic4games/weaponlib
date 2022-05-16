@@ -3270,7 +3270,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		if(renderOptimization == null) {
 		    renderOptimization = 0.25f;
 		}
-		double volumeThreshold = sqDistance * renderOptimization;
+		double volumeThreshold = sqDistance;
 		
 		Interceptors.setRenderVolumeThreshold(volumeThreshold);
 		

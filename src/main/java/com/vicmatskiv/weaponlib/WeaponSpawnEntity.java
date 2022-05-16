@@ -15,12 +15,14 @@ import com.vicmatskiv.weaponlib.render.bgl.PostProcessPipeline;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.world.World;
 
 public class WeaponSpawnEntity extends EntityProjectile {
@@ -48,6 +50,7 @@ public class WeaponSpawnEntity extends EntityProjectile {
 	private Weapon weapon;
 	private int explosionParticleTextureId;
 	private int smokeParticleTextureId;
+	public long birthStamp;
 
 	public WeaponSpawnEntity(World world) {
 		super(world);
@@ -74,6 +77,8 @@ public class WeaponSpawnEntity extends EntityProjectile {
 		this.weapon = weapon;
 		this.damage = damage;
 		
+	
+		
 		this.explosionRadius = explosionRadius;
 		this.isDestroyingBlocks = isDestroyingBlocks;
 		this.explosionParticleAgeCoefficient = explosionParticleAgeCoefficient;
@@ -83,13 +88,32 @@ public class WeaponSpawnEntity extends EntityProjectile {
 		this.explosionParticleTextureId = explosionParticleTextureId;
 		this.smokeParticleTextureId = smokeParticleTextureId;
 		
+		this.birthStamp = System.currentTimeMillis();
+		
 		this.setSize(0.30F, 0.30F);
 	}
 
 	@Override
 	public void onUpdate() {
 	    super.onUpdate();
+	    
+	   
+	    
+	
+	    /*
+	    if(System.currentTimeMillis() - birthStamp > 1500) { 
+	    	//System.out.println("Killed rogue bullet");
+	    	setDead();
+	    }
+	    */
+	    
+	  
+	   
 	}
+	
+
+	
+	
 
 	/**
 	 * @see net.minecraft.entity.projectile.EntityThrowable#onImpact(net.minecraft.util.MovingObjectPosition)
@@ -97,10 +121,15 @@ public class WeaponSpawnEntity extends EntityProjectile {
 	@Override
 	protected void onImpact(CompatibleRayTraceResult position) {
 
+		
+		
 	    if(compatibility.world(this).isRemote) {
 	        return;
 	    }
 
+	    
+	    
+	    
 	    if(weapon == null) {
 	        return;
 	    }

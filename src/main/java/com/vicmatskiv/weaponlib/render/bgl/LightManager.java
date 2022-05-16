@@ -8,6 +8,7 @@ import com.vicmatskiv.weaponlib.ClientEventHandler;
 import com.vicmatskiv.weaponlib.shader.jim.Shader;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.BlockPos;
 import scala.actors.threadpool.Arrays;
@@ -53,7 +54,10 @@ public class LightManager {
 		for(Entry<Integer, Stack<Long>> registry : ClientEventHandler.muzzleFlashMap.entrySet()) {
 			
 			if(!registry.getValue().empty() /*&& System.currentTimeMillis()-registry.getValue().peek() > 25*/) {
-				EntityPlayer player = (EntityPlayer) Minecraft.getMinecraft().world.getEntityByID(registry.getKey());
+				Entity entity = Minecraft.getMinecraft().world.getEntityByID(registry.getKey());
+				if(!(entity instanceof EntityPlayer)) continue;
+				
+				EntityPlayer player = (EntityPlayer) entity;
 				addLight((float) player.posX, (float) player.posY + 0.6f, (float) player.posZ, 1.0f, 0.623f, 0.262f, 0.05f, 0.009f, 0.032f);
 			}
 			

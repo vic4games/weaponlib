@@ -26,7 +26,7 @@ public class ShaderManager {
 	public static boolean enableShaders = true;
 
 	public static Shader loadVMWShader(String name, Attribute...attribs) {
-		//System.out.println("Loading shader " + name);
+	
 		return loadShader(new ResourceLocation("mw:shaders/" + name), attribs);
 	}
 	

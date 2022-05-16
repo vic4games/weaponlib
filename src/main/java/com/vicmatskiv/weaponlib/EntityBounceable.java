@@ -349,13 +349,15 @@ public class EntityBounceable extends Entity implements Contextual, CompatibleIE
     public void onBounce(CompatibleRayTraceResult movingobjectposition) {}
 
     private void avoidBlockCollisionAfterBounce(CompatibleRayTraceResult movingobjectposition) {
-        if(movingobjectposition.getTypeOfHit() != Type.BLOCK) {
+       
+    	
+    	if(movingobjectposition.getTypeOfHit() != Type.BLOCK) {
             return;
         }
 
-        double dX = Math.signum(motionX) * 0.05;
-        double dY = Math.signum(motionY) * 0.05;
-        double dZ = Math.signum(motionZ) * 0.05;
+        double dX = Math.signum(motionX) * 0.01;
+        double dY = Math.signum(motionY) * 0.01;
+        double dZ = Math.signum(motionZ) * 0.01;
 
         for(int i = 0; i < 10; i++) {
 
@@ -383,14 +385,15 @@ public class EntityBounceable extends Entity implements Contextual, CompatibleIE
 
     private void avoidEntityCollisionAfterBounce(CompatibleRayTraceResult movingobjectposition) {
 
+    	
         if(movingobjectposition.getEntityHit() == null) {
             return;
         }
 
-        slowdownFactor = 0.3f;
-        double dX = Math.signum(motionX) * 0.05;
-        double dY = Math.signum(motionY) * 0.05;
-        double dZ = Math.signum(motionZ) * 0.05;
+        slowdownFactor = 0.01f;
+        double dX = Math.signum(motionX) * 0.01;
+        double dY = Math.signum(motionY) * 0.01;
+        double dZ = Math.signum(motionZ) * 0.01;
 
         float f = 0.3F;
         CompatibleAxisAlignedBB axisalignedbb = compatibility.getBoundingBox(movingobjectposition.getEntityHit())
@@ -411,9 +414,11 @@ public class EntityBounceable extends Entity implements Contextual, CompatibleIE
                     logger.debug("Found non-intercept position colliding with block {}", blockState);
                     intercept = movingobjectposition;
                 } else {
+                	
                     this.posX = projectedPos.getXCoord();
                     this.posY = projectedPos.getYCoord();
                     this.posZ = projectedPos.getZCoord();
+                    
                 }
 
                 break;

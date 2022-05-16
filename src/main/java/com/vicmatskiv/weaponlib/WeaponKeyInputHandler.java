@@ -23,6 +23,7 @@ import com.vicmatskiv.weaponlib.melee.PlayerMeleeInstance;
 import com.vicmatskiv.weaponlib.render.ModificationGUI;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -57,6 +58,7 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
 	        altMode = Keyboard.isKeyDown(KeyBindings.altModeDebugKey.getKeyCode());
 	    }
 	    
+	   
 //	    System.out.println("Alt mode: " + altMode);
 	    
 //	    if(DebugPositioner.isDebugModeEnabled()) {
@@ -246,6 +248,7 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
             }
         }
 
+         /*
         else if(KeyBindings.rightArrowKey.isPressed()) {
             PlayerItemInstance<?> instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player);
             if(instance instanceof PlayerWeaponInstance && instance.getState() == WeaponState.MODIFYING) {
@@ -297,7 +300,7 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
                 AttachmentCategory category = AttachmentCategory.FRONTSIGHT;
                 modContext.getAttachmentAspect().changeAttachment(category, (PlayerWeaponInstance) instance);
             }
-        }
+        }*/
 
         else if(KeyBindings.fireModeKey.isPressed()) {
             PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);

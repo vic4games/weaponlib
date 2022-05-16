@@ -699,8 +699,9 @@ public class ModificationGUI {
 				
 				GUIRenderHelper.drawAlignedString(text, StringAlignment.RIGHT, true, scaledresolution.getScaledWidth_double() - 18, scaledresolution.getScaledHeight_double() - 75 - (18 * groupID), SIDEBAR_SCALE, ColorPalette.WHITE);
 		
+				//System.out.println("hi ");
 				
-				if(isInClick) {
+				if(isInClick && groupSelector.checkBounding(0, 0, mouseX, mouseY, 1.0)) {
 					// Click on a certain group
 					currentGroup = ModificationGroup.fromID(groupID);
 					

@@ -27,12 +27,14 @@ import net.minecraftforge.fml.common.network.ByteBufUtils;
 public class BulletShellClient implements CompatibleMessage {
 
 	public Vec3d position;
+	public int shooter;
 	public Vec3d velocity;
 	public Shell.Type type;
 
 	public BulletShellClient() {}
 	
-	public BulletShellClient(Shell.Type type, Vec3d pos, Vec3d velocity) {
+	public BulletShellClient(int shooterID, Shell.Type type, Vec3d pos, Vec3d velocity) {
+		this.shooter = shooterID;
 		this.type = type;
 		this.position = pos;
 		this.velocity = velocity;
@@ -40,6 +42,7 @@ public class BulletShellClient implements CompatibleMessage {
 	
 
 	public void fromBytes(ByteBuf buf) {
+		this.shooter = buf.readInt();
 		this.position = NetworkUtil.readVec3d(buf);
 		this.velocity = NetworkUtil.readVec3d(buf);
 		this.type = Shell.Type.valueOf(ByteBufUtils.readUTF8String(buf));
@@ -48,6 +51,7 @@ public class BulletShellClient implements CompatibleMessage {
 	
 
 	public void toBytes(ByteBuf buf) {
+		buf.writeInt(this.shooter);
 		NetworkUtil.writeVec3d(buf, position);
 		NetworkUtil.writeVec3d(buf, velocity);
 		ByteBufUtils.writeUTF8String(buf, type.toString());
@@ -62,9 +66,11 @@ public class BulletShellClient implements CompatibleMessage {
 			 if(!ctx.isServerSide()) {
 		            compatibility.runInMainClientThread(() -> {
 					
+		            	if(Minecraft.getMinecraft().player.getEntityId() != m.shooter) {
+		            		Shell shell = new Shell(m.type, m.position, new Vec3d(-90, 0, 90), m.velocity);
+			            	CompatibleClientEventHandler.shellManager.enqueueShell(shell);
+		            	}
 		            	
-		            	Shell shell = new Shell(m.type, m.position, new Vec3d(90, 0, 90), m.velocity);
-		            	CompatibleClientEventHandler.shellManager.enqueueShell(shell);
 					
 				});
 			}

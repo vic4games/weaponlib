@@ -53,6 +53,10 @@ public class MuzzleFlashRenderer {
 		 
 		Weapon weapon = (Weapon) weaponItemStack.getItem();
 		
+		if(!(Minecraft.getMinecraft().world.getEntityByID(entityID) instanceof EntityPlayer)) {
+			return;
+		}
+		
 		EntityPlayer player = (EntityPlayer) Minecraft.getMinecraft().world.getEntityByID(entityID);
 		
 		

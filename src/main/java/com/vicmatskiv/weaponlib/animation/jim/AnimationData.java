@@ -551,11 +551,12 @@ public class AnimationData {
 				double rotYMult = 1.0;
 				double rotZMult = 1.0;
 				
+				/*
 				if(ClientModContext.getContext().getMainHeldWeapon().isAimed()) {
 					rotXMult = 0.1;
 					rotYMult = 0.1;
 					rotZMult = 0.5;
-				}
+				}*/
 				
 				double tesla = 0;
 				if(divisor == 12.6) {

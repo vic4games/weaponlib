@@ -22,6 +22,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.IProjectile;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.math.Vec3d;
 //import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
 
@@ -55,6 +56,8 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
     private long timestamp;
     
     private double aimTan;
+    
+    public Vec3d origin;
 
     protected long maxLifetime = DEFAULT_MAX_LIFETIME;
 
@@ -89,11 +92,16 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
         this.setLocationAndAngles(thrower.posX, thrower.posY + (double) thrower.getEyeHeight(),
                 thrower.posZ, compatibility.getCompatibleAimingRotationYaw(thrower), thrower.rotationPitch);
 
+       
+        
         this.posX -= (double) (CompatibleMathHelper.cos(this.rotationYaw / 180.0F * (float) Math.PI) * 0.16F);
         this.posY -= 0.10000000149011612D;
         this.posZ -= (double) (CompatibleMathHelper.sin(this.rotationYaw / 180.0F * (float) Math.PI) * 0.16F);
         this.setPosition(this.posX, this.posY, this.posZ);
 
+        
+        this.origin = new Vec3d(this.posX, this.posY, this.posZ);
+        
         //this.yOffset = 0.0F; TODO: verify how this works in 1.7.10
         float f = velocity; //0.4F;
         this.motionX = (double) (-CompatibleMathHelper.sin(this.rotationYaw / 180.0F * (float) Math.PI)
@@ -187,7 +195,7 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
     
     	
         if(ticksExisted > MAX_TICKS) {
-            setDead();
+            //setDead();
             return;
         }
         this.lastTickPosX = this.posX;

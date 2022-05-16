@@ -173,6 +173,7 @@ public class EntityGrenade extends AbstractEntityGrenade {
             double x = (rand.nextDouble() - 0.5) * 2;
             double y = (rand.nextDouble() - 0.5) * 2;
             double z = (rand.nextDouble() - 0.5) * 2;
+            
             double d2 = x * x + y * y + z * z;
             if(d2 == 0) {
                 logger.debug("Ignoring zero distance index {}", i);

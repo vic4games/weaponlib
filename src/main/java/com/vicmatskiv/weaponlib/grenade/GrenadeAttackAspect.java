@@ -20,6 +20,7 @@ import com.vicmatskiv.weaponlib.state.StateManager;
 
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.DamageSource;
 
 
 /*
@@ -211,7 +212,7 @@ public class GrenadeAttackAspect implements Aspect<GrenadeState, PlayerGrenadeIn
     
         if(activationTimestamp == 0 && instance.getWeapon().getType() == Type.REGULAR) {
             // explode immediately
-
+        	player.attackEntityFrom(DamageSource.causeExplosionDamage(player), 500f);
             Explosion.createServerSideExplosion(modContext, compatibility.world(player), null,
                     player.posX, player.posY, player.posZ, instance.getWeapon().getExplosionStrength(), false, true,
                     instance.getWeapon().isDestroyingBlocks(), 1f, 1f, 1.5f, 1f, null, null, modContext.getExplosionSound());

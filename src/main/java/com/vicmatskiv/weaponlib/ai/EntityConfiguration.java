@@ -43,7 +43,7 @@ public class EntityConfiguration {
     
     private static final Logger logger = LogManager.getLogger(EntityConfiguration.class);
 
-    private static final int DEFAULT_TRACKING_RANGE = 64;
+    private static final int DEFAULT_TRACKING_RANGE = 640;
     private static final int DEFAULT_UPDATE_FREQUENCY = 3;
     private static final int DEFAULT_MAX_HEALTH = 20;
     private static final double DEFAULT_MAX_SPEED = 0.25;
