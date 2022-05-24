@@ -4,6 +4,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
+
+import net.minecraft.client.audio.ISound;
+import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.Vec3d;
 
 public class MultipartTransition<Part, Context> {
@@ -21,6 +25,8 @@ public class MultipartTransition<Part, Context> {
 	private Map<Part, Part> attachedTo = new HashMap<>();
 	private long duration;
 	private long pause;
+	
+	public CompatibleSound sound;
 	
 	public Vec3d beizer;
 	public Interpolation interp = Interpolation.SMOOTHSTEP;

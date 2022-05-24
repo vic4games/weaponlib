@@ -25,14 +25,19 @@ import org.lwjgl.util.vector.Quaternion;
 import org.lwjgl.util.vector.Vector3f;
 import org.lwjgl.util.vector.Vector4f;
 
+import com.vicmatskiv.weaponlib.ClientModContext;
 import com.vicmatskiv.weaponlib.DefaultPart;
 import com.vicmatskiv.weaponlib.RenderableState;
+import com.vicmatskiv.weaponlib.UniversalSoundLookup;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 import com.vicmatskiv.weaponlib.compatibility.Interceptors;
 
 import akka.japi.Pair;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.init.SoundEvents;
 import net.minecraft.util.math.Vec3d;
 
 
@@ -59,6 +64,9 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
 		private Long startTime;
 		private long totalDuration;
 
+		
+		private int previousIndex = -1;
+		
 		private int currentIndex;
 		private long currentStartTime;
 		private boolean expired;
@@ -80,6 +88,8 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
 			toPositioning = transitionProvider.getTransitions(toState);
 			segmentCount = toPositioning.size();
 
+			
+			
 			for(MultipartTransition<Part, Context> t : toPositioning) {
 				totalDuration += t.getDuration() + t.getPause();
 			}
@@ -142,6 +152,8 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
 					if(fromMatrix == null && fromPositioning != null) {
 					    MultipartTransition<Part, Context> fromMultipart = fromPositioning.get(fromPositioning.size() - 1);
 
+					    
+					    
 	                    if(fromMultipart.getPositioning(part) == (Object)MultipartTransition.anchoredPosition()) {
 	                        fromMatrix = lastApplied.get(p);
 	                        if(fromMatrix == null) {
@@ -192,18 +204,34 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
 			long currentTime = currentTimeProvider.get();
 			MultipartTransition<Part, Context> targetState = toPositioning.get(currentIndex);
 			
+			
+			if(previousIndex != currentIndex) {
+				if(targetState.sound != null) {
+					Minecraft.getMinecraft().getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(targetState.sound.getSound(), 1.0f));
+				}
+			}
+			
+			previousIndex = currentIndex;
 		
 			
 			long currentDuration = targetState.getDuration();
 			long currentPause = targetState.getPause();
 
-			
+		
 			if(currentIndex == 0 && startTime == null) {
 				logger.debug("Starting transition {}, duration {}ms, pause {}ms", currentIndex, currentDuration, currentPause);
 				startTime = currentTime;
+				
+				
+			}
+			
+			
+			if(currentTime-currentStartTime < 10) {
+				
 			}
 
 			if(currentStartTime == 0) {
+				
 				currentStartTime = currentTime;
 			} else if(currentTime > currentStartTime + currentDuration + currentPause) {
 				logger.debug("Completed transition {}, duration {}ms, pause {}ms", currentIndex, currentDuration, currentPause);
@@ -214,6 +242,13 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
 							multipartTransition.getDuration(), multipartTransition.getPause());
 				}
 				currentStartTime = currentTime;
+				
+				
+				
+			
+				
+				
+				
 			}
 
 			long currentOffset = currentTime - currentStartTime;
@@ -225,7 +260,10 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
 			
 			if(currentProgress > 1f) {
 				currentProgress = 1f;
+				
 			}
+			
+			
 			
 
 			float finalCurrentProgress = currentProgress;
@@ -288,8 +326,18 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
 				public void position(Part part, Context context) {
 					PartData partData = getPartData(part, context);
 					
-					
-					
+				
+					/*
+					 * try {
+						if(targetState.sound != null) {
+							Minecraft.getMinecraft().getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(targetState.sound, 1.0f));
+							
+						}
+					} catch(Exception e) {
+						e.printStackTrace();
+					}
+					 */
+				
 					//System.out.println(partData.matrices.get(currentIndex));
 					
 					if(part == DefaultPart.MAIN_ITEM) {
@@ -317,6 +365,8 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
 								finalCurrentProgress, beizer, revertFlag, interpolation);
 								
 					} else {
+						
+					
 						
 						applyOnce2(part, context,
 							    partData.matrices.get(currentIndex),

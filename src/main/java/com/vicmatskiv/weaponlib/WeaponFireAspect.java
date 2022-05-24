@@ -16,6 +16,7 @@ import com.vicmatskiv.weaponlib.animation.ClientValueRepo;
 import com.vicmatskiv.weaponlib.command.DebugCommand;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
+import com.vicmatskiv.weaponlib.config.BalancePackManager;
 import com.vicmatskiv.weaponlib.network.packets.BulletShellClient;
 import com.vicmatskiv.weaponlib.network.packets.GunFXPacket;
 import com.vicmatskiv.weaponlib.render.shells.ShellParticleSimulator;
@@ -214,6 +215,7 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
 
     private void fire(PlayerWeaponInstance weaponInstance) {
     	
+    	
     
         EntityLivingBase player = weaponInstance.getPlayer();
         Weapon weapon = (Weapon) weaponInstance.getItem();
@@ -281,12 +283,18 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
         }
         
         
-        player.rotationPitch = player.rotationPitch - weaponInstance.getRecoil() * 0.7f;
+        float recoilAmount = weaponInstance.getRecoil();
+       
+        if(BalancePackManager.shouldChangeWeaponRecoil(weapon)) recoilAmount = (float) BalancePackManager.getNewWeaponRecoil(weapon);
+        recoilAmount *= BalancePackManager.getGlobalRecoilMultiplier();
+        recoilAmount *= BalancePackManager.getGroupRecoilMultiplier(weapon.getConfigurationGroup());
+        
+        player.rotationPitch = player.rotationPitch - recoilAmount * 0.7f;
         float rotationYawFactor = -1.0f + random.nextFloat() * 2.0f;
         
-        player.rotationYaw = player.rotationYaw + weaponInstance.getRecoil() * rotationYawFactor * 0.4f;
+        player.rotationYaw = player.rotationYaw + recoilAmount * rotationYawFactor * 0.4f;
 		
-        ClientValueRepo.recoilWoundY += weaponInstance.getRecoil() * 0.7f;
+        ClientValueRepo.recoilWoundY += recoilAmount * 0.7f;
         
 
         Boolean muzzleFlash = modContext.getConfigurationManager().getProjectiles().isMuzzleEffects();

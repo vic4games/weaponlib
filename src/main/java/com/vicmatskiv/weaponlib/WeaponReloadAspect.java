@@ -129,7 +129,7 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 	private static Predicate<PlayerWeaponInstance> reloadAnimationCompleted = weaponInstance -> {
 		
 		
-		long maxTime = weaponInstance.getAnimationDuration();
+		long maxTime = (long) (weaponInstance.getAnimationDuration());
 		
 		/*
 		if(weaponInstance.getState() == WeaponState.COMPOUND_RELOAD) {
@@ -137,12 +137,19 @@ public class WeaponReloadAspect implements Aspect<WeaponState, PlayerWeaponInsta
 		} else if(weaponInstance.getState() == WeaponState.COMPOUND_RELOAD_EMPTY) {
 			maxTime /= 1.5;
 		}
+		
+		
+		
 		*/
+		
+	
+		//return System.currentTimeMillis() - weaponInstance.getStateUpdateTimestamp() > 2116;
 		
 		return System.currentTimeMillis() >= weaponInstance.getStateUpdateTimestamp()
 	
 			+ Math.max(weaponInstance.getWeapon().builder.reloadingTimeout,
-					maxTime * 0.8);
+					maxTime);
+		
 			
 		};
 	

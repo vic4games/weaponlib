@@ -19,6 +19,7 @@ import com.google.gson.JsonObject;
 import com.vicmatskiv.weaponlib.ClientModContext;
 import com.vicmatskiv.weaponlib.RenderContext;
 import com.vicmatskiv.weaponlib.RenderableState;
+import com.vicmatskiv.weaponlib.UniversalSoundLookup;
 import com.vicmatskiv.weaponlib.WeaponRenderer;
 import com.vicmatskiv.weaponlib.animation.MatrixHelper;
 import com.vicmatskiv.weaponlib.animation.Transform;
@@ -26,9 +27,12 @@ import com.vicmatskiv.weaponlib.animation.Transition;
 import com.vicmatskiv.weaponlib.render.bgl.math.AngleKit.EulerAngle;
 import com.vicmatskiv.weaponlib.render.bgl.math.AngleKit.Format;
 import com.vicmatskiv.weaponlib.animation.DebugPositioner.Position;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.init.SoundEvents;
+import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.Vec3d;
 import scala.actors.threadpool.Arrays;
 
@@ -204,10 +208,21 @@ public class AnimationData {
 			// System.out.println(f + " | " + new BlockbenchTransition(timeDelta,
 			// rotationKey, translationKey));
 		
+			
+			
 			this.bbTransition.put(f, new BlockbenchTransition(timeDelta, rotationKey, translationKey));
 
 		}
 
+	}
+	 
+	public void setSounds(HashMap<Float, String> map, ArrayList<Float> overflowList) {
+		for(Entry<Float, BlockbenchTransition> set : this.bbTransition.entrySet()) {
+			if(map.containsKey(set.getKey())) {
+				overflowList.remove(set.getKey());
+				set.getValue().setSound(UniversalSoundLookup.lookupSound(map.get(set.getKey())));
+			}
+		}
 	}
 	
 	public float getDelta(TreeMap<Float, Vec3d> map, float f) {
@@ -389,6 +404,8 @@ public class AnimationData {
 		List<Transition<RenderContext<RenderableState>>> transitionList = new ArrayList<>();
 		
 		
+		
+		
 
 		if(!isNull) {
 			
@@ -423,11 +440,16 @@ public class AnimationData {
 		private float timestamp;
 		private Vec3d rotation;
 		private Vec3d translation;
+		private CompatibleSound sound;
 
 		public BlockbenchTransition(float timestamp, Vec3d rotation, Vec3d translation) {
 			this.timestamp = timestamp;
 			this.rotation = rotation;
 			this.translation = translation;
+		}
+		
+		public void setSound(CompatibleSound sound) {
+			this.sound = sound;
 		}
 
 		public void directTransform() {
@@ -460,7 +482,7 @@ public class AnimationData {
 		
 		
 		public Transition<?> createVMWTransitionWithADS(Transform normal, Transform ads, double divisor) {
-			return new Transition<>((rc) -> {
+			Transition<?> trans =  new Transition<>((rc) -> {
 				
 				/*
 				 * So you wanna mess with this code?
@@ -525,6 +547,10 @@ public class AnimationData {
 					
 				
 			}, (int) timestamp);
+		//	System.out.println("Hello?! Brother! " + sound);
+			trans.setSound(sound);
+			
+			return trans;
 			
 			
 			
@@ -532,7 +558,8 @@ public class AnimationData {
 		}
 
 		public Transition<?> createVMWTransition(Transform t, double divisor) {
-			return new Transition<>((rc) -> {
+			Transition<?> trans = new Transition<>((rc) -> {
+				
 				
 				/*
 				 * So you wanna mess with this code?
@@ -625,6 +652,10 @@ public class AnimationData {
 			
 			
 			
+			
+			//System.out.println("Hello?! Brother! " + sound);
+			trans.setSound(sound);
+			return trans;
 
 		}
 

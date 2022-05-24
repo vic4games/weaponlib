@@ -52,6 +52,7 @@ import com.vicmatskiv.weaponlib.animation.jim.FuckMyLife;
 import com.vicmatskiv.weaponlib.animation.jim.AnimationData.BlockbenchTransition;
 import com.vicmatskiv.weaponlib.animation.movement.WeaponRotationHandler;
 import com.vicmatskiv.weaponlib.command.DebugCommand;
+import com.vicmatskiv.weaponlib.config.BalancePackManager;
 import com.vicmatskiv.weaponlib.debug.DebugRenderer;
 import com.vicmatskiv.weaponlib.animation.MultipartRenderStateDescriptor;
 import com.vicmatskiv.weaponlib.animation.MultipartRenderStateManager;
@@ -1205,10 +1206,16 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 			tessellator.draw();
 			
 
+			
+			
+			
 			GL11.glPopAttrib();
 			GlStateManager.enableLighting();
 			GlStateManager.popMatrix();
 			GlStateManager.enableTexture2D();
+			
+			
+			
 		} else {
 			GL11.glPushMatrix();
 			GL11.glPushAttrib(GL11.GL_ENABLE_BIT);
@@ -1231,9 +1238,32 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 
 
 			GL11.glPopAttrib();
-
+			
+			
 			GL11.glPopMatrix();
+			
 		}
+		
+		
+		if(BalancePackManager.isWeaponDisabled(renderContext.getWeaponInstance().getWeapon())) {
+			GlStateManager.disableTexture2D();
+			Tessellator t = Tessellator.getInstance();
+			BufferBuilder bb = t.getBuffer();
+			bb.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+			double size = 1.0;
+			bb.pos(0, 0, 10).color(1, 0, 0, .5f).endVertex();
+			bb.pos(size, 0, 10).color(1, 0, 0, .5f).endVertex();
+			bb.pos(size, size, 10).color(1, 0, 0, .5f).endVertex();
+			bb.pos(0, size, 10).color(1, 0, 0, .5f).endVertex();
+			
+			t.draw();
+			GlStateManager.enableTexture2D();
+		}
+		
+		
+		
+		
+		
 		
 		/*
 		

@@ -33,7 +33,9 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleReflection;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTargetPoint;
 import com.vicmatskiv.weaponlib.compatibility.RecoilParam;
+import com.vicmatskiv.weaponlib.config.BalancePackManager;
 import com.vicmatskiv.weaponlib.config.Gun;
+import com.vicmatskiv.weaponlib.config.BalancePackManager.GunConfigurationGroup;
 import com.vicmatskiv.weaponlib.crafting.CraftingComplexity;
 import com.vicmatskiv.weaponlib.crafting.OptionsMetadata;
 import com.vicmatskiv.weaponlib.jim.util.VMWHooksHandler;
@@ -110,6 +112,8 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         private String endOfShootSound;
         private String burstShootSound;
         private String silencedBurstShootSound;
+        
+        private GunConfigurationGroup configGroup = GunConfigurationGroup.NONE;
         
         private Vec3d muzzlePosition = new Vec3d(-.3, -1.0, -5.3);
 
@@ -241,6 +245,11 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
                 .withZRotationCoefficient(2f)
                 .withTransitionDuration(50);
             screenShakingBuilders.put(RenderableState.SHOOTING, defaultShootingStateScreenShakingBuilder);
+        }
+        
+        public Builder withConfigGroup(GunConfigurationGroup group) {
+        	this.configGroup = group;
+			return this;
         }
         
         public Builder withWeaponType(String type) {
@@ -891,9 +900,22 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
 
                 int explosionParticleTextureId = modContext.registerTexture(explosionParticleTexture);
                 int smokeParticleTextureId = modContext.registerTexture(smokeParticleTexture);
+                
+               
+                
+                
                 spawnEntityWith = (weapon, player) -> {
+                	
+                	
+                	 double damage = spawnEntityDamage;
+                     if(BalancePackManager.hasActiveBalancePack()) {
+                     	if(BalancePackManager.shouldChangeWeaponDamage(weapon)) damage = BalancePackManager.getNewWeaponDamage(weapon);
+                     	damage *= BalancePackManager.getGroupDamageMultiplier(weapon.getConfigurationGroup());
+                     	damage *= BalancePackManager.getGlobalDamageMultiplier();
+                     }
+                	
                     WeaponSpawnEntity bullet = new WeaponSpawnEntity(weapon, compatibility.world(player), player, spawnEntitySpeed,
-                            spawnEntityGravityVelocity, inaccuracy, spawnEntityDamage, spawnEntityExplosionRadius, 
+                            spawnEntityGravityVelocity, inaccuracy, (float) damage, spawnEntityExplosionRadius, 
                             isDestroyingBlocks, spawnEntityParticleAgeCoefficient, spawnEntitySmokeParticleAgeCoefficient,
                             spawnEntityExplosionParticleScaleCoefficient, spawnEntitySmokeParticleScaleCoefficient,
                             explosionParticleTextureId, 
@@ -1184,7 +1206,9 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
     }
 
     void toggleAiming() {
+    	
         PlayerWeaponInstance mainHandHeldWeaponInstance = modContext.getMainHeldWeapon();
+        
         if(mainHandHeldWeaponInstance != null
                 && (mainHandHeldWeaponInstance.getState() == WeaponState.READY
                 || mainHandHeldWeaponInstance.getState() == WeaponState.PAUSED
@@ -1580,6 +1604,10 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
     
     public boolean hasFlashPedals() {
     	return builder.hasFlashPedals;
+    }
+    
+    public GunConfigurationGroup getConfigurationGroup() {
+    	return builder.configGroup;
     }
 
     public boolean hasIteratedLoad() {

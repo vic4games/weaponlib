@@ -7,7 +7,10 @@ import java.io.Console;
 import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -48,6 +51,11 @@ import org.lwjgl.util.vector.Quaternion;
 
 import com.google.common.reflect.ClassPath;
 import com.google.common.reflect.Reflection;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonIOException;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.stream.JsonWriter;
 import com.vicmatskiv.weaponlib.AttachmentCategory;
 import com.vicmatskiv.weaponlib.BulletHoleRenderer;
 import com.vicmatskiv.weaponlib.ClassInfo;
@@ -56,6 +64,8 @@ import com.vicmatskiv.weaponlib.ItemAttachment;
 import com.vicmatskiv.weaponlib.ItemSkin;
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.PlayerWeaponInstance;
+import com.vicmatskiv.weaponlib.RenderContext;
+import com.vicmatskiv.weaponlib.RenderableState;
 import com.vicmatskiv.weaponlib.RenderingPhase;
 import com.vicmatskiv.weaponlib.RopeSimulation;
 import com.vicmatskiv.weaponlib.RopeSimulation.Stick;
@@ -67,15 +77,23 @@ import com.vicmatskiv.weaponlib.animation.AnimationModeProcessor;
 import com.vicmatskiv.weaponlib.animation.ClientValueRepo;
 import com.vicmatskiv.weaponlib.animation.MatrixHelper;
 import com.vicmatskiv.weaponlib.animation.OpenGLSelectionHelper;
+import com.vicmatskiv.weaponlib.animation.Transform;
+import com.vicmatskiv.weaponlib.animation.Transition;
 import com.vicmatskiv.weaponlib.animation.gui.AnimationGUI;
 import com.vicmatskiv.weaponlib.animation.jim.AnimationData;
 import com.vicmatskiv.weaponlib.animation.jim.AnimationData.BlockbenchTransition;
 import com.vicmatskiv.weaponlib.command.DebugCommand;
 import com.vicmatskiv.weaponlib.compatibility.graph.CompatibilityClassGenerator;
+import com.vicmatskiv.weaponlib.config.BalancePackManager;
+import com.vicmatskiv.weaponlib.config.BalancePackManager.BalancePack;
+import com.vicmatskiv.weaponlib.config.BalancePackManager.GunBalanceConfiguration;
+import com.vicmatskiv.weaponlib.config.BalancePackManager.GunCategoryBalanceConfiguration;
+import com.vicmatskiv.weaponlib.config.BalancePackManager.GunConfigurationGroup;
 import com.vicmatskiv.weaponlib.animation.jim.BBLoader;
 import com.vicmatskiv.weaponlib.debug.DebugRenderer;
 import com.vicmatskiv.weaponlib.debug.SysOutController;
 import com.vicmatskiv.weaponlib.model.Bullet556;
+import com.vicmatskiv.weaponlib.network.CompressionUtil;
 import com.vicmatskiv.weaponlib.particle.DriftCloudFX;
 import com.vicmatskiv.weaponlib.render.Bloom;
 import com.vicmatskiv.weaponlib.render.Dloom;
@@ -159,11 +177,13 @@ import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.client.model.obj.OBJLoader;
 import net.minecraftforge.client.model.obj.OBJModel;
 import net.minecraftforge.client.settings.KeyBindingMap;
+import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.event.entity.living.LivingFallEvent;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingJumpEvent;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.eventhandler.Event.Result;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -489,10 +509,95 @@ public abstract class CompatibleClientEventHandler {
 	public void renderWorrldLastEvent(RenderWorldLastEvent evt) {
 		PostProcessPipeline.captureMatricesIntoBuffers();
 		frametimer.markFrame();
+		
+		/*
+		byte[] bruh = CompressionUtil.compressString("fuck");
+		
+		String result = CompressionUtil.decompressString(bruh);
+	*/
+		
+		
 		/*
 		System.out.println("DEOBF: " + Launch.blackboard.get("fml.deobfuscatedEnvironment"));
 		System.out.println();
 		*/
+		
+		/*
+		BalancePackManager.loadDirectory();
+		
+		if(Minecraft.getMinecraft().player != null && Minecraft.getMinecraft().player.ticksExisted % 100 == 0) {
+			BalancePack bp = new BalancePack("Name", "ddkd", 1.0, 1.0);
+			bp.addWeaponConfig(new GunBalanceConfiguration("hk416", true, 8.0, 1.3));
+			bp.addWeaponConfig(new GunBalanceConfiguration("m17", true, 1, -1.0));
+			bp.addBalancingCategory(new GunCategoryBalanceConfiguration(GunConfigurationGroup.NONE, 1.0, 1.0));
+		
+			
+			BalancePackManager.setCurrentBalancePack(bp);
+			try {
+				
+				File f = new File("balance_pack.json");
+				FileWriter fw = new FileWriter(f);
+				
+				
+				
+				
+				new GsonBuilder().setPrettyPrinting().create().toJson(bp.toJSONObject(), fw);
+				
+				fw.close();
+			} catch (JsonIOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		
+		if(Minecraft.getMinecraft().player != null && Minecraft.getMinecraft().player.ticksExisted % 100 == 0) {
+			
+			
+			File f =  new File("balance_pack.json");
+			try {
+				System.out.println("bro");
+				JsonObject obj = (new GsonBuilder()).create().fromJson(new FileReader(f), JsonObject.class);
+				System.out.println(obj.toString());
+				BalancePack bp = BalancePack.fromJSONObject(obj);
+				System.out.println(bp);
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
+		}
+		*/
+		
+		
+		/*
+		AnimationData data = BBLoader.getAnimation("m17", "reloadtactical", "main");
+		float orig = 0;
+		for(Entry<Float, BlockbenchTransition> entry : data.bbTransition.entrySet()) {
+			orig += Math.round(entry.getValue().getTimestamp());
+		}
+		System.out.println("Flag One: " + orig);
+		
+		float testOrig = 0;
+		for(Transition<RenderContext<RenderableState>> t : data.getTransitionList(Transform.NULL.copy(), 1.0)) {
+			testOrig += t.getDuration();
+		}
+		System.out.println("Flag Two: " + testOrig);
+		
+		
+		float totalDur = 0;
+		if(getModContext().getMainHeldWeapon() != null) {
+			for(Transition<RenderContext<RenderableState>> i : getModContext().getMainHeldWeapon().getWeapon().getRenderer().getWeaponRendererBuilder().tacticalReloadContainer.getFirstPerson()) {
+				totalDur += i.getDuration();
+			}
+		}
+		System.out.println("Flag Three: " + totalDur);
+		
+		*/
+		//System.out.println("Flag Four: " + getModContext().getMainHeldWeapon().getWeapon().getRenderer().getWeaponRendererBuilder().tacticalReloadContainer.getDuration());
+		//System.out.println("Total duration: " + totalDur);
+		//System.out.println(orig);
 		
 	
 		

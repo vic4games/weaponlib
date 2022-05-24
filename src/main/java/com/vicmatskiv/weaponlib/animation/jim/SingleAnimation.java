@@ -17,7 +17,7 @@ public class SingleAnimation {
 	private HashMap<String, AnimationData> dataMap = new HashMap<>();
 	private int timestampCount = 0;
 	private ArrayList<Float> timestamps;
-	
+	private HashMap<Float, String> sounds = new HashMap<>();
 	
 	private float duration;
 	
@@ -34,6 +34,13 @@ public class SingleAnimation {
 		this.duration = duration;
 	}
 	
+	public void registerSound(float time, String name) {
+		this.sounds.put(time, name);
+	}
+	
+	public HashMap<Float, String> getSoundMap() {
+		return this.sounds;
+	}
 	
 	public ArrayList<Float> getTimestamps() {
 		return this.timestamps;
@@ -90,12 +97,28 @@ public class SingleAnimation {
 				}
 			}
 			
-			/*
-			for(float f : timestamps) {
-				if(!i.getValue().getTimestamps().contains(f)) {
-					i.getValue().bakeKeyframes(f);
-				}
-			}*/
+			
+			
+		}
+		
+		ArrayList<Float> overflowList = new ArrayList<>();
+		for(Entry<Float, String> entry : sounds.entrySet()) overflowList.add(entry.getKey());
+		
+		// Tries to assign all the sounds to main
+		if(dataMap.containsKey(BBLoader.KEY_MAIN)) {
+			dataMap.get(BBLoader.KEY_MAIN).setSounds(sounds, overflowList);
+		}
+		
+		if(!overflowList.isEmpty()) {
+			for(Entry<String, AnimationData> data : this.dataMap.entrySet()) {
+				if(data.getKey().equals(BBLoader.KEY_MAIN)) continue;
+				if(overflowList.isEmpty()) break;
+				
+				
+				data.getValue().setSounds(sounds, overflowList);
+				
+				
+			}
 		}
 		
 		//System.out.println("Total # of transitions: " + timestamps.size());

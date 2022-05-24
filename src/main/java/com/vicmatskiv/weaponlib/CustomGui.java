@@ -32,6 +32,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleEntityEquipmentSlot;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleGui;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMathHelper;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTessellator;
+import com.vicmatskiv.weaponlib.config.BalancePackManager;
 import com.vicmatskiv.weaponlib.config.ConfigurationManager.StatusBarPosition;
 import com.vicmatskiv.weaponlib.debug.DebugRenderer;
 import com.vicmatskiv.weaponlib.electronics.ItemWirelessCamera;
@@ -417,6 +418,18 @@ public class CustomGui extends CompatibleGui {
 					//fontRender.drawStringWithShadow(TextFormatting.RED + "" + modContext.getMainHeldWeapon().getState() + "", x-100, y + 10, color);
 					
 				}
+                
+                int x = getStatusBarXPosition(width, "Weapon disabled", fontRender);
+				int y = getStatusBarYPosition(height);
+
+                
+                if(BalancePackManager.isWeaponDisabled(weaponInstance.getWeapon())) {
+                	fontRender.drawStringWithShadow("Weapon disabled", x - 5, y + 10, 0xc23616);
+					
+                }
+                
+               
+                
 				GL11.glPopAttrib();
 				event.setCanceled(true);
 			}

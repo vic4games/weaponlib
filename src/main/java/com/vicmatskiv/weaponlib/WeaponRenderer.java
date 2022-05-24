@@ -54,6 +54,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleAchievement;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponRenderer;
 import com.vicmatskiv.weaponlib.compatibility.Interceptors;
+import com.vicmatskiv.weaponlib.config.BalancePackManager;
 import com.vicmatskiv.weaponlib.config.Projectiles;
 import com.vicmatskiv.weaponlib.debug.DebugRenderer;
 import com.vicmatskiv.weaponlib.jim.util.VMWHooksHandler;
@@ -70,6 +71,7 @@ import com.vicmatskiv.weaponlib.shader.jim.ShaderManager;
 import akka.japi.Pair;
 import net.minecraft.advancements.critereon.CuredZombieVillagerTrigger;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelBox;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -81,6 +83,7 @@ import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.Vec3d;
@@ -185,7 +188,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 	    private TransitionContainer compoundReloadEmptyContainer = new TransitionContainer();
 	    private TransitionContainer loadEmptyContainer = new TransitionContainer();
 	    private TransitionContainer unloadEmptyContainer = new TransitionContainer();
-	    private TransitionContainer tacticalReloadContainer = new TransitionContainer();
+	    public TransitionContainer tacticalReloadContainer = new TransitionContainer();
 	    
 	    
 	    // ADS animations
@@ -377,6 +380,10 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 
 		protected ItemAttachment<Weapon>[] actionPiece; 
 		protected Transform actionPieceTransform;
+		
+		public long getTacticalReloadDuration() {
+			return tacticalReloadContainer.getDuration();
+		}
 		
 		public long getCompoundReloadDuration() {
 			return compoundReloadContainer.getDuration();
@@ -1198,7 +1205,6 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				}
 				
 				if(hasTacticalReload) {
-					System.out.println("YYEEYEY DOIN TACTICAL");
 					withTacticalReloadCustom(p, BBLoader.getAnimation(animationFile, BBLoader.KEY_TACTICAL_RELOAD, BBLoader.KEY_MAGAZINE)
 							.getTransitionList(Transform.NULL.copy().withRotationPoint(r.x, r.y, r.z), BBLoader.HANDDIVISOR));
 					
@@ -1350,6 +1356,25 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			return this;
 		}
 		
+		public Builder setupModernEjectSpentRoundAnimation(ItemAttachment<Weapon> action, String animationFile, String partKey) {
+			if(VMWHooksHandler.isOnServer()) return this;
+			
+			
+			AnimationData main = BBLoader.getAnimation(animationFile, BBLoader.KEY_EJECT_SPENT_ROUND, BBLoader.KEY_MAIN);
+			AnimationData left = BBLoader.getAnimation(animationFile, BBLoader.KEY_EJECT_SPENT_ROUND, "lefthand");
+			AnimationData right = BBLoader.getAnimation(animationFile, BBLoader.KEY_EJECT_SPENT_ROUND, "righthand");
+						
+			checkDefaults();
+			
+			this.firstPersonPositioningDrawing = main.getTransitionList(firstPersonTransform, BBLoader.GENDIVISOR);
+			this.firstPersonLeftHandPositioningDrawing = left.getTransitionList(firstPersonLeftHandTransform, BBLoader.HANDDIVISOR);
+			this.firstPersonRightHandPositioningDrawing = right.getTransitionList(firstPersonRightHandTransform, BBLoader.HANDDIVISOR);
+	
+			return this;
+			
+		}
+		
+		
 		public Builder setupCustomKeyedPart(ItemAttachment<Weapon> action, String animationFile, String partKey) {
 			AnimationSet set = BBLoader.getAnimationSet(animationFile);
 			
@@ -1446,7 +1471,9 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			this.compoundReloadContainer.setLeftHand(left.getTransitionList(firstPersonLeftHandTransform, BBLoader.HANDDIVISOR));
 			this.compoundReloadContainer.setRightHand(right == null ? null : right.getTransitionList(firstPersonRightHandTransform, BBLoader.HANDDIVISOR));
 
-			this.compoundReloadContainer.setDuration((long) Math.round((main.getAppointedDuration()*AnimationData.PACE)));
+			
+			this.compoundReloadContainer.setDuration();
+			//this.compoundReloadContainer.setDuration((long) Math.round((main.getAppointedDuration()*AnimationData.PACE)));
 			return this;
 			
 		}
@@ -1463,7 +1490,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			this.loadEmptyContainer.setLeftHand(left.getTransitionList(firstPersonLeftHandTransform, BBLoader.HANDDIVISOR));
 			this.loadEmptyContainer.setRightHand(right == null ? null : right.getTransitionList(firstPersonRightHandTransform, BBLoader.HANDDIVISOR));
 
-			this.loadEmptyContainer.setDuration((long) Math.round((main.getAppointedDuration()*AnimationData.PACE)));
+			this.loadEmptyContainer.setDuration();
 			return this;
 			
 		}
@@ -1480,7 +1507,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			this.unloadEmptyContainer.setLeftHand(left.getTransitionList(firstPersonLeftHandTransform, BBLoader.HANDDIVISOR));
 			this.unloadEmptyContainer.setRightHand(right == null ? null : right.getTransitionList(firstPersonRightHandTransform, BBLoader.HANDDIVISOR));
 
-			this.unloadEmptyContainer.setDuration((long) Math.round((main.getAppointedDuration()*AnimationData.PACE)));
+			this.unloadEmptyContainer.setDuration();
 			return this;
 			
 		}
@@ -1495,7 +1522,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			container.setFirstPerson(main.getTransitionList(firstPersonTransform, BBLoader.GENDIVISOR));
 			container.setLeftHand(left.getTransitionList(firstPersonLeftHandTransform, BBLoader.HANDDIVISOR));
 			container.setRightHand(right == null ? null : right.getTransitionList(firstPersonRightHandTransform, BBLoader.HANDDIVISOR));
-			container.setDuration((long) Math.round((main.getAppointedDuration()*AnimationData.PACE)));
+			container.setDuration();
 			return this;
 		}
 		
@@ -1509,7 +1536,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			container.setFirstPerson(main.getTransitionList(firstPersonZoomingTransform, BBLoader.GENDIVISOR));
 			container.setLeftHand(left.getTransitionList(firstPersonLeftHandTransform, BBLoader.HANDDIVISOR));
 			container.setRightHand(right == null ? null : right.getTransitionList(firstPersonRightHandTransform, BBLoader.HANDDIVISOR));
-			container.setDuration((long) Math.round((main.getAppointedDuration()*AnimationData.PACE)));
+			container.setDuration();
 			return this;
 		}
 		
@@ -1525,7 +1552,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			this.tacticalReloadContainer.setLeftHand(left.getTransitionList(firstPersonLeftHandTransform, BBLoader.HANDDIVISOR));
 			this.tacticalReloadContainer.setRightHand(right == null ? null : right.getTransitionList(firstPersonRightHandTransform, BBLoader.HANDDIVISOR));
 
-			this.tacticalReloadContainer.setDuration((long) Math.round((main.getAppointedDuration()*AnimationData.PACE)));
+			this.tacticalReloadContainer.setDuration();
 			return this;
 			
 		}
@@ -1543,7 +1570,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			this.compoundReloadEmptyContainer.setLeftHand(left.getTransitionList(firstPersonLeftHandTransform, BBLoader.HANDDIVISOR));
 			this.compoundReloadEmptyContainer.setRightHand(right == null ? null : right.getTransitionList(firstPersonRightHandTransform, BBLoader.HANDDIVISOR));
 			
-			this.compoundReloadEmptyContainer.setDuration((long) Math.round((main.getAppointedDuration()*AnimationData.PACE)));
+			this.compoundReloadEmptyContainer.setDuration();
 			//setupBBAnim(animationFile, anim, mainBoneName, leftHandBoneName, rightHandBoneName, this.compoundReloadContainer);
 			return this;
 			
@@ -2719,6 +2746,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		
 		
 	
+		
+		
 		List<MultipartTransition<Part, RenderContext<RenderableState>>> result = new ArrayList<>();
 		for(int i = 0; i < wt.size(); i++) {
 		
@@ -2737,11 +2766,14 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
             }
         	
             
+            
 			MultipartTransition<Part, RenderContext<RenderableState>> t = new MultipartTransition<Part, RenderContext<RenderableState>>(p.getDuration(), pause)
 					.withPartPositionFunction(Part.MAIN_ITEM, createWeaponPartPositionFunction(p))
 					.withPartPositionFunction(Part.LEFT_HAND, createWeaponPartPositionFunction(l))
 					.withPartPositionFunction(Part.RIGHT_HAND, createWeaponPartPositionFunction(r));
 
+			t.sound = p.getSound();
+			
 			
 			
 			
@@ -2762,6 +2794,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			
 			result.add(t);
 		}
+		
+	
 		
 		
 		
@@ -3217,8 +3251,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 	    
 		if(!OpenGLSelectionHelper.isInSelectionPass && !AnimationGUI.getInstance().magEdit.isState()) {
 			
-			//Shaders.gunLightingShader = ShaderManager.loadVMWShader("gunlight");
-			
+			Shaders.gunLightingShader = ShaderManager.loadVMWShader("gunlight");
+			GlStateManager.enableBlend();
 			//OpenGlHelper.glFramebufferTexture2D(OpenGlHelper.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT1, GL11.GL_TEXTURE_2D, PostProcessPipeline.maskingBuffer.framebufferTexture, 0);
 			
 			
@@ -3237,6 +3271,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			
 			
 			Shaders.gunLightingShader.use();
+			Shaders.gunLightingShader.uniform1f("time", ClientValueRepo.ticker.getLerpedFloat());
+			Shaders.gunLightingShader.uniform1i("disabled", BalancePackManager.isWeaponDisabled(renderContext.getWeaponInstance().getWeapon()) ? 1 : 0);
 			
 			if(useSkin) {
 				Shaders.gunLightingShader.uniform1i("skin", 3);

@@ -119,8 +119,13 @@ public class TransitionContainer {
 		return duration;
 	}
 
-	public void setDuration(long duration) {
-		this.duration = duration;
+	public void setDuration() {
+		this.duration = 0;
+		for(Transition<RenderContext<RenderableState>> t : this.firstPerson) {
+			this.duration += t.getDuration();
+		}
+		
+		//this.duration = duration;
 	}
 
 }

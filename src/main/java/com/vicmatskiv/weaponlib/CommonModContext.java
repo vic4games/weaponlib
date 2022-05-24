@@ -14,6 +14,7 @@ import com.vicmatskiv.weaponlib.WeaponAttachmentAspect.EnterAttachmentModePermit
 import com.vicmatskiv.weaponlib.WeaponAttachmentAspect.ExitAttachmentModePermit;
 import com.vicmatskiv.weaponlib.WeaponReloadAspect.CompoundPermit;
 import com.vicmatskiv.weaponlib.WeaponReloadAspect.UnloadPermit;
+import com.vicmatskiv.weaponlib.command.BalancePackCommand;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleBlockState;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleCustomPlayerInventoryCapability;
@@ -78,6 +79,7 @@ import com.vicmatskiv.weaponlib.mission.PlayerMissionSyncMessage;
 import com.vicmatskiv.weaponlib.network.NetworkPermitManager;
 import com.vicmatskiv.weaponlib.network.PermitMessage;
 import com.vicmatskiv.weaponlib.network.TypeRegistry;
+import com.vicmatskiv.weaponlib.network.packets.BalancePackClient;
 import com.vicmatskiv.weaponlib.network.packets.BulletShellClient;
 import com.vicmatskiv.weaponlib.network.packets.GunFXPacket;
 import com.vicmatskiv.weaponlib.particle.SpawnParticleMessage;
@@ -98,6 +100,8 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.fml.common.Mod.EventHandler;
+import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 
 public class CommonModContext implements ModContext {
 
@@ -234,6 +238,9 @@ public class CommonModContext implements ModContext {
     
     protected static ThreadLocal<ModContext> currentContext = new ThreadLocal<>();
 
+    
+    
+    
 	@Override
     public void preInit(Object mod, String modId, ConfigurationManager configurationManager,
             CompatibleFmlPreInitializationEvent event, CompatibleChannel channel) {
@@ -364,6 +371,8 @@ public class CommonModContext implements ModContext {
         
         channel.registerMessage(new BulletShellClient.GunFXPacketHandler(),
         		BulletShellClient.class, 38, CompatibleSide.CLIENT);
+        
+        channel.registerMessage(new BalancePackClient.BalancePacketHandler(), BalancePackClient.class, 39, CompatibleSide.CLIENT);
         
         
         

@@ -41,12 +41,15 @@ import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.client.resources.SimpleReloadableResourceManager;
 import net.minecraft.client.shader.Framebuffer;
+import net.minecraft.command.ServerCommandManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.WorldProviderSurface;
 import net.minecraftforge.client.ClientCommandHandler;
+import net.minecraftforge.fml.common.Mod.EventHandler;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
 public class ClientModContext extends CommonModContext {
@@ -87,9 +90,10 @@ public class ClientModContext extends CommonModContext {
 		aspectRatio = (float)Minecraft.getMinecraft().displayWidth / Minecraft.getMinecraft().displayHeight;
 
 		ClientCommandHandler.instance.registerCommand(new DebugCommand(modId));
-
+		
 		ClientCommandHandler.instance.registerCommand(new MainCommand(modId, this));
-
+		
+		
 		this.statusMessageCenter = new StatusMessageCenter();
 
 		rendererRegistry = new CompatibleRenderingRegistry(modId);
@@ -142,7 +146,7 @@ public class ClientModContext extends CommonModContext {
 	    super.init(mod, modid);
 	    
 	    //compatibility.registerRenderingRegistry(rendererRegistry);
-
+	 
 	    rendererRegistry.registerEntityRenderingHandler(WeaponSpawnEntity.class, new SpawnEntityRenderer());
 	    rendererRegistry.registerEntityRenderingHandler(EntityWirelessCamera.class, new WirelessCameraRenderer(modId));
 	    rendererRegistry.registerEntityRenderingHandler(EntityShellCasing.class, new ShellCasingRenderer());

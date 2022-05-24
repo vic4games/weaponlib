@@ -189,7 +189,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 	
 	public long getAnimationDuration(WeaponState state) {
 		
-		
+		//System.out.println(getWeapon().getRenderer().getWeaponRendererBuilder().getTacticalReloadDuration());
 		
 		switch(state) {
 		
@@ -206,7 +206,8 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 			//return getWeapon().getRenderer().getWeaponRendererBuilder().getCompoundReloadEmptyDuration();
 			return getWeapon().getRenderer().getWeaponRendererBuilder().getCompoundReloadEmptyDuration();
 		case TACTICAL_RELOAD:
-			return 3000L;
+			
+			return getWeapon().getRenderer().getWeaponRendererBuilder().getTacticalReloadDuration();
 		case COMPOUND_RELOAD_FINISHED:
 			return getWeapon().getRenderer().getWeaponRendererBuilder().getCompoundReloadDuration();
 			

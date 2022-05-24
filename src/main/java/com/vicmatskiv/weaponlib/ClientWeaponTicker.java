@@ -8,6 +8,7 @@ import org.lwjgl.input.Mouse;
 
 import com.vicmatskiv.weaponlib.animation.AnimationModeProcessor;
 import com.vicmatskiv.weaponlib.animation.ClientValueRepo;
+import com.vicmatskiv.weaponlib.config.BalancePackManager;
 import com.vicmatskiv.weaponlib.grenade.ItemGrenade;
 import com.vicmatskiv.weaponlib.melee.ItemMelee;
 
@@ -86,6 +87,7 @@ class ClientWeaponTicker extends Thread {
     private void onLeftButtonUp() {
         EntityPlayer player = compatibility.getClientPlayer();
         Item item = getHeldItemMainHand(player);
+        if((item instanceof Weapon) && BalancePackManager.isWeaponDisabled((Weapon) item)) return;
         if(item instanceof Weapon) {
             ((Weapon) item).tryStopFire(player);
         } else if(item instanceof ItemGrenade) {
@@ -96,6 +98,7 @@ class ClientWeaponTicker extends Thread {
     private void onRightButtonUp() {
         EntityPlayer player = compatibility.getClientPlayer();
         Item item = getHeldItemMainHand(player);
+        if((item instanceof Weapon) && BalancePackManager.isWeaponDisabled((Weapon) item)) return;
         if(item instanceof ItemGrenade) { // TODO: introduce generic action handler interface with on*Click() handler
             ((ItemGrenade) item).attackUp(player, false);
         }
@@ -118,6 +121,7 @@ class ClientWeaponTicker extends Thread {
     	if(AnimationModeProcessor.getInstance().getFPSMode()) return;
         EntityPlayer player = compatibility.getClientPlayer();
         Item item = getHeldItemMainHand(player);
+        if((item instanceof Weapon) && BalancePackManager.isWeaponDisabled((Weapon) item)) return;
         if(item instanceof Weapon) {
             ((Weapon) item).tryFire(player);
         } else if(item instanceof ItemMelee) {
@@ -131,9 +135,12 @@ class ClientWeaponTicker extends Thread {
 
     private void onRightButtonDown() {
     	if(AnimationModeProcessor.getInstance().getFPSMode()) return;
+    	
         
         EntityPlayer player = compatibility.getClientPlayer();
         Item item = getHeldItemMainHand(player);
+        
+        if((item instanceof Weapon) && BalancePackManager.isWeaponDisabled((Weapon) item)) return;
         
         if(item instanceof Weapon) {
         	if(player.isSprinting()) {

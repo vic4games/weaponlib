@@ -74,7 +74,7 @@ import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.client.settings.KeyBindingMap;
 import net.minecraftforge.common.ForgeModContainer;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
-import net.minecraftforge.gradle.GradleStartCommon;
+//import net.minecraftforge.gradle.GradleStartCommon;
 import scala.reflect.internal.Trees.This;
 
 /**
@@ -532,7 +532,7 @@ public class PostProcessPipeline {
 	 */
 	public static void doWorldProcessing() {
 
-		// if(true) return;
+		 //if(true) return;
 
 		// Shaders.postWorld = ShaderManager.loadVMWShader("postworld");
 
@@ -637,6 +637,7 @@ public class PostProcessPipeline {
 
 	public static void drawRainBuffer() {
 
+		
 		float rainStrength = mc.world.getRainStrength(mc.getRenderPartialTicks());
 		boolean isRain = ModernWeatherRenderer.isRainingOrSnowing(mc.player.getPosition());
 

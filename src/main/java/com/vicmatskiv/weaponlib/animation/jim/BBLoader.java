@@ -38,6 +38,10 @@ public class BBLoader {
 	public static double GENDIVISOR = 5;
 	
 	
+	public static final String KEY_MAIN = "main";
+	
+	public static final String KEY_EJECT_SPENT_ROUND = "ejectspentround";
+	
 	public static final String KEY_COMPOUND_RELOAD_EMPTY = "reloadempty";
 	public static final String KEY_COMPOUND_RELOAD = "reload";
 	public static final String KEY_LOAD = "load";
@@ -187,12 +191,24 @@ public class BBLoader {
 			
 			SingleAnimation anim = new SingleAnimation(animationHeader);
 			
+			JsonObject singleAnimJSON = animationsJSON.get(entry.getKey()).getAsJsonObject();
+			
 			// load all the bone data into the single animation
 			
-			float appointedDuration = animationsJSON.get(entry.getKey()).getAsJsonObject().get("animation_length").getAsFloat();
+			float appointedDuration = singleAnimJSON.get("animation_length").getAsFloat();
 			//System.out.println("APPOINTED DURATION: " + appointedDuration);
 			
-			JsonObject animJSON = animationsJSON.get(entry.getKey()).getAsJsonObject().get("bones").getAsJsonObject();
+			
+			// load up sound FX
+			if(singleAnimJSON.has("sound_effects")) {
+				JsonObject soundFX = singleAnimJSON.get("sound_effects").getAsJsonObject();
+				for(Entry<String, JsonElement> effect : soundFX.entrySet()) {
+					anim.registerSound(Float.parseFloat(effect.getKey()), effect.getValue().getAsJsonObject().get("effect").getAsString());
+				}
+			}
+			
+			
+			JsonObject animJSON = singleAnimJSON.get("bones").getAsJsonObject();
 			for(Entry<String, JsonElement> subEntry : animJSON.entrySet()) {
 				
 				JsonObject boneJSON = animJSON.get(subEntry.getKey()).getAsJsonObject();
@@ -203,10 +219,15 @@ public class BBLoader {
 			
 			
 			
+			
+			
 			anim.setDuration(appointedDuration);
 			
 			// Bake the data
 			anim.bake();
+			
+			// Sound key
+		
 		
 			
 			// Add to set
