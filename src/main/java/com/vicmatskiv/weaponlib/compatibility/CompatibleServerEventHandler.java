@@ -73,7 +73,7 @@ public abstract class CompatibleServerEventHandler {
 	@SubscribeEvent
 	public void onPlayerLoggedIn(PlayerLoggedInEvent event) {
 	    onCompatiblePlayerLoggedIn(event);
-	    System.out.println("hi");
+	    //System.out.println("hi");
 	    getModContext().getChannel().getChannel().sendTo(new BalancePackClient(BalancePackManager.getActiveBalancePack()), (EntityPlayerMP) event.player);
 	    
 	}

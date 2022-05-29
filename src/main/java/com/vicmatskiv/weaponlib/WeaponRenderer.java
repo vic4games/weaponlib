@@ -2658,7 +2658,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
                 break;
 
             default:
-                if(player.isSprinting() && getBuilder().firstPersonPositioningRunning != null) {
+                if((player != null && player.isSprinting()) && getBuilder().firstPersonPositioningRunning != null) {
                     currentState = RenderableState.RUNNING;
                 } else if(playerWeaponInstance.isAimed()) {
                     currentState = RenderableState.ZOOMING;
@@ -3251,7 +3251,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 	    
 		if(!OpenGLSelectionHelper.isInSelectionPass && !AnimationGUI.getInstance().magEdit.isState()) {
 			
-			Shaders.gunLightingShader = ShaderManager.loadVMWShader("gunlight");
+			//Shaders.gunLightingShader = ShaderManager.loadVMWShader("gunlight");
 			GlStateManager.enableBlend();
 			//OpenGlHelper.glFramebufferTexture2D(OpenGlHelper.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT1, GL11.GL_TEXTURE_2D, PostProcessPipeline.maskingBuffer.framebufferTexture, 0);
 			
