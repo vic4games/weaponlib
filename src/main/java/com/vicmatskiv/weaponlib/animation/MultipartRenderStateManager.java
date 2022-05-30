@@ -207,7 +207,7 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
 			
 			if(previousIndex != currentIndex) {
 				if(targetState.sound != null) {
-					System.out.println(targetState.sound.getResourceLocation());
+					//System.out.println(targetState.sound.getResourceLocation());
 					
 					Minecraft.getMinecraft().getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(targetState.sound.getSound(), 1.0f));
 				}

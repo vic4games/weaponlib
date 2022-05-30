@@ -45,6 +45,10 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.Vec3d;
 
 public class ReflexScreen extends ModelBase implements CustomRenderer<RenderableState>{
+	
+	
+	public static final Reticle DEFAULT_RETICLE = new Reticle("holo", 0.05f);
+	
 	private final ModelRenderer bb_main;
 
 	
@@ -143,6 +147,7 @@ public class ReflexScreen extends ModelBase implements CustomRenderer<Renderable
 		//if(true) return;
 		Reticle currentReticle = reticleList.current();
 		
+		if(currentReticle == null) currentReticle = DEFAULT_RETICLE;
 		
 		//Shaders.reflexReticle = ShaderManager.loadVMWShader("reflex");
 		
@@ -179,7 +184,7 @@ public class ReflexScreen extends ModelBase implements CustomRenderer<Renderable
 		GlStateManager.enableCull();
 	
 
-		OpenGlHelper.glFramebufferTexture2D(OpenGlHelper.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT1, GL11.GL_TEXTURE_2D, Bloom.data.framebufferTexture, 0);
+		//OpenGlHelper.glFramebufferTexture2D(OpenGlHelper.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT1, GL11.GL_TEXTURE_2D, Bloom.data.framebufferTexture, 0);
 		//GL20.glDrawBuffers(intBuf);
 		
 		//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gAlbedoSpec, 0);

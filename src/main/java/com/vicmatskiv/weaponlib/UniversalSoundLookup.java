@@ -16,7 +16,7 @@ public class UniversalSoundLookup {
 		for(Entry<String, CompatibleSound> entry : registry.entrySet()) {
 			
 			registry.put(entry.getKey(), context.registerSound(entry.getKey()));	
-			System.out.println("Properly initialized " + entry.getKey() + " | " + registry.get(entry.getKey()));
+		//	System.out.println("Properly initialized " + entry.getKey() + " | " + registry.get(entry.getKey()));
 		}
 	}
 	

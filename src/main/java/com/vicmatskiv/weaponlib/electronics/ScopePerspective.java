@@ -14,6 +14,7 @@ import com.vicmatskiv.weaponlib.perspective.Perspective;
 import com.vicmatskiv.weaponlib.perspective.PerspectiveRenderer;
 import com.vicmatskiv.weaponlib.render.scopes.Reticle;
 
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemStack;
 
@@ -56,12 +57,14 @@ public class ScopePerspective extends PerspectiveRenderer {
 		//GL11.glBindTexture(GL11.GL_TEXTURE_2D, framebuffer.framebufferTexture);
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, perspective.getTexture(renderContext));
 		compatibility.disableLightMap();
-		GL11.glEnable(GL11.GL_DEPTH_TEST);
+		GlStateManager.enableDepth();
 		//GL11.glDepthMask(true);
-		GL11.glDisable(GL11.GL_LIGHTING);
-		GL11.glDisable(GL11.GL_ALPHA_TEST);
-		GL11.glDisable(GL11.GL_BLEND);
+		//GL11.glDisable(GL11.GL_LIGHTING);
+		//GL11.glDisable(GL11.GL_ALPHA_TEST);
+		//GL11.glDisable(GL11.GL_BLEND);
 
+		GlStateManager.enableAlpha();
+		GlStateManager.enableBlend();
 		GL11.glColor4f(brightness, brightness, brightness, 1f);
 		model.render(this.reticle, renderContext.getPlayer(), renderContext.getScale());
 

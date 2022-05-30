@@ -73,7 +73,7 @@ public class MuzzleFlashRenderer {
 		
 		boolean shouldRenderCrossplane = Minecraft.getMinecraft().world.getEntityByID(entityID) != Minecraft.getMinecraft().player || Minecraft.getMinecraft().gameSettings.thirdPersonView != 0;
 
-		OpenGlHelper.glFramebufferTexture2D(OpenGlHelper.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT1, GL11.GL_TEXTURE_2D, Bloom.data.framebufferTexture, 0);
+		//OpenGlHelper.glFramebufferTexture2D(OpenGlHelper.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT1, GL11.GL_TEXTURE_2D, Bloom.data.framebufferTexture, 0);
 		//
 		//GL20.glDrawBuffers(intBuf);
 		

@@ -136,7 +136,7 @@ public class WeaponSpawnEntity extends EntityProjectile {
 
 	    if(explosionRadius > 0) {
 	    	
-	    	PostProcessPipeline.createDistortionPoint((float) position.getHitVec().getXCoord(),(float)  position.getHitVec().getYCoord(), (float) position.getHitVec().getZCoord(), 2f, 3000);
+	    	//PostProcessPipeline.createDistortionPoint((float) position.getHitVec().getXCoord(),(float)  position.getHitVec().getYCoord(), (float) position.getHitVec().getZCoord(), 2f, 3000);
 	        Explosion.createServerSideExplosion(weapon.getModContext(), compatibility.world(this), this,
 	                position.getHitVec().getXCoord(), position.getHitVec().getYCoord(), position.getHitVec().getZCoord(),
 	                explosionRadius, false, true, isDestroyingBlocks, explosionParticleAgeCoefficient,
