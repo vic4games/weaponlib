@@ -412,7 +412,7 @@ public class EntityCustomMob extends CompatibleEntityMob
                                                                                         // 3f;
                 WeaponSpawnEntity bullet = new WeaponSpawnEntity(weapon, compatibility.world(player), player,
                         weapon.getSpawnEntityVelocity(), weapon.getSpawnEntityGravityVelocity(), inaccuracy,
-                        weapon.getSpawnEntityDamage() * 0.01f, weapon.getSpawnEntityExplosionRadius(), false, 1f, 1f, 1.5f, 1f,
+                        weapon.getSpawnEntityDamage() * 0.01f, weapon.getSpawnEntityExplosionRadius(), false, false, 1f, 1f, 1.5f, 1f,
                         -1, -1);
                 bullet.setPositionAndDirection();
                 return bullet;

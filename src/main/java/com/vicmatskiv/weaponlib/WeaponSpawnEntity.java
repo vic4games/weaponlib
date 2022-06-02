@@ -9,6 +9,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleBlockState;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTargetPoint;
 import com.vicmatskiv.weaponlib.config.Projectiles;
+import com.vicmatskiv.weaponlib.particle.BetterMuzzleSmoke;
 import com.vicmatskiv.weaponlib.particle.SpawnParticleMessage;
 import com.vicmatskiv.weaponlib.render.bgl.PostProcessPipeline;
 
@@ -33,6 +34,7 @@ public class WeaponSpawnEntity extends EntityProjectile {
     private static final String TAG_DAMAGE = "damage";
     private static final String TAG_EXPLOSION_RADIUS = "explosionRadius";
     private static final String TAG_EXPLOSION_IS_DESTROYING_BLOCKS = "destroyBlocks";
+    private static final String TAG_IS_SPAWN_ROCKET_PARTICLES = "rocketParticles";
     private static final String TAG_EXPLOSION_PARTICLE_AGE_COEFFICIENT = "epac";
     private static final String TAG_SMOKE_PARTICLE_AGE_COEFFICIENT = "spac";
     private static final String TAG_EXPLOSION_PARTICLE_SCALE_COEFFICIENT = "epsc";
@@ -52,6 +54,8 @@ public class WeaponSpawnEntity extends EntityProjectile {
 	private int smokeParticleTextureId;
 	public long birthStamp;
 
+	
+	private boolean spawnRocketParticles;
 	public WeaponSpawnEntity(World world) {
 		super(world);
 	}
@@ -65,6 +69,7 @@ public class WeaponSpawnEntity extends EntityProjectile {
 			float damage,
 			float explosionRadius,
 			boolean isDestroyingBlocks,
+			boolean spawnRocketParticles,
 			float explosionParticleAgeCoefficient,
 			float smokeParticleAgeCoefficient,
 			float explosionParticleScaleCoefficient,
@@ -88,6 +93,10 @@ public class WeaponSpawnEntity extends EntityProjectile {
 		this.explosionParticleTextureId = explosionParticleTextureId;
 		this.smokeParticleTextureId = smokeParticleTextureId;
 		
+		this.spawnRocketParticles = spawnRocketParticles;
+		
+		//System.out.println(weapon + " 4 " + spawnRocketParticles);
+		
 		this.birthStamp = System.currentTimeMillis();
 		
 		this.setSize(0.30F, 0.30F);
@@ -96,6 +105,20 @@ public class WeaponSpawnEntity extends EntityProjectile {
 	@Override
 	public void onUpdate() {
 		
+		//System.out.println(spawnRocketParticles);
+		if(compatibility.world(this).isRemote && spawnRocketParticles) {
+			BetterMuzzleSmoke smokeParticle = new BetterMuzzleSmoke(
+					compatibility.world(this),
+    				this.posX,
+    				this.posY,
+    				this.posZ,
+    		        1,
+    		      (float)0,
+    		      (float)0,
+    		      (int)0);
+
+    		Minecraft.getMinecraft().effectRenderer.addEffect(smokeParticle);
+		}
 		
 		
 	    super.onUpdate();
@@ -209,6 +232,7 @@ public class WeaponSpawnEntity extends EntityProjectile {
 		buffer.writeFloat(damage);
 		buffer.writeFloat(explosionRadius);
 		buffer.writeBoolean(isDestroyingBlocks);
+		buffer.writeBoolean(spawnRocketParticles);
 		buffer.writeFloat(explosionParticleAgeCoefficient);
 		buffer.writeFloat(smokeParticleAgeCoefficient);
 		buffer.writeFloat(explosionParticleScaleCoefficient);
@@ -222,6 +246,7 @@ public class WeaponSpawnEntity extends EntityProjectile {
 		damage = buffer.readFloat();
 		explosionRadius = buffer.readFloat();
 		isDestroyingBlocks = buffer.readBoolean();
+		spawnRocketParticles = buffer.readBoolean();
 		explosionParticleAgeCoefficient = buffer.readFloat();
 		smokeParticleAgeCoefficient = buffer.readFloat();
 		explosionParticleScaleCoefficient = buffer.readFloat();
@@ -238,6 +263,7 @@ public class WeaponSpawnEntity extends EntityProjectile {
         damage = tagCompound.getFloat(TAG_DAMAGE);
         explosionRadius = tagCompound.getFloat(TAG_EXPLOSION_RADIUS);
         isDestroyingBlocks = tagCompound.getBoolean(TAG_EXPLOSION_IS_DESTROYING_BLOCKS);
+        spawnRocketParticles = tagCompound.getBoolean(TAG_IS_SPAWN_ROCKET_PARTICLES);
         explosionParticleAgeCoefficient = tagCompound.getFloat(TAG_EXPLOSION_PARTICLE_AGE_COEFFICIENT);
         smokeParticleAgeCoefficient = tagCompound.getFloat(TAG_SMOKE_PARTICLE_AGE_COEFFICIENT);
         explosionParticleScaleCoefficient = tagCompound.getFloat(TAG_EXPLOSION_PARTICLE_SCALE_COEFFICIENT);
@@ -253,6 +279,7 @@ public class WeaponSpawnEntity extends EntityProjectile {
         tagCompound.setFloat(TAG_DAMAGE, damage);
         tagCompound.setFloat(TAG_EXPLOSION_RADIUS, explosionRadius);
         tagCompound.setBoolean(TAG_EXPLOSION_IS_DESTROYING_BLOCKS, isDestroyingBlocks);
+        tagCompound.setBoolean(TAG_IS_SPAWN_ROCKET_PARTICLES, spawnRocketParticles);
         tagCompound.setFloat(TAG_EXPLOSION_PARTICLE_AGE_COEFFICIENT, explosionParticleAgeCoefficient);
         tagCompound.setFloat(TAG_SMOKE_PARTICLE_AGE_COEFFICIENT, smokeParticleAgeCoefficient);
         tagCompound.setFloat(TAG_EXPLOSION_PARTICLE_SCALE_COEFFICIENT, explosionParticleScaleCoefficient);

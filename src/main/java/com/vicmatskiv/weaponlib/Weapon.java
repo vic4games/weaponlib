@@ -131,6 +131,7 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         BiFunction<Weapon, EntityLivingBase, ? extends WeaponSpawnEntity> spawnEntityWith;
         BiFunction<PlayerWeaponInstance, EntityLivingBase, ? extends EntityShellCasing> spawnShellWith;
         private float spawnEntityDamage;
+        private boolean spawnEntityRocketParticles;
         private float spawnEntityExplosionRadius;
         private boolean isDestroyingBlocks = true;
         private float spawnEntityGravityVelocity;
@@ -553,6 +554,12 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
             return this;
         }
 
+        
+        public Builder withSpawnEntityRocketParticles() {
+        	this.spawnEntityRocketParticles = true;
+        	return this;
+        }
+        
         public Builder withSpawnEntityDamage(float spawnEntityDamage) {
             this.spawnEntityDamage = spawnEntityDamage;
             return this;
@@ -914,9 +921,11 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
                      	damage *= BalancePackManager.getGlobalDamageMultiplier();
                      }
                 	
+                    // System.out.println(weapon.getName() + " | " + spawnEntityRocketParticles);
+                     
                     WeaponSpawnEntity bullet = new WeaponSpawnEntity(weapon, compatibility.world(player), player, spawnEntitySpeed,
                             spawnEntityGravityVelocity, inaccuracy, (float) damage, spawnEntityExplosionRadius, 
-                            isDestroyingBlocks, spawnEntityParticleAgeCoefficient, spawnEntitySmokeParticleAgeCoefficient,
+                            isDestroyingBlocks, spawnEntityRocketParticles, spawnEntityParticleAgeCoefficient, spawnEntitySmokeParticleAgeCoefficient,
                             spawnEntityExplosionParticleScaleCoefficient, spawnEntitySmokeParticleScaleCoefficient,
                             explosionParticleTextureId, 
                             smokeParticleTextureId);

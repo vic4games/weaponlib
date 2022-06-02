@@ -74,17 +74,7 @@ public class SpawnEntityRenderer extends CompatibleEntityRenderer {
             		double zOffset = xxofset * Math.cos(entity.rotationYaw / 180.0F * (float) Math.PI);
             		double xOffset = xxofset * Math.sin(entity.rotationYaw / 180.0F * (float) Math.PI);
             		
-            		BetterMuzzleSmoke smokeParticle = new BetterMuzzleSmoke(
-            				weaponSpawnEntity.world,
-            				weaponSpawnEntity.posX,
-            				weaponSpawnEntity.posY,
-            				weaponSpawnEntity.posZ,
-            		        1,
-            		      (float)0,
-            		      (float)0,
-            		      (int)0);
-
-            		Minecraft.getMinecraft().effectRenderer.addEffect(smokeParticle);
+            		
             		
             		//weaponSpawnEntity.world.spawnParticle(EnumParticleTypes.SMOKE_LARGE, true, weaponSpawnEntity.posX + xOffset, weaponSpawnEntity.posY, weaponSpawnEntity.posZ + zOffset, 0, 0, 0, new int[] {});
             		      
