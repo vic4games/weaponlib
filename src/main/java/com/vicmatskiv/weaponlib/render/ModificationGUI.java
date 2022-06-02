@@ -592,6 +592,7 @@ public class ModificationGUI {
 			tabList.add(activeTab);
 		}
 
+		
 		// Draws all the tabs
 		for (ModificationTab mt : tabList) {
 			if (mt.group != currentGroup || mt.hidden)
@@ -607,6 +608,7 @@ public class ModificationGUI {
 
 		GlStateManager.disableTexture2D();
 		
+		GlStateManager.enableBlend();
 		// Draws background rectangles
 		GUIRenderHelper.drawColoredRectangle(20, 20, 115, 175, SIDEBAR_ALPHA, ColorPalette.BLACK);
 		GUIRenderHelper.drawColoredRectangle(140.5, 20, 7.5, 175, SIDEBAR_ALPHA, ColorPalette.BLACK);

@@ -75,7 +75,7 @@ public class Explosion {
 
         
         
-        isDestroyingBlocks = true;
+       // isDestroyingBlocks = true;
         explosion.doExplosionA();
         explosion.doExplosionB(false, isDestroyingBlocks);
 

@@ -95,6 +95,9 @@ public class WeaponSpawnEntity extends EntityProjectile {
 
 	@Override
 	public void onUpdate() {
+		
+		
+		
 	    super.onUpdate();
 	    
 	   
@@ -124,7 +127,7 @@ public class WeaponSpawnEntity extends EntityProjectile {
 		
 		
 	    if(compatibility.world(this).isRemote) {
-	        return;
+	    	  return;
 	    }
 
 	    
