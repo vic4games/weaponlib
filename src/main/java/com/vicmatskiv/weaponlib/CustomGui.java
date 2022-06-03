@@ -424,7 +424,7 @@ public class CustomGui extends CompatibleGui {
 					
 					// Set up GUI positioning
 					GlStateManager.pushMatrix();
-					double scale = 0.17 * scaledResolution.getScaleFactor();
+					double scale = 0.15 * scaledResolution.getScaleFactor();
 					GlStateManager.translate((scaledResolution.getScaledWidth_double()-256*scale), (scaledResolution.getScaledHeight_double()-128*scale), 0);
 					GlStateManager.scale(scale, scale, scale);
 					Minecraft.getMinecraft().getTextureManager().bindTexture(AMMO_COUNTER_TEXTURES);
@@ -460,13 +460,16 @@ public class CustomGui extends CompatibleGui {
 						totalCapaString = totalCapacity + "";
 					}
 				
+					String keyNameString = "[" + KeyBindings.fireModeKey.getDisplayName() + "]";
+					double keyNameOffset = fontRender.getStringWidth(keyNameString);
+					
 					// Render main ammo counter body
 					drawTexturedModalRect(0, 0, 0, 0, 256, 53);
 					
 					
 					// Draw the firemode indicator
 					GlStateManager.pushMatrix();
-					GlStateManager.translate(256 - 100, 60, 0);
+					GlStateManager.translate(256 - 90 - (keyNameOffset*1.75), 60, 0);
 					GlStateManager.scale(0.7, 0.7, 0.7);
 					drawTexturedModalRect(0, 0, 146 + 39*(2-firemode), 53, 39, 28);
 					GlStateManager.popMatrix();
@@ -487,13 +490,14 @@ public class CustomGui extends CompatibleGui {
 						totalLength = adjLength*8.5;
 					}
 					
-							
+				
+					//String keyNameString = "[" + KeyBindings.fireModeKey.getDisplayName() + "]";
 							
 					// Draw strings
 					drawScaledString(fontRender, weaponName, 126 - fontRender.getStringWidth(weaponName), -fontRender.FONT_HEIGHT - 2, 2.0, 0xffea8a);
 					drawScaledString(fontRender, currentAmmo, 64 + 20 - fontRender.getStringWidth(currentAmmo)*2 - totalLength, 53/8.0 - 1, 3.5, 0xffea8a);
 					drawScaledString(fontRender, bottomString, 64 - totalLength, 53/8.0, 3.0);
-					drawScaledString(fontRender, "[" + KeyBindings.fireModeKey.getDisplayName() + "]", 95, 30, 2.0, 0xffea8a);
+					drawScaledString(fontRender, keyNameString, 105 - keyNameOffset, 30, 2.0, 0xffea8a);
 					
 					
 	
