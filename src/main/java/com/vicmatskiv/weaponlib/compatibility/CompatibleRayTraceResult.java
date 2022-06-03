@@ -1,6 +1,10 @@
 package com.vicmatskiv.weaponlib.compatibility;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import net.minecraft.entity.Entity;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 
 public class CompatibleRayTraceResult {
@@ -13,9 +17,19 @@ public class CompatibleRayTraceResult {
 	private RayTraceResult position;
 	private CompatibleVec3 hitVec;
 	private CompatibleBlockPos blockPos;
+	private List<BlockPos> passThrus = new ArrayList<>();
 
 	static CompatibleRayTraceResult fromRayTraceResult (RayTraceResult position) {
 		return position != null ? new CompatibleRayTraceResult(position) : null;
+	}
+	
+	protected CompatibleRayTraceResult() {
+		
+	}
+	
+	protected void postInit(RayTraceResult position) {
+		this.position = position;
+		init();
 	}
 
 	private CompatibleRayTraceResult(RayTraceResult position) {
@@ -27,6 +41,10 @@ public class CompatibleRayTraceResult {
 	    this.position = new RayTraceResult(entity);
 	    init();
     }
+	
+	public void addPassThru(BlockPos pos) {
+		this.passThrus.add(pos);
+	}
 
 	private void init() {
 	    this.hitVec = position.hitVec != null ? new CompatibleVec3(position.hitVec) : null;
@@ -62,6 +80,10 @@ public class CompatibleRayTraceResult {
 
 	public int getBlockPosZ() {
 		return blockPos.getBlockPos().getZ();
+	}
+	
+	public List<BlockPos> getPassThrus() {
+		return passThrus;
 	}
 
 	public CompatibleBlockPos getBlockPos() {

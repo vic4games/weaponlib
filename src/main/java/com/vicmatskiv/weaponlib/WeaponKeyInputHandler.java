@@ -65,6 +65,7 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
 //	        KeyBindings.bindDebugKeys();
 //        }
 	    
+	    /*
 	    try {
 	    	//System.out.println(KeyBindings.jDebugKey);
 	    	if(CompatibleClientEventHandler.muzzlePositioner) {
@@ -92,7 +93,7 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
 	    	e.printStackTrace();
 	    }
 	    
-   
+   		*/
 
 	    if(AnimationModeProcessor.getInstance().getFPSMode()) {
 	    	if(Keyboard.isKeyDown(Keyboard.KEY_COMMA)) {
@@ -109,6 +110,7 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
 	    }
 	    
 	    
+	    /*
 	    if(!AnimationGUI.getInstance().magEdit.isState()) {
 	    	if(DebugPositioner.isDebugModeEnabled() && KeyBindings.upArrowKey.isPressed()) {
 	            DebugPositioner.incrementXRotation(5);
@@ -153,7 +155,7 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
 	    	} else if(KeyBindings.kDebugKey.isKeyDown()) {
 	    		CompatibleClientEventHandler.magRotPositioner =CompatibleClientEventHandler.magRotPositioner.addVector(0, 0, -0.1);
 	    	}
-	    }
+	    }*/
 	    
 	     
 
@@ -181,6 +183,13 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
         
         else if(KeyBindings.inspectKey.isPressed()) {
             PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
+            if(itemStack != null) {
+                Item item = itemStack.getItem();
+                if(item instanceof Inspectable) {
+                    ((Inspectable) item).inspectMainHeldItemForPlayer(player);
+                }
+            }
+            /*
             if(instance != null && instance.getState() == WeaponState.MODIFYING) {
                 instance.setAltModificationModeEnabled(!instance.isAltMofificationModeEnabled());
             } else if(itemStack != null) {
@@ -189,6 +198,7 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
                     ((Inspectable) item).inspectMainHeldItemForPlayer(player);
                 }
             }
+            */
         }
 
         else if(KeyBindings.laserSwitchKey.isPressed()) {
@@ -216,6 +226,7 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
         }
 
         else if(KeyBindings.attachmentKey.isPressed()) {
+        	
             if(itemStack != null && itemStack.getItem() instanceof Modifiable /* && itemStack.getItem() instanceof Weapon*/) {
                 ((Modifiable) itemStack.getItem()).toggleClientAttachmentSelectionMode(player);
                 
@@ -239,6 +250,7 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
             modContext.getChannel().getChannel().sendToServer(new OpenCustomPlayerInventoryGuiMessage(GuiHandler.CUSTOM_PLAYER_INVENTORY_GUI_ID));
         }
 
+        /*
         else if(KeyBindings.upArrowKey.isPressed()) {
             PlayerWeaponInstance instance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
             if(instance != null && instance.getState() == WeaponState.MODIFYING) {
@@ -246,7 +258,7 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
                         ? AttachmentCategory.RAILING: AttachmentCategory.SCOPE;
                 modContext.getAttachmentAspect().changeAttachment(category, instance);
             }
-        }
+        }*/
 
          /*
         else if(KeyBindings.rightArrowKey.isPressed()) {

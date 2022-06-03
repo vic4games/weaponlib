@@ -15,20 +15,25 @@ public class KeyBindings {
     public static KeyBinding unloadKey;
     public static KeyBinding inspectKey;
     public static KeyBinding attachmentKey;
+    /*
     public static KeyBinding upArrowKey;
     public static KeyBinding downArrowKey;
     public static KeyBinding leftArrowKey;
     public static KeyBinding rightArrowKey;
+    */
     public static KeyBinding laserSwitchKey;
     public static KeyBinding nightVisionSwitchKey;
     public static KeyBinding proningSwitchKey;
+    /*
     public static KeyBinding laserAttachmentKey;
     public static KeyBinding periodKey;
+    */
 
     public static KeyBinding addKey;
 
+    
     public static KeyBinding subtractKey;
-
+	
     public static KeyBinding fireModeKey;
     
     public static KeyBinding customInventoryKey;
@@ -83,6 +88,7 @@ public class KeyBindings {
         attachmentKey = new KeyBinding("key.attachment", Keyboard.KEY_M,
                 "key.categories.weaponlib");
 
+        /*
         upArrowKey = new KeyBinding("key.scope", Keyboard.KEY_UP,
                 "key.categories.weaponlib");
 
@@ -94,6 +100,7 @@ public class KeyBindings {
 
         rightArrowKey = new KeyBinding("key.texture_change", Keyboard.KEY_RIGHT,
                 "key.categories.weaponlib");
+		*/
 
         addKey = new KeyBinding("key.add", Keyboard.KEY_I,
                 "key.categories.weaponlib");
@@ -107,15 +114,18 @@ public class KeyBindings {
         proningSwitchKey = new KeyBinding("key.proning", Keyboard.KEY_Z,
                 "key.categories.weaponlib");
         
+        /*
         laserAttachmentKey = new KeyBinding("key.attach_laser", Keyboard.KEY_RSHIFT,
                 "key.categories.weaponlib");
+         */
         
         customInventoryKey = new KeyBinding("key.custom_inventory", Keyboard.KEY_X,
                 "key.categories.weaponlib");
         
+        /*
         periodKey = new KeyBinding("key.sight", Keyboard.KEY_PERIOD,
                 "key.categories.weaponlib");
-        
+        */
         
         /*
          * VEHICLE
@@ -147,18 +157,22 @@ public class KeyBindings {
         compatibility.registerKeyBinding(unloadKey);
         compatibility.registerKeyBinding(inspectKey);
         compatibility.registerKeyBinding(attachmentKey);
+        /*
         compatibility.registerKeyBinding(upArrowKey);
         compatibility.registerKeyBinding(downArrowKey);
         compatibility.registerKeyBinding(leftArrowKey);
         compatibility.registerKeyBinding(rightArrowKey);
+        */
         compatibility.registerKeyBinding(laserSwitchKey);
         compatibility.registerKeyBinding(nightVisionSwitchKey);
         compatibility.registerKeyBinding(addKey);
         compatibility.registerKeyBinding(subtractKey);
         compatibility.registerKeyBinding(fireModeKey);
         compatibility.registerKeyBinding(proningSwitchKey);
+        /*
         compatibility.registerKeyBinding(laserAttachmentKey);
         compatibility.registerKeyBinding(periodKey);
+        */
         compatibility.registerKeyBinding(customInventoryKey);
         
         

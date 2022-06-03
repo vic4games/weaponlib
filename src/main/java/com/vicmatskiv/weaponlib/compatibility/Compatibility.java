@@ -46,6 +46,7 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumDifficulty;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
@@ -193,7 +194,7 @@ public interface Compatibility {
 
 	public boolean inventoryHasFreeSlots(EntityPlayer player);
 
-    public void addBlockHitEffect(int x, int y, int z, CompatibleEnumFacing enumFacing);
+    public void addBlockHitEffect(BlockPos pos, double x, double y, double z, CompatibleEnumFacing enumFacing);
 
     public String getDisplayName(EntityPlayer player);
 

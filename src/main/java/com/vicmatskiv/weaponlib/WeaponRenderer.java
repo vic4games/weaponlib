@@ -3732,16 +3732,27 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 
 		
 		
+		List<CustomRenderer<?>> postList = compatibleAttachment.getAttachment().getAllPostRenderers();
+		for(CustomRenderer<?> preloaded : postList) {
+			CustomRenderer<RenderableState> actualPost = (CustomRenderer<RenderableState>) preloaded;
+			deferredPost.add(new Pair<>(captureCurrentModelViewMatrix(), actualPost));
+		}
 		
 		
+		/*
 		@SuppressWarnings("unchecked")
         CustomRenderer<RenderableState> postRenderer = (CustomRenderer<RenderableState>) compatibleAttachment.getAttachment().getPostRenderer();
 		if(postRenderer != null) {
+			
+		
+			
+			
 			// Stuff like lasers goes in here
+			//postRenderer.render(renderContext);
 			deferredPost.add(new Pair<>(captureCurrentModelViewMatrix(), postRenderer));
 			
 		}
-		
+		*/
 
 		for(CompatibleAttachment<?> childAttachment: itemAttachment.getAttachments()) {
 			renderCompatibleAttachment(childAttachment, positioner, renderContext);
@@ -3759,6 +3770,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 	}
 	
 	public void renderPostRenderers(RenderContext<RenderableState> renderContext) {
+		
+	
 		
 		for(Pair<FloatBuffer, CustomRenderer<RenderableState>> pair : this.deferredPost) {
 			GL11.glPushMatrix();

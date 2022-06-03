@@ -738,5 +738,13 @@ public class BalancePackManager {
 	}
 	
 	
+	public static double getNetGunDamage(Weapon weapon) {
+		double dmg = weapon.getSpawnEntityDamage();
+		if(shouldChangeWeaponDamage(weapon)) dmg = getNewWeaponDamage(weapon);
+		dmg *= getGlobalDamageMultiplier();
+		return dmg;
+ 	}
+	
+	
 
 }

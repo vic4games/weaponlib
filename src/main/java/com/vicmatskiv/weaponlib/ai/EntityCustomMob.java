@@ -418,7 +418,7 @@ public class EntityCustomMob extends CompatibleEntityMob
                 return bullet;
             };
 
-            fireAspect.serverFire(this, itemStack, spawnEntityWith, false);
+            fireAspect.serverFire(this, itemStack, spawnEntityWith, false, false);
         } else if (itemStack.getItem() instanceof ItemGrenade) {
             float rotationPitchAdjustment = 20f;
             this.rotationPitch -= rotationPitchAdjustment;

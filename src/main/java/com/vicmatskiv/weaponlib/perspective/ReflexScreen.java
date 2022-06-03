@@ -144,7 +144,9 @@ public class ReflexScreen extends ModelBase implements CustomRenderer<Renderable
 	
 	public void renderReticle(RenderContext<RenderableState> renderContext, boolean bloom) {
 
+		
 		//if(true) return;
+ 		//if(true) return;
 		Reticle currentReticle = reticleList.current();
 		
 		if(currentReticle == null) currentReticle = DEFAULT_RETICLE;

@@ -29,7 +29,7 @@ public class TryFireMessageHandler implements CompatibleMessageHandler<TryFireMe
 						
 						
 						
-						fireManager.serverFire(player, itemStack, message.isBurst());
+						fireManager.serverFire(player, itemStack, message.isBurst(), message.isAimed());
 					});
 				}
 			}

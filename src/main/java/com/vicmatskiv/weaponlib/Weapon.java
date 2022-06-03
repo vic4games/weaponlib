@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -45,6 +46,7 @@ import com.vicmatskiv.weaponlib.render.WeaponSpritesheetBuilder;
 import com.vicmatskiv.weaponlib.render.shells.ShellParticleSimulator.Shell.Type;
 
 import akka.japi.Pair;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.resources.I18n;
@@ -56,10 +58,12 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import scala.tools.nsc.typechecker.MethodSynthesis.MethodSynth.LazyValGetter.ChangeOwnerAndModuleClassTraverser;
 
 public class Weapon extends CompatibleItem implements PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, 
 AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
@@ -914,6 +918,9 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
                 spawnEntityWith = (weapon, player) -> {
                 	
                 	
+                	
+                	
+                	
                 	 double damage = spawnEntityDamage;
                      if(BalancePackManager.hasActiveBalancePack()) {
                      	if(BalancePackManager.shouldChangeWeaponDamage(weapon)) damage = BalancePackManager.getNewWeaponDamage(weapon);
@@ -980,7 +987,7 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
                         CompatibleTargetPoint point = new CompatibleTargetPoint(entity.dimension,
                                 position.getBlockPosX(), position.getBlockPosY(), position.getBlockPosZ(), 100);
                         modContext.getChannel().sendToAllAround(
-                                new BlockHitMessage(position.getBlockPosX(), position.getBlockPosY(), position.getBlockPosZ(), position.getSideHit()), point);
+                                new BlockHitMessage(position.getBlockPos().getBlockPos(), position.getHitVec().getXCoord(), position.getHitVec().getYCoord(), position.getHitVec().getZCoord(), position.getSideHit()), point);
                         
                         MaterialImpactSound materialImpactSound = modContext.getMaterialImpactSound(blockState, entity);
                         if(materialImpactSound != null) {
@@ -1082,15 +1089,31 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
             	ArrayList<String> descriptionBuilder = new ArrayList<>();
             	
             	descriptionBuilder.add(plate + "Type: " + plain + this.gunType);
-            	descriptionBuilder.add(plate + "Damage: " + plain + this.spawnEntityDamage);
-                 
-            	descriptionBuilder.add(plate + "Magazines:");
+            	descriptionBuilder.add(plate + "Damage: " + plain + (BalancePackManager.getNetGunDamage(weapon)));
             	
-            	ArrayList<ItemMagazine> mags = new ArrayList<>();
-                weapon.getCompatibleAttachments(AttachmentCategory.MAGAZINE).forEach(c -> mags.add((ItemMagazine) c.getAttachment()));
-                mags.sort((a, b) -> a.getAmmo()-b.getAmmo());
-              
-                mags.forEach(c -> descriptionBuilder.add(plain + (I18n.format(c.getUnlocalizedName() + ".name"))));
+            	
+                
+            	boolean cartridgeDriven = false;
+            	String catridgeName = "";
+            	for(Entry<ItemAttachment<Weapon>, CompatibleAttachment<Weapon>> i : compatibleAttachments.entrySet()) {
+            		if(i.getValue().getAttachment().getCategory() == AttachmentCategory.BULLET) {
+            			cartridgeDriven = true;
+            			catridgeName = new TextComponentTranslation(i.getValue().getAttachment().getUnlocalizedName() + ".name").getFormattedText();
+            		}
+            	}
+            	
+            	if(!cartridgeDriven) {
+            		descriptionBuilder.add(plate + "Magazines:");
+            		ArrayList<ItemMagazine> mags = new ArrayList<>();
+                    weapon.getCompatibleAttachments(AttachmentCategory.MAGAZINE).forEach(c -> mags.add((ItemMagazine) c.getAttachment()));
+                    mags.sort((a, b) -> a.getAmmo()-b.getAmmo());
+                  
+                    mags.forEach(c -> descriptionBuilder.add(plain + (I18n.format(c.getUnlocalizedName() + ".name"))));
+            	} else {
+            		descriptionBuilder.add(plate + "Cartridge: " + plain + catridgeName);
+            	}
+            	
+            	
                 //mags.sort((a, b) -> a
                  
                  
@@ -1308,10 +1331,13 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
     }
 
     void onSpawnEntityBlockImpact(World world, EntityPlayer player, WeaponSpawnEntity entity, CompatibleRayTraceResult position) {
-       
+   
     	if(world.isRemote) {
     		EnumFacing facing = EnumFacing.valueOf(position.getSideHit().toString());
         	CompatibleClientEventHandler.bhr.addBulletHole(new BulletHole(new Vec3d(position.getHitVec().getXCoord(), position.getHitVec().getYCoord(), position.getHitVec().getZCoord()), facing, 0.05));
+        	
+        	
+        	
         	
     	}
     	
@@ -1651,12 +1677,36 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
     	return builder.zoom;
     }
 
+    public boolean isDestroyingBlocks() {
+    	return builder.isDestroyingBlocks;
+    }
+    
+    public float getSmokeParticleAgeCoefficient() {
+    	return builder.spawnEntitySmokeParticleAgeCoefficient;
+    }
+    
+    public float getSmokeParticleScaleCoefficient() {
+    	return builder.spawnEntitySmokeParticleScaleCoefficient;
+    }
+    
+    public float getParticleAgeCoefficient() {
+    	return builder.spawnEntityParticleAgeCoefficient;
+    }
+    
+    public float getExplosionScaleCoefficient() {
+    	return builder.spawnEntityExplosionParticleScaleCoefficient;
+    }
+    
     public boolean isSmokeEnabled() {
         return builder.smokeEnabled;
     }
 
     public float getBleedingCoefficient() {
         return builder.bleedingCoefficient;
+    }
+    
+    public boolean hasRocketParticles() {
+    	return builder.spawnEntityRocketParticles;
     }
     
 //    public ScreenShaking getScreenShaking(RenderableState state) {

@@ -53,7 +53,7 @@ public class AttachmentBuilder<T> {
 	protected ApplyHandler2<T> apply2;
 	protected ApplyHandler2<T> remove2;
 	private String crosshair;
-	private CustomRenderer<?> postRenderer;
+	private List<CustomRenderer<?>> postRenderer = new ArrayList<>();
 	private List<Tuple<ModelBase, String>> texturedModels = new ArrayList<>();
 	private boolean isRenderablePart;
     private int maxStackSize = 1;
@@ -178,7 +178,7 @@ public class AttachmentBuilder<T> {
 
 
 	public AttachmentBuilder<T> withPostRender(CustomRenderer<?> postRenderer) {
-		this.postRenderer = postRenderer;
+		this.postRenderer.add(postRenderer);
 		return this;
 	}
 

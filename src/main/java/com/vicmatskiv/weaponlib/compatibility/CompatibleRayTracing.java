@@ -14,8 +14,31 @@ import net.minecraft.world.World;
 
 public class CompatibleRayTracing {
 
+	
+	public static Vec3d directionFromEnumFacing(EnumFacing facing) {
+		switch(facing) {
+			case UP:
+				return new Vec3d(0, 1, 0);
+			case DOWN:
+				return new Vec3d(0, -1, 0);
+			case EAST:
+				return new Vec3d(1, 0, 0);
+			case WEST:
+				return new Vec3d(-1, 0, 0);
+			case NORTH:
+				return new Vec3d(0, 0, -1);
+			case SOUTH:
+				return new Vec3d(0, 0, 1);
+			default:
+				return Vec3d.ZERO;
+		}
+	}
+	
     public static CompatibleRayTraceResult rayTraceBlocks(World world, CompatibleVec3 cvec31, CompatibleVec3 cvec32,
             BiPredicate<Block, CompatibleBlockState> isCollidable) {
+    	
+    	CompatibleRayTraceResult crtr = new CompatibleRayTraceResult();
+    	
         //boolean stopOnLiquid,
         Vec3d vec31 = cvec31.getVec();
         Vec3d vec32 = cvec32.getVec();
@@ -37,6 +60,8 @@ public class CompatibleRayTracing {
                 Block block = iblockstate.getBlock();
                 CompatibleBlockState compatibleBlockState = new CompatibleBlockState(iblockstate);
 
+                
+                
                 if ((!ignoreBlockWithoutBoundingBox || iblockstate.getCollisionBoundingBox(world, blockpos) != Block.NULL_AABB)
                         && isCollidable.test(block, compatibleBlockState))
                 {
@@ -44,9 +69,14 @@ public class CompatibleRayTracing {
 
                     if (raytraceresult != null)
                     {
-                        return CompatibleRayTraceResult.fromRayTraceResult(raytraceresult);
+                    	crtr.postInit(raytraceresult);
+                        return crtr;
                     }
+                } else {
+                	crtr.addPassThru(blockpos);
                 }
+                	
+                
 
                 RayTraceResult raytraceresult2 = null;
                 int k1 = 200;
@@ -60,7 +90,13 @@ public class CompatibleRayTracing {
 
                     if (l == i && i1 == j && j1 == k)
                     {
-                        return returnLastUncollidableBlock ? CompatibleRayTraceResult.fromRayTraceResult(raytraceresult2) : null;
+                    	if(returnLastUncollidableBlock) {
+                    		crtr.postInit(raytraceresult2);
+                    		return crtr;
+                    	} else {
+                    		return null;
+                    	}
+                       // return returnLastUncollidableBlock ? CompatibleRayTraceResult.fromRayTraceResult(raytraceresult2) : null;
                     }
 
                     boolean flag2 = true;
@@ -180,17 +216,24 @@ public class CompatibleRayTracing {
 
                             if (raytraceresult1 != null)
                             {
-                                return CompatibleRayTraceResult.fromRayTraceResult(raytraceresult1);
+                            	crtr.postInit(raytraceresult1);
+                            	return crtr;
+                                //return CompatibleRayTraceResult.fromRayTraceResult(raytraceresult1);
                             }
                         }
                         else
                         {
+                        	crtr.addPassThru(blockpos);
                             raytraceresult2 = new RayTraceResult(RayTraceResult.Type.MISS, vec31, enumfacing, blockpos);
                         }
                     }
                 }
 
-                return returnLastUncollidableBlock ? CompatibleRayTraceResult.fromRayTraceResult(raytraceresult2) : null;
+                if(returnLastUncollidableBlock) {
+                	crtr.postInit(raytraceresult2);
+                	return crtr;
+                } else return null;
+                //return returnLastUncollidableBlock ? CompatibleRayTraceResult.fromRayTraceResult(raytraceresult2) : null;
             }
             else
             {

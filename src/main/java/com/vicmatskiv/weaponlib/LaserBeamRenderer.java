@@ -38,6 +38,7 @@ public class LaserBeamRenderer implements CustomRenderer {
 	public void render(RenderContext renderContext) {
 		
 		
+		
 		PlayerItemInstance<?> instance = renderContext.getPlayerItemInstance();
 
 		CompatibleTransformType type = renderContext.getCompatibleTransformType();

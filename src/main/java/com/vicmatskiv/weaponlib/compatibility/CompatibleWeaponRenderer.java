@@ -201,6 +201,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 	public List<BakedQuad> getQuads(IBlockState state, EnumFacing side, long rand) {
 		
 	
+	
 		
 		if (transformType == TransformType.GROUND
 				|| transformType == TransformType.GUI
@@ -332,8 +333,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 	@SideOnly(Side.CLIENT)
 	public void renderItem() {
 		
-		
-
+	
 		// System.out.println(BBLoader.loadAnimationData("HKgrip.animation.json",
 		// "animation.HKgrip.reload2", "bone4").bbTransition);
 		GL11.glPushMatrix();

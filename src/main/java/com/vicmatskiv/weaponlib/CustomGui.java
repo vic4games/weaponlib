@@ -96,6 +96,7 @@ public class CustomGui extends CompatibleGui {
 	
 	public static VehicleCustomGUI vehicleGUIOverlay = new VehicleCustomGUI();
 	
+	public static final ResourceLocation AMMO_COUNTER_TEXTURES = new ResourceLocation("mw:textures/hud/ammoiconsheet.png");
 
 	
 	public CustomGui(Minecraft mc, ModContext modContext, WeaponAttachmentAspect attachmentAspect) {
@@ -251,6 +252,7 @@ public class CustomGui extends CompatibleGui {
 
 	@Override
 	public void onCompatibleRenderCrosshair(RenderGameOverlayEvent.Pre event) {
+		
 		if (compatibility.getEventType(event) != RenderGameOverlayEvent.ElementType.CROSSHAIRS ) {
 			return;
 		}
@@ -269,6 +271,7 @@ public class CustomGui extends CompatibleGui {
 
 			String crosshair = weaponItem != null ? weaponItem.getCrosshair(weaponInstance) : null;
 			if(crosshair != null) {
+				
 				ScaledResolution scaledResolution = compatibility.getResolution(event);
 				int width = scaledResolution.getScaledWidth();
 			    int height = scaledResolution.getScaledHeight();
@@ -278,13 +281,16 @@ public class CustomGui extends CompatibleGui {
 				mc.entityRenderer.setupOverlayRendering();
 
 				int color = 0xFFFFFF;
-				
+			
 
-				GL11.glPushAttrib(GL11.GL_ENABLE_BIT);
+				//GlStateManager.pushAttrib();
+				//GL11.glPushAttrib(GL11.GL_ENABLE_BIT);
 				GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-				GL11.glDisable(GL11.GL_LIGHTING);
-		        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-				GL11.glDisable(GL11.GL_BLEND);
+				GlStateManager.disableLighting();
+				//GL11.glDisable(GL11.GL_LIGHTING);
+				GlStateManager.blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
+		      //  GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+				GlStateManager.disableBlend();
                 
                 this.mc.renderEngine.bindTexture(new ResourceLocation(crosshair));
 
@@ -412,11 +418,87 @@ public class CustomGui extends CompatibleGui {
 					int y = getStatusBarYPosition(height);
 
 
-					fontRender.drawStringWithShadow(messageText, x, y, color);
+					//fontRender.drawStringWithShadow(messageText, x, y, color);
+					
+					GlStateManager.enableBlend();
+					
+					// Set up GUI positioning
+					GlStateManager.pushMatrix();
+					double scale = 0.17 * scaledResolution.getScaleFactor();
+					GlStateManager.translate((scaledResolution.getScaledWidth_double()-256*scale), (scaledResolution.getScaledHeight_double()-128*scale), 0);
+					GlStateManager.scale(scale, scale, scale);
+					Minecraft.getMinecraft().getTextureManager().bindTexture(AMMO_COUNTER_TEXTURES);
+					
+					// Figure out the firemode, and assign it an ID
+					int firemode = 0;
+					if(weaponInstance.getMaxShots() == Integer.MAX_VALUE) {
+						firemode = 2;
+					} else if(weaponInstance.getMaxShots() == 1) {
+						firemode = 0;
+					} else {
+						firemode = 1;
+					}
+					
+					// Check the total capacity, this allows us to differentiate b/w
+					// cartridge based weapons, and allows us to tell if a weapon has no
+					// magazine in it.
+					ItemMagazine magazine = (ItemMagazine) attachmentAspect.getActiveAttachment(AttachmentCategory.MAGAZINE, weaponInstance);
+					int totalCapacity;
+					if(magazine != null) {
+						totalCapacity = magazine.getAmmo();
+					} else {
+						totalCapacity = weaponInstance.getWeapon().getAmmoCapacity();
+					}
+					
+					// If there is no magazine, display two "-"
+					String totalCapaString, currentAmmo;
+					if(weaponInstance.getWeapon().getAmmoCapacity() == 0 && totalCapacity == 0) {
+						totalCapaString = "-";
+						currentAmmo = "-";
+					} else {
+						currentAmmo = weaponInstance.getAmmo() + "";
+						totalCapaString = totalCapacity + "";
+					}
+				
+					// Render main ammo counter body
+					drawTexturedModalRect(0, 0, 0, 0, 256, 53);
 					
 					
-					//fontRender.drawStringWithShadow(TextFormatting.RED + "" + modContext.getMainHeldWeapon().getState() + "", x-100, y + 10, color);
+					// Draw the firemode indicator
+					GlStateManager.pushMatrix();
+					GlStateManager.translate(256 - 100, 60, 0);
+					GlStateManager.scale(0.7, 0.7, 0.7);
+					drawTexturedModalRect(0, 0, 146 + 39*(2-firemode), 53, 39, 28);
+					GlStateManager.popMatrix();
 					
+					// Get the weapon name from the localization file
+					String weaponName = new TextComponentTranslation(weaponItem.getUnlocalizedName() + ".name").getFormattedText();
+
+					
+					
+					String bottomString = "   " + TextFormatting.GRAY + " | " + TextFormatting.WHITE + "" + totalCapaString;
+							double totalLength = 0;
+							
+							
+					
+					// Fixes length in cases of minigun		
+					if(bottomString.length() > 13) {
+						int adjLength = bottomString.length() - 13;
+						totalLength = adjLength*8.5;
+					}
+					
+							
+							
+					// Draw strings
+					drawScaledString(fontRender, weaponName, 126 - fontRender.getStringWidth(weaponName), -fontRender.FONT_HEIGHT - 2, 2.0, 0xffea8a);
+					drawScaledString(fontRender, currentAmmo, 64 + 20 - fontRender.getStringWidth(currentAmmo)*2 - totalLength, 53/8.0 - 1, 3.5, 0xffea8a);
+					drawScaledString(fontRender, bottomString, 64 - totalLength, 53/8.0, 3.0);
+					drawScaledString(fontRender, "[" + KeyBindings.fireModeKey.getDisplayName() + "]", 95, 30, 2.0, 0xffea8a);
+					
+					
+	
+					GlStateManager.popMatrix();
+				
 				}
                 
                 int x = getStatusBarXPosition(width, "Weapon disabled", fontRender);
@@ -428,9 +510,9 @@ public class CustomGui extends CompatibleGui {
 					
                 }
                 
-               
+               //GlStateManager.popAttrib();
                 
-				GL11.glPopAttrib();
+			//	GL11.glPopAttrib();
 				event.setCanceled(true);
 			}
 		} else if(itemStack.getItem() instanceof ItemMagazine) {
@@ -512,10 +594,24 @@ public class CustomGui extends CompatibleGui {
                 event.setCanceled(true);
             }
 		}
+		
+		
 	}
 
+	public void drawScaledString(FontRenderer fr, String str, double x, double y, double scale, int color) {
+		
+		GlStateManager.pushMatrix();
+		
+		GlStateManager.translate(x, y, 0);
+		GlStateManager.scale(scale, scale, scale);
+		
+		fr.drawStringWithShadow(str, (float) (x/scale), (float) (y/scale), color);
+		GlStateManager.popMatrix();
+	}
 	
-	
+	public void drawScaledString(FontRenderer fr, String str, double x, double y, double scale) {
+		drawScaledString(fr, str, x, y, scale, 0xffffff);
+	}
 
     private void drawShieldIndicator(CustomArmor armor, double capacity, double screenWidth, double screenHeight) {
         
@@ -554,6 +650,7 @@ public class CustomGui extends CompatibleGui {
         GL11.glColorMask(true, true, true, true);
 
         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+
         GL11.glDisable(GL11.GL_LIGHTING);
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
         GL11.glEnable(GL11.GL_BLEND);
@@ -565,7 +662,7 @@ public class CustomGui extends CompatibleGui {
         
         GL11.glPopAttrib();
         
-        GL11.glDisable(GL11.GL_ALPHA_TEST);
+        GlStateManager.disableAlpha();
         GL11.glDisable(GL11.GL_STENCIL_TEST);
     }
 

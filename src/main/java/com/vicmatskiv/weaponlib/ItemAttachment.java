@@ -25,7 +25,7 @@ public class ItemAttachment<T> extends CompatibleItem implements ModelSource {
 	protected MeleeWeaponApplyHandler<T> apply3;
 	protected MeleeWeaponApplyHandler<T> remove3;
 	private List<Tuple<ModelBase, String>> texturedModels = new ArrayList<>();
-	private CustomRenderer<?> postRenderer;
+	private List<CustomRenderer<?>> postRenderer = new ArrayList<>();
 	private CustomRenderer<?> preRenderer;
 	private Part renderablePart;
 	private String name;
@@ -172,11 +172,17 @@ public class ItemAttachment<T> extends CompatibleItem implements ModelSource {
 		this.name = name;
 	}
 
-	public void setPostRenderer(CustomRenderer<?> postRenderer) {
-		this.postRenderer = postRenderer;
+	public void setPostRenderers(List<CustomRenderer<?>> postRenderer) {
+		postRenderer = postRenderer;
 	}
 
+
+	@Override
 	public CustomRenderer<?> getPostRenderer() {
+		return postRenderer.isEmpty() ? null : postRenderer.get(0);
+	}
+	
+	public List<CustomRenderer<?>> getAllPostRenderers() {
 		return postRenderer;
 	}
 
@@ -216,5 +222,10 @@ public class ItemAttachment<T> extends CompatibleItem implements ModelSource {
     public MeleeWeaponApplyHandler<T> getRemove3() {
         return remove3;
     }
+
+	public void setPostRenderer(List<CustomRenderer<?>> postRenderer2) {
+		this.postRenderer = postRenderer2;
+		
+	}
 
 }

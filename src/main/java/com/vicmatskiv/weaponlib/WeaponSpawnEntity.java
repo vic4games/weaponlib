@@ -2,6 +2,8 @@ package com.vicmatskiv.weaponlib;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
+import java.util.List;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -24,6 +26,7 @@ import net.minecraft.item.Item;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumParticleTypes;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class WeaponSpawnEntity extends EntityProjectile {
@@ -55,7 +58,7 @@ public class WeaponSpawnEntity extends EntityProjectile {
 	public long birthStamp;
 
 	
-	private boolean spawnRocketParticles;
+	public boolean spawnRocketParticles;
 	public WeaponSpawnEntity(World world) {
 		super(world);
 	}
@@ -105,20 +108,7 @@ public class WeaponSpawnEntity extends EntityProjectile {
 	@Override
 	public void onUpdate() {
 		
-		//System.out.println(spawnRocketParticles);
-		if(compatibility.world(this).isRemote && spawnRocketParticles) {
-			BetterMuzzleSmoke smokeParticle = new BetterMuzzleSmoke(
-					compatibility.world(this),
-    				this.posX,
-    				this.posY,
-    				this.posZ,
-    		        1,
-    		      (float)0,
-    		      (float)0,
-    		      (int)0);
-
-    		Minecraft.getMinecraft().effectRenderer.addEffect(smokeParticle);
-		}
+	
 		
 		
 	    super.onUpdate();
@@ -299,12 +289,16 @@ public class WeaponSpawnEntity extends EntityProjectile {
 	int getParticleCount(float damage) {
         return (int) (damage - 1);
     }
-
+	
 	@Override
-	public boolean canCollideWithBlock(Block block, CompatibleBlockState metadata) {
-	    return !compatibility.isBlockPenetratableByBullets(block) && super.canCollideWithBlock(block, metadata);
+	public boolean canCollideWithBlock(List<BlockPos> violators, Block block, BlockPos pos,
+			CompatibleBlockState metadata) {
+		// TODO Auto-generated method stub
+		//System.out.println(block);
+		return !compatibility.isBlockPenetratableByBullets(block) && super.canCollideWithBlock(violators, block, pos, metadata);
 	}
 
+	
     public Item getSpawnedItem() {
         // TODO Auto-generated method stub
         return null;

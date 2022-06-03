@@ -30,6 +30,7 @@ import com.vicmatskiv.weaponlib.state.StateManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.fml.common.network.NetworkRegistry.TargetPoint;
@@ -224,7 +225,7 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
         
         //if(true) return;
         modContext.getChannel().getChannel().sendToServer(new TryFireMessage(true, 
-                oneClickBurstEnabled.test(weaponInstance) && weaponInstance.getSeriesShotCount() ==  0));
+                oneClickBurstEnabled.test(weaponInstance) && weaponInstance.getSeriesShotCount() ==  0, weaponInstance.isAimed()));
 
         
     	
@@ -404,11 +405,11 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
     }
 
     //(weapon, player) 
-    public void serverFire(EntityLivingBase player, ItemStack itemStack, boolean isBurst) {
-        serverFire(player, itemStack, null, isBurst);
+    public void serverFire(EntityLivingBase player, ItemStack itemStack, boolean isBurst, boolean isAimed) {
+        serverFire(player, itemStack, null, isBurst, isAimed);
     }
     
-    public void serverFire(EntityLivingBase player, ItemStack itemStack, BiFunction<Weapon, EntityLivingBase, ? extends WeaponSpawnEntity> spawnEntityWith, boolean isBurst) {
+    public void serverFire(EntityLivingBase player, ItemStack itemStack, BiFunction<Weapon, EntityLivingBase, ? extends WeaponSpawnEntity> spawnEntityWith, boolean isBurst, boolean isAimed) {
         if(!(itemStack.getItem() instanceof Weapon)) {
             return;
         }
@@ -432,11 +433,48 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
             spawnEntityWith = weapon.builder.spawnEntityWith;
         }
         
+        //System.out.println(isAimed);
+      
+        /*
+        int itemIndex = 0;
+        EntityPlayer realPlayer = (EntityPlayer) player;
+        for(int i = 0; i < realPlayer.inventory.getSizeInventory(); ++i) {
+        	if(ItemStack.areItemStacksEqual(realPlayer.inventory.getStackInSlot(i), itemStack)) {
+        		itemIndex = i;
+        	}
+        }
+        
+        
+        
+        PlayerWeaponInstance pwi = new PlayerWeaponInstance(itemIndex, player, itemStack);
+        System.out.println(pwi.isAimed());
+            	*/
+        
         
         
         for(int i = 0; i < weapon.builder.pellets; i++) {
+        	double damage = weapon.getSpawnEntityDamage();
+            if(BalancePackManager.hasActiveBalancePack()) {
+            	if(BalancePackManager.shouldChangeWeaponDamage(weapon)) damage = BalancePackManager.getNewWeaponDamage(weapon);
+            	damage *= BalancePackManager.getGroupDamageMultiplier(weapon.getConfigurationGroup());
+            	damage *= BalancePackManager.getGlobalDamageMultiplier();
+            }
+       	
+           // System.out.println(weapon.getName() + " | " + spawnEntityRocketParticles);
+            
+           WeaponSpawnEntity bullet = new WeaponSpawnEntity(weapon, compatibility.world(player), player, weapon.getSpawnEntityVelocity(),
+                   weapon.getSpawnEntityGravityVelocity(), weapon.getInaccuracy() + (isAimed ? 0.0f : 2.6f), (float) damage, weapon.getSpawnEntityExplosionRadius(), 
+                   weapon.isDestroyingBlocks(), weapon.hasRocketParticles(), weapon.getParticleAgeCoefficient(), weapon.getSmokeParticleAgeCoefficient(),
+                   weapon.getExplosionScaleCoefficient(), weapon.getSmokeParticleScaleCoefficient(),
+                   0, 
+                   0);
+           bullet.setPositionAndDirection();
+           compatibility.spawnEntity(player, bullet);
+          // return bullet;
+           /*
             WeaponSpawnEntity spawnEntity = spawnEntityWith.apply(weapon, player);
             compatibility.spawnEntity(player, spawnEntity);
+            */
         }
 
         PlayerWeaponInstance playerWeaponInstance = Tags.getInstance(itemStack, PlayerWeaponInstance.class);

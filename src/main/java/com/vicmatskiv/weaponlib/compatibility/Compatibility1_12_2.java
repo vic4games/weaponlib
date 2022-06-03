@@ -19,6 +19,7 @@ import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.ai.EntityCustomMob;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleParticle.CompatibleParticleBreaking;
 import com.vicmatskiv.weaponlib.inventory.GuiHandler;
+import com.vicmatskiv.weaponlib.particle.CompatibleDiggingParticle;
 import com.vicmatskiv.weaponlib.tile.CustomTileEntityRenderer;
 
 import net.minecraft.block.Block;
@@ -33,6 +34,7 @@ import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.model.ModelBiped.ArmPose;
 import net.minecraft.client.model.ModelPlayer;
 import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraft.client.particle.ParticleDigging;
 import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.entity.RenderPlayer;
@@ -76,6 +78,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.EnumDifficulty;
@@ -651,11 +654,26 @@ public class Compatibility1_12_2 implements Compatibility {
     }
 
     @Override
-    public void addBlockHitEffect(int x, int y, int z, CompatibleEnumFacing sideHit) {
-        for(int i = 0; i < 6; i++) {
+    public void addBlockHitEffect(BlockPos pos, double x, double y, double z, CompatibleEnumFacing sideHit) {
+    	// Get direction
+    	Vec3d speedVec = CompatibleRayTracing.directionFromEnumFacing(sideHit.getEnumFacing()).scale(2);
+        for(int i = 0; i < 12; i++) {
         	
-            Minecraft.getMinecraft().effectRenderer.addBlockHitEffects(
+        	
+        	
+        	Vec3d spreadVector = new Vec3d(Math.random() - 0.5, Math.random()*0.5, Math.random() - 0.5).scale(0.2);
+        	Vec3d individualVector = speedVec.add(spreadVector);
+        	
+        	IBlockState hitBlock = Minecraft.getMinecraft().world.getBlockState(pos);
+        	CompatibleDiggingParticle cdp = new CompatibleDiggingParticle(Minecraft.getMinecraft().world, x, y, z, individualVector.x, individualVector.y, individualVector.z, hitBlock);
+    		cdp.setBlockPos(new BlockPos(x, y, z));
+    		Minecraft.getMinecraft().effectRenderer.addEffect(cdp);
+    
+        	
+    		/*
+        	Minecraft.getMinecraft().effectRenderer.addBlockHitEffects(
                     new BlockPos(x, y, z), sideHit.getEnumFacing());
+                    */
                     
         }
     }
@@ -819,34 +837,20 @@ public class Compatibility1_12_2 implements Compatibility {
                 || block == Blocks.LEAVES
                 || block == Blocks.LEAVES2
                 || block == Blocks.FIRE
-                || block == Blocks.HAY_BLOCK
                 || block == Blocks.DOUBLE_PLANT
                 || block == Blocks.WEB
-                || block == Blocks.ACACIA_FENCE
-                || block == Blocks.ACACIA_FENCE_GATE
-                || block == Blocks.ACACIA_STAIRS
                 || block == Blocks.BARRIER
                 || block == Blocks.BEETROOTS
-                || block == Blocks.BIRCH_FENCE
-                || block == Blocks.BIRCH_FENCE_GATE
-                || block == Blocks.BIRCH_STAIRS
                 || block == Blocks.CAKE
                 || block == Blocks.CARPET
                 || block == Blocks.CARROTS
                 || block == Blocks.COCOA
-                || block == Blocks.DARK_OAK_FENCE
-                || block == Blocks.DARK_OAK_FENCE_GATE
-                || block == Blocks.DARK_OAK_STAIRS
                 || block == Blocks.GLASS
                 || block == Blocks.GLASS_PANE
                 || block == Blocks.GLOWSTONE
                 || block == Blocks.IRON_BARS
                 || block == Blocks.LADDER
                 || block == Blocks.LEVER
-                || block == Blocks.OAK_FENCE
-                || block == Blocks.OAK_FENCE_GATE
-                || block == Blocks.OAK_STAIRS
-                || block == Blocks.PLANKS
                 || block == Blocks.POTATOES
                 || block == Blocks.REDSTONE_TORCH
                 || block == Blocks.SAPLING
@@ -856,7 +860,6 @@ public class Compatibility1_12_2 implements Compatibility {
                 || block == Blocks.WALL_BANNER
                 || block == Blocks.WALL_SIGN
                 || block == Blocks.WATERLILY
-                || block == Blocks.WOODEN_SLAB
                 || block == Blocks.DOUBLE_WOODEN_SLAB
                 || block == Blocks.WHEAT;
     }
@@ -868,6 +871,9 @@ public class Compatibility1_12_2 implements Compatibility {
 
     @Override
     public boolean canCollideCheck(Block block, CompatibleBlockState metadata, boolean hitIfLiquid) {
+    	//return false;
+    	
+    //	return block == Blocks.STAINED_GLASS;
         return block.canCollideCheck(metadata.getBlockState(), hitIfLiquid);
     }
 
