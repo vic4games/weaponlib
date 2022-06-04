@@ -146,5 +146,24 @@ public class ModelRenderTool {
 		return vec;
 	}
 	
+	public static float[] transformViaMatrix(float x1, float y1, float z1, Matrix4f mat) {
+		if(mat != null){
+			float x = mat.m00 * x1 + mat.m10 * y1 + mat.m20 * z1 + mat.m30;
+			float y = mat.m01 * x1 + mat.m11 * y1 + mat.m21 * z1 + mat.m31;
+			float z = mat.m02 * x1 + mat.m12 * y1 + mat.m22 * z1 + mat.m32;
+			return new float[] { x, y, z };
+		}
+		return new float[] { x1, y1, z1 };
+	}
+	public static float[] transformViaMatrix(float[] vec, Matrix4f mat){
+		if(mat != null){
+			float x = mat.m00 * vec[0] + mat.m10 * vec[1] + mat.m20 * vec[2] + mat.m30;
+			float y = mat.m01 * vec[0] + mat.m11 * vec[1] + mat.m21 * vec[2] + mat.m31;
+			float z = mat.m02 * vec[0] + mat.m12 * vec[1] + mat.m22 * vec[2] + mat.m32;
+			return new float[] { x, y, z };
+		}
+		return vec;
+	}
+	
 	
 }

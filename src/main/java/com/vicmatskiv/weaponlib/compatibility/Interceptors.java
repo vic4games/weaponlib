@@ -371,7 +371,7 @@ public class Interceptors {
     		//nc.update();
     	}
     	
-    	nsm.applyWorld();
+   	nsm.applyWorld();
     	
     	/*
     	if(weaponInstance != null) {

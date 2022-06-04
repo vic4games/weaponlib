@@ -35,9 +35,12 @@ import com.vicmatskiv.weaponlib.mission.MissionManager;
 import com.vicmatskiv.weaponlib.mission.MissionOfferingSyncMessage;
 import com.vicmatskiv.weaponlib.mission.Missions;
 import com.vicmatskiv.weaponlib.mission.PlayerMissionSyncMessage;
+import com.vicmatskiv.weaponlib.network.packets.HeadshotSFXPacket;
 import com.vicmatskiv.weaponlib.tracking.PlayerEntityTracker;
 import com.vicmatskiv.weaponlib.tracking.SyncPlayerEntityTrackerMessage;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
@@ -78,6 +81,11 @@ public class ServerEventHandler extends CompatibleServerEventHandler {
     @Override
     protected void onCompatibleLivingUpdateEvent(CompatibleLivingUpdateEvent e) {
         
+    	
+    	if(!compatibility.world(e.getEntity()).isRemote && e.getEntityLiving() instanceof EntityPlayer) {
+    		//modContext.getChannel().getChannel().sendTo(new HeadshotSFXPacket(), (EntityPlayerMP) e.getEntityLiving());
+    	}
+    	
         if(!compatibility.world(e.getEntity()).isRemote) {
 //            if(e.getEntity() instanceof EntityPlayer) {
 //                System.out.println(System.currentTimeMillis() + ": " + compatibility.world(e.getEntity()).getTotalWorldTime());
@@ -278,6 +286,13 @@ public class ServerEventHandler extends CompatibleServerEventHandler {
             	if(hit.hitVec.distanceTo(eyes) < 0.6f) {
             		
             		e.setAmount(e.getAmount()*2.5f);
+            		
+            		if(e.getDamageSource().getTrueSource() instanceof EntityPlayer) {
+            			//System.out.println(e.getDamageSource().getTrueSource());
+            			modContext.getChannel().getChannel().sendTo(new HeadshotSFXPacket(), (EntityPlayerMP) e.getDamageSource().getTrueSource());
+            		}
+                	
+            		
             	}
         	}
         	

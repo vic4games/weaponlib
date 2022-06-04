@@ -447,4 +447,6 @@ public interface Compatibility {
     public int removeMatchingInventoryItemStacks(EntityPlayer player, Item item, int quantity);
 
     public int getMatchingInventoryItemStack(EntityPlayer player, Item item);
+
+	public void addBloodParticle(ModContext modContext, double x, double y, double z, double velX, double velY, double velZ);
 }

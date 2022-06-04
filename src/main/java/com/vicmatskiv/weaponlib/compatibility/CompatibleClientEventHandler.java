@@ -68,6 +68,7 @@ import com.vicmatskiv.weaponlib.RenderContext;
 import com.vicmatskiv.weaponlib.RenderableState;
 import com.vicmatskiv.weaponlib.RenderingPhase;
 import com.vicmatskiv.weaponlib.RopeSimulation;
+import com.vicmatskiv.weaponlib.UniversalSoundLookup;
 import com.vicmatskiv.weaponlib.RopeSimulation.Stick;
 import com.vicmatskiv.weaponlib.Weapon;
 import com.vicmatskiv.weaponlib.WeaponReloadAspect;
@@ -133,6 +134,7 @@ import com.vicmatskiv.weaponlib.vehicle.network.VehicleInteractPacket;
 
 import akka.japi.Pair;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.model.ModelBox;
@@ -1178,6 +1180,7 @@ public abstract class CompatibleClientEventHandler {
 		
 		
 		
+		
  		
 		
 		EntityPlayer player = Minecraft.getMinecraft().player;
@@ -1196,13 +1199,17 @@ public abstract class CompatibleClientEventHandler {
 						
 		
 		
-		
-		if(event.phase == Phase.START && Minecraft.getMinecraft().player != null && getModContext() != null && getModContext().getMainHeldWeapon() != null) {
+	
+		if(event.phase == Phase.START && Minecraft.getMinecraft().player != null && getModContext() != null) {
+			
 			ClientValueRepo.update(getModContext());
 			
-			CompatibleWeaponRenderer.wrh.strafingAnimation.update(0.08f);
-			CompatibleWeaponRenderer.wrh.runningAnimation.update(0.08f);
-			CompatibleWeaponRenderer.wrh.walkingAnimation.update(0.08f);
+			if(getModContext().getMainHeldWeapon() != null) {
+				CompatibleWeaponRenderer.wrh.strafingAnimation.update(0.08f);
+				CompatibleWeaponRenderer.wrh.runningAnimation.update(0.08f);
+				CompatibleWeaponRenderer.wrh.walkingAnimation.update(0.08f);
+			}
+			
 		}
 		
 		

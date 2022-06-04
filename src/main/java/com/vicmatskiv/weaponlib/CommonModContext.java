@@ -80,8 +80,10 @@ import com.vicmatskiv.weaponlib.network.NetworkPermitManager;
 import com.vicmatskiv.weaponlib.network.PermitMessage;
 import com.vicmatskiv.weaponlib.network.TypeRegistry;
 import com.vicmatskiv.weaponlib.network.packets.BalancePackClient;
+import com.vicmatskiv.weaponlib.network.packets.BloodPacketClient;
 import com.vicmatskiv.weaponlib.network.packets.BulletShellClient;
 import com.vicmatskiv.weaponlib.network.packets.GunFXPacket;
+import com.vicmatskiv.weaponlib.network.packets.HeadshotSFXPacket;
 import com.vicmatskiv.weaponlib.particle.SpawnParticleMessage;
 import com.vicmatskiv.weaponlib.particle.SpawnParticleMessageHandler;
 import com.vicmatskiv.weaponlib.state.Permit;
@@ -373,7 +375,10 @@ public class CommonModContext implements ModContext {
         		BulletShellClient.class, 38, CompatibleSide.CLIENT);
         
         channel.registerMessage(new BalancePackClient.BalancePacketHandler(), BalancePackClient.class, 39, CompatibleSide.CLIENT);
-        
+        channel.registerMessage(new HeadshotSFXPacket.GunFXPacketHandler(), HeadshotSFXPacket.class, 40, CompatibleSide.CLIENT);
+        channel.registerMessage(new BloodPacketClient.BalancePacketHandler(this),
+        		BloodPacketClient.class, 41, CompatibleSide.CLIENT);
+
         
         
 		ServerEventHandler serverHandler = new ServerEventHandler(this, modId);

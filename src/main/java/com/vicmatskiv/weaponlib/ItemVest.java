@@ -28,6 +28,7 @@ public class ItemVest extends CompatibleItem implements ISpecialArmor, ModelSour
         
         private int durability;
         private int damageReduceAmount;
+        private double percentDamageBlocked;
         
         private Consumer<ItemStack> entityPositioning;
         private Consumer<ItemStack> inventoryPositioning;
@@ -49,6 +50,11 @@ public class ItemVest extends CompatibleItem implements ISpecialArmor, ModelSour
         public Builder withDamageReduceAmount(int damageReduceAmount) {
             this.damageReduceAmount = damageReduceAmount;
             return this;
+        }
+        
+        public Builder withPercentDamageBlocked(double ratio) {
+        	this.percentDamageBlocked = ratio;
+        	return this;
         }
         
         public Builder withDurability(int durability) {
@@ -174,7 +180,7 @@ public class ItemVest extends CompatibleItem implements ISpecialArmor, ModelSour
 //            ResourceLocation guiTextureLocation = new ResourceLocation(modContext.getModId(), 
 //                    addFileExtension(guiTextureName, ".png"));
             
-            ItemVest item = new ItemVest(modContext, damageReduceAmount, durability);
+            ItemVest item = new ItemVest(modContext, percentDamageBlocked, durability);
             
             item.setUnlocalizedName(modContext.getModId() + "_" + name);
             
@@ -198,9 +204,11 @@ public class ItemVest extends CompatibleItem implements ISpecialArmor, ModelSour
     private final int damageReduceAmount;
     
     private int durability;
+    private double percentDamageBlocked;
     
-    public ItemVest(ModContext context, int damageReduceAmount, int durability) {
-        this.damageReduceAmount = damageReduceAmount;
+    public ItemVest(ModContext context, double percentDamageBlocked, int durability) {
+        this.percentDamageBlocked = percentDamageBlocked;
+        this.damageReduceAmount = 1;
         this.durability = durability;
     }
 
@@ -234,17 +242,17 @@ public class ItemVest extends CompatibleItem implements ISpecialArmor, ModelSour
     @Override
     public ArmorProperties getProperties(EntityLivingBase player, ItemStack vestStack, DamageSource source, double damage,
             int slot) {
-        return new ArmorProperties(0, damageReduceAmount / 25.0, durability);
+        return new ArmorProperties(0, this.percentDamageBlocked, durability);
     }
 
     @Override
     public int getArmorDisplay(EntityPlayer player, ItemStack armor, int slot) {
-        return damageReduceAmount;
+        return (int) (this.percentDamageBlocked*10);
     }
 
     @Override
     public void damageArmor(EntityLivingBase entity, ItemStack stack, DamageSource source, int damage, int slot) {
-        double absorb = damage * (this.damageReduceAmount / 25.0);
+        double absorb = damage * percentDamageBlocked;
         int itemDamage = (int)(absorb / 25.0 < 1 ? 1 : absorb / 25.0);
         stack.damageItem(itemDamage, entity);
     }

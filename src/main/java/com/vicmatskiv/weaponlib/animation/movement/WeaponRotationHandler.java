@@ -129,31 +129,36 @@ public class WeaponRotationHandler {
 		recoverySpring.setMass(1);
 		
 		
+		
 		if(renderContext.getWeaponInstance().isAimed()) {
 			float divisorMultiplier = 1f;
-			swayAmplitude /= 3;
-			if(renderContext.getWeaponInstance().getScope() != null && renderContext.getWeaponInstance().getScope().isOptical()) {
-				divisorMultiplier = 3f;
+			
+			if(divisorMultiplier != 0.0) {
 				swayAmplitude /= 3;
-				walkingSwayAmplitude /= 3f;
+				if(renderContext.getWeaponInstance().getScope() != null && renderContext.getWeaponInstance().getScope().isOptical()) {
+					divisorMultiplier = 3f;
+					swayAmplitude /= 3;
+					walkingSwayAmplitude /= 3f;
+				}
+				
+				divisorMultiplier /= params.getADSSimilarity();
+				
+				// The spring is more obvious in first person
+				// so, by increasing the damping we can make
+				// it look better.
+				recoverySpring.setDamping(5);
+				
+				forwardMagnitude /= 5*divisorMultiplier;
+				strafeMagnitude /= 3*divisorMultiplier;
+				recoilAmplitude /= 3*divisorMultiplier;
+				weaponRecoveryAmplitude /= 2*divisorMultiplier;
+				walkingSwayAmplitude /= 4*divisorMultiplier;
 			}
 			
-			divisorMultiplier /= params.getADSSimilarity();
-			
-			// The spring is more obvious in first person
-			// so, by increasing the damping we can make
-			// it look better.
-			recoverySpring.setDamping(5);
-			
-			forwardMagnitude /= 5*divisorMultiplier;
-			strafeMagnitude /= 3*divisorMultiplier;
-			recoilAmplitude /= 3*divisorMultiplier;
-			weaponRecoveryAmplitude /= 2*divisorMultiplier;
-			walkingSwayAmplitude /= 4*divisorMultiplier;
 			
 		}
 		
-
+		
 		
 		
 		strafingAnimation.doPositioning((float) strafeMagnitude, rotationPoint);	

@@ -113,10 +113,10 @@ public class MuzzleFlashRenderer {
 				// edge artifacts.
 				GlStateManager.alphaFunc(GL11.GL_GREATER, 0.0F);
 		
-    	
+    	 
 		// Adds a random element to the size
 		// as it looks nice.
-    	double size = Math.random()*0.5+1.0;
+    	double size = Math.random()*0.5 + 0.5;
     	
     	//isPetalFlash = true;
     	

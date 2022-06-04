@@ -1,10 +1,23 @@
 package com.vicmatskiv.weaponlib.particle;
 
+import java.awt.geom.CubicCurve2D;
+
 import javax.annotation.Nullable;
+
+import org.lwjgl.util.vector.Matrix4f;
+import org.lwjgl.util.vector.Vector3f;
+
+import com.vicmatskiv.weaponlib.ModelRenderer;
+import com.vicmatskiv.weaponlib.animation.MatrixHelper;
+import com.vicmatskiv.weaponlib.jim.util.RandomUtil;
+import com.vicmatskiv.weaponlib.render.ModelRenderTool;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.model.ModelBase;
+import net.minecraft.client.model.ModelBiped;
+import net.minecraft.client.model.ModelBox;
 import net.minecraft.client.particle.IParticleFactory;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleDigging;
@@ -12,14 +25,57 @@ import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import scala.actors.threadpool.Arrays;
 
 public class CompatibleDiggingParticle extends Particle {
 	private final IBlockState sourceState;
 	private BlockPos sourcePos;
+	
+	private float prevAxisAngle;
+	private float axisAngle;
+	private float axisMomentum;
+	private float[] currentAxis = new float[3];
+	private Matrix4f rotationMatrix = new Matrix4f();
 
+	
+	private static final float[] CUBE_VERTICES = new float[] {
+			-1.0f, -1.0f, 1.0f,
+			1.0f, -1.0f, 1.0f,
+			1.0f, 1.0f, 1.0f,
+			-1.0f, 1.0f, 1.0f,
+			
+			-1.0f, -1.0f, -1.0f,
+			1.0f, -1.0f, -1.0f,
+			1.0f, 1.0f, -1.0f,
+			-1.0f, 1.0f, -1.0f,
+			
+			-1.0f, 1.0f, -1.0f,
+			1.0f, 1.0f, -1.0f,
+			1.0f, 1.0f, 1.0f,
+			-1.0f, 1.0f, 1.0f,
+			
+			-1.0f, -1.0f, -1.0f,
+			1.0f, -1.0f, -1.0f,
+			1.0f, -1.0f, 1.0f,
+			-1.0f, -1.0f, 1.0f,
+			
+			1.0f, -1.0f, -1.0f,
+			1.0f, 1.0f, -1.0f,
+			1.0f, 1.0f, 1.0f,
+			1.0f, -1.0f, 1.0f,
+			
+			-1.0f, -1.0f, -1.0f,
+			-1.0f, 1.0f, -1.0f, 
+			-1.0f, 1.0f, 1.0f,
+			-1.0f, -1.0f, 1.0f
+			
+			
+		};
+	
 	public CompatibleDiggingParticle(World worldIn, double xCoordIn, double yCoordIn, double zCoordIn, double xSpeedIn,
 			double ySpeedIn, double zSpeedIn) {
 		super(worldIn, xCoordIn, yCoordIn, zCoordIn, xSpeedIn, ySpeedIn, zSpeedIn);
@@ -32,10 +88,29 @@ public class CompatibleDiggingParticle extends Particle {
 	        this.sourceState = state;
 	        this.setParticleTexture(Minecraft.getMinecraft().getBlockRendererDispatcher().getBlockModelShapes().getTexture(state));
 	        this.particleGravity = state.getBlock().blockParticleGravity;
+	       
+	        
+	     
+	        this.particleGravity = 1.0f;
 	        this.particleRed = 0.6F;
 	        this.particleGreen = 0.6F;
 	        this.particleBlue = 0.6F;
-	        this.particleScale /= 2.0F;
+	        this.particleScale = (float) (Math.random()*0.05f);
+	        
+	        this.motionX = xSpeedIn;
+	        this.motionY = ySpeedIn;
+	        this.motionZ = zSpeedIn;
+
+	        
+	        this.currentAxis = new float[] { (float) RandomUtil.getRandomWithNegatives(1.0), (float) RandomUtil.getRandomWithNegatives(1.0), (float) RandomUtil.getRandomWithNegatives(1.0) };
+	       
+	    	//System.out.println(Arrays.toString(currentAxis));
+	        
+	        this.axisMomentum = (float) (Math.random()*5f);
+	        
+	        
+	        
+	        
 	    }
 
 	/**
@@ -81,6 +156,22 @@ public class CompatibleDiggingParticle extends Particle {
 		return 1;
 	}
 
+	
+	@Override
+	public void onUpdate() {
+		// TODO Auto-generated method stub
+		super.onUpdate();
+		
+		if(this.onGround) {
+			this.axisMomentum *= 0.9f;
+		} else {
+			this.axisMomentum *= 0.9999f;
+		}
+
+		rotationMatrix.rotate(this.axisMomentum*0.01f, new Vector3f(currentAxis[0], currentAxis[1], currentAxis[2]));
+		
+	}
+	
 	/**
 	 * Renders the particle
 	 */
@@ -99,12 +190,102 @@ public class CompatibleDiggingParticle extends Particle {
 			f3 = this.particleTexture.getInterpolatedV((double) ((this.particleTextureJitterY + 1.0F) / 4.0F * 16.0F));
 		}
 
+	
+		
+		
+		
+		
 		float f5 = (float) (this.prevPosX + (this.posX - this.prevPosX) * (double) partialTicks - interpPosX);
 		float f6 = (float) (this.prevPosY + (this.posY - this.prevPosY) * (double) partialTicks - interpPosY);
 		float f7 = (float) (this.prevPosZ + (this.posZ - this.prevPosZ) * (double) partialTicks - interpPosZ);
+		
 		int i = this.getBrightnessForRender(partialTicks);
 		int j = i >> 16 & 65535;
 		int k = i & 65535;
+		
+		float size = this.particleScale;
+		
+		
+
+		
+		
+		
+		int c = 0;
+		
+		for(int n = 0; n < CUBE_VERTICES.length; n += 3) {
+			
+			
+			// (f, f2), (f1, f2), (f1, f3), (f, f3)
+			// Create texture coordinates
+			float tx = f;
+			float ty = f2;
+			
+			if(c == 1) {
+				tx = f1;
+				
+			} else if(c == 2) {
+				tx = f1;
+				ty = f3;
+			} else if(c == 3) {
+				tx = f;
+				ty = f3;
+			}
+			
+			
+			float[] vertex = ModelRenderTool.transformViaMatrix(CUBE_VERTICES[n]*size, CUBE_VERTICES[n+1]*size, CUBE_VERTICES[n+2]*size, rotationMatrix);
+		
+			
+			// Add vertex to buffer
+			buffer.pos(f5 + vertex[0], f6 + vertex[1], f7 + vertex[2]).tex(tx, ty).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
+			
+			// Cycle 'C'
+			c += 1;
+			if(c == 4) c = 0;
+		}
+		
+		
+		
+		/*
+		// Left & right faces
+				buffer.pos(f5 + size, f6 - size, f7 - size).tex(f, f2).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
+				buffer.pos(f5 + size, f6 + size, f7 - size).tex(f1, f2).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
+				buffer.pos(f5 + size, f6 + size, f7 + size).tex(f1, f3).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
+				buffer.pos(f5 + size, f6 - size, f7 + size).tex(f, f3).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
+				
+				buffer.pos(f5 - size, f6 - size, f7 - size).tex(f, f2).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
+				buffer.pos(f5 - size, f6 + size, f7 - size).tex(f1, f2).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
+				buffer.pos(f5 - size, f6 + size, f7 + size).tex(f1, f3).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
+				buffer.pos(f5 - size, f6 - size, f7 + size).tex(f, f3).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
+				
+				*/
+				/*
+				// Up & down faces
+				buffer.pos(f5 + -size, f6 + size, f7 - size).tex(f, f2).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
+				buffer.pos(f5 + size, f6 + size, f7 - size).tex(f1, f2).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
+				buffer.pos(f5 + size, f6 + size, f7 + size).tex(f1, f3).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
+				buffer.pos(f5 + -size, f6 + size, f7 + size).tex(f, f3).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
+				
+				buffer.pos(f5 + -size, f6 - size, f7 - size).tex(f, f2).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
+				buffer.pos(f5 + size, f6 - size, f7 - size).tex(f1, f2).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
+				buffer.pos(f5 + size, f6 - size, f7 + size).tex(f1, f3).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
+				buffer.pos(f5 + -size, f6 - size, f7 + size).tex(f, f3).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
+				*/
+		
+				/*
+				// Forward & backward faceaz
+				buffer.pos(f5 + -size, f6 + -size, f7 + size).tex(f, f2).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
+				buffer.pos(f5 + size, f6 + -size, f7 + size).tex(f1, f2).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
+				buffer.pos(f5 + size, f6 + size, f7 + size).tex(f1, f3).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
+				buffer.pos(f5 + -size, f6 + size, f7 + size).tex(f, f3).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
+				
+				buffer.pos(f5 + -size, f6 + -size, f7 - size).tex(f, f2).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
+				buffer.pos(f5 + size, f6 + -size, f7 - size).tex(f1, f2).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
+				buffer.pos(f5 + size, f6 + size, f7 - size).tex(f1, f3).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
+				buffer.pos(f5 + -size, f6 + size, f7 - size).tex(f, f3).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
+				*/
+				
+		
+		/*
 		buffer.pos((double) (f5 - rotationX * f4 - rotationXY * f4), (double) (f6 - rotationZ * f4),
 				(double) (f7 - rotationYZ * f4 - rotationXZ * f4)).tex((double) f, (double) f3)
 				.color(this.particleRed, this.particleGreen, this.particleBlue, 1.0F).lightmap(j, k).endVertex();
@@ -117,6 +298,7 @@ public class CompatibleDiggingParticle extends Particle {
 		buffer.pos((double) (f5 + rotationX * f4 - rotationXY * f4), (double) (f6 - rotationZ * f4),
 				(double) (f7 + rotationYZ * f4 - rotationXZ * f4)).tex((double) f1, (double) f3)
 				.color(this.particleRed, this.particleGreen, this.particleBlue, 1.0F).lightmap(j, k).endVertex();
+		*/
 	}
 
 	public int getBrightnessForRender(float p_189214_1_) {

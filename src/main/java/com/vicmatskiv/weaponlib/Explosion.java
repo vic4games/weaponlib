@@ -16,15 +16,22 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleBlockState;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMathHelper;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleVec3;
+import com.vicmatskiv.weaponlib.jim.util.RandomUtil;
+import com.vicmatskiv.weaponlib.particle.CompatibleDiggingParticle;
 import com.vicmatskiv.weaponlib.particle.ExplosionSmokeFX;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityTNTPrimed;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.init.Blocks;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 public class Explosion {
@@ -323,7 +330,32 @@ public class Explosion {
                         d3 = d3 * d7;
                         d4 = d4 * d7;
                         d5 = d5 * d7;
+                        
+                        
+                        if(blockState.getBlockState().getBlock() != Blocks.AIR) {
+                        	Vec3d posVect = new Vec3d((d0 + this.explosionX) / 2.0D,
+                                    (d1 + this.explosionY) / 2.0D,
+                                    (d2 + this.explosionZ) / 2.0D);
+                            
+                            Vec3d directionVector = posVect.subtract(new Vec3d(this.explosionX, this.explosionY, this.explosionZ)).normalize();
+                            
+                            
+                            for(int n = 0; n < 5; ++n) {
+                            	double spread = 0.1;
+                            	Vec3d spreadVector = new Vec3d(RandomUtil.getRandomWithNegatives(spread), RandomUtil.getRandomDoubleInclusive(0.0, spread), RandomUtil.getRandomWithNegatives(spread)).add(directionVector);
+                            	
+                            	CompatibleDiggingParticle cdp = new CompatibleDiggingParticle(Minecraft.getMinecraft().world, posVect.x, posVect.y, posVect.z,
+                                        spreadVector.x, spreadVector.y, spreadVector.z, blockState.getBlockState());
+                        		cdp.setBlockPos(blockpos.getBlockPos());
+                        		Minecraft.getMinecraft().effectRenderer.addEffect(cdp);
+                            }
+                            
+                        
+                        }
 
+                        
+                        
+                        /*
                         modContext.getEffectManager().spawnExplosionParticle(
                                 (d0 + this.explosionX) / 2.0D,
                                 (d1 + this.explosionY) / 2.0D,
@@ -332,6 +364,7 @@ public class Explosion {
                                 explosionParticleScaleCoefficient * world.rand.nextFloat(),
                                 (int)((15 + (int)(world.rand.nextFloat() * 10)) * explosionParticleAgeCoefficient),
                                 explosionParticleTextureName);
+                        */
                     }
 
                 }

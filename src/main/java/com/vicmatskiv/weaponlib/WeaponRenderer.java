@@ -2771,6 +2771,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 					.withPartPositionFunction(Part.MAIN_ITEM, createWeaponPartPositionFunction(p))
 					.withPartPositionFunction(Part.LEFT_HAND, createWeaponPartPositionFunction(l))
 					.withPartPositionFunction(Part.RIGHT_HAND, createWeaponPartPositionFunction(r));
+			
+			
 
 			t.sound = p.getSound();
 			

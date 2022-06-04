@@ -19,6 +19,7 @@ import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.ai.EntityCustomMob;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleParticle.CompatibleParticleBreaking;
 import com.vicmatskiv.weaponlib.inventory.GuiHandler;
+import com.vicmatskiv.weaponlib.particle.CompatibleBloodParticle;
 import com.vicmatskiv.weaponlib.particle.CompatibleDiggingParticle;
 import com.vicmatskiv.weaponlib.tile.CustomTileEntityRenderer;
 
@@ -654,14 +655,15 @@ public class Compatibility1_12_2 implements Compatibility {
     }
 
     @Override
+    @SideOnly(Side.CLIENT)
     public void addBlockHitEffect(BlockPos pos, double x, double y, double z, CompatibleEnumFacing sideHit) {
     	// Get direction
-    	Vec3d speedVec = CompatibleRayTracing.directionFromEnumFacing(sideHit.getEnumFacing()).scale(2);
+    	Vec3d speedVec = CompatibleRayTracing.directionFromEnumFacing(sideHit.getEnumFacing()).scale(0.3);
         for(int i = 0; i < 12; i++) {
         	
         	
         	
-        	Vec3d spreadVector = new Vec3d(Math.random() - 0.5, Math.random()*0.5, Math.random() - 0.5).scale(0.2);
+        	Vec3d spreadVector = new Vec3d(Math.random() - 0.5, Math.random()*0.5, Math.random() - 0.5).scale(0.05);
         	Vec3d individualVector = speedVec.add(spreadVector);
         	
         	IBlockState hitBlock = Minecraft.getMinecraft().world.getBlockState(pos);
@@ -685,6 +687,17 @@ public class Compatibility1_12_2 implements Compatibility {
         CompatibleParticleBreaking particle = CompatibleParticle.createParticleBreaking(
                 modContext, world(clientPlayer()), x, y + yOffset, z);
         Minecraft.getMinecraft().effectRenderer.addEffect(particle);
+    }
+    
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void addBloodParticle(ModContext modContext, double x, double y, double z, double velX, double velY, double velZ) {
+    
+    	
+    	CompatibleBloodParticle cdp = new CompatibleBloodParticle(modContext, Minecraft.getMinecraft().world, x, y, z, velX, velY, velZ);
+    
+		Minecraft.getMinecraft().effectRenderer.addEffect(cdp);
+
     }
 
     @Override
@@ -1428,7 +1441,10 @@ private Optional<Field> shadersEnabledFieldOptional;
         for(int i = 0; i < itemStacks.length; i++) {
             stackList.add(itemStacks[i]);
         }
-        ArmorProperties.applyArmor(entityLiving, stackList, damageSource, amount);
+        float amt = ArmorProperties.applyArmor(entityLiving, stackList, damageSource, amount);
+        event.setAmount(amt);
+        //event.setAmount(amount);
+        //ArmorProperties.applyArmor(entityLiving, stackList, damageSource, amount);
     }
 
     @Override

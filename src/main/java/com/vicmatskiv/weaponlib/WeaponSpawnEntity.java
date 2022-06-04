@@ -11,6 +11,8 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleBlockState;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTargetPoint;
 import com.vicmatskiv.weaponlib.config.Projectiles;
+import com.vicmatskiv.weaponlib.jim.util.HitUtil;
+import com.vicmatskiv.weaponlib.network.packets.BloodPacketClient;
 import com.vicmatskiv.weaponlib.particle.BetterMuzzleSmoke;
 import com.vicmatskiv.weaponlib.particle.SpawnParticleMessage;
 import com.vicmatskiv.weaponlib.render.bgl.PostProcessPipeline;
@@ -27,6 +29,8 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.math.RayTraceResult.Type;
 import net.minecraft.world.World;
 
 public class WeaponSpawnEntity extends EntityProjectile {
@@ -140,6 +144,10 @@ public class WeaponSpawnEntity extends EntityProjectile {
 		
 		
 	    if(compatibility.world(this).isRemote) {
+	    	
+	    	
+	    //	compatibility.playSound(Minecraft.getMinecraft().player, UniversalSoundLookup.lookupSound("headshotsfx"), 10.0f, 1.0f);
+        	
 	    	  return;
 	    }
 
@@ -199,6 +207,7 @@ public class WeaponSpawnEntity extends EntityProjectile {
             if(bleedingCoefficient > 0.0f) {
                 int count = (int)(getParticleCount (damage) * bleedingCoefficient);
                 logger.debug("Generating {} particle(s) per damage {}", count, damage);
+                /*
                 weapon.getModContext().getChannel().sendToAllAround(new SpawnParticleMessage(
                         SpawnParticleMessage.ParticleType.BLOOD,
                         count,
@@ -206,6 +215,18 @@ public class WeaponSpawnEntity extends EntityProjectile {
                         position.getEntityHit().posY - motionY / magnitude,
                         position.getEntityHit().posZ - motionZ / magnitude),
                         point);
+                        
+                */
+                
+                RayTraceResult rtr = HitUtil.traceProjectilehit(this, position.getEntityHit());
+                if(rtr != null && rtr.typeOfHit == Type.BLOCK) {
+                	weapon.getModContext().getChannel().sendToAllAround(new BloodPacketClient(
+                    		rtr.hitVec.x,
+                    		rtr.hitVec.y,
+                    		rtr.hitVec.z, motionX, motionY, motionZ), point);
+                }
+                
+                
             }
 
 	    } else if(position.getTypeOfHit() == CompatibleRayTraceResult.Type.BLOCK) {

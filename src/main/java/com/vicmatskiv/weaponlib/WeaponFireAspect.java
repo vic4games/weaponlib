@@ -28,6 +28,7 @@ import com.vicmatskiv.weaponlib.state.PermitManager;
 import com.vicmatskiv.weaponlib.state.StateManager;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.particle.Particle;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.ItemStackHelper;
@@ -179,6 +180,7 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
     void onFireButtonDown(EntityPlayer player) {
         PlayerWeaponInstance weaponInstance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
         if(weaponInstance != null) {
+        	
             stateManager.changeStateFromAnyOf(this, weaponInstance, allowedFireOrEjectFromStates, WeaponState.FIRING, WeaponState.EJECTING, WeaponState.ALERT);
         }
     }
@@ -222,6 +224,8 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
         Weapon weapon = (Weapon) weaponInstance.getItem();
         Random random = player.getRNG();
 
+        
+       
         
         //if(true) return;
         modContext.getChannel().getChannel().sendToServer(new TryFireMessage(true, 

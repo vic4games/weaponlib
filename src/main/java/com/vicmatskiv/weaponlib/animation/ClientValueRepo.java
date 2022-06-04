@@ -18,6 +18,7 @@ import com.vicmatskiv.weaponlib.numerical.RandomVector;
 import com.vicmatskiv.weaponlib.numerical.SpringValue;
 import com.vicmatskiv.weaponlib.numerical.SynchronizedSimulator;
 import com.vicmatskiv.weaponlib.shader.jim.ShaderManager;
+import com.vicmatskiv.weaponlib.vehicle.collisions.MathHelper;
 
 import akka.japi.Pair;
 import net.java.games.input.Mouse;
@@ -62,6 +63,8 @@ public class ClientValueRepo {
 	// scope
 	public static LerpedValue scopeX = new LerpedValue();
 	public static LerpedValue scopeY = new LerpedValue();
+	
+	public static LerpedValue smoothADSTransitory = new LerpedValue();
 
 
 	
@@ -143,7 +146,25 @@ public class ClientValueRepo {
 	}
 
 	public static void update(ModContext context) {
+		
+		
+		
 		PlayerWeaponInstance pwi = context.getMainHeldWeapon();
+		
+		if(pwi == null) {
+			
+			smoothADSTransitory.previousValue = 0;
+			smoothADSTransitory.currentValue = 0;
+			
+			jumpingSpring.setSpringConstant(2000);
+			jumpingSpring.setDamping(400);
+			
+			if (!Minecraft.getMinecraft().player.onGround) {
+				jumpingSpring.velocity += Minecraft.getMinecraft().player.motionY*10;
+			}
+			jumpingSpring.update(0.05);
+			return;
+		}
 		
 		
 		// Recoil constants
@@ -155,7 +176,15 @@ public class ClientValueRepo {
 		//}
 		//slidePump = new SynchronizedSimulator(slidePumpValue, 1/10.0);
 		
-
+		
+		
+		if(pwi.isAimed()) {
+		  if(smoothADSTransitory.currentValue < 1) smoothADSTransitory.update(smoothADSTransitory.getValue() + 0.2);
+		} else {
+			if(smoothADSTransitory.currentValue > 0) smoothADSTransitory.update(smoothADSTransitory.getValue() - 0.1);
+		}
+		
+		smoothADSTransitory.currentValue = net.minecraft.util.math.MathHelper.clamp(smoothADSTransitory.currentValue, 0.0, 1.0);
 		
 		//double stockLength = AnimationGUI.getInstance().stockLength.getValue();
 		
@@ -174,6 +203,7 @@ public class ClientValueRepo {
 		forward.updatePrevious();
 		recovery.updatePrevious();
 		ticker.updatePrevious();
+		smoothADSTransitory.updatePrevious();
 		//weaponRecovery.updatePrevious();
 		
 		
@@ -395,12 +425,9 @@ public class ClientValueRepo {
 		 * rise *= 0.8;
 		 */
 		
-		jumpingSpring.setSpringConstant(2000);
-		jumpingSpring.setDamping(400);
 		
-		if (!Minecraft.getMinecraft().player.onGround) {
-			jumpingSpring.velocity += Minecraft.getMinecraft().player.motionY*10;
-		}
+		
+		
 
 		
 
@@ -438,7 +465,7 @@ public class ClientValueRepo {
 
 		//forward.update(0.05);
 		walkingGun.update(0.05);
-		jumpingSpring.update(0.05);
+		
 		
 		 
 		//walkYWiggle = (2*Math.PI*((Minecraft.getMinecraft().player.ticksExisted%36)/36.0));
