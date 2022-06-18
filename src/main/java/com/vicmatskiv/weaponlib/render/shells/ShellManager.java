@@ -43,6 +43,7 @@ public class ShellManager {
 		for(int i = 0; i < shellQueue.size(); ++i) {
 			shells.add(shellQueue.poll());
 		}
+		if(shells.isEmpty()) return;
 		
 
 		CompatibleShellRenderer.render(shells);

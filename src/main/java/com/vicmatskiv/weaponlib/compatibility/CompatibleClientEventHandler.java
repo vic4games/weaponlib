@@ -90,6 +90,10 @@ import com.vicmatskiv.weaponlib.config.BalancePackManager.BalancePack;
 import com.vicmatskiv.weaponlib.config.BalancePackManager.GunBalanceConfiguration;
 import com.vicmatskiv.weaponlib.config.BalancePackManager.GunCategoryBalanceConfiguration;
 import com.vicmatskiv.weaponlib.config.BalancePackManager.GunConfigurationGroup;
+import com.vicmatskiv.weaponlib.config.ModernConfigurationManager;
+import com.vicmatskiv.weaponlib.config.novel.ModernConfigManager;
+import com.vicmatskiv.weaponlib.config.novel.ModernConfiguration;
+import com.vicmatskiv.weaponlib.config.novel.VMWModConfigGUI;
 import com.vicmatskiv.weaponlib.animation.jim.BBLoader;
 import com.vicmatskiv.weaponlib.debug.DebugRenderer;
 import com.vicmatskiv.weaponlib.debug.SysOutController;
@@ -180,6 +184,8 @@ import net.minecraftforge.client.model.obj.OBJLoader;
 import net.minecraftforge.client.model.obj.OBJModel;
 import net.minecraftforge.client.settings.KeyBindingMap;
 import net.minecraftforge.common.DimensionManager;
+import net.minecraftforge.common.config.Config;
+import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.event.entity.living.LivingFallEvent;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingJumpEvent;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
@@ -507,241 +513,44 @@ public abstract class CompatibleClientEventHandler {
 	
 	public VMWFrameTimer frametimer = new VMWFrameTimer();
 	
+	
+	/*
+	 * FRAMEBUFFER HOT-SWAP
+	 */
+	private static Field framebufferMcLink = null;
+
+	
+	
 	@SubscribeEvent
 	public void renderWorrldLastEvent(RenderWorldLastEvent evt) {
-		PostProcessPipeline.captureMatricesIntoBuffers();
+		
+	   //if(true) return;
+		
+		
+		if(!ModernConfigManager.disableAllShaders && !ModernConfigManager.disableWorldShaders) {
+			// Fills the model view matrix & projection matrix. Only used for world rendering.
+			PostProcessPipeline.captureMatricesIntoBuffers();
+		}
+		
+		
+		
+		// Replaces the weather renderer. TO-DO: Add config option
+		PostProcessPipeline.setWorldElements();
+		
 		frametimer.markFrame();
 		
-		/*
-		byte[] bruh = CompressionUtil.compressString("fuck");
-		
-		String result = CompressionUtil.decompressString(bruh);
-	*/
-		
-		
-		/*
-		System.out.println("DEOBF: " + Launch.blackboard.get("fml.deobfuscatedEnvironment"));
-		System.out.println();
-		*/
-		
-		/*
-		BalancePackManager.loadDirectory();
-		
-		if(Minecraft.getMinecraft().player != null && Minecraft.getMinecraft().player.ticksExisted % 100 == 0) {
-			BalancePack bp = new BalancePack("Name", "ddkd", 1.0, 1.0);
-			bp.addWeaponConfig(new GunBalanceConfiguration("hk416", true, 8.0, 1.3));
-			bp.addWeaponConfig(new GunBalanceConfiguration("m17", true, 1, -1.0));
-			bp.addBalancingCategory(new GunCategoryBalanceConfiguration(GunConfigurationGroup.NONE, 1.0, 1.0));
-		
-			
-			BalancePackManager.setCurrentBalancePack(bp);
-			try {
-				
-				File f = new File("balance_pack.json");
-				FileWriter fw = new FileWriter(f);
-				
-				
-				
-				
-				new GsonBuilder().setPrettyPrinting().create().toJson(bp.toJSONObject(), fw);
-				
-				fw.close();
-			} catch (JsonIOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		
-		
-		if(Minecraft.getMinecraft().player != null && Minecraft.getMinecraft().player.ticksExisted % 100 == 0) {
-			
-			
-			File f =  new File("balance_pack.json");
-			try {
-				System.out.println("bro");
-				JsonObject obj = (new GsonBuilder()).create().fromJson(new FileReader(f), JsonObject.class);
-				System.out.println(obj.toString());
-				BalancePack bp = BalancePack.fromJSONObject(obj);
-				System.out.println(bp);
-			} catch(Exception e) {
-				e.printStackTrace();
-			}
-		}
-		*/
-		
-		
-		/*
-		AnimationData data = BBLoader.getAnimation("m17", "reloadtactical", "main");
-		float orig = 0;
-		for(Entry<Float, BlockbenchTransition> entry : data.bbTransition.entrySet()) {
-			orig += Math.round(entry.getValue().getTimestamp());
-		}
-		System.out.println("Flag One: " + orig);
-		
-		float testOrig = 0;
-		for(Transition<RenderContext<RenderableState>> t : data.getTransitionList(Transform.NULL.copy(), 1.0)) {
-			testOrig += t.getDuration();
-		}
-		System.out.println("Flag Two: " + testOrig);
-		
-		
-		float totalDur = 0;
-		if(getModContext().getMainHeldWeapon() != null) {
-			for(Transition<RenderContext<RenderableState>> i : getModContext().getMainHeldWeapon().getWeapon().getRenderer().getWeaponRendererBuilder().tacticalReloadContainer.getFirstPerson()) {
-				totalDur += i.getDuration();
-			}
-		}
-		System.out.println("Flag Three: " + totalDur);
-		
-		*/
-		//System.out.println("Flag Four: " + getModContext().getMainHeldWeapon().getWeapon().getRenderer().getWeaponRendererBuilder().tacticalReloadContainer.getDuration());
-		//System.out.println("Total duration: " + totalDur);
-		//System.out.println(orig);
-		
-	
 		
 		
 		ClientValueRepo.renderUpdate(getModContext());
-		//System.out.println(Minecraft.getMinecraft().getFramebuffer() instanceof HDRFramebuffer);
-
-		PostProcessPipeline.setWorldElements();
+	
+		
 		
 		double divisor = 120/frametimer.getFramerate()*0.05;
 		divisor = Math.min(0.08, divisor);
 		Interceptors.nsm.update();
 		
-		//EntityPlayer p = Minecraft.getMinecraft().player;
-		//PostProcessPipeline.createDistortionPoint((float) p.posX,(float)  p.posY, (float) p.posZ, 15f, 5f);
-		
-		/*
-		
-		GlStateManager.pushMatrix();
-		
-		
-		Shader shad = ShaderManager.loadVMWShader("cloud");
-		shad.use();
-		for(int i = 0; i < 5; ++i) {
-			GlStateManager.setActiveTexture(GL13.GL_TEXTURE0 + 3 + i);
-			Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mw:textures/environment/fbm" + (i+1) + ".png"));
-			GlStateManager.setActiveTexture(GL13.GL_TEXTURE0);
-			//System.out.println("mw:textures/environment/fbm" + i + ".png");
-			shad.uniform1i("fbm[" + i + "]", 3 + i);
-		}
-		
-		
-		
-		
-		GlStateManager.enableBlend();
-		shad.uniform1i("cloud", 3);
-		shad.uniform1f("timer", ClientValueRepo.ticker.getLerpedFloat());
-		Vec3d pti = getInterpolatedPlayerCoords();
-		//GlStateManager.translate(-pti.x, -pti.y, -pti.z);
-		double size = 30;
-		GlStateManager.translate(0, 10, 0);
-		//GlStateManager.disableTexture2D();
-		GlStateManager.enableTexture2D();
-		
-		//Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mw:textures/environment/cloud.png"));
-		Tessellator t = Tessellator.getInstance();
-		BufferBuilder bb = t.getBuffer();
-		bb.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-
-		bb.pos(-1*size, 0, -1*size).tex(0, 0).endVertex();
-		bb.pos(1*size, 0, -1*size).tex(1, 0).endVertex();
-		bb.pos(1*size, 0, 1*size).tex(1, 1).endVertex();
-		bb.pos(-1*size, 0, size).tex(0, 1).endVertex();
-		
-		t.draw();
-		shad.release();
-		GlStateManager.popMatrix();
-		*/
-		//float light = Minecraft.getMinecraft().world.getLight(Minecraft.getMinecraft().player.getPosition()) * Minecraft.getMinecraft().world.getSunBrightness(1.0f);
-		
-		//System.out.println(light);
-		
-		
-		//Interceptors.nsm.update(1/divisor);
 	
-		
-		try {
-			//AnimationData susData = BBLoader.getAnimation("mp5", "inspect", "main");
-			//System.out.println(susData.getTimestamps());
-			
-			/*
-			System.out.println("===== START =====");
-			for(Entry<Float, BlockbenchTransition> bbt : susData.bbTransition.entrySet()) {
-				System.out.println("(" + bbt.getKey() + ") -> " + bbt.getValue().getTimestamp());
-			}
-			System.out.println("===== END =====");
-			*/
-			//System.out.println(susData.timestamps.size());
-		
-		} catch(Exception e) {
-			//e.printStackTrace();
-		}
-		//System.out.println(susData);
-		
-		//System.out.println("hi");
-		/*
-		if(ClientModContext.getContext() != null && ClientModContext.getContext().getMainHeldWeapon() != null) {
-			GlStateManager.pushMatrix();
-			
-			Vec3d playI = getInterpolatedPlayerCoords();
-			GlStateManager.translate(-playI.x, -playI.y, -playI.z);
-			
-			GlStateManager.translate(-1447, 6, 327);
-			//DebugRenderer.setupBasicRender();
-			//GL11.glPointSize(10f);
-			//DebugRenderer.renderPoint(Vec3d.ZERO, Vec3d.ZERO);
-			//DebugRenderer.destructBasicRender();
-			
-			
-			MuzzleFlashRenderer mfr = new MuzzleFlashRenderer();
-			ItemStack weaponItemStack = ClientModContext.getContext().getMainHeldWeapon().getItemStack();
-			
-			
-			//Bloom.bindBloomBuffer();
-			//mfr.renderFlash(weaponItemStack, true);
-			GlStateManager.enableTexture2D();
-			Minecraft.getMinecraft().getFramebuffer().bindFramebuffer(false);
-			mfr.renderFlash(weaponItemStack, false);
-			
-			GlStateManager.popMatrix();
-		}*/
-		
-	/*
-		GlStateManager.pushMatrix();
-		Vec3d iP = getInterpolatedPlayerCoords();
-		
-		Quaternion q = MatrixHelper.fromEulerAngles(Math.toRadians(0), Math.toRadians(0), Math.toRadians(45));
-		double[] angles = MatrixHelper.toEulerAngles(q);
-		
-		FloatBuffer boof = BufferUtils.createFloatBuffer(16);
-		GlStateManager.quatToGlMatrix(boof, q);
-		
-		
-		//float[] axisAngle = new AngleKit().convertEulerToAxisAngle((float) Math.toRadians(45), 0, 0);
-		
-		//System.out.println(Math.toDegrees(axisAngle[0]) + " -> (" +  axisAngle[1] + ", " + axisAngle[2] + ", " + axisAngle[3] + ")");
-		
-		//GlStateManager.multMatrix(boof);
-		//angles[0] -= Math.PI;
-		//angles[2] *= -1;
-		
-		//System.out.println(Math.toDegrees(angles[0]) + " | " + Math.toDegrees(angles[1]) +  " | " + Math.toDegrees(angles[2]));
-		
-		
-		GlStateManager.rotate(45f, 0, 1, 0);
-		new ModelChest().renderAll();
-		
-		
-		
-		GlStateManager.popMatrix();
-		
-		*/
+		// TO-DO is this necessary? Make sure to delete in WeaponRenderer if not.
 		if(ClientModContext.getContext().getMainHeldWeapon() != null) {
 			
 			GlStateManager.pushMatrix();
@@ -754,215 +563,19 @@ public abstract class CompatibleClientEventHandler {
 			Project.gluUnProject(WeaponRenderer.POSITION.get(0), WeaponRenderer.POSITION.get(1), WeaponRenderer.POSITION.get(2), MODELVIEW, PROJECTION, VIEWPORT,
 					NEW_POS);
 			GlStateManager.popMatrix();
-			/*
-			PlayerWeaponInstance playerWeaponInstance = ClientModContext.getContext().getMainHeldWeapon();
-			Vec3d newPos = Vec3d.ZERO;
-	    	Vec3d offset = new Vec3d(-0.5, -0.25, 0.5);
-			if(playerWeaponInstance.isAimed()) {
-			//	offset = new Vec3d(0.1, -0.2, 0.5);
-			}
-			Vec3d posAdd = offset.rotatePitch((float) -Math.toRadians(Minecraft.getMinecraft().player.rotationPitch)).rotateYaw((float) -Math.toRadians(Minecraft.getMinecraft().player.rotationYaw));
 			
-			Vec3d outwardPos = newPos.subtract(Minecraft.getMinecraft().player.getPositionEyes(1.0f)).normalize().rotatePitch((float) -Math.toRadians(Minecraft.getMinecraft().player.rotationPitch)).rotateYaw((float) Math.toRadians(-Minecraft.getMinecraft().player.rotationYaw)).scale(0.5).add(Minecraft.getMinecraft().player.getPositionEyes(1.0f));
-			testPos = outwardPos.add(posAdd);
-			*/
-			
-			
-			/*
-			testPos = new Vec3d(CompatibleClientEventHandler.NEW_POS.get(0), 
-        			CompatibleClientEventHandler.NEW_POS.get(1),
-        			CompatibleClientEventHandler.NEW_POS.get(2));
-			
-			
-			double distance = 0.5;
-			Vec3d eyePos = Minecraft.getMinecraft().player.getPositionEyes(1.0f);
-			Vec3d newVec = testPos.subtract(eyePos).normalize().scale(distance).add(eyePos);
-			//testPos = testPos.add(Minecraft.getMinecraft().player.getPositionVector());
-			GlStateManager.pushMatrix();
-			Vec3d iP = getInterpolatedPlayerCoords();
-			GlStateManager.translate(-iP.x, -iP.y, -iP.z);
-			GlStateManager.disableTexture2D();
-			Tessellator t = Tessellator.getInstance();
-			BufferBuilder bb2 = t.getBuffer();
-			GL11.glPointSize(10f);
-			bb2.begin(GL11.GL_POINTS, DefaultVertexFormats.POSITION);
-			bb2.pos(newVec.x, newVec.y, newVec.z).endVertex();
-			t.draw();
-			
-			//System.out.println(testPos);
-			GlStateManager.popMatrix();
-			
-			
-			shellManager.enqueueShell(new Shell(Type.ASSAULT, newVec, Vec3d.ZERO, new Vec3d(0.2, 0 , 0)));
-			*/
 		}
 		
 		
 		
-		//if(true) return;
-		//System.out.println("Start");
-
-		/* Generate methods for glCommands
-		ArrayList<Pair<Class<?>, Method>> ar = ccg.findStandardOpenGLMethod("glGenVertexArrays");
-		for(Pair<Class<?>, Method> pair : ar) {
-			System.out.println("\n" + ccg.buildOutMethod(pair, "glGenVertexArrays"));
-		}
-		\
 		
-		
-		//System.out.println("end");
-		if(true) return;
-		
-		
-		
-		//SysOutController.revealCallLocations();
-		
-		GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW);
-		GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, PROJECTION);
-		
-		GlStateManager.enableTexture2D();
-		
-		Minecraft.getMinecraft().getTextureManager()
-		.bindTexture(new ResourceLocation("mw:textures/models/assaultshell.png"));
-		
-		
-		MODELVIEW.rewind();
-		PROJECTION.rewind();
-		
-		/*
-		if(shr2 == null) {
-			shr2 = new ShellRenderer2();
-			shr2.init();
-		}
-		shr2.realRender();
-		*/
-		
-		/*
-		if(iso == null) {
-			WavefrontModel model = WavefrontLoader.loadSubModel("assaultshell", "casing", true);
-			iso = new InstancedShellObject("instanced", model, GL11.GL_TRIANGLES, 100000,
-					new InstancedAttribute("inPosition", 3, InstancedAttribute.Type.VEC3),
-					new InstancedAttribute("inQuat", 4, InstancedAttribute.Type.VEC4),
-					new InstancedAttribute("inLightmapCoords", 5, InstancedAttribute.Type.VEC2));
-		}
-		*/
-		
-		/*
-		Minecraft.getMinecraft().entityRenderer.enableLightmap();
-		
-		CompatibleShellRenderer.setupLightmapCoords(Minecraft.getMinecraft().player.getPositionVector());
-		GlStateManager.enableLighting();
-		GlStateManager.color(1, 1, 1);
-		GlStateManager.pushMatrix();
-		
-		EntityPlayer p = Minecraft.getMinecraft().player;
-		GlStateManager.translate(-p.posX, -p.posY, -p.posZ);
-		
-		iso.updateData(shellManager);
-		iso.render(shellManager.getShells().size());
-		GlStateManager.popMatrix();
-		*/
-		//if(true) return;
-		//ir.render();
-		
-		//System.out.println(shells.getShells().size());
-		
-		//SysOutController.reset();
-		
-		
+		// wtf is bhr
 		bhr.render();
 		
 		
 		
-		/*
-		GL11.glPushMatrix();
-		
-		Minecraft.getMinecraft().getTextureManager()
-		.bindTexture(new ResourceLocation("mw:textures/models/assaultshell.png"));
-		GlStateManager.translate(0, 1.5, 0.2);
-		GlStateManager.rotate(45, 0, 0, 0);
-		GlStateManager.enableLighting();
-		Shader shad = ShaderManager.loadVMWShader("shells");
-		Minecraft.getMinecraft().entityRenderer.enableLightmap();
-		CompatibleShellRenderer.setupLightmapCoords(Minecraft.getMinecraft().player.getPositionVector());
-		
-		
-		shad.use();
-		shad.uniform1i("lightmap", 1);
-		
-		WavefrontModel model  = WavefrontLoader.loadSubModel("assaultshell", "casing");
-		model.render();
-		shad.release();
-		*/
-		/*
-		GlStateManager.disableTexture2D();
-		
-		
-		
-		Tessellator t = Tessellator.getInstance();
-		BufferBuilder bb2 = t.getBuffer();
-		bb2.begin(GL11.GL_TRIANGLES, DefaultVertexFormats.POSITION);
-		GlStateManager.disableCull();
-		GlStateManager.color(0.8f, 0.7f, 0, 1);
-		GlStateManager.disableTexture2D();
-		//GlStateManager.disableBlend();
-		GlStateManager.disableLighting();
-		double shScaleX = 0.02;
-		double shScaleY = 0.12;
-		double shScaleZ = 0.02;
-		for(int i = 0; i < g_vertex_buffer_data.length-3; i += 3) {
-			//System.out.println(i);
-			bb2.pos(g_vertex_buffer_data[i]*shScaleX, g_vertex_buffer_data[i+1]*shScaleY, g_vertex_buffer_data[i+2]*shScaleZ).endVertex();
-		}
-		
-		t.draw();
-		*/
-		
-		
-		
-		//CompatibleShellRenderer.renderDegenerateModel();
-		
-		
-
-		
-		
-		//GL11.glPopMatrix();
-		
-		
-		/*
-		GlStateManager.pushMatrix();
-		EntityPlayer pla = Minecraft.getMinecraft().player;
-		
-		double iPosX = pla.prevPosX + (pla.posX - pla.prevPosX)*Minecraft.getMinecraft().getRenderPartialTicks();
-		double iPosY = pla.prevPosY + (pla.posY - pla.prevPosY)*Minecraft.getMinecraft().getRenderPartialTicks();
-		double iPosZ = pla.prevPosZ + (pla.posZ - pla.prevPosZ)*Minecraft.getMinecraft().getRenderPartialTicks();
-		GlStateManager.translate(-iPosX, -iPosY, -iPosZ);
-		GlStateManager.disableTexture2D();
-		GL11.glPointSize(10f);
-		Tessellator tes  = Tessellator.getInstance();
-		BufferBuilder bb = tes.getBuffer();
-		GlStateManager.disableCull();
-		Vec3d lol = new Vec3d(120.7, 4.01, -343);
-		
-		GlStateManager.enableTexture2D();
-		ResourceLocation rl = new ResourceLocation("mw:textures/entity/bullethole.png");
-		Minecraft.getMinecraft().getTextureManager().bindTexture(rl);
-		
-		
-		GL14.glBlendEquation(GL14.GL_FUNC_SUBTRACT);
-		GlStateManager.enableBlend();
-		double size = 0.05;
-		bb.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-		bb.pos(lol.x+size, lol.y, lol.z+size).tex(0, 0).endVertex();
-		bb.pos(lol.x-size, lol.y, lol.z+size).tex(1, 0).endVertex();
-		bb.pos(lol.x-size, lol.y, lol.z-size).tex(1, 1).endVertex();
-		bb.pos(lol.x+size, lol.y, lol.z-size).tex(0, 1).endVertex();
-		tes.draw();
-		
-		GlStateManager.popMatrix();
-		
-		*/
-		
+	
+		// What is this and is it necessary
 		if(ClientModContext.getContext() != null && ClientModContext.getContext().getMainHeldWeapon() != null) {
 			PlayerWeaponInstance pwi = ClientModContext.getContext().getMainHeldWeapon();
 			
@@ -975,38 +588,10 @@ public abstract class CompatibleClientEventHandler {
 				pwi.getWeapon().getRenderer().setShouldDoEmptyVariant(false);
 			}
 			
-			ItemAttachment<Weapon> i = ClientModContext.getContext().getAttachmentAspect().getActiveAttachment(AttachmentCategory.MAGAZINE, pwi);
-			
-			
-			//System.out.println(i);
-			//System.out.println(pwi.getWeapon().getRenderer().getStateManager(player));
-			
-		//	pwi.getWeapon().getCompatibleAttachments(AttachmentCategory.MAGAZINE).forEach(c -> System.out.println(I18n.format(c.getAttachment().getUnlocalizedName() + ".name")));
-			//String unloc = pwi.getItemStack().getUnlocalizedName();
-		//	System.out.println(I18n.format(pwi.getItemStack().getUnlocalizedName() + ".name"));
-			//Minecraft.getMinecraft().getLanguageManager().getCurrentLanguage().getJavaLocale().tra
-			//System.out.println(new TextComponentTranslation(unloc, new Object[0]).getFormattedText());
-			//System.out.println(NEW_POS.get(0));
-			/*
-			Vec3d newPos = new Vec3d(CompatibleClientEventHandler.NEW_POS.get(0), 
-	    			CompatibleClientEventHandler.NEW_POS.get(1),
-	    			CompatibleClientEventHandler.NEW_POS.get(2));
-	    	float rotate = (float) Math.toRadians(-Minecraft.getMinecraft().player.rotationYaw);
-	    	Vec3d vec = (new Vec3d(-20, -0, 0)).rotateYaw(rotate);
-	    	Shell shell = new Shell(newPos.add(Minecraft.getMinecraft().player.getPositionVector()), new Vec3d(-90, 0, 0).rotateYaw(rotate), vec);
-	    	CompatibleClientEventHandler.shellManager.enqueueShell(shell);
-			*/
-	    	//System.out.println(pwi.isMagSwapDone());
-			
-			
-			
-			//System.out.println(pwi.getWeapon().getTotalReloadingDuration());
-			
-			boolean var = Math.abs((System.currentTimeMillis()-(pwi.getReloadTimestamp()))/((double) pwi.getWeapon().getTotalReloadingDuration()*0.5)-0.5) < 0.01;
-		//	System.out.println(var);
-			//System.out.println(ClientModContext.getContext().getMainHeldWeapon().getState());
-			
+		
 		}
+		
+		
 		
 		
 		// Hot swaps the Minecraft framebuffer
@@ -1014,18 +599,38 @@ public abstract class CompatibleClientEventHandler {
 	
 		// for an HDR one.
 		
-		try {
-			Framebuffer current = Minecraft.getMinecraft().getFramebuffer();
-			if(!(current instanceof HDRFramebuffer)) {
-				Field f = CompatibleReflection.findField(Minecraft.class,"framebufferMc", "field_147124_at");
-				//System.out.println("FOUND");
-				f.setAccessible(true);
-				Framebuffer fbo = new HDRFramebuffer(current.framebufferWidth, current.framebufferHeight, true);
-				f.set(Minecraft.getMinecraft(), fbo);
+		
+		if(ModernConfigManager.enableHDRFramebuffer) {
+			// Swap for a HDR buffer.
+			if(framebufferMcLink == null) {
+				
+				framebufferMcLink = CompatibleReflection.findField(Minecraft.class, "framebufferMc", "field_147124_at");
+				framebufferMcLink.setAccessible(true);
+				
 			}
-		} catch(Exception e) {
-			e.printStackTrace();
+			
+			// Check if our 
+			Framebuffer current = Minecraft.getMinecraft().getFramebuffer();
+			
+			if(!(current instanceof HDRFramebuffer)) {
+				// Create an EXACT match, but in the HDR format. This will break w/ other mods that try to do
+				// anything similar.
+				Framebuffer newFBO = new HDRFramebuffer(current.framebufferWidth, current.framebufferHeight, current.useDepth);
+				
+				try {
+					framebufferMcLink.set(Minecraft.getMinecraft(), newFBO);
+				} catch (IllegalArgumentException e) {
+					System.err.println("Could not hotswap framebuffer. Error: ");
+					e.printStackTrace();
+				} catch (IllegalAccessException e) {
+					System.err.println("Could not hotswap framebuffer. Error: ");
+					e.printStackTrace();
+				}
+			}
 		}
+		
+		
+	
 		
 		
 		
@@ -1041,6 +646,8 @@ public abstract class CompatibleClientEventHandler {
 		}
 
 	
+		
+		
 		if (ClientModContext.getContext().getSafeGlobals().renderingPhase.get() == RenderingPhase.RENDER_PERSPECTIVE)
 			return;
 		
@@ -1051,6 +658,8 @@ public abstract class CompatibleClientEventHandler {
 		PROJECTION.rewind();
 		MODELVIEW.rewind();
 
+		
+		
 		
 		if(AnimationModeProcessor.getInstance().getFPSMode()) {
 			Minecraft.getMinecraft().setIngameNotInFocus();
@@ -1072,6 +681,7 @@ public abstract class CompatibleClientEventHandler {
 		
 		
 		PostProcessPipeline.blitDepth();
+		
 		PostProcessPipeline.setupDistortionBufferEffects();
 
 		PostProcessPipeline.doWorldProcessing();
@@ -1181,6 +791,7 @@ public abstract class CompatibleClientEventHandler {
 		
 		
 		
+	//	ModernConfigManager.init();
  		
 		
 		EntityPlayer player = Minecraft.getMinecraft().player;

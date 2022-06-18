@@ -38,6 +38,9 @@ import com.vicmatskiv.weaponlib.animation.ClientValueRepo;
 import com.vicmatskiv.weaponlib.animation.gui.AnimationGUI;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleReflection;
+import com.vicmatskiv.weaponlib.config.ModernConfigurationManager;
+import com.vicmatskiv.weaponlib.config.novel.ModernConfigManager;
+import com.vicmatskiv.weaponlib.config.novel.ModernConfiguration;
 import com.vicmatskiv.weaponlib.debug.DebugRenderer;
 import com.vicmatskiv.weaponlib.grenade.GrenadeAttackAspect;
 import com.vicmatskiv.weaponlib.render.Bloom;
@@ -532,6 +535,9 @@ public class PostProcessPipeline {
 	 */
 	public static void doWorldProcessing() {
 
+		
+		if(ModernConfigManager.disableAllShaders || ModernConfigManager.disableWorldShaders) return;
+		
 		 //if(true) return;
 
 		// Shaders.postWorld = ShaderManager.loadVMWShader("postworld");
@@ -597,7 +603,7 @@ public class PostProcessPipeline {
 		// Rebind the MC Framebuffer
 		mc.getFramebuffer().bindFramebuffer(false);
 
-	drawRainBuffer();
+	if(!ModernConfigManager.disableScreenShaders && ModernConfigManager.onScreenRainAndSnow) drawRainBuffer();
 
 	}
 
@@ -634,13 +640,24 @@ public class PostProcessPipeline {
 	 */
 	public static float[][] rainDrops = new float[64][9];
 	public static long inRainTimestamp = System.currentTimeMillis();
-
+	
+	
+	// Turns off when there are no more 'active' drops
+	private static boolean rainKeepAlive = false;
+	
+	
 	public static void drawRainBuffer() {
 
 		
 		float rainStrength = mc.world.getRainStrength(mc.getRenderPartialTicks());
 		boolean isRain = ModernWeatherRenderer.isRainingOrSnowing(mc.player.getPosition());
 
+	
+		// Cancels rain render when there are no drops left to dry and there
+		// is no rain.
+		if(rainStrength == 0.0 && !rainKeepAlive) return;
+		
+		
 		Biome playerBiome = mc.world.getBiome(mc.player.getPosition());
 
 		int playerHeight = mc.world.getHeight(mc.player.getPosition().getX(), mc.player.getPosition().getZ());
@@ -675,7 +692,7 @@ public class PostProcessPipeline {
 					}
 
 					rainDrops[i] = new float[] { (float) Math.random() * 600f, (float) Math.random() * 250f, 0f,
-							(float) velocity, 0f, (float) Math.random() * 25f + 30f, 0f, (float) Math.random() * 20f,
+							(float) velocity, 0f, (float) Math.random() * 25f + 30f, 0f, (float) Math.random() * 10f,
 							0f, isRain ? 1 : 0 };
 
 				}
@@ -695,11 +712,15 @@ public class PostProcessPipeline {
 		 * GL11.GL_LINEAR); GL11.glTexParameteri(GL11.GL_TEXTURE_2D,
 		 * GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
 		 */
+		
+		rainKeepAlive = false;
 
 		double dt = 0.05;
 		for (float[] raindrop : rainDrops) {
 			if (raindrop[7] == 0f)
 				continue;
+			
+			rainKeepAlive = true;
 
 			if (raindrop[9] == 1) {
 				Minecraft.getMinecraft().getTextureManager().bindTexture(RAIN_DROP_TEXTURE);
@@ -746,6 +767,8 @@ public class PostProcessPipeline {
 			drawRaindrop(raindrop[0], raindrop[1], raindrop[4], raindrop[8], alphaFade);
 		}
 
+		//System.out.println("There are " + (rainKeepAlive ? "still" : "no") + " drops left.");
+		
 		// Clean up GlStates
 		endRainBufferRender();
 
@@ -841,6 +864,12 @@ public class PostProcessPipeline {
 	 */
 	public static void doPostProcess() {
 
+		
+		
+		if(ModernConfigManager.disableAllShaders || ModernConfigManager.disableScreenShaders) return;
+		
+		if(ModernConfigManager.bloomEffect) Bloom.doBloom();
+		
 		// if(true) return;
 
 		if (AnimationModeProcessor.getInstance().getFPSMode())
@@ -889,9 +918,14 @@ public class PostProcessPipeline {
 
 		// Send variables as uniforms
 		Shaders.post.uniform2f("windowSize", 1.0f / mc.displayWidth, 1.0f / mc.displayHeight);
-		Shaders.post.uniform1i("isSnow", !isRain ? 1 : 0);
+		Shaders.post.boolean1b("isSnow", !isRain);
 		Shaders.post.uniform1f("timer", ClientValueRepo.ticker.getLerpedFloat());
-
+		
+		Shaders.post.boolean1b("enableFilmGrain", ModernConfigManager.filmGrain);
+		Shaders.post.uniform1f("mdf", (float) ModernConfigManager.filmGrainIntensity);
+		Shaders.post.boolean1b("onScreenLiquids", ModernConfigManager.onScreenRainAndSnow);
+		
+		
 		// Draw full-screen triangle in order to ensure the fragment shader
 		// runs for every pixel on screen
 		Framebuffer boof = Minecraft.getMinecraft().getFramebuffer();

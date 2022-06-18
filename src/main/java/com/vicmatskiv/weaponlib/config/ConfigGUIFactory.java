@@ -2,6 +2,8 @@ package com.vicmatskiv.weaponlib.config;
 
 import java.util.Set;
 
+import com.vicmatskiv.weaponlib.config.novel.VMWModConfigGUI;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraftforge.fml.client.IModGuiFactory;

@@ -28,6 +28,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatiblePlayerEntityTrackerProvi
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSide;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 import com.vicmatskiv.weaponlib.config.ConfigurationManager;
+import com.vicmatskiv.weaponlib.config.novel.ModernConfigManager;
 import com.vicmatskiv.weaponlib.crafting.RecipeManager;
 import com.vicmatskiv.weaponlib.electronics.EntityWirelessCamera;
 import com.vicmatskiv.weaponlib.electronics.HandheldState;
@@ -291,6 +292,11 @@ public class CommonModContext implements ModContext {
         magazineReloadAspect.setStateManager(magazineStateManager);
 
 		this.recipeManager = new RecipeManager();
+		
+		
+		// Initiate config
+		ModernConfigManager.init();
+		
 
 		
 		channel.registerMessage(new TryFireMessageHandler(weaponFireAspect),

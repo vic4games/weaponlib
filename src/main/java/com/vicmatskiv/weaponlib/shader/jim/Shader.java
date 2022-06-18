@@ -44,6 +44,10 @@ public class Shader {
 		OpenGlHelper.glUniformMatrix4(getLoc(name),  transpose, mat);
 	}
 	
+	public void boolean1b(String name, boolean b) {
+		uniform1i(name, b ? 1 : 0);
+	}
+	
 	public void uniform1i(String name, int i) {
 		OpenGlHelper.glUniform1i(getLoc(name), i);
 	}

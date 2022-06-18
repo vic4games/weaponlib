@@ -38,6 +38,7 @@ import com.vicmatskiv.weaponlib.animation.ClientValueRepo;
 import com.vicmatskiv.weaponlib.animation.MatrixHelper;
 import com.vicmatskiv.weaponlib.animation.MultipartRenderStateManager;
 import com.vicmatskiv.weaponlib.animation.ScreenShakingAnimationManager;
+import com.vicmatskiv.weaponlib.config.novel.ModernConfigManager;
 import com.vicmatskiv.weaponlib.inventory.CustomPlayerInventory;
 import com.vicmatskiv.weaponlib.jim.util.HitUtil;
 import com.vicmatskiv.weaponlib.numerical.LissajousCurve;
@@ -604,13 +605,20 @@ public class Interceptors {
         nsm.applyHead();
         //nsm.update();
         
-        Bloom.doBloom();
-		GlStateManager.disableLighting();
-		GlStateManager.disableBlend();
-		
-		//GlStateManager.enableBlend();
-		
-		PostProcessPipeline.doPostProcess();
+      // if(true) return false;
+        
+      
+     
+        if(!ModernConfigManager.disableAllShaders && !ModernConfigManager.disableScreenShaders) {
+        	GlStateManager.disableLighting();
+    		GlStateManager.disableBlend();
+    		
+    		//GlStateManager.enableBlend();
+    		
+    		PostProcessPipeline.doPostProcess();
+    		
+    		GlStateManager.enableDepth();
+        }
 		
         
         return false;
