@@ -6,6 +6,8 @@ import java.util.List;
 
 import org.lwjgl.opengl.GL20;
 
+import com.vicmatskiv.weaponlib.config.novel.ModernConfigManager;
+
 import net.minecraft.client.renderer.OpenGlHelper;
 
 

@@ -402,6 +402,8 @@ public class CustomGui extends CompatibleGui {
                     fontRender.drawStringWithShadow(applyLaser, 150, height - 100, color);
 					*/
 				} else {
+					
+					
 					Message message = modContext.getStatusMessageCenter().nextMessage();
 					String messageText;
 					if(message != null) {

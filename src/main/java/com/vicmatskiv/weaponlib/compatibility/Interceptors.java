@@ -607,7 +607,7 @@ public class Interceptors {
         
       // if(true) return false;
         
-      
+       
      
         if(!ModernConfigManager.disableAllShaders && !ModernConfigManager.disableScreenShaders) {
         	GlStateManager.disableLighting();

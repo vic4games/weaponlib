@@ -56,6 +56,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponRenderer;
 import com.vicmatskiv.weaponlib.compatibility.Interceptors;
 import com.vicmatskiv.weaponlib.config.BalancePackManager;
 import com.vicmatskiv.weaponlib.config.Projectiles;
+import com.vicmatskiv.weaponlib.config.novel.ModernConfigManager;
 import com.vicmatskiv.weaponlib.debug.DebugRenderer;
 import com.vicmatskiv.weaponlib.jim.util.VMWHooksHandler;
 import com.vicmatskiv.weaponlib.perspective.ReflexScreen;
@@ -3271,20 +3272,22 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			}
 			
 			
-			
-			Shaders.gunLightingShader.use();
-			Shaders.gunLightingShader.uniform1f("time", ClientValueRepo.ticker.getLerpedFloat());
-			Shaders.gunLightingShader.uniform1i("disabled", BalancePackManager.isWeaponDisabled(renderContext.getWeaponInstance().getWeapon()) ? 1 : 0);
-			
-			if(useSkin) {
-				Shaders.gunLightingShader.uniform1i("skin", 3);
+			if(!ModernConfigManager.disableAllShaders) {
+				Shaders.gunLightingShader.use();
+				Shaders.gunLightingShader.uniform1f("time", ClientValueRepo.ticker.getLerpedFloat());
+				Shaders.gunLightingShader.uniform1i("disabled", BalancePackManager.isWeaponDisabled(renderContext.getWeaponInstance().getWeapon()) ? 1 : 0);
 				
+				if(useSkin) {
+					Shaders.gunLightingShader.uniform1i("skin", 3);
+					
+				}
+				Shaders.gunLightingShader.uniform1i("useSkin", useSkin ? 1 : 0);
+				
+				
+		    	GL20.glUniform1i(GL20.glGetUniformLocation(Shaders.gunLightingShader.getShaderId(), "lightmap"), 1);
+		    	GL20.glUniform1f(GL20.glGetUniformLocation(Shaders.gunLightingShader.getShaderId(), "lightIntensity"), shot ? 1.5f + ((float) Math.random()) : 0.0f);
+			
 			}
-			Shaders.gunLightingShader.uniform1i("useSkin", useSkin ? 1 : 0);
-			
-			
-	    	GL20.glUniform1i(GL20.glGetUniformLocation(Shaders.gunLightingShader.getShaderId(), "lightmap"), 1);
-	    	GL20.glUniform1f(GL20.glGetUniformLocation(Shaders.gunLightingShader.getShaderId(), "lightIntensity"), shot ? 1.5f + ((float) Math.random()) : 0.0f);
 		}
 		
     	// Clears out the defferal list, so that a new set can be

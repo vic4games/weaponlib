@@ -5,6 +5,8 @@ import org.lwjgl.opengl.GLSync;
 
 import com.vicmatskiv.weaponlib.RenderingPhase;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderTickEvent;
+import com.vicmatskiv.weaponlib.render.Shaders;
+import com.vicmatskiv.weaponlib.render.bgl.PostProcessPipeline;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -61,8 +63,13 @@ public class FirstPersonPerspective<S> extends Perspective<S> {
         
        
         this.entityRenderer.renderWorld(event.getRenderTickTime(), p_78471_2_);
+     
+//PostProcessPipeline.blitDepth();
+		
+	//	PostProcessPipeline.setupDistortionBufferEffects();
 
-        
+		//PostProcessPipeline.doWorldProcessing();
+		
         
         postRenderWorld(event);
         

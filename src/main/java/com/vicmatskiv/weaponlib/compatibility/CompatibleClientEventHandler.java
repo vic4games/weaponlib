@@ -524,7 +524,7 @@ public abstract class CompatibleClientEventHandler {
 	@SubscribeEvent
 	public void renderWorrldLastEvent(RenderWorldLastEvent evt) {
 		
-	   //if(true) return;
+	  // if(true) return;
 		
 		
 		if(!ModernConfigManager.disableAllShaders && !ModernConfigManager.disableWorldShaders) {
@@ -645,9 +645,10 @@ public abstract class CompatibleClientEventHandler {
 			}
 		}
 
-	
 		
 		
+		
+		//System.out.println("yo " + ClientModContext.getContext().getSafeGlobals().renderingPhase.get());
 		if (ClientModContext.getContext().getSafeGlobals().renderingPhase.get() == RenderingPhase.RENDER_PERSPECTIVE)
 			return;
 		

@@ -540,7 +540,7 @@ public class PostProcessPipeline {
 		
 		 //if(true) return;
 
-		// Shaders.postWorld = ShaderManager.loadVMWShader("postworld");
+		//Shaders.postWorld = ShaderManager.loadVMWShader("postworld");
 
 		// Check if buffers need to be remade
 		if (shouldRecreateFramebuffer())

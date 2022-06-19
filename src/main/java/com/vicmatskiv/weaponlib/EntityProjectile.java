@@ -28,9 +28,11 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 //import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
+import net.minecraft.world.gen.layer.GenLayerAddSnow;
 
 public abstract class EntityProjectile extends Entity implements IProjectile, CompatibleIEntityAdditionalSpawnData {
 
@@ -200,6 +202,10 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
     	//System.out.println("hi?");
     
     	
+    	
+    	
+    	
+    	
         if(ticksExisted > MAX_TICKS) {
             //setDead();
             return;
@@ -253,6 +259,23 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
                 vec3, vec31,
                 (block, blockMetadata) -> canCollideWithBlock(null, block, null, blockMetadata));
       
+      
+        Vec3d motion = new Vec3d(this.motionX, this.motionY, this.motionZ).normalize().scale(10);
+        Vec3d start = new Vec3d(this.prevPosX, this.prevPosY, this.prevPosZ);
+        Vec3d end = new Vec3d(this.posX, this.posY, this.posZ).add(motion);
+        
+        RayTraceResult rtr = compatibility.world(this).rayTraceBlocks(start, end, false, true, false);
+        
+        if(rtr != null) {
+        	IBlockState state = compatibility.world(this).getBlockState(rtr.getBlockPos());
+        	if(state.getMaterial() == Material.GLASS) {
+        		this.world.destroyBlock(rtr.getBlockPos(), true);
+        	}
+        }
+        
+       
+      
+       
         
         if(this.world != null && movingobjectposition != null && CommonModContext.getContext() != null && CommonModContext.getContext().getConfigurationManager().getProjectiles().isDestroyGlassBlocks()) {
         	for(BlockPos pos : movingobjectposition.getPassThrus()) {
@@ -261,7 +284,7 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
         			
         			
         			
-        			this.world.destroyBlock(pos, false);
+        			//this.world.destroyBlock(pos, false);
         		}
         	}
         }

@@ -201,8 +201,6 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 	public List<BakedQuad> getQuads(IBlockState state, EnumFacing side, long rand) {
 		
 	
-	
-		
 		if (transformType == TransformType.GROUND
 				|| transformType == TransformType.GUI
 				|| transformType == TransformType.FIRST_PERSON_RIGHT_HAND
