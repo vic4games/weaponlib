@@ -3081,7 +3081,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 //	        return;
 //	    }
 		
-		if(true) return;
+		//if(true) return;
 		
 		
 		
@@ -3275,7 +3275,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		    if(sqDistance < 900) {
 		    	   Interceptors.setRenderVolumeThreshold(volumeThreshold);
 		        if(attachments != null) {
-		            renderAttachments(positioner, renderContext, attachments);
+		          //  renderAttachments(positioner, renderContext, attachments);
 		        }
 		    }
 		} finally {

@@ -526,6 +526,8 @@ public abstract class CompatibleClientEventHandler {
 	public void renderWorrldLastEvent(RenderWorldLastEvent evt) {
 		
 	  // if(true) return;
+		
+		
 	
 		
 		if(ModernConfigManager.enableAllShaders && ModernConfigManager.enableWorldShaders) {
