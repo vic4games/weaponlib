@@ -784,6 +784,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 						renderRightArm(player, renderContext, positioner);
 
 					}
+					GL20.glUseProgram(0);
 				} else {
 					/*
 					 * gunLightingShader.use();
@@ -819,7 +820,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 				
 				
 
-				GL20.glUseProgram(0);
+				
 
 				// gunLightingShader.release();
 			}
@@ -916,36 +917,17 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 					
 					
 				} else {
-					/*
-					Bloom.bindBloomBuffer();
-				//	renderItem(itemStack, renderContext, positioner);
-					Shader bruh = ShaderManager.loadVMWShader("block");
-					bruh.use();
 					renderItem(itemStack, renderContext, positioner);
-					bruh.release();
-					*/
-					
-					
-					renderItem(itemStack, renderContext, positioner);
-					
 				}
 				
 			
 				
-				//Bloom.unapplyMultisample();
-				if(forceMSAA) {
-					
-					
-					//Bloom.unapplyMultisample(framebuffer);
-					
-				//	msaaBuffer.unbindMSAABuffer(framebuffer.framebufferObject);
-					//Bloom.unapplyMultisample();
-				}
+		
 			
 				
 				
 				
-				if(AnimationGUI.getInstance().magEdit.isState()) {
+				if(AnimationGUI.getInstance().magEdit.isState() && AnimationModeProcessor.getInstance().getFPSMode()) {
 					GL11.glPushMatrix();
 					AnimationModeProcessor.getInstance().deferredMatrix.rewind();
 					GL11.glLoadMatrix(AnimationModeProcessor.getInstance().deferredMatrix);
@@ -964,13 +946,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 				
 				if (OpenGLSelectionHelper.selectID == 3 && AnimationModeProcessor.getInstance().getFPSMode() && !AnimationModeProcessor.getInstance().editRotationPointMode && !AnimationGUI.getInstance().magEdit.isState() ) {
 					AnimationModeProcessor.getInstance().currentPartMatrix = MatrixHelper.captureMatrix();
-					
-					//AnimationModeProcessor.getInstance().transformMode = 1;
-					
 					captureAtlasPosition();
-					
-					//AnimationModeProcessor.getInstance().renderTransformIndicator(1.0f);
-					
 				}
 				
 				
@@ -990,24 +966,9 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 				AnimationModeProcessor.getInstance().renderTransformIndicator(1.0f);
 				GlStateManager.popMatrix();
 			}
-			
-
-			/*
-			if (renderContext.getWeaponInstance().isAimed()
-					&& ((ClientModContext) renderContext.getModContext()).getSafeGlobals().renderingPhase
-							.get() != RenderingPhase.RENDER_PERSPECTIVE) {
-				Dloom.blitDepth();
-				CompatibleClientEventHandler.postBlur();
-			}
-			*/
-			// gunLightingShader.release();
 		}
 		
 
-		if(!OpenGLSelectionHelper.isInSelectionPass && !AnimationModeProcessor.getInstance().getFPSMode()) {
-			//Bloom.doBloom();
-		}
-		
 	
 
 		if (transformType == TransformType.GUI && inventoryTextureInitializationPhaseOn) {

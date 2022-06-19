@@ -86,7 +86,9 @@ public class OpticalScopePerspective extends FirstPersonPerspective<RenderableSt
            
             if(scope.isOptical()) {
             	//setSize(1920, DEFAULT_HEIGHT);
+            	
                setSize(scope.getWidth(), scope.getHeight());
+              
             }
             
             super.update(event);

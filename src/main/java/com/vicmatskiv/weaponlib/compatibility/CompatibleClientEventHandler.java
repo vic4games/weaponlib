@@ -100,6 +100,7 @@ import com.vicmatskiv.weaponlib.debug.SysOutController;
 import com.vicmatskiv.weaponlib.model.Bullet556;
 import com.vicmatskiv.weaponlib.network.CompressionUtil;
 import com.vicmatskiv.weaponlib.particle.DriftCloudFX;
+import com.vicmatskiv.weaponlib.perspective.ReflexScreen;
 import com.vicmatskiv.weaponlib.render.Bloom;
 import com.vicmatskiv.weaponlib.render.Dloom;
 import com.vicmatskiv.weaponlib.render.HDRFramebuffer;
@@ -525,7 +526,7 @@ public abstract class CompatibleClientEventHandler {
 	public void renderWorrldLastEvent(RenderWorldLastEvent evt) {
 		
 	  // if(true) return;
-		
+	
 		
 		if(ModernConfigManager.enableAllShaders && ModernConfigManager.enableWorldShaders) {
 			// Fills the model view matrix & projection matrix. Only used for world rendering.
@@ -550,6 +551,7 @@ public abstract class CompatibleClientEventHandler {
 		Interceptors.nsm.update();
 		
 	
+		/*
 		// TO-DO is this necessary? Make sure to delete in WeaponRenderer if not.
 		if(ClientModContext.getContext().getMainHeldWeapon() != null) {
 			
@@ -566,7 +568,7 @@ public abstract class CompatibleClientEventHandler {
 			
 		}
 		
-		
+		*/
 		
 		
 		// wtf is bhr

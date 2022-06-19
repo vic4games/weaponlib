@@ -3065,72 +3065,10 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 	public static boolean updateMagicMagazine;
 
 
-	public static void renderFlash(ItemStack weaponItemStack, boolean bloom) {
-		Shaders.flash.use();
-		
-		Shaders.flash.uniform1i("bloom", bloom ? 1 : 0);
-		
-		GlStateManager.disableLighting();
-		GlStateManager.pushMatrix();
-		GlStateManager.enableBlend();
-		GlStateManager.depthMask(false);
-		
-		GlStateManager.disableCull();
-		GlStateManager.color(1f, 1f, 1f, 0.99f);
-		GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
-		
-		Vec3d mP = ((Weapon) weaponItemStack.getItem()).getMuzzlePosition();
-		if(CompatibleClientEventHandler.muzzlePositioner) {
-			mP = CompatibleClientEventHandler.debugmuzzlePosition;
-		}
-		GlStateManager.translate(mP.x, mP.y, mP.z);
-		Minecraft.getMinecraft().getTextureManager().bindTexture(ClientEventHandler.FLASH);
-		EntityPlayer p = Minecraft.getMinecraft().player;
 
-		
-		
-		GlStateManager.rotate(-180f, 0f, 1f, 0f);
-		//GlStateManager.rotate(p.rotationPitch, 1f, 0f, 0f);
-		// renderFlashPlane(0, 0, 0, 0.7, 0.4, 0);
-		//double scale = 3.0-(1*Math.random());
-		double scale = 3;
-		
-		
-		//	GlStateManager.color(2.0f, 2.0f, 2.0f);
-		if(Minecraft.getMinecraft().gameSettings.thirdPersonView != 0) {
-			ClientEventHandler.renderFlashPlane(0, 0, 0, 0, 0.6 * scale, 0.8 * scale, 0);
-			ClientEventHandler.renderFlashPlane(0, 0, 0, 0, 0.6 * scale, 0.8 * scale, 90);
-			
-		}
-		
-		Minecraft.getMinecraft().getTextureManager().bindTexture(SPARKS_ONE);
-		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
-    	GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
-    
-    	Shaders.flash.uniform1i("natural", 1);
-		ClientEventHandler.renderSparks(0, 0, 0, 0.6*scale, 0.6 * scale, 0, 0, 3);
-		Shaders.flash.uniform1i("natural", 0);
-		Minecraft.getMinecraft().getTextureManager().bindTexture(ClientEventHandler.FLASHF);
-
-		
-		
-		ClientEventHandler.renderFlashPlane(0, 0, 0.1, 0.6*scale, 0.6 * scale, 0, 30);
-		ClientEventHandler.renderFlashPlane(0, 0, 2.0/scale, 0.5 * scale, 0.5 * scale, 0, 30);
-		ClientEventHandler.renderFlashPlane(0, 0, 3.5/scale, 0.4 * scale, 0.4 * scale, 0, 0);
-		
-		
-		GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-		GlStateManager.depthMask(true);
-		GlStateManager.popMatrix();
-		GlStateManager.enableLighting();
-		Shaders.flash.release();
-	}
 	
 	
-	public static final FloatBuffer MODELVIEW = GLAllocation.createDirectFloatBuffer(16);
-	public static final FloatBuffer PROJECTION = GLAllocation.createDirectFloatBuffer(16);
-	public static final IntBuffer VIEWPORT = GLAllocation.createDirectIntBuffer(16);
-	public static final FloatBuffer POSITION = GLAllocation.createDirectFloatBuffer(4);
+
     
 	
 	
@@ -3180,9 +3118,9 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			MuzzleFlashRenderer.renderFlash(renderContext.getPlayer().getEntityId(), weaponItemStack, false);
 			
 			
-			Vec3d distortPos = new Vec3d(0, 0, 1).rotateYaw((float) -Math.toRadians(Minecraft.getMinecraft().player.rotationYaw)).add(Minecraft.getMinecraft().player.getPositionEyes(1.0f));
+			//Vec3d distortPos = new Vec3d(0, 0, 1).rotateYaw((float) -Math.toRadians(Minecraft.getMinecraft().player.rotationYaw)).add(Minecraft.getMinecraft().player.getPositionEyes(1.0f));
 			
-			PostProcessPipeline.createDistortionPoint((float) distortPos.x, (float) distortPos.y, (float) distortPos.z, 1f, 300);
+			//PostProcessPipeline.createDistortionPoint((float) distortPos.x, (float) distortPos.y, (float) distortPos.z, 1f, 300);
 			
 			/*
 			Bloom.bindBloomBuffer();
@@ -3199,11 +3137,12 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		//CompatibleClientEventHandler.uploadFlash(Minecraft.getMinecraft().player.getEntityId());
 		
 		//Bloom.doBloom();
+		/*
 		 GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW);
 	        GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, PROJECTION);
 	        GL11.glGetInteger(GL11.GL_VIEWPORT, VIEWPORT);
 			Project.gluProject(-0.2f, -1.4f, 0, MODELVIEW, PROJECTION, VIEWPORT, POSITION);
-		      
+		      */
 		
 		
 		//Project.gluProject((float) (100f*Math.random()-100), (float) (100f*Math.random()-100), (float) (100f*Math.random()-100), buf, buf2, buf3, test);
