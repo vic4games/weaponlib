@@ -56,6 +56,13 @@ public class ModernConfigManager {
 	@ConfigSync(category = CATEGORY_RENDERING, comment = "Enables scope effects")
 	public static boolean enableScopeEffects = true;
 	
+	@ConfigSync(category = CATEGORY_RENDERING, comment = "Enables flash shaders")
+	public static boolean enableFlashShaders = true;
+	
+	@ConfigSync(category = CATEGORY_RENDERING, comment = "Enables reticle shaders")
+	public static boolean enableReticleShaders = true;
+	
+	
 	@ConfigSync(category = CATEGORY_RENDERING_SCREENSHADERS, comment = "Enables film grain effect")
 	public static boolean filmGrain = true;
 	

@@ -213,7 +213,7 @@ public class ReflexScreen extends ModelBase implements CustomRenderer<Renderable
 		//Bloom.bindBloomBuffer();
 		//renderReticle(renderContext, true);
 		
-		if(ModernConfigManager.enableAllShaders) {
+		if(ModernConfigManager.enableAllShaders && ModernConfigManager.enableReticleShaders) {
 			Minecraft.getMinecraft().getFramebuffer().bindFramebuffer(true);
 			renderReticle(renderContext, false);
 		}

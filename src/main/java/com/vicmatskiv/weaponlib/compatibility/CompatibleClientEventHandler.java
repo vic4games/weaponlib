@@ -681,7 +681,7 @@ public abstract class CompatibleClientEventHandler {
 	
 		
 		
-		if(ModernConfigManager.enableAllShaders) {
+		if(ModernConfigManager.enableAllShaders && ModernConfigManager.enableWorldShaders) {
 			PostProcessPipeline.blitDepth();
 			
 			//PostProcessPipeline.setupDistortionBufferEffects();
