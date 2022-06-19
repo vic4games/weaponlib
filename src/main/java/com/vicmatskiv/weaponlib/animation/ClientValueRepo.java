@@ -151,18 +151,21 @@ public class ClientValueRepo {
 		
 		PlayerWeaponInstance pwi = context.getMainHeldWeapon();
 		
+		jumpingSpring.setSpringConstant(2000);
+		jumpingSpring.setDamping(400);
+		
+		if (!Minecraft.getMinecraft().player.onGround) {
+			jumpingSpring.velocity += Minecraft.getMinecraft().player.motionY*10;
+		}
+		jumpingSpring.update(0.05);
+		
+		
 		if(pwi == null) {
 			
 			smoothADSTransitory.previousValue = 0;
 			smoothADSTransitory.currentValue = 0;
 			
-			jumpingSpring.setSpringConstant(2000);
-			jumpingSpring.setDamping(400);
 			
-			if (!Minecraft.getMinecraft().player.onGround) {
-				jumpingSpring.velocity += Minecraft.getMinecraft().player.motionY*10;
-			}
-			jumpingSpring.update(0.05);
 			return;
 		}
 		

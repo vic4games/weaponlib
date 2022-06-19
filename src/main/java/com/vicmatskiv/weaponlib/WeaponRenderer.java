@@ -3081,6 +3081,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 //	        return;
 //	    }
 		
+		if(true) return;
+		
 		
 		
 		Weapon wea = (Weapon) weaponItemStack.getItem();
@@ -3386,7 +3388,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
     private void renderCompatibleAttachment(CompatibleAttachment<?> compatibleAttachment,
 			Positioner<Part, RenderContext<RenderableState>> positioner, RenderContext<RenderableState> renderContext) {
 
-		//if(true) return;
+		
 		
 		if(compatibleAttachment.getAttachment().getCategory() == AttachmentCategory.MAGAZINE) {
 			currentMagazine = compatibleAttachment;

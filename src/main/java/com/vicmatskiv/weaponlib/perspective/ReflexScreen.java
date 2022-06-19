@@ -37,8 +37,11 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelBox;
 import net.minecraft.client.model.ModelRenderer;
+import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemStack;
@@ -216,6 +219,34 @@ public class ReflexScreen extends ModelBase implements CustomRenderer<Renderable
 		if(ModernConfigManager.enableAllShaders && ModernConfigManager.enableReticleShaders) {
 		//	Minecraft.getMinecraft().getFramebuffer().bindFramebuffer(true);
 			renderReticle(renderContext, false);
+		} else {
+			
+			GlStateManager.enableBlend();
+			Minecraft.getMinecraft().getTextureManager().bindTexture(reticleList.current().getReticleTexture());
+			positioning.accept(renderContext.getPlayer(), renderContext.getWeapon());
+			//bb_main.render(0.065f);
+			//GlStateManager.disableTexture2D();
+			Tessellator t = Tessellator.getInstance();
+			BufferBuilder bb = t.getBuffer();
+			bb.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
+			
+			double sizeW = 0.12;
+			double sizeH = 0.12;
+			double x = -0.015;
+			double y = 1.525;
+			
+			double texScale = 2.0;
+			double iTS = -1;
+			
+			
+			//GlStateManager.color(10.0f, 10.0f, 10.0f, 2f);
+			bb.pos(-1*sizeW + x, -1*sizeH + y, 0).tex(iTS, iTS).endVertex();
+			bb.pos(1*sizeW + x, -1*sizeH + y, 0).tex(texScale, iTS).endVertex();
+			bb.pos(1*sizeW + x, 1*sizeH + y, 0).tex(texScale, texScale).endVertex();
+			bb.pos(-1*sizeW + x, 1*sizeH + y, 0).tex(iTS, texScale).endVertex();
+			
+			t.draw();
+			
 		}
 		
 		
