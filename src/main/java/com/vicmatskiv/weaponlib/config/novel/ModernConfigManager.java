@@ -41,14 +41,20 @@ public class ModernConfigManager {
 	private static ArrayList<String> categories = new ArrayList<>();
 	
 	
-	@ConfigSync(category = CATEGORY_RENDERING, comment = "Disables all shaders")
-	public static boolean disableAllShaders = false;
+	@ConfigSync(category = CATEGORY_RENDERING, comment = "Enables all shaders")
+	public static boolean enableAllShaders = true;
 
-	@ConfigSync(category = CATEGORY_RENDERING, comment = "Disables world shaders")
-	public static boolean disableWorldShaders = false;
+	@ConfigSync(category = CATEGORY_RENDERING, comment = "Enables world shaders")
+	public static boolean enableWorldShaders = true;
 	
-	@ConfigSync(category = CATEGORY_RENDERING, comment = "Disables screen shaders")
-	public static boolean disableScreenShaders = false;
+	@ConfigSync(category = CATEGORY_RENDERING, comment = "Enables screen shaders")
+	public static boolean enableScreenShaders = true;
+	
+	@ConfigSync(category = CATEGORY_RENDERING, comment = "Enables gun shaders, so skinning & lighting")
+	public static boolean enableGunShaders = true;
+	
+	@ConfigSync(category = CATEGORY_RENDERING, comment = "Enables scope effects")
+	public static boolean enableScopeEffects = true;
 	
 	@ConfigSync(category = CATEGORY_RENDERING_SCREENSHADERS, comment = "Enables film grain effect")
 	public static boolean filmGrain = true;
@@ -70,6 +76,9 @@ public class ModernConfigManager {
 	@RequiresMcRestart
 	@ConfigSync(category = CATEGORY_RENDERING, comment = "Enables the HDR framebuffer, requires restart. \nThe HDR is the cause of a lot of shader incompat, \nbut Bloom will look weird without it")
 	public static boolean enableHDRFramebuffer = true;
+	
+
+	
 	
 	
 	

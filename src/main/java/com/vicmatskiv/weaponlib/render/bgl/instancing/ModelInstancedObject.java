@@ -9,6 +9,7 @@ import javax.xml.bind.ValidationException;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL31;
 
+import com.vicmatskiv.weaponlib.config.novel.ModernConfigManager;
 import com.vicmatskiv.weaponlib.render.VAOData;
 import com.vicmatskiv.weaponlib.render.WavefrontModel;
 import com.vicmatskiv.weaponlib.render.bgl.GLCompatible;
@@ -44,6 +45,7 @@ public class ModelInstancedObject<K> extends BasicInstancedObject<K> {
 	@Override
 	public void render(int primCount) {
 		
+	
 		preRender();
 		
 		GLCompatible.glDrawElementsInstanced(getRenderMode(), model.indexBuffer.size(), GL11.GL_UNSIGNED_INT, 0, primCount);

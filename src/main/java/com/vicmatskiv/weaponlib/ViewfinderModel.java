@@ -8,6 +8,7 @@ import org.lwjgl.opengl.GL20;
 import com.vicmatskiv.weaponlib.animation.ClientValueRepo;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.FlatSurfaceModelBox;
+import com.vicmatskiv.weaponlib.config.novel.ModernConfigManager;
 import com.vicmatskiv.weaponlib.perspective.OpticalScopePerspective;
 import com.vicmatskiv.weaponlib.render.scopes.Reticle;
 import com.vicmatskiv.weaponlib.shader.jim.ShaderManager;
@@ -44,14 +45,48 @@ public class ViewfinderModel extends ModelBase {
 	public void render(Reticle ret, Entity entity, float f5) {
 		
 		
-		//super.render(entity, f, f1, f2, f3, f4, f5);
-		//setRotationAngles(f, f1, f2, f3, f4, f5, entity);
+		if(ModernConfigManager.enableAllShaders && ModernConfigManager.enableScopeEffects) {
+			renderWithScopeFX(ret, entity, f5);
+		} else {
+			renderDry(ret, entity, f5);
+		}
+		
+		
+	}
+	
+	public void renderDry(Reticle ret, Entity entity, float f5) {
+		GlStateManager.disableBlend();
+		GlStateManager.disableAlpha();
+		surfaceRenderer.render(f5);
+		
+		GlStateManager.enableAlpha();
+		GlStateManager.enableBlend();
+		Minecraft.getMinecraft().getTextureManager().bindTexture(ret.getReticleTexture());
+		GlStateManager.pushMatrix();
+		
+		GlStateManager.pushMatrix();
+		double yOff = 0.68;
+		double xOff = -0.119;
+		GlStateManager.translate(-xOff, -yOff, 0);
+		GlStateManager.rotate(180f, 0, 0, 1);
+		GlStateManager.translate(xOff, yOff, 0.001);
+		
+		surfaceRenderer.render(f5);
+		
+		GlStateManager.popMatrix();
+		GlStateManager.popMatrix();
+		
+		
+	}
+	
+	public void renderWithScopeFX(Reticle ret, Entity entity, float f5) {
 		GlStateManager.enableBlend();
 		GlStateManager.enableAlpha();
 		
 		
 		//OpticalScopePerspective.scope = ShaderManager.loadVMWShader("vignette");
 		
+	
 		OpticalScopePerspective.scope.use();
 		
 		GlStateManager.setActiveTexture(GL13.GL_TEXTURE0+4);

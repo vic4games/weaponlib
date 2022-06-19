@@ -536,7 +536,7 @@ public class PostProcessPipeline {
 	public static void doWorldProcessing() {
 
 		
-		if(ModernConfigManager.disableAllShaders || ModernConfigManager.disableWorldShaders) return;
+		if(!ModernConfigManager.enableWorldShaders) return;
 		
 		 //if(true) return;
 
@@ -603,7 +603,7 @@ public class PostProcessPipeline {
 		// Rebind the MC Framebuffer
 		mc.getFramebuffer().bindFramebuffer(false);
 
-	if(!ModernConfigManager.disableScreenShaders && ModernConfigManager.onScreenRainAndSnow) drawRainBuffer();
+	if(ModernConfigManager.enableAllShaders && ModernConfigManager.onScreenRainAndSnow) drawRainBuffer();
 
 	}
 
@@ -866,7 +866,7 @@ public class PostProcessPipeline {
 
 		
 		
-		if(ModernConfigManager.disableAllShaders || ModernConfigManager.disableScreenShaders) return;
+		if(!ModernConfigManager.enableScreenShaders) return;
 		
 		if(ModernConfigManager.bloomEffect) Bloom.doBloom();
 		

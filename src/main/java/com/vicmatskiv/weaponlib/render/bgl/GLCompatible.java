@@ -35,6 +35,8 @@ import org.lwjgl.opengl.GL33;
 import org.lwjgl.opengl.GLContext;
 import org.lwjgl.opengl.NVTextureMultisample;
 
+import com.vicmatskiv.weaponlib.config.novel.ModernConfigManager;
+
 public class GLCompatible {
 
 	// Types
@@ -76,7 +78,7 @@ public class GLCompatible {
 
 	
 	public static boolean doesSupportInstancing() {
-		return supportsInstancing;
+		return supportsInstancing && ModernConfigManager.enableAllShaders;
 	}
 	
 	/*

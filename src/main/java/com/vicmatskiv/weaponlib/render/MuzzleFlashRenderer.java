@@ -17,6 +17,7 @@ import com.vicmatskiv.weaponlib.animation.ClientValueRepo;
 import com.vicmatskiv.weaponlib.animation.gui.AnimationGUI;
 import com.vicmatskiv.weaponlib.animation.movement.WeaponRotationHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
+import com.vicmatskiv.weaponlib.config.novel.ModernConfigManager;
 import com.vicmatskiv.weaponlib.debug.DebugRenderer;
 import com.vicmatskiv.weaponlib.render.SpriteSheetTools.Sprite;
 import com.vicmatskiv.weaponlib.shader.jim.Shader;
@@ -107,8 +108,12 @@ public class MuzzleFlashRenderer {
 		//ClientValueRepo
 		
 		// Shaders.flash = ShaderManager.loadVMWShader("flash");
-				Shaders.flash.use();
-				Shaders.flash.uniform1i("bloom", bloom ? 1 : 0);
+		if(ModernConfigManager.enableAllShaders) {
+			Shaders.flash.use();
+			Shaders.flash.uniform1i("bloom", bloom ? 1 : 0);
+		}
+		
+				
 				// Changing the alpha function in order to prevent
 				// edge artifacts.
 				GlStateManager.alphaFunc(GL11.GL_GREATER, 0.0F);

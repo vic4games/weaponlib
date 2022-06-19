@@ -3272,7 +3272,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			}
 			
 			
-			if(!ModernConfigManager.disableAllShaders) {
+			if(ModernConfigManager.enableAllShaders && ModernConfigManager.enableGunShaders) {
 				Shaders.gunLightingShader.use();
 				Shaders.gunLightingShader.uniform1f("time", ClientValueRepo.ticker.getLerpedFloat());
 				Shaders.gunLightingShader.uniform1i("disabled", BalancePackManager.isWeaponDisabled(renderContext.getWeaponInstance().getWeapon()) ? 1 : 0);

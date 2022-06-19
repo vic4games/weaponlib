@@ -24,6 +24,7 @@ import com.vicmatskiv.weaponlib.CustomRenderer;
 import com.vicmatskiv.weaponlib.RenderContext;
 import com.vicmatskiv.weaponlib.RenderableState;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTransformType;
+import com.vicmatskiv.weaponlib.config.novel.ModernConfigManager;
 import com.vicmatskiv.weaponlib.render.Bloom;
 import com.vicmatskiv.weaponlib.render.Dloom;
 import com.vicmatskiv.weaponlib.render.Shaders;
@@ -212,8 +213,11 @@ public class ReflexScreen extends ModelBase implements CustomRenderer<Renderable
 		//Bloom.bindBloomBuffer();
 		//renderReticle(renderContext, true);
 		
-		Minecraft.getMinecraft().getFramebuffer().bindFramebuffer(true);
-		renderReticle(renderContext, false);
+		if(ModernConfigManager.enableAllShaders) {
+			Minecraft.getMinecraft().getFramebuffer().bindFramebuffer(true);
+			renderReticle(renderContext, false);
+		}
+		
 		
 		
 

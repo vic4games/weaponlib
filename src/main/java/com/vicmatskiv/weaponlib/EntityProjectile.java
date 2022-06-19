@@ -11,10 +11,12 @@ import org.apache.logging.log4j.Logger;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleAxisAlignedBB;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleBlockPos;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleBlockState;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleEnumFacing;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleIEntityAdditionalSpawnData;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMathHelper;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTracing;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleTargetPoint;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleVec3;
 
 import io.netty.buffer.ByteBuf;
@@ -260,6 +262,10 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
                 (block, blockMetadata) -> canCollideWithBlock(null, block, null, blockMetadata));
       
       
+        /*
+         *  GLASS BREAK CHECK
+         */
+        
         Vec3d motion = new Vec3d(this.motionX, this.motionY, this.motionZ).normalize().scale(10);
         Vec3d start = new Vec3d(this.prevPosX, this.prevPosY, this.prevPosZ);
         Vec3d end = new Vec3d(this.posX, this.posY, this.posZ).add(motion);
@@ -270,12 +276,23 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
         	IBlockState state = compatibility.world(this).getBlockState(rtr.getBlockPos());
         	if(state.getMaterial() == Material.GLASS) {
         		this.world.destroyBlock(rtr.getBlockPos(), true);
+        		
+  
+        		if(CommonModContext.getContext() != null) {
+        			CommonModContext.getContext().getChannel().sendToAllAround(new BlockHitMessage(rtr.getBlockPos(), rtr.hitVec.x, rtr.hitVec.y, rtr.hitVec.z, CompatibleEnumFacing.valueOf(rtr.sideHit)), new CompatibleTargetPoint(this.dimension, this.posX, this.posY, this.posZ, 20.0));
+            		
+        		}
+        		/*
+        		modContext.getChannel().sendToAllAround(
+                        new BlockHitMessage(position.getBlockPos().getBlockPos(), position.getHitVec().getXCoord(), position.getHitVec().getYCoord(), position.getHitVec().getZCoord(), position.getSideHit()), point);
+                */
         	}
         }
         
        
       
        
+        /*
         
         if(this.world != null && movingobjectposition != null && CommonModContext.getContext() != null && CommonModContext.getContext().getConfigurationManager().getProjectiles().isDestroyGlassBlocks()) {
         	for(BlockPos pos : movingobjectposition.getPassThrus()) {
@@ -288,6 +305,7 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
         		}
         	}
         }
+        */
       
         
        

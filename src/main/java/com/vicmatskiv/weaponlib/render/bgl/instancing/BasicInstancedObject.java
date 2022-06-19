@@ -6,6 +6,7 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL31;
 
+import com.vicmatskiv.weaponlib.config.novel.ModernConfigManager;
 import com.vicmatskiv.weaponlib.render.VAOData;
 import com.vicmatskiv.weaponlib.render.VAOLoader;
 import com.vicmatskiv.weaponlib.render.bgl.GLCompatible;
@@ -85,6 +86,7 @@ public abstract class BasicInstancedObject<K> {
 	}
 	
 	protected void preRender() {
+		
 		renderShader.use();
 		GLCompatible.glBindVertexArray(vao.getVaoID());
 		ModernUtil.enableVertexAttribRange(0, this.largestAttribute);
@@ -101,6 +103,7 @@ public abstract class BasicInstancedObject<K> {
 	
 	public void render(int primCount) {
 		
+
 		// Render setup
 		preRender();
 		

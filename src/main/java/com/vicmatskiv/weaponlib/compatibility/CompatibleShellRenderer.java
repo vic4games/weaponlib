@@ -13,6 +13,7 @@ import org.lwjgl.opengl.GL20;
 import com.vicmatskiv.weaponlib.animation.ClientValueRepo;
 import com.vicmatskiv.weaponlib.animation.MatrixHelper;
 import com.vicmatskiv.weaponlib.compatibility.shells.ShellRegistry;
+import com.vicmatskiv.weaponlib.config.novel.ModernConfigManager;
 import com.vicmatskiv.weaponlib.render.InstancedShellObject;
 import com.vicmatskiv.weaponlib.render.Shaders;
 import com.vicmatskiv.weaponlib.render.WavefrontLoader;
@@ -170,6 +171,7 @@ public class CompatibleShellRenderer {
 		
 	
 		
+		
 		GlStateManager.pushMatrix();
 
 		GlStateManager.enableTexture2D();
@@ -186,8 +188,10 @@ public class CompatibleShellRenderer {
 		GlStateManager.translate(-interpX, -interpY, -interpZ);
 		
 		if(GLCompatible.doesSupportInstancing()) {
+			
 			renderInstanced(shells);
 		} else {
+			//System.out.println("hi");
 			renderNonInstanced(shells);
 		}
 		
@@ -252,11 +256,17 @@ public class CompatibleShellRenderer {
 			
 			if(getDistanceFromPlayer(sh.pos) < 120) {
 				
-				legacyShader.use();
-				legacyShader.uniform1i("lightmap", 1);
-				Minecraft.getMinecraft().getTextureManager().bindTexture(ShellRegistry.getShellTexture(sh.getType()));
-				ShellRegistry.getShellModel(sh.getType()).render();
-				legacyShader.release();
+				if(ModernConfigManager.enableAllShaders) {
+					legacyShader.use();
+					legacyShader.uniform1i("lightmap", 1);
+					Minecraft.getMinecraft().getTextureManager().bindTexture(ShellRegistry.getShellTexture(sh.getType()));
+					ShellRegistry.getShellModel(sh.getType()).render();
+					legacyShader.release();
+				} else {
+					Minecraft.getMinecraft().getTextureManager().bindTexture(ShellRegistry.getShellTexture(sh.getType()));
+					ShellRegistry.getShellModel(sh.getType()).render();
+				}
+				
 			} else {
 				
 				
@@ -276,6 +286,7 @@ public class CompatibleShellRenderer {
 
 		}
 	
+		GlStateManager.enableTexture2D();
 		Minecraft.getMinecraft().entityRenderer.disableLightmap();
 		//GlStateManager.popMatrix();
 	}

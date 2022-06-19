@@ -527,7 +527,7 @@ public abstract class CompatibleClientEventHandler {
 	  // if(true) return;
 		
 		
-		if(!ModernConfigManager.disableAllShaders && !ModernConfigManager.disableWorldShaders) {
+		if(ModernConfigManager.enableAllShaders && ModernConfigManager.enableWorldShaders) {
 			// Fills the model view matrix & projection matrix. Only used for world rendering.
 			PostProcessPipeline.captureMatricesIntoBuffers();
 		}
@@ -681,11 +681,14 @@ public abstract class CompatibleClientEventHandler {
 	
 		
 		
-		PostProcessPipeline.blitDepth();
-		
-		PostProcessPipeline.setupDistortionBufferEffects();
+		if(ModernConfigManager.enableAllShaders) {
+			PostProcessPipeline.blitDepth();
+			
+			//PostProcessPipeline.setupDistortionBufferEffects();
 
-		PostProcessPipeline.doWorldProcessing();
+			PostProcessPipeline.doWorldProcessing();
+		}
+		
 		
 		
 	}
