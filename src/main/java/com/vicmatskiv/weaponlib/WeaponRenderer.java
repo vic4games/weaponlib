@@ -3083,6 +3083,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		
 		//if(true) return;
 		
+		if(DebugCommand.debugFlag == 1) return;
+		
 		
 		
 		Weapon wea = (Weapon) weaponItemStack.getItem();
@@ -3156,6 +3158,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		
 		//ItemSkin
 			
+		if(DebugCommand.debugFlag == 2) return;
+		
 			
 		List<CompatibleAttachment<? extends AttachmentContainer>> attachments = null;
 		if(getBuilder().getModel() instanceof ModelWithAttachments) {
@@ -3191,6 +3195,10 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(getBuilder().getModId()
 					+ ":textures/models/" + textureName));
 		}
+		
+		
+		if(DebugCommand.debugFlag == 3) return;
+		
 		//gunLightingShader = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/gunlight"));
 	    
 		if(!OpenGLSelectionHelper.isInSelectionPass && !AnimationGUI.getInstance().magEdit.isState()) {
@@ -3212,6 +3220,9 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				GlStateManager.setActiveTexture(GL13.GL_TEXTURE0);
 			}
 			
+			if(DebugCommand.debugFlag == 4) return;
+			
+			
 			
 			if(ModernConfigManager.enableAllShaders && ModernConfigManager.enableGunShaders) {
 				Shaders.gunLightingShader.use();
@@ -3229,6 +3240,9 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		    	GL20.glUniform1f(GL20.glGetUniformLocation(Shaders.gunLightingShader.getShaderId(), "lightIntensity"), shot ? 1.5f + ((float) Math.random()) : 0.0f);
 			
 			}
+			
+			if(DebugCommand.debugFlag == 5) return;
+			
 		}
 		
     	// Clears out the defferal list, so that a new set can be
@@ -3271,13 +3285,18 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		                renderContext.getScale());
 			}
 		    
+			if(DebugCommand.debugFlag == 6) return;
+			
 
 		    if(sqDistance < 900) {
 		    	   Interceptors.setRenderVolumeThreshold(volumeThreshold);
 		        if(attachments != null) {
-		          //  renderAttachments(positioner, renderContext, attachments);
+		            renderAttachments(positioner, renderContext, attachments);
 		        }
 		    }
+		    
+		    if(DebugCommand.debugFlag == 7) return;
+			
 		} finally {
 		    Interceptors.setRenderVolumeThreshold(0.0);
 		}
@@ -3285,8 +3304,13 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		
 		
 		
+		if(DebugCommand.debugFlag == 8) return;
 		
-		if(!OpenGLSelectionHelper.isInSelectionPass) Shaders.gunLightingShader.release();
+		if(!OpenGLSelectionHelper.isInSelectionPass && ModernConfigManager.enableAllShaders && ModernConfigManager.enableGunShaders) Shaders.gunLightingShader.release();
+		
+		
+		if(DebugCommand.debugFlag == 9) return;
+		
 		
 		if(!AnimationModeProcessor.getInstance().getFPSMode()) renderPostRenderers(renderContext);
 		

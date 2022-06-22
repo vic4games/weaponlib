@@ -60,6 +60,9 @@ public class DebugCommand extends CompatibleCommand {
     private static final String DEBUG_MUZZLE_POS = "muzzle";
     private static final String DEBUG_COMPAT = "compat";
 
+    
+    public static int debugFlag = 0;
+    
     private String modId;
 
     public DebugCommand(String modId) {
@@ -267,6 +270,8 @@ public class DebugCommand extends CompatibleCommand {
     			
     		}
     		
+    	} else if(args[1].equals("debugFlag")) {
+    		debugFlag = Integer.parseInt(args[2]);
     	}
     }
     
