@@ -177,7 +177,7 @@ public class MuzzleFlashRenderer {
 			}
 		}
 		
-		Shaders.flash.release();
+		if(ModernConfigManager.enableAllShaders && ModernConfigManager.enableFlashShaders) Shaders.flash.release();
 		GlStateManager.popMatrix();
 		
 		//GL20.glDrawBuffers(GL30.GL_COLOR_ATTACHMENT0);

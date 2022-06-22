@@ -25,6 +25,8 @@ import com.vicmatskiv.weaponlib.RenderContext;
 import com.vicmatskiv.weaponlib.RenderableState;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTransformType;
 import com.vicmatskiv.weaponlib.config.novel.ModernConfigManager;
+import com.vicmatskiv.weaponlib.model.FlatModel;
+import com.vicmatskiv.weaponlib.model.ScreenModel;
 import com.vicmatskiv.weaponlib.render.Bloom;
 import com.vicmatskiv.weaponlib.render.Dloom;
 import com.vicmatskiv.weaponlib.render.Shaders;
@@ -209,6 +211,7 @@ public class ReflexScreen extends ModelBase implements CustomRenderer<Renderable
 		//GL20.glDrawBuffers(GL30.GL_COLOR_ATTACHMENT0);
 		
 	}
+	private static ScreenModel screenModel = new ScreenModel();
 
 	@Override
 	public void render(RenderContext<RenderableState> renderContext) {
@@ -216,11 +219,30 @@ public class ReflexScreen extends ModelBase implements CustomRenderer<Renderable
 		//Bloom.bindBloomBuffer();
 		//renderReticle(renderContext, true);
 		
-		if(ModernConfigManager.enableAllShaders && ModernConfigManager.enableReticleShaders) {
+		if(!ModernConfigManager.enableAllShaders && ModernConfigManager.enableReticleShaders) {
 		//	Minecraft.getMinecraft().getFramebuffer().bindFramebuffer(true);
 			renderReticle(renderContext, false);
 		} else {
 			
+			
+			GlStateManager.disableTexture2D();
+			GlStateManager.enableTexture2D();
+			Minecraft.getMinecraft().getTextureManager().bindTexture(reticleList.current().getReticleTexture());
+			
+			GlStateManager.pushMatrix();
+			double scale = 0.3;
+			
+			
+			GlStateManager.scale(scale, scale, scale);
+			
+			positioning.accept(renderContext.getPlayer(), renderContext.getWeapon());
+			GlStateManager.translate(-.3, -1.3, 0);
+			
+			
+			
+			screenModel.render(null, 0f, 0f, 0f, 0f, 0f, 0.0625f);
+			GlStateManager.popMatrix();
+			/*
 			GlStateManager.enableBlend();
 			Minecraft.getMinecraft().getTextureManager().bindTexture(reticleList.current().getReticleTexture());
 			positioning.accept(renderContext.getPlayer(), renderContext.getWeapon());
@@ -247,6 +269,7 @@ public class ReflexScreen extends ModelBase implements CustomRenderer<Renderable
 			
 			t.draw();
 			
+			*/
 		}
 		
 		
