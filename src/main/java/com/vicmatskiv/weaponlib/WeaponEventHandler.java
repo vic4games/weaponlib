@@ -47,6 +47,7 @@ public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 	public void compatibleZoom(FOVUpdateEvent event) {
 		
 		
+		
 		/*
 		 * TODO: if optical zoom is on then
 		 * 			if rendering phase is "render viewfinder" then
@@ -85,7 +86,7 @@ public class WeaponEventHandler extends CompatibleWeaponEventHandler {
 		   RenderingPhase phase = (((ClientModContext) modContext).getSafeGlobals().renderingPhase).get();
 		 
 		     if(instance.isAimed() && phase == null) {
-		    	fov = 0.8f;
+		    	fov = 0.7f;
 		    }
 		     
 		    if(Minecraft.getMinecraft().player.isSprinting()) {

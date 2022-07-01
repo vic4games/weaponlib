@@ -212,6 +212,7 @@ public class ClientValueRepo {
 		
 		ticker.currentValue += 0.01;
 		
+		//System.out.println("yo");
 		boolean reload = false;
 		if(reload) {
 			xInertia = null;
@@ -226,6 +227,7 @@ public class ClientValueRepo {
 		if(yInertia == null) {
 			yInertia = new SpringValue(500, 50, 100);
 		}
+		/*
 		xInertia.setSpringConstant(4000);
 		yInertia.setSpringConstant(4000);
 		xInertia.setMass(15);
@@ -233,6 +235,14 @@ public class ClientValueRepo {
 	xInertia.setDamping(400);
 	yInertia.setDamping(400);
 	
+	*/
+		
+		xInertia.setSpringConstant(4000);
+		yInertia.setSpringConstant(4000);
+		xInertia.setMass(20);
+		yInertia.setMass(20);
+	xInertia.setDamping(350);
+	yInertia.setDamping(350);
 	
 
 	

@@ -81,6 +81,11 @@ public class Explosion {
                 explosionParticleTextureName, smokeParticleTextureName, explosionSound);
 
         
+       net.minecraft.world.Explosion explo = new net.minecraft.world.Explosion(world, entity, posX, posY, posZ, explosionStrength, false, isDestroyingBlocks);
+       explo.doExplosionA();
+        
+        
+        if(true) return;
         
        // isDestroyingBlocks = true;
         explosion.doExplosionA();

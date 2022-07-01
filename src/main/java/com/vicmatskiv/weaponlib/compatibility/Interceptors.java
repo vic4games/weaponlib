@@ -798,6 +798,8 @@ public class Interceptors {
                 + player.getEyeHeight() * 1.6f : position;
     }
     
+
+    
     public static void turn(EntityPlayer player, float yawDelta, float pitchDelta) {
     	//if(1+1==2) return;'
     	
@@ -836,8 +838,22 @@ public class Interceptors {
     	//compatibility.addChatMessage(Minecraft.getMinecraft().player, "Working " + Minecraft.getMinecraft().player.ticksExisted);
     	
     	
-    	ClientValueRepo.xInertia.velocity += yawDelta;
-    	ClientValueRepo.yInertia.velocity += -pitchDelta*2;
+    	
+    	float yawAddition = -yawDelta * 1.5f;
+    	float pitchAddition = pitchDelta * 2.5f;
+    	
+    	/*
+    	if(Math.abs(Math.abs(yawAddition) - Math.abs(previousYawAddition)) > 1.0) yawAddition = (float) InterpolationKit.interpolateValue(previousYawAddition, yawAddition, 0.3f);
+    	if(Math.abs(Math.abs(pitchAddition) - Math.abs(previousPitchAddition)) > 1.0) pitchAddition = (float) InterpolationKit.interpolateValue(previousPitchAddition, pitchAddition, 0.3f);
+    	*/
+    	//System.out.println(Math.abs(yawAddition) - Math.abs(previousYawAddition));
+    	
+    
+    	ClientValueRepo.xInertia.velocity += yawAddition;
+    	ClientValueRepo.yInertia.velocity += pitchAddition;
+    	
+    
+    	
     	//ClientValueRepo.xInertia += yawDelta*0.02;
     	//ClientValueRepo.yInertia += pitchDelta*0.04;
     	

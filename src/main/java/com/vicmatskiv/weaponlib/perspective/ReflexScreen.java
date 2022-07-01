@@ -219,30 +219,58 @@ public class ReflexScreen extends ModelBase implements CustomRenderer<Renderable
 		//Bloom.bindBloomBuffer();
 		//renderReticle(renderContext, true);
 		
-		if(!ModernConfigManager.enableAllShaders && ModernConfigManager.enableReticleShaders) {
+		if(ModernConfigManager.enableAllShaders && ModernConfigManager.enableReticleShaders) {
 		//	Minecraft.getMinecraft().getFramebuffer().bindFramebuffer(true);
 			renderReticle(renderContext, false);
 		} else {
 			
 			
-			GlStateManager.disableTexture2D();
-			GlStateManager.enableTexture2D();
+			
+			//GlStateManager.disableTexture2D();
 			Minecraft.getMinecraft().getTextureManager().bindTexture(reticleList.current().getReticleTexture());
 			
 			GlStateManager.pushMatrix();
-			double scale = 0.3;
+			GlStateManager.enableCull();
 			
 			
-			GlStateManager.scale(scale, scale, scale);
-			
+		
+		//	GlStateManager.translate(0, -3, 0);
 			positioning.accept(renderContext.getPlayer(), renderContext.getWeapon());
-			GlStateManager.translate(-.3, -1.3, 0);
 			
-			
-			
-			screenModel.render(null, 0f, 0f, 0f, 0f, 0f, 0.0625f);
-			GlStateManager.popMatrix();
+
 			/*
+			textureWidth = 4;
+			textureHeight = textureWidth;
+
+			ModelRenderer bb2 = new ModelRenderer(this);
+			bb2.setRotationPoint(0.0F, 24.0F, 0.0F);
+			bb2.cubeList.add(new ModelBox(bb2, 0, 0, -3.0F, -2.0F, 0.0F, 5, 4, 0, 0.0F, false));
+			
+			bb2.render(0.065f);
+			*/
+			
+			Tessellator t = Tessellator.getInstance();
+			BufferBuilder bb = t.getBuffer();
+			bb.begin(GL11.GL_QUADS, DefaultVertexFormats.OLDMODEL_POSITION_TEX_NORMAL);
+			
+			double scaleW = 1.0 * reticleList.current().getTextureScale();
+			double scaleH = scaleW;
+			double x = -0.03, y = 1.56;
+			
+			bb.pos(-1*scaleW + x, -1*scaleH + y, 0).tex(0, 0).normal(0, 0, 1).endVertex();
+			bb.pos(1*scaleW + x, -1*scaleH + y, 0).tex(1, 0).normal(0, 0, 1).endVertex();
+			bb.pos(1*scaleW + x, 1*scaleH + y, 0).tex(1, 1).normal(0, 0, 1).endVertex();
+			
+			bb.pos(-1*scaleW + x, 1*scaleH + y, 0).tex(0, 1).normal(0, 0, 1).endVertex();
+			
+			t.draw();
+		
+			
+			GlStateManager.popMatrix();
+			
+			
+			/*
+			GlStateManager.disableTexture2D();
 			GlStateManager.enableBlend();
 			Minecraft.getMinecraft().getTextureManager().bindTexture(reticleList.current().getReticleTexture());
 			positioning.accept(renderContext.getPlayer(), renderContext.getWeapon());
@@ -268,8 +296,8 @@ public class ReflexScreen extends ModelBase implements CustomRenderer<Renderable
 			bb.pos(-1*sizeW + x, 1*sizeH + y, 0).tex(iTS, texScale).endVertex();
 			
 			t.draw();
-			
 			*/
+			
 		}
 		
 		

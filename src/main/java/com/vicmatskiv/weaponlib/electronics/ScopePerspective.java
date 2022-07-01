@@ -49,6 +49,7 @@ public class ScopePerspective extends PerspectiveRenderer {
 		    perspective = STATIC_TEXTURE_PERSPECTIVE;
 		}
 
+	
 		float brightness = perspective.getBrightness(renderContext);
 		GL11.glPushMatrix();
 		GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_CURRENT_BIT);
@@ -66,7 +67,7 @@ public class ScopePerspective extends PerspectiveRenderer {
 		GlStateManager.enableAlpha();
 		GlStateManager.enableBlend();
 		GL11.glColor4f(brightness, brightness, brightness, 1f);
-		model.render(this.reticle, renderContext.getPlayer(), renderContext.getScale());
+		model.render(this.reticle, renderContext, renderContext.getPlayer(), renderContext.getScale());
 
 		compatibility.enableLightMap();
 		GL11.glPopAttrib();

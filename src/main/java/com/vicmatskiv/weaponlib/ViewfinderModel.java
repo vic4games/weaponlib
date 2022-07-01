@@ -11,6 +11,7 @@ import com.vicmatskiv.weaponlib.compatibility.FlatSurfaceModelBox;
 import com.vicmatskiv.weaponlib.config.novel.ModernConfigManager;
 import com.vicmatskiv.weaponlib.perspective.OpticalScopePerspective;
 import com.vicmatskiv.weaponlib.render.scopes.Reticle;
+import com.vicmatskiv.weaponlib.shader.jim.Shader;
 import com.vicmatskiv.weaponlib.shader.jim.ShaderManager;
 
 import net.minecraft.client.Minecraft;
@@ -42,11 +43,11 @@ public class ViewfinderModel extends ModelBase {
 		setRotation(surfaceRenderer, 0F, 0F, 0F);
 	}
 
-	public void render(Reticle ret, Entity entity, float f5) {
+	public void render(Reticle ret, RenderContext<RenderableState> renderContext, Entity entity, float f5) {
 		
 		
 		if(ModernConfigManager.enableAllShaders && ModernConfigManager.enableScopeEffects) {
-			renderWithScopeFX(ret, entity, f5);
+			renderWithScopeFX(ret, renderContext, entity, f5);
 		} else {
 			renderDry(ret, entity, f5);
 		}
@@ -79,15 +80,32 @@ public class ViewfinderModel extends ModelBase {
 		
 	}
 	
-	public void renderWithScopeFX(Reticle ret, Entity entity, float f5) {
+	public void renderWithScopeFX(Reticle ret, RenderContext<RenderableState> renderContext, Entity entity, float f5) {
 		GlStateManager.enableBlend();
 		GlStateManager.enableAlpha();
 		
 		
 		//OpticalScopePerspective.scope = ShaderManager.loadVMWShader("vignette");
 		
-	
-		OpticalScopePerspective.scope.use();
+		boolean isNightVisionOn = false;
+		if(renderContext.getWeaponInstance() != null) {
+			ItemAttachment<Weapon> scope = renderContext.getWeaponInstance().getAttachmentItemWithCategory(AttachmentCategory.SCOPE);
+			if(scope != null) { 
+				if(scope instanceof ItemScope) {
+					isNightVisionOn = ((ItemScope) scope).hasNightVision() && renderContext.getWeaponInstance().isNightVisionOn();
+				}
+			}
+		}
+		
+		
+		//System.out.println(isNightVisionOn);
+		
+		
+		
+		
+		Shader scopeShader = OpticalScopePerspective.scope;
+		
+		scopeShader.use();
 		
 		GlStateManager.setActiveTexture(GL13.GL_TEXTURE0+4);
 		Minecraft.getMinecraft().getTextureManager().bindTexture(ret.getReticleTexture());
@@ -122,8 +140,9 @@ public class ViewfinderModel extends ModelBase {
         		ClientValueRepo.scopeY.currentValue = 1;
         	}
     		//System.out.println(pwi);
-    		OpticalScopePerspective.scope.uniform1f("reticleZoom", (pwi+0.86f));
-    	    
+    		scopeShader.uniform1f("reticleZoom", (pwi+0.86f));
+    		scopeShader.uniform1f("actualZoom", (1.0f - pwi) - 0.80f);
+    	  //  System.out.println("reticleZoom " + ((1.0 - pwi) - 0.80));
     		//OpticalScopePerspective.scope.uniform1i("cancel", ClientModContext.getContext().getMainHeldWeapon().isAimed() ? 0 : 1);
         	
     	}
@@ -133,18 +152,30 @@ public class ViewfinderModel extends ModelBase {
     	ClientValueRepo.scopeY = 0;
     	    	
     	*/
+    	
+    	
+    	scopeShader.uniform1i("reticle", 4);
+    	scopeShader.uniform1i("dirt", 6);
+    	scopeShader.uniform1i("holo", 7);
+    	scopeShader.uniform2f("Velocity", (float) ClientValueRepo.scopeX.getLerpedFloat(), (float) ClientValueRepo.scopeY.getLerpedFloat());
+    	scopeShader.uniform2f("resolution", Minecraft.getMinecraft().displayWidth, Minecraft.getMinecraft().displayHeight);
+    	scopeShader.boolean1b("isNightVisionOn", isNightVisionOn);
+    	/*
     	GL20.glUniform1i(GL20.glGetUniformLocation(OpticalScopePerspective.scope.getShaderId(), "reticle"), 4);
      	GL20.glUniform1i(GL20.glGetUniformLocation(OpticalScopePerspective.scope.getShaderId(), "dirt"), 6);
      	GL20.glUniform1i(GL20.glGetUniformLocation(OpticalScopePerspective.scope.getShaderId(), "holo"), 7);
     	GL20.glUniform2f(GL20.glGetUniformLocation(OpticalScopePerspective.scope.getShaderId(), "Velocity"),
     			(float) ClientValueRepo.scopeX.getLerpedFloat(), (float) ClientValueRepo.scopeY.getLerpedFloat());
-    	OpticalScopePerspective.scope.uniform2f("resolution", Minecraft.getMinecraft().displayWidth, Minecraft.getMinecraft().displayHeight);
-    	//	GL20.glUniform1f(GL20.glGetUniformLocation(OpticalScopePerspective.scope.getShaderId(), "Radius"),
-    //			0.55f);
+    			*/
+    	//OpticalScopePerspective.scope.uniform2f("resolution", Minecraft.getMinecraft().displayWidth, Minecraft.getMinecraft().displayHeight);
+
+ 
+    	
+    	
     	
     	GlStateManager.enableBlend();
 		surfaceRenderer.render(f5);
-		OpticalScopePerspective.scope.release();
+		scopeShader.release();
 	}
 
 	private void setRotation(ModelRenderer model, float x, float y, float z) {

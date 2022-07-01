@@ -1,61 +1,31 @@
 package com.vicmatskiv.weaponlib.render.bgl;
 
-import java.awt.Color;
-import java.awt.image.BufferedImage;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.nio.DoubleBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-
-import javax.management.modelmbean.ModelMBeanNotificationBroadcaster;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.Marker;
 import org.lwjgl.BufferUtils;
-import org.lwjgl.opengl.ARBDepthTexture;
-import org.lwjgl.opengl.ARBTextureBorderClamp;
-import org.lwjgl.opengl.ARBTextureMirrorClampToEdge;
-import org.lwjgl.opengl.ARBTextureRectangle;
-import org.lwjgl.opengl.ARBTextureRg;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL13;
-import org.lwjgl.opengl.GL14;
-import org.lwjgl.opengl.GL20;
-import org.lwjgl.opengl.GL30;
-import org.lwjgl.opengl.GLSync;
-import org.lwjgl.util.glu.GLU;
 import org.lwjgl.util.glu.Project;
 import org.lwjgl.util.vector.Matrix4f;
 
 import com.vicmatskiv.weaponlib.animation.AnimationModeProcessor;
 import com.vicmatskiv.weaponlib.animation.ClientValueRepo;
-import com.vicmatskiv.weaponlib.animation.gui.AnimationGUI;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleReflection;
-import com.vicmatskiv.weaponlib.config.ModernConfigurationManager;
 import com.vicmatskiv.weaponlib.config.novel.ModernConfigManager;
-import com.vicmatskiv.weaponlib.config.novel.ModernConfiguration;
-import com.vicmatskiv.weaponlib.debug.DebugRenderer;
-import com.vicmatskiv.weaponlib.grenade.GrenadeAttackAspect;
 import com.vicmatskiv.weaponlib.render.Bloom;
 import com.vicmatskiv.weaponlib.render.HDRFramebuffer;
 import com.vicmatskiv.weaponlib.render.Shaders;
-import com.vicmatskiv.weaponlib.render.bgl.LightManager.PointLight;
 import com.vicmatskiv.weaponlib.render.bgl.weather.ModernWeatherRenderer;
-import com.vicmatskiv.weaponlib.shader.jim.Shader;
-import com.vicmatskiv.weaponlib.shader.jim.ShaderManager;
-
-import jline.internal.TerminalLineSettings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.client.particle.Particle;
-import net.minecraft.client.particle.ParticleManager;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.renderer.GlStateManager;
@@ -64,21 +34,10 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.GlStateManager.DestFactor;
 import net.minecraft.client.renderer.GlStateManager.SourceFactor;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.client.shader.Framebuffer;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.IWorldEventListener;
 import net.minecraft.world.biome.Biome;
-import net.minecraftforge.client.event.ModelBakeEvent;
-import net.minecraftforge.client.settings.KeyBindingMap;
-import net.minecraftforge.common.ForgeModContainer;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
-//import net.minecraftforge.gradle.GradleStartCommon;
-import scala.reflect.internal.Trees.This;
 
 /**
  * Post-processing pipeline enabling modern post effects to be applied in

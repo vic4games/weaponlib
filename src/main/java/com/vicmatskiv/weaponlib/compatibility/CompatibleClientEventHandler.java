@@ -92,7 +92,6 @@ import com.vicmatskiv.weaponlib.config.BalancePackManager.GunCategoryBalanceConf
 import com.vicmatskiv.weaponlib.config.BalancePackManager.GunConfigurationGroup;
 import com.vicmatskiv.weaponlib.config.ModernConfigurationManager;
 import com.vicmatskiv.weaponlib.config.novel.ModernConfigManager;
-import com.vicmatskiv.weaponlib.config.novel.ModernConfiguration;
 import com.vicmatskiv.weaponlib.config.novel.VMWModConfigGUI;
 import com.vicmatskiv.weaponlib.animation.jim.BBLoader;
 import com.vicmatskiv.weaponlib.debug.DebugRenderer;

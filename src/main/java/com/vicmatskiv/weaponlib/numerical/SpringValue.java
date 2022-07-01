@@ -11,6 +11,8 @@ public class SpringValue {
 	public double velocity = 0;
 	public double position = 0;
 	
+	private double waitingForce = 0.0;
+	
 	// for rendering
 	public double prevPosition = 0;
 	
@@ -20,9 +22,18 @@ public class SpringValue {
 		this.damping = damp;
 	}
 	
+	public void applyForce(double force) {
+		this.waitingForce = force;
+	}
+	
 	public void update(double dt) {
 		double force = -springConstant*(position);
 		double dampingForce = damping*velocity;
+		
+		force += waitingForce;
+		waitingForce = 0;
+		
+		
 	//	dampingForce = 5000;
 		double appliedForce = force - dampingForce;
 		double acceleration = appliedForce/mass;
