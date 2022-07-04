@@ -29,6 +29,7 @@ Reloadable, Updatable, Part {
 		private long reloadingTimeout = DEFAULT_RELOADING_TIMEOUT_TICKS;
 		private Set<ItemBullet> compatibleBullets = new HashSet<>();
 		private String reloadSound;
+		private String unloadSound;
 		
 
 		
@@ -40,6 +41,11 @@ Reloadable, Updatable, Part {
 
 		public Builder withReloadingTimeout(int reloadingTimeout) {
 			this.reloadingTimeout = reloadingTimeout;
+			return this;
+		}
+		
+		public Builder withUnloadSound(String unloadSound) {
+			this.unloadSound = unloadSound;
 			return this;
 		}
 		
@@ -63,6 +69,7 @@ Reloadable, Updatable, Part {
 			magazine.compatibleBullets = new ArrayList<>(compatibleBullets);
 			if(reloadSound != null) {
 				magazine.reloadSound = modContext.registerSound(reloadSound);
+				magazine.unloadSound = modContext.registerSound(unloadSound);
 			}
 			magazine.modContext = modContext;
 			withInformationProvider((stack) -> TextFormatting.RED + "Ammo: " + TextFormatting.GRAY + Tags.getAmmo(stack) + "/" + ammo);
@@ -76,6 +83,7 @@ Reloadable, Updatable, Part {
 	private long reloadingTimeout;
 	private List<ItemBullet> compatibleBullets;
 	private CompatibleSound reloadSound;
+	private CompatibleSound unloadSound;
 	private ModContext modContext;
 	private Vec3d rotPoint;
 	
@@ -137,6 +145,10 @@ Reloadable, Updatable, Part {
 	public CompatibleSound getReloadSound() {
 		return reloadSound;
 	}
+	
+	public CompatibleSound getUnloadSound() {
+		return unloadSound;
+	}
 
 	public long getReloadTimeout() {
 		return reloadingTimeout;
@@ -166,7 +178,7 @@ Reloadable, Updatable, Part {
 
     @Override
     public void unloadMainHeldItemForPlayer(EntityPlayer player) {
-        // TODO Auto-generated method stub
+    	modContext.getMagazineReloadAspect().unloadMainHeldItem(player);
     }
 	
 }

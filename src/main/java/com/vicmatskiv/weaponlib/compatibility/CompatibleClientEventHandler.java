@@ -68,6 +68,7 @@ import com.vicmatskiv.weaponlib.RenderContext;
 import com.vicmatskiv.weaponlib.RenderableState;
 import com.vicmatskiv.weaponlib.RenderingPhase;
 import com.vicmatskiv.weaponlib.RopeSimulation;
+import com.vicmatskiv.weaponlib.Tags;
 import com.vicmatskiv.weaponlib.UniversalSoundLookup;
 import com.vicmatskiv.weaponlib.RopeSimulation.Stick;
 import com.vicmatskiv.weaponlib.Weapon;
@@ -137,6 +138,8 @@ import com.vicmatskiv.weaponlib.vehicle.network.VehicleDataContainer;
 import com.vicmatskiv.weaponlib.vehicle.network.VehicleInteractPacket;
 
 import akka.japi.Pair;
+import net.minecraft.block.BlockDoor;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.entity.EntityPlayerSP;
@@ -161,6 +164,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.launchwrapper.Launch;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
@@ -527,7 +531,19 @@ public abstract class CompatibleClientEventHandler {
 	  // if(true) return;
 		
 		
-	
+		
+		
+		if(Minecraft.getMinecraft().player != null) {
+			ItemStack stack = Minecraft.getMinecraft().player.getHeldItemMainhand();
+			if(stack != null && !stack.isEmpty()) {
+				NBTTagCompound nbt = stack.getTagCompound();
+			//	System.out.println(nbt);
+				//Tags.setInstance(itemStack, instance);
+			}
+			
+		}
+		
+		
 		
 		if(ModernConfigManager.enableAllShaders && ModernConfigManager.enableWorldShaders) {
 			// Fills the model view matrix & projection matrix. Only used for world rendering.

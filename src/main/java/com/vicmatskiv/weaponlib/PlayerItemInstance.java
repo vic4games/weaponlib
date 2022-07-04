@@ -92,6 +92,10 @@ public class PlayerItemInstance<S extends ManagedState<S>> extends UniversalObje
 	protected <T extends PlayerItemInstance<S>> T getPreparedState() {
 		return (T)preparedState;
 	}
+	
+	public boolean shouldHaveInstanceTags() {
+		return true;
+	}
 
 	@Override
 	public void init(ByteBuf buf) {

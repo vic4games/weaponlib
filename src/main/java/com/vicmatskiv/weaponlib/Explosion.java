@@ -74,15 +74,20 @@ public class Explosion {
             CompatibleSound explosionSound) {
 
         Float damageCoefficient = modContext.getConfigurationManager().getExplosions().getDamage();
-        explosionStrength *= damageCoefficient;
+      //  explosionStrength *= damageCoefficient;
 
         Explosion explosion = new Explosion(modContext, world, entity, posX, posY, posZ, explosionStrength, isFlaming, 
                 isSmoking, particleAgeCoefficient, smokeParticleAgeCoefficient, explosionParticleScaleCoefficient, smokeParticleScaleCoefficient,
                 explosionParticleTextureName, smokeParticleTextureName, explosionSound);
 
         
+        
+        
+        /*
        net.minecraft.world.Explosion explo = new net.minecraft.world.Explosion(world, entity, posX, posY, posZ, explosionStrength, false, isDestroyingBlocks);
        explo.doExplosionA();
+       */
+        world.createExplosion(entity, posX, posY, posZ, explosionStrength, isSmoking);
         
         
         if(true) return;

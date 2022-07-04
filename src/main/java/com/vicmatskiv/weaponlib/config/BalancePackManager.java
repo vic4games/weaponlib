@@ -41,6 +41,7 @@ public class BalancePackManager {
 	// JSON LOOKUP KEYS FOR PACK MANAGER VERSION 1.0v
 	private static final String PACK_MANAGER_VERSION = "1.0";
 	
+	private static final String HEADSHOT_MULTIPLIER_KEY = "headshotMultiplier";
 	private static final String DAMAGE_MULTIPLIER_KEY = "damageMultiplier";
 	private static final String RECOIL_MULTIPLIER_KEY = "recoilMultiplier";
 	private static final String GLOBAL_PARAMETERS_KEY = "globalParameters";
@@ -204,6 +205,7 @@ public class BalancePackManager {
 		private String name;
 		private String version;
 		
+		private double headshotMultiplier = 2.5;
 		private double globalRecoilMultiplier = 1.0;
 		private double globalDamageMultiplier = 1.0;
 		
@@ -213,9 +215,10 @@ public class BalancePackManager {
 		private HashMap<GunConfigurationGroup, GunCategoryBalanceConfiguration> gunCategoryConfigurations = new HashMap<>();
 		
 		
-		public BalancePack(String name, String version, double globalRecoilMultiplier, double globalDamageMultiplier) {
+		public BalancePack(String name, String version, double headshotMult, double globalRecoilMultiplier, double globalDamageMultiplier) {
 			this.name = name;
 			this.version = version;
+			this.headshotMultiplier = headshotMult;
 			this.globalDamageMultiplier = globalDamageMultiplier;
 			this.globalRecoilMultiplier = globalRecoilMultiplier;
 		}
@@ -244,19 +247,24 @@ public class BalancePackManager {
 			String packVersion = jsonObject.get(PACK_VERSION_KEY).getAsString();
 			
 			
-			double globalRecoil, globalDamage;
+			double globalRecoil, globalDamage, headshotMultiplier = 2.5;
 			if(jsonObject.has(GLOBAL_PARAMETERS_KEY)) {
 				JsonObject globalParameters = jsonObject.get(GLOBAL_PARAMETERS_KEY).getAsJsonObject();
 				
 				globalDamage = globalParameters.get(DAMAGE_MULTIPLIER_KEY).getAsDouble();
 				globalRecoil = globalParameters.get(RECOIL_MULTIPLIER_KEY).getAsDouble();
+				
+				if(globalParameters.has(HEADSHOT_MULTIPLIER_KEY)) {
+					headshotMultiplier = globalParameters.get(HEADSHOT_MULTIPLIER_KEY).getAsDouble();
+				}
+				
 			} else {
 				globalRecoil = 1.0;
 				globalDamage = 1.0;
 				
 			}
 	
-			BalancePack bp = new BalancePack(packName, packVersion, globalRecoil, globalDamage);
+			BalancePack bp = new BalancePack(packName, packVersion, headshotMultiplier, globalRecoil, globalDamage);
 			
 
 			
@@ -306,6 +314,7 @@ public class BalancePackManager {
 			JsonObject globalParameters = new JsonObject();
 			globalParameters.addProperty(DAMAGE_MULTIPLIER_KEY, this.globalDamageMultiplier);
 			globalParameters.addProperty(RECOIL_MULTIPLIER_KEY, this.globalRecoilMultiplier);
+			globalParameters.addProperty(HEADSHOT_MULTIPLIER_KEY, this.headshotMultiplier);
 			obj.add(GLOBAL_PARAMETERS_KEY, globalParameters);
 			
 			// Write the individual weapon keys
@@ -659,8 +668,17 @@ public class BalancePackManager {
 		
 	}
 	
+	public static double getHeadshotMultiplier() {
+		if(!hasActiveBalancePack()) {
+			return 2.5;
+		} else {
+			return getActiveBalancePack().headshotMultiplier;
+		}
+		
+	}
+	
 	public static void createDefaultBalancePack() {
-		BalancePack defaultPack = new BalancePack("default", "1.0", 1.0, 1.0);
+		BalancePack defaultPack = new BalancePack("default", "1.0", 2.5, 1.0, 1.0);
 		defaultPack.addWeaponConfig(new GunBalanceConfiguration("exampleWeapon", true, 8.0, 1.0));
 		for(GunConfigurationGroup i : GunConfigurationGroup.values()) {
 			defaultPack.addBalancingCategory(new GunCategoryBalanceConfiguration(i, 1.0, 1.0));

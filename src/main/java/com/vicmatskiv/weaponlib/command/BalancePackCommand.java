@@ -22,7 +22,7 @@ public class BalancePackCommand extends CompatibleCommand {
 
 	@Override
 	protected void execCommand(ICommandSender sender, String[] args) {
-		CommonModContext.getContext().getChannel().getChannel().sendToAll(new BalancePackClient(new BalancePack("fuck", "1", 1, 1)));
+	//	CommonModContext.getContext().getChannel().getChannel().sendToAll(new BalancePackClient(new BalancePack("fuck", "1", 2.5, 1, 1)));
 		if(args.length == 0) {
 			sender.sendMessage(new TextComponentString(getHeader() + " Arguments:"));
 			sender.sendMessage(new TextComponentString("info - " + TextFormatting.ITALIC + "Provides info about currently loaded pack"));

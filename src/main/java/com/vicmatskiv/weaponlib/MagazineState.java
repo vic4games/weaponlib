@@ -9,7 +9,9 @@ public enum MagazineState implements ManagedState<MagazineState> {
 
 	READY(false), 
 	LOAD_REQUESTED, 
-	LOAD(null, LOAD_REQUESTED, null, true);
+	LOAD(null, LOAD_REQUESTED, null, true),
+	UNLOAD_REQUESTED, 
+	UNLOAD(null, UNLOAD_REQUESTED, null, true);
 	
 	private static final int DEFAULT_PRIORITY = 0;
 

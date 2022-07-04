@@ -16,7 +16,11 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleTransformType;
 import com.vicmatskiv.weaponlib.render.scopes.Reticle;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.ITextureObject;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
@@ -68,6 +72,7 @@ public class PerspectiveRenderer implements CustomRenderer<RenderableState> {
 				&& renderContext.getCompatibleTransformType() != CompatibleTransformType.FIRST_PERSON_LEFT_HAND) {
 			return;
 		}
+		
 
 		if(renderContext.getModContext() == null) {
 		    return;
@@ -86,7 +91,13 @@ public class PerspectiveRenderer implements CustomRenderer<RenderableState> {
 		GL11.glPushMatrix();
 		GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_CURRENT_BIT);
 
+		
+
+		
 		positioning.accept(renderContext.getPlayer(), renderContext.getWeapon());
+		
+		
+		
 		//GL11.glBindTexture(GL11.GL_TEXTURE_2D, framebuffer.framebufferTexture);
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, perspective.getTexture(renderContext));
 		compatibility.disableLightMap();
@@ -96,8 +107,14 @@ public class PerspectiveRenderer implements CustomRenderer<RenderableState> {
 		GL11.glDisable(GL11.GL_ALPHA_TEST);
 		GL11.glDisable(GL11.GL_BLEND);
 
+		
+		
+	
+		
+		
 		GL11.glColor4f(brightness, brightness, brightness, 1f);
 		
+	
 		model.render(renderContext.getPlayer(),
 				renderContext.getLimbSwing(),
 				renderContext.getFlimbSwingAmount(),

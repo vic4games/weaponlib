@@ -11,6 +11,8 @@ import net.minecraft.client.settings.KeyBinding;
 public class KeyBindings {
 	
 
+	public static KeyBinding openDoor;
+	
     public static KeyBinding reloadKey;
     public static KeyBinding unloadKey;
     public static KeyBinding inspectKey;
@@ -70,6 +72,10 @@ public class KeyBindings {
     
     public static void init() {
 
+    	 openDoor = new KeyBinding("key.opendoor", Keyboard.KEY_K,
+                 "key.categories.weaponlib");
+    	
+    	
         reloadKey = new KeyBinding("key.reload", Keyboard.KEY_R,
                 "key.categories.weaponlib");
         
@@ -153,6 +159,8 @@ public class KeyBindings {
                 "key.categories.vehicle");
         
 
+        
+        compatibility.registerKeyBinding(openDoor);
         compatibility.registerKeyBinding(reloadKey);
         compatibility.registerKeyBinding(unloadKey);
         compatibility.registerKeyBinding(inspectKey);

@@ -37,6 +37,7 @@ public class ModernConfigManager {
 	
 	public static final String CATEGORY_RENDERING = "rendering";
 	public static final String CATEGORY_RENDERING_SCREENSHADERS = "rendering.screenshaders";
+	public static final String CATEGORY_GAMEPLAY = "gameplay";
 	
 	private static ArrayList<String> categories = new ArrayList<>();
 	
@@ -83,6 +84,14 @@ public class ModernConfigManager {
 	@RequiresMcRestart
 	@ConfigSync(category = CATEGORY_RENDERING, comment = "Enables the HDR framebuffer, requires restart. \nThe HDR is the cause of a lot of shader incompat, \nbut Bloom will look weird without it")
 	public static boolean enableHDRFramebuffer = true;
+	
+	
+	
+	@ConfigSync(category = CATEGORY_GAMEPLAY, comment = "Enables the ammo counter")
+	public static boolean enableAmmoCounter = true;
+	
+	@ConfigSync(category = CATEGORY_GAMEPLAY, comment = "Enable open door key display when hovering doors")
+	public static boolean enableOpenDoorDisplay = true;
 	
 
 	

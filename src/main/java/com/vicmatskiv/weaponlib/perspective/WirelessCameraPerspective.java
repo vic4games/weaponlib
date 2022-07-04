@@ -48,6 +48,8 @@ public class WirelessCameraPerspective extends RemoteFirstPersonPerspective {
     @Override
     protected void updateWatchablePlayer() {
 
+    	
+    		
 //        this.watchablePlayer.setEntityLiving(null);
 //        if(true) return;
 
@@ -117,6 +119,8 @@ public class WirelessCameraPerspective extends RemoteFirstPersonPerspective {
 
     @Override
     protected void renderOverlay() {
+    	
+    	
         super.renderOverlay();
         framebuffer.bindFramebuffer(true);
         int maxDistance = 120;

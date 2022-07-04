@@ -6,11 +6,15 @@ import com.vicmatskiv.weaponlib.command.BalancePackCommand;
 import com.vicmatskiv.weaponlib.config.BalancePackManager;
 import com.vicmatskiv.weaponlib.network.packets.BalancePackClient;
 
+import net.minecraft.block.BlockDoor;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.RayTraceResult;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.EntityEvent.EntityConstructing;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
@@ -44,6 +48,11 @@ public abstract class CompatibleServerEventHandler {
 	
 	@SubscribeEvent
     public final void onPlayerTickEvent(TickEvent.PlayerTickEvent event) {
+		
+		
+		
+ 		
+ 		
         if(event.phase == Phase.END) {            
             int updatedFlags = CompatibleExtraEntityFlags.getFlags(event.player);
             if((updatedFlags & CompatibleExtraEntityFlags.PRONING) != 0) {

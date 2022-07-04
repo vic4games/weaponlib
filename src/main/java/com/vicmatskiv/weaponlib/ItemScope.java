@@ -30,6 +30,7 @@ public class ItemScope extends ItemAttachment<Weapon> {
         private float maxZoom;
         private boolean isOpticalZoom;
         private boolean hasNightVision;
+        private boolean usesWhitePhosphor;
         private BiConsumer<EntityLivingBase, ItemStack> viewfinderPositioning;
         private int width = DEFAULT_WIDTH;
         private int height = DEFAULT_HEIGHT;
@@ -82,6 +83,11 @@ public class ItemScope extends ItemAttachment<Weapon> {
         public Builder withNightVision() {
             this.hasNightVision = true;
             return this;
+        }
+        
+        public Builder withWhitePhosphor() {
+        	this.usesWhitePhosphor = true;
+        	return this;
         }
         
         // reticle
@@ -171,6 +177,10 @@ public class ItemScope extends ItemAttachment<Weapon> {
         return builder.isOpticalZoom;
     }
 
+    public boolean usesWhitePhosphor() {
+    	return builder.usesWhitePhosphor;
+    }
+    
     public boolean hasNightVision() {
         return builder.hasNightVision;
     }

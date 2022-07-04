@@ -24,6 +24,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleServerEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleServerTickEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleStartTrackingEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleStopTrackingEvent;
+import com.vicmatskiv.weaponlib.config.BalancePackManager;
 import com.vicmatskiv.weaponlib.electronics.ItemHandheld;
 import com.vicmatskiv.weaponlib.inventory.CustomPlayerInventory;
 import com.vicmatskiv.weaponlib.inventory.EntityInventorySyncMessage;
@@ -285,7 +286,8 @@ public class ServerEventHandler extends CompatibleServerEventHandler {
         		Vec3d eyes = e.getEntityLiving().getPositionEyes(1.0f);
             	if(hit.hitVec.distanceTo(eyes) < 0.6f) {
             		
-            		e.setAmount(e.getAmount()*2.5f);
+            		//System.out.println("Current headshot multiplier is " + BalancePackManager.getHeadshotMultiplier());
+            		e.setAmount((float) (e.getAmount()*BalancePackManager.getHeadshotMultiplier()));
             		
             		if(e.getDamageSource().getTrueSource() instanceof EntityPlayer) {
             			//System.out.println(e.getDamageSource().getTrueSource());

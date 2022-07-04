@@ -22,12 +22,17 @@ import com.vicmatskiv.weaponlib.melee.MeleeState;
 import com.vicmatskiv.weaponlib.melee.PlayerMeleeInstance;
 import com.vicmatskiv.weaponlib.render.ModificationGUI;
 
+import net.minecraft.block.BlockDoor;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 
 public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
@@ -107,6 +112,19 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
 	    		AnimationModeProcessor.getInstance().transformMode = 3;
 	    	}
 	    
+	    }
+	    
+	    
+	    if(KeyBindings.openDoor.isPressed() && itemStack != null && !itemStack.isEmpty() && itemStack.getItem() instanceof Weapon) {
+			RayTraceResult rtr = player.world.rayTraceBlocks(player.getPositionVector(), player.getPositionVector().addVector(0, player.getEyeHeight(), 0).add(player.getLookVec().scale(5)), false, true, false);
+	 		if(rtr != null) {
+	 			IBlockState state = player.world.getBlockState(rtr.getBlockPos());
+	 			if(state.getBlock() instanceof BlockDoor) {
+	 				BlockDoor door = (BlockDoor) state.getBlock();
+	 				door.onBlockActivated(player.world, rtr.getBlockPos(), state, player, EnumHand.MAIN_HAND, EnumFacing.NORTH, (float) rtr.hitVec.x, (float) rtr.hitVec.y, (float) rtr.hitVec.z);
+	 			}
+	 		
+	 		}
 	    }
 	    
 	    
