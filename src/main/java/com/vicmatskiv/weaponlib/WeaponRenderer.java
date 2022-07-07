@@ -3275,15 +3275,16 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		try {
 			if(!AnimationModeProcessor.getInstance().shouldIsolateCategory()) {
 			
-				double fMod = 0.05;
 				
-				float test1 = (float) Math.sin(fMod*Minecraft.getMinecraft().player.ticksExisted);
+				float fMod = 0.30f;
+				float test1 = (float) Math.sin(0.1f*Minecraft.getMinecraft().player.ticksExisted) * fMod;
 				
 				
 				//System.out.println("yo");
 			//	test1 = 1;
 				
 				
+			//	GlStateManager.translate(0, 0, test1);
 				//GlStateManager.translate(-0.05*test1, 0.01*test1, 0);
 				//GlStateManager.rotate(-10f*test1, 1, 1, 0);
 				//Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mw:textures/items/sexmoiv.png"));

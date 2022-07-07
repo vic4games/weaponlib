@@ -2,6 +2,9 @@ package com.vicmatskiv.weaponlib.compatibility;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.FloatBuffer;
 import java.time.temporal.WeekFields;
 import java.util.HashMap;
@@ -62,10 +65,13 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.model.ModelBox;
+import net.minecraft.client.model.ModelIllager;
 import net.minecraft.client.model.ModelPlayer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms.TransformType;
 import net.minecraft.client.renderer.entity.RenderLivingBase;
+import net.minecraft.client.renderer.entity.layers.LayerHeldItem;
+import net.minecraft.client.renderer.entity.layers.LayerRenderer;
 import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -84,6 +90,8 @@ import net.minecraft.world.gen.NoiseGeneratorSimplex;
 import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.event.EntityViewRenderEvent.CameraSetup;
 import net.minecraftforge.common.util.FakePlayer;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
+
 
 public class Interceptors {
 	
@@ -771,6 +779,45 @@ public class Interceptors {
             modelBase.render(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
         }
     }
+    
+    public static boolean layerRendererHookSetup = false;
+    public static Field layerRendererField;
+    public static Method translateItemField;
+    public static HashMap<RenderLivingBase<?>, LayerHeldItem> sidePositioningMap = new HashMap<>();
+    
+    public static void checkLayerRenderersHooks() {
+    	layerRendererHookSetup = true;
+    	
+    	layerRendererField = CompatibleReflection.findField(RenderLivingBase.class, "layerRenderers", "field_177097_h");
+    	translateItemField = CompatibleReflection.findMethod(LayerHeldItem.class, "translateToHand", "func_191361_a", EnumHandSide.class);
+		 }
+    
+    @SuppressWarnings("unchecked")
+	public static LayerHeldItem extractLayerHeldItem(RenderLivingBase<?> rlb) {
+    	List<LayerRenderer<?>> list = null;
+    	
+    	try {
+			list = (List<LayerRenderer<?>>) layerRendererField.get(rlb);
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+			return null;
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+			return null;
+		}
+    	
+    	for(LayerRenderer<?> lr : list) {
+    		if(lr instanceof LayerHeldItem) {
+    		
+    			return (LayerHeldItem) lr;
+    		}
+    	}
+    	
+    	// If nothing above works
+    	return null;
+    	
+    }
+   
 
     public static void positionItemSide(RenderLivingBase<?> livingEntityRenderer, EntityLivingBase entity,
             ItemStack itemStack, TransformType transformType, EnumHandSide handSide) {
@@ -783,7 +830,51 @@ public class Interceptors {
                 ((ModelBiped)livingEntityRenderer.getMainModel()).postRenderArm(0.0625F, handSide);
             }
         } else {
-            ((ModelBiped)livingEntityRenderer.getMainModel()).postRenderArm(0.0625F, handSide);
+        	
+        	/*
+        	 * This is a pretty complex fix, essentially this method replaces something that can be
+        	 * overriden in a few small cases, and the fix that was here before was to cast it to a (ModelBiped) and
+        	 * call the postRenderArm method. Unfortunately- the illager does not abide by that fix. To actually fix it,
+        	 * what we do is we find the layerRenderers method from RenderLivingBase, and use it to get the LayerHeldItem
+        	 * which we can then invoke. This fix is complex because this entire method is based around ASM.
+        	 */
+        	
+        	if(!layerRendererHookSetup) {
+        		checkLayerRenderersHooks();
+        	}
+        	
+        	
+        	if(!sidePositioningMap.containsKey(livingEntityRenderer)) {
+        		LayerHeldItem lhi = extractLayerHeldItem(livingEntityRenderer);
+        		if(lhi == null) {
+        			((ModelBiped) livingEntityRenderer.getMainModel()).postRenderArm(0.0625F, handSide);
+        		}
+        		
+        		sidePositioningMap.put(livingEntityRenderer, lhi);
+        		
+        		
+        		
+        	}
+        	
+        	
+        
+        	if(sidePositioningMap.containsKey(livingEntityRenderer)) {
+        		try {
+					translateItemField.invoke(sidePositioningMap.get(livingEntityRenderer), handSide);
+				} catch (IllegalAccessException e) {
+					((ModelBiped) livingEntityRenderer.getMainModel()).postRenderArm(0.0625F, handSide);
+			          
+					e.printStackTrace();
+				} catch (IllegalArgumentException e) {
+					((ModelBiped) livingEntityRenderer.getMainModel()).postRenderArm(0.0625F, handSide);
+			          
+					e.printStackTrace();
+				} catch (InvocationTargetException e) {
+					((ModelBiped) livingEntityRenderer.getMainModel()).postRenderArm(0.0625F, handSide);
+			          
+					e.printStackTrace();
+				}
+        	}
         }
     }
     

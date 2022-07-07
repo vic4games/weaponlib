@@ -87,7 +87,7 @@ public class Explosion {
        net.minecraft.world.Explosion explo = new net.minecraft.world.Explosion(world, entity, posX, posY, posZ, explosionStrength, false, isDestroyingBlocks);
        explo.doExplosionA();
        */
-        world.createExplosion(entity, posX, posY, posZ, explosionStrength, isSmoking);
+        world.createExplosion(entity, posX, posY + 0.5, posZ, explosionStrength, isSmoking);
         
         
         if(true) return;

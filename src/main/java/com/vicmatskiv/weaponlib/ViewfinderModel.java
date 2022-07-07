@@ -114,6 +114,7 @@ public class ViewfinderModel extends ModelBase {
 		
 		
 	
+		OpticalScopePerspective.scope = ShaderManager.loadVMWShader("vignette");
 		
 		Shader scopeShader = OpticalScopePerspective.scope;
 	
