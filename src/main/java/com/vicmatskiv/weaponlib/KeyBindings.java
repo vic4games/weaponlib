@@ -72,7 +72,7 @@ public class KeyBindings {
     
     public static void init() {
 
-    	 openDoor = new KeyBinding("key.opendoor", Keyboard.KEY_K,
+    	 openDoor = new KeyBinding("key.opendoor", Keyboard.KEY_C,
                  "key.categories.weaponlib");
     	
     	
