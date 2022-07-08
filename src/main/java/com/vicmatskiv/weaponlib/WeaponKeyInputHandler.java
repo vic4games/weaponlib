@@ -20,6 +20,7 @@ import com.vicmatskiv.weaponlib.inventory.GuiHandler;
 import com.vicmatskiv.weaponlib.inventory.OpenCustomPlayerInventoryGuiMessage;
 import com.vicmatskiv.weaponlib.melee.MeleeState;
 import com.vicmatskiv.weaponlib.melee.PlayerMeleeInstance;
+import com.vicmatskiv.weaponlib.network.packets.OpenDoorPacket;
 import com.vicmatskiv.weaponlib.render.ModificationGUI;
 
 import net.minecraft.block.BlockDoor;
@@ -120,8 +121,11 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
 	 		if(rtr != null) {
 	 			IBlockState state = player.world.getBlockState(rtr.getBlockPos());
 	 			if(state.getBlock() instanceof BlockDoor) {
+	 				modContext.getChannel().getChannel().sendToServer(new OpenDoorPacket(rtr.getBlockPos()));
+	 				/*
 	 				BlockDoor door = (BlockDoor) state.getBlock();
 	 				door.onBlockActivated(player.world, rtr.getBlockPos(), state, player, EnumHand.MAIN_HAND, EnumFacing.NORTH, (float) rtr.hitVec.x, (float) rtr.hitVec.y, (float) rtr.hitVec.z);
+	 				*/
 	 			}
 	 		
 	 		}
