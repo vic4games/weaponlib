@@ -56,6 +56,8 @@ public class BalancePackManager {
 		NONE,
 		SIDEARM,
 		SHOTGUN,
+		REVOLVER,
+		DMR,
 		RIFLES,
 		LONG_RANGE_RIFLES,
 		HEAVY;
