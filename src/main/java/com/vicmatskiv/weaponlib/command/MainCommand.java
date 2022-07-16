@@ -12,12 +12,16 @@ import com.vicmatskiv.weaponlib.AttachmentCategory;
 import com.vicmatskiv.weaponlib.AttachmentContainer;
 import com.vicmatskiv.weaponlib.CompatibleAttachment;
 import com.vicmatskiv.weaponlib.ModContext;
+import com.vicmatskiv.weaponlib.Weapon;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleCommand;
+import com.vicmatskiv.weaponlib.crafting.items.CraftingItem;
 
 import net.minecraft.block.Block;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.text.TextFormatting;
 
 public class MainCommand extends CompatibleCommand {
 
@@ -139,17 +143,39 @@ public class MainCommand extends CompatibleCommand {
     }
 
     private void showRecipe(Item item) {
-        if(item != null) {
-            compatibility.addChatMessage(compatibility.clientPlayer(), "");
-            compatibility.addChatMessage(compatibility.clientPlayer(),
-                    "Recipe for " + item.getItemStackDisplayName(null));
+        if(item != null && (item instanceof Weapon)) {
+           // compatibility.addChatMessage(compatibility.clientPlayer(), "");
+            compatibility.addChatMessage(compatibility.clientPlayer(), TextFormatting.GOLD +
+                    "-- Recipe for " + TextFormatting.GRAY +  item.getItemStackDisplayName(null) + TextFormatting.GOLD + "--");
+           
+            ItemStack[] modernRecipe = ((Weapon) item).getModernRecipe();
+            if(modernRecipe == null) {
+            	return;
+            }
+            for(ItemStack stack : modernRecipe) {
+            	
+            	
+            	String toPrint = "> " + stack.getCount() + "x " + TextFormatting.WHITE + I18n.format(stack.getUnlocalizedName() + ".name");
+            	
+            	// Appends the disassembly to the end of the string
+            	if(stack.getItem() instanceof CraftingItem) {
+            		CraftingItem craftingItem = (CraftingItem) stack.getItem();
+            		System.out.println(craftingItem.getRecoveryScrap());
+            		toPrint += " -> " + (stack.getCount()*craftingItem.getRecoveryPercentage()) + "x " + I18n.format(craftingItem.getRecoveryScrap().getUnlocalizedName() + ".name");
+            	}
+            	
+            	compatibility.addChatMessage(compatibility.clientPlayer(), TextFormatting.GOLD + toPrint);
+                 
+            }
+             
+            /*
             List<Object> recipe = modContext.getRecipeManager().getRecipe(item);
             if(recipe != null) {
                 formatRecipe(recipe);
             } else {
                 compatibility.addChatMessage(compatibility.clientPlayer(),
                         "Recipe for " + item.getItemStackDisplayName(null) + " not found");
-            }
+            }*/
         }
     }
 

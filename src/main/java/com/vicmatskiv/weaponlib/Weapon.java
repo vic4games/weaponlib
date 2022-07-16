@@ -146,6 +146,8 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         public long reloadingTimeout = Weapon.DEFAULT_RELOADING_TIMEOUT_TICKS;
         long loadIterationTimeout = Weapon.DEFAULT_LOAD_ITERATION_TIMEOUT_TICKS;
 
+        
+        
         private String modId;
 
         boolean crosshairFullScreen = false;
@@ -222,6 +224,7 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         private float silencedShootSoundVolume = Weapon.DEFAULT_SILENCED_SHOOT_SOUND_VOLUME;
         private float shootSoundVolume = Weapon.DEFAULT_SHOOT_SOUND_VOLUME;
         private Object[] craftingRecipe;
+        private ItemStack[] modernCraftingRecipe;
         public boolean isOneClickBurstAllowed;
         String flashTexture;
         
@@ -791,6 +794,8 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
             return this;
         }
 
+        
+        @Deprecated
         public Builder withCrafting(CraftingComplexity craftingComplexity, Object...craftingMaterials) {
             if(craftingComplexity == null) {
                 throw new IllegalArgumentException("Crafting complexity not set");
@@ -801,6 +806,11 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
             this.craftingComplexity = craftingComplexity;
             this.craftingMaterials = craftingMaterials;
             return this;
+        }
+        
+        public Builder withModernRecipe(ItemStack...itemStacks) {
+        	this.modernCraftingRecipe = itemStacks;
+        	return this;
         }
 
         public Builder withCraftingRecipe(Object...craftingRecipe) {
@@ -1077,8 +1087,7 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
             }
             
             
-           
-            
+         weapon.modernRecipe = modernCraftingRecipe;
             
             this.informationProvider = (stack) -> {
             	
@@ -1154,6 +1163,8 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
 
     private Vec3d muzzlePosition;
     
+    private ItemStack[] modernRecipe;
+    
     private CompatibleSound shootSound;
     private CompatibleSound endOfShootSound;
     private CompatibleSound silencedShootSound;
@@ -1179,6 +1190,11 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         return builder.name;
     }
 
+    public ItemStack[] getModernRecipe() {
+    	return this.modernRecipe;
+    }
+    
+    
     public CompatibleSound getShootSound() {
         return shootSound;
     }
