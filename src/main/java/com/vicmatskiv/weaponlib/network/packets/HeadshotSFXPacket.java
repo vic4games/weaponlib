@@ -23,6 +23,8 @@ import net.minecraft.init.SoundEvents;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.Vec3d;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class HeadshotSFXPacket implements CompatibleMessage {
 
@@ -44,6 +46,12 @@ public class HeadshotSFXPacket implements CompatibleMessage {
 	public static class GunFXPacketHandler implements CompatibleMessageHandler<HeadshotSFXPacket, CompatibleMessage> {
 		
 		
+		
+		@SideOnly(Side.CLIENT)
+		public void act() {
+			compatibility.playSound(Minecraft.getMinecraft().player, UniversalSoundLookup.lookupSound("headshotsfx"), 10.0f, 1.0f);
+        	
+		}
 
 		@Override
 		public <T extends CompatibleMessage> T onCompatibleMessage(HeadshotSFXPacket m, CompatibleMessageContext ctx) {
@@ -53,8 +61,7 @@ public class HeadshotSFXPacket implements CompatibleMessage {
 		            	
 		            	//System.out.println("hi");
 		            	//PositionedSoundRecord shot = PositionedSoundRecord.getMasterRecord(UniversalSoundLookup.lookupSound("headshotsfx").getSound(), 1.0f);
-		            	
-		            	compatibility.playSound(Minecraft.getMinecraft().player, UniversalSoundLookup.lookupSound("headshotsfx"), 10.0f, 1.0f);
+		            	act();
 		            	//Minecraft.getMinecraft().getSoundHandler().playSound(shot);
 		            	
 		            	//Minecraft.getMinecraft().world.playSound(Minecraft.getMinecraft().player, Minecraft.getMinecraft().player.getPosition(), SoundEvents.BLOCK_ANVIL_BREAK, SoundCategory.MASTER, 1.0f, 1.0f);
