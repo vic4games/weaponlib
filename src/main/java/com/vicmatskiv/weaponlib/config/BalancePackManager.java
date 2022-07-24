@@ -7,6 +7,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map.Entry;
 
 import javax.annotation.Nullable;
@@ -51,6 +53,15 @@ public class BalancePackManager {
 	
 	private static final String GUN_CONFIG_LIST = "gunConfigurations";
 	private static final String CATEGORY_CONFIG_LIST = "categoryConfigurations";
+	
+	
+	private static final String FIRE_RATE_MODIFIER = "firerate";
+	
+	//firemodeAuto
+	
+	private static final String FIRE_MODE_AUTO = "firemodeAuto";
+	private static final String FIRE_MODE_BURST = "firemodeBurst";
+	private static final String FIRE_MODE_SINGLE = "firemodeSingle";
 	
 	public static enum GunConfigurationGroup {
 		NONE,
@@ -108,6 +119,7 @@ public class BalancePackManager {
 			category.addProperty("group", getGroup().toString());
 			category.addProperty(DAMAGE_MULTIPLIER_KEY, getDamageMultiplier());
 			category.addProperty(RECOIL_MULTIPLIER_KEY, getRecoilMultiplier());
+			
 			return category;
 		}
 
@@ -135,6 +147,20 @@ public class BalancePackManager {
 		// Recoil as -1 means the recoil is not modified
 		private double recoil = -1;
 		
+		private float fireRate = -1;
+		
+		
+		private boolean fireModePropertiesChanged = false;
+		
+		private boolean fireModeBurstChanged = false;
+		private int burstShots = 0;
+		
+		private boolean fireModeSingleChanged = false;
+		private boolean singleFireEnabled = false;
+		
+		private boolean fireModeAutoChanged = false;
+		private boolean autoFireEnabled = false;
+		
 		
 		public GunBalanceConfiguration(String weaponName, boolean enabled, double damage, double recoil) {
 			this.weaponName = weaponName;
@@ -148,7 +174,53 @@ public class BalancePackManager {
 			return weaponName;
 		}
 
+		public void setBurstShots(int shots) {
+			if(shots != 0) fireModeBurstChanged = true;
+			fireModePropertiesChanged = true;
+			burstShots = shots;
+		}
+		
+		public void setFiremodeAuto(boolean fma) {
+			fireModeAutoChanged = true;
+			fireModePropertiesChanged = true;
+			this.autoFireEnabled = fma;
+		}
+		
+		public void setFiremodeSingle(boolean fms) {
+			fireModeSingleChanged = true;
+			fireModePropertiesChanged = true;
+			this.singleFireEnabled = fms;
+		}
+		
+		public boolean altersFiremodeAuto() {
+			return this.fireModeAutoChanged;
+		}
+		
+		public boolean altersFiremodeSingle() {
+			return this.fireModeSingleChanged;
+		}
+		
+		public boolean altersFiremodeBurst() {
+			return this.fireModeBurstChanged;
+		}
+		
+		public int getBurstShots() {
+			return burstShots;
+		}
 
+		public boolean getFiremodeAuto() {
+			return this.autoFireEnabled;
+		}
+		
+		public boolean getFiremodeSingle() {
+			return this.singleFireEnabled;
+		}
+		
+		public boolean wereFiremodePropertiesAltered() {
+			return this.fireModePropertiesChanged;
+		}
+		
+		
 		public void setWeaponName(String weaponName) {
 			this.weaponName = weaponName;
 		}
@@ -182,6 +254,14 @@ public class BalancePackManager {
 		public void setRecoil(double recoil) {
 			this.recoil = recoil;
 		}
+		
+		public void setFirerate(float firerate) {
+			this.fireRate = firerate;
+		}
+		
+		public double getFirerate() {
+			return this.fireRate;
+		}
 
 
 		public JsonObject toJSONObject() {
@@ -190,16 +270,53 @@ public class BalancePackManager {
 			weapon.addProperty("enabled", isEnabled());
 			weapon.addProperty("damage", getDamage());
 			weapon.addProperty("recoil", getRecoil());
+		
+			
+			if(getFirerate() != -1)
+				weapon.addProperty(FIRE_RATE_MODIFIER, getFirerate());
+			
+			if(wereFiremodePropertiesAltered()) {
+				weapon.addProperty(FIRE_MODE_AUTO, getFiremodeAuto());
+				weapon.addProperty(FIRE_MODE_BURST, getBurstShots());
+				weapon.addProperty(FIRE_MODE_SINGLE, getFiremodeSingle());
+			}
+				
+				
+			
+			
+			
 			return weapon;
 		}
 
 
 		public static GunBalanceConfiguration fromJSONObject(JsonObject obj) {
+			
+			
 			String name = obj.get("name").getAsString();
 			boolean enabled = obj.has("enabled") ? obj.get("enabled").getAsBoolean() : true;
 			double damage = obj.has("damage") ? obj.get("damage").getAsDouble() : -1;
 			double recoil = obj.has("recoil") ? obj.get("recoil").getAsDouble() : -1;
-			return new GunBalanceConfiguration(name, enabled, damage, recoil);
+
+			
+		
+
+			GunBalanceConfiguration gbc = new GunBalanceConfiguration(name, enabled, damage, recoil);
+			
+			if(obj.has(FIRE_RATE_MODIFIER)) 
+				gbc.setFirerate(obj.get(FIRE_RATE_MODIFIER).getAsFloat());
+			
+			if(obj.has(FIRE_MODE_AUTO))
+				gbc.setFiremodeAuto(obj.get(FIRE_MODE_AUTO).getAsBoolean());
+			
+			if(obj.has(FIRE_MODE_BURST))
+				gbc.setBurstShots(obj.get(FIRE_MODE_BURST).getAsInt());
+			
+			if(obj.has(FIRE_MODE_SINGLE)) 
+				gbc.setFiremodeSingle(obj.get(FIRE_MODE_SINGLE).getAsBoolean());
+				
+			
+			
+			return gbc;
 		}
 	}
 	
@@ -706,6 +823,17 @@ public class BalancePackManager {
 		return getActiveBalancePack().containsWeapon(weapon.getName());
 	}
 	
+	public static float getFirerate(Weapon weapon) {
+		
+		if(!hasActiveBalancePack() || !balancePackAddressesWeapon(weapon) || getActiveBalancePack().getWeaponBalancing(weapon.getName()).getFirerate() == -1) {
+			return weapon.builder.getFirerate();
+		}
+		
+	
+		
+		return (float) getActiveBalancePack().getWeaponBalancing(weapon.getName()).getFirerate();
+	}
+	
 	public static boolean balancePackAddressesGroup(GunConfigurationGroup group) {
 		if(!hasActiveBalancePack()) return false;
 		return getActiveBalancePack().containsCategory(group);
@@ -725,6 +853,77 @@ public class BalancePackManager {
 		if(!hasActiveBalancePack() || !balancePackAddressesWeapon(weapon) || getActiveBalancePack().getWeaponBalancing(weapon.getName()).getDamage() == -1) return false;
 		return true;
 	}
+	
+	public static boolean firemodePropertiesAltered(Weapon weapon) {
+		if(!hasActiveBalancePack() || !balancePackAddressesWeapon(weapon)) {
+			return false;
+		} else return getActiveBalancePack().getWeaponBalancing(weapon.getName()).wereFiremodePropertiesAltered();
+		
+		
+	}
+	
+	
+	public static List<Integer> getFiremodeListForWeapon(Weapon weapon) {
+		if(!hasActiveBalancePack() || !balancePackAddressesWeapon(weapon) || !getActiveBalancePack().getWeaponBalancing(weapon.getName()).wereFiremodePropertiesAltered()) {
+			return weapon.builder.getMaxShots();
+		}
+		
+		GunBalanceConfiguration gbc = getActiveBalancePack().getWeaponBalancing(weapon.getName());
+		List<Integer> integer = new ArrayList<>();
+		
+		if(gbc.altersFiremodeAuto() && !gbc.getFiremodeAuto()
+				&& gbc.altersFiremodeSingle() && !gbc.getFiremodeSingle()
+				&& gbc.altersFiremodeBurst() && gbc.getBurstShots() == 0) {
+			integer.add(1);
+			return integer;
+		}
+		
+		
+		if(!gbc.altersFiremodeSingle() && weapon.builder.getMaxShots().contains(1)) {
+			integer.add(1);
+		} else if(gbc.altersFiremodeSingle() && gbc.getFiremodeSingle()) {
+			integer.add(1);
+		}
+		
+		
+		int burstInt = 0;
+		boolean originalSupportsBurst = false;
+		for(Integer i : weapon.builder.getMaxShots()) {
+			if(i != 1 && i != Integer.MAX_VALUE) {
+				originalSupportsBurst = true;
+				burstInt = i;
+				break;
+			}
+		}
+		
+		if(!gbc.altersFiremodeBurst() && originalSupportsBurst) {
+			integer.add(burstInt);
+		} else if(gbc.altersFiremodeBurst()) {
+			integer.add(gbc.getBurstShots());
+		}
+		
+		
+		if(!gbc.altersFiremodeAuto() && weapon.builder.getMaxShots().contains(Integer.MAX_VALUE)) {
+			integer.add(Integer.MAX_VALUE);
+		} else if(gbc.altersFiremodeAuto() && gbc.getFiremodeAuto()) {
+	
+			integer.add(Integer.MAX_VALUE);
+		}
+		
+		
+		
+		
+			
+		
+		
+				
+		return integer;
+		
+		
+		
+		
+	}
+	
 	
 	
 	public static boolean shouldChangeWeaponRecoil(Weapon weapon) {

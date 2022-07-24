@@ -271,8 +271,16 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         	return this;
         }
         
+        public List<Integer> getMaxShots() {
+        	return this.maxShots;
+        }
+        
         public int[][] getGUIPositions() {
         	return this.guiPositions;
+        }
+        
+        public float getFirerate() {
+        	return this.fireRate;
         }
         
         public Builder hasFlashPedals() {
@@ -1097,9 +1105,10 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
             	
             	ArrayList<String> descriptionBuilder = new ArrayList<>();
             	
+            	
             	descriptionBuilder.add(plate + "Type: " + plain + this.gunType);
             	descriptionBuilder.add(plate + "Damage: " + plain + (BalancePackManager.getNetGunDamage(weapon)));
-            	
+            	descriptionBuilder.add(plate + "Firerate: " + plain + Math.round(BalancePackManager.getFirerate(weapon)*100) + "/100");
             	
                 
             	boolean cartridgeDriven = false;
@@ -1463,16 +1472,22 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
 
     void changeFireMode(PlayerWeaponInstance instance) {
         int result;
-        Iterator<Integer> it = builder.maxShots.iterator();
+        
+        
+        List<Integer> maxShotsList = BalancePackManager.getFiremodeListForWeapon(instance.getWeapon());
+        
+        Iterator<Integer> it = maxShotsList.iterator();
+      //  Iterator<Integer> it = builder.maxShots.iterator();
         while(it.hasNext()) {
             if(instance.getMaxShots() == it.next()) {
                 break;
             }
         }
+       
         if(it.hasNext()) {
             result = it.next();
         } else {
-            result = builder.maxShots.get(0);
+            result = maxShotsList.get(0);
         }
 
         instance.setMaxShots(result);

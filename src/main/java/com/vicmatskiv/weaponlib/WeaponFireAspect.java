@@ -58,7 +58,9 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
 //    }
 
     private static Predicate<PlayerWeaponInstance> readyToShootAccordingToFireRate = instance ->
-        System.currentTimeMillis() - instance.getLastFireTimestamp() >= 50f / instance.getWeapon().builder.fireRate;
+    System.currentTimeMillis() - instance.getLastFireTimestamp() >= 50f / BalancePackManager.getFirerate(instance.getWeapon());
+        
+    //System.currentTimeMillis() - instance.getLastFireTimestamp() >= 50f / instance.getWeapon().builder.fireRate;
         
     private static Predicate<PlayerWeaponInstance> postBurstTimeoutExpired = instance ->
         System.currentTimeMillis() - instance.getLastBurstEndTimestamp()

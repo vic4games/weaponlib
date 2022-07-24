@@ -672,7 +672,12 @@ public class Compatibility1_12_2 implements Compatibility {
         	CompatibleDiggingParticle cdp = new CompatibleDiggingParticle(Minecraft.getMinecraft().world, x, y, z, individualVector.x, individualVector.y, individualVector.z, hitBlock);
     		cdp.setBlockPos(new BlockPos(x, y, z));
     		Minecraft.getMinecraft().effectRenderer.addEffect(cdp);
-    
+    	
+    		
+    		 if(Math.random() < 0.5 && i <= 2) {
+    	        	Minecraft.getMinecraft().world.spawnParticle(EnumParticleTypes.SMOKE_NORMAL, x, y, z, 0, 0, 0, new int[0]);
+    	            
+    	        }
         	
     		/*
         	Minecraft.getMinecraft().effectRenderer.addBlockHitEffects(
@@ -680,6 +685,8 @@ public class Compatibility1_12_2 implements Compatibility {
                     */
                     
         }
+        
+       
     }
 
     @Override
