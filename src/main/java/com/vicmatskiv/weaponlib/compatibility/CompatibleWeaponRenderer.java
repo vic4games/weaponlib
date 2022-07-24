@@ -1,4 +1,4 @@
-package com.vicmatskiv.weaponlib.compatibility;
+ package com.vicmatskiv.weaponlib.compatibility;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -6,6 +6,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
@@ -1125,6 +1126,13 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 //        GlStateManager.translate(0.0F, 0.0F, -2000.0F);
 	}
 
+    // Allows us to determine how large the icon sheet is.
+    private static int gunIconSheetHeight;
+    private static int gunIconSheetWidth;
+    private static boolean hasCalculatedSheetDimensions = false;
+
+
+
 	private void renderCachedInventoryTexture(RenderContext<RenderableState> renderContext, Integer inventoryTexture) {
 
 
@@ -1150,9 +1158,35 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 			GlStateManager.translate(-8.0F, -8.0F, 0.0F);
 			
 			Minecraft.getMinecraft().getTextureManager().bindTexture(ResourceManager.GUN_ICON_SHEET);
+
+
+			// Checks to see if the gun icon sheet has already
+			// had it's size cached, if not it does that.
+            if(!hasCalculatedSheetDimensions) {
+                hasCalculatedSheetDimensions = true;
+
+                
+                try {
+                	InputStream inputStream = Minecraft.getMinecraft().getResourceManager().getResource(ResourceManager.GUN_ICON_SHEET).getInputStream();
+                    BufferedImage bf = ImageIO.read(inputStream);
+
+                    gunIconSheetWidth = bf.getWidth();
+                    gunIconSheetHeight = bf.getHeight();
+                    
+                
+                    
+                } catch(IOException e) {
+                	e.printStackTrace();
+                	gunIconSheetHeight = 1664;
+                	gunIconSheetWidth = 1664;
+                }
+                
+            }
+            
+           
 			
 			int id = WeaponSpritesheetBuilder.getSpriteID(pwi.getWeapon().getName());
-			Sprite sprite = SpriteSheetTools.getSquareSprite(id, 128, 1664, 1664);
+			Sprite sprite = SpriteSheetTools.getSquareSprite(id, 128, gunIconSheetWidth, gunIconSheetHeight);
 
 			
 			CompatibleTessellator tessellator = CompatibleTessellator.getInstance();

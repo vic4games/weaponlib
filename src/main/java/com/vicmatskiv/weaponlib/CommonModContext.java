@@ -30,6 +30,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 import com.vicmatskiv.weaponlib.config.ConfigurationManager;
 import com.vicmatskiv.weaponlib.config.novel.ModernConfigManager;
 import com.vicmatskiv.weaponlib.crafting.RecipeManager;
+import com.vicmatskiv.weaponlib.crafting.workbench.WorkbenchBlock;
 import com.vicmatskiv.weaponlib.electronics.EntityWirelessCamera;
 import com.vicmatskiv.weaponlib.electronics.HandheldState;
 import com.vicmatskiv.weaponlib.electronics.PlayerHandheldInstance;
@@ -100,10 +101,12 @@ import com.vicmatskiv.weaponlib.vehicle.network.VehicleControlPacketHandler;
 import com.vicmatskiv.weaponlib.vehicle.network.VehicleInteractPHandler;
 import com.vicmatskiv.weaponlib.vehicle.network.VehicleInteractPacket;
 
+import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 
@@ -441,6 +444,10 @@ public class CommonModContext implements ModContext {
         File missionsDir = new File(new File(event.getEvent().getSuggestedConfigurationFile().getParent(), "mw"), "missions");
         File entityMissionFile = new File(new File(event.getEvent().getSuggestedConfigurationFile().getParent(), "mw"), "entity_mission_offerings.json");
 
+        
+     
+       // compatibility.registerBlock(this, new WorkbenchBlock("workbench", Material.ROCK), "workbench");
+        
        // this.missionManager = new MissionManager(modId, missionsDir, entityMissionFile);
 	}
 	

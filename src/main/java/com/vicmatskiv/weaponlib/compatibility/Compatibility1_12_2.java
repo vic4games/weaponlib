@@ -566,6 +566,8 @@ public class Compatibility1_12_2 implements Compatibility {
         ForgeRegistries.BLOCKS.register(block);
         ItemBlock itemBlock = new ItemBlock(block);
         // TODO: introduce registerItem()
+        
+      // System.out.println("Debug Out: " + block.getRegistryName() + " | Item Block: " + itemBlock + " | Provided name: " + name);
         context.registerRenderableItem(block.getRegistryName(), itemBlock, null);
         //GameRegistry.register(itemBlock.setRegistryName(block.getRegistryName()));
 //        itemBlock.setRegistryName(block.getRegistryName());

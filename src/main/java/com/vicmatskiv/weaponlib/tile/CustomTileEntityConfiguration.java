@@ -115,7 +115,9 @@ public class CustomTileEntityConfiguration<T extends CustomTileEntityConfigurati
         ResourceLocation textureResource = new ResourceLocation(modContext.getModId(), textureName);
         tileEntityBlock.setBlockTextureName(textureResource.toString());
         compatibility.registerTileEntity(tileEntityClass, "tile" + name);
-                    
+        
+        //System.out.println("RUNNING!");
+               
         compatibility.registerBlock(modContext, tileEntityBlock, name);
         
         if(compatibility.isClientSide()) {
