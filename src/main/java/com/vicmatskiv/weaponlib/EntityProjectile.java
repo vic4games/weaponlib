@@ -266,11 +266,12 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
          *  GLASS BREAK CHECK
          */
         
-        Vec3d motion = new Vec3d(this.motionX, this.motionY, this.motionZ).normalize().scale(10);
+        Vec3d motion = new Vec3d(this.motionX, this.motionY, this.motionZ);
         Vec3d start = new Vec3d(this.prevPosX, this.prevPosY, this.prevPosZ);
         Vec3d end = new Vec3d(this.posX, this.posY, this.posZ).add(motion);
-        
+
         RayTraceResult rtr = compatibility.world(this).rayTraceBlocks(start, end, false, true, false);
+
         
         if(rtr != null) {
         	IBlockState state = compatibility.world(this).getBlockState(rtr.getBlockPos());
