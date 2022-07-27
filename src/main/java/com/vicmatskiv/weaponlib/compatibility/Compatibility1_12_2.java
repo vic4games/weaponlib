@@ -112,6 +112,7 @@ import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.oredict.ShapedOreRecipe;
+import scala.actors.threadpool.Arrays;
 
 @SuppressWarnings("deprecation")
 public class Compatibility1_12_2 implements Compatibility {
@@ -1450,8 +1451,12 @@ private Optional<Field> shadersEnabledFieldOptional;
         for(int i = 0; i < itemStacks.length; i++) {
             stackList.add(itemStacks[i]);
         }
+
+    
         float amt = ArmorProperties.applyArmor(entityLiving, stackList, damageSource, amount);
         event.setAmount(amt);
+        
+       
         //event.setAmount(amount);
         //ArmorProperties.applyArmor(entityLiving, stackList, damageSource, amount);
     }
