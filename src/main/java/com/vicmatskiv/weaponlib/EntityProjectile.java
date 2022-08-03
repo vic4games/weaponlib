@@ -266,29 +266,34 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
          *  GLASS BREAK CHECK
          */
         
-        Vec3d motion = new Vec3d(this.motionX, this.motionY, this.motionZ);
-        Vec3d start = new Vec3d(this.prevPosX, this.prevPosY, this.prevPosZ);
-        Vec3d end = new Vec3d(this.posX, this.posY, this.posZ).add(motion);
+       
+        if(!world.isRemote) {
+        	 Vec3d motion = new Vec3d(this.motionX, this.motionY, this.motionZ);
+             Vec3d start = new Vec3d(this.prevPosX, this.prevPosY, this.prevPosZ);
+             Vec3d end = new Vec3d(this.posX, this.posY, this.posZ).add(motion);
 
-        RayTraceResult rtr = compatibility.world(this).rayTraceBlocks(start, end, false, true, false);
+             RayTraceResult rtr = compatibility.world(this).rayTraceBlocks(start, end, false, true, false);
 
-        
-        if(rtr != null) {
-        	IBlockState state = compatibility.world(this).getBlockState(rtr.getBlockPos());
-        	if(state.getMaterial() == Material.GLASS) {
-        		this.world.destroyBlock(rtr.getBlockPos(), true);
-        		
-  
-        		if(CommonModContext.getContext() != null) {
-        			CommonModContext.getContext().getChannel().sendToAllAround(new BlockHitMessage(rtr.getBlockPos(), rtr.hitVec.x, rtr.hitVec.y, rtr.hitVec.z, CompatibleEnumFacing.valueOf(rtr.sideHit)), new CompatibleTargetPoint(this.dimension, this.posX, this.posY, this.posZ, 20.0));
-            		
-        		}
-        		/*
-        		modContext.getChannel().sendToAllAround(
-                        new BlockHitMessage(position.getBlockPos().getBlockPos(), position.getHitVec().getXCoord(), position.getHitVec().getYCoord(), position.getHitVec().getZCoord(), position.getSideHit()), point);
-                */
-        	}
+            
+             if(rtr != null) {
+             	IBlockState state = compatibility.world(this).getBlockState(rtr.getBlockPos());
+             	if(state.getMaterial() == Material.GLASS) {
+             		this.world.destroyBlock(rtr.getBlockPos(), true);
+             	
+             		
+       
+             		if(CommonModContext.getContext() != null) {
+             			CommonModContext.getContext().getChannel().sendToAllAround(new BlockHitMessage(rtr.getBlockPos(), rtr.hitVec.x, rtr.hitVec.y, rtr.hitVec.z, CompatibleEnumFacing.valueOf(rtr.sideHit)), new CompatibleTargetPoint(this.dimension, this.posX, this.posY, this.posZ, 20.0));
+                 		
+             		}
+             		/*
+             		modContext.getChannel().sendToAllAround(
+                             new BlockHitMessage(position.getBlockPos().getBlockPos(), position.getHitVec().getXCoord(), position.getHitVec().getYCoord(), position.getHitVec().getZCoord(), position.getSideHit()), point);
+                     */
+             	}
+             }
         }
+       
         
        
       

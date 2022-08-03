@@ -20,9 +20,12 @@ public class ContainerWorkbench extends CompatibleContainer {
 		this.inventory = inventory;
 		this.tileEntityWorkbench = workbenchTileEntity;
 
+		// Output slots
 		for (int i = 0; i < 9; ++i) {
-			addSlotToContainer(new Slot(inventory, i, 8 + i * 18, 142));
+			addSlotToContainer(new Slot(inventory, i, 40 + i * 22, 219));
 		}
+		
+		
 		
 	
 	}

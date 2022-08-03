@@ -38,6 +38,7 @@ import com.vicmatskiv.weaponlib.config.BalancePackManager;
 import com.vicmatskiv.weaponlib.config.Gun;
 import com.vicmatskiv.weaponlib.config.BalancePackManager.GunConfigurationGroup;
 import com.vicmatskiv.weaponlib.crafting.CraftingComplexity;
+import com.vicmatskiv.weaponlib.crafting.CraftingRegistry;
 import com.vicmatskiv.weaponlib.crafting.OptionsMetadata;
 import com.vicmatskiv.weaponlib.jim.util.VMWHooksHandler;
 import com.vicmatskiv.weaponlib.model.Shell;
@@ -263,6 +264,10 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         public Builder withWeaponType(String type) {
         	this.gunType = type;
         	return this;
+        }
+        
+        public String getWeaponType() {
+        	return this.gunType;
         }
         
         
@@ -1141,6 +1146,8 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
                  return descriptionBuilder;
             };
 
+            
+            CraftingRegistry.register(weapon);
 
             return weapon;
         }

@@ -201,6 +201,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 	@Override
 	public List<BakedQuad> getQuads(IBlockState state, EnumFacing side, long rand) {
 		
+//if(true) return Collections.emptyList();
 	
 		if (transformType == TransformType.GROUND
 				|| transformType == TransformType.GUI
@@ -329,8 +330,14 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 		GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, atlasMatrix);
 	}
 	
+	public void setTransformType(TransformType type) {
+		this.transformType = type;
+	}
+	
 	@SideOnly(Side.CLIENT)
 	public void renderItem() {
+		
+		//if(true) return;
 		
 	
 		// System.out.println(BBLoader.loadAnimationData("HKgrip.animation.json",
@@ -839,6 +846,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 			
 			
 			
+			
 			// gunLightingShader = ShaderManager.loadShader(new ResourceLocation("mw" + ":"
 			// + "shaders/gunlight"));
 
@@ -1142,6 +1150,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 	
 
 		if(!DebugCommand.isForceLiveRenderGUI()) {
+			
 			PlayerWeaponInstance pwi = renderContext.getWeaponInstance();
 			
 			if(!WeaponSpritesheetBuilder.hasSpriteID(pwi.getWeapon().getName())) return;
