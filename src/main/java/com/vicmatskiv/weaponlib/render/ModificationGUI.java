@@ -264,7 +264,7 @@ public class ModificationGUI {
 	 * @author homer
 	 *
 	 */
-	private static class TooltipBuilder {
+	public static class TooltipBuilder {
 		private StringBuilder sb = new StringBuilder();
 		private int color;
 		

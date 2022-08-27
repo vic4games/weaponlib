@@ -1,6 +1,8 @@
 package com.vicmatskiv.weaponlib.compatibility;
 
 
+import com.vicmatskiv.weaponlib.BlockHitMessage;
+import com.vicmatskiv.weaponlib.CommonModContext;
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.command.BalancePackCommand;
 import com.vicmatskiv.weaponlib.config.BalancePackManager;
@@ -12,8 +14,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.EntityEvent.EntityConstructing;
@@ -50,7 +54,22 @@ public abstract class CompatibleServerEventHandler {
     public final void onPlayerTickEvent(TickEvent.PlayerTickEvent event) {
 		
 		
-		
+		if(event.phase == Phase.END) {
+			
+			//System.out.println(getModContext());
+			double pX = -83.3;
+			double pY = 91.9;
+			double pZ = -243.533;
+			
+			BlockPos bp = new BlockPos(pX, pY, pZ);
+			
+	
+				
+				//getModContext().getChannel().sendToAllAround(new BlockHitMessage(new BlockPos(pX, pY, pZ), pX, pY, pZ, CompatibleEnumFacing.valueOf(EnumFacing.UP)), new CompatibleTargetPoint(0, pX, pY, pZ, 20.0));
+	     		
+			
+			
+		}
  		
  		
         if(event.phase == Phase.END) {            

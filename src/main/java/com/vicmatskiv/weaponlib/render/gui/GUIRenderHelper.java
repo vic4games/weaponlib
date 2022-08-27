@@ -1,5 +1,8 @@
 package com.vicmatskiv.weaponlib.render.gui;
 
+import java.time.temporal.ChronoUnit;
+import java.util.concurrent.TimeUnit;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
@@ -8,6 +11,7 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import scala.concurrent.duration.Duration;
 
 public class GUIRenderHelper {
 	
@@ -20,6 +24,23 @@ public class GUIRenderHelper {
 	private static final Minecraft mc = Minecraft.getMinecraft();
 	private static double FONT_SIZE_HALVED = mc.fontRenderer.FONT_HEIGHT/2.0;
 
+	
+	public static String formatTimeString(long time, TimeUnit unit) {
+		Duration duration = Duration.create(time, unit);
+		
+		if(duration.toDays() != 0) {
+			return (duration.toDays()) + "d " + (duration.toHours() - duration.toDays()*24) + "h ";
+		} else if(duration.toHours() != 0) {
+			return (duration.toHours()) + "h " + (duration.toMinutes() - duration.toHours()*60) + "m " + (duration.toSeconds() - duration.toMinutes()*60) + "s";
+		} else if(duration.toMinutes() != 0) {
+			return (duration.toMinutes()) + "m " + (duration.toSeconds() - duration.toMinutes()*60) + "s";
+		} else if(duration.toSeconds() != 0) {
+			return duration.toSeconds() + "s";
+		}
+		return "";
+	}
+	
+	
 	public static void drawAlignedString(String text, StringAlignment alignment, boolean verticallyCentered, double x, double y, double scale, int color) {
 		switch(alignment) {
 			case CENTERED: {

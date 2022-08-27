@@ -38,7 +38,9 @@ import com.vicmatskiv.weaponlib.config.BalancePackManager;
 import com.vicmatskiv.weaponlib.config.Gun;
 import com.vicmatskiv.weaponlib.config.BalancePackManager.GunConfigurationGroup;
 import com.vicmatskiv.weaponlib.crafting.CraftingComplexity;
+import com.vicmatskiv.weaponlib.crafting.CraftingGroup;
 import com.vicmatskiv.weaponlib.crafting.CraftingRegistry;
+import com.vicmatskiv.weaponlib.crafting.IModernCrafting;
 import com.vicmatskiv.weaponlib.crafting.OptionsMetadata;
 import com.vicmatskiv.weaponlib.jim.util.VMWHooksHandler;
 import com.vicmatskiv.weaponlib.model.Shell;
@@ -67,7 +69,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import scala.tools.nsc.typechecker.MethodSynthesis.MethodSynth.LazyValGetter.ChangeOwnerAndModuleClassTraverser;
 
 public class Weapon extends CompatibleItem implements PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, 
-AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
+AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable, IModernCrafting {
 
     private static final Logger logger = LogManager.getLogger(Weapon.class);
 
@@ -821,6 +823,13 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
             return this;
         }
         
+        
+        
+        public Builder withTest() {
+        	return this;
+        }
+        
+        
         public Builder withModernRecipe(ItemStack...itemStacks) {
         	this.modernCraftingRecipe = itemStacks;
         	return this;
@@ -1147,7 +1156,9 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
             };
 
             
-            CraftingRegistry.register(weapon);
+            // Do not register weapons to the registry if they do not
+            // have a crafting recipe.
+            if(modernCraftingRecipe != null) CraftingRegistry.register(weapon);
 
             return weapon;
         }
@@ -1205,9 +1216,30 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
     public String getName() {
         return builder.name;
     }
+    
+    
+    @Override
+    public CraftingGroup getCraftingGroup() {
+    	return CraftingGroup.GUN;
+    }
+    
+    @Override
+    public Item getItem() {
+    	return this;
+    }
 
+    @Override
     public ItemStack[] getModernRecipe() {
-    	return this.modernRecipe;
+    	
+    	if(this.modernRecipe == null) return null;
+    	
+    	ItemStack[] copyArray = new ItemStack[this.modernRecipe.length];
+    	for(int i = 0; i < this.modernRecipe.length; ++i) {
+    		copyArray[i] = this.modernRecipe[i].copy();
+    	}
+     	 
+    	
+    	return copyArray;
     }
     
     

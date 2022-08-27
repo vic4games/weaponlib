@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 
+
 import com.vicmatskiv.weaponlib.MagazineReloadAspect.LoadPermit;
 import com.vicmatskiv.weaponlib.WeaponAttachmentAspect.ChangeAttachmentPermit;
 import com.vicmatskiv.weaponlib.WeaponAttachmentAspect.EnterAttachmentModePermit;
@@ -30,6 +31,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 import com.vicmatskiv.weaponlib.config.ConfigurationManager;
 import com.vicmatskiv.weaponlib.config.novel.ModernConfigManager;
 import com.vicmatskiv.weaponlib.crafting.RecipeManager;
+import com.vicmatskiv.weaponlib.crafting.workbench.TileEntityWorkbench;
 import com.vicmatskiv.weaponlib.crafting.workbench.WorkbenchBlock;
 import com.vicmatskiv.weaponlib.electronics.EntityWirelessCamera;
 import com.vicmatskiv.weaponlib.electronics.HandheldState;
@@ -87,6 +89,8 @@ import com.vicmatskiv.weaponlib.network.packets.BulletShellClient;
 import com.vicmatskiv.weaponlib.network.packets.GunFXPacket;
 import com.vicmatskiv.weaponlib.network.packets.HeadshotSFXPacket;
 import com.vicmatskiv.weaponlib.network.packets.OpenDoorPacket;
+import com.vicmatskiv.weaponlib.network.packets.WorkbenchPacket;
+import com.vicmatskiv.weaponlib.network.packets.WorkshopClientPacket;
 import com.vicmatskiv.weaponlib.particle.SpawnParticleMessage;
 import com.vicmatskiv.weaponlib.particle.SpawnParticleMessageHandler;
 import com.vicmatskiv.weaponlib.state.Permit;
@@ -392,6 +396,11 @@ public class CommonModContext implements ModContext {
         channel.registerMessage(new OpenDoorPacket.OpenDoorPacketHandler(this),
         		OpenDoorPacket.class, 42, CompatibleSide.SERVER);
 
+        channel.registerMessage(new WorkbenchPacket.WorkbenchPacketHandler(this),
+        		WorkbenchPacket.class, 43, CompatibleSide.SERVER);
+        
+        channel.registerMessage(new WorkshopClientPacket.WorkshopClientPacketHandler(this),
+        		WorkshopClientPacket.class, 44, CompatibleSide.CLIENT);
         
         
 		ServerEventHandler serverHandler = new ServerEventHandler(this, modId);
@@ -445,10 +454,21 @@ public class CommonModContext implements ModContext {
         File entityMissionFile = new File(new File(event.getEvent().getSuggestedConfigurationFile().getParent(), "mw"), "entity_mission_offerings.json");
 
         
+       
+        
      
        // compatibility.registerBlock(this, new WorkbenchBlock("workbench", Material.ROCK), "workbench");
         
        // this.missionManager = new MissionManager(modId, missionsDir, entityMissionFile);
+	}
+	
+	@Override
+	public void preInitEnd(Object mod, String modId, ConfigurationManager configurationManager,
+			CompatibleFmlPreInitializationEvent event, CompatibleChannel channel) {
+		 compatibility.registerTileEntity(TileEntityWorkbench.class, "mw:tileworkbench");
+	        compatibility.registerBlock(this, new WorkbenchBlock(this, "weapon_workbench", Material.WOOD), "weapon_workbench");
+	        
+		
 	}
 	
 	@Override

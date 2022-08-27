@@ -1,0 +1,249 @@
+package com.vicmatskiv.weaponlib.network.packets;
+
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Random;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
+
+import javax.print.attribute.HashAttributeSet;
+
+import org.apache.commons.compress.compressors.gzip.GzipUtils;
+import org.apache.commons.lang3.RandomUtils;
+
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.vicmatskiv.weaponlib.ClientEventHandler;
+import com.vicmatskiv.weaponlib.ModContext;
+import com.vicmatskiv.weaponlib.Weapon;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleMessage;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageHandler;
+import com.vicmatskiv.weaponlib.config.BalancePackManager;
+import com.vicmatskiv.weaponlib.config.BalancePackManager.BalancePack;
+import com.vicmatskiv.weaponlib.crafting.CraftingGroup;
+import com.vicmatskiv.weaponlib.crafting.CraftingRegistry;
+import com.vicmatskiv.weaponlib.crafting.IModernCrafting;
+import com.vicmatskiv.weaponlib.crafting.workbench.TileEntityWorkbench;
+import com.vicmatskiv.weaponlib.jim.util.RandomUtil;
+import com.vicmatskiv.weaponlib.network.CompressionUtil;
+import com.vicmatskiv.weaponlib.network.NetworkUtil;
+import com.vicmatskiv.weaponlib.render.shells.ShellParticleSimulator.Shell;
+import com.vicmatskiv.weaponlib.vehicle.EntityVehicle;
+import com.vicmatskiv.weaponlib.vehicle.network.VehicleClientPacket;
+import com.vicmatskiv.weaponlib.vehicle.network.VehicleDataContainer;
+import com.vicmatskiv.weaponlib.vehicle.network.VehiclePacketLatencyTracker;
+
+import io.netty.buffer.ByteBuf;
+import net.minecraft.block.BlockDoor;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.Minecraft;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.World;
+import net.minecraftforge.fml.common.network.ByteBufUtils;
+import net.minecraftforge.fml.common.network.NetworkRegistry.TargetPoint;
+import scala.actors.threadpool.Arrays;
+
+public class WorkbenchPacket implements CompatibleMessage {
+
+	
+	
+	public static final int CRAFT = 1;
+	public static final int DISMANTLE = 2;
+	public static final int MOVE_OUTPUT = 3;
+	public static final int UPDATE = 4;
+	
+	public int opcode;
+	public BlockPos teLocation;
+	
+	
+	public int craftingTimer;
+	public int craftingDuration;
+	
+	public CraftingGroup craftingGroup;
+	public String craftingName = "";
+	
+	public int playerID;
+	public int slotToMove;
+
+	public WorkbenchPacket() {}
+	
+	public WorkbenchPacket(int type, BlockPos location, int craftingTimer, int craftingDuration, CraftingGroup group, String nameToCraft) {
+		this.opcode = type;
+		this.teLocation = location;
+		
+		this.craftingTimer = craftingTimer;
+		this.craftingDuration = craftingDuration;
+		
+		this.craftingGroup = group;
+		this.craftingName = nameToCraft;
+	}
+	
+	public WorkbenchPacket(int type, BlockPos location, int playerID, int slotToMove)  {
+		this.opcode = type;
+		this.teLocation = location;
+		this.playerID = playerID;
+		this.slotToMove = slotToMove;
+	}
+	
+
+	public void fromBytes(ByteBuf buf) {
+		this.opcode = buf.readInt();
+		this.teLocation = BlockPos.fromLong(buf.readLong());
+		if(this.opcode == CRAFT) {
+			this.craftingTimer = buf.readInt();
+			this.craftingDuration = buf.readInt();
+			this.craftingGroup = CraftingGroup.getValue(buf.readInt());
+			this.craftingName = ByteBufUtils.readUTF8String(buf);
+		} else if(this.opcode == MOVE_OUTPUT) {
+			this.playerID = buf.readInt();
+			this.slotToMove = buf.readInt();
+		} else if(this.opcode == DISMANTLE) {
+			this.craftingDuration = buf.readInt();
+		}
+		
+		
+	}
+	
+	
+
+	public void toBytes(ByteBuf buf) {
+		buf.writeInt(this.opcode);
+		buf.writeLong(this.teLocation.toLong());
+		if(this.opcode == CRAFT) {
+			buf.writeInt(this.craftingTimer);
+			buf.writeInt(this.craftingDuration);
+			buf.writeInt(this.craftingGroup.getID());
+			ByteBufUtils.writeUTF8String(buf, this.craftingName);
+		} else if(this.opcode == MOVE_OUTPUT) {
+			buf.writeInt(this.playerID);
+			buf.writeInt(this.slotToMove);
+		} else if(this.opcode == DISMANTLE) {
+			buf.writeInt(this.craftingDuration);
+		}
+		
+	}
+
+	public static class WorkbenchPacketHandler implements CompatibleMessageHandler<WorkbenchPacket, CompatibleMessage> {
+		
+		private ModContext modContext;
+		
+		
+		public WorkbenchPacketHandler(ModContext context) {
+			this.modContext = context;
+		}
+		
+
+		@Override
+		public <T extends CompatibleMessage> T onCompatibleMessage(WorkbenchPacket m, CompatibleMessageContext ctx) {
+			if(ctx.isServerSide()) {
+	            ctx.runInMainThread(() -> {
+					
+
+	            	World world = ctx.getPlayer().world;
+	            	
+	            	TileEntity tileEntity = world.getTileEntity(m.teLocation);
+	            	if(tileEntity instanceof TileEntityWorkbench) {
+	            		TileEntityWorkbench workbench = (TileEntityWorkbench) tileEntity;
+	            		
+	            		if(m.opcode == CRAFT) {
+	            			ItemStack[] modernRecipe = CraftingRegistry.getModernCrafting(m.craftingGroup, m.craftingName).getModernRecipe();
+		            		if(modernRecipe == null) return;
+		            		
+		            		
+		            		// Add all items to an item list to verify that they exist.
+		            		HashMap<Item, ItemStack> itemList = new HashMap<>(27, 0.7f);
+		            		for(int i = 23; i < workbench.mainInventory.getSlots(); ++i) {
+		            			itemList.put(workbench.mainInventory.getStackInSlot(i).getItem(), workbench.mainInventory.getStackInSlot(i));
+		            		}
+		            		
+		            		// Verify
+		            		for(ItemStack stack : modernRecipe) {
+		            			// Does it even have that item? / Does it have enough of that item?
+		            			if(!itemList.containsKey(stack.getItem()) || stack.getCount() > itemList.get(stack.getItem()).getCount()) {
+		            				return;
+		            			}
+		            			
+		            			
+		            		}
+		            		
+		            		// Consume materials
+		            		for(ItemStack stack : modernRecipe) {
+		            			itemList.get(stack.getItem()).shrink(stack.getCount());
+		            		}
+		            		
+		            		
+		            		
+		            		workbench.craftingTimer = m.craftingTimer;
+		            		workbench.craftingDuration = m.craftingDuration;
+		            		workbench.craftingTarget = CraftingRegistry.getModernCrafting(m.craftingGroup, m.craftingName);
+		            		
+		            		workbench.markDirty();
+		            	
+		            		modContext.getChannel().getChannel().sendToAllAround(new WorkshopClientPacket(m.teLocation, m.craftingName, m.craftingTimer, m.craftingDuration), new TargetPoint(0, m.teLocation.getX(), m.teLocation.getY(), m.teLocation.getZ(), 20));
+		            		
+	            		} else if(m.opcode == DISMANTLE) {
+	            			
+	            			for(int i = 9; i < 13; ++i) {
+	            				if(!workbench.mainInventory.getStackInSlot(i).isEmpty()) {
+	            					
+	            					ItemStack stack = workbench.mainInventory.getStackInSlot(i);
+	            					if(stack.getItem() instanceof IModernCrafting && ((IModernCrafting) stack.getItem()).getModernRecipe() != null && (workbench.dismantleStatus[i - 9] == -1 || workbench.dismantleStatus[i - 9] > workbench.dismantleDuration[i - 9])) {
+	            						
+	            						workbench.dismantleStatus[i - 9] = 0;
+	            						workbench.dismantleDuration[i - 9] = m.craftingDuration;
+	            						
+	            						
+	            					}
+	            					
+	            					
+	            				}
+	            			}
+	            			
+	            			modContext.getChannel().getChannel().sendToAllAround(new WorkshopClientPacket(m.teLocation, workbench.dismantleStatus, workbench.dismantleDuration), new TargetPoint(0, m.teLocation.getX(), m.teLocation.getY(), m.teLocation.getZ(), 25));
+		            		
+	            			
+	            			
+	            			
+	            		} else if(m.opcode == MOVE_OUTPUT) {
+	            			((EntityPlayer) world.getEntityByID(m.playerID)).addItemStackToInventory(workbench.mainInventory.getStackInSlot(m.slotToMove));
+	            		}
+	            		
+	            		
+	            		
+	            		
+	            		
+	            	}
+	       
+	            	
+		            
+		            	
+				});
+			}
+			
+			return null;
+		}
+
+	}
+
+	
+}

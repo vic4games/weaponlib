@@ -15,6 +15,8 @@ import com.vicmatskiv.weaponlib.ItemAttachment.ApplyHandler;
 import com.vicmatskiv.weaponlib.ItemAttachment.ApplyHandler2;
 import com.vicmatskiv.weaponlib.ItemMagazine.Builder;
 import com.vicmatskiv.weaponlib.crafting.CraftingComplexity;
+import com.vicmatskiv.weaponlib.crafting.CraftingGroup;
+import com.vicmatskiv.weaponlib.crafting.CraftingRegistry;
 import com.vicmatskiv.weaponlib.crafting.OptionsMetadata;
 
 import net.minecraft.client.model.ModelBase;
@@ -68,9 +70,18 @@ public class AttachmentBuilder<T> {
     private Object[] craftingRecipe;
     
     private List<ItemAttachment<T>> requiredAttachments = new ArrayList<>();
+    
+    private ItemStack[] modernRecipe;
+    private CraftingGroup craftingGroup;
 
 	public AttachmentBuilder<T> withCategory(AttachmentCategory attachmentCategory) {
 		this.attachmentCategory = attachmentCategory;
+		return this;
+	}
+	
+	public AttachmentBuilder<T> withModernRecipe(CraftingGroup group, ItemStack...is) {
+		this.modernRecipe = is;
+		this.craftingGroup = group;
 		return this;
 	}
 
@@ -258,6 +269,12 @@ public class AttachmentBuilder<T> {
 		attachment.setName(name);
 		attachment.apply2 = apply2;
 		
+		
+		attachment.setCraftingGroup(craftingGroup);
+		attachment.setModernRecipe(modernRecipe);
+		
+		// Do not register things if they do not have recipes.
+		if(this.modernRecipe != null) CraftingRegistry.register(craftingGroup, attachment);
 
 		if(rotationPoint != null) attachment.rotationPoint = rotationPoint;
 

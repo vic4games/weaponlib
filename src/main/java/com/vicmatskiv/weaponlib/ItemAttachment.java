@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.function.Function;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleItem;
+import com.vicmatskiv.weaponlib.crafting.CraftingGroup;
+import com.vicmatskiv.weaponlib.crafting.IModernCrafting;
 import com.vicmatskiv.weaponlib.melee.PlayerMeleeInstance;
 
 import net.minecraft.client.model.ModelBase;
@@ -14,7 +16,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.Vec3d;
 
-public class ItemAttachment<T> extends CompatibleItem implements ModelSource {
+public class ItemAttachment<T> extends CompatibleItem implements ModelSource, IModernCrafting {
 
 	private AttachmentCategory category;
 	private String crosshair;
@@ -32,6 +34,9 @@ public class ItemAttachment<T> extends CompatibleItem implements ModelSource {
 	private Function<ItemStack, String> informationProvider;
 	protected int maxStackSize = 1;
 
+	private ItemStack[] modernRecipe;
+	private CraftingGroup craftGroup;
+	
 	private List<CompatibleAttachment<T>> attachments = new ArrayList<>();
 
 	private List<Weapon> compatibleWeapons = new ArrayList<>();
@@ -86,8 +91,18 @@ public class ItemAttachment<T> extends CompatibleItem implements ModelSource {
 		return this;
 	}
 	
-
+	@Override
+	public CraftingGroup getCraftingGroup() {
+		return this.craftGroup;
+	}
 	
+	public void setCraftingGroup(CraftingGroup cg) {
+		this.craftGroup = cg;
+	}
+	
+	public void setModernRecipe(ItemStack...is) {
+		this.modernRecipe = is;
+	}
 
 
 	public Part getRenderablePart() {
@@ -226,6 +241,24 @@ public class ItemAttachment<T> extends CompatibleItem implements ModelSource {
 	public void setPostRenderer(List<CustomRenderer<?>> postRenderer2) {
 		this.postRenderer = postRenderer2;
 		
+	}
+	
+	@Override
+	public Item getItem() {
+		return this;
+	}
+
+	@Override
+	public ItemStack[] getModernRecipe() {
+		if(this.modernRecipe == null) return null;
+    	
+    	ItemStack[] copyArray = new ItemStack[this.modernRecipe.length];
+    	for(int i = 0; i < this.modernRecipe.length; ++i) {
+    		copyArray[i] = this.modernRecipe[i].copy();
+    	}
+     	 
+    	
+    	return copyArray;
 	}
 
 }

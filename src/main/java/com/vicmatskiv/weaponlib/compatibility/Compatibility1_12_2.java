@@ -660,32 +660,56 @@ public class Compatibility1_12_2 implements Compatibility {
     @Override
     @SideOnly(Side.CLIENT)
     public void addBlockHitEffect(BlockPos pos, double x, double y, double z, CompatibleEnumFacing sideHit) {
-    	// Get direction
-    	Vec3d speedVec = CompatibleRayTracing.directionFromEnumFacing(sideHit.getEnumFacing()).scale(0.3);
-        for(int i = 0; i < 12; i++) {
-        	
-        	
-        	
-        	Vec3d spreadVector = new Vec3d(Math.random() - 0.5, Math.random()*0.5, Math.random() - 0.5).scale(0.05);
-        	Vec3d individualVector = speedVec.add(spreadVector);
-        	
-        	IBlockState hitBlock = Minecraft.getMinecraft().world.getBlockState(pos);
-        	CompatibleDiggingParticle cdp = new CompatibleDiggingParticle(Minecraft.getMinecraft().world, x, y, z, individualVector.x, individualVector.y, individualVector.z, hitBlock);
-    		cdp.setBlockPos(new BlockPos(x, y, z));
-    		Minecraft.getMinecraft().effectRenderer.addEffect(cdp);
     	
-    		
-    		 if(Math.random() < 0.5 && i <= 2) {
-    	        	Minecraft.getMinecraft().world.spawnParticle(EnumParticleTypes.SMOKE_NORMAL, x, y, z, 0, 0, 0, new int[0]);
-    	            
-    	        }
+    	IBlockState hitBlock = Minecraft.getMinecraft().world.getBlockState(pos);
+    	
+    	if(hitBlock.getMaterial() == Material.GLASS) {
+    		// Get direction
+        	Vec3d speedVec = CompatibleRayTracing.directionFromEnumFacing(sideHit.getEnumFacing()).scale(0.3);
         	
-    		/*
-        	Minecraft.getMinecraft().effectRenderer.addBlockHitEffects(
-                    new BlockPos(x, y, z), sideHit.getEnumFacing());
-                    */
-                    
-        }
+            for(int i = 0; i < 36; i++) {
+        
+            	double sX = pos.getX() + Math.random();
+            	double sY = pos.getY() + Math.random();
+            	double sZ = pos.getZ() + Math.random();
+            	
+            	Vec3d modifiedSpeedVec = speedVec.scale(new Vec3d(sX, sY, sZ).squareDistanceTo(new Vec3d(x, y, z))*2);
+            	
+            	CompatibleDiggingParticle cdp = new CompatibleDiggingParticle(Minecraft.getMinecraft().world, sX, sY, sZ, modifiedSpeedVec.x, modifiedSpeedVec.y, modifiedSpeedVec.z, hitBlock);
+        		cdp.setBlockPos(new BlockPos(x, y, z));
+        		Minecraft.getMinecraft().effectRenderer.addEffect(cdp);
+                        
+            }
+    	} else {
+    		// Get direction
+        	Vec3d speedVec = CompatibleRayTracing.directionFromEnumFacing(sideHit.getEnumFacing()).scale(0.3);
+            for(int i = 0; i < 12; i++) {
+            	
+            	
+            	
+            	Vec3d spreadVector = new Vec3d(Math.random() - 0.5, Math.random()*0.5, Math.random() - 0.5).scale(0.05);
+            	Vec3d individualVector = speedVec.add(spreadVector);
+            	
+            	
+            	CompatibleDiggingParticle cdp = new CompatibleDiggingParticle(Minecraft.getMinecraft().world, x, y, z, individualVector.x, individualVector.y, individualVector.z, hitBlock);
+        		cdp.setBlockPos(new BlockPos(x, y, z));
+        		Minecraft.getMinecraft().effectRenderer.addEffect(cdp);
+        	
+        		
+        		 if(Math.random() < 0.5 && i <= 2) {
+        	        	Minecraft.getMinecraft().world.spawnParticle(EnumParticleTypes.SMOKE_NORMAL, x, y, z, 0, 0, 0, new int[0]);
+        	            
+        	        }
+            	
+        		/*
+            	Minecraft.getMinecraft().effectRenderer.addBlockHitEffects(
+                        new BlockPos(x, y, z), sideHit.getEnumFacing());
+                        */
+                        
+            }
+    	}
+    	
+    	
         
        
     }

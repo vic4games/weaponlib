@@ -3201,7 +3201,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		
 		//gunLightingShader = ShaderManager.loadShader(new ResourceLocation("mw" + ":" + "shaders/gunlight"));
 	    
-		Shaders.gunLightingShader = ShaderManager.loadVMWShader("gunlight");
+		//Shaders.gunLightingShader = ShaderManager.loadVMWShader("gunlight");
 		
 		if(!OpenGLSelectionHelper.isInSelectionPass && !AnimationGUI.getInstance().magEdit.isState()) {
 			

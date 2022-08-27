@@ -23,6 +23,9 @@ import net.minecraft.util.ResourceLocation;
 public interface ModContext {
 
 	public boolean isClient();
+	
+	public void preInitEnd(Object mod, String modId, ConfigurationManager configurationManager,
+			CompatibleFmlPreInitializationEvent event, CompatibleChannel channel);
 
 	public void preInit(Object mod, String modId, ConfigurationManager configurationManager,
 			CompatibleFmlPreInitializationEvent event, CompatibleChannel channel);
