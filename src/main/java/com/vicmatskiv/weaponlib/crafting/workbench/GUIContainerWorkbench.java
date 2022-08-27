@@ -79,6 +79,8 @@ public class GUIContainerWorkbench extends CompatibleGuiContainer {
 	// Tells us what kind of stuff we're lookin to craft
 	// Guns = 1, Attachments = 2, Modification Attachments = 3
 	private int craftingMode = 1;
+	
+	private boolean hasRequiredItems = false;
 
 	private HashMap<Item, Boolean> hasAvailiableMaterials = new HashMap<>();
 
@@ -164,6 +166,8 @@ public class GUIContainerWorkbench extends CompatibleGuiContainer {
 	@SuppressWarnings("unchecked")
 	public void setItemRenderTooltip(ItemStack stack, String... strings) {
 
+		if(stack.isEmpty()) return;
+		
 		this.tooltipRenderItem.clear();
 		this.tooltipRenderItem.add(format(stack.getItem().getUnlocalizedName()));
 
@@ -266,20 +270,20 @@ public class GUIContainerWorkbench extends CompatibleGuiContainer {
 			}
 		}
 
-		boolean hasAllItems = true;
+		hasRequiredItems = true;
 		for (ItemStack is : modernRecipe) {
 			if (!counter.containsKey(is.getItem())) {
-				hasAllItems = false;
+				hasRequiredItems = false;
 				hasAvailiableMaterials.put(is.getItem(), false);
 			} else if (is.getCount() > counter.get(is.getItem())) {
-				hasAllItems = false;
+				hasRequiredItems = false;
 				hasAvailiableMaterials.put(is.getItem(), false);
 			} else {
 				hasAvailiableMaterials.put(is.getItem(), true);
 			}
 		}
 
-		this.craftButton.setDisabled(!hasAllItems);
+		this.craftButton.setDisabled(!hasRequiredItems);
 
 	}
 
@@ -295,8 +299,18 @@ public class GUIContainerWorkbench extends CompatibleGuiContainer {
 				onSelectNewCrafting(this.selectedCraftingPiece);
 		}
 
-		if (!this.craftButton.isDisabled() && teWorkbench.getProgress() != 0)
+		if (!this.craftButton.isDisabled() && teWorkbench.getProgress() != 0) {
 			this.craftButton.setDisabled(true);
+		}
+			
+		
+		
+		
+		if(this.selectedCraftingPiece != null && hasRequiredItems && teWorkbench.getProgress() == 0) {
+			this.craftButton.setDisabled(false);
+		}
+		
+		
 
 	}
 
@@ -431,7 +445,11 @@ public class GUIContainerWorkbench extends CompatibleGuiContainer {
 	@Override
 	protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
 
+		
+		drawDefaultBackground();
+		
 		FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
+		GlStateManager.enableBlend();
 
 		if (page == 1) {
 			Minecraft.getMinecraft().getTextureManager().bindTexture(GUI_INV_TEX);

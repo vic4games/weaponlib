@@ -28,11 +28,14 @@ public class AlternateTESR extends TileEntitySpecialRenderer<TileEntityStation> 
 			int destroyStage, float partial, BufferBuilder buffer) {
 		// TODO Auto-generated method stub
 		super.renderTileEntityFast(te, x, y, z, partialTicks, destroyStage, partial, buffer);
+	
 	}
 	
 	@Override
 	public void render(TileEntityStation te, double x, double y, double z, float partialTicks, int destroyStage,
 			float alpha) {
+		
+		
 		GL11.glPushMatrix();
         this.bindTexture(this.resourceLocation);
       

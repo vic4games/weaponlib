@@ -37,6 +37,8 @@ public class WorkbenchBlock extends BlockStation {
 	public WorkbenchBlock(ModContext context, String name, Material materialIn) {
 		super(name, materialIn);
 		this.modContext = context;
+		
+		
 	}
 	
 	
@@ -63,9 +65,16 @@ public class WorkbenchBlock extends BlockStation {
 			EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
 		playerIn.openGui(modContext.getMod(), GuiHandler.WORKBENCH_GUI_ID, worldIn, pos.getX(), pos.getY(), pos.getZ());
 		
-		if(!worldIn.isRemote && hand == EnumHand.MAIN_HAND) {
-			modContext.getChannel().getChannel().sendTo(new WorkshopClientPacket(pos, (TileEntityWorkbench) worldIn.getTileEntity(pos)), (EntityPlayerMP) playerIn);
+		if(hand == EnumHand.MAIN_HAND) {
+			
+			playerIn.swingArm(hand);
+			
+			if(!worldIn.isRemote) {
+				modContext.getChannel().getChannel().sendTo(new WorkshopClientPacket(pos, (TileEntityWorkbench) worldIn.getTileEntity(pos)), (EntityPlayerMP) playerIn);
+			}
 		}
+		
+		
 		
 		return super.onBlockActivated(worldIn, pos, state, playerIn, hand, facing, hitX, hitY, hitZ);
 	}
