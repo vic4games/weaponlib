@@ -2,6 +2,7 @@ package com.vicmatskiv.weaponlib.crafting.base;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
+import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleBlockPos;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleBlockState;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMathHelper;
@@ -29,11 +30,14 @@ import net.minecraft.world.World;
 
 public class BlockStation extends Block {
 	
+	
+	protected ModContext modContext;
 	public static final PropertyDirection FACING = BlockHorizontal.FACING;
 
 	
-	public BlockStation(String name, Material materialIn) {
+	public BlockStation(ModContext context, String name, Material materialIn) {
 		super(materialIn);
+		this.modContext = context;
 		setUnlocalizedName(name);
 		setRegistryName(name);
 		setCreativeTab(CreativeTabs.MISC);

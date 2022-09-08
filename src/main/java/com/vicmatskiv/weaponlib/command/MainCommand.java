@@ -14,6 +14,7 @@ import com.vicmatskiv.weaponlib.CompatibleAttachment;
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.Weapon;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleCommand;
+import com.vicmatskiv.weaponlib.crafting.CraftingEntry;
 import com.vicmatskiv.weaponlib.crafting.items.CraftingItem;
 
 import net.minecraft.block.Block;
@@ -148,14 +149,14 @@ public class MainCommand extends CompatibleCommand {
             compatibility.addChatMessage(compatibility.clientPlayer(), TextFormatting.GOLD +
                     "-- Recipe for " + TextFormatting.GRAY +  item.getItemStackDisplayName(null) + TextFormatting.GOLD + "--");
            
-            ItemStack[] modernRecipe = ((Weapon) item).getModernRecipe();
+            CraftingEntry[] modernRecipe = ((Weapon) item).getModernRecipe();
             if(modernRecipe == null) {
             	return;
             }
-            for(ItemStack stack : modernRecipe) {
+            for(CraftingEntry stack : modernRecipe) {
             	
             	
-            	String toPrint = "> " + stack.getCount() + "x " + TextFormatting.WHITE + I18n.format(stack.getUnlocalizedName() + ".name");
+            	String toPrint = "> " + stack.getCount() + "x " + TextFormatting.WHITE + I18n.format(stack.getItem().getUnlocalizedName() + ".name");
             	
             	// Appends the disassembly to the end of the string
             	if(stack.getItem() instanceof CraftingItem) {

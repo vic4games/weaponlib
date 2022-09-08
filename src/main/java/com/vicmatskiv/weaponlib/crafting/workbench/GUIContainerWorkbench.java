@@ -11,6 +11,7 @@ import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.Weapon;
 import com.vicmatskiv.weaponlib.animation.gui.GuiRenderUtil;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleGuiContainer;
+import com.vicmatskiv.weaponlib.crafting.CraftingEntry;
 import com.vicmatskiv.weaponlib.crafting.CraftingGroup;
 import com.vicmatskiv.weaponlib.crafting.CraftingRegistry;
 import com.vicmatskiv.weaponlib.crafting.IModernCrafting;
@@ -18,6 +19,8 @@ import com.vicmatskiv.weaponlib.crafting.items.CraftingItem;
 import com.vicmatskiv.weaponlib.network.packets.WorkbenchPacket;
 import com.vicmatskiv.weaponlib.render.gui.GUIRenderHelper;
 import com.vicmatskiv.weaponlib.render.gui.GUIRenderHelper.StringAlignment;
+
+import akka.japi.Pair;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
@@ -31,8 +34,10 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextFormatting;
+import net.minecraftforge.oredict.OreDictionary;
 import scala.actors.threadpool.Arrays;
 
 public class GUIContainerWorkbench extends CompatibleGuiContainer {
@@ -255,7 +260,7 @@ public class GUIContainerWorkbench extends CompatibleGuiContainer {
 	}
 
 	public void onSelectNewCrafting(IModernCrafting crafting) {
-		ItemStack[] modernRecipe = crafting.getModernRecipe();
+		CraftingEntry[] modernRecipe = crafting.getModernRecipe();
 
 		HashMap<Item, Integer> counter = new HashMap<>();
 		for (int i = 22; i < teWorkbench.mainInventory.getSlots(); ++i) {
@@ -271,16 +276,36 @@ public class GUIContainerWorkbench extends CompatibleGuiContainer {
 		}
 
 		hasRequiredItems = true;
-		for (ItemStack is : modernRecipe) {
-			if (!counter.containsKey(is.getItem())) {
-				hasRequiredItems = false;
-				hasAvailiableMaterials.put(is.getItem(), false);
-			} else if (is.getCount() > counter.get(is.getItem())) {
-				hasRequiredItems = false;
-				hasAvailiableMaterials.put(is.getItem(), false);
+		
+		
+		
+		for (CraftingEntry is : modernRecipe) {
+			if(!is.isOreDictionary()) {
+				if (!counter.containsKey(is.getItem())) {
+					hasRequiredItems = false;
+					hasAvailiableMaterials.put(is.getItem(), false);
+				} else if (is.getCount() > counter.get(is.getItem())) {
+					hasRequiredItems = false;
+					hasAvailiableMaterials.put(is.getItem(), false);
+				} else {
+					hasAvailiableMaterials.put(is.getItem(), true);
+				}
 			} else {
-				hasAvailiableMaterials.put(is.getItem(), true);
+				NonNullList<ItemStack> list = OreDictionary.getOres(is.getOreDictionaryEntry());
+				boolean foundSomething = false;
+				for(ItemStack toTest : list) {
+					if(counter.containsKey(toTest.getItem()) && toTest.getCount() <= counter.get(toTest.getItem())) {
+						foundSomething = true;
+						hasAvailiableMaterials.put(is.getItem(), true);
+						break;
+					}
+				}
+				
+				if(!foundSomething) {
+					hasRequiredItems = false;
+				}
 			}
+ 			
 		}
 
 		this.craftButton.setDisabled(!hasRequiredItems);
@@ -344,7 +369,10 @@ public class GUIContainerWorkbench extends CompatibleGuiContainer {
 					strings.add(TextFormatting.BLUE + "Time remaining: " + TextFormatting.WHITE
 							+ GUIRenderHelper.formatTimeString(seconds, TimeUnit.SECONDS));
 					strings.add(TextFormatting.BLUE + "Products:");
-					for (ItemStack s : ((IModernCrafting) item).getModernRecipe()) {
+					for (CraftingEntry s : ((IModernCrafting) item).getModernRecipe()) {
+						 
+					
+						
 						int count = (int) Math.round(s.getCount() * (s.getItem() instanceof CraftingItem
 								? ((CraftingItem) s.getItem()).getRecoveryPercentage()
 								: 1.0));
@@ -609,7 +637,8 @@ public class GUIContainerWorkbench extends CompatibleGuiContainer {
 				IModernCrafting weapon = selectedCraftingPiece;
 				if (weapon.getModernRecipe() != null && weapon.getModernRecipe().length != 0) {
 					int c = 0;
-					for (ItemStack stack : weapon.getModernRecipe()) {
+					for (CraftingEntry stack : weapon.getModernRecipe()) {
+						ItemStack itemStack = new ItemStack(stack.getItem());
 						Minecraft.getMinecraft().getTextureManager().bindTexture(GUI_TEX);
 
 						boolean hasItem = this.hasAvailiableMaterials.get(stack.getItem());
@@ -635,9 +664,9 @@ public class GUIContainerWorkbench extends CompatibleGuiContainer {
 									formatColor = TextFormatting.GREEN;
 								}
 
-								setItemRenderTooltip(stack, formatColor + "" + percentage + "% Yield");
+								setItemRenderTooltip(itemStack, formatColor + "" + percentage + "% Yield");
 							} else {
-								setItemRenderTooltip(stack, TextFormatting.GREEN + "100% Yield");
+								setItemRenderTooltip(itemStack, TextFormatting.GREEN + "100% Yield");
 
 							}
 
@@ -658,7 +687,7 @@ public class GUIContainerWorkbench extends CompatibleGuiContainer {
 						}
 						GlStateManager.popMatrix();
 
-						Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(stack, x, y);
+						Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(itemStack, x, y);
 
 						GUIRenderHelper.drawScaledString("x" + stack.getCount(), x + 8, y + 12, 0.6,
 								hasItem ? GREEN : RED);

@@ -15,6 +15,7 @@ import com.vicmatskiv.weaponlib.ItemAttachment.ApplyHandler;
 import com.vicmatskiv.weaponlib.ItemAttachment.ApplyHandler2;
 import com.vicmatskiv.weaponlib.ItemMagazine.Builder;
 import com.vicmatskiv.weaponlib.crafting.CraftingComplexity;
+import com.vicmatskiv.weaponlib.crafting.CraftingEntry;
 import com.vicmatskiv.weaponlib.crafting.CraftingGroup;
 import com.vicmatskiv.weaponlib.crafting.CraftingRegistry;
 import com.vicmatskiv.weaponlib.crafting.OptionsMetadata;
@@ -71,7 +72,7 @@ public class AttachmentBuilder<T> {
     
     private List<ItemAttachment<T>> requiredAttachments = new ArrayList<>();
     
-    private ItemStack[] modernRecipe;
+    private CraftingEntry[] modernRecipe;
     private CraftingGroup craftingGroup;
 
 	public AttachmentBuilder<T> withCategory(AttachmentCategory attachmentCategory) {
@@ -79,7 +80,7 @@ public class AttachmentBuilder<T> {
 		return this;
 	}
 	
-	public AttachmentBuilder<T> withModernRecipe(CraftingGroup group, ItemStack...is) {
+	public AttachmentBuilder<T> withModernRecipe(CraftingGroup group, CraftingEntry...is) {
 		this.modernRecipe = is;
 		this.craftingGroup = group;
 		return this;

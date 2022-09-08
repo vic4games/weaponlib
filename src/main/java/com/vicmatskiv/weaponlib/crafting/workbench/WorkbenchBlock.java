@@ -32,13 +32,9 @@ public class WorkbenchBlock extends BlockStation {
 	
 	
 	
-	private ModContext modContext;
 
 	public WorkbenchBlock(ModContext context, String name, Material materialIn) {
-		super(name, materialIn);
-		this.modContext = context;
-		
-		
+		super(context, name, materialIn);
 	}
 	
 	

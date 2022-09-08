@@ -38,6 +38,7 @@ import com.vicmatskiv.weaponlib.config.BalancePackManager;
 import com.vicmatskiv.weaponlib.config.Gun;
 import com.vicmatskiv.weaponlib.config.BalancePackManager.GunConfigurationGroup;
 import com.vicmatskiv.weaponlib.crafting.CraftingComplexity;
+import com.vicmatskiv.weaponlib.crafting.CraftingEntry;
 import com.vicmatskiv.weaponlib.crafting.CraftingGroup;
 import com.vicmatskiv.weaponlib.crafting.CraftingRegistry;
 import com.vicmatskiv.weaponlib.crafting.IModernCrafting;
@@ -227,7 +228,7 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable, IModernCraf
         private float silencedShootSoundVolume = Weapon.DEFAULT_SILENCED_SHOOT_SOUND_VOLUME;
         private float shootSoundVolume = Weapon.DEFAULT_SHOOT_SOUND_VOLUME;
         private Object[] craftingRecipe;
-        private ItemStack[] modernCraftingRecipe;
+        private CraftingEntry[] modernCraftingRecipe;
         public boolean isOneClickBurstAllowed;
         String flashTexture;
         
@@ -830,7 +831,7 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable, IModernCraf
         }
         
         
-        public Builder withModernRecipe(ItemStack...itemStacks) {
+        public Builder withModernRecipe(CraftingEntry...itemStacks) {
         	this.modernCraftingRecipe = itemStacks;
         	return this;
         }
@@ -1190,7 +1191,7 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable, IModernCraf
 
     private Vec3d muzzlePosition;
     
-    private ItemStack[] modernRecipe;
+    private CraftingEntry[] modernRecipe;
     
     private CompatibleSound shootSound;
     private CompatibleSound endOfShootSound;
@@ -1229,17 +1230,8 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable, IModernCraf
     }
 
     @Override
-    public ItemStack[] getModernRecipe() {
-    	
-    	if(this.modernRecipe == null) return null;
-    	
-    	ItemStack[] copyArray = new ItemStack[this.modernRecipe.length];
-    	for(int i = 0; i < this.modernRecipe.length; ++i) {
-    		copyArray[i] = this.modernRecipe[i].copy();
-    	}
-     	 
-    	
-    	return copyArray;
+    public CraftingEntry[] getModernRecipe() {
+    	return this.modernRecipe;
     }
     
     

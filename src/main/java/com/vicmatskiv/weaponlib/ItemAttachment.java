@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.function.Function;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleItem;
+import com.vicmatskiv.weaponlib.crafting.CraftingEntry;
 import com.vicmatskiv.weaponlib.crafting.CraftingGroup;
 import com.vicmatskiv.weaponlib.crafting.IModernCrafting;
 import com.vicmatskiv.weaponlib.melee.PlayerMeleeInstance;
@@ -34,7 +35,7 @@ public class ItemAttachment<T> extends CompatibleItem implements ModelSource, IM
 	private Function<ItemStack, String> informationProvider;
 	protected int maxStackSize = 1;
 
-	private ItemStack[] modernRecipe;
+	private CraftingEntry[] modernRecipe;
 	private CraftingGroup craftGroup;
 	
 	private List<CompatibleAttachment<T>> attachments = new ArrayList<>();
@@ -100,7 +101,7 @@ public class ItemAttachment<T> extends CompatibleItem implements ModelSource, IM
 		this.craftGroup = cg;
 	}
 	
-	public void setModernRecipe(ItemStack...is) {
+	public void setModernRecipe(CraftingEntry...is) {
 		this.modernRecipe = is;
 	}
 
@@ -249,16 +250,8 @@ public class ItemAttachment<T> extends CompatibleItem implements ModelSource, IM
 	}
 
 	@Override
-	public ItemStack[] getModernRecipe() {
-		if(this.modernRecipe == null) return null;
-    	
-    	ItemStack[] copyArray = new ItemStack[this.modernRecipe.length];
-    	for(int i = 0; i < this.modernRecipe.length; ++i) {
-    		copyArray[i] = this.modernRecipe[i].copy();
-    	}
-     	 
-    	
-    	return copyArray;
+	public CraftingEntry[] getModernRecipe() {
+		return this.modernRecipe;
 	}
 
 }

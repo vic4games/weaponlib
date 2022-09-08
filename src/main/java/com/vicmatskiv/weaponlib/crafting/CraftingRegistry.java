@@ -40,7 +40,7 @@ public class CraftingRegistry {
 		return weaponRecipeLookup.get(name);
 	}
 	
-	public static ItemStack[] getWeaponRecipe(String name) {
+	public static CraftingEntry[] getWeaponRecipe(String name) {
 		return getWeapon(name).getModernRecipe();
 	}
 	

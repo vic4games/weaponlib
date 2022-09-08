@@ -12,6 +12,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Random;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -32,6 +33,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageHandler;
 import com.vicmatskiv.weaponlib.config.BalancePackManager;
 import com.vicmatskiv.weaponlib.config.BalancePackManager.BalancePack;
+import com.vicmatskiv.weaponlib.crafting.CraftingEntry;
 import com.vicmatskiv.weaponlib.crafting.CraftingGroup;
 import com.vicmatskiv.weaponlib.crafting.CraftingRegistry;
 import com.vicmatskiv.weaponlib.crafting.IModernCrafting;
@@ -45,6 +47,7 @@ import com.vicmatskiv.weaponlib.vehicle.network.VehicleClientPacket;
 import com.vicmatskiv.weaponlib.vehicle.network.VehicleDataContainer;
 import com.vicmatskiv.weaponlib.vehicle.network.VehiclePacketLatencyTracker;
 
+import akka.japi.Pair;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.block.BlockDoor;
 import net.minecraft.block.state.IBlockState;
@@ -56,11 +59,13 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.NetworkRegistry.TargetPoint;
+import net.minecraftforge.oredict.OreDictionary;
 import scala.actors.threadpool.Arrays;
 
 public class WorkbenchPacket implements CompatibleMessage {
@@ -166,7 +171,7 @@ public class WorkbenchPacket implements CompatibleMessage {
 	            		TileEntityWorkbench workbench = (TileEntityWorkbench) tileEntity;
 	            		
 	            		if(m.opcode == CRAFT) {
-	            			ItemStack[] modernRecipe = CraftingRegistry.getModernCrafting(m.craftingGroup, m.craftingName).getModernRecipe();
+	            			CraftingEntry[] modernRecipe = CraftingRegistry.getModernCrafting(m.craftingGroup, m.craftingName).getModernRecipe();
 		            		if(modernRecipe == null) return;
 		            		
 		            		
@@ -176,19 +181,56 @@ public class WorkbenchPacket implements CompatibleMessage {
 		            			itemList.put(workbench.mainInventory.getStackInSlot(i).getItem(), workbench.mainInventory.getStackInSlot(i));
 		            		}
 		            		
+		            		
+		            		ArrayList<Pair<Item, Integer>> toConsume = new ArrayList<>();
+		            		
 		            		// Verify
-		            		for(ItemStack stack : modernRecipe) {
-		            			// Does it even have that item? / Does it have enough of that item?
-		            			if(!itemList.containsKey(stack.getItem()) || stack.getCount() > itemList.get(stack.getItem()).getCount()) {
-		            				return;
+		            		for(CraftingEntry stack : modernRecipe) {
+		            			
+		            			if(!stack.isOreDictionary()) {
+		            				// Does it even have that item? / Does it have enough of that item?
+			            			if(!itemList.containsKey(stack.getItem()) || stack.getCount() > itemList.get(stack.getItem()).getCount()) {
+			            				return;
+			            			}
+			            			
+			            			toConsume.add(new Pair<Item, Integer>(stack.getItem(), stack.getCount()));
+		            			} else {		            				
+		            				// Stack is an OreDictionary term
+		            				boolean hasAny = false;
+		            				NonNullList<ItemStack> list = OreDictionary.getOres(stack.getOreDictionaryEntry());
+		            				for(ItemStack toTest : list) {
+		            					if(itemList.containsKey(toTest.getItem()) && stack.getCount() <= itemList.get(toTest.getItem()).getCount()) {
+		            						hasAny = true;
+		            						
+		            						toConsume.add(new Pair<Item, Integer>(toTest.getItem(), stack.getCount()));
+		            						
+		            				
+		            						break;
+		            					}
+		            				}
+		            				
+		            				if(!hasAny) return;
 		            			}
-		            			
-		            			
 		            		}
 		            		
+		            		/*
 		            		// Consume materials
-		            		for(ItemStack stack : modernRecipe) {
-		            			itemList.get(stack.getItem()).shrink(stack.getCount());
+		            		for(CraftingEntry stack : modernRecipe) {
+		            			if(!stack.isOreDictionary()) {
+		            				itemList.get(stack.getItem()).shrink(stack.getCount());
+		            			} else {
+		            				
+		            				List<ItemStack> list = OreDictionary.getOres(stack.getOreDictionaryEntry());
+		            				for(ItemStack test : list) {
+		            					
+		            				}
+		            				itemList.get(stack.getItem()).shrink(stack.getCount());
+		            			}
+		            			
+		            		}*/
+		            		
+		            		for(Pair<Item, Integer> i : toConsume) {
+		            			itemList.get(i.first()).shrink(i.second());
 		            		}
 		            		
 		            		

@@ -1,40 +1,17 @@
 package com.vicmatskiv.weaponlib.crafting.workbench;
 
-import java.time.Duration;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-
-import javax.management.modelmbean.ModelMBeanNotificationBroadcaster;
-
-import org.apache.commons.codec.binary.Hex;
-
-import com.vicmatskiv.weaponlib.Weapon;
-import com.vicmatskiv.weaponlib.compatibility.CompatibleTileEntity;
+import com.vicmatskiv.weaponlib.crafting.CraftingEntry;
 import com.vicmatskiv.weaponlib.crafting.CraftingGroup;
 import com.vicmatskiv.weaponlib.crafting.CraftingRegistry;
 import com.vicmatskiv.weaponlib.crafting.IModernCrafting;
 import com.vicmatskiv.weaponlib.crafting.base.TileEntityStation;
 import com.vicmatskiv.weaponlib.crafting.items.CraftingItem;
-import com.vicmatskiv.weaponlib.tile.CustomTileEntity;
-
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufInputStream;
-import io.netty.buffer.Unpooled;
-import it.unimi.dsi.fastutil.bytes.ByteBidirectionalIterator;
-import net.minecraft.init.Items;
-import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ITickable;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
-import net.minecraftforge.fml.common.registry.GameRegistry;
-import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.ItemStackHandler;
-import scala.actors.threadpool.Arrays;
 
-public class TileEntityWorkbench extends TileEntityStation implements ITickable {
+public class TileEntityWorkbench extends TileEntityStation {
 
 	public int craftingTimer = -1;
 	public int craftingDuration = -1;
@@ -158,10 +135,7 @@ public class TileEntityWorkbench extends TileEntityStation implements ITickable 
 	@Override
 	public void update() {
 
-		
-		if(this.world.isRemote) {
-			//System.out.println(mainInventory.serializeNBT());
-		}
+	
 		
 		if (this.craftingTimer != -1) {
 			this.craftingTimer++;
@@ -184,15 +158,16 @@ public class TileEntityWorkbench extends TileEntityStation implements ITickable 
 				if (!this.world.isRemote) {
 					ItemStack stackToDismantle = mainInventory.getStackInSlot(i + 9);
 					if (stackToDismantle.getItem() instanceof IModernCrafting) {
-						ItemStack[] modernRecipe = ((IModernCrafting) stackToDismantle.getItem()).getModernRecipe();
+						CraftingEntry[] modernRecipe = ((IModernCrafting) stackToDismantle.getItem()).getModernRecipe();
 						stackToDismantle.shrink(1);
 
-						for (ItemStack stack : modernRecipe) {
+						for (CraftingEntry stack : modernRecipe) {
+							ItemStack itemStack = new ItemStack(stack.getItem());
 							if (stack.getItem() instanceof CraftingItem) {
-								stack.setCount((int) Math.round(
+								itemStack.setCount((int) Math.round(
 										stack.getCount() * ((CraftingItem) stack.getItem()).getRecoveryPercentage()));
 							}
-							addStackToInventoryRange(stack, 12, 22);
+							addStackToInventoryRange(itemStack, 31, 40);
 						}
 					}
 				}

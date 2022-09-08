@@ -69,6 +69,8 @@ public class ContainerWorkbench extends CompatibleContainer {
 
 	@Override
 	public ItemStack transferStackInSlot(EntityPlayer playerIn, int index) {
+		
+		
 		Slot slot = this.inventorySlots.get(index);
 
 		if (index < 27) {

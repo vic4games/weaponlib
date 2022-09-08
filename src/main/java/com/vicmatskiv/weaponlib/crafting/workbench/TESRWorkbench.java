@@ -1,8 +1,9 @@
-package com.vicmatskiv.weaponlib.render;
+package com.vicmatskiv.weaponlib.crafting.workbench;
 
 import org.lwjgl.opengl.GL11;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTileEntity;
+import com.vicmatskiv.weaponlib.crafting.base.TESRStation;
 import com.vicmatskiv.weaponlib.crafting.base.TileEntityStation;
 
 import net.minecraft.client.Minecraft;
@@ -13,31 +14,22 @@ import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
 
-public class AlternateTESR extends TileEntitySpecialRenderer<TileEntityStation> {
+public class TESRWorkbench extends TESRStation<TileEntityWorkbench> {
 
-	private ModelBase model;
-	private ResourceLocation resourceLocation;
+
+
 	
-	public AlternateTESR(ModelBase model, ResourceLocation loc) {
-		this.model = model;
-		this.resourceLocation = loc;
+	public TESRWorkbench(ModelBase model, ResourceLocation location) {
+		super(model, location);
 	}
-	
+
 	@Override
-	public void renderTileEntityFast(TileEntityStation te, double x, double y, double z, float partialTicks,
-			int destroyStage, float partial, BufferBuilder buffer) {
-		// TODO Auto-generated method stub
-		super.renderTileEntityFast(te, x, y, z, partialTicks, destroyStage, partial, buffer);
-	
-	}
-	
-	@Override
-	public void render(TileEntityStation te, double x, double y, double z, float partialTicks, int destroyStage,
+	public void render(TileEntityWorkbench te, double x, double y, double z, float partialTicks, int destroyStage,
 			float alpha) {
 		
 		
 		GL11.glPushMatrix();
-        this.bindTexture(this.resourceLocation);
+        this.bindTexture(this.location);
       
       //  GL11.glEnable(GL12.GL_RESCALE_NORMAL);
         GlStateManager.enableTexture2D();

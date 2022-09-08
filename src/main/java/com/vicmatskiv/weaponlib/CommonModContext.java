@@ -31,6 +31,8 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 import com.vicmatskiv.weaponlib.config.ConfigurationManager;
 import com.vicmatskiv.weaponlib.config.novel.ModernConfigManager;
 import com.vicmatskiv.weaponlib.crafting.RecipeManager;
+import com.vicmatskiv.weaponlib.crafting.ammopress.BlockAmmoPress;
+import com.vicmatskiv.weaponlib.crafting.ammopress.TileEntityAmmoPress;
 import com.vicmatskiv.weaponlib.crafting.workbench.TileEntityWorkbench;
 import com.vicmatskiv.weaponlib.crafting.workbench.WorkbenchBlock;
 import com.vicmatskiv.weaponlib.electronics.EntityWirelessCamera;
@@ -467,6 +469,10 @@ public class CommonModContext implements ModContext {
 			CompatibleFmlPreInitializationEvent event, CompatibleChannel channel) {
 		 compatibility.registerTileEntity(TileEntityWorkbench.class, "mw:tileworkbench");
 	        compatibility.registerBlock(this, new WorkbenchBlock(this, "weapon_workbench", Material.WOOD), "weapon_workbench");
+	        
+	        
+	        compatibility.registerTileEntity(TileEntityAmmoPress.class, "mw:tileammopress");
+	        compatibility.registerBlock(this, new BlockAmmoPress(this, "ammo_press", Material.IRON), "ammo_press");
 	        
 		
 	}

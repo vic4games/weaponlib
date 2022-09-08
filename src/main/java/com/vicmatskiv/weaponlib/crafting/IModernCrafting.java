@@ -5,7 +5,7 @@ import net.minecraft.item.ItemStack;
 
 public interface IModernCrafting {
 	
-	public ItemStack[] getModernRecipe();
+	public CraftingEntry[] getModernRecipe();
 	public Item getItem();
 	public CraftingGroup getCraftingGroup();
 
