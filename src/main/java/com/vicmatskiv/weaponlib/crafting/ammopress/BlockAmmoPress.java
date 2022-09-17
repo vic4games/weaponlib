@@ -4,11 +4,18 @@ import java.util.List;
 
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.crafting.base.BlockStation;
+import com.vicmatskiv.weaponlib.crafting.workbench.TileEntityWorkbench;
+import com.vicmatskiv.weaponlib.inventory.GuiHandler;
+import com.vicmatskiv.weaponlib.network.packets.StationClientPacket;
 
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
@@ -31,6 +38,24 @@ public class BlockAmmoPress extends BlockStation {
 		addCollisionBoxToList(pos, entityBox, collidingBoxes, new AxisAlignedBB(0.2D, 0.0D, 0.2D, 0.8D, 0.8D, 0.8D));
 		
 		
+		
+	}
+	
+	@Override
+	public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn,
+			EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+		playerIn.openGui(modContext.getMod(), GuiHandler.AMMOPRESS_GUI_ID, worldIn, pos.getX(), pos.getY(), pos.getZ());
+		
+		if(hand == EnumHand.MAIN_HAND) {
+			
+			playerIn.swingArm(hand);
+			
+			if(!worldIn.isRemote) {
+				modContext.getChannel().getChannel().sendTo(new StationClientPacket(worldIn, pos), (EntityPlayerMP) playerIn);
+			}
+		}
+		
+		return super.onBlockActivated(worldIn, pos, state, playerIn, hand, facing, hitX, hitY, hitZ);
 		
 	}
 	

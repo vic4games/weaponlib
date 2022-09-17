@@ -37,6 +37,8 @@ import com.vicmatskiv.weaponlib.crafting.CraftingEntry;
 import com.vicmatskiv.weaponlib.crafting.CraftingGroup;
 import com.vicmatskiv.weaponlib.crafting.CraftingRegistry;
 import com.vicmatskiv.weaponlib.crafting.IModernCrafting;
+import com.vicmatskiv.weaponlib.crafting.ammopress.TileEntityAmmoPress;
+import com.vicmatskiv.weaponlib.crafting.base.TileEntityStation;
 import com.vicmatskiv.weaponlib.crafting.workbench.TileEntityWorkbench;
 import com.vicmatskiv.weaponlib.jim.util.RandomUtil;
 import com.vicmatskiv.weaponlib.network.CompressionUtil;
@@ -53,6 +55,7 @@ import net.minecraft.block.BlockDoor;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketBuffer;
@@ -68,7 +71,7 @@ import net.minecraftforge.fml.common.network.NetworkRegistry.TargetPoint;
 import net.minecraftforge.oredict.OreDictionary;
 import scala.actors.threadpool.Arrays;
 
-public class WorkbenchPacket implements CompatibleMessage {
+public class StationPacket implements CompatibleMessage {
 
 	
 	
@@ -90,9 +93,22 @@ public class WorkbenchPacket implements CompatibleMessage {
 	public int playerID;
 	public int slotToMove;
 
-	public WorkbenchPacket() {}
+	public int quantity = -1;
 	
-	public WorkbenchPacket(int type, BlockPos location, int craftingTimer, int craftingDuration, CraftingGroup group, String nameToCraft) {
+	public StationPacket() {}
+	
+	
+	public StationPacket(int type, BlockPos location, String nameToCraft, CraftingGroup group, int quantity) {
+		this.opcode = type;
+		this.teLocation = location;
+		
+		this.craftingName = nameToCraft;
+		this.craftingGroup = group;
+		
+		this.quantity = quantity;
+	}
+	
+	public StationPacket(int type, BlockPos location, int craftingTimer, int craftingDuration, CraftingGroup group, String nameToCraft) {
 		this.opcode = type;
 		this.teLocation = location;
 		
@@ -103,7 +119,7 @@ public class WorkbenchPacket implements CompatibleMessage {
 		this.craftingName = nameToCraft;
 	}
 	
-	public WorkbenchPacket(int type, BlockPos location, int playerID, int slotToMove)  {
+	public StationPacket(int type, BlockPos location, int playerID, int slotToMove)  {
 		this.opcode = type;
 		this.teLocation = location;
 		this.playerID = playerID;
@@ -115,10 +131,14 @@ public class WorkbenchPacket implements CompatibleMessage {
 		this.opcode = buf.readInt();
 		this.teLocation = BlockPos.fromLong(buf.readLong());
 		if(this.opcode == CRAFT) {
-			this.craftingTimer = buf.readInt();
-			this.craftingDuration = buf.readInt();
+			this.quantity = buf.readInt();
+			if(quantity == -1) {
+				this.craftingTimer = buf.readInt();
+				this.craftingDuration = buf.readInt();	
+			}
 			this.craftingGroup = CraftingGroup.getValue(buf.readInt());
 			this.craftingName = ByteBufUtils.readUTF8String(buf);
+			
 		} else if(this.opcode == MOVE_OUTPUT) {
 			this.playerID = buf.readInt();
 			this.slotToMove = buf.readInt();
@@ -135,10 +155,14 @@ public class WorkbenchPacket implements CompatibleMessage {
 		buf.writeInt(this.opcode);
 		buf.writeLong(this.teLocation.toLong());
 		if(this.opcode == CRAFT) {
-			buf.writeInt(this.craftingTimer);
-			buf.writeInt(this.craftingDuration);
+			buf.writeInt(this.quantity);
+			if(this.quantity == -1) {
+				buf.writeInt(this.craftingTimer);
+				buf.writeInt(this.craftingDuration);
+			}
 			buf.writeInt(this.craftingGroup.getID());
 			ByteBufUtils.writeUTF8String(buf, this.craftingName);
+			 
 		} else if(this.opcode == MOVE_OUTPUT) {
 			buf.writeInt(this.playerID);
 			buf.writeInt(this.slotToMove);
@@ -148,7 +172,7 @@ public class WorkbenchPacket implements CompatibleMessage {
 		
 	}
 
-	public static class WorkbenchPacketHandler implements CompatibleMessageHandler<WorkbenchPacket, CompatibleMessage> {
+	public static class WorkbenchPacketHandler implements CompatibleMessageHandler<StationPacket, CompatibleMessage> {
 		
 		private ModContext modContext;
 		
@@ -159,7 +183,7 @@ public class WorkbenchPacket implements CompatibleMessage {
 		
 
 		@Override
-		public <T extends CompatibleMessage> T onCompatibleMessage(WorkbenchPacket m, CompatibleMessageContext ctx) {
+		public <T extends CompatibleMessage> T onCompatibleMessage(StationPacket m, CompatibleMessageContext ctx) {
 			if(ctx.isServerSide()) {
 	            ctx.runInMainThread(() -> {
 					
@@ -167,18 +191,21 @@ public class WorkbenchPacket implements CompatibleMessage {
 	            	World world = ctx.getPlayer().world;
 	            	
 	            	TileEntity tileEntity = world.getTileEntity(m.teLocation);
-	            	if(tileEntity instanceof TileEntityWorkbench) {
-	            		TileEntityWorkbench workbench = (TileEntityWorkbench) tileEntity;
+	            	if(tileEntity instanceof TileEntityStation) {
+	            		TileEntityStation station = (TileEntityStation) tileEntity;
 	            		
 	            		if(m.opcode == CRAFT) {
+	            			
+	            			
+	            		
 	            			CraftingEntry[] modernRecipe = CraftingRegistry.getModernCrafting(m.craftingGroup, m.craftingName).getModernRecipe();
 		            		if(modernRecipe == null) return;
 		            		
-		            		
+		            	
 		            		// Add all items to an item list to verify that they exist.
 		            		HashMap<Item, ItemStack> itemList = new HashMap<>(27, 0.7f);
-		            		for(int i = 23; i < workbench.mainInventory.getSlots(); ++i) {
-		            			itemList.put(workbench.mainInventory.getStackInSlot(i).getItem(), workbench.mainInventory.getStackInSlot(i));
+		            		for(int i = 23; i < station.mainInventory.getSlots(); ++i) {
+		            			itemList.put(station.mainInventory.getStackInSlot(i).getItem(), station.mainInventory.getStackInSlot(i));
 		            		}
 		            		
 		            		
@@ -213,6 +240,8 @@ public class WorkbenchPacket implements CompatibleMessage {
 		            			}
 		            		}
 		            		
+		         
+		            		
 		            		/*
 		            		// Consume materials
 		            		for(CraftingEntry stack : modernRecipe) {
@@ -229,30 +258,57 @@ public class WorkbenchPacket implements CompatibleMessage {
 		            			
 		            		}*/
 		            		
-		            		for(Pair<Item, Integer> i : toConsume) {
-		            			itemList.get(i.first()).shrink(i.second());
+		            		if(station instanceof TileEntityWorkbench) {
+		            			for(Pair<Item, Integer> i : toConsume) {
+			            			itemList.get(i.first()).shrink(i.second());
+			            		}
 		            		}
 		            		
 		            		
 		            		
-		            		workbench.craftingTimer = m.craftingTimer;
-		            		workbench.craftingDuration = m.craftingDuration;
-		            		workbench.craftingTarget = CraftingRegistry.getModernCrafting(m.craftingGroup, m.craftingName);
 		            		
-		            		workbench.markDirty();
+		            		if(station instanceof TileEntityWorkbench) {
+		            			TileEntityWorkbench workbench = (TileEntityWorkbench) station;
+		            			workbench.craftingTimer = m.craftingTimer;
+		            			workbench.craftingDuration = m.craftingDuration;
+			            		workbench.craftingTarget = CraftingRegistry.getModernCrafting(m.craftingGroup, m.craftingName);
+		            		} else if(station instanceof TileEntityAmmoPress) {
+		            			
+		            			TileEntityAmmoPress press = (TileEntityAmmoPress) station;
+		            			Item item = CraftingRegistry.getModernCrafting(m.craftingGroup, m.craftingName).getItem();
+		            			ItemStack newStack = new ItemStack(item, m.quantity);
+		            			
+		            			
+		            			if(press.hasStack()) {
+		            				ItemStack topQueue = press.getLatestStackInQueue();
+		            				if(ItemStack.areItemsEqualIgnoreDurability(topQueue, newStack)) {
+		            					topQueue.grow(m.quantity);
+		            					
+		            				} else {
+		            					press.addStack(newStack);
+		            				}
+		            			} else {
+		            				press.addStack(newStack);
+		            			}
+		            			
+		            			
+		            			
+		            		}
+		            		
+		            		station.markDirty();
 		            	
-		            		modContext.getChannel().getChannel().sendToAllAround(new WorkshopClientPacket(m.teLocation, m.craftingName, m.craftingTimer, m.craftingDuration), new TargetPoint(0, m.teLocation.getX(), m.teLocation.getY(), m.teLocation.getZ(), 20));
+		            		modContext.getChannel().getChannel().sendToAllAround(new StationClientPacket(station.getWorld(), m.teLocation), new TargetPoint(0, m.teLocation.getX(), m.teLocation.getY(), m.teLocation.getZ(), 20));
 		            		
 	            		} else if(m.opcode == DISMANTLE) {
 	            			
 	            			for(int i = 9; i < 13; ++i) {
-	            				if(!workbench.mainInventory.getStackInSlot(i).isEmpty()) {
+	            				if(!station.mainInventory.getStackInSlot(i).isEmpty()) {
 	            					
-	            					ItemStack stack = workbench.mainInventory.getStackInSlot(i);
-	            					if(stack.getItem() instanceof IModernCrafting && ((IModernCrafting) stack.getItem()).getModernRecipe() != null && (workbench.dismantleStatus[i - 9] == -1 || workbench.dismantleStatus[i - 9] > workbench.dismantleDuration[i - 9])) {
+	            					ItemStack stack = station.mainInventory.getStackInSlot(i);
+	            					if(stack.getItem() instanceof IModernCrafting && ((IModernCrafting) stack.getItem()).getModernRecipe() != null && (station.dismantleStatus[i - 9] == -1 || station.dismantleStatus[i - 9] > station.dismantleDuration[i - 9])) {
 	            						
-	            						workbench.dismantleStatus[i - 9] = 0;
-	            						workbench.dismantleDuration[i - 9] = m.craftingDuration;
+	            						station.dismantleStatus[i - 9] = 0;
+	            						station.dismantleDuration[i - 9] = m.craftingDuration;
 	            						
 	            						
 	            					}
@@ -261,13 +317,13 @@ public class WorkbenchPacket implements CompatibleMessage {
 	            				}
 	            			}
 	            			
-	            			modContext.getChannel().getChannel().sendToAllAround(new WorkshopClientPacket(m.teLocation, workbench.dismantleStatus, workbench.dismantleDuration), new TargetPoint(0, m.teLocation.getX(), m.teLocation.getY(), m.teLocation.getZ(), 25));
+	            			modContext.getChannel().getChannel().sendToAllAround(new StationClientPacket(station.getWorld(), m.teLocation), new TargetPoint(0, m.teLocation.getX(), m.teLocation.getY(), m.teLocation.getZ(), 25));
 		            		
 	            			
 	            			
 	            			
 	            		} else if(m.opcode == MOVE_OUTPUT) {
-	            			((EntityPlayer) world.getEntityByID(m.playerID)).addItemStackToInventory(workbench.mainInventory.getStackInSlot(m.slotToMove));
+	            			((EntityPlayer) world.getEntityByID(m.playerID)).addItemStackToInventory(station.mainInventory.getStackInSlot(m.slotToMove));
 	            		}
 	            		
 	            		

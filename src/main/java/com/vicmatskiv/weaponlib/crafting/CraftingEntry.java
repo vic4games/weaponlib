@@ -1,6 +1,10 @@
 package com.vicmatskiv.weaponlib.crafting;
 
+import net.minecraft.block.Block;
+import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemBlock;
+import net.minecraft.item.ItemStack;
 import net.minecraftforge.oredict.OreDictionary;
 
 public class CraftingEntry {
@@ -13,9 +17,20 @@ public class CraftingEntry {
 		this.item = i;
 		this.count = c;
 	}
+	
+	public CraftingEntry(Block i, int c) {
+		this.item = Item.getItemFromBlock(i);
+		this.count = c;
+	}
 	 
 	public CraftingEntry(Item dismantle, String oreDictionary, int count) {
 		this.item = dismantle;
+		this.oreDictionary = oreDictionary;
+		this.count = count;
+	}
+	
+	public CraftingEntry(Block dismantle, String oreDictionary, int count) {
+		this.item = Item.getItemFromBlock(dismantle);
 		this.oreDictionary = oreDictionary;
 		this.count = count;
 	}

@@ -1,8 +1,9 @@
-package com.vicmatskiv.weaponlib.crafting.workbench;
+package com.vicmatskiv.weaponlib.crafting.ammopress;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.concurrent.TimeUnit;
 
 import org.lwjgl.input.Keyboard;
@@ -17,9 +18,14 @@ import com.vicmatskiv.weaponlib.crafting.CraftingRegistry;
 import com.vicmatskiv.weaponlib.crafting.IModernCrafting;
 import com.vicmatskiv.weaponlib.crafting.base.GUIContainerStation;
 import com.vicmatskiv.weaponlib.crafting.items.CraftingItem;
+import com.vicmatskiv.weaponlib.crafting.workbench.CustomSearchTextField;
+import com.vicmatskiv.weaponlib.crafting.workbench.GUIButtonCustom;
+import com.vicmatskiv.weaponlib.crafting.workbench.TileEntityWorkbench;
+import com.vicmatskiv.weaponlib.crafting.workbench.WorkbenchBlock;
 import com.vicmatskiv.weaponlib.network.packets.StationPacket;
 import com.vicmatskiv.weaponlib.render.gui.GUIRenderHelper;
 import com.vicmatskiv.weaponlib.render.gui.GUIRenderHelper.StringAlignment;
+import com.vicmatskiv.weaponlib.vehicle.jimphysics.InterpolationKit;
 
 import akka.japi.Pair;
 import net.minecraft.client.Minecraft;
@@ -41,26 +47,26 @@ import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.oredict.OreDictionary;
 import scala.actors.threadpool.Arrays;
 
-public class GUIContainerWorkbench extends GUIContainerStation<TileEntityWorkbench> {
+public class GUIContainerAmmoPress extends GUIContainerStation<TileEntityAmmoPress> {
 
-
+	
 	// GUI Textures
 	private static final ResourceLocation GUI_TEX = new ResourceLocation("mw:textures/gui/workshop_sheet.png");
 	private static final ResourceLocation GUI_INV_TEX = new ResourceLocation("mw:textures/gui/workbench_inv_sheet.png");
+	private static final ResourceLocation AMMO_PRESS_TEX = new ResourceLocation("mw:textures/gui/ammosheet.png");
 
-	// Color pallette
-	private static final int GRAY = 0x7B7B7B;
-	private static final int RED = 0xA95E5F;
-	private static final int GOLD = 0xFDF17C;
-	private static final int BLUE = 0x8FC5E3;
-	private static final int GREEN = 0x97E394;
-	private static final int LIGHT_GREY = 0xDADADA;
+	
+
 
 	// Buttons & Search box
-	private GUIButtonCustom craftButton, leftArrow, rightArrow, assaultSelector, attachSelector, modSelector,
+	private GUIButtonCustom craftButton, leftArrow, rightArrow, bulletSelector, magazineSelector,
 			dismantleButton;
-	private CustomSearchTextField searchBox;
+	
+	
+	private CustomSearchTextField searchBox, quantityBox;
 
+	
+	
 	// Currently selected crafting piece
 	private IModernCrafting selectedCraftingPiece = null;
 
@@ -74,24 +80,26 @@ public class GUIContainerWorkbench extends GUIContainerStation<TileEntityWorkben
 	private int scrollBarOffset = 0;
 
 
+
 	// Tells us what kind of stuff we're lookin to craft
-	// Guns = 1, Attachments = 2, Modification Attachments = 3
+	// Bullets = 1; Magazines = 2;
 	private int craftingMode = 1;
 	
 	private boolean hasRequiredItems = false;
 
 	private HashMap<Item, Boolean> hasAvailiableMaterials = new HashMap<>();
 
+	
 
-
-	public GUIContainerWorkbench(EntityPlayer player, InventoryPlayer inventory,
-			TileEntityWorkbench tileEntityWorkbench) {
-		super(new ContainerWorkbench(player, inventory, tileEntityWorkbench));
+	public GUIContainerAmmoPress(EntityPlayer player, InventoryPlayer inventory,
+			TileEntityAmmoPress tileEntityWorkbench) {
+		super(new ContainerAmmoPress(player, inventory, tileEntityWorkbench));
 		this.xSize = 402;
 		this.ySize = 240;
 
 		filteredCraftingList = new ArrayList<IModernCrafting>();
-		filteredCraftingList.addAll(CraftingRegistry.getWeaponCraftingRegistry());
+		filteredCraftingList.addAll(CraftingRegistry.getAttachmentCraftingRegistry());
+		filteredCraftingList.removeIf((s) -> s.getCraftingGroup() != CraftingGroup.BULLET);
 
 		this.tileEntity = tileEntityWorkbench;
 		setPageRange(1, 2);
@@ -103,13 +111,13 @@ public class GUIContainerWorkbench extends GUIContainerStation<TileEntityWorkben
 
 		if (button == craftButton) {
 
-			if (selectedCraftingPiece != null && tileEntity.craftingTimer == -1) {
+			if (selectedCraftingPiece != null) {
 
+			
 				modContext.getChannel().getChannel()
-						.sendToServer(new StationPacket(StationPacket.CRAFT, tileEntity.getPos(), 0, craftingMode == 1 ? WorkbenchBlock.WORKBENCH_WEAPON_CRAFTING_TIME : WorkbenchBlock.WORKBENCH_ATTACHMENT_CRAFTING_TIME,
-								CraftingGroup.getValue(craftingMode),
-								selectedCraftingPiece.getItem().getUnlocalizedName()));
+						.sendToServer(new StationPacket(StationPacket.CRAFT, tileEntity.getPos(), selectedCraftingPiece.getItem().getUnlocalizedName(), selectedCraftingPiece.getCraftingGroup(), 4));
 
+				
 			}
 
 		} else if (button == dismantleButton) {
@@ -122,40 +130,29 @@ public class GUIContainerWorkbench extends GUIContainerStation<TileEntityWorkben
 			setPage(getPage() - 1);
 		} else if (button == rightArrow) {
 			setPage(getPage() + 1);
+			if (getPage() == 2) tileEntity.pushInventoryRefresh = true;
 
-			if (getPage() == 2) {
-				tileEntity.pushInventoryRefresh = true;
-			}
-
-		} else if (button == assaultSelector) {
+		} else if (button == bulletSelector) {
 			((GUIButtonCustom) button).toggleOn();
-			modSelector.toggleOff();
-			attachSelector.toggleOff();
+			magazineSelector.toggleOff();
 			craftingMode = 1;
-
+		
 			selectedCraftingPiece = null;
 
 			filteredCraftingList.clear();
-			filteredCraftingList.addAll(CraftingRegistry.getWeaponCraftingRegistry());
-		} else if (button == attachSelector) {
+			filteredCraftingList.addAll(CraftingRegistry.getAttachmentCraftingRegistry());
+			filteredCraftingList.removeIf((s) -> s.getCraftingGroup() != CraftingGroup.BULLET);
+			
+		} else if (button == magazineSelector) {
 			((GUIButtonCustom) button).toggleOn();
-			modSelector.toggleOff();
-			assaultSelector.toggleOff();
+			bulletSelector.toggleOff();
 			craftingMode = 2;
 
 			selectedCraftingPiece = null;
 
 			filteredCraftingList.clear();
 			filteredCraftingList.addAll(CraftingRegistry.getAttachmentCraftingRegistry());
-			filteredCraftingList.removeIf((s) -> s.getCraftingGroup() == CraftingGroup.ATTACHMENT_MODIFICATION);
-		} else if (button == modSelector) {
-			((GUIButtonCustom) button).toggleOn();
-			attachSelector.toggleOff();
-			assaultSelector.toggleOff();
-			filteredCraftingList.addAll(CraftingRegistry.getAttachmentCraftingRegistry());
-
-			filteredCraftingList.removeIf((s) -> s.getCraftingGroup() != CraftingGroup.ATTACHMENT_MODIFICATION);
-			craftingMode = 3;
+			filteredCraftingList.removeIf((s) -> s.getCraftingGroup() != CraftingGroup.MAGAZINE);
 		}
 	}
 
@@ -170,6 +167,12 @@ public class GUIContainerWorkbench extends GUIContainerStation<TileEntityWorkben
 		this.searchBox.setEnableBackgroundDrawing(true);
 		this.searchBox.setVisible(true);
 		this.searchBox.setTextColor(16777215);
+		
+		this.quantityBox = new CustomSearchTextField("Quantity", 0, this.fontRenderer, this.guiLeft + 267, this.guiTop + 183, 84, 13);
+		this.quantityBox.setMaxStringLength(50);
+		this.quantityBox.setEnableBackgroundDrawing(true);
+		this.quantityBox.setVisible(true);
+		this.quantityBox.setTextColor(16777215);
 
 		craftButton = new GUIButtonCustom(GUI_TEX, 0, this.guiLeft + 211, this.guiTop + 179, 53, 17, 480, 370, "CRAFT")
 				.withStandardState(GRAY, 0, 240).withHoveredState(GOLD, 0, 257).withDisabledState(RED, 0, 274)
@@ -184,28 +187,24 @@ public class GUIContainerWorkbench extends GUIContainerStation<TileEntityWorkben
 				370, "").withStandardState(0xFFFFFF, 57, 317).withHoveredState(0xFFFFFF, 85, 317)
 						.withDisabledCheck(() -> this.getPage() == 2);
 
-		assaultSelector = new GUIButtonCustom(GUI_TEX, 3, this.guiLeft + 107, this.guiTop + 29, 19, 20, 480, 370, "")
-				.withStandardState(0xFFFFFF, 0, 291).withHoveredState(0xFFFFFF, 19, 291)
-				.withToggledState(0xFFFFFF, 38, 291).withPageRestriction(2).makeToggleButton();
+		bulletSelector = new GUIButtonCustom(AMMO_PRESS_TEX, 3, this.guiLeft + 107, this.guiTop + 29, 19, 20, 256, 256, "")
+				.withStandardState(0xFFFFFF, 0, 0).withHoveredState(0xFFFFFF, 19, 0)
+				.withToggledState(0xFFFFFF, 38, 0).withPageRestriction(2).makeToggleButton();
 
-		attachSelector = new GUIButtonCustom(GUI_TEX, 4, this.guiLeft + 130, this.guiTop + 29, 19, 20, 480, 370, "")
-				.withStandardState(0xFFFFFF, 0, 311).withHoveredState(0xFFFFFF, 19, 311)
-				.withToggledState(0xFFFFFF, 38, 311).withPageRestriction(2).makeToggleButton();
+		magazineSelector = new GUIButtonCustom(AMMO_PRESS_TEX, 4, this.guiLeft + 130, this.guiTop + 29, 19, 20, 256, 256, "")
+				.withStandardState(0xFFFFFF, 0, 20).withHoveredState(0xFFFFFF, 19, 20)
+				.withToggledState(0xFFFFFF, 38, 20).withPageRestriction(2).makeToggleButton();
 
-		modSelector = new GUIButtonCustom(GUI_TEX, 5, this.guiLeft + 154, this.guiTop + 29, 19, 20, 480, 370, "")
-				.withStandardState(0xFFFFFF, 0, 331).withHoveredState(0xFFFFFF, 19, 331)
-				.withToggledState(0xFFFFFF, 38, 331).withPageRestriction(2).makeToggleButton();
 
 		dismantleButton = new GUIButtonCustom(GUI_INV_TEX, 6, this.guiLeft + 286, this.guiTop + 70, 73, 17, 480, 370,
 				"DISMANTLE").withStandardState(GRAY, 0, 283).withHoveredState(GOLD, 0, 300)
 						.withDisabledState(RED, 0, 317).withPageRestriction(1);
 
-		assaultSelector.toggleOn();
+		bulletSelector.toggleOn();
 
 		addButton(craftButton);
-		addButton(assaultSelector);
-		addButton(attachSelector);
-		addButton(modSelector);
+		addButton(bulletSelector);
+		addButton(magazineSelector);
 		addButton(leftArrow);
 		addButton(rightArrow);
 		addButton(dismantleButton);
@@ -213,7 +212,7 @@ public class GUIContainerWorkbench extends GUIContainerStation<TileEntityWorkben
 		setPage(1);
 	}
 
-
+	
 
 	public void onSelectNewCrafting(IModernCrafting crafting) {
 		CraftingEntry[] modernRecipe = crafting.getModernRecipe();
@@ -273,7 +272,6 @@ public class GUIContainerWorkbench extends GUIContainerStation<TileEntityWorkben
 		super.updateScreen();
 
 		
-	
 		if (tileEntity.pushInventoryRefresh) {
 			tileEntity.pushInventoryRefresh = false;
 			if (this.selectedCraftingPiece != null)
@@ -281,14 +279,14 @@ public class GUIContainerWorkbench extends GUIContainerStation<TileEntityWorkben
 		}
 
 		if (!this.craftButton.isDisabled() && tileEntity.getProgress() != 0) {
-			this.craftButton.setDisabled(true);
+		//	this.craftButton.setDisabled(true);
 		}
 			
 		
 		
 		
 		if(this.selectedCraftingPiece != null && hasRequiredItems && tileEntity.getProgress() == 0) {
-			this.craftButton.setDisabled(false);
+		//	this.craftButton.setDisabled(false);
 		}
 		
 		
@@ -303,13 +301,20 @@ public class GUIContainerWorkbench extends GUIContainerStation<TileEntityWorkben
 		// this.guiLeft + 304, this.guiTop + 185, 53f, 240f, 81, 11,
 		ArrayList<String> strings = new ArrayList<>();
 
+		
+	
 		if (GUIRenderHelper.checkInBox(mouseX, mouseY, this.guiLeft + 304, this.guiTop + 185, 81, 11)
-				&& tileEntity.craftingTimer != -1) {
-			int seconds = (tileEntity.craftingDuration - tileEntity.craftingTimer) / 20;
-			strings.add(TextFormatting.GOLD + "Crafting: " + TextFormatting.WHITE
-					+ I18n.format(tileEntity.craftingTargetName + ".name"));
-			strings.add(TextFormatting.GOLD + "Time remaining: " + TextFormatting.WHITE
-					+ GUIRenderHelper.formatTimeString(seconds, TimeUnit.SECONDS));
+				&& tileEntity.craftingTimer != -1 && tileEntity.hasStack()) {
+			int millis = (int) Math.round(((tileEntity.craftingDuration - tileEntity.craftingTimer) / 20.0)*1000);
+			
+			
+			if(tileEntity.hasStack()) {
+				strings.add(TextFormatting.GOLD + "Crafting: " + TextFormatting.WHITE
+						+ I18n.format(tileEntity.getLatestStackInQueue().getUnlocalizedName() + ".name"));
+				strings.add(TextFormatting.GOLD + "Quantity: " + TextFormatting.WHITE
+						+ tileEntity.getLatestStackInQueue().getCount());
+			}
+			
 		}
 
 		if (GUIRenderHelper.checkInBox(mouseX, mouseY, this.guiLeft + 261, this.guiTop + 57, 122, 7)) {
@@ -341,14 +346,34 @@ public class GUIContainerWorkbench extends GUIContainerStation<TileEntityWorkben
 			}
 		}
 
-		if (!strings.isEmpty())
-			drawHoveringText(strings, mouseX, mouseY);
-
+	
+	
+	
+		
+		
 		if (getPage() == 2) {
 			this.searchBox.drawTextBox();
-		
+			this.quantityBox.drawTextBox();
+			
+			
+			LinkedList<ItemStack> queue = tileEntity.getCraftingQueue();
+			for(int i = 0; i < queue.size(); ++i) {
+				ItemStack stack = queue.get(i);
+				GlStateManager.color(1, 1, 1);
+				Minecraft.getMinecraft().getTextureManager().bindTexture(AMMO_PRESS_TEX);
+				GUIRenderHelper.drawTexturedRect(this.guiLeft + 200 + i*20, this.guiTop, 0, 40, 20, 20, 256, 256);
+				Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(stack, this.guiLeft + 202 + i*20, this.guiTop + 2);
 
+				GUIRenderHelper.drawScaledString("x" + stack.getCount(), this.guiLeft + 212 + i*20, this.guiTop + 16, 0.7, BLUE);
+			}
+			
 		}
+		
+		
+		if (!strings.isEmpty())
+			drawHoveringText(strings, mouseX, mouseY);
+		
+		
 
 	}
 
@@ -356,7 +381,8 @@ public class GUIContainerWorkbench extends GUIContainerStation<TileEntityWorkben
 	protected void compatibleMouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
 		super.compatibleMouseClicked(mouseX, mouseY, mouseButton);
 		this.searchBox.mouseClicked(mouseX, mouseY, mouseButton);
-
+		this.quantityBox.mouseClicked(mouseX, mouseY, mouseButton);
+		
 		int c = (int) Math.floor(filteredCraftingList.size() * scrollBarProgress / 7) * 7;
 		for (int y = 0; y < 6; ++y) {
 			for (int x = 0; x < 7; ++x) {
@@ -390,14 +416,18 @@ public class GUIContainerWorkbench extends GUIContainerStation<TileEntityWorkben
 	@SuppressWarnings("unchecked")
 	@Override
 	protected void keyTyped(char typedChar, int keyCode) throws IOException {
-		
-		boolean cancelationFlag = this.searchBox.getText().length() == 0 && keyCode == Keyboard.KEY_BACK;
+		 
+	
+		boolean cancelationForSearch = this.searchBox.getText().length() == 0 && keyCode == Keyboard.KEY_BACK;
+		boolean cancelationForQuantity = this.quantityBox.getText().length() == 0 && keyCode == Keyboard.KEY_BACK;
 		
 		super.keyTyped(typedChar, keyCode);
 		this.searchBox.textboxKeyTyped(typedChar, keyCode);
+		if(Character.isDigit(typedChar) || keyCode == Keyboard.KEY_BACK) {
+			this.quantityBox.textboxKeyTyped(typedChar, keyCode);
+		}
 		
-		
-		if(cancelationFlag) return;
+		if((cancelationForSearch && this.searchBox.isFocused()) || (cancelationForQuantity && this.quantityBox.isFocused())) return;
 		
 		
 		if(keyCode == Keyboard.KEY_BACK) {
@@ -421,9 +451,7 @@ public class GUIContainerWorkbench extends GUIContainerStation<TileEntityWorkben
 		}
 	}
 
-	public Weapon getSelectedWeaponIDForGUI() {
-		return (Weapon) selectedCraftingPiece;
-	}
+
 
 	@Override
 	protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
@@ -470,7 +498,13 @@ public class GUIContainerWorkbench extends GUIContainerStation<TileEntityWorkben
 
 			// Draw progress bar
 			// forty notches, therefore 1/40.0 = 0.025
-			double progress = (0.025) * (Math.round(tileEntity.getProgress() / (0.025)));
+			
+			
+			double prevProgress = (Math.max(tileEntity.prevCraftingTimer, 0)) / (double) tileEntity.craftingDuration;
+			double currProgress = (Math.max(tileEntity.craftingTimer, 0)) / (double) tileEntity.craftingDuration;
+			double intpProgress = InterpolationKit.interpolateValue(prevProgress, currProgress, Minecraft.getMinecraft().getRenderPartialTicks());
+			
+			double progress = (0.025) * (Math.round(intpProgress / (0.025)));
 			drawModalRectWithCustomSizedTexture(this.guiLeft + 304, this.guiTop + 185, 53f, 240f, 81, 11, 480, 370);
 			drawModalRectWithCustomSizedTexture(this.guiLeft + 304, this.guiTop + 185, 53f, 240f + 11, (int) (81 * progress), 11, 480,
 					370);
@@ -536,11 +570,11 @@ public class GUIContainerWorkbench extends GUIContainerStation<TileEntityWorkben
 							}
 						}
 			
-						
+						RenderHelper.enableGUIStandardItemLighting();
 						Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(
 								new ItemStack(filteredCraftingList.get(c).getItem()), this.guiLeft + 15 + (x * 23),
 								this.guiTop + 55 + (y * 23));
-						
+						RenderHelper.disableStandardItemLighting();
 						
 						Minecraft.getMinecraft().getTextureManager().bindTexture(GUI_TEX);
 						
@@ -552,18 +586,11 @@ public class GUIContainerWorkbench extends GUIContainerStation<TileEntityWorkben
 			}
 
 
-			if (craftingMode == 1 && getSelectedWeaponIDForGUI() != null) {
-				render3DItemInGUI(getSelectedWeaponIDForGUI(), this.guiLeft + 300, this.guiTop + 65, mouseX, mouseY);
+			if (craftingMode == 1 && selectedCraftingPiece != null) {
+				render3DItemInGUI(selectedCraftingPiece.getItem(), this.guiLeft + 300, this.guiTop + 65, mouseX, mouseY);
 			}
 			
-			if (craftingMode == 1 && selectedCraftingPiece != null) {
-				Weapon weapon = getSelectedWeaponIDForGUI();
-				GuiRenderUtil.drawScaledString(fontRenderer, format(weapon.getUnlocalizedName()),
-						this.guiLeft + 214, this.guiTop + 31, 1.2, 0xFDF17C);
-				GuiRenderUtil.drawScaledString(fontRenderer, weapon.builder.getWeaponType(), this.guiLeft + 214, this.guiTop + 43, 0.75,
-						0xC8C49C);
-
-			} else if (craftingMode > 1 && selectedCraftingPiece != null) {
+			if (selectedCraftingPiece != null) {
 
 				GuiRenderUtil.drawScaledString(fontRenderer,
 						format(selectedCraftingPiece.getItem().getUnlocalizedName()), this.guiLeft + 214, this.guiTop + 31,
@@ -589,10 +616,10 @@ public class GUIContainerWorkbench extends GUIContainerStation<TileEntityWorkben
 					0.8, 0xFFFFFF);
 
 			if (selectedCraftingPiece != null) {
-				IModernCrafting weapon = selectedCraftingPiece;
-				if (weapon.getModernRecipe() != null && weapon.getModernRecipe().length != 0) {
+				IModernCrafting modernCraftingPiece = selectedCraftingPiece;
+				if (modernCraftingPiece.getModernRecipe() != null && modernCraftingPiece.getModernRecipe().length != 0) {
 					int c = 0;
-					for (CraftingEntry stack : weapon.getModernRecipe()) {
+					for (CraftingEntry stack : modernCraftingPiece.getModernRecipe()) {
 						ItemStack itemStack = new ItemStack(stack.getItem());
 						Minecraft.getMinecraft().getTextureManager().bindTexture(GUI_TEX);
 
@@ -658,6 +685,8 @@ public class GUIContainerWorkbench extends GUIContainerStation<TileEntityWorkben
 
 
 			GlStateManager.popMatrix();
+			
+			
 
 			boolean playerInventoryFull = Minecraft.getMinecraft().player.inventory.getFirstEmptyStack() == -1;
 			if (playerInventoryFull) {
@@ -665,17 +694,23 @@ public class GUIContainerWorkbench extends GUIContainerStation<TileEntityWorkben
 						1.0, RED);
 			}
 			for (int i = 0; i < 9; ++i) {
+				ItemStack stack = tileEntity.mainInventory.getStackInSlot(i);
 				Minecraft.getMinecraft().getTextureManager().bindTexture(GUI_TEX);
 
 				if (GUIRenderHelper.checkInBox(mouseX, mouseY, this.guiLeft + 40 + (i * 22), this.guiTop + 219, 20, 20)) {
 					GUIRenderHelper.drawTexturedRect(this.guiLeft + 39 + (i * 22), this.guiTop + 218, playerInventoryFull ? 18 : 0, 351,
 							18, 18, 480, 370);
-					setItemRenderTooltip(tileEntity.mainInventory.getStackInSlot(i));
+					setItemRenderTooltip(stack);
 
 				}
-				Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(tileEntity.mainInventory.getStackInSlot(i),
+				Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(stack,
 						this.guiLeft + 40 + (i * 22), this.guiTop + 219);
 
+				if(!stack.isEmpty()) {
+					GUIRenderHelper.drawScaledString(tileEntity.mainInventory.getStackInSlot(i).getCount() + "", this.guiLeft + 50 + (i * 22), this.guiTop + 230, 1, 0xFFFFFF);
+					
+				}
+				
 			}
 
 		}
@@ -683,27 +718,7 @@ public class GUIContainerWorkbench extends GUIContainerStation<TileEntityWorkben
 	}
 	
 	
-	public void render3DItemInGUI(Item item, int x, int y, int mouseX, int mouseY) {
-		GlStateManager.pushMatrix();
-
-		GlStateManager.translate(x, y, 100.0F);
-		GlStateManager.translate(8.0F, 8.0F, 0.0F);
-		GlStateManager.scale(1.0F, -1.0F, 1.0F);
-		GlStateManager.scale(20.0F, 20.0F, 20.0F);
-
-		GlStateManager.rotate(15 + mouseY*0.01f, 1, 0, 0);
-		GlStateManager.rotate(120 + mouseX*0.01f, 0, 1, 0);
-		GlStateManager.rotate(0, 0, 0, 1);
-
-		GlStateManager.scale(4, 4, 4);
-		GlStateManager.enableLighting();
-		RenderHelper.enableStandardItemLighting();
-		Minecraft.getMinecraft().getRenderItem().renderItem(new ItemStack(item),
-				TransformType.THIRD_PERSON_LEFT_HAND);
-		RenderHelper.disableStandardItemLighting();
-		GlStateManager.disableLighting();
-		GlStateManager.popMatrix();
-	}
+	
 
 	@Override
 	public void onGuiClosed() {

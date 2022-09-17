@@ -6,33 +6,27 @@ import com.vicmatskiv.weaponlib.crafting.CraftingRegistry;
 import com.vicmatskiv.weaponlib.crafting.IModernCrafting;
 import com.vicmatskiv.weaponlib.crafting.base.TileEntityStation;
 import com.vicmatskiv.weaponlib.crafting.items.CraftingItem;
+
+import io.netty.buffer.ByteBuf;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
+import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.items.ItemStackHandler;
 
 public class TileEntityWorkbench extends TileEntityStation {
 
-	public int craftingTimer = -1;
-	public int craftingDuration = -1;
+
 	public IModernCrafting craftingTarget;
 
 	// For the client.
 	public String craftingTargetName;
 
-	public int[] dismantleStatus = new int[] { -1, -1, -1, -1 };
-	public int[] dismantleDuration = new int[] { -1, -1, -1, -1 };
 
 	public int ticker;
 
 	public boolean pushInventoryRefresh = false;
 
-	/*
-	 * Contents: 9 for crafting output 4 for dismantling slots 10 dismantling
-	 * inventory 27 for main inventory + ------------------------- 50 slots total
-	 * 
-	 */
-	public ItemStackHandler mainInventory = new ItemStackHandler(50);
 
 	public TileEntityWorkbench() {
 	}
@@ -63,16 +57,34 @@ public class TileEntityWorkbench extends TileEntityStation {
 	public void handleUpdateTag(NBTTagCompound tag) {
 		super.handleUpdateTag(tag);
 	}
+	
+	
+	@Override
+	public void writeBytesForClientSync(ByteBuf buf) {
+		super.writeBytesForClientSync(buf);
+		if(this.craftingTarget != null) {
+			buf.writeBoolean(true);
+			ByteBufUtils.writeUTF8String(buf, this.craftingTarget.getItem().getUnlocalizedName());
+		} else {
+			buf.writeBoolean(false);
+		}
+		
+	}
+	
+	@Override
+	public void readBytesFromClientSync(ByteBuf buf) {
+		super.readBytesFromClientSync(buf);
+		if(buf.readBoolean()) {
+			this.craftingTargetName = ByteBufUtils.readUTF8String(buf);
+		}
+	}
 
 	@Override
 	public NBTTagCompound writeToNBT(NBTTagCompound compound) {
 		super.writeToNBT(compound);
-		compound.setTag("mainInventory", mainInventory.serializeNBT());
 		if (craftingTimer != -1) {
 			compound.setInteger("craftingTargetID", this.craftingTarget.getCraftingGroup().getID());
 			compound.setString("craftingTargetName", this.craftingTarget.getItem().getUnlocalizedName());
-			compound.setInteger("craftingTimer", craftingTimer);
-			compound.setInteger("craftingDuration", craftingDuration);
 
 		}
 		return compound;
@@ -81,14 +93,10 @@ public class TileEntityWorkbench extends TileEntityStation {
 	@Override
 	public void readFromNBT(NBTTagCompound compound) {
 		super.readFromNBT(compound);
-		if (compound.hasKey("mainInventory"))
-			this.mainInventory.deserializeNBT((NBTTagCompound) compound.getTag("mainInventory"));
 		if (compound.hasKey("craftingTimer") && compound.hasKey("craftingDuration")) {
 			this.craftingTarget = CraftingRegistry.getModernCrafting(
 					CraftingGroup.getValue(compound.getInteger("craftingTargetID")),
 					compound.getString("craftingTargetName"));
-			this.craftingTimer = compound.getInteger("craftingTimer");
-			this.craftingDuration = compound.getInteger("craftingDuration");
 		}
 
 	}
@@ -98,39 +106,7 @@ public class TileEntityWorkbench extends TileEntityStation {
 		this.craftingDuration = duration;
 	}
 
-	public void setDismantling(int[] instant, int[] lengths) {
-		this.dismantleStatus = instant;
-		this.dismantleDuration = lengths;
-	}
-
-	public void addStackToInventoryRange(ItemStack stack, int start, int end) {
-
-		for (int i = start; i <= end; ++i) {
-			if (ItemStack.areItemsEqual(mainInventory.getStackInSlot(i), stack)) {
-				ItemStack inInventory = mainInventory.getStackInSlot(i);
-				if (inInventory.getCount() + stack.getCount() <= inInventory.getMaxStackSize()) {
-					inInventory.grow(stack.getCount());
-					stack.shrink(stack.getCount());
-				} else if (inInventory.getCount() >= inInventory.getMaxStackSize()) {
-					continue;
-				} else if (inInventory.getCount() + inInventory.getCount() >= inInventory.getMaxStackSize()) {
-					int difference = inInventory.getMaxStackSize() - inInventory.getCount();
-					inInventory.grow(difference);
-					stack.shrink(difference);
-					continue;
-				}
-			}
-		}
-
-		if (stack.getCount() > 0) {
-			for (int i = start; i <= end; ++i) {
-				if (mainInventory.getStackInSlot(i).isEmpty()) {
-					mainInventory.setStackInSlot(i, stack);
-					break;
-				}
-			}
-		}
-	}
+	
 
 	@Override
 	public void update() {
@@ -167,7 +143,7 @@ public class TileEntityWorkbench extends TileEntityStation {
 								itemStack.setCount((int) Math.round(
 										stack.getCount() * ((CraftingItem) stack.getItem()).getRecoveryPercentage()));
 							}
-							addStackToInventoryRange(itemStack, 31, 40);
+							addStackToInventoryRange(itemStack, 13, 22);
 						}
 					}
 				}

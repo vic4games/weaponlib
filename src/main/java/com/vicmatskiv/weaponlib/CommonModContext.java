@@ -91,8 +91,8 @@ import com.vicmatskiv.weaponlib.network.packets.BulletShellClient;
 import com.vicmatskiv.weaponlib.network.packets.GunFXPacket;
 import com.vicmatskiv.weaponlib.network.packets.HeadshotSFXPacket;
 import com.vicmatskiv.weaponlib.network.packets.OpenDoorPacket;
-import com.vicmatskiv.weaponlib.network.packets.WorkbenchPacket;
-import com.vicmatskiv.weaponlib.network.packets.WorkshopClientPacket;
+import com.vicmatskiv.weaponlib.network.packets.StationPacket;
+import com.vicmatskiv.weaponlib.network.packets.StationClientPacket;
 import com.vicmatskiv.weaponlib.particle.SpawnParticleMessage;
 import com.vicmatskiv.weaponlib.particle.SpawnParticleMessageHandler;
 import com.vicmatskiv.weaponlib.state.Permit;
@@ -398,11 +398,11 @@ public class CommonModContext implements ModContext {
         channel.registerMessage(new OpenDoorPacket.OpenDoorPacketHandler(this),
         		OpenDoorPacket.class, 42, CompatibleSide.SERVER);
 
-        channel.registerMessage(new WorkbenchPacket.WorkbenchPacketHandler(this),
-        		WorkbenchPacket.class, 43, CompatibleSide.SERVER);
+        channel.registerMessage(new StationPacket.WorkbenchPacketHandler(this),
+        		StationPacket.class, 43, CompatibleSide.SERVER);
         
-        channel.registerMessage(new WorkshopClientPacket.WorkshopClientPacketHandler(this),
-        		WorkshopClientPacket.class, 44, CompatibleSide.CLIENT);
+        channel.registerMessage(new StationClientPacket.WorkshopClientPacketHandler(this),
+        		StationClientPacket.class, 44, CompatibleSide.CLIENT);
         
         
 		ServerEventHandler serverHandler = new ServerEventHandler(this, modId);

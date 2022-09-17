@@ -11,16 +11,20 @@ import net.minecraft.client.gui.GuiTextField;
  * @author James Holden, 2022
  */
 public class CustomSearchTextField extends GuiTextField {
+	
+	private String hintText;
 
-	public CustomSearchTextField(int componentId, FontRenderer fontrendererObj, int x, int y, int par5Width,
+	public CustomSearchTextField(String hint, int componentId, FontRenderer fontrendererObj, int x, int y, int par5Width,
 			int par6Height) {
 		super(componentId, fontrendererObj, x, y, par5Width, par6Height);
+		
+		this.hintText = hint;
 	}
 	
 	@Override
 	public void drawTextBox() {
 		if(getText().length() == 0 && !isFocused()) {
-			drawString(Minecraft.getMinecraft().fontRenderer, "Search Items...", this.x + 3, this.y + 2, 0xFFFFFF);
+			drawString(Minecraft.getMinecraft().fontRenderer, this.hintText, this.x + 3, this.y + 2, 0xFFFFFF);
 		} else if(isFocused() && getText().length() == 0) {
 			if(System.currentTimeMillis()%1000 < 500) {
 				drawString(Minecraft.getMinecraft().fontRenderer, "_", this.x + 3, this.y + 2, 0xFFFFFF);

@@ -3,7 +3,7 @@ package com.vicmatskiv.weaponlib.crafting.workbench;
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.crafting.base.BlockStation;
 import com.vicmatskiv.weaponlib.inventory.GuiHandler;
-import com.vicmatskiv.weaponlib.network.packets.WorkshopClientPacket;
+import com.vicmatskiv.weaponlib.network.packets.StationClientPacket;
 
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -66,7 +66,7 @@ public class WorkbenchBlock extends BlockStation {
 			playerIn.swingArm(hand);
 			
 			if(!worldIn.isRemote) {
-				modContext.getChannel().getChannel().sendTo(new WorkshopClientPacket(pos, (TileEntityWorkbench) worldIn.getTileEntity(pos)), (EntityPlayerMP) playerIn);
+				modContext.getChannel().getChannel().sendTo(new StationClientPacket(worldIn, pos), (EntityPlayerMP) playerIn);
 			}
 		}
 		

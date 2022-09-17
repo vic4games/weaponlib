@@ -19,6 +19,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleFmlPreInitializationEven
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderingRegistry;
 import com.vicmatskiv.weaponlib.config.ConfigurationManager;
+import com.vicmatskiv.weaponlib.crafting.ammopress.GUIContainerAmmoPress;
 import com.vicmatskiv.weaponlib.crafting.workbench.GUIContainerWorkbench;
 import com.vicmatskiv.weaponlib.electronics.EntityWirelessCamera;
 import com.vicmatskiv.weaponlib.electronics.WirelessCameraRenderer;
@@ -130,7 +131,7 @@ public class ClientModContext extends CommonModContext {
 		this.playerRawPitchAnimationManager = new ScreenShakingAnimationManager();
 		
 		GUIContainerWorkbench.setModContext(this);
-		
+		GUIContainerAmmoPress.setModContext(this);
 		
 		
 		

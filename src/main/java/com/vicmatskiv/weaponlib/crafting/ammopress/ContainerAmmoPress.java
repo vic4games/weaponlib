@@ -1,9 +1,12 @@
-package com.vicmatskiv.weaponlib.crafting.workbench;
+package com.vicmatskiv.weaponlib.crafting.ammopress;
 
 import java.util.function.Supplier;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleContainer;
 import com.vicmatskiv.weaponlib.crafting.base.ContainerStation;
+import com.vicmatskiv.weaponlib.crafting.workbench.PagedSlot;
+import com.vicmatskiv.weaponlib.crafting.workbench.PagedSlotItemHandler;
+import com.vicmatskiv.weaponlib.crafting.workbench.TileEntityWorkbench;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -11,11 +14,11 @@ import net.minecraft.inventory.IContainerListener;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 
-public class ContainerWorkbench extends ContainerStation {
+public class ContainerAmmoPress extends ContainerStation {
 
-	private TileEntityWorkbench tileEntityWorkbench;
+	private TileEntityAmmoPress tileEntityWorkbench;
 
-	public ContainerWorkbench(EntityPlayer player, InventoryPlayer inventory, TileEntityWorkbench workbenchTileEntity) {
+	public ContainerAmmoPress(EntityPlayer player, InventoryPlayer inventory, TileEntityAmmoPress workbenchTileEntity) {
 		this.tileEntityWorkbench = workbenchTileEntity;
 
 		// Page first
