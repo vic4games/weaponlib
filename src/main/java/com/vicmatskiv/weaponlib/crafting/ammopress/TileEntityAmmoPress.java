@@ -75,6 +75,7 @@ public class TileEntityAmmoPress extends TileEntityStation {
 		buf.writeInt(this.craftStack.size());
 		for(ItemStack stack : craftStack) {
 			ByteBufUtils.writeItemStack(buf, stack);
+			buf.writeInt(stack.getCount());
 		}
 	}
 	
@@ -85,8 +86,12 @@ public class TileEntityAmmoPress extends TileEntityStation {
 		
 		int size = buf.readInt();
 		for(int i = 0; i < size; ++i) {
-			this.craftStack.offer(ByteBufUtils.readItemStack(buf));
+			ItemStack stack = ByteBufUtils.readItemStack(buf);
+			stack.setCount(buf.readInt());
+			this.craftStack.offer(stack);
 		}
+		
+		
 		
 	}
 	
@@ -147,9 +152,14 @@ public class TileEntityAmmoPress extends TileEntityStation {
 		super.update();
 		
 		
+		
+		
 	
 		if(hasStack()) {
 			
+		//System.out.println("yo " + getCraftingQueue());
+			
+			//if(1+1 == 2) return;
 			boolean canCraftNextItem = true;
 			for(CraftingEntry entry : ((IModernCrafting) getLatestStackInQueue().getItem()).getModernRecipe()) {
 				if(!inventoryContainsEnoughItems(entry.getItem(), entry.getCount(), 22, 49)) {

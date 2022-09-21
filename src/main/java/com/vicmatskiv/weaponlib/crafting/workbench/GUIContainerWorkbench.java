@@ -165,7 +165,7 @@ public class GUIContainerWorkbench extends GUIContainerStation<TileEntityWorkben
 	public void initGui() {
 		super.initGui();
 
-		this.searchBox = new CustomSearchTextField("Search Items...", 0, this.fontRenderer, this.guiLeft + 15, this.guiTop + 32, 84, 13);
+		this.searchBox = new CustomSearchTextField(GUI_TEX, "Search Items...", 0, 0, this.fontRenderer, this.guiLeft + 15, this.guiTop + 32, 84, 13);
 		this.searchBox.setMaxStringLength(50);
 		this.searchBox.setEnableBackgroundDrawing(true);
 		this.searchBox.setVisible(true);

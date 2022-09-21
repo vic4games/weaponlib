@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleGuiContainer;
+import com.vicmatskiv.weaponlib.crafting.IModernCrafting;
 import com.vicmatskiv.weaponlib.crafting.ammopress.ContainerAmmoPress;
 import com.vicmatskiv.weaponlib.crafting.ammopress.TileEntityAmmoPress;
 import com.vicmatskiv.weaponlib.crafting.workbench.GUIButtonCustom;
@@ -32,6 +33,10 @@ public class GUIContainerStation<T extends TileEntityStation> extends Compatible
 	private ArrayList<String> tooltipRenderItem = new ArrayList<>();
 
 	protected static ModContext modContext;
+
+	
+	// Currently used crafting list.
+	protected ArrayList<IModernCrafting> filteredCraftingList = new ArrayList<>();
 
 
 	// The page the workbench is on
@@ -69,6 +74,8 @@ public class GUIContainerStation<T extends TileEntityStation> extends Compatible
 	public String format(String unloc) {
 		return I18n.format(unloc + ".name");
 	}
+	
+	public void fillFilteredList() {};
 	
 	@Override
 	public void updateScreen() {

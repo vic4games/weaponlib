@@ -79,6 +79,7 @@ public class StationPacket implements CompatibleMessage {
 	public static final int DISMANTLE = 2;
 	public static final int MOVE_OUTPUT = 3;
 	public static final int UPDATE = 4;
+	public static final int POP_FROM_QUEUE = 5;
 	
 	public int opcode;
 	public BlockPos teLocation;
@@ -139,7 +140,7 @@ public class StationPacket implements CompatibleMessage {
 			this.craftingGroup = CraftingGroup.getValue(buf.readInt());
 			this.craftingName = ByteBufUtils.readUTF8String(buf);
 			
-		} else if(this.opcode == MOVE_OUTPUT) {
+		} else if(this.opcode == MOVE_OUTPUT || this.opcode == POP_FROM_QUEUE) {
 			this.playerID = buf.readInt();
 			this.slotToMove = buf.readInt();
 		} else if(this.opcode == DISMANTLE) {
@@ -163,7 +164,7 @@ public class StationPacket implements CompatibleMessage {
 			buf.writeInt(this.craftingGroup.getID());
 			ByteBufUtils.writeUTF8String(buf, this.craftingName);
 			 
-		} else if(this.opcode == MOVE_OUTPUT) {
+		} else if(this.opcode == MOVE_OUTPUT || this.opcode == POP_FROM_QUEUE) {
 			buf.writeInt(this.playerID);
 			buf.writeInt(this.slotToMove);
 		} else if(this.opcode == DISMANTLE) {
@@ -195,6 +196,40 @@ public class StationPacket implements CompatibleMessage {
 	            		TileEntityStation station = (TileEntityStation) tileEntity;
 	            		
 	            		if(m.opcode == CRAFT) {
+	            			
+	            			
+	            			
+	            			
+	            			if(tileEntity instanceof TileEntityAmmoPress) {
+	            				// Since it's based on a queue, you can add whatever you'd like and it
+	            				// will merely refuse to craft it until you have the resources avaliable.
+	            				
+	            				
+	            				TileEntityAmmoPress press = (TileEntityAmmoPress) station;
+		            			Item item = CraftingRegistry.getModernCrafting(m.craftingGroup, m.craftingName).getItem();
+		            			ItemStack newStack = new ItemStack(item, m.quantity);
+		            			
+		            		
+		            			if(press.hasStack()) {
+		            				ItemStack topQueue = press.getLatestStackInQueue();
+		            				if(ItemStack.areItemsEqualIgnoreDurability(topQueue, newStack)) {
+		            					
+		            					topQueue.grow(m.quantity);
+		            					
+		            					
+		            				} else {
+		            					press.addStack(newStack);
+		            				}
+		            			} else {
+		            				press.addStack(newStack);
+		            			}
+		            			
+		            			
+		            			modContext.getChannel().getChannel().sendToAllAround(new StationClientPacket(station.getWorld(), m.teLocation), new TargetPoint(0, m.teLocation.getX(), m.teLocation.getY(), m.teLocation.getZ(), 20));
+			            		
+		            			
+		            			return;
+	            			}
 	            			
 	            			
 	            		
@@ -258,12 +293,9 @@ public class StationPacket implements CompatibleMessage {
 		            			
 		            		}*/
 		            		
-		            		if(station instanceof TileEntityWorkbench) {
-		            			for(Pair<Item, Integer> i : toConsume) {
-			            			itemList.get(i.first()).shrink(i.second());
-			            		}
+		            		for(Pair<Item, Integer> i : toConsume) {
+		            			itemList.get(i.first()).shrink(i.second());
 		            		}
-		            		
 		            		
 		            		
 		            		
@@ -272,27 +304,6 @@ public class StationPacket implements CompatibleMessage {
 		            			workbench.craftingTimer = m.craftingTimer;
 		            			workbench.craftingDuration = m.craftingDuration;
 			            		workbench.craftingTarget = CraftingRegistry.getModernCrafting(m.craftingGroup, m.craftingName);
-		            		} else if(station instanceof TileEntityAmmoPress) {
-		            			
-		            			TileEntityAmmoPress press = (TileEntityAmmoPress) station;
-		            			Item item = CraftingRegistry.getModernCrafting(m.craftingGroup, m.craftingName).getItem();
-		            			ItemStack newStack = new ItemStack(item, m.quantity);
-		            			
-		            			
-		            			if(press.hasStack()) {
-		            				ItemStack topQueue = press.getLatestStackInQueue();
-		            				if(ItemStack.areItemsEqualIgnoreDurability(topQueue, newStack)) {
-		            					topQueue.grow(m.quantity);
-		            					
-		            				} else {
-		            					press.addStack(newStack);
-		            				}
-		            			} else {
-		            				press.addStack(newStack);
-		            			}
-		            			
-		            			
-		            			
 		            		}
 		            		
 		            		station.markDirty();
@@ -324,6 +335,17 @@ public class StationPacket implements CompatibleMessage {
 	            			
 	            		} else if(m.opcode == MOVE_OUTPUT) {
 	            			((EntityPlayer) world.getEntityByID(m.playerID)).addItemStackToInventory(station.mainInventory.getStackInSlot(m.slotToMove));
+	            		} else if(m.opcode == POP_FROM_QUEUE) {
+	            			if(!(tileEntity instanceof TileEntityAmmoPress)) return;
+	            			
+	            			TileEntityAmmoPress teAmmoPress = (TileEntityAmmoPress) tileEntity;
+	            			
+	            			if(teAmmoPress.hasStack() && teAmmoPress.getCraftingQueue().size() > m.slotToMove) {
+	            				teAmmoPress.getCraftingQueue().remove(m.slotToMove);
+	            			}
+	            			
+	            			modContext.getChannel().getChannel().sendToAllAround(new StationClientPacket(station.getWorld(), m.teLocation), new TargetPoint(0, m.teLocation.getX(), m.teLocation.getY(), m.teLocation.getZ(), 25));
+		            		
 	            		}
 	            		
 	            		

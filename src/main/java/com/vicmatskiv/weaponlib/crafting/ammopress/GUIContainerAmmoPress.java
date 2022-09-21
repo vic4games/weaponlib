@@ -70,9 +70,7 @@ public class GUIContainerAmmoPress extends GUIContainerStation<TileEntityAmmoPre
 	// Currently selected crafting piece
 	private IModernCrafting selectedCraftingPiece = null;
 
-	// Currently used crafting list.
-	private ArrayList<IModernCrafting> filteredCraftingList = new ArrayList<>();
-
+	
 	// Scroll bar data
 	private boolean scrollBarGrabbed = false;
 	private double scrollBarProgress;
@@ -96,13 +94,25 @@ public class GUIContainerAmmoPress extends GUIContainerStation<TileEntityAmmoPre
 		super(new ContainerAmmoPress(player, inventory, tileEntityWorkbench));
 		this.xSize = 402;
 		this.ySize = 240;
+		
+		fillFilteredList();
 
-		filteredCraftingList = new ArrayList<IModernCrafting>();
-		filteredCraftingList.addAll(CraftingRegistry.getAttachmentCraftingRegistry());
-		filteredCraftingList.removeIf((s) -> s.getCraftingGroup() != CraftingGroup.BULLET);
-
+		
 		this.tileEntity = tileEntityWorkbench;
 		setPageRange(1, 2);
+	}
+	
+	@Override
+	public void fillFilteredList() {
+		if(craftingMode == 1) {
+			filteredCraftingList = new ArrayList<IModernCrafting>();
+			filteredCraftingList.addAll(CraftingRegistry.getAttachmentCraftingRegistry());
+			filteredCraftingList.removeIf((s) -> s.getCraftingGroup() != CraftingGroup.BULLET);
+		} else if(craftingMode == 2) {
+			filteredCraftingList = new ArrayList<IModernCrafting>();
+			filteredCraftingList.addAll(CraftingRegistry.getAttachmentCraftingRegistry());
+			filteredCraftingList.removeIf((s) -> s.getCraftingGroup() != CraftingGroup.MAGAZINE);
+		}
 	}
 
 	@Override
@@ -111,11 +121,14 @@ public class GUIContainerAmmoPress extends GUIContainerStation<TileEntityAmmoPre
 
 		if (button == craftButton) {
 
-			if (selectedCraftingPiece != null) {
+			if (selectedCraftingPiece != null && quantityBox.getText().length() != 0) {
 
+				int quantity = Integer.parseInt(quantityBox.getText());
+				
+				
 			
 				modContext.getChannel().getChannel()
-						.sendToServer(new StationPacket(StationPacket.CRAFT, tileEntity.getPos(), selectedCraftingPiece.getItem().getUnlocalizedName(), selectedCraftingPiece.getCraftingGroup(), 4));
+						.sendToServer(new StationPacket(StationPacket.CRAFT, tileEntity.getPos(), selectedCraftingPiece.getItem().getUnlocalizedName(), selectedCraftingPiece.getCraftingGroup(), quantity));
 
 				
 			}
@@ -139,10 +152,7 @@ public class GUIContainerAmmoPress extends GUIContainerStation<TileEntityAmmoPre
 		
 			selectedCraftingPiece = null;
 
-			filteredCraftingList.clear();
-			filteredCraftingList.addAll(CraftingRegistry.getAttachmentCraftingRegistry());
-			filteredCraftingList.removeIf((s) -> s.getCraftingGroup() != CraftingGroup.BULLET);
-			
+			fillFilteredList();
 		} else if (button == magazineSelector) {
 			((GUIButtonCustom) button).toggleOn();
 			bulletSelector.toggleOff();
@@ -150,9 +160,7 @@ public class GUIContainerAmmoPress extends GUIContainerStation<TileEntityAmmoPre
 
 			selectedCraftingPiece = null;
 
-			filteredCraftingList.clear();
-			filteredCraftingList.addAll(CraftingRegistry.getAttachmentCraftingRegistry());
-			filteredCraftingList.removeIf((s) -> s.getCraftingGroup() != CraftingGroup.MAGAZINE);
+			fillFilteredList();
 		}
 	}
 
@@ -162,13 +170,13 @@ public class GUIContainerAmmoPress extends GUIContainerStation<TileEntityAmmoPre
 	public void initGui() {
 		super.initGui();
 
-		this.searchBox = new CustomSearchTextField("Search Items...", 0, this.fontRenderer, this.guiLeft + 15, this.guiTop + 32, 84, 13);
+		this.searchBox = new CustomSearchTextField(GUI_TEX, "Search Items...", 0, 0, this.fontRenderer, this.guiLeft + 15, this.guiTop + 32, 84, 13);
 		this.searchBox.setMaxStringLength(50);
 		this.searchBox.setEnableBackgroundDrawing(true);
 		this.searchBox.setVisible(true);
 		this.searchBox.setTextColor(16777215);
 		
-		this.quantityBox = new CustomSearchTextField("Quantity", 0, this.fontRenderer, this.guiLeft + 267, this.guiTop + 183, 84, 13);
+		this.quantityBox = new CustomSearchTextField(AMMO_PRESS_TEX, "Amt.", 1, 1, this.fontRenderer, this.guiLeft + 267, this.guiTop + 183, 84, 13);
 		this.quantityBox.setMaxStringLength(50);
 		this.quantityBox.setEnableBackgroundDrawing(true);
 		this.quantityBox.setVisible(true);
@@ -263,7 +271,7 @@ public class GUIContainerAmmoPress extends GUIContainerStation<TileEntityAmmoPre
  			
 		}
 
-		this.craftButton.setDisabled(!hasRequiredItems);
+		//this.craftButton.setDisabled(!hasRequiredItems);
 
 	}
 
@@ -301,6 +309,8 @@ public class GUIContainerAmmoPress extends GUIContainerStation<TileEntityAmmoPre
 		// this.guiLeft + 304, this.guiTop + 185, 53f, 240f, 81, 11,
 		ArrayList<String> strings = new ArrayList<>();
 
+		
+		
 		
 	
 		if (GUIRenderHelper.checkInBox(mouseX, mouseY, this.guiLeft + 304, this.guiTop + 185, 81, 11)
@@ -349,7 +359,17 @@ public class GUIContainerAmmoPress extends GUIContainerStation<TileEntityAmmoPre
 	
 	
 	
-		
+		int highlighted = -1;
+		if(tileEntity.hasStack()) {
+			if (mouseY >= this.guiTop && mouseY <= this.guiTop + 20) {
+				int id = (mouseX - (this.guiLeft + 200))/20;
+				if(id >= 0 && tileEntity.getCraftingQueue().size() - 1 >= id) {
+					highlighted = id;
+					strings.add(format(tileEntity.getCraftingQueue().get(id).getUnlocalizedName()));
+					strings.add(TextFormatting.GRAY + "Quantity: " + TextFormatting.GOLD + tileEntity.getCraftingQueue().get(id).getCount());
+				}
+			}
+		}
 		
 		if (getPage() == 2) {
 			this.searchBox.drawTextBox();
@@ -361,7 +381,12 @@ public class GUIContainerAmmoPress extends GUIContainerStation<TileEntityAmmoPre
 				ItemStack stack = queue.get(i);
 				GlStateManager.color(1, 1, 1);
 				Minecraft.getMinecraft().getTextureManager().bindTexture(AMMO_PRESS_TEX);
-				GUIRenderHelper.drawTexturedRect(this.guiLeft + 200 + i*20, this.guiTop, 0, 40, 20, 20, 256, 256);
+				if(highlighted != -1 && highlighted == i) {
+					GUIRenderHelper.drawTexturedRect(this.guiLeft + 200 + i*20, this.guiTop, 20, 40, 20, 20, 256, 256);
+				} else {
+					GUIRenderHelper.drawTexturedRect(this.guiLeft + 200 + i*20, this.guiTop, 0, 40, 20, 20, 256, 256);
+				}
+				
 				Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(stack, this.guiLeft + 202 + i*20, this.guiTop + 2);
 
 				GUIRenderHelper.drawScaledString("x" + stack.getCount(), this.guiLeft + 212 + i*20, this.guiTop + 16, 0.7, BLUE);
@@ -382,6 +407,18 @@ public class GUIContainerAmmoPress extends GUIContainerStation<TileEntityAmmoPre
 		super.compatibleMouseClicked(mouseX, mouseY, mouseButton);
 		this.searchBox.mouseClicked(mouseX, mouseY, mouseButton);
 		this.quantityBox.mouseClicked(mouseX, mouseY, mouseButton);
+		
+		
+
+		if(tileEntity.hasStack()) {
+			if (mouseY >= this.guiTop && mouseY <= this.guiTop + 20) {
+				int id = (mouseX - (this.guiLeft + 200))/20;
+				if(id >= 0 && tileEntity.getCraftingQueue().size() - 1 >= id) {
+					
+					modContext.getChannel().getChannel().sendToServer(new StationPacket(StationPacket.POP_FROM_QUEUE, tileEntity.getPos(), Minecraft.getMinecraft().player.getEntityId(), id));
+				}
+			}
+		}
 		
 		int c = (int) Math.floor(filteredCraftingList.size() * scrollBarProgress / 7) * 7;
 		for (int y = 0; y < 6; ++y) {
@@ -432,18 +469,10 @@ public class GUIContainerAmmoPress extends GUIContainerStation<TileEntityAmmoPre
 		
 		if(keyCode == Keyboard.KEY_BACK) {
 			filteredCraftingList = new ArrayList<>();
-			if (craftingMode == 1) {
-				filteredCraftingList.addAll((ArrayList<Weapon>) CraftingRegistry.getWeaponCraftingRegistry().clone());
-			} else if (craftingMode == 2) {
-				filteredCraftingList.addAll((ArrayList<Weapon>) CraftingRegistry.getAttachmentCraftingRegistry().clone());
-				filteredCraftingList.removeIf((s) -> s.getCraftingGroup() == CraftingGroup.ATTACHMENT_MODIFICATION);
-			} else {
-				filteredCraftingList.addAll((ArrayList<Weapon>) CraftingRegistry.getAttachmentCraftingRegistry().clone());
-				filteredCraftingList.removeIf((s) -> s.getCraftingGroup() != CraftingGroup.ATTACHMENT_MODIFICATION);
-			}
+			fillFilteredList();
 		}
 		
-
+	
 		if (searchBox.getText().length() != 0) {
 			// Filter out bad results.
 			filteredCraftingList.removeIf((a) -> !I18n.format(a.getItem().getUnlocalizedName() + ".name").toLowerCase()
