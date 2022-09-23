@@ -4,6 +4,9 @@ import java.util.HashMap;
 import java.util.LinkedList;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTileEntity;
+import com.vicmatskiv.weaponlib.crafting.CraftingEntry;
+import com.vicmatskiv.weaponlib.crafting.IModernCrafting;
+import com.vicmatskiv.weaponlib.crafting.items.CraftingItem;
 import com.vicmatskiv.weaponlib.network.packets.StationPacket;
 
 import io.netty.buffer.ByteBuf;
@@ -35,11 +38,20 @@ public class TileEntityStation extends TileEntity implements ITickable, ISidedIn
 	public int craftingTimer = -1;
 	public int craftingDuration = -1;
 	
+	public boolean pushInventoryRefresh = false;
+
+	
 	
 	private int side;
 	
 	public TileEntityStation() {
 		
+	}
+	
+	public double getProgress() {
+		if (craftingTimer == -1 || craftingDuration == -1)
+			return 0.0;
+		return craftingTimer / (double) craftingDuration;
 	}
 	
 	public void setSide(int side) {
@@ -59,7 +71,50 @@ public class TileEntityStation extends TileEntity implements ITickable, ISidedIn
 
 	@Override
 	public void update() {
-		// TODO Auto-generated method stub
+		
+		prevCraftingTimer = craftingTimer;
+		
+		for (int i = 0; i < dismantleStatus.length; ++i) {
+			if (dismantleStatus[i] == -1 || dismantleDuration[i] == -1)
+				continue;
+			dismantleStatus[i]++;
+			
+
+			if (mainInventory.getStackInSlot(i + 9).isEmpty()) {
+				dismantleStatus[i] = -1;
+				dismantleDuration[i] = -1;
+			}
+
+			
+			if (dismantleStatus[i] > dismantleDuration[i]) {
+
+				ItemStack stackToDismantle = mainInventory.getStackInSlot(i + 9);
+				if (stackToDismantle.getItem() instanceof IModernCrafting) {
+					CraftingEntry[] modernRecipe = ((IModernCrafting) stackToDismantle.getItem()).getModernRecipe();
+					if(!world.isRemote) stackToDismantle.shrink(1);
+					if((!world.isRemote && stackToDismantle.getCount() != 0) || (world.isRemote && stackToDismantle.getCount() == 1)) {
+						dismantleStatus[i] = 0;
+					} else {
+						dismantleStatus[i] = -1;
+						dismantleDuration[i] = -1;
+					}
+
+					if(!world.isRemote) {
+						for (CraftingEntry stack : modernRecipe) {
+							ItemStack itemStack = new ItemStack(stack.getItem());
+							if (stack.getItem() instanceof CraftingItem) {
+								itemStack.setCount((int) Math.round(
+										stack.getCount() * ((CraftingItem) stack.getItem()).getRecoveryPercentage()));
+							}
+							addStackToInventoryRange(itemStack, 13, 22);
+						}
+					}
+					
+				}
+			}
+
+			
+		}
 		
 	}
 	

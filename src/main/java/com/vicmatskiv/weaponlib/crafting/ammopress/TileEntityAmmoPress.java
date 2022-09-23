@@ -29,12 +29,10 @@ public class TileEntityAmmoPress extends TileEntityStation {
 	
 	
 	
-	public boolean pushInventoryRefresh = false;
-
+	
 	
 
 	
-	private boolean makingBullets = false;
 	private double currentWheelRotation = 0.0;
 	private double prevWheelRotation = 0.0;
 	
@@ -50,11 +48,7 @@ public class TileEntityAmmoPress extends TileEntityStation {
 		return prevWheelRotation;
 	}
 	
-	public double getProgress() {
-		if (craftingTimer == -1 || craftingDuration == -1)
-			return 0.0;
-		return craftingTimer / (double) craftingDuration;
-	}
+	
 	
 	public ItemStack getLatestStackInQueue() {
 		if(this.craftStack.isEmpty()) return null;
@@ -148,12 +142,11 @@ public class TileEntityAmmoPress extends TileEntityStation {
 	
 	@Override
 	public void update() {
-		// TODO Auto-generated method stub
 		super.update();
 		
 		
 		
-		
+	
 	
 		if(hasStack()) {
 			
@@ -175,8 +168,7 @@ public class TileEntityAmmoPress extends TileEntityStation {
 			
 			
 			
-			prevCraftingTimer = craftingTimer;
-			
+	
 			if(craftingDuration != -1) craftingTimer++;
 			if(craftingTimer > craftingDuration) {
 				
@@ -195,13 +187,6 @@ public class TileEntityAmmoPress extends TileEntityStation {
 				ItemStack splitOff = stack.splitStack(1);
 				
 				addStackToInventoryRange(splitOff, 0, 8);
-				
-				
- 				
-				
-				
-					
-				
 			}
 			
 			

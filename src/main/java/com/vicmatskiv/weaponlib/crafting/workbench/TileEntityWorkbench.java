@@ -25,7 +25,6 @@ public class TileEntityWorkbench extends TileEntityStation {
 
 	public int ticker;
 
-	public boolean pushInventoryRefresh = false;
 
 
 	public TileEntityWorkbench() {
@@ -37,11 +36,7 @@ public class TileEntityWorkbench extends TileEntityStation {
 
 	}
 
-	public double getProgress() {
-		if (craftingTimer == -1 || craftingDuration == -1)
-			return 0.0;
-		return craftingTimer / (double) craftingDuration;
-	}
+
 
 	@Override
 	public NBTTagCompound getUpdateTag() {
@@ -110,46 +105,14 @@ public class TileEntityWorkbench extends TileEntityStation {
 
 	@Override
 	public void update() {
-
+		super.update();
 	
 		
 		if (this.craftingTimer != -1) {
 			this.craftingTimer++;
 		}
 
-		for (int i = 0; i < dismantleStatus.length; ++i) {
-			if (dismantleStatus[i] == -1 || dismantleDuration[i] == -1)
-				continue;
-			dismantleStatus[i]++;
-
-			if (mainInventory.getStackInSlot(i + 9).isEmpty()) {
-				dismantleStatus[i] = -1;
-				dismantleDuration[i] = -1;
-			}
-
-			if (dismantleStatus[i] > dismantleDuration[i]) {
-				dismantleStatus[i] = -1;
-				dismantleDuration[i] = -1;
-
-				if (!this.world.isRemote) {
-					ItemStack stackToDismantle = mainInventory.getStackInSlot(i + 9);
-					if (stackToDismantle.getItem() instanceof IModernCrafting) {
-						CraftingEntry[] modernRecipe = ((IModernCrafting) stackToDismantle.getItem()).getModernRecipe();
-						stackToDismantle.shrink(1);
-
-						for (CraftingEntry stack : modernRecipe) {
-							ItemStack itemStack = new ItemStack(stack.getItem());
-							if (stack.getItem() instanceof CraftingItem) {
-								itemStack.setCount((int) Math.round(
-										stack.getCount() * ((CraftingItem) stack.getItem()).getRecoveryPercentage()));
-							}
-							addStackToInventoryRange(itemStack, 13, 22);
-						}
-					}
-				}
-
-			}
-		}
+		
 
 		if (getProgress() >= 1) {
 			craftingTimer = -1;
