@@ -211,7 +211,7 @@ public class StationPacket implements CompatibleMessage {
 		            			
 		            		
 		            			if(press.hasStack()) {
-		            				ItemStack topQueue = press.getLatestStackInQueue();
+		            				ItemStack topQueue = press.getCraftingQueue().getLast();
 		            				if(ItemStack.areItemsEqualIgnoreDurability(topQueue, newStack)) {
 		            					
 		            					topQueue.grow(m.quantity);

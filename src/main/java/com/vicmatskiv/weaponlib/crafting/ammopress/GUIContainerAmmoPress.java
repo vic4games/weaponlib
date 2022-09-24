@@ -221,32 +221,40 @@ public class GUIContainerAmmoPress extends GUIContainerStation<TileEntityAmmoPre
 	
 	@Override
 	public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+		
 		super.drawScreen(mouseX, mouseY, partialTicks);
-	
-	
+		if(getPage() == 2) this.quantityBox.drawTextBox();
+		drawTooltips(mouseX, mouseY, partialTicks);
 		
 		
 		if (getPage() == 2) {
-			this.quantityBox.drawTextBox();
+			
 			
 			
 			LinkedList<ItemStack> queue = tileEntity.getCraftingQueue();
+			GlStateManager.enableBlend();
 			for(int i = 0; i < queue.size(); ++i) {
-				ItemStack stack = queue.get(i);
-				GlStateManager.color(1, 1, 1);
 				Minecraft.getMinecraft().getTextureManager().bindTexture(AMMO_PRESS_TEX);
 				if(GUIRenderHelper.checkInBox(mouseX, mouseY, this.guiLeft + 200 + i*20, this.guiTop, 20, 20)) {
 					GUIRenderHelper.drawTexturedRect(this.guiLeft + 200 + i*20, this.guiTop, 20, 40, 20, 20, 256, 256);
 				} else {
 					GUIRenderHelper.drawTexturedRect(this.guiLeft + 200 + i*20, this.guiTop, 0, 40, 20, 20, 256, 256);
 				}
-				
+			}
+			
+			for(int i = 0; i < queue.size(); ++i) {
+				ItemStack stack = queue.get(i);
 				Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(stack, this.guiLeft + 202 + i*20, this.guiTop + 2);
-
-				GUIRenderHelper.drawScaledString("x" + stack.getCount(), this.guiLeft + 212 + i*20, this.guiTop + 16, 0.7, BLUE);
+			}
+			
+			for(int i = 0; i < queue.size(); ++i) {
+				ItemStack stack = queue.get(i);
+				GUIRenderHelper.drawScaledString("x" + stack.getCount(), this.guiLeft + 212 + i*20, this.guiTop + 16, 0.7, GOLD);
 			}
 			
 		}
+		
+		
 		
 
 

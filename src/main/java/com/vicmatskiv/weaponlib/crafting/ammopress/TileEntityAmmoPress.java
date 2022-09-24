@@ -170,7 +170,7 @@ public class TileEntityAmmoPress extends TileEntityStation {
 		super.update();
 		
 		
-		
+		//System.out.println(getCraftingQueue());
 	
 	
 		if(hasStack()) {

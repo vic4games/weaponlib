@@ -7,6 +7,9 @@ import java.util.concurrent.TimeUnit;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL12;
+import org.lwjgl.opengl.GL13;
 
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.Weapon;
@@ -289,11 +292,8 @@ public abstract class GUIContainerStation<T extends TileEntityStation> extends C
 	
 	
 	
+	public void drawTooltips(int mouseX, int mouseY, float partialTicks) {
 	
-	
-	@Override
-	public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-		super.drawScreen(mouseX, mouseY, partialTicks);
 		renderHoveredToolTip(mouseX, mouseY);
 		
 		
@@ -339,7 +339,7 @@ public abstract class GUIContainerStation<T extends TileEntityStation> extends C
 								? ((CraftingItem) s.getItem()).getRecoveryPercentage()
 								: 1.0));
 						strings.add(TextFormatting.GOLD + "" + count + "x " + TextFormatting.WHITE
-								+ I18n.format(s.getItem().getUnlocalizedName() + ".name"));
+								+ format(s.getItem().getUnlocalizedName()));
 					}
 
 				}
@@ -348,12 +348,25 @@ public abstract class GUIContainerStation<T extends TileEntityStation> extends C
 		}
 		
 		
-		if (!strings.isEmpty())
+		if (!strings.isEmpty()) {
+		
 			drawHoveringText(strings, mouseX, mouseY);
-
-		if (getPage() == 2) {
-			this.searchBox.drawTextBox();
 		}
+			
+		
+		
+		GlStateManager.color(1, 1, 1, 1);
+	}
+	
+	
+	
+	@Override
+	public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+		super.drawScreen(mouseX, mouseY, partialTicks);
+		
+		
+
+		if (getPage() == 2) searchBox.drawTextBox();
 		
 		
 		
@@ -615,14 +628,11 @@ public abstract class GUIContainerStation<T extends TileEntityStation> extends C
 			
 
 
-			if (getCraftingMode() == 1 && hasSelectedCraftingPiece()) {
-				if(shouldOverrideCraftingModeOneRender()) {
-					// Implemented in order to allow the workbench to use
-					// special rendering for displaying guns.
-					doCraftingModeOneRender(partialTicks, mouseX, mouseY);
-				} else {
-					render3DItemInGUI(getSelectedCraftingPiece().getItem(), this.guiLeft + 300, this.guiTop + 65, mouseX, mouseY);
-				}
+			if (getCraftingMode() == 1 && hasSelectedCraftingPiece() && shouldOverrideCraftingModeOneRender()) {
+			
+				// Implemented in order to allow the workbench to use
+				// special rendering for displaying guns.
+				doCraftingModeOneRender(partialTicks, mouseX, mouseY);
 				
 			} else if(hasSelectedCraftingPiece()){
 
@@ -741,14 +751,22 @@ public abstract class GUIContainerStation<T extends TileEntityStation> extends C
 						this.guiLeft + 40 + (i * 22), this.guiTop + 219);
 				RenderHelper.disableStandardItemLighting();
 				
-				if(!stack.isEmpty()) {
-					GUIRenderHelper.drawScaledString(tileEntity.mainInventory.getStackInSlot(i).getCount() + "", this.guiLeft + 50 + (i * 22), this.guiTop + 230, 1, 0xFFFFFF);
-					
-				}
+		
 				
 				
 				
 			}
+			
+			GlStateManager.pushMatrix();
+			GlStateManager.translate(0, 0, 100);
+			for (int i = 0; i < 9; ++i) {
+				ItemStack stack = tileEntity.mainInventory.getStackInSlot(i);
+				if(!stack.isEmpty()) {
+					GUIRenderHelper.drawScaledString(tileEntity.mainInventory.getStackInSlot(i).getCount() + "", this.guiLeft + 50 + (i * 22), this.guiTop + 230, 1, 0xFFFFFF);
+					
+				}
+			}
+			GlStateManager.popMatrix();
 
 		}
 		

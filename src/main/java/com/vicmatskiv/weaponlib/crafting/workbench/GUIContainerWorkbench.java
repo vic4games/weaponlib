@@ -110,6 +110,12 @@ public class GUIContainerWorkbench extends GUIContainerStation<TileEntityWorkben
   	}
 	
 	@Override
+	public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+		super.drawScreen(mouseX, mouseY, partialTicks);
+		drawTooltips(mouseX, mouseY, partialTicks);
+	}
+	
+	@Override
 	protected void actionPerformed(GuiButton button) throws IOException {
 		super.actionPerformed(button);
 
@@ -200,12 +206,16 @@ public class GUIContainerWorkbench extends GUIContainerStation<TileEntityWorkben
 		// This is just a backup check. This should only ever run if we are dealing
 		// with crafting mode one, so it will always be a weapon.
 		if(!(getSelectedCraftingPiece().getItem() instanceof Weapon)) return;
-		
+	
 		Weapon weapon = (Weapon) getSelectedCraftingPiece().getItem();
         GuiRenderUtil.drawScaledString(fontRenderer, format(weapon.getUnlocalizedName()),
                         this.guiLeft + 214, this.guiTop + 31, 1.2, 0xFDF17C);
         GuiRenderUtil.drawScaledString(fontRenderer, weapon.builder.getWeaponType(), this.guiLeft + 214, this.guiTop + 43, 0.75,
                         0xC8C49C);
+        
+        render3DItemInGUI(weapon, this.guiLeft + 300, this.guiTop + 55, mouseX, mouseY);
+        
+        
 	}
 
 }

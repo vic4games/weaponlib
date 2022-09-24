@@ -105,6 +105,9 @@ public class TileEntityStation extends TileEntity implements ITickable, ISidedIn
 		
 		
 
+		
+		
+		
 		prevCraftingTimer = craftingTimer;
 		
 		for (int i = 0; i < dismantleStatus.length; ++i) {
