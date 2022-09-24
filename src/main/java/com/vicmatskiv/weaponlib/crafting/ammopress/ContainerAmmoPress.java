@@ -70,8 +70,6 @@ public class ContainerAmmoPress extends ContainerStation {
 
 	@Override
 	public ItemStack transferStackInSlot(EntityPlayer playerIn, int index) {
-		
-		
 		Slot slot = this.inventorySlots.get(index);
 
 		if (index < 27) {
@@ -98,15 +96,7 @@ public class ContainerAmmoPress extends ContainerStation {
 	}
 
 	@Override
-	public void addListener(IContainerListener listener) {
-		// TODO Auto-generated method stub
-		super.addListener(listener);
-
-	}
-
-	@Override
 	public boolean canInteractWith(EntityPlayer playerIn) {
-		// TODO Auto-generated method stub
 		return true;
 	}
 

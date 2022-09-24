@@ -94,16 +94,9 @@ public class ContainerWorkbench extends ContainerStation {
 		return ItemStack.EMPTY;
 	}
 
-	@Override
-	public void addListener(IContainerListener listener) {
-		// TODO Auto-generated method stub
-		super.addListener(listener);
-
-	}
 
 	@Override
 	public boolean canInteractWith(EntityPlayer playerIn) {
-		// TODO Auto-generated method stub
 		return true;
 	}
 

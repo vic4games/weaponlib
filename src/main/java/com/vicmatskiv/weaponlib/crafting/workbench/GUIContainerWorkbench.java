@@ -38,21 +38,29 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextFormatting;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.oredict.OreDictionary;
 import scala.actors.threadpool.Arrays;
 
 
 /**
- * GUIContainer for the Workbench Block
+ * GUI class for the Workbench Block
  * 
  * Crafting Modes:
  * 1.) Guns
  * 2.) Attachments (normal ones)
  * 3.) Modification mode attachments
  * 
+ * Features (plus the features of it's parent class {@link GUIContainerStation})
+ * 1. Player has three categories to choose from weapons, attachments, and modification attachments
+ * 2. If the player has the materials to craft an item, they can craft it
+ * 3. 3D weapon rendering into the GUI
  * 
  * @author Homer Riva-Cambrin, 2022
+ * @version September 23rd, 2022
  */
+@SideOnly(Side.CLIENT)
 public class GUIContainerWorkbench extends GUIContainerStation<TileEntityWorkbench> {
 
 	// Buttons & Search box
@@ -93,13 +101,11 @@ public class GUIContainerWorkbench extends GUIContainerStation<TileEntityWorkben
 	public void fillFilteredList() {
 		filteredCraftingList.clear();
 		if(getCraftingMode() == 1) {
-			filteredCraftingList.addAll(CraftingRegistry.getWeaponCraftingRegistry());
+			filteredCraftingList.addAll(CraftingRegistry.getCraftingListForGroup(CraftingGroup.GUN));
 		} else if(getCraftingMode() == 2) {
-			filteredCraftingList.addAll(CraftingRegistry.getAttachmentCraftingRegistry());
-			filteredCraftingList.removeIf((s) -> s.getCraftingGroup() != CraftingGroup.ATTACHMENT_NORMAL);
+			filteredCraftingList.addAll(CraftingRegistry.getCraftingListForGroup(CraftingGroup.ATTACHMENT_NORMAL));
 		} else {
-			filteredCraftingList.addAll(CraftingRegistry.getAttachmentCraftingRegistry());
-			filteredCraftingList.removeIf((s) -> s.getCraftingGroup() != CraftingGroup.ATTACHMENT_MODIFICATION);
+			filteredCraftingList.addAll(CraftingRegistry.getCraftingListForGroup(CraftingGroup.ATTACHMENT_MODIFICATION));
 		}
   	}
 	

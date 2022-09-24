@@ -1,5 +1,6 @@
 package com.vicmatskiv.weaponlib.crafting.base;
 
+import java.lang.reflect.Array;
 import java.util.HashMap;
 import java.util.LinkedList;
 
@@ -22,15 +23,39 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.items.ItemStackHandler;
 
+/**
+ * Parent class for the workbench and ammo press tile entities.
+ * 
+ * Features:
+ * 1. 50 slot inventory (contents of which are described above the variable)
+ * 2. Writing/reading inventory data to/from NBT
+ * 3. Dismantling up to four items at once
+ * 4. A crafting timer (despite differences in crafting b/w ammo presses & workbenches, the timer IS universal)
+ * 5. Methods allowing stations to work nicely with hoppers!
+ * 
+ * @author Homer Riva-Cambrin
+ * @version September 23rd, 2022
+ */
 public class TileEntityStation extends TileEntity implements ITickable, ISidedInventory {
 	
 	/*
-	 * Contents: 9 for crafting output 4 for dismantling slots 10 dismantling
-	 * inventory 27 for main inventory + ------------------------- 50 slots total
+	 * --------------------------|
+	 * Contents:                 |
+	 * ------------------------- |
+	 * 9 for crafting output     |
+	 * 4 for dismantling slots   |
+	 * 10 dismantling inventory  |
+	 * 27 for main inventory (+) |
+	 * ------------------------- |
+	 * 50 slots total
 	 * 
 	 */
 	public ItemStackHandler mainInventory = new ItemStackHandler(50);
 
+	// T
+	
+	// For client interp purposes
+	public int[] previousDismantleStatus = new int[] { -1, -1, -1, -1 };
 	public int[] dismantleStatus = new int[] { -1, -1, -1, -1 };
 	public int[] dismantleDuration = new int[] { -1, -1, -1, -1 };
 	
@@ -62,8 +87,14 @@ public class TileEntityStation extends TileEntity implements ITickable, ISidedIn
 		return side;
 	}
 	
+
+	public int getDismantlingTime(IModernCrafting crafting) {
+		return 0;
+	}
+	
 	
 	public void setDismantling(int[] instant, int[] lengths) {
+		this.previousDismantleStatus = instant.clone();
 		this.dismantleStatus = instant;
 		this.dismantleDuration = lengths;
 	}
@@ -72,15 +103,23 @@ public class TileEntityStation extends TileEntity implements ITickable, ISidedIn
 	@Override
 	public void update() {
 		
+		
+
 		prevCraftingTimer = craftingTimer;
 		
 		for (int i = 0; i < dismantleStatus.length; ++i) {
+			
+			
 			if (dismantleStatus[i] == -1 || dismantleDuration[i] == -1)
 				continue;
+			previousDismantleStatus[i] = dismantleStatus[i];
 			dismantleStatus[i]++;
+			
+			
 			
 
 			if (mainInventory.getStackInSlot(i + 9).isEmpty()) {
+				previousDismantleStatus[i] = -1;
 				dismantleStatus[i] = -1;
 				dismantleDuration[i] = -1;
 			}
@@ -88,13 +127,17 @@ public class TileEntityStation extends TileEntity implements ITickable, ISidedIn
 			
 			if (dismantleStatus[i] > dismantleDuration[i]) {
 
+				
+				
 				ItemStack stackToDismantle = mainInventory.getStackInSlot(i + 9);
 				if (stackToDismantle.getItem() instanceof IModernCrafting) {
 					CraftingEntry[] modernRecipe = ((IModernCrafting) stackToDismantle.getItem()).getModernRecipe();
 					if(!world.isRemote) stackToDismantle.shrink(1);
-					if((!world.isRemote && stackToDismantle.getCount() != 0) || (world.isRemote && stackToDismantle.getCount() == 1)) {
+					if((!world.isRemote && stackToDismantle.getCount() != 0) || (world.isRemote && stackToDismantle.getCount() >= 1)) {
+						previousDismantleStatus[i] = 0;
 						dismantleStatus[i] = 0;
 					} else {
+						previousDismantleStatus[i] = -1;
 						dismantleStatus[i] = -1;
 						dismantleDuration[i] = -1;
 					}
@@ -207,7 +250,11 @@ public class TileEntityStation extends TileEntity implements ITickable, ISidedIn
 	public void readBytesFromClientSync(ByteBuf buf) {
 		this.craftingTimer = buf.readInt();
 		this.craftingDuration = buf.readInt();
-		for(int i = 0; i < dismantleStatus.length; ++i) dismantleStatus[i] = buf.readInt();
+		for(int i = 0; i < dismantleStatus.length; ++i) {
+			int time = buf.readInt();
+			previousDismantleStatus[i] = time;
+			dismantleStatus[i] = time;
+		}
 		for(int i = 0; i < dismantleDuration.length; ++i) dismantleDuration[i] = buf.readInt();
 		
 	}

@@ -7,6 +7,16 @@ import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.oredict.OreDictionary;
 
+/**
+ * CraftingEntry class stores an item, the count, and an optional OreDictionary name.
+ * 
+ * Features:
+ * 1. Can be initialized with a block (similar to ItemStack)
+ * 2. Can be initialized with an OreDictionary name (you do have to give it a default item though for dismantling)
+ * 
+ * @author Homer Riva-Cambrin
+ * @version September 23rd, 2022
+ */
 public class CraftingEntry {
 	
 	private Item item;

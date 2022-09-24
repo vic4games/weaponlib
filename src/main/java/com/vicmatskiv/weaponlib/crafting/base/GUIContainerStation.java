@@ -156,7 +156,7 @@ public abstract class GUIContainerStation<T extends TileEntityStation> extends C
 		
 		if (button == dismantleButton) {
 			modContext.getChannel().getChannel().sendToServer(
-					new StationPacket(StationPacket.DISMANTLE, tileEntity.getPos(), 0, WorkbenchBlock.WORKBENCH_DISMANTLING_TIME, null, ""));
+					new StationPacket(StationPacket.DISMANTLE, tileEntity.getPos(), 0, -1, null, ""));
 		} else if (button == leftArrow) {
 			setPage(getPage() - 1);
 		} else if (button == rightArrow) {
@@ -402,16 +402,7 @@ public abstract class GUIContainerStation<T extends TileEntityStation> extends C
 		
 		if(!cancelationFlag) {
 			if(keyCode == Keyboard.KEY_BACK) {
-				filteredCraftingList = new ArrayList<>();
-				if (craftingMode == 1) {
-					filteredCraftingList.addAll((ArrayList<Weapon>) CraftingRegistry.getWeaponCraftingRegistry().clone());
-				} else if (craftingMode == 2) {
-					filteredCraftingList.addAll((ArrayList<Weapon>) CraftingRegistry.getAttachmentCraftingRegistry().clone());
-					filteredCraftingList.removeIf((s) -> s.getCraftingGroup() == CraftingGroup.ATTACHMENT_MODIFICATION);
-				} else {
-					filteredCraftingList.addAll((ArrayList<Weapon>) CraftingRegistry.getAttachmentCraftingRegistry().clone());
-					filteredCraftingList.removeIf((s) -> s.getCraftingGroup() != CraftingGroup.ATTACHMENT_MODIFICATION);
-				}
+				fillFilteredList();
 			}
 			
 
@@ -506,7 +497,7 @@ public abstract class GUIContainerStation<T extends TileEntityStation> extends C
 				if (tileEntity.dismantleStatus[i] == -1 || tileEntity.dismantleDuration[i] == -1)
 					continue;
 
-				double progress = tileEntity.dismantleStatus[i] / (double) tileEntity.dismantleDuration[i];
+				double progress = InterpolationKit.interpolateValue(tileEntity.previousDismantleStatus[i], tileEntity.dismantleStatus[i], Minecraft.getMinecraft().getRenderPartialTicks()) / (double) tileEntity.dismantleDuration[i];
 				drawModalRectWithCustomSizedTexture(this.guiLeft + 261 + i * 31, this.guiTop + 57, 81, 232, 29, 7, 480,
 						370);
 				drawModalRectWithCustomSizedTexture(this.guiLeft + 261 + i * 31, this.guiTop + 57, 81, 239,
@@ -744,9 +735,12 @@ public abstract class GUIContainerStation<T extends TileEntityStation> extends C
 					setItemRenderTooltip(stack);
 
 				}
+				
+				RenderHelper.enableGUIStandardItemLighting();
 				Minecraft.getMinecraft().getRenderItem().renderItemIntoGUI(stack,
 						this.guiLeft + 40 + (i * 22), this.guiTop + 219);
-
+				RenderHelper.disableStandardItemLighting();
+				
 				if(!stack.isEmpty()) {
 					GUIRenderHelper.drawScaledString(tileEntity.mainInventory.getStackInSlot(i).getCount() + "", this.guiLeft + 50 + (i * 22), this.guiTop + 230, 1, 0xFFFFFF);
 					

@@ -8,57 +8,75 @@ import com.vicmatskiv.weaponlib.Weapon;
 
 import net.minecraft.item.ItemStack;
 
+
+/**
+ * CraftingRegistry that stores all of the craftable items, allows for an easy lookup of them,
+ * and finally an easy registration
+ * 
+ * @author Homer Riva-Cambrin
+ * @version September 23rd, 2022
+ */
 public class CraftingRegistry {
 	
-	private static HashMap<String, Weapon> weaponRecipeLookup = new HashMap<>(50, 0.7f);
-	private static HashMap<String, ItemAttachment<?>> attachmentRecipeLookup = new HashMap<>(50, 0.7f);
-	private static ArrayList<Weapon> weaponCraftingRegistry = new ArrayList<>();
-	private static ArrayList<ItemAttachment<?>> attachmentCraftingRegistry = new ArrayList<>();
+	// Stores a map of all the items registered in a certain category
+	private static HashMap<CraftingGroup, ArrayList<IModernCrafting>> craftingMap = new HashMap<>(200, .7f);
 	
+	// Stores a map of a map of each group under their unlocalized names respectively
 	private static HashMap<CraftingGroup, HashMap<String, IModernCrafting>> categoricalLookup = new HashMap<>(50, 0.7f);
 	
 	static {
+		// Fills the maps with the groups (obviously important
+		// or we will get a null pointer exception)
 		for(CraftingGroup group : CraftingGroup.values()) {
+			craftingMap.put(group, new ArrayList<>());
 			categoricalLookup.put(group, new HashMap<>());
 		}
 	}
 	
-	
+	/**
+	 * Returns the IModernCrafting given the crafting group to search and the 
+	 * unlocalized name of the item you are looking to craft.
+	 * 
+	 * @param group - Crafting group of the crafting you are looking for
+	 * @param name - Unlocalized name of item you are looking to craft
+	 * @return The modern crafting of that item
+	 */
 	public static IModernCrafting getModernCrafting(CraftingGroup group, String name) {
 		return categoricalLookup.get(group).get(name);
 	}
 	
-	public static ArrayList<Weapon> getWeaponCraftingRegistry() {
-		return weaponCraftingRegistry;
+	/**
+	 * Returns if there is an IModernCrafting for an item given 
+	 * the crafting group to search and the unlocalized name of
+	 * the item you are looking to check.
+	 * 
+	 * @param group - Crafting group of the crafting you are looking for
+	 * @param name - Unlocalized name of item you are looking to craft
+	 * @return The modern crafting of that item
+	 */
+	public static boolean hasModernCrafting(CraftingGroup group, String name) {
+		return categoricalLookup.get(group).containsKey(name);
+	}
+
+	/**
+	 * Returns the list of all the items registered to a category
+	 * 
+	 * @param group - Crafting group of the crafting you are looking for
+	 * @return The list of all the items registered to that category
+	 */
+	public static ArrayList<IModernCrafting> getCraftingListForGroup(CraftingGroup group) {
+		return craftingMap.get(group);
 	}
 	
-	public static ArrayList<ItemAttachment<?>> getAttachmentCraftingRegistry() {
-		return attachmentCraftingRegistry;
-	}
-	
-	public static Weapon getWeapon(String name) {
-		return weaponRecipeLookup.get(name);
-	}
-	
-	public static CraftingEntry[] getWeaponRecipe(String name) {
-		return getWeapon(name).getModernRecipe();
-	}
-	
-	public static void register(Weapon weapon) {
-		weaponCraftingRegistry.add(weapon);
-		weaponRecipeLookup.put(weapon.getName(), weapon);
-		categoricalLookup.get(CraftingGroup.GUN).put(weapon.getUnlocalizedName(), weapon);
-		
-	}
-	
-	public static void register(CraftingGroup group, ItemAttachment<?> attachment) {
-		attachmentCraftingRegistry.add(attachment);
-		attachmentRecipeLookup.put(attachment.getUnlocalizedName(), attachment);
-		
-		if(group == null)
-			group = CraftingGroup.ATTACHMENT_NORMAL;
-		
-		categoricalLookup.get(group).put(attachment.getUnlocalizedName(), attachment);
+	/**
+	 * Registers an implementor of {@link IModernCrafting}
+	 * 
+	 * @param group - Crafting group of the crafting you are looking for
+	 * @param crafting - IModernCrafting to register
+	 */
+	public static void register(IModernCrafting crafting) {
+		craftingMap.get(crafting.getCraftingGroup()).add(crafting);
+		categoricalLookup.get(crafting.getCraftingGroup()).put(crafting.getItem().getUnlocalizedName(), crafting);
 	}
 
 }

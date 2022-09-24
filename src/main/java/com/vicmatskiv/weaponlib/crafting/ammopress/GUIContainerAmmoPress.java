@@ -20,6 +20,7 @@ import com.vicmatskiv.weaponlib.crafting.base.GUIContainerStation;
 import com.vicmatskiv.weaponlib.crafting.items.CraftingItem;
 import com.vicmatskiv.weaponlib.crafting.workbench.CustomSearchTextField;
 import com.vicmatskiv.weaponlib.crafting.workbench.GUIButtonCustom;
+import com.vicmatskiv.weaponlib.crafting.workbench.GUIContainerWorkbench;
 import com.vicmatskiv.weaponlib.crafting.workbench.TileEntityWorkbench;
 import com.vicmatskiv.weaponlib.crafting.workbench.WorkbenchBlock;
 import com.vicmatskiv.weaponlib.network.packets.StationPacket;
@@ -54,8 +55,13 @@ import scala.actors.threadpool.Arrays;
  * 1.) Bullets
  * 2.) Magazines
  * 
+ * Features (plus the features of it's parent class {@link GUIContainerStation})
+ * 1. Player has three categories to choose from weapons, attachments, and modification attachments
+ * 2. A queue that allows players to queue items up for crafting (maximum sets in queue is 7)
+ * 3. Textbox that allows the player to specify the quantity
  * 
  * @author Homer Riva-Cambrin, 2022
+ * @version September 23rd, 2022
  */
 public class GUIContainerAmmoPress extends GUIContainerStation<TileEntityAmmoPress> {
 	
@@ -124,11 +130,19 @@ public class GUIContainerAmmoPress extends GUIContainerStation<TileEntityAmmoPre
 	public void fillFilteredList() {
 		filteredCraftingList.clear();
 		if(getCraftingMode() == 1) {
-			filteredCraftingList.addAll(CraftingRegistry.getAttachmentCraftingRegistry());
-			filteredCraftingList.removeIf((s) -> s.getCraftingGroup() != CraftingGroup.BULLET);
+			filteredCraftingList.addAll(CraftingRegistry.getCraftingListForGroup(CraftingGroup.BULLET));
 		} else if(getCraftingMode() == 2) {
-			filteredCraftingList.addAll(CraftingRegistry.getAttachmentCraftingRegistry());
-			filteredCraftingList.removeIf((s) -> s.getCraftingGroup() != CraftingGroup.MAGAZINE);
+			filteredCraftingList.addAll(CraftingRegistry.getCraftingListForGroup(CraftingGroup.MAGAZINE));
+		}
+	}
+	
+	@Override
+	public void updateScreen() {
+		super.updateScreen();
+		if(this.tileEntity.getCraftingQueue().size() > 9) {
+			craftButton.setDisabled(true);
+		} else {
+			craftButton.setDisabled(false);
 		}
 	}
 
@@ -136,7 +150,7 @@ public class GUIContainerAmmoPress extends GUIContainerStation<TileEntityAmmoPre
 	protected void actionPerformed(GuiButton button) throws IOException {
 		super.actionPerformed(button);
 
-		if (button == craftButton) {
+		if (button == craftButton && !craftButton.isDisabled()) {
 
 			if (hasSelectedCraftingPiece() && quantityBox.getText().length() != 0) {
 

@@ -11,6 +11,7 @@ import com.vicmatskiv.weaponlib.crafting.base.TileEntityStation;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
 import net.minecraft.init.Items;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -22,6 +23,11 @@ import net.minecraftforge.items.ItemStackHandler;
 public class TileEntityAmmoPress extends TileEntityStation {
 	
 	
+	
+	public static final int BULLET_CRAFT_DURATION = 2;
+	public static final int MAGAZINE_CRAFT_DURATION = 400;
+	
+	public static final int BULLET_DISMANTLE_DURATION = 400;
 	
 	
 	public LinkedList<ItemStack> craftStack = new LinkedList<>();
@@ -48,6 +54,25 @@ public class TileEntityAmmoPress extends TileEntityStation {
 		return prevWheelRotation;
 	}
 	
+	
+	public int getCraftingDurationForItem(Item item) {
+		if(!(item instanceof IModernCrafting)) return 0;
+		return getDismantlingTime((IModernCrafting) item);
+		
+	}
+	
+	@Override
+	public int getDismantlingTime(IModernCrafting crafting) {
+		CraftingGroup group = crafting.getCraftingGroup();
+		switch(group) {
+			default:
+				return MAGAZINE_CRAFT_DURATION;
+			case MAGAZINE:
+				return MAGAZINE_CRAFT_DURATION;
+			case BULLET:
+				return BULLET_CRAFT_DURATION;
+		}
+	}
 	
 	
 	public ItemStack getLatestStackInQueue() {
@@ -163,7 +188,7 @@ public class TileEntityAmmoPress extends TileEntityStation {
 			}
 	
 			if(craftingDuration == -1 && canCraftNextItem) {
-				craftingDuration = 2;
+				craftingDuration = getCraftingDurationForItem(getLatestStackInQueue().getItem());
 			}
 			
 			

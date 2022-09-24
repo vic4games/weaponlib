@@ -1159,7 +1159,9 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable, IModernCraf
             
             // Do not register weapons to the registry if they do not
             // have a crafting recipe.
-            if(modernCraftingRecipe != null) CraftingRegistry.register(weapon);
+            if(modernCraftingRecipe != null) {
+            	CraftingRegistry.register(weapon);
+            }
 
             return weapon;
         }

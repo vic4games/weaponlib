@@ -1,5 +1,18 @@
 package com.vicmatskiv.weaponlib.crafting;
 
+/**
+ * CraftingGroup enum class used to differentiate between types of items for crafting purposes
+ * (i.e. when filtering out non-guns from a CraftingRegistry query)
+ * 
+ * GUN = 1
+ * ATTACHMENT_NORMAL = 2
+ * ATTACHMENT_MODIFICATION = 3
+ * BULLET = 4
+ * MAGAZINE = 5
+ * 
+ * @author Homer Riva-Cambrin
+ * @version September 23rd, 2022
+ */
 public enum CraftingGroup {
 	GUN,
 	ATTACHMENT_NORMAL,

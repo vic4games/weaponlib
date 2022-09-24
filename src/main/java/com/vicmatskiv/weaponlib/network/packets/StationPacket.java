@@ -318,8 +318,9 @@ public class StationPacket implements CompatibleMessage {
 	            					ItemStack stack = station.mainInventory.getStackInSlot(i);
 	            					if(stack.getItem() instanceof IModernCrafting && ((IModernCrafting) stack.getItem()).getModernRecipe() != null && (station.dismantleStatus[i - 9] == -1 || station.dismantleStatus[i - 9] > station.dismantleDuration[i - 9])) {
 	            						
+
 	            						station.dismantleStatus[i - 9] = 0;
-	            						station.dismantleDuration[i - 9] = m.craftingDuration;
+	            						station.dismantleDuration[i - 9] = ((TileEntityStation) tileEntity).getDismantlingTime(((IModernCrafting) stack.getItem()));
 	            						
 	            						
 	            					}

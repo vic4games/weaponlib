@@ -37,6 +37,11 @@ public class TileEntityWorkbench extends TileEntityStation {
 	}
 
 
+	@Override
+	public int getDismantlingTime(IModernCrafting crafting) {
+		return WorkbenchBlock.WORKBENCH_DISMANTLING_TIME;
+	}
+	
 
 	@Override
 	public NBTTagCompound getUpdateTag() {
