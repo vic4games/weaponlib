@@ -74,9 +74,10 @@ public class ModernConfigManager {
 	@ConfigSync(category = CATEGORY_RENDERING_SCREENSHADERS, comment = "Enables glow around bright objects (bloom)")
 	public static boolean bloomEffect = true;
 	
+	@RequiresMcRestart
 	@RangeInt(min = 2, max = 8)
 	@ConfigSync(category = CATEGORY_RENDERING_SCREENSHADERS, comment = "Lower numbers = better performance")
-	public static int bloomLayers = 6;
+	public static int bloomLayers = 3;
 	
 	@ConfigSync(category = CATEGORY_RENDERING_SCREENSHADERS, comment = "Enable on-screen rain/snow VFX")
 	public static boolean onScreenRainAndSnow = true;

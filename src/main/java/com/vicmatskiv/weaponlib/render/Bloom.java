@@ -16,6 +16,7 @@ import org.lwjgl.opengl.GL40;
 
 import com.vicmatskiv.weaponlib.WeaponFireAspect;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
+import com.vicmatskiv.weaponlib.config.novel.ModernConfigManager;
 import com.vicmatskiv.weaponlib.render.bgl.GLCompatible;
 import com.vicmatskiv.weaponlib.shader.jim.Shader;
 import com.vicmatskiv.weaponlib.shader.jim.ShaderManager;
@@ -34,8 +35,9 @@ import net.minecraft.util.ResourceLocation;
 /**
  * Bloom implementation based on https://github.com/Drillgon200/Hbm-s-Nuclear-Tech-GIT/blob/30df900f4f7f3827133bc58fb26f922da5f3d909/src/main/java/com/hbm/handler/HbmShaderManager2.java#L285 using
  * the techniques used in COD (Next Generation Post Processing by Jorge Jiminez)
- * @author homer
- *
+ * 
+ * @author Homer Riva-Cambrin, 2022
+ * @version September 26th, 2022
  */
 public class Bloom {
 	
@@ -48,9 +50,21 @@ public class Bloom {
 	public static int height = mc.displayHeight;
 	public static boolean hasLoaded = false;
 	
-	public static final int LAYERS = 6;
+
 	public static Framebuffer[] buffers;
 	public static Framebuffer data;
+	
+	
+	/**
+	 * By default, it should be about six. 
+	 * @return 
+	 * 
+	 * 
+	 * @return amount of layers from the configuration setting
+	 */
+	public static int getLayers() {
+		return ModernConfigManager.bloomLayers;
+	}
 	
 	
 	public static void setupBloom() {
@@ -144,11 +158,11 @@ public class Bloom {
 
 		checkFramebufer(data.framebufferObject);
 
-		buffers = new Framebuffer[LAYERS];
+		buffers = new Framebuffer[getLayers()];
 		float bW = width;
 		float bH = height;
 		
-		for(int i = 0; i < LAYERS; ++i) {
+		for(int i = 0; i < getLayers(); ++i) {
 			
 			buffers[i] = new Framebuffer((int) bW, (int) bH, false);
 			buffers[i].bindFramebufferTexture();
@@ -172,7 +186,6 @@ public class Bloom {
 	
 	public static void checkFramebufer(int buf) {
 		int i = OpenGlHelper.glCheckFramebufferStatus(OpenGlHelper.GL_FRAMEBUFFER);
-		//System.out.println("hi " + (i == GL30.GL_FRAMEBUFFER_COMPLETE));
         if (i != OpenGlHelper.GL_FRAMEBUFFER_COMPLETE)
         {
         	
@@ -212,6 +225,8 @@ public class Bloom {
 		
 		data.bindFramebuffer(false);
 		GlStateManager.enableBlend();
+		
+		//Shaders.bloomTest = ShaderManager.loadVMWShader("btest");
 		
 		//Shaders.bloomTest = ShaderManager.loadVMWShader("btest");
 		
@@ -256,10 +271,13 @@ public class Bloom {
 	
 	public static void runDownsampler() {
 		buffers[0].bindFramebuffer(true);
+		
+		//Shaders.downsample = ShaderManager.loadVMWShader("downsample");
+		
 		Shaders.downsample.use();
 		GL20.glUniform2f(GL20.glGetUniformLocation(Shaders.downsample.getShaderId(), "texel"), 1F/(float) data.framebufferTextureWidth, 1F/(float) data.framebufferTextureHeight);
 		renderFboTriangle(data, buffers[0].framebufferWidth, buffers[0].framebufferHeight);
-		for(int i = 1; i < LAYERS; i++) {
+		for(int i = 1; i < getLayers(); i++) {
 			buffers[i].bindFramebuffer(true);
 			GL20.glUniform2f(GL20.glGetUniformLocation(Shaders.downsample.getShaderId(), "texel"), 1F/(float) buffers[i-1].framebufferTextureWidth, 1F/(float) buffers[i-1].framebufferTextureHeight);
 			renderFboTriangle(buffers[i-1], buffers[i].framebufferWidth, buffers[i].framebufferHeight);
@@ -314,10 +332,12 @@ public class Bloom {
 		
 		runDownsampler();
 		GlStateManager.enableBlend();
-		for(int i = LAYERS-1; i >= 0; --i) {			
+		for(int i = getLayers() - 1; i >= 0; --i) {			
 			GlStateManager.blendFunc(SourceFactor.ONE, DestFactor.ZERO);
 			buffers[i].bindFramebuffer(true);
 
+			
+			//Shaders.upsample = ShaderManager.loadVMWShader("upsample");
 			Shaders.upsample.use();
 			/*
 			GL20.glUniform2f(GL20.glGetUniformLocation(upsample.getShaderId(), "fragmentSize"), 1F/(float) buffers[i].framebufferWidth, 1F/(float) buffers[i].framebufferHeight);

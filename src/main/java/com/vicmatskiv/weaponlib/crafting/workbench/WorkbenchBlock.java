@@ -38,22 +38,7 @@ public class WorkbenchBlock extends BlockStation {
 	}
 	
 	
-	@Override
-	public void onBlockHarvested(World worldIn, BlockPos pos, IBlockState state, EntityPlayer player) {
-		if(worldIn.isRemote) {
-			super.onBlockHarvested(worldIn, pos, state, player);
-			return;
-		}
-		
-		TileEntityWorkbench workbench = (TileEntityWorkbench) worldIn.getTileEntity(pos);
-		for(int i = 0; i < workbench.mainInventory.getSlots(); ++i) {
-			ItemStack stack = workbench.mainInventory.getStackInSlot(i);
-			
-			worldIn.spawnEntity(new EntityItem(worldIn, pos.getX(), pos.getY(), pos.getZ(), stack));
-		}
-		
-		super.onBlockHarvested(worldIn, pos, state, player);
-	}
+	
 	
 	
 	@Override
