@@ -2,11 +2,14 @@ package com.vicmatskiv.weaponlib.grenade;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.function.BiPredicate;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.objectweb.asm.ClassReader;
 
 import com.vicmatskiv.weaponlib.Explosion;
 import com.vicmatskiv.weaponlib.ModContext;
@@ -155,11 +158,36 @@ public class EntityGrenade extends AbstractEntityGrenade {
 
     		
         logger.debug("Exploding {}", this);
-
+        
+       
+       
+        try {
+        	
+        	System.out.println("HOLAA");
+        	Explosion.createServerSideExplosion(modContext, compatibility.world(this), this,
+                    this.posX, this.posY, this.posZ, explosionStrength, false, true, destroyBlocks, 1f, 1f, 1.5f, 1f, null, null, 
+                    modContext.getExplosionSound());
+      
+        	for(Field m : Explosion.class.getFields()) {
+        		System.out.println(m.getName());
+        	}
+        } catch (SecurityException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NoClassDefFoundError e) {
+			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+        
+        /*
         Explosion.createServerSideExplosion(modContext, compatibility.world(this), this,
                 this.posX, this.posY, this.posZ, explosionStrength, false, true, destroyBlocks, 1f, 1f, 1.5f, 1f, null, null, 
                 modContext.getExplosionSound());
-
+        */
+        
+        
+        
         List<?> nearbyEntities = compatibility.getEntitiesWithinAABBExcludingEntity(compatibility.world(this), this,
                 compatibility.getBoundingBox(this).expand(5, 5, 5));
 
