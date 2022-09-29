@@ -42,13 +42,13 @@ public class ModernConfigManager {
 	private static ArrayList<String> categories = new ArrayList<>();
 	
 	
-	@ConfigSync(category = CATEGORY_RENDERING, comment = "Enables all shaders")
+	@ConfigSync(category = CATEGORY_RENDERING, comment = "Setting this to false disables all shaders, enabling allows to select which shaders are used.")
 	public static boolean enableAllShaders = true;
 
-	@ConfigSync(category = CATEGORY_RENDERING, comment = "Enables world shaders")
+	@ConfigSync(category = CATEGORY_RENDERING, comment = "Setting this to false disables all world shaders, enabling allows to select which world shaders are used.")
 	public static boolean enableWorldShaders = true;
 	
-	@ConfigSync(category = CATEGORY_RENDERING, comment = "Enables screen shaders")
+	@ConfigSync(category = CATEGORY_RENDERING, comment = "Setting this to false disables all screen shaders, enabling allows to select which screen shaders are used.")
 	public static boolean enableScreenShaders = true;
 	
 	@ConfigSync(category = CATEGORY_RENDERING, comment = "Enables gun shaders, so skinning & lighting")
@@ -86,6 +86,8 @@ public class ModernConfigManager {
 	@ConfigSync(category = CATEGORY_RENDERING, comment = "Enables the HDR framebuffer, requires restart. \nThe HDR is the cause of a lot of shader incompat, \nbut Bloom will look weird without it")
 	public static boolean enableHDRFramebuffer = true;
 	
+	@ConfigSync(category = CATEGORY_RENDERING, comment = "Enables the fancy VMW snow/rain")
+	public static boolean enableFancyRainAndSnow = true;
 	
 	
 	@ConfigSync(category = CATEGORY_GAMEPLAY, comment = "Enables the ammo counter")

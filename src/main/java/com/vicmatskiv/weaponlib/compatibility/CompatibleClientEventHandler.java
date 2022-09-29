@@ -122,6 +122,7 @@ import com.vicmatskiv.weaponlib.render.bgl.ModernUtil;
 import com.vicmatskiv.weaponlib.render.bgl.PostProcessPipeline;
 import com.vicmatskiv.weaponlib.render.bgl.instancing.InstancedAttribute;
 import com.vicmatskiv.weaponlib.render.bgl.math.AngleKit;
+import com.vicmatskiv.weaponlib.render.bgl.weather.ModernWeatherRenderer;
 import com.vicmatskiv.weaponlib.render.qrender.QRenderer;
 import com.vicmatskiv.weaponlib.render.shells.ShellManager;
 import com.vicmatskiv.weaponlib.render.shells.ShellParticleSimulator;
@@ -369,6 +370,8 @@ public abstract class CompatibleClientEventHandler {
 
 	@SubscribeEvent
 	public void mouseMove(MouseEvent me) {
+		
+		
 		
 		if(AnimationModeProcessor.getInstance().getFPSMode()) {
 			AnimationModeProcessor amp = AnimationModeProcessor.getInstance();

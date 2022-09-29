@@ -38,6 +38,7 @@ import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.biome.Biome;
+import net.minecraftforge.client.IRenderHandler;
 
 /**
  * Post-processing pipeline enabling modern post effects to be applied in
@@ -81,6 +82,15 @@ public class PostProcessPipeline {
 	private static int depthTexture = -1;
 	private static int fauxColorTexture = -1;
 
+	
+	// Tells us if the player has flipped the configuration option
+	private static boolean persistenceWeatherStatus = false;
+	private static boolean swappedWeatherRenderer = false;
+	
+	// Gives us the original weather renderer to swap back to
+	private static IRenderHandler originalWeatherRenderer;
+	
+	
 	private static final ModernWeatherRenderer modernWeatherRenderer = new ModernWeatherRenderer();
 
 	private static final float ALPHA_MULTIPLIER_DISTORTION = 0.5f;
@@ -92,7 +102,8 @@ public class PostProcessPipeline {
 	 * This is a useful tool to easily render things to the distortion buffer
 	 * without making GL calls in areas where it is inconvienent to.
 	 * 
-	 * @author Jim Holden, 2022
+	 * @author Homer Riva-Cambrin, 2022
+	 * @version September 28th, 2022
 	 */
 	public static class DistortionPoint {
 		private float x, y, z;
@@ -179,7 +190,21 @@ public class PostProcessPipeline {
 	 * Static method that changes the world's weather renderer
 	 */
 	public static void setWorldElements() {
-		mc.world.provider.setWeatherRenderer(modernWeatherRenderer);
+		if(!swappedWeatherRenderer || (ModernConfigManager.enableFancyRainAndSnow != persistenceWeatherStatus)) {
+			persistenceWeatherStatus = ModernConfigManager.enableFancyRainAndSnow;
+			
+			
+			if(persistenceWeatherStatus) {
+				if(!swappedWeatherRenderer) originalWeatherRenderer = mc.world.provider.getWeatherRenderer();
+				mc.world.provider.setWeatherRenderer(modernWeatherRenderer);
+			} else {
+				mc.world.provider.setWeatherRenderer(originalWeatherRenderer);
+			}
+			
+			swappedWeatherRenderer = true;
+			
+		}
+		
 
 	}
 

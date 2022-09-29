@@ -18,6 +18,7 @@ import org.apache.commons.codec.language.bm.BeiderMorseEncoder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.BufferUtils;
+import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Matrix3f;
 import org.lwjgl.util.vector.Matrix4f;
@@ -38,6 +39,7 @@ import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.init.SoundEvents;
+import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.Vec3d;
 
 
@@ -205,11 +207,13 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
 			MultipartTransition<Part, Context> targetState = toPositioning.get(currentIndex);
 			
 			
+			
 			if(previousIndex != currentIndex) {
 				if(targetState.sound != null) {
 					//System.out.println(targetState.sound.getResourceLocation());
 					
-					Minecraft.getMinecraft().getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(targetState.sound.getSound(), 1.0f));
+					PositionedSoundRecord psr = new PositionedSoundRecord(targetState.sound.getSound(), SoundCategory.PLAYERS, 1.0F, 1.0F, Minecraft.getMinecraft().player.getPosition().up(5));
+		        	Minecraft.getMinecraft().getSoundHandler().playSound(psr);
 				}
 			}
 			

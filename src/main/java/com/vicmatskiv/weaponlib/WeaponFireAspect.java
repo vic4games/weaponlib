@@ -28,11 +28,14 @@ import com.vicmatskiv.weaponlib.state.PermitManager;
 import com.vicmatskiv.weaponlib.state.StateManager;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.audio.PositionedSound;
+import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.fml.common.network.NetworkRegistry.TargetPoint;
 
@@ -203,6 +206,7 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
     }
 
     private void cannotFire(PlayerWeaponInstance weaponInstance) {
+  
         if(weaponInstance.getAmmo() == 0 || Tags.getAmmo(weaponInstance.getItemStack()) == 0) {
             String message;
             if(weaponInstance.getWeapon().getAmmoCapacity() == 0
@@ -222,6 +226,7 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
     	
     	
     
+    	
         EntityLivingBase player = weaponInstance.getPlayer();
         Weapon weapon = (Weapon) weaponInstance.getItem();
         Random random = player.getRNG();
@@ -272,15 +277,22 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
         		e.printStackTrace();
         	}*/
         	
-        	
-        	
-            compatibility.playSound(player, shootSound,
+        	// Should prevent sound from being one sided
+        
+        	PositionedSoundRecord psr = new PositionedSoundRecord(shootSound.getSound(), SoundCategory.PLAYERS, silencerOn ? weapon.getSilencedShootSoundVolume() : weapon.getShootSoundVolume(), 1.0F, Minecraft.getMinecraft().player.getPosition().up(5));
+        	Minecraft.getMinecraft().getSoundHandler().playSound(psr);
+        	//Minecraft.getMinecraft().getSoundHandler().playSound(new PositionedSoundRecord(shootSound.getSound(), SoundCategory.PLAYERS,silencerOn ? weapon.getSilencedShootSoundVolume() : weapon.getShootSoundVolume(), 1f, Minecraft.getMinecraft().player.getPosition()));
+            /*
+        	compatibility.playSound(player, shootSound,
                     silencerOn ? weapon.getSilencedShootSoundVolume() : weapon.getShootSoundVolume(), 1F);
+                    */
         }
         
         int currentAmmo = weaponInstance.getAmmo();
         if(currentAmmo == 1 && weapon.getEndOfShootSound() != null) {
-            compatibility.playSound(player, weapon.getEndOfShootSound(), 1F, 1F);
+        	PositionedSoundRecord psr = new PositionedSoundRecord(weapon.getEndOfShootSound().getSound(), SoundCategory.PLAYERS, 1.0F, 1.0F, Minecraft.getMinecraft().player.getPosition().up(5));
+        	Minecraft.getMinecraft().getSoundHandler().playSound(psr);
+            // compatibility.playSound(player, weapon.getEndOfShootSound(), 1F, 1F);
            
         }
         
