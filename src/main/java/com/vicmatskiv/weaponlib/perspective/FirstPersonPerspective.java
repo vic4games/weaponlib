@@ -5,6 +5,8 @@ import org.lwjgl.opengl.GLSync;
 
 import com.vicmatskiv.weaponlib.RenderingPhase;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderTickEvent;
+import com.vicmatskiv.weaponlib.config.novel.ModernConfigManager;
+import com.vicmatskiv.weaponlib.render.DepthTexture;
 import com.vicmatskiv.weaponlib.render.Shaders;
 import com.vicmatskiv.weaponlib.render.bgl.PostProcessPipeline;
 
@@ -34,6 +36,9 @@ public class FirstPersonPerspective<S> extends Perspective<S> {
     @Override
     public void update(CompatibleRenderTickEvent event) {
     	
+    	
+    	//if(true) return;
+    
         modContext.getSafeGlobals().renderingPhase.set(RenderingPhase.RENDER_PERSPECTIVE);
         long p_78471_2_ = this.renderEndNanoTime + (long)(1000000000 / 60);
         int origDisplayWidth = Minecraft.getMinecraft().displayWidth;
@@ -44,6 +49,8 @@ public class FirstPersonPerspective<S> extends Perspective<S> {
 
         framebuffer.bindFramebuffer(true);
 
+        
+       
         Minecraft.getMinecraft().displayWidth = width;
         Minecraft.getMinecraft().displayHeight = height;
 
@@ -64,6 +71,13 @@ public class FirstPersonPerspective<S> extends Perspective<S> {
        
         this.entityRenderer.renderWorld(event.getRenderTickTime(), p_78471_2_);
      
+        if(PostProcessPipeline.shouldDoFog()) {
+        	// Blits onto custom scope depth texture
+        	// TO-DO: Just use a depth-texture compatible framebuffer w/ the scope. more efficient.
+        	PostProcessPipeline.blitScopeDepthTexture(framebuffer);
+        }
+        
+        
 //PostProcessPipeline.blitDepth();
 		
 	//	PostProcessPipeline.setupDistortionBufferEffects();
@@ -73,6 +87,8 @@ public class FirstPersonPerspective<S> extends Perspective<S> {
         
         postRenderWorld(event);
         
+        
+       
        
 
        /*
@@ -108,6 +124,9 @@ public class FirstPersonPerspective<S> extends Perspective<S> {
         Minecraft.getMinecraft().displayWidth = origDisplayWidth;
         Minecraft.getMinecraft().displayHeight = origDisplayHeight;
         this.renderEndNanoTime = System.nanoTime();
+        
+       
+        
         modContext.getSafeGlobals().renderingPhase.set(RenderingPhase.NORMAL);
     }
 

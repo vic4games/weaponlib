@@ -668,11 +668,18 @@ public abstract class CompatibleClientEventHandler {
 		}
 
 		
-		
-		
+		RenderingPhase phase = ClientModContext.getContext().getSafeGlobals().renderingPhase.get();
+
+	//	System.out.println(GL11.glGetInteger(GL30.GL_FRAMEBUFFER));
 		//System.out.println("yo " + ClientModContext.getContext().getSafeGlobals().renderingPhase.get());
-		if (ClientModContext.getContext().getSafeGlobals().renderingPhase.get() == RenderingPhase.RENDER_PERSPECTIVE)
+		if (phase == RenderingPhase.RENDER_PERSPECTIVE) {
+		
+			
+			
+			//PostProcessPipeline.blitDepth();
 			return;
+		} 
+			
 		
 		
 

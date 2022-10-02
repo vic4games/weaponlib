@@ -10,6 +10,9 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.FlatSurfaceModelBox;
 import com.vicmatskiv.weaponlib.config.novel.ModernConfigManager;
 import com.vicmatskiv.weaponlib.perspective.OpticalScopePerspective;
+import com.vicmatskiv.weaponlib.render.Dloom;
+import com.vicmatskiv.weaponlib.render.Shaders;
+import com.vicmatskiv.weaponlib.render.bgl.PostProcessPipeline;
 import com.vicmatskiv.weaponlib.render.scopes.Reticle;
 import com.vicmatskiv.weaponlib.shader.jim.Shader;
 import com.vicmatskiv.weaponlib.shader.jim.ShaderManager;
@@ -111,15 +114,22 @@ public class ViewfinderModel extends ModelBase {
 				}
 			}
 		}
-		
-		
-	
-		OpticalScopePerspective.scope = ShaderManager.loadVMWShader("vignette");
-		
+
 		Shader scopeShader = OpticalScopePerspective.scope;
 	
 		scopeShader.use();
 		
+		boolean shouldDoFog = PostProcessPipeline.shouldDoFog() && PostProcessPipeline.getScopeDepthTexture() != null;
+		
+	
+		//shouldDoFog = false;
+		if(shouldDoFog) {
+			GlStateManager.setActiveTexture(GL13.GL_TEXTURE0 + 3);
+			GlStateManager.bindTexture(PostProcessPipeline.getScopeDepthTexture().getTexture());
+			GlStateManager.setActiveTexture(GL13.GL_TEXTURE0);
+		}
+		
+	
 		GlStateManager.setActiveTexture(GL13.GL_TEXTURE0 + 4);
 		Minecraft.getMinecraft().getTextureManager().bindTexture(ret.getReticleTexture());
 		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
@@ -153,10 +163,25 @@ public class ViewfinderModel extends ModelBase {
     		scopeShader.uniform1f("actualZoom", (1.0f - pwi) - 0.80f);
     	}
     	
+    	
+    	if(shouldDoFog) {
+    		scopeShader.boolean1b("shouldDoFog", true);
+    		scopeShader.uniform1i("depthTex", 3);
+    		
+    		float fogIntensity = 0.6f;
+    		fogIntensity *= Minecraft.getMinecraft().world.getRainStrength(Minecraft.getMinecraft().getRenderPartialTicks());
+    		scopeShader.uniform1f("fogIntensity", fogIntensity);
+    		scopeShader.uniform3f("baseFogColor", 0.6f, 0.6f, 0.6f);
+
+    		
+    	} else {
+    		scopeShader.boolean1b("shouldDoFog", false);
+    	}
  
     	scopeShader.uniform1i("reticle", 4);
     	scopeShader.uniform1i("dirt", 6);
-    	scopeShader.uniform1i("holo", 7);
+    	//scopeShader.uniform1i("holo", 7);
+    	
     	//scopeShader.uniform2f("Velocity", (float) ClientValueRepo.scopeX.getLerpedFloat(), (float) ClientValueRepo.scopeY.getLerpedFloat());
     	scopeShader.uniform2f("resolution", Minecraft.getMinecraft().displayWidth, Minecraft.getMinecraft().displayHeight);
     	scopeShader.boolean1b("isNightVisionOn", isNightVisionOn);

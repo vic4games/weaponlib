@@ -9,6 +9,7 @@ import org.lwjgl.input.Mouse;
 import com.vicmatskiv.weaponlib.animation.AnimationModeProcessor;
 import com.vicmatskiv.weaponlib.animation.ClientValueRepo;
 import com.vicmatskiv.weaponlib.config.BalancePackManager;
+import com.vicmatskiv.weaponlib.config.novel.ModernConfigManager;
 import com.vicmatskiv.weaponlib.grenade.ItemGrenade;
 import com.vicmatskiv.weaponlib.melee.ItemMelee;
 
@@ -105,14 +106,17 @@ class ClientWeaponTicker extends Thread {
         
         PlayerWeaponInstance mainHandHeldWeaponInstance = clientModContext.getMainHeldWeapon();
         if(mainHandHeldWeaponInstance != null) {
-        	if(item instanceof Weapon && mainHandHeldWeaponInstance.isAimed()) {
-        		if(mainHandHeldWeaponInstance.isAimed() && ClientValueRepo.shouldContinueRunning) {
-        			player.setSprinting(true);
-        			ClientValueRepo.shouldContinueRunning = false;
-        		}
-        		((Weapon) item).toggleAiming();
-        	
+        	if(ModernConfigManager.holdToAim) {
+        		if(item instanceof Weapon && mainHandHeldWeaponInstance.isAimed()) {
+            		if(mainHandHeldWeaponInstance.isAimed() && ClientValueRepo.shouldContinueRunning) {
+            			player.setSprinting(true);
+            			ClientValueRepo.shouldContinueRunning = false;
+            		}
+            		((Weapon) item).toggleAiming();
+            	
+            	}
         	}
+        	
         }
         
     }

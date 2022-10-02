@@ -21,6 +21,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleReflection;
 import com.vicmatskiv.weaponlib.config.novel.ModernConfigManager;
 import com.vicmatskiv.weaponlib.render.Bloom;
+import com.vicmatskiv.weaponlib.render.DepthTexture;
 import com.vicmatskiv.weaponlib.render.HDRFramebuffer;
 import com.vicmatskiv.weaponlib.render.Shaders;
 import com.vicmatskiv.weaponlib.render.bgl.weather.ModernWeatherRenderer;
@@ -78,9 +79,16 @@ public class PostProcessPipeline {
 
 	private static ArrayList<DistortionPoint> distortionList = new ArrayList<>();
 
+	/*
 	private static int depthBuffer = -1;
 	private static int depthTexture = -1;
+	*/
+	
 	private static int fauxColorTexture = -1;
+	
+	
+	private static DepthTexture scopeDepthTexture;
+	private static DepthTexture normalDepthTexture;
 
 	
 	// Tells us if the player has flipped the configuration option
@@ -97,6 +105,8 @@ public class PostProcessPipeline {
 
 	// Constants
 	private static final int MAX_RAINDROPS_ON_SCREEN = 16;
+	private static final float BASE_FOG_INTENSITY = 0.6f;
+	private static final float[] BASE_FOG_COLOR = new float[] { 0.6f, 0.6f, 0.6f };
 
 	/**
 	 * This is a useful tool to easily render things to the distortion buffer
@@ -207,6 +217,8 @@ public class PostProcessPipeline {
 		
 
 	}
+	
+	
 
 	/**
 	 * Obtains the current modelview & projection matrices, inverts them, and stores
@@ -242,9 +254,38 @@ public class PostProcessPipeline {
 		 */
 
 	}
+	
+	
+	public static boolean shouldDoFog() {
+		return ModernConfigManager.enableAllShaders && ModernConfigManager.enableWorldShaders && getFogIntensity() != 0;
+	}
+	
+	
+
 
 	public static void recreateDepthFramebuffer() {
+		
+		if(normalDepthTexture == null)
+			normalDepthTexture = new DepthTexture(width, height);
+		normalDepthTexture.recreateBuffer(width, height);
+		
+		/*
+		Framebuffer buffer = mc.getFramebuffer();
+		
+		if(normalDepthTexture == null) {
+			normalDepthTexture = new DepthTexture(buffer.framebufferWidth, buffer.framebufferHeight);
+		}
+		
+		// Method automatically tests if it should so there
+		// is very little overhead here.
+		normalDepthTexture.recreateBuffer(buffer.framebufferWidth, buffer.framebufferHeight);
+		
+		// Blit the buffer onto the scope's depth texture
+		normalDepthTexture.blitOn(buffer, true);
+		*/
+		
 
+		/*
 		// If there is a depth buffer, delete it
 		if (depthBuffer != -1)
 			OpenGlHelper.glDeleteFramebuffers(depthBuffer);
@@ -253,9 +294,7 @@ public class PostProcessPipeline {
 		if (depthTexture == -1)
 			depthTexture = GL11.glGenTextures();
 
-		// Create color attachment
-		if (fauxColorTexture == -1)
-			fauxColorTexture = GL11.glGenTextures();
+		
 
 		// Depth buffer
 		depthBuffer = OpenGlHelper.glGenFramebuffers();
@@ -270,18 +309,15 @@ public class PostProcessPipeline {
 		GlStateManager.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
 		OpenGlHelper.glFramebufferTexture2D(OpenGlHelper.GL_FRAMEBUFFER, OpenGlHelper.GL_DEPTH_ATTACHMENT,
 				GL11.GL_TEXTURE_2D, depthTexture, 0);
-
+		*/
 		// Stupid OpenGL spec requires this
 		// for older computers
 
-		GlStateManager.bindTexture(fauxColorTexture);
-		GlStateManager.glTexImage2D(3553, 0, 32856, width, height, 0, 6408, 5121, (IntBuffer) null);
-
+		
 		// GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGB, width, height, 0,
 		// GL11.GL_RGB,
 		// GL11.GL_UNSIGNED_BYTE, (IntBuffer) null);
-		OpenGlHelper.glFramebufferTexture2D(OpenGlHelper.GL_FRAMEBUFFER, OpenGlHelper.GL_COLOR_ATTACHMENT0,
-				GL11.GL_TEXTURE_2D, fauxColorTexture, 0);
+		
 
 		// (new org.apache.logging.log4j.core.Logger()).setl
 
@@ -290,6 +326,7 @@ public class PostProcessPipeline {
 		// int bruh =
 		// OpenGlHelper.glCheckFramebufferStatus(OpenGlHelper.GL_FRAMEBUFFER);
 
+		/*
 		int status = OpenGlHelper.glCheckFramebufferStatus(OpenGlHelper.GL_FRAMEBUFFER);
 
 		if (status != OpenGlHelper.GL_FRAMEBUFFER_COMPLETE) {
@@ -307,6 +344,7 @@ public class PostProcessPipeline {
 		} else {
 			logger.debug("Succesfully created depth buffer.");
 		}
+		*/
 
 		// GL11.glGetError();
 		/*
@@ -316,9 +354,39 @@ public class PostProcessPipeline {
 		 * 
 		 */
 	}
+	
+	
+	
+	public static void blitScopeDepthTexture(Framebuffer buffer) {
+		if(scopeDepthTexture == null) {
+			scopeDepthTexture = new DepthTexture(buffer.framebufferWidth, buffer.framebufferHeight);
+		}
+		
+		// Method automatically tests if it should so there
+		// is very little overhead here.
+		scopeDepthTexture.recreateBuffer(buffer.framebufferWidth, buffer.framebufferHeight);
+		
+		// Blit the buffer onto the scope's depth texture
+		scopeDepthTexture.blitOn(buffer, true);
+		
+	}
+	
+	public static DepthTexture getScopeDepthTexture() {
+		return scopeDepthTexture;
+	}
 
 	public static void blitDepth() {
+		
+		Framebuffer buffer = mc.getFramebuffer();
+		
+		if(normalDepthTexture == null)
+			normalDepthTexture = new DepthTexture(buffer.framebufferWidth, buffer.framebufferHeight);
+		
+	
+		// Blit the buffer onto the main depth texture
+		normalDepthTexture.blitOn(buffer, true);
 
+		/*
 		if (depthBuffer == -1)
 			recreateDepthFramebuffer();
 		// recreateDepthFramebuffer();
@@ -332,7 +400,7 @@ public class PostProcessPipeline {
 				GL11.GL_NEAREST);
 
 		Minecraft.getMinecraft().getFramebuffer().bindFramebuffer(false);
-
+		*/
 	}
 
 	/**
@@ -361,6 +429,14 @@ public class PostProcessPipeline {
 		height = mc.displayHeight;
 
 		recreateDepthFramebuffer();
+		
+		// Create color attachment
+		if (fauxColorTexture == -1)
+			fauxColorTexture = GL11.glGenTextures();
+		GlStateManager.bindTexture(fauxColorTexture);
+		GlStateManager.glTexImage2D(3553, 0, 32856, width, height, 0, 6408, 5121, (IntBuffer) null);
+		OpenGlHelper.glFramebufferTexture2D(OpenGlHelper.GL_FRAMEBUFFER, OpenGlHelper.GL_COLOR_ATTACHMENT0,
+				GL11.GL_TEXTURE_2D, fauxColorTexture, 0);
 
 		if (distortionBuffer != null)
 			distortionBuffer.deleteFramebuffer();
@@ -512,7 +588,21 @@ public class PostProcessPipeline {
 		MODELVIEW_MATRIX_BUFFER.rewind();
 
 	}
+	
 
+
+	
+	public static float getFogIntensity() {
+		if(mc == null || mc.world == null) {
+			return 0.0f;
+		}
+		return BASE_FOG_INTENSITY * mc.world.getRainStrength(mc.getRenderPartialTicks());
+	}
+	
+	public static float[] getBaseFogColor() {
+		return BASE_FOG_COLOR;
+	}
+	
 	/**
 	 * Called at the end of the world render, copies the framebuffer into a second
 	 * buffer, applies post effects, and renders it back
@@ -535,12 +625,10 @@ public class PostProcessPipeline {
 
 		// Do shader stuff
 		GlStateManager.setActiveTexture(GL13.GL_TEXTURE0 + 6);
-		GlStateManager.bindTexture(depthTexture);
+		GlStateManager.bindTexture(normalDepthTexture.getTexture());
 		GlStateManager.setActiveTexture(GL13.GL_TEXTURE0);
 
-		float fogIntensity = 0.6f;
-		fogIntensity *= mc.world.getRainStrength(mc.getRenderPartialTicks());
-
+	
 		fillGLBuffers();
 
 		// Copy the Minecraft framebuffer to the secondary world buffer
@@ -552,8 +640,8 @@ public class PostProcessPipeline {
 
 		Shaders.postWorld.use();
 		Shaders.postWorld.uniform1i("depthBuf", 6);
-		Shaders.postWorld.uniform1f("fogIntensity", fogIntensity);
-		Shaders.postWorld.uniform3f("baseFogColor", 0.6f, 0.6f, 0.6f);
+		Shaders.postWorld.uniform1f("fogIntensity", getFogIntensity());
+		Shaders.postWorld.uniform3f("baseFogColor", getBaseFogColor()[0], getBaseFogColor()[1], getBaseFogColor()[2]);
 		// Shaders.postWorld.uniform1f("help", 0.2f);
 		// Shaders.postWorld.uniform1f("joe[0]", 1.0f);
 		

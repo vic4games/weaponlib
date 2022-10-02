@@ -26,12 +26,11 @@ public class ShaderManager {
 	public static boolean enableShaders = true;
 
 	public static Shader loadVMWShader(String name, Attribute...attribs) {
-	
+		
 		return loadShader(new ResourceLocation("mw:shaders/" + name), attribs);
 	}
 	
 	public static Shader loadShader(ResourceLocation file, Attribute...attribs) {
-		
 		  if(!enableShaders)
 					return new Shader(0);
 				int vertexShader = 0;

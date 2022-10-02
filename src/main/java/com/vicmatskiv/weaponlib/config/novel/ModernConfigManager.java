@@ -96,6 +96,8 @@ public class ModernConfigManager {
 	@ConfigSync(category = CATEGORY_GAMEPLAY, comment = "Enable open door key display when hovering doors")
 	public static boolean enableOpenDoorDisplay = true;
 	
+	@ConfigSync(category = CATEGORY_GAMEPLAY, comment = "If true, hold to aim. If false, toggle to aim.")
+	public static boolean holdToAim = true;
 
 	
 	

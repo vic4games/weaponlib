@@ -5,6 +5,7 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 import java.util.function.Function;
 
 import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
 
 import com.vicmatskiv.weaponlib.animation.AnimationModeProcessor;
 import com.vicmatskiv.weaponlib.animation.DebugPositioner;
@@ -210,6 +211,7 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
                 if(item instanceof Inspectable) {
                     ((Inspectable) item).inspectMainHeldItemForPlayer(player);
                 }
+              
             }
             /*
             if(instance != null && instance.getState() == WeaponState.MODIFYING) {

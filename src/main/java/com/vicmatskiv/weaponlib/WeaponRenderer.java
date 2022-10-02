@@ -79,6 +79,7 @@ import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
+import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.Entity;
@@ -3279,8 +3280,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			
 				
 				float fMod = 0.30f;
-				float test1 = (float) Math.sin(0.1f*Minecraft.getMinecraft().player.ticksExisted) * fMod;
-				
+			
 				
 				//System.out.println("yo");
 			//	test1 = 1;
@@ -3290,6 +3290,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				//GlStateManager.translate(-0.05*test1, 0.01*test1, 0);
 				//GlStateManager.rotate(-10f*test1, 1, 1, 0);
 				//Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mw:textures/items/sexmoiv.png"));
+				
 				getBuilder().getModel().render(this.player,
 		                renderContext.getLimbSwing(),
 		                renderContext.getFlimbSwingAmount(),
@@ -3305,6 +3306,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		    if(sqDistance < 900) {
 		    	   Interceptors.setRenderVolumeThreshold(volumeThreshold);
 		        if(attachments != null) {
+		       
 		            renderAttachments(positioner, renderContext, attachments);
 		        }
 		    }
@@ -3349,7 +3351,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 	}
 
 	public void renderAttachments(Positioner<Part, RenderContext<RenderableState>> positioner, RenderContext<RenderableState> renderContext,List<CompatibleAttachment<? extends AttachmentContainer>> attachments) {
-		
+		GlStateManager.color(1, 1, 1);
 		for(CompatibleAttachment<?> compatibleAttachment: attachments) {
 			if(compatibleAttachment != null && !(compatibleAttachment.getAttachment() instanceof ItemSkin) && !(compatibleAttachment.getAttachment() instanceof ItemScope)) {
 				
