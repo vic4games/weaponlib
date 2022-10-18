@@ -8,6 +8,7 @@ import java.util.function.Function;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleItem;
 import com.vicmatskiv.weaponlib.crafting.CraftingEntry;
 import com.vicmatskiv.weaponlib.crafting.CraftingGroup;
+import com.vicmatskiv.weaponlib.crafting.CraftingRegistry;
 import com.vicmatskiv.weaponlib.crafting.IModernCrafting;
 import com.vicmatskiv.weaponlib.melee.PlayerMeleeInstance;
 
@@ -252,6 +253,11 @@ public class ItemAttachment<T> extends CompatibleItem implements ModelSource, IM
 	@Override
 	public CraftingEntry[] getModernRecipe() {
 		return this.modernRecipe;
+	}
+
+	@Override
+	public void setCraftingRecipe(CraftingEntry[] recipe) {
+		this.modernRecipe = recipe;
 	}
 
 }

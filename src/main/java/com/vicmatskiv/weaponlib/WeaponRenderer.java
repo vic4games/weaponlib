@@ -3729,14 +3729,9 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		@SuppressWarnings("unchecked")
         CustomRenderer<RenderableState> postRenderer = (CustomRenderer<RenderableState>) compatibleAttachment.getAttachment().getPostRenderer();
 		if(postRenderer != null) {
-			
-		
-			
-			
 			// Stuff like lasers goes in here
 			//postRenderer.render(renderContext);
 			deferredPost.add(new Pair<>(captureCurrentModelViewMatrix(), postRenderer));
-			
 		}
 		*/
 

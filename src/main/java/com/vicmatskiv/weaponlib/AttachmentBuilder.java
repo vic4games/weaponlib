@@ -275,9 +275,7 @@ public class AttachmentBuilder<T> {
 		attachment.setModernRecipe(modernRecipe);
 		
 		// Do not register things if they do not have recipes.
-		if(this.modernRecipe != null) {
-			CraftingRegistry.register(attachment);
-		}
+		CraftingRegistry.registerHook(attachment);
 
 		if(rotationPoint != null) attachment.rotationPoint = rotationPoint;
 

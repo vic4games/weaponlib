@@ -3,6 +3,7 @@ package com.vicmatskiv.weaponlib.compatibility;
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.Console;
 import java.io.File;
 import java.io.FileDescriptor;
@@ -94,6 +95,7 @@ import com.vicmatskiv.weaponlib.config.BalancePackManager.GunConfigurationGroup;
 import com.vicmatskiv.weaponlib.config.ModernConfigurationManager;
 import com.vicmatskiv.weaponlib.config.novel.ModernConfigManager;
 import com.vicmatskiv.weaponlib.config.novel.VMWModConfigGUI;
+import com.vicmatskiv.weaponlib.crafting.CraftingFileManager;
 import com.vicmatskiv.weaponlib.animation.jim.BBLoader;
 import com.vicmatskiv.weaponlib.debug.DebugRenderer;
 import com.vicmatskiv.weaponlib.debug.SysOutController;
@@ -167,6 +169,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.datafix.fixes.MinecartEntityTypes;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -203,6 +206,7 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.PlayerTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent;
+import net.minecraftforge.fml.common.network.FMLNetworkEvent;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -529,9 +533,31 @@ public abstract class CompatibleClientEventHandler {
 	
 	
 	@SubscribeEvent
+	public void connectedToServerEvent(FMLNetworkEvent.ClientConnectedToServerEvent evt) {
+		Minecraft.getMinecraft().addScheduledTask(() -> {
+			
+			if(evt.isLocal()) {
+				
+			}
+			
+		});
+	}
+	
+	
+	@SubscribeEvent
 	public void renderWorrldLastEvent(RenderWorldLastEvent evt) {
 		
 	  // if(true) return;
+		
+		
+		
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		for(int i = 0; i < 24; ++i) baos.write(3);
+		
+		
+		//CraftingFileManager.getInstance().saveCacheAndLoad(baos);
+		
+		//CraftingFileManager.getInstance().readCache(new File(Loader.instance().getConfigDir() + "/mw/crafting/cache/wei.cache"));
 		
 		
 		

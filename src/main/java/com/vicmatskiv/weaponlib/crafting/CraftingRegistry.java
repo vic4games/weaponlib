@@ -3,18 +3,22 @@ package com.vicmatskiv.weaponlib.crafting;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import org.omg.CORBA.CTX_RESTRICT_SCOPE;
+
 import com.vicmatskiv.weaponlib.ItemAttachment;
 import com.vicmatskiv.weaponlib.Weapon;
 
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
 
 /**
  * CraftingRegistry that stores all of the craftable items, allows for an easy lookup of them,
- * and finally an easy registration
+ * and finally an easy registration process that first uses a hook system, and then later fills
+ * in the recipes from a file.
  * 
  * @author Homer Riva-Cambrin
- * @version September 23rd, 2022
+ * @version October 9th, 2022
  */
 public class CraftingRegistry {
 	
@@ -24,6 +28,11 @@ public class CraftingRegistry {
 	// Stores a map of a map of each group under their unlocalized names respectively
 	private static HashMap<CraftingGroup, HashMap<String, IModernCrafting>> categoricalLookup = new HashMap<>(50, 0.7f);
 	
+
+	protected static HashMap<String, CraftingEntry[]> recipeMap = new HashMap<>();
+	
+	private static HashMap<Item, IModernCrafting> hookMap = new HashMap<>();
+	
 	static {
 		// Fills the maps with the groups (obviously important
 		// or we will get a null pointer exception)
@@ -31,6 +40,9 @@ public class CraftingRegistry {
 			craftingMap.put(group, new ArrayList<>());
 			categoricalLookup.put(group, new HashMap<>());
 		}
+		
+		
+		
 	}
 	
 	/**
@@ -74,9 +86,74 @@ public class CraftingRegistry {
 	 * @param group - Crafting group of the crafting you are looking for
 	 * @param crafting - IModernCrafting to register
 	 */
-	public static void register(IModernCrafting crafting) {
+	public static void registerHook(IModernCrafting crafting) {
+		//System.out.println("CABRON: " + crafting.getItem().getRegistryName());
+		//recipeMap.put(crafting.getItem().getRegistryName().toString(), null);
+		hookMap.put(crafting.getItem(), crafting);
+		
+	}
+	
+	public static boolean hasHook(String registryName) {
+		return hasHook(Item.getByNameOrId(registryName));
+	}
+	
+	public static boolean hasHook(Item item) {
+		return hookMap.containsKey(item);
+	}
+	
+	public static IModernCrafting getHook(String registryName) {
+		return getHook(Item.getByNameOrId(registryName));
+	}
+	
+	public static IModernCrafting getHook(Item item) {
+		return hookMap.get(item);
+	}
+	
+	protected static boolean isRecipeRegistered(String registryName) {
+		return isRecipeRegistered(Item.getByNameOrId(registryName));
+	}
+	
+	protected static boolean isRecipeRegistered(Item item) {
+		return isRecipeRegistered(getHook(item));
+	}
+	
+	protected static boolean isRecipeRegistered(IModernCrafting crafting) {
+		if(crafting.getCraftingGroup() == null) return false;
+		if(craftingMap.get(crafting.getCraftingGroup()).contains(crafting)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	
+	
+	protected static void deleteRecipeRegistry(Item item) {
+		deleteRecipeRegistry(getHook(item));
+	}
+	
+	protected static void deleteRecipeRegistry(IModernCrafting crafting) {
+		craftingMap.get(crafting.getCraftingGroup()).remove(crafting);
+		categoricalLookup.get(crafting.getCraftingGroup()).remove(crafting.getItem().getUnlocalizedName());
+	}
+	
+	
+	
+	protected static void registerRecipe(Item item, CraftingGroup group, CraftingEntry[] entry) {
+		IModernCrafting crafting = getHook(item);
+		
+		// Sets their crafting groups
+		crafting.setCraftingRecipe(entry);
+		crafting.setCraftingGroup(group);
+		
+		// If it already exists, assume we are loading a new set of recipes.
+		if(isRecipeRegistered(crafting)) deleteRecipeRegistry(crafting);
+		
+		// Registers them
 		craftingMap.get(crafting.getCraftingGroup()).add(crafting);
 		categoricalLookup.get(crafting.getCraftingGroup()).put(crafting.getItem().getUnlocalizedName(), crafting);
 	}
+	
+
 
 }

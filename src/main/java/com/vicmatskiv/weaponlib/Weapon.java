@@ -1159,13 +1159,13 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable, IModernCraf
             
             // Do not register weapons to the registry if they do not
             // have a crafting recipe.
-            if(modernCraftingRecipe != null) {
-            	CraftingRegistry.register(weapon);
-            }
+            CraftingRegistry.registerHook(weapon);
 
             return weapon;
         }
     }
+    
+    private CraftingGroup craftingGroup = CraftingGroup.GUN;
 
     private static final long DEFAULT_RELOADING_TIMEOUT_TICKS = 10;
     private static final long DEFAULT_UNLOADING_TIMEOUT_TICKS = 10;
@@ -1223,7 +1223,7 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable, IModernCraf
     
     @Override
     public CraftingGroup getCraftingGroup() {
-    	return CraftingGroup.GUN;
+    	return this.craftingGroup;
     }
     
     @Override
@@ -1234,6 +1234,7 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable, IModernCraf
     @Override
     public CraftingEntry[] getModernRecipe() {
     	return this.modernRecipe;
+    	//return CraftingRegistry.getDatabaseRecipe(this);
     }
     
     
@@ -1784,4 +1785,14 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable, IModernCraf
     public ScreenShakeAnimation.Builder getScreenShakeAnimationBuilder(RenderableState renderableState) {
         return builder.screenShakingBuilders.get(renderableState);
     }
+
+	@Override
+	public void setCraftingRecipe(CraftingEntry[] recipe) {
+		this.modernRecipe = recipe;
+	}
+
+	@Override
+	public void setCraftingGroup(CraftingGroup group) {
+		this.craftingGroup = group;
+	}
 }

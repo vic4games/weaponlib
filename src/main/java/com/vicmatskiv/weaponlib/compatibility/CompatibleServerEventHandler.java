@@ -1,24 +1,21 @@
 package com.vicmatskiv.weaponlib.compatibility;
 
 
-import com.vicmatskiv.weaponlib.BlockHitMessage;
-import com.vicmatskiv.weaponlib.CommonModContext;
-import com.vicmatskiv.weaponlib.ModContext;
-import com.vicmatskiv.weaponlib.command.BalancePackCommand;
-import com.vicmatskiv.weaponlib.config.BalancePackManager;
-import com.vicmatskiv.weaponlib.network.packets.BalancePackClient;
+import java.io.ByteArrayOutputStream;
+import org.apache.commons.codec.binary.Hex;
 
-import net.minecraft.block.BlockDoor;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.Minecraft;
+import com.vicmatskiv.weaponlib.ModContext;
+import com.vicmatskiv.weaponlib.config.BalancePackManager;
+import com.vicmatskiv.weaponlib.crafting.CraftingFileManager;
+import com.vicmatskiv.weaponlib.jim.util.ByteArrayUtils;
+import com.vicmatskiv.weaponlib.network.packets.BalancePackClient;
+import com.vicmatskiv.weaponlib.network.packets.CraftingClientPacket;
+
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.RayTraceResult;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.EntityEvent.EntityConstructing;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
@@ -29,14 +26,12 @@ import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerDropsEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.fml.common.Mod.EventHandler;
-import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerRespawnEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
-import net.minecraftforge.fml.common.network.FMLNetworkEvent.ServerConnectionFromClientEvent;
 
 public abstract class CompatibleServerEventHandler {
 
@@ -51,24 +46,71 @@ public abstract class CompatibleServerEventHandler {
 	protected abstract void onCompatibleItemToss(ItemTossEvent itemTossEvent);
 	
 	@SubscribeEvent
+	public final void onEntityJoinedEvent(EntityJoinWorldEvent evt) {
+		// We are only interested in the player. We also only want to deal with this if the server and the client
+		// are operating off of DIFFERENT file systems (hence the dedicated server check!).
+		if(!(evt.getEntity() instanceof EntityPlayer) || !FMLCommonHandler.instance().getMinecraftServerInstance().isDedicatedServer()) return;
+		
+		System.out.println("WARNING RUNNING!");
+		
+		EntityPlayer player = (EntityPlayer) evt.getEntity();
+		if(player.world.isRemote) return;
+		
+	
+		ByteArrayOutputStream baos = ByteArrayUtils.createByteArrayOutputStreamFromBytes(CraftingFileManager.getInstance().getCurrentFileHash());
+		if(baos == null) return;
+		
+		getModContext().getChannel().getChannel().sendTo(new CraftingClientPacket(baos, true), (EntityPlayerMP) player);
+		
+		System.out.println(Hex.encodeHexString(CraftingFileManager.getInstance().getCurrentFileHash()));
+		
+		System.out.println("An entity has joined the server ;)");
+		
+	}
+	
+	@SubscribeEvent
     public final void onPlayerTickEvent(TickEvent.PlayerTickEvent event) {
 		
-		
+
 		if(event.phase == Phase.END) {
-			
-			//System.out.println(getModContext());
-			double pX = -83.3;
-			double pY = 91.9;
-			double pZ = -243.533;
-			
-			BlockPos bp = new BlockPos(pX, pY, pZ);
-			
-	
+			if(!event.player.world.isRemote) {
+				for(EntityPlayer ep : event.player.getEntityWorld().playerEntities) {
+					//new HelloWorldPacket();
+					
+					//ByteArrayOutputStream baos = new ByteArrayOutputStream();
+					
+					
 				
-				//getModContext().getChannel().sendToAllAround(new BlockHitMessage(new BlockPos(pX, pY, pZ), pX, pY, pZ, CompatibleEnumFacing.valueOf(EnumFacing.UP)), new CompatibleTargetPoint(0, pX, pY, pZ, 20.0));
-	     		
+					/*
+					
+					
+					try {
+						byte[] ba = new byte[100000];
+						for(int i = 0; i < ba.length; ++i) {
+							ba[i] = 0x01b;
+						}
+						
+						baos.write(ba);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					
+					JsonObject obj = new JsonObject();
+					obj.addProperty("cock", 5);
+					
 			
-			
+					byte[] json = obj.toString().getBytes();
+					ByteArrayInputStream bais = new ByteArrayInputStream(json);
+					
+					JsonObject obj2 = new GsonBuilder().create().fromJson(new InputStreamReader(bais), JsonObject.class);
+					System.out.println(obj2);
+					*/
+					
+					
+					//getModContext().getChannel().getChannel().sendTo(new CraftingClientPacket(baos), (EntityPlayerMP) ep);
+				}
+			}
 		}
  		
  		

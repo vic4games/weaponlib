@@ -13,9 +13,10 @@ import net.minecraftforge.oredict.OreDictionary;
  * Features:
  * 1. Can be initialized with a block (similar to ItemStack)
  * 2. Can be initialized with an OreDictionary name (you do have to give it a default item though for dismantling)
+ * 3. Can be printed to a string
  * 
  * @author Homer Riva-Cambrin
- * @version September 23rd, 2022
+ * @version October 9th, 2022
  */
 public class CraftingEntry {
 	
@@ -59,6 +60,15 @@ public class CraftingEntry {
 	
 	public boolean isOreDictionary() {
 		return this.oreDictionary != null && this.oreDictionary.length() != 0;
+	}
+	
+	@Override
+	public String toString() {
+		if(isOreDictionary()) {
+			return "(" + this.oreDictionary + "[" + this.item.getRegistryName().toString() + "], " + getCount() + ")";
+		} else {
+			return "(" + this.item.getRegistryName().toString()  + ", " + getCount() + ")";
+		}
 	}
 
 }

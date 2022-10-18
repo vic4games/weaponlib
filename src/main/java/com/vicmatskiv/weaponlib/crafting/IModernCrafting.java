@@ -19,4 +19,7 @@ public interface IModernCrafting {
 	public Item getItem();
 	public CraftingGroup getCraftingGroup();
 
+	public void setCraftingRecipe(CraftingEntry[] recipe);
+	public void setCraftingGroup(CraftingGroup group);
+
 }
