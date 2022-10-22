@@ -73,7 +73,10 @@ public class StationClientPacket implements CompatibleMessage {
 		this.pos = BlockPos.fromLong(buf.readLong());
 		
 		
-		this.copiedBuf = buf;
+		
+		
+		this.copiedBuf = buf.copy();
+	
 		
 		
 	}
