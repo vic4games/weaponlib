@@ -2,6 +2,7 @@ package com.vicmatskiv.weaponlib.crafting.base;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -44,7 +45,7 @@ import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.oredict.OreDictionary;
-import scala.actors.threadpool.Arrays;
+
 
 public abstract class GUIContainerStation<T extends TileEntityStation> extends CompatibleGuiContainer {
 	
