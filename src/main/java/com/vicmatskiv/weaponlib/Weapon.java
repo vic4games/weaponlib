@@ -1393,7 +1393,7 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable, IModernCraf
    
     	if(world.isRemote) {
     		EnumFacing facing = EnumFacing.valueOf(position.getSideHit().toString());
-        	CompatibleClientEventHandler.bhr.addBulletHole(new BulletHole(new Vec3d(position.getHitVec().getXCoord(), position.getHitVec().getYCoord(), position.getHitVec().getZCoord()), facing, 0.05));
+        	CompatibleClientEventHandler.BULLET_HOLE_RENDERER.addBulletHole(new BulletHole(new Vec3d(position.getHitVec().getXCoord(), position.getHitVec().getYCoord(), position.getHitVec().getZCoord()), facing, 0.05));
         	
         	
         	

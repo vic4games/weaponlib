@@ -379,7 +379,7 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
         	Vec3d velocity = new Vec3d(-0.3, 0.1, 0.0);
     		velocity = velocity.rotateYaw((float) Math.toRadians(-player.rotationYaw));
     		Shell shell = new Shell(weapon.getShellType(), pos.add(weaponDir), new Vec3d(-90, 0, 180 + player.rotationYaw), velocity);
-        	CompatibleClientEventHandler.shellManager.enqueueShell(shell);
+        	CompatibleClientEventHandler.SHELL_MANAGER.enqueueShell(shell);
     	
         	//Shell
         	

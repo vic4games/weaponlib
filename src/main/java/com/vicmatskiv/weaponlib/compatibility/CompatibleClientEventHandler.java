@@ -63,6 +63,7 @@ import com.vicmatskiv.weaponlib.ClassInfo;
 import com.vicmatskiv.weaponlib.ClientModContext;
 import com.vicmatskiv.weaponlib.ItemAttachment;
 import com.vicmatskiv.weaponlib.ItemSkin;
+import com.vicmatskiv.weaponlib.KeyBindings;
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.PlayerWeaponInstance;
 import com.vicmatskiv.weaponlib.RenderContext;
@@ -220,6 +221,29 @@ public abstract class CompatibleClientEventHandler {
 	public static boolean freecamLock = false;
 	public static boolean muzzlePositioner = false;
 	
+	public static double freeYaw = 0;
+	public static double freePitch = 0;
+
+	public static double yawDelta = 0;
+	public static double pitchDelta = 0;
+
+	
+	// Field that allows us to reset the mouse wheel
+		// rotation for the debug animation editor.
+		private static Field EVENT_DWHEEL_FIELD = null;
+		
+		
+		public static final FloatBuffer MODELVIEW = GLAllocation.createDirectFloatBuffer(16);
+		public static final FloatBuffer PROJECTION = GLAllocation.createDirectFloatBuffer(16);
+		public static final IntBuffer VIEWPORT = GLAllocation.createDirectIntBuffer(16);
+		public static final FloatBuffer NEW_POS = GLAllocation.createDirectFloatBuffer(4);
+
+		
+		
+
+		public static final ShellManager SHELL_MANAGER = new ShellManager();
+		
+	
 	
 	public static Vec3d magRotPositioner = Vec3d.ZERO;
 
@@ -241,80 +265,32 @@ public abstract class CompatibleClientEventHandler {
 
 	@SubscribeEvent
 	public void keyInputEvent(KeyboardInputEvent kie) {
-		
-		
-		
-	
-		if(Keyboard.isKeyDown(Keyboard.KEY_HOME)) {
-	
-			freecamLock = !freecamLock;
-		}
+		// This is used to unlock and lock freecam.
+		if(Keyboard.isKeyDown(KeyBindings.freecamLock.getKeyCode())) freecamLock = !freecamLock;
 	}
 
 	@SubscribeEvent
 	public final void properCameraSetup(EntityViewRenderEvent.CameraSetup e) {
-		EntityPlayer player = compatibility.getClientPlayer();
-
-		if (player.isRiding() && player.getRidingEntity() instanceof EntityVehicle
-				&& Minecraft.getMinecraft().gameSettings.thirdPersonView == 0) {
-			EntityVehicle vehicle = (EntityVehicle) player.getRidingEntity();
-			// vehicle.rotationPitch = 30f;
-
-			if (Minecraft.getMinecraft().gameSettings.thirdPersonView == 0) {
-
-				// GL11.glRotated(-45, 1.0, 0.0, 0.0);
-				// GL11.glTranslated(player.posX, player.posY, player.posZ);
-
-				// GL11.glTranslated(-player.posX, -player.posY, -player.posZ);
-
-				// e.setRoll(-(vehicle.rotationRoll + vehicle.rotationRollH));
-				// e.setPitch(-vehicle.rotationPitch);
-				// GL11.glTranslated(0.0, -0.9, -.8);
+		if(freecamEnabled) {
+			if(Keyboard.isKeyDown(KeyBindings.freecamRotate.getKeyCode()) && freecamEnabled) {
+				// Rotates the freecam if the key is down
+				freeYaw += yawDelta;
+				freePitch += pitchDelta;
+			} else if(!freecamLock) {
+				// When the player releases the key, snap back
+				freeYaw = 0;
+				freePitch = 0;
 			}
-
-		}
-		
-		
-		if(Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) && freecamEnabled) {
-			freeYaw += yawDelta;
-			freePitch += pitchDelta;
-		} else if(!freecamLock) {
-			freeYaw = 0;
-			freePitch = 0;
-		}
-		if(freecamEnabled) {
 			
 			e.setYaw((float) (freeYaw));
 			e.setPitch((float) (freePitch));
 		}
-		
-		/*
-		// System.out.println("hi");
-		if (Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) && freecamEnabled) {
-			// System.out.println("hi");
-			freeYaw += yawDelta;
-			freePitch += pitchDelta;
-			
-		} else if(!freecamLock) {
-			freeYaw = 0;
-			freePitch = 0;
-		}
-		
-		if(freecamEnabled) {
-			e.setYaw((float) (freeYaw));
-			e.setPitch((float) (freePitch));
-		}*/
-		
 
+		// Reset the deltas
 		yawDelta = 0;
 		pitchDelta = 0;
 	}
 
-	public static double freeYaw = 0;
-	public static double freePitch = 0;
-
-	public static double yawDelta = 0;
-	public static double pitchDelta = 0;
 
 	public static Vec3d debugmuzzlePosition = new Vec3d(0, -1, -6.5);
 
@@ -367,10 +343,8 @@ public abstract class CompatibleClientEventHandler {
 
 		}
 	}
-	@SubscribeEvent
-	public void playerTick(PlayerTickEvent evt) {
-		//Minecraft.getMinecraft().player.inventory.currentItem = 0;
-	}
+
+	
 
 	@SubscribeEvent
 	public void mouseMove(MouseEvent me) {
@@ -380,24 +354,23 @@ public abstract class CompatibleClientEventHandler {
 		if(AnimationModeProcessor.getInstance().getFPSMode()) {
 			AnimationModeProcessor amp = AnimationModeProcessor.getInstance();
 			
-			
+			// Use the scroll wheel to zoom in and out the camera
 			double pan = Math.max(0.01, Math.abs(amp.pan.z)/10000f);
-			
-			
-		
 			amp.pan = amp.pan.addVector(0, 0, (me.getDwheel())*pan);
 			
-			Field f = ReflectionHelper.findField(Mouse.class, "event_dwheel");
+			if(EVENT_DWHEEL_FIELD == null) {
+				// Usually we would include the MCP mapping, however this tool is
+				// only ever meant to be used in the debug environment.
+				EVENT_DWHEEL_FIELD = ReflectionHelper.findField(Mouse.class, "event_dwheel");
+			}
+			
 			try {
-				f.set(null, 0);
-			} catch (IllegalArgumentException e) {
-				// TODO Auto-generated catch block
+				EVENT_DWHEEL_FIELD.set(null, 0);
+			} catch(Exception e) {
+				System.err.println("Could not assign value to EVENT_DWHEEL_FIELD!");
 				e.printStackTrace();
-			} catch (IllegalAccessException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}	
-		}
+			}
+		 } 
 		
 		
 	}
@@ -479,47 +452,25 @@ public abstract class CompatibleClientEventHandler {
 		GL11.glPopMatrix();
 	}
 
-	@SubscribeEvent
-	public void livingUpdateEvent(LivingUpdateEvent evt) {
-		if (evt.getEntityLiving() instanceof EntityPlayer) {
-			EntityPlayer player = (EntityPlayer) evt.getEntityLiving();
 
-		}
-	}
-
-	public static final FloatBuffer MODELVIEW = GLAllocation.createDirectFloatBuffer(16);
-	public static final FloatBuffer PROJECTION = GLAllocation.createDirectFloatBuffer(16);
-	public static final IntBuffer VIEWPORT = GLAllocation.createDirectIntBuffer(16);
-	public static final FloatBuffer NEW_POS = GLAllocation.createDirectFloatBuffer(4);
 
 	
-	
-	public static WavefrontModel bulletShell = WavefrontLoader.loadSubModel("9mmshell", "casing");
-	
-//	public static ShellParticleSimulator shells = new ShellParticleSimulator();
-	
-	public static ShellManager shellManager = new ShellManager();
-	public static BulletHoleRenderer bhr = new BulletHoleRenderer();
+	public static final BulletHoleRenderer BULLET_HOLE_RENDERER = new BulletHoleRenderer();
 	//public static InstancedRender ir = new InstancedRender();
 	
 	
 	public static Vec3d testPos = Vec3d.ZERO;
 
 	
-	public static CompatibilityClassGenerator ccg = new CompatibilityClassGenerator();
-	public static InstancedShellObject iso;
-	
+
+
 	public static Vec3d getInterpolatedPlayerCoords() {
 		EntityPlayer p = Minecraft.getMinecraft().player;
-		float interpX = (float) MatrixHelper.solveLerp(p.prevPosX, p.posX,
-				Minecraft.getMinecraft().getRenderPartialTicks());
-		float interpY = (float) MatrixHelper.solveLerp(p.prevPosY, p.posY,
-				Minecraft.getMinecraft().getRenderPartialTicks());
-		float interpZ = (float) MatrixHelper.solveLerp(p.prevPosZ, p.posZ,
-				Minecraft.getMinecraft().getRenderPartialTicks());
-
-		
-		return new Vec3d(interpX, interpY, interpZ);
+		float mu = Minecraft.getMinecraft().getRenderPartialTicks();
+		double interpolatedX = (p.posX - p.prevPosX) * mu + p.prevPosX;
+		double interpolatedY = (p.posY - p.prevPosY) * mu + p.prevPosY;
+		double interpolatedZ = (p.posZ - p.prevPosZ) * mu + p.prevPosZ;
+		return new Vec3d(interpolatedX, interpolatedY, interpolatedZ);
 	}
 	
 	public VMWFrameTimer frametimer = new VMWFrameTimer();
@@ -547,78 +498,35 @@ public abstract class CompatibleClientEventHandler {
 	@SubscribeEvent
 	public void renderWorrldLastEvent(RenderWorldLastEvent evt) {
 		
-	  // if(true) return;
-		
-		
-		
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		for(int i = 0; i < 24; ++i) baos.write(3);
-		
-		
-		//CraftingFileManager.getInstance().saveCacheAndLoad(baos);
-		
-		//CraftingFileManager.getInstance().readCache(new File(Loader.instance().getConfigDir() + "/mw/crafting/cache/wei.cache"));
-		
-		
-		
-		
-		if(Minecraft.getMinecraft().player != null) {
-			ItemStack stack = Minecraft.getMinecraft().player.getHeldItemMainhand();
-			if(stack != null && !stack.isEmpty()) {
-				NBTTagCompound nbt = stack.getTagCompound();
-			//	System.out.println(nbt);
-				//Tags.setInstance(itemStack, instance);
-			}
-			
-		}
-		
-		
-		
 		if(ModernConfigManager.enableAllShaders && ModernConfigManager.enableWorldShaders) {
 			// Fills the model view matrix & projection matrix. Only used for world rendering.
 			PostProcessPipeline.captureMatricesIntoBuffers();
 		}
 		
+		// Replaces the weather renderer.
+		if(!ModernConfigManager.enableFancyRainAndSnow) {
+			PostProcessPipeline.setWorldElements();
+		}
 		
 		
-		// Replaces the weather renderer. TO-DO: Add config option
-		PostProcessPipeline.setWorldElements();
+		// Updates the value repository
+		ClientValueRepo.renderUpdate(getModContext());
 		
+		// Marks the frametimer
 		frametimer.markFrame();
 		
 		
-		
-		ClientValueRepo.renderUpdate(getModContext());
-	
-		
-		
+		// Frametimer syncs to 120 TO-DO: Optimize this
 		double divisor = 120/frametimer.getFramerate()*0.05;
 		divisor = Math.min(0.08, divisor);
 		Interceptors.nsm.update();
 		
 	
-		/*
-		// TO-DO is this necessary? Make sure to delete in WeaponRenderer if not.
-		if(ClientModContext.getContext().getMainHeldWeapon() != null) {
-			
-			GlStateManager.pushMatrix();
-			Vec3d iP2 = getInterpolatedPlayerCoords();
-			GlStateManager.translate(-iP2.x, -iP2.y, -iP2.z);
-			GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW);
-			GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, PROJECTION);
-			GL11.glGetInteger(GL11.GL_VIEWPORT, VIEWPORT);
 
-			Project.gluUnProject(WeaponRenderer.POSITION.get(0), WeaponRenderer.POSITION.get(1), WeaponRenderer.POSITION.get(2), MODELVIEW, PROJECTION, VIEWPORT,
-					NEW_POS);
-			GlStateManager.popMatrix();
-			
-		}
-		
-		*/
 		
 		
 		// wtf is bhr
-		bhr.render();
+		BULLET_HOLE_RENDERER.render();
 		
 		
 		
@@ -709,7 +617,7 @@ public abstract class CompatibleClientEventHandler {
 		
 		
 
-		shellManager.render();
+		SHELL_MANAGER.render();
 
 		PROJECTION.rewind();
 		MODELVIEW.rewind();
@@ -905,7 +813,7 @@ public abstract class CompatibleClientEventHandler {
 			
 			ClientValueRepo.ticker.update(Minecraft.getMinecraft().player.ticksExisted);
 
-			shellManager.update(0.05);
+			SHELL_MANAGER.update(0.05);
 			
 			
 		}
@@ -913,7 +821,7 @@ public abstract class CompatibleClientEventHandler {
 		if(Minecraft.getMinecraft().player != null && Minecraft.getMinecraft().player.ticksExisted%1 == 0 && event.phase == Phase.START) {
 			for(int i = 0; i < 0; ++i) {
 				
-				shellManager.enqueueShell(new Shell(Type.ASSAULT, new Vec3d(188, 6, -395.45), new Vec3d(90,0,0), new Vec3d(Math.random()/2-0.25, Math.random()/2-0.25, Math.random()/2-0.25)));
+				SHELL_MANAGER.enqueueShell(new Shell(Type.ASSAULT, new Vec3d(188, 6, -395.45), new Vec3d(90,0,0), new Vec3d(Math.random()/2-0.25, Math.random()/2-0.25, Math.random()/2-0.25)));
 				
 			}
 			

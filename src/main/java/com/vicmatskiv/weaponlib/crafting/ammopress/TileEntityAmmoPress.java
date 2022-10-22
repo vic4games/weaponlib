@@ -212,6 +212,7 @@ public class TileEntityAmmoPress extends TileEntityStation {
 				ItemStack splitOff = stack.splitStack(1);
 				
 				addStackToInventoryRange(splitOff, 0, 8);
+				markDirty();
 			}
 			
 			

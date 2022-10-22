@@ -62,9 +62,11 @@ public class TileEntityWorkbench extends TileEntityStation {
 	@Override
 	public void writeBytesForClientSync(ByteBuf buf) {
 		super.writeBytesForClientSync(buf);
+		System.out.println("Writing bytes for client sync, target is currently: " + this.craftingTarget);
 		if(this.craftingTarget != null) {
 			buf.writeBoolean(true);
 			ByteBufUtils.writeUTF8String(buf, this.craftingTarget.getItem().getUnlocalizedName());
+			System.out.println("Tile Entity Workbench writing " + this.craftingTarget.getItem().getUnlocalizedName());
 		} else {
 			buf.writeBoolean(false);
 		}
@@ -74,15 +76,18 @@ public class TileEntityWorkbench extends TileEntityStation {
 	@Override
 	public void readBytesFromClientSync(ByteBuf buf) {
 		super.readBytesFromClientSync(buf);
+		System.out.println("Starting read from client sync...");
 		if(buf.readBoolean()) {
 			this.craftingTargetName = ByteBufUtils.readUTF8String(buf);
+			System.out.println("Tile Entity Workbench reading " + this.craftingTargetName);
 		}
 	}
 
 	@Override
 	public NBTTagCompound writeToNBT(NBTTagCompound compound) {
 		super.writeToNBT(compound);
-		if (craftingTimer != -1) {
+		System.out.println(compound);
+		if (craftingTimer != -1 && this.craftingTarget != null) {
 			compound.setInteger("craftingTargetID", this.craftingTarget.getCraftingGroup().getID());
 			compound.setString("craftingTargetName", this.craftingTarget.getItem().getUnlocalizedName());
 
@@ -93,6 +98,7 @@ public class TileEntityWorkbench extends TileEntityStation {
 	@Override
 	public void readFromNBT(NBTTagCompound compound) {
 		super.readFromNBT(compound);
+		System.out.println("Reading: " + compound);
 		if (compound.hasKey("craftingTimer") && compound.hasKey("craftingDuration")) {
 			this.craftingTarget = CraftingRegistry.getModernCrafting(
 					CraftingGroup.getValue(compound.getInteger("craftingTargetID")),
@@ -126,6 +132,7 @@ public class TileEntityWorkbench extends TileEntityStation {
 
 			if (!this.world.isRemote) {
 				addStackToInventoryRange(new ItemStack(this.craftingTarget.getItem()), 0, 9);
+				markDirty();
 			}
 
 		}

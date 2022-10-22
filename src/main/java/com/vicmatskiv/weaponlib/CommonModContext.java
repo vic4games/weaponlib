@@ -461,8 +461,8 @@ public class CommonModContext implements ModContext {
 //        CriteriaTriggers.INVENTORY_CHANGED.addListener(
 //                null, new ICriterionTrigger.Listener(inventoryChangeTriggerInstance, null, "Custom inventory change"));
         
-        File missionsDir = new File(new File(event.getEvent().getSuggestedConfigurationFile().getParent(), "mw"), "missions");
-        File entityMissionFile = new File(new File(event.getEvent().getSuggestedConfigurationFile().getParent(), "mw"), "entity_mission_offerings.json");
+     //   File missionsDir = new File(new File(event.getEvent().getSuggestedConfigurationFile().getParent(), "mw"), "missions");
+       // File entityMissionFile = new File(new File(event.getEvent().getSuggestedConfigurationFile().getParent(), "mw"), "entity_mission_offerings.json");
 
         
        
@@ -476,14 +476,11 @@ public class CommonModContext implements ModContext {
 	@Override
 	public void preInitEnd(Object mod, String modId, ConfigurationManager configurationManager,
 			CompatibleFmlPreInitializationEvent event, CompatibleChannel channel) {
-		 compatibility.registerTileEntity(TileEntityWorkbench.class, "mw:tileworkbench");
-	        compatibility.registerBlock(this, new WorkbenchBlock(this, "weapon_workbench", Material.WOOD), "weapon_workbench");
-	        
-	        
-	        compatibility.registerTileEntity(TileEntityAmmoPress.class, "mw:tileammopress");
-	        compatibility.registerBlock(this, new BlockAmmoPress(this, "ammo_press", Material.IRON), "ammo_press");
-	        
+		compatibility.registerTileEntity(TileEntityWorkbench.class, "mw:tileworkbench");
+		compatibility.registerBlock(this, new WorkbenchBlock(this, "weapon_workbench", Material.WOOD), "weapon_workbench");
 		
+		compatibility.registerTileEntity(TileEntityAmmoPress.class, "mw:tileammopress");
+		compatibility.registerBlock(this, new BlockAmmoPress(this, "ammo_press", Material.IRON), "ammo_press");	
 	}
 	
 	@Override

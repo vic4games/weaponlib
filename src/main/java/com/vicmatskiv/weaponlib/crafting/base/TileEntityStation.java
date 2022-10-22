@@ -154,6 +154,7 @@ public class TileEntityStation extends TileEntity implements ITickable, ISidedIn
 							}
 							addStackToInventoryRange(itemStack, 13, 22);
 						}
+						markDirty();
 					}
 					
 				}

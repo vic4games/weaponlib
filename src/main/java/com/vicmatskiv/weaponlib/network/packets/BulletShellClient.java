@@ -68,7 +68,7 @@ public class BulletShellClient implements CompatibleMessage {
 					
 		            	if(Minecraft.getMinecraft().player.getEntityId() != m.shooter) {
 		            		Shell shell = new Shell(m.type, m.position, new Vec3d(-90, 0, 90), m.velocity);
-			            	CompatibleClientEventHandler.shellManager.enqueueShell(shell);
+			            	CompatibleClientEventHandler.SHELL_MANAGER.enqueueShell(shell);
 		            	}
 		            	
 					
