@@ -3229,7 +3229,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			
 			if(ModernConfigManager.enableAllShaders && ModernConfigManager.enableGunShaders) {
 				Shaders.gunLightingShader.use();
-				Shaders.gunLightingShader.uniform1f("time", ClientValueRepo.ticker.getLerpedFloat());
+				Shaders.gunLightingShader.uniform1f("time", ClientValueRepo.TICKER.getLerpedFloat());
 				Shaders.gunLightingShader.uniform1i("disabled", BalancePackManager.isWeaponDisabled(renderContext.getWeaponInstance().getWeapon()) ? 1 : 0);
 				
 				if(useSkin) {
@@ -3668,7 +3668,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 					for(ItemAttachment<Weapon> part : possibleActionList) {
 						if(compatibleAttachment.getAttachment() == part) {
 							
-							float mu = (float) ClientValueRepo.slidePumpValue.value;
+							float mu = (float) ClientValueRepo.slidePumpValue.getLerpedFloat();
 							
 							mu = Math.min(mu, 1.0f);
 							

@@ -11,10 +11,7 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 
-import com.vicmatskiv.weaponlib.render.ShellRenderer2;
 import com.vicmatskiv.weaponlib.render.bgl.GLCompatible;
-import com.vicmatskiv.weaponlib.shader.DynamicShaderGroupManager;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.ResourceLocation;
 

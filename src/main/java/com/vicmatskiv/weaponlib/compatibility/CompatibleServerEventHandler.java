@@ -2,8 +2,6 @@ package com.vicmatskiv.weaponlib.compatibility;
 
 
 import java.io.ByteArrayOutputStream;
-import org.apache.commons.codec.binary.Hex;
-
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.config.BalancePackManager;
 import com.vicmatskiv.weaponlib.crafting.CraftingFileManager;
@@ -33,6 +31,14 @@ import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerRespawnEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 
+/**
+ * Handles server events 
+ * 
+ * @author Victor Matskiv Sr.
+ * @since October 23rd, 2022 by Homer Riva-Cambrin
+ * - Re-factored class
+ * - Added TO-DOs for necessary sections
+ */
 public abstract class CompatibleServerEventHandler {
 
     public abstract String getModId();
@@ -50,78 +56,37 @@ public abstract class CompatibleServerEventHandler {
 		// We are only interested in the player. We also only want to deal with this if the server and the client
 		// are operating off of DIFFERENT file systems (hence the dedicated server check!).
 		if(!(evt.getEntity() instanceof EntityPlayer) || !FMLCommonHandler.instance().getMinecraftServerInstance().isDedicatedServer()) return;
-		
-		System.out.println("WARNING RUNNING!");
-		
 		EntityPlayer player = (EntityPlayer) evt.getEntity();
-		if(player.world.isRemote) return;
 		
-	
+		// Create a hash stream and make sure it's not null (not errored out)
 		ByteArrayOutputStream baos = ByteArrayUtils.createByteArrayOutputStreamFromBytes(CraftingFileManager.getInstance().getCurrentFileHash());
 		if(baos == null) return;
 		
-		getModContext().getChannel().getChannel().sendTo(new CraftingClientPacket(baos, true), (EntityPlayerMP) player);
-		
-		System.out.println(Hex.encodeHexString(CraftingFileManager.getInstance().getCurrentFileHash()));
-		
-		System.out.println("An entity has joined the server ;)");
-		
+		// Send the player the hash
+		getModContext().getChannel().getChannel().sendTo(new CraftingClientPacket(baos, true), (EntityPlayerMP) player);	
 	}
 	
 	@SubscribeEvent
     public final void onPlayerTickEvent(TickEvent.PlayerTickEvent event) {
-		
-
-		if(event.phase == Phase.END) {
-			if(!event.player.world.isRemote) {
-				for(EntityPlayer ep : event.player.getEntityWorld().playerEntities) {
-					//new HelloWorldPacket();
-					
-					//ByteArrayOutputStream baos = new ByteArrayOutputStream();
-					
-					
-				
-					/*
-					
-					
-					try {
-						byte[] ba = new byte[100000];
-						for(int i = 0; i < ba.length; ++i) {
-							ba[i] = 0x01b;
-						}
-						
-						baos.write(ba);
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					
-					JsonObject obj = new JsonObject();
-					obj.addProperty("cock", 5);
-					
-			
-					byte[] json = obj.toString().getBytes();
-					ByteArrayInputStream bais = new ByteArrayInputStream(json);
-					
-					JsonObject obj2 = new GsonBuilder().create().fromJson(new InputStreamReader(bais), JsonObject.class);
-					System.out.println(obj2);
-					*/
-					
-					
-					//getModContext().getChannel().getChannel().sendTo(new CraftingClientPacket(baos), (EntityPlayerMP) ep);
-				}
-			}
-		}
- 		
- 		
+		// We check the phase to see if it is at "Phase.END" as we
+		// do not want this running twice.
         if(event.phase == Phase.END) {            
             int updatedFlags = CompatibleExtraEntityFlags.getFlags(event.player);
             if((updatedFlags & CompatibleExtraEntityFlags.PRONING) != 0) {
+            	// If the player is proning, change their hitbox. TO-DO: Is there a more
+            	// efficient way to do this?
                 setSize(event.player, 0.6f, 0.6f); //player.width, player.width);
             }
         }
     }
     
+	/**
+	 * Sets player size by modifying bounding box
+	 * 
+	 * @param entityPlayer - player that we want to change hitbox of
+	 * @param width - new width of hitbox
+	 * @param height - new height of hitbox
+	 */
     protected void setSize(EntityPlayer entityPlayer, float width, float height)
     {
         if (width != entityPlayer.width || height != entityPlayer.height)
@@ -143,7 +108,9 @@ public abstract class CompatibleServerEventHandler {
 	@SubscribeEvent
 	public void onPlayerLoggedIn(PlayerLoggedInEvent event) {
 	    onCompatiblePlayerLoggedIn(event);
-	    //System.out.println("hi");
+	    // TO-DO: Can we cache balance packs similar to crafting files? Maybe
+	    // they could use the same system? This could crash a server if a large
+	    // amount of players join.
 	    getModContext().getChannel().getChannel().sendTo(new BalancePackClient(BalancePackManager.getActiveBalancePack()), (EntityPlayerMP) event.player);
 	    
 	}

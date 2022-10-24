@@ -170,12 +170,12 @@ public class WeaponRotationHandler {
 		
 		
 		
-		double gunSwayX = LissajousCurve.getXOffsetOnCurve(swayAmplitude, 0.25, Math.PI, 0, ClientValueRepo.ticker.getLerpedFloat());
-		double gunSwayY = LissajousCurve.getXOffsetOnCurve(swayAmplitude, 0.5,Math.PI, Math.PI/2, ClientValueRepo.ticker.getLerpedFloat());
+		double gunSwayX = LissajousCurve.getXOffsetOnCurve(swayAmplitude, 0.25, Math.PI, 0, ClientValueRepo.TICKER.getLerpedFloat());
+		double gunSwayY = LissajousCurve.getXOffsetOnCurve(swayAmplitude, 0.5,Math.PI, Math.PI/2, ClientValueRepo.TICKER.getLerpedFloat());
 		
 		
-		double walkSwayX = LissajousCurve.getXOffsetOnCurve(walkingSwayAmplitude, 0.5, Math.PI, 0, ClientValueRepo.ticker.getLerpedFloat());
-		double walkSwayY = LissajousCurve.getXOffsetOnCurve(walkingSwayAmplitude, 0.25,Math.PI, Math.PI/2, ClientValueRepo.ticker.getLerpedFloat());
+		double walkSwayX = LissajousCurve.getXOffsetOnCurve(walkingSwayAmplitude, 0.5, Math.PI, 0, ClientValueRepo.TICKER.getLerpedFloat());
+		double walkSwayY = LissajousCurve.getXOffsetOnCurve(walkingSwayAmplitude, 0.25,Math.PI, Math.PI/2, ClientValueRepo.TICKER.getLerpedFloat());
 		
 		
 		GlStateManager.translate(walkSwayY, walkSwayX, 0);
@@ -189,9 +189,9 @@ public class WeaponRotationHandler {
 		
 		
 		//weaponRecoveryAmplitude = 1;
-		double recoveryX = LissajousCurve.getXOffsetOnCurve(weaponRecoveryAmplitude, 1, Math.PI, 0, ClientValueRepo.ticker.getLerpedFloat());
-		double recoveryY = LissajousCurve.getXOffsetOnCurve(weaponRecoveryAmplitude, 0.5, Math.PI, Math.PI/2, ClientValueRepo.ticker.getLerpedFloat());
-		double recoveryZ = LissajousCurve.getXOffsetOnCurve(weaponRecoveryAmplitude, 2, Math.PI, Math.PI/2, ClientValueRepo.ticker.getLerpedFloat());
+		double recoveryX = LissajousCurve.getXOffsetOnCurve(weaponRecoveryAmplitude, 1, Math.PI, 0, ClientValueRepo.TICKER.getLerpedFloat());
+		double recoveryY = LissajousCurve.getXOffsetOnCurve(weaponRecoveryAmplitude, 0.5, Math.PI, Math.PI/2, ClientValueRepo.TICKER.getLerpedFloat());
+		double recoveryZ = LissajousCurve.getXOffsetOnCurve(weaponRecoveryAmplitude, 2, Math.PI, Math.PI/2, ClientValueRepo.TICKER.getLerpedFloat());
 		
 		//System.out.println(weaponRecoveryAmplitude);
 	

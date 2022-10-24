@@ -226,7 +226,7 @@ public class ModernWeatherRenderer extends IRenderHandler {
 		
 		// Rain pass
 		Minecraft.getMinecraft().getTextureManager().bindTexture(RAIN_HEAVY);
-		timer = -ClientValueRepo.ticker.getLerpedFloat()/3f;
+		timer = -ClientValueRepo.TICKER.getLerpedFloat()/3f;
 		BufferBuilder bb = t.getBuffer();
 		bb.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
 		for(int i = 0; i < rainPositions.length; ++i) {
@@ -248,7 +248,7 @@ public class ModernWeatherRenderer extends IRenderHandler {
 		
 		// Snow pass
 		Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mw:textures/environment/christmassnow.png"));
-		timer = -ClientValueRepo.ticker.getLerpedFloat()/25f;
+		timer = -ClientValueRepo.TICKER.getLerpedFloat()/25f;
 		bb = t.getBuffer();
 		bb.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
 		for(int i = 0; i < rainPositions.length; ++i) {

@@ -186,7 +186,7 @@ public class ViewfinderModel extends ModelBase {
     	scopeShader.uniform2f("resolution", Minecraft.getMinecraft().displayWidth, Minecraft.getMinecraft().displayHeight);
     	scopeShader.boolean1b("isNightVisionOn", isNightVisionOn);
     	scopeShader.boolean1b("useWhitePhosphor", useWhitePhosphor);
-    	scopeShader.uniform1f("time", ClientValueRepo.ticker.getLerpedFloat());
+    	scopeShader.uniform1f("time", ClientValueRepo.TICKER.getLerpedFloat());
  
     	
     	

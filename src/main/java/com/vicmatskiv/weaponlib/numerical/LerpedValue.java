@@ -33,6 +33,10 @@ public class LerpedValue {
 		this.currentValue += value;
 	}
 	
+	public void dampen(double damper) {
+		this.currentValue *= damper;
+	}
+	
 	public double getValue() {
 		return this.currentValue;
 	}

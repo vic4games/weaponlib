@@ -991,7 +991,7 @@ public class PostProcessPipeline {
 		// Send variables as uniforms
 		Shaders.post.uniform2f("windowSize", 1.0f / mc.displayWidth, 1.0f / mc.displayHeight);
 		Shaders.post.boolean1b("isSnow", !isRain);
-		Shaders.post.uniform1f("timer", ClientValueRepo.ticker.getLerpedFloat());
+		Shaders.post.uniform1f("timer", ClientValueRepo.TICKER.getLerpedFloat());
 		
 		Shaders.post.boolean1b("enableFilmGrain", ModernConfigManager.filmGrain);
 		Shaders.post.uniform1f("mdf", (float) ModernConfigManager.filmGrainIntensity);

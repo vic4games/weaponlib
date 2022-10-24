@@ -117,6 +117,8 @@ public abstract class GUIContainerStation<T extends TileEntityStation> extends C
 	@Override
 	public void initGui() {
 		super.initGui();
+		
+		ScaledResolution scaledRes = new ScaledResolution(Minecraft.getMinecraft());
 	
 		this.searchBox = new CustomSearchTextField(GUI_TEX, "Search Items...", 0, 0, this.fontRenderer, this.guiLeft + 15, this.guiTop + 32, 84, 13);
 		this.searchBox.setMaxStringLength(50);
@@ -587,7 +589,7 @@ public abstract class GUIContainerStation<T extends TileEntityStation> extends C
 				int c = (int) Math.floor(filteredCraftingList.size() * scrollBarProgress / 7) * 7;
 				for (int y = 0; y < 6; ++y) {
 					for (int x = 0; x < 7; ++x) {
-						if (c == filteredCraftingList.size())
+						if (c >= filteredCraftingList.size())
 							break;
 
 						if (filteredCraftingList.get(c) == getSelectedCraftingPiece()) {

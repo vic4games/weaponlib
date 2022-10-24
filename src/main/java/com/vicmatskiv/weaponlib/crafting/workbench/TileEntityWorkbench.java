@@ -130,7 +130,7 @@ public class TileEntityWorkbench extends TileEntityStation {
 			craftingDuration = -1;
 
 
-			if (!this.world.isRemote) {
+			if (!this.world.isRemote && this.craftingTarget != null) {
 				addStackToInventoryRange(new ItemStack(this.craftingTarget.getItem()), 0, 9);
 				markDirty();
 			}
