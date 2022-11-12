@@ -111,7 +111,7 @@ public class StationPacket implements CompatibleMessage {
 	
 	public StationPacket(int type, BlockPos location, int craftingTimer, int craftingDuration, CraftingGroup group, String nameToCraft) {
 		
-		System.out.printf("Initializing SP with Opcode %d | Crafting Group=%s | Name to Craft: %s\n", type, group.toString(), nameToCraft);
+		//System.out.printf("Initializing SP with Opcode %d | Crafting Group=%s | Name to Craft: %s\n", type, group.toString(), nameToCraft);
 		
 		this.opcode = type;
 		this.teLocation = location;
