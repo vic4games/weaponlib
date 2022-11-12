@@ -613,6 +613,7 @@ public class Interceptors {
         nsm.applyHead();
         //nsm.update();
         
+        
       // if(true) return false;
         
        
@@ -628,8 +629,12 @@ public class Interceptors {
     		GlStateManager.enableDepth();
         }
 		
-        
+      //  System.out.println("hi");
         return false;
+    }
+    
+    public static void renderLastEvent() {
+    	
     }
     
     public static NewScreenshakingManager nsm = new NewScreenshakingManager();
@@ -639,6 +644,8 @@ public class Interceptors {
         if(!(compatibility.getRenderViewEntity() instanceof EntityPlayer)) {
             return true;
         }
+        
+        
         
         boolean allowDefaultEffect = false;
 

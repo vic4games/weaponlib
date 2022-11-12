@@ -235,6 +235,8 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
 
         
        
+        //System.out.println(weaponInstance.getWeapon().getName());
+        
         
         //if(true) return;
         modContext.getChannel().getChannel().sendToServer(new TryFireMessage(true, 
@@ -350,9 +352,7 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
         ClientValueRepo.fireWeapon(weaponInstance);
        // System.out.println("Gun tick added @ " + Minecraft.getMinecraft().player.ticksExisted);
         //System.out.println("WFA: " + System.currentTimeMillis());
-        ClientValueRepo.flash = 1;
-     
-       ClientValueRepo.recoilStop = 50f;
+
         if(weapon.isSmokeEnabled()) {
         	
             modContext.getEffectManager().spawnSmokeParticle(player, compatibility.getEffectOffsetX()

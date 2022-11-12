@@ -407,7 +407,7 @@ public abstract class CompatibleClientEventHandler {
 		
 		// Past here we only want to deal with Phase.START.
 		// Also we should be in a world.
-		if(event.phase != Phase.START && Minecraft.getMinecraft().player != null) return;
+		if(event.phase != Phase.START || Minecraft.getMinecraft().player == null) return;
 
 		// Run recalculations for the weather renderer
 		if (ModernConfigManager.enableFancyRainAndSnow && PostProcessPipeline.getWeatherRenderer() != null &&
@@ -423,9 +423,9 @@ public abstract class CompatibleClientEventHandler {
 			ClientValueRepo.update(getModContext());
 
 			if (getModContext().getMainHeldWeapon() != null) {
-				CompatibleWeaponRenderer.wrh.strafingAnimation.update(0.08f);
-				CompatibleWeaponRenderer.wrh.runningAnimation.update(0.08f);
-				CompatibleWeaponRenderer.wrh.walkingAnimation.update(0.08f);
+				CompatibleWeaponRenderer.wrh.STRAFING_ANIMATION.update(0.08f);
+				CompatibleWeaponRenderer.wrh.RUNNING_ANIMATION.update(0.08f);
+				CompatibleWeaponRenderer.wrh.WALKING_ANIMATION.update(0.08f);
 			}
 
 		}

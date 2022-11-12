@@ -2,14 +2,12 @@ package com.vicmatskiv.weaponlib.command;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 
 import org.apache.commons.io.IOUtils;
 
 import com.vicmatskiv.weaponlib.CommonModContext;
-import com.vicmatskiv.weaponlib.compatibility.CompatibleCommand;
 import com.vicmatskiv.weaponlib.config.BalancePackManager;
 import com.vicmatskiv.weaponlib.config.BalancePackManager.BalancePack;
 import com.vicmatskiv.weaponlib.network.packets.BalancePackClient;

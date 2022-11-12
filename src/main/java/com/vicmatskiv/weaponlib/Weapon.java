@@ -65,6 +65,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.common.registry.GameRegistry.ObjectHolder;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import scala.tools.nsc.typechecker.MethodSynthesis.MethodSynth.LazyValGetter.ChangeOwnerAndModuleClassTraverser;
@@ -376,7 +377,10 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable, IModernCraf
             this.ammo = ammo;
             return this;
         }
+        
 
+
+ 
         public Builder withMaxShots(int... maxShots) {
             for(int m: maxShots) {
                 this.maxShots.add(m);

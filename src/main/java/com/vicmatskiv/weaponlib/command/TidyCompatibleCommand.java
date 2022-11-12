@@ -6,7 +6,6 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleCommand;
-import com.vicmatskiv.weaponlib.config.BalancePackManager;
 
 import akka.japi.Pair;
 import net.minecraft.command.ICommandSender;
@@ -127,21 +126,21 @@ public abstract class TidyCompatibleCommand extends CompatibleCommand {
 	@Override
 	protected void execCommand(ICommandSender sender, String[] args) {
 
+		
 		if(args.length == 0) {
 			sender.sendMessage(new TextComponentString(getCompatibleUsage(sender)));
 			return;
 		}
 		
+		
 		if(args.length > 0) {
 			
 			
-			if(args.length == 1 && !this.tree.containsKey(args[0])) {
+			if(args.length == 1 && !this.tree.containsKey(args[0])) {				
 				sender.sendMessage(new TextComponentString(getCompatibleUsage(sender)));
 				return;
-			} else if(args.length > 1 && !checkForSecondaryArgument(args[0], args[1])) {
-				sender.sendMessage(new TextComponentString(getCompatibleUsage(sender)));
-				return;
-			}
+			} 
+			
 			
 			
 			if(args[0].equals(HELP_KEY)) {

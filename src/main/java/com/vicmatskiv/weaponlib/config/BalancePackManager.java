@@ -7,11 +7,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
-
-import javax.annotation.Nullable;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,14 +18,11 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
-import com.google.gson.stream.JsonReader;
 import com.vicmatskiv.weaponlib.Weapon;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
-import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.DimensionManager;
 
 public class BalancePackManager {
@@ -302,18 +296,20 @@ public class BalancePackManager {
 
 			GunBalanceConfiguration gbc = new GunBalanceConfiguration(name, enabled, damage, recoil);
 			
-			if(obj.has(FIRE_RATE_MODIFIER)) 
+			if(obj.has(FIRE_RATE_MODIFIER)) {
+				//System.out.println("For " + name + " firerate will be " + obj.get(FIRE_RATE_MODIFIER).getAsFloat());
 				gbc.setFirerate(obj.get(FIRE_RATE_MODIFIER).getAsFloat());
-			
-			if(obj.has(FIRE_MODE_AUTO))
-				gbc.setFiremodeAuto(obj.get(FIRE_MODE_AUTO).getAsBoolean());
-			
-			if(obj.has(FIRE_MODE_BURST))
-				gbc.setBurstShots(obj.get(FIRE_MODE_BURST).getAsInt());
-			
-			if(obj.has(FIRE_MODE_SINGLE)) 
-				gbc.setFiremodeSingle(obj.get(FIRE_MODE_SINGLE).getAsBoolean());
+			}
 				
+			
+			if(obj.has(FIRE_MODE_AUTO) && obj.has(FIRE_MODE_BURST) && obj.has(FIRE_MODE_SINGLE)) {
+				gbc.setFiremodeAuto(obj.get(FIRE_MODE_AUTO).getAsBoolean());
+				gbc.setBurstShots(obj.get(FIRE_MODE_BURST).getAsInt());
+				gbc.setFiremodeSingle(obj.get(FIRE_MODE_SINGLE).getAsBoolean());
+			}
+				
+			
+			
 			
 			
 			return gbc;
@@ -358,10 +354,13 @@ public class BalancePackManager {
 		public static BalancePack fromJSONObject(JsonObject jsonObject) {
 			
 			
+			
 			if(!jsonObject.has(PACK_NAME_KEY) || !jsonObject.has(PACK_VERSION_KEY)) {
 				LOGGER.error("Missing pack name or version key! Cannot load balance pack from JSON data.");
 				return null;
 			}
+			
+			//System.out.println("JSONOBJ " + jsonObject);
 			
 			String packName = jsonObject.get(PACK_NAME_KEY).getAsString();
 			String packVersion = jsonObject.get(PACK_VERSION_KEY).getAsString();
@@ -664,7 +663,7 @@ public class BalancePackManager {
 		} else {
 			JsonObject index = null;
 			
-			System.out.println("FILE: " + getIndexFile());
+			//System.out.println("FILE: " + getIndexFile());
 			try {
 				index = readJSONFile(getIndexFile());
 			} catch(JsonSyntaxException e) {
@@ -869,59 +868,13 @@ public class BalancePackManager {
 		}
 		
 		GunBalanceConfiguration gbc = getActiveBalancePack().getWeaponBalancing(weapon.getName());
-		List<Integer> integer = new ArrayList<>();
+		List<Integer> shotsList = new ArrayList<>();
 		
-		if(gbc.altersFiremodeAuto() && !gbc.getFiremodeAuto()
-				&& gbc.altersFiremodeSingle() && !gbc.getFiremodeSingle()
-				&& gbc.altersFiremodeBurst() && gbc.getBurstShots() == 0) {
-			integer.add(1);
-			return integer;
-		}
-		
-		
-		if(!gbc.altersFiremodeSingle() && weapon.builder.getMaxShots().contains(1)) {
-			integer.add(1);
-		} else if(gbc.altersFiremodeSingle() && gbc.getFiremodeSingle()) {
-			integer.add(1);
-		}
-		
-		
-		int burstInt = 0;
-		boolean originalSupportsBurst = false;
-		for(Integer i : weapon.builder.getMaxShots()) {
-			if(i != 1 && i != Integer.MAX_VALUE) {
-				originalSupportsBurst = true;
-				burstInt = i;
-				break;
-			}
-		}
-		
-		if(!gbc.altersFiremodeBurst() && originalSupportsBurst) {
-			integer.add(burstInt);
-		} else if(gbc.altersFiremodeBurst()) {
-			integer.add(gbc.getBurstShots());
-		}
-		
-		
-		if(!gbc.altersFiremodeAuto() && weapon.builder.getMaxShots().contains(Integer.MAX_VALUE)) {
-			integer.add(Integer.MAX_VALUE);
-		} else if(gbc.altersFiremodeAuto() && gbc.getFiremodeAuto()) {
-	
-			integer.add(Integer.MAX_VALUE);
-		}
-		
-		
-		
-		
-			
-		
-		
+		if(gbc.autoFireEnabled) shotsList.add(Integer.MAX_VALUE);
+		if(gbc.singleFireEnabled) shotsList.add(1);
+		if(gbc.burstShots != 0) shotsList.add(gbc.burstShots);
 				
-		return integer;
-		
-		
-		
-		
+		return shotsList;		
 	}
 	
 	

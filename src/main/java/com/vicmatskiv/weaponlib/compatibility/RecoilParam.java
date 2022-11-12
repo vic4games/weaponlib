@@ -26,7 +26,7 @@ public class RecoilParam {
 		this.powerRecoveryStockRate = prnsr;
 		this.weaponRotationX = weaponRotX;
 		this.weaponRotationY = weaponRotY;
-		this.adsSimilarity = adsSimilarity;
+		this.adsSimilarity = 1.0 / adsSimilarity;
 	}
 	
 	public double getWeaponPower() {

@@ -8,29 +8,21 @@ import java.util.concurrent.TimeUnit;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL12;
-import org.lwjgl.opengl.GL13;
 
 import com.vicmatskiv.weaponlib.ModContext;
-import com.vicmatskiv.weaponlib.Weapon;
 import com.vicmatskiv.weaponlib.animation.gui.GuiRenderUtil;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleGuiContainer;
 import com.vicmatskiv.weaponlib.crafting.CraftingEntry;
-import com.vicmatskiv.weaponlib.crafting.CraftingGroup;
-import com.vicmatskiv.weaponlib.crafting.CraftingRegistry;
 import com.vicmatskiv.weaponlib.crafting.IModernCrafting;
 import com.vicmatskiv.weaponlib.crafting.items.CraftingItem;
 import com.vicmatskiv.weaponlib.crafting.workbench.CustomSearchTextField;
 import com.vicmatskiv.weaponlib.crafting.workbench.GUIButtonCustom;
-import com.vicmatskiv.weaponlib.crafting.workbench.WorkbenchBlock;
 import com.vicmatskiv.weaponlib.network.packets.StationPacket;
 import com.vicmatskiv.weaponlib.render.gui.GUIRenderHelper;
 import com.vicmatskiv.weaponlib.render.gui.GUIRenderHelper.StringAlignment;
 import com.vicmatskiv.weaponlib.vehicle.jimphysics.InterpolationKit;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
@@ -118,8 +110,6 @@ public abstract class GUIContainerStation<T extends TileEntityStation> extends C
 	public void initGui() {
 		super.initGui();
 		
-		ScaledResolution scaledRes = new ScaledResolution(Minecraft.getMinecraft());
-	
 		this.searchBox = new CustomSearchTextField(GUI_TEX, "Search Items...", 0, 0, this.fontRenderer, this.guiLeft + 15, this.guiTop + 32, 84, 13);
 		this.searchBox.setMaxStringLength(50);
 		this.searchBox.setEnableBackgroundDrawing(true);
@@ -408,11 +398,15 @@ public abstract class GUIContainerStation<T extends TileEntityStation> extends C
 	
 	
 	@Override
-	@SuppressWarnings("unchecked")
 	protected void keyTyped(char typedChar, int keyCode) throws IOException {
 		boolean cancelationFlag = this.searchBox.getText().length() == 0 && keyCode == Keyboard.KEY_BACK;
 		
-		super.keyTyped(typedChar, keyCode);
+		
+		// This 'if' statement prevents the GUI from closing when we hit "E" (or whatever
+		// the inventory key is!)
+		if(!(Minecraft.getMinecraft().gameSettings.keyBindInventory.isActiveAndMatches(keyCode) && searchBox.isFocused()))
+			super.keyTyped(typedChar, keyCode);
+		
 		this.searchBox.textboxKeyTyped(typedChar, keyCode);
 		
 		
@@ -433,7 +427,6 @@ public abstract class GUIContainerStation<T extends TileEntityStation> extends C
 		
 	}
 	
-	@SuppressWarnings("unchecked")
 	public void setItemRenderTooltip(ItemStack stack, String... strings) {
 
 		if(stack.isEmpty()) return;
@@ -451,6 +444,9 @@ public abstract class GUIContainerStation<T extends TileEntityStation> extends C
 	
 	protected void setPage(int id) {
 
+		
+	
+		
 		// Lock to minimum page
 		if (id < minPage)
 			id = minPage;
@@ -458,6 +454,10 @@ public abstract class GUIContainerStation<T extends TileEntityStation> extends C
 		// Lock to maximum page
 		if (id > maxPage)
 			id = maxPage;
+		
+		
+		this.scrollBarProgress = 0;
+		this.scrollBarOffset = 0;
 
 		this.page = id;
 		((ContainerStation) this.inventorySlots).page = id;

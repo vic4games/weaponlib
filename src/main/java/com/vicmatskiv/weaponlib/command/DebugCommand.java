@@ -10,19 +10,13 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 
-import javax.transaction.TransactionRequiredException;
-
 import com.vicmatskiv.weaponlib.ClientModContext;
 import com.vicmatskiv.weaponlib.ItemAttachment;
 import com.vicmatskiv.weaponlib.Part;
-import com.vicmatskiv.weaponlib.WeaponRenderer.Builder;
 import com.vicmatskiv.weaponlib.animation.AnimationModeProcessor;
 import com.vicmatskiv.weaponlib.animation.DebugPositioner;
-import com.vicmatskiv.weaponlib.animation.OpenGLSelectionHelper;
 import com.vicmatskiv.weaponlib.animation.Transform;
-import com.vicmatskiv.weaponlib.animation.gui.AnimationGUI;
 import com.vicmatskiv.weaponlib.animation.jim.BBLoader;
-import com.vicmatskiv.weaponlib.compatibility.CompatibleClassInfoProvider;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleCommand;
 import com.vicmatskiv.weaponlib.compatibility.graph.CompatibilityClassGenerator;
@@ -30,14 +24,10 @@ import com.vicmatskiv.weaponlib.render.ModificationGUI;
 import com.vicmatskiv.weaponlib.render.WeaponSpritesheetBuilder;
 import com.vicmatskiv.weaponlib.vehicle.VehiclePart;
 
-import akka.io.Udp.SimpleSender;
 import akka.japi.Pair;
-import net.minecraft.client.renderer.entity.layers.LayerArmorBase;
-import net.minecraft.client.renderer.entity.layers.LayerBipedArmor;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.item.Item;
 import net.minecraft.util.text.TextFormatting;
-import net.minecraftforge.client.event.ClientChatEvent;
 
 public class DebugCommand extends CompatibleCommand {
 

@@ -17,6 +17,7 @@ import com.vicmatskiv.weaponlib.animation.gui.AnimationGUI;
 import com.vicmatskiv.weaponlib.command.DebugCommand;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.RecoilParam;
+import com.vicmatskiv.weaponlib.config.BalancePackManager;
 import com.vicmatskiv.weaponlib.network.TypeRegistry;
 import com.vicmatskiv.weaponlib.perspective.OpticalScopePerspective;
 import com.vicmatskiv.weaponlib.perspective.Perspective;
@@ -429,7 +430,8 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 //    }
 
 	public float getFireRate() {
-		return getWeapon().builder.fireRate;
+		return BalancePackManager.getFirerate(getWeapon());
+		//return getWeapon().builder.fireRate;
 	}
 	
     public boolean isOneClickBurstAllowed() {
