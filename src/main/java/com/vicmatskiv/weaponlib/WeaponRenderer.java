@@ -3430,6 +3430,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 
 		
 		
+		
 		if(compatibleAttachment.getAttachment().getCategory() == AttachmentCategory.MAGAZINE) {
 			currentMagazine = compatibleAttachment;
 		}
@@ -3602,8 +3603,14 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_CURRENT_BIT);
 			
 			
+			
+			//System.out.println(compatibleAttachment.getAttachment().getCategory());
+			
+			
 			if(compatibleAttachment.getAttachment().getCategory() == AttachmentCategory.ACTION) {
+				
 				if(AnimationModeProcessor.getInstance().getFPSMode()) {
+					
 					AnimationModeProcessor.getInstance().slideTransform.doGLDirect();
 				
 					CompatibleWeaponRenderer.captureAtlasPosition();
@@ -3668,14 +3675,17 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 					for(ItemAttachment<Weapon> part : possibleActionList) {
 						if(compatibleAttachment.getAttachment() == part) {
 							
+							
 							float mu = (float) ClientValueRepo.slidePumpValue.getLerpedFloat();
 							
+					
 							mu = Math.min(mu, 1.0f);
+							
+							
 							
 							Transform t = renderContext.getWeaponInstance().getWeapon().getRenderer().getBuilder().actionPieceTransform;
 							
-							
-						//	mu = 1f;
+
 							if(DebugCommand.isDebuggingActionPosition()) {
 								//System.out.println("hi");
 								t = DebugCommand.debugSlideTransform;

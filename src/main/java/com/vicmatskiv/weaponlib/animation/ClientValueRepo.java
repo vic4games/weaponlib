@@ -150,7 +150,11 @@ public class ClientValueRepo {
 		forward.updatePrevious();
 		TICKER.updatePrevious();
 		slidePumpValue.updatePrevious();
-
+		
+		
+		slidePumpValue.dampen(0.0001);
+		
+		
 		EntityPlayer player = MC.player;
 
 		PlayerWeaponInstance pwi = context.getMainHeldWeapon();
