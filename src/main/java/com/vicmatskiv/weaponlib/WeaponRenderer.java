@@ -3,7 +3,6 @@ package com.vicmatskiv.weaponlib;
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
 import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -15,7 +14,6 @@ import java.util.Map.Entry;
 import java.util.Random;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
@@ -24,24 +22,13 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
-import org.lwjgl.opengl.GL30;
-import org.lwjgl.opengl.GLSync;
-import org.lwjgl.util.glu.GLU;
-import org.lwjgl.util.glu.Project;
-
 
 import com.vicmatskiv.weaponlib.animation.AnimationModeProcessor;
 import com.vicmatskiv.weaponlib.animation.ClientValueRepo;
 import com.vicmatskiv.weaponlib.animation.DebugPositioner;
-import com.vicmatskiv.weaponlib.animation.Interpolation;
 import com.vicmatskiv.weaponlib.animation.DebugPositioner.TransitionConfiguration;
+import com.vicmatskiv.weaponlib.animation.Interpolation;
 import com.vicmatskiv.weaponlib.animation.MultipartPositioning.Positioner;
-import com.vicmatskiv.weaponlib.animation.jim.AnimationData;
-import com.vicmatskiv.weaponlib.animation.jim.AnimationSet;
-import com.vicmatskiv.weaponlib.animation.jim.BBLoader;
-import com.vicmatskiv.weaponlib.animation.jim.SingleAnimation;
-import com.vicmatskiv.weaponlib.animation.jim.AnimationData.BlockbenchTransition;
-import com.vicmatskiv.weaponlib.command.DebugCommand;
 import com.vicmatskiv.weaponlib.animation.MultipartRenderStateManager;
 import com.vicmatskiv.weaponlib.animation.MultipartTransition;
 import com.vicmatskiv.weaponlib.animation.MultipartTransitionProvider;
@@ -50,51 +37,32 @@ import com.vicmatskiv.weaponlib.animation.SpecialAttachments;
 import com.vicmatskiv.weaponlib.animation.Transform;
 import com.vicmatskiv.weaponlib.animation.Transition;
 import com.vicmatskiv.weaponlib.animation.gui.AnimationGUI;
-import com.vicmatskiv.weaponlib.compatibility.CompatibleAchievement;
+import com.vicmatskiv.weaponlib.animation.jim.AnimationData;
+import com.vicmatskiv.weaponlib.animation.jim.AnimationSet;
+import com.vicmatskiv.weaponlib.animation.jim.BBLoader;
+import com.vicmatskiv.weaponlib.animation.jim.SingleAnimation;
+import com.vicmatskiv.weaponlib.command.DebugCommand;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponRenderer;
 import com.vicmatskiv.weaponlib.compatibility.Interceptors;
 import com.vicmatskiv.weaponlib.config.BalancePackManager;
 import com.vicmatskiv.weaponlib.config.Projectiles;
 import com.vicmatskiv.weaponlib.config.novel.ModernConfigManager;
-import com.vicmatskiv.weaponlib.debug.DebugRenderer;
 import com.vicmatskiv.weaponlib.jim.util.VMWHooksHandler;
-import com.vicmatskiv.weaponlib.perspective.ReflexScreen;
-import com.vicmatskiv.weaponlib.render.Bloom;
-import com.vicmatskiv.weaponlib.render.Dloom;
 import com.vicmatskiv.weaponlib.render.MuzzleFlashRenderer;
 import com.vicmatskiv.weaponlib.render.Shaders;
-import com.vicmatskiv.weaponlib.render.WeaponSpritesheetBuilder;
-import com.vicmatskiv.weaponlib.render.bgl.PostProcessPipeline;
-import com.vicmatskiv.weaponlib.shader.jim.Shader;
-import com.vicmatskiv.weaponlib.shader.jim.ShaderManager;
 
 import akka.japi.Pair;
-import net.minecraft.advancements.critereon.CuredZombieVillagerTrigger;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.model.ModelBase;
-import net.minecraft.client.model.ModelBox;
-import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.OpenGlHelper;
-import net.minecraft.client.renderer.RenderHelper;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.Vec3d;
-import net.minecraftforge.client.ForgeHooksClient;
-import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class WeaponRenderer extends CompatibleWeaponRenderer {
 
@@ -125,10 +93,6 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 
 		private ModelBase model;
 		private String textureName;
-		private float weaponProximity;
-		private float yOffsetZoom;
-		private float xOffsetZoom = 0.69F;
-
 		private Consumer<ItemStack> entityPositioning;
 		private Consumer<ItemStack> inventoryPositioning;
 		private Consumer<RenderContext<RenderableState>> thirdPersonPositioning;
@@ -173,12 +137,17 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 
 	    private Consumer<RenderContext<RenderableState>> firstPersonRightHandPositioningLoadIterationCompleted;
 
+	    
+	 
 		private List<Transition<RenderContext<RenderableState>>> firstPersonPositioningReloading;
-		private List<Transition<RenderContext<RenderableState>>> firstPersonLeftHandPositioningReloading;
+	    private List<Transition<RenderContext<RenderableState>>> firstPersonLeftHandPositioningReloading;
 		private List<Transition<RenderContext<RenderableState>>> firstPersonRightHandPositioningReloading;
 		
+		@Deprecated
 	    private List<Transition<RenderContext<RenderableState>>> thirdPersonPositioningReloading;
-	    private List<Transition<RenderContext<RenderableState>>> thirdPersonLeftHandPositioningReloading;
+	    @Deprecated
+		private List<Transition<RenderContext<RenderableState>>> thirdPersonLeftHandPositioningReloading;
+	    @Deprecated
 	    private List<Transition<RenderContext<RenderableState>>> thirdPersonRightHandPositioningReloading;
 	        
 	    private List<Transition<RenderContext<RenderableState>>> firstPersonPositioningInspecting;
@@ -204,8 +173,11 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		private List<Transition<RenderContext<RenderableState>>> firstPersonLeftHandPositioningUnloading;
 		private List<Transition<RenderContext<RenderableState>>> firstPersonRightHandPositioningUnloading;
 		
+		@Deprecated
 	    private List<Transition<RenderContext<RenderableState>>> thirdPersonPositioningUnloading;
-	    private List<Transition<RenderContext<RenderableState>>> thirdPersonLeftHandPositioningUnloading;
+	    @Deprecated
+		private List<Transition<RenderContext<RenderableState>>> thirdPersonLeftHandPositioningUnloading;
+	    @Deprecated
 	    private List<Transition<RenderContext<RenderableState>>> thirdPersonRightHandPositioningUnloading;
 	        
 		private List<Transition<RenderContext<RenderableState>>> firstPersonPositioningLoadIteration;
@@ -223,14 +195,6 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		private long totalLoadIterationDuration;
 		
 		
-		private long totalCompoundReloadingDuration;
-		private long totalCompoundReloadEmptyDuration;
-		private long totalTacticalReloadDuration;
-		private long totalLoadEmptyDuration;
-		private long totalLoadDuration;
-		private long totalUnloadDuration;
-		
-
 		private String modId;
 
 		private int recoilAnimationDuration = DEFAULT_RECOIL_ANIMATION_DURATION;
@@ -253,8 +217,10 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		private LinkedHashMap<Part, List<Transition<RenderContext<RenderableState>>>> firstPersonCustomPositioningUnloading = new LinkedHashMap<>();
 		private LinkedHashMap<Part, List<Transition<RenderContext<RenderableState>>>> firstPersonCustomPositioningReloading = new LinkedHashMap<>();
 
+		@Deprecated
 	    private LinkedHashMap<Part, List<Transition<RenderContext<RenderableState>>>> thirdPersonCustomPositioningUnloading = new LinkedHashMap<>();
-	    private LinkedHashMap<Part, List<Transition<RenderContext<RenderableState>>>> thirdPersonCustomPositioningReloading = new LinkedHashMap<>();
+	    @Deprecated
+		private LinkedHashMap<Part, List<Transition<RenderContext<RenderableState>>>> thirdPersonCustomPositioningReloading = new LinkedHashMap<>();
 		
 	    private LinkedHashMap<Part, List<Transition<RenderContext<RenderableState>>>> firstPersonCustomPositioningLoadIteration = new LinkedHashMap<>();
         private LinkedHashMap<Part, List<Transition<RenderContext<RenderableState>>>> firstPersonCustomPositioningLoadIterationsCompleted = new LinkedHashMap<>();
@@ -478,17 +444,14 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		}
 
 		public Builder withWeaponProximity(float weaponProximity) {
-			this.weaponProximity = weaponProximity;
 			return this;
 		}
 
 		public Builder withYOffsetZoom(float yOffsetZoom) {
-			this.yOffsetZoom = yOffsetZoom;
 			return this;
 		}
 
 		public Builder withXOffsetZoom(float xOffsetZoom) {
-			this.xOffsetZoom = xOffsetZoom;
 			return this;
 		}
 
@@ -595,6 +558,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			return this;
 		}
 		
+		@Deprecated
 		@SafeVarargs
         public final Builder withThirdPersonPositioningReloading(Transition<RenderContext<RenderableState>> ...transitions) {
             this.thirdPersonPositioningReloading = Arrays.asList(transitions);
@@ -756,6 +720,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			return this;
 		}
 		
+		@Deprecated
 		@SafeVarargs
 		public final Builder withThirdPersonLeftHandPositioningReloading(Transition<RenderContext<RenderableState>> ...transitions) {
 		    this.thirdPersonLeftHandPositioningReloading = Arrays.asList(transitions);
@@ -826,6 +791,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			return this;
 		}
 		
+		@Deprecated
 		@SafeVarargs
 		public final Builder withThirdPersonRightHandPositioningReloading(Transition<RenderContext<RenderableState>> ...transitions) {
 		    this.thirdPersonRightHandPositioningReloading = Arrays.asList(transitions);
@@ -843,6 +809,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			return this;
 		}
 		
+		@Deprecated
 		@SafeVarargs
 		public final Builder withThirdPersonRightHandPositioningUnloading(Transition<RenderContext<RenderableState>> ...transitions) {
 		    this.thirdPersonRightHandPositioningUnloading = Arrays.asList(transitions);
@@ -1004,6 +971,9 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			return this;
 		}
 		
+		
+		
+		@Deprecated
 	      @SafeVarargs
 	      public final Builder withThirdPersonCustomPositioningReloading(Part part, Transition<RenderContext<RenderableState>> ...transitions) {
 	          if(part instanceof DefaultPart) {
@@ -1061,6 +1031,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			return this;
 		}
 		
+		@Deprecated
 		@SafeVarargs
         public final Builder withThirdPersonCustomPositioningUnloading(Part part, Transition<RenderContext<RenderableState>> ...transitions) {
             if(part instanceof DefaultPart) {
@@ -1155,31 +1126,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			}
 		}
 		
-		private void setupBBAnim(String animationFile, String anim, String mainBoneName, String leftHandBoneName, String rightHandBoneName, List<Transition<RenderContext<RenderableState>>> mainT, List<Transition<RenderContext<RenderableState>>> leftT, List<Transition<RenderContext<RenderableState>>> rightT) {
-			AnimationData main = BBLoader.getAnimation(animationFile, anim, mainBoneName);
-			AnimationData left = BBLoader.getAnimation(animationFile, anim, leftHandBoneName);
-			AnimationData right = BBLoader.getAnimation(animationFile, anim, rightHandBoneName);
-						
-			checkDefaults();
-			
-			mainT = main.getTransitionList(firstPersonTransform, BBLoader.GENDIVISOR);
-			mainT = left.getTransitionList(firstPersonLeftHandTransform, BBLoader.HANDDIVISOR);
-			mainT = right.getTransitionList(firstPersonRightHandTransform, BBLoader.HANDDIVISOR);
-
-		}
 		
-		private void setupBBAnim(String animationFile, String anim, String mainBoneName, String leftHandBoneName, String rightHandBoneName, TransitionContainer tc) {
-			AnimationData main = BBLoader.getAnimation(animationFile, anim, mainBoneName);
-			AnimationData left = BBLoader.getAnimation(animationFile, anim, leftHandBoneName);
-			AnimationData right = BBLoader.getAnimation(animationFile, anim, rightHandBoneName);
-						
-			checkDefaults();
-			
-			tc.setFirstPerson(main.getTransitionList(firstPersonTransform, BBLoader.GENDIVISOR));
-			tc.setLeftHand(main.getTransitionList(firstPersonLeftHandTransform, BBLoader.HANDDIVISOR));
-			tc.setRightHand(right.getTransitionList(firstPersonRightHandTransform, BBLoader.HANDDIVISOR));
-
-		}
 		
 		
 		private String animationFileName;
@@ -1358,6 +1305,13 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			return this;
 		}
 		
+		public Builder setupModernEjectSpentRoundAllAnimation(ItemAttachment<Weapon> action, String animationFile, String partKey) {
+			setupModernEjectSpentRoundAimedAnimation(action, animationFile, partKey);
+			setupModernEjectSpentRoundAnimation(action, animationFile, partKey);
+			return this;
+		}
+			
+		
 		public Builder setupModernEjectSpentRoundAnimation(ItemAttachment<Weapon> action, String animationFile, String partKey) {
 			if(VMWHooksHandler.isOnServer()) return this;
 			
@@ -1368,9 +1322,27 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 						
 			checkDefaults();
 			
-			this.firstPersonPositioningDrawing = main.getTransitionList(firstPersonTransform, BBLoader.GENDIVISOR);
-			this.firstPersonLeftHandPositioningDrawing = left.getTransitionList(firstPersonLeftHandTransform, BBLoader.HANDDIVISOR);
-			this.firstPersonRightHandPositioningDrawing = right.getTransitionList(firstPersonRightHandTransform, BBLoader.HANDDIVISOR);
+			this.firstPersonPositioningEjectSpentRound = main.getTransitionList(firstPersonTransform, BBLoader.GENDIVISOR);
+			this.firstPersonLeftHandPositioningEjectSpentRound = left.getTransitionList(firstPersonLeftHandTransform, BBLoader.HANDDIVISOR);
+			this.firstPersonRightHandPositioningEjectSpentRound = right.getTransitionList(firstPersonRightHandTransform, BBLoader.HANDDIVISOR);
+	
+			return this;
+			
+		}
+		
+		public Builder setupModernEjectSpentRoundAimedAnimation(ItemAttachment<Weapon> action, String animationFile, String partKey) {
+			if(VMWHooksHandler.isOnServer()) return this;
+			
+			
+			AnimationData main = BBLoader.getAnimation(animationFile, BBLoader.KEY_EJECT_SPENT_ROUND_AIMED, BBLoader.KEY_MAIN);
+			AnimationData left = BBLoader.getAnimation(animationFile, BBLoader.KEY_EJECT_SPENT_ROUND_AIMED, "lefthand");
+			AnimationData right = BBLoader.getAnimation(animationFile, BBLoader.KEY_EJECT_SPENT_ROUND_AIMED, "righthand");
+						
+			checkDefaults();
+			
+			this.firstPersonPositioningEjectSpentRoundAimed = main.getTransitionList(firstPersonTransform, BBLoader.GENDIVISOR);
+			this.firstPersonLeftHandPositioningEjectSpentRoundAimed = left.getTransitionList(firstPersonLeftHandTransform, BBLoader.HANDDIVISOR);
+			this.firstPersonRightHandPositioningEjectSpentRoundAimed = right.getTransitionList(firstPersonRightHandTransform, BBLoader.HANDDIVISOR);
 	
 			return this;
 			
@@ -2248,8 +2220,6 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 	private ArrayList<Pair<FloatBuffer,  CustomRenderer<RenderableState>>> deferredPost = new ArrayList<>();
 	
 	
-	// Magic Magazine Stuff
-	private boolean magicMagPermit;
 	private long magicAnimationTimer;
 	private WeaponState magicState = WeaponState.READY;
 	
@@ -3088,7 +3058,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		
 		
 		
-		Weapon wea = (Weapon) weaponItemStack.getItem();
+		weaponItemStack.getItem();
 	
 		
 		if(CompatibleClientEventHandler.muzzlePositioner && !OpenGLSelectionHelper.isInSelectionPass) {
@@ -3279,7 +3249,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			if(!AnimationModeProcessor.getInstance().shouldIsolateCategory()) {
 			
 				
-				float fMod = 0.30f;
+				
 			
 				
 				//System.out.println("yo");
@@ -3373,7 +3343,6 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 	
 	
 	public void setMagicMagPermit(boolean state) {
-		magicMagPermit = state;
 	}
 	
 	
@@ -3542,7 +3511,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		
 		
 		if(compatibleAttachment.getAttachment() instanceof ItemMagazine && AnimationGUI.getInstance().magEdit.isState() && !OpenGLSelectionHelper.isInSelectionPass) {
-	    	ItemMagazine mag = (ItemMagazine) compatibleAttachment.getAttachment();
+	    	compatibleAttachment.getAttachment();
 	    	
 	    	
 	    	GlStateManager.pushMatrix();

@@ -41,6 +41,7 @@ public class BBLoader {
 	public static final String KEY_MAIN = "main";
 	
 	public static final String KEY_EJECT_SPENT_ROUND = "ejectspentround";
+	public static final String KEY_EJECT_SPENT_ROUND_AIMED = "ejectspentroundaimed";
 	
 	public static final String KEY_COMPOUND_RELOAD_EMPTY = "reloadempty";
 	public static final String KEY_COMPOUND_RELOAD = "reload";
