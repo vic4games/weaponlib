@@ -7,7 +7,9 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import com.vicmatskiv.weaponlib.ClientEventHandler;
 import com.vicmatskiv.weaponlib.ModContext;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMaterial;
 
 import net.minecraft.block.state.IBlockState;
@@ -107,6 +109,7 @@ public class CustomTileEntityConfiguration<T extends CustomTileEntityConfigurati
         Class<? extends TileEntity> tileEntityClass = createTileEntityClass();
         
         CustomTileEntityBlock tileEntityBlock = new CustomTileEntityBlock(material, tileEntityClass);
+        ClientEventHandler.BLANKMAPPED_LIST.add(tileEntityBlock);
         tileEntityBlock.setBlockName(modContext.getModId() + "_" + name);
         tileEntityBlock.setHardness(hardness);
         tileEntityBlock.setResistance(resistance);

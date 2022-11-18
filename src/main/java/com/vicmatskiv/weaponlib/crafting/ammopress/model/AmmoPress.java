@@ -1,6 +1,8 @@
 package com.vicmatskiv.weaponlib.crafting.ammopress.model;
 
 
+import java.util.Arrays;
+
 import com.vicmatskiv.weaponlib.animation.ClientValueRepo;
 
 import net.minecraft.client.Minecraft;
@@ -11,7 +13,6 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
-import scala.actors.threadpool.Arrays;
 
 // Made with Blockbench 4.3.1
 // Exported for Minecraft version 1.7 - 1.12

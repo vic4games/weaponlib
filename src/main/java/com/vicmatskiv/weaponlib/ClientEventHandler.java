@@ -2,6 +2,7 @@ package com.vicmatskiv.weaponlib;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
+import java.util.ArrayList;
 import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.locks.Lock;
@@ -29,6 +30,7 @@ import com.vicmatskiv.weaponlib.shader.DynamicShaderPhase;
 import com.vicmatskiv.weaponlib.tracking.PlayerEntityTracker;
 import com.vicmatskiv.weaponlib.vehicle.EntityVehicle;
 
+import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.renderer.GlStateManager;
@@ -36,6 +38,9 @@ import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.item.EntityBoat;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.Vec3d;
+import net.minecraftforge.client.event.ModelRegistryEvent;
+import net.minecraftforge.client.model.ModelLoader;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 public class ClientEventHandler extends CompatibleClientEventHandler {
 
@@ -73,6 +78,16 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 		this.runInClientThreadQueue = runInClientThreadQueue;
         this.shaderGroupManager = new DynamicShaderGroupManager();
         //this.reloadAspect = reloadAspect;
+	}
+	
+	public static ArrayList<Block> BLANKMAPPED_LIST = new ArrayList<>();
+	
+	@SubscribeEvent
+	public void onModelRegistry(ModelRegistryEvent e) {
+		//System.out.println("HOLA CHINGAS " + BLANKMAPPED_LIST);
+		for(Block b : BLANKMAPPED_LIST)
+			ModelLoader.setCustomStateMapper(b, BlankStateMapper.DEFAULT);
+		
 	}
 
 	public void onCompatibleClientTick(CompatibleClientTickEvent event) {
