@@ -98,6 +98,9 @@ public class ModernConfigManager {
 	
 	@ConfigSync(category = CATEGORY_GAMEPLAY, comment = "If true, hold to aim. If false, toggle to aim.")
 	public static boolean holdToAim = true;
+	
+	@ConfigSync(category = CATEGORY_GAMEPLAY, comment = "Enables the black background on the ammo counter.")
+	public static boolean enableAmmoCounterBackground = true;
 
 	
 	

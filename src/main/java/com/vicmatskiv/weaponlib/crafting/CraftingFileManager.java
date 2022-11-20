@@ -294,7 +294,7 @@ public class CraftingFileManager extends JSONDatabaseManager {
 	@Override
 	public void loadDirectory() {
 		
-		System.out.println("COMPA T2S 1ZR T2A");
+
 
 		
 		// Gets directory-- this will initialize it

@@ -17,6 +17,7 @@ import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.PlayerWeaponInstance;
 import com.vicmatskiv.weaponlib.RenderingPhase;
 import com.vicmatskiv.weaponlib.RopeSimulation;
+import com.vicmatskiv.weaponlib.Weapon;
 import com.vicmatskiv.weaponlib.WeaponState;
 import com.vicmatskiv.weaponlib.animation.AnimationModeProcessor;
 import com.vicmatskiv.weaponlib.animation.ClientValueRepo;
@@ -45,6 +46,8 @@ import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.MathHelper;
@@ -59,6 +62,7 @@ import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingJumpEvent;
+import net.minecraftforge.event.entity.living.LivingEquipmentChangeEvent;
 import net.minecraftforge.event.entity.living.LivingFallEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -124,6 +128,8 @@ public abstract class CompatibleClientEventHandler {
 		e.setNewfov((float) (e.getFov() + fA));
 
 	}
+	
+	
 
 	@SubscribeEvent
 	public void keyInputEvent(KeyboardInputEvent kie) {
@@ -395,6 +401,9 @@ public abstract class CompatibleClientEventHandler {
 		onCompatibleClientTick(new CompatibleClientTickEvent(event));
 
 		// ModernConfigManager.init();
+		
+	
+		
 
 		EntityPlayer player = Minecraft.getMinecraft().player;
 		if (player != null && event.phase == Phase.END) {
@@ -402,6 +411,14 @@ public abstract class CompatibleClientEventHandler {
 			double yAmount = ClientValueRepo.recoilWoundY * 0.2;
 			player.rotationPitch += yAmount;
 			ClientValueRepo.recoilWoundY -= yAmount;
+			
+			/*
+			ItemStack itemstack = player.getHeldItem(EnumHand.OFF_HAND);
+			if(itemstack.getItem() instanceof Weapon) {
+				player.setHeldItem(EnumHand.OFF_HAND, player.getHeldItem(EnumHand.MAIN_HAND));
+	            player.setHeldItem(EnumHand.MAIN_HAND, itemstack);
+			}*/
+            
 
 		}
 		
@@ -592,7 +609,7 @@ public abstract class CompatibleClientEventHandler {
 		event.getMap().registerSprite(getModContext()
 				.getNamedResource(CompatibleParticle.CompatibleParticleBreaking.TEXTURE_BLOOD_PARTICLES));
 		carParticles = event.getMap().registerSprite(new ResourceLocation("mw" + ":" + "particle/carparticle"));
-		smoke1 = event.getMap().registerSprite(new ResourceLocation("mw" + ":" + "smokes/smokesheet"));
+		//smoke1 = event.getMap().registerSprite(new ResourceLocation("mw" + ":" + "smokes/smokesheet"));
 	}
 
 	protected abstract void onCompatibleRenderTickEvent(CompatibleRenderTickEvent compatibleRenderTickEvent);

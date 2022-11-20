@@ -2,32 +2,32 @@ package com.vicmatskiv.weaponlib.crafting.ammopress;
 
 import java.util.LinkedList;
 
+import com.vicmatskiv.weaponlib.ItemBullet;
+import com.vicmatskiv.weaponlib.ItemMagazine;
+import com.vicmatskiv.weaponlib.Tags;
 import com.vicmatskiv.weaponlib.crafting.CraftingEntry;
 import com.vicmatskiv.weaponlib.crafting.CraftingGroup;
-import com.vicmatskiv.weaponlib.crafting.CraftingRegistry;
 import com.vicmatskiv.weaponlib.crafting.IModernCrafting;
 import com.vicmatskiv.weaponlib.crafting.base.TileEntityStation;
 
 import io.netty.buffer.ByteBuf;
-import net.minecraft.client.Minecraft;
-import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.tileentity.TileEntityHopper;
 import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
-import net.minecraftforge.items.ItemStackHandler;
 
 public class TileEntityAmmoPress extends TileEntityStation {
 	
 	
 	
 	public static final int BULLET_CRAFT_DURATION = 2;
-	public static final int MAGAZINE_CRAFT_DURATION = 400;
+	public static final int MAGAZINE_CRAFT_DURATION = 100;
 	
-	public static final int BULLET_DISMANTLE_DURATION = 400;
+	public static final int BULLET_DISMANTLE_DURATION = 2;
+	
+	public static final int BULLETS_CRAFTED_PER_PRESS = 6;
 	
 	
 	public LinkedList<ItemStack> craftStack = new LinkedList<>();
@@ -133,13 +133,11 @@ public class TileEntityAmmoPress extends TileEntityStation {
 
 		
 		NBTTagList stackNBTCompound = new NBTTagList();
-		int pos = 0;
 		for(int i = 0; i < this.craftStack.size(); ++i) {
 			ItemStack stack = this.craftStack.get(i);
 			NBTTagCompound element = new NBTTagCompound();
 			stack.writeToNBT(element);
 			stackNBTCompound.appendTag(element);
-			
 		}
 		compound.setTag("craftingStack", stackNBTCompound);
 		
@@ -210,6 +208,17 @@ public class TileEntityAmmoPress extends TileEntityStation {
 				}
 				
 				ItemStack splitOff = stack.splitStack(1);
+				
+				// For every bullet crafted, output BULLETS_CRAFTED_PER_PRESS.
+				if(splitOff.getItem() instanceof ItemBullet) {
+					splitOff.setCount(splitOff.getCount() * BULLETS_CRAFTED_PER_PRESS);
+				}
+				
+				// Make magazines empty
+				if(splitOff.getItem() instanceof ItemMagazine) {
+					Tags.setAmmo(splitOff, 0);
+				}
+				
 				
 				addStackToInventoryRange(splitOff, 0, 8);
 				markDirty();

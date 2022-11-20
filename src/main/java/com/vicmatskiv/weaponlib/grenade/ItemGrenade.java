@@ -384,7 +384,7 @@ PlayerItemInstanceFactory<PlayerGrenadeInstance, GrenadeState>, AttachmentContai
                 }
             } else {
                 //throw new IllegalStateException("No recipe defined for attachment " + name);
-                System.err.println("!!!No recipe defined for grenade " + name);
+                //System.err.println("!!!No recipe defined for grenade " + name);
             }
 
             return grenade;

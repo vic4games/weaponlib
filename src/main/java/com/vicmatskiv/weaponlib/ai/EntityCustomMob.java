@@ -75,7 +75,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class EntityCustomMob extends CompatibleEntityMob
-        implements IRangedAttackMob, Contextual, MissionAssigner, Configurable<EntityConfiguration>, IEntityReload {
+        implements IRangedAttackMob, Contextual, MissionAssigner, Configurable<EntityConfiguration> {
 
     private static final float FLAT_WORLD_SPAWN_CHANCE = 0.01f;
     private static final CompatibleDataManager.Key VARIANT = CompatibleDataManager.createKey(EntityCustomMob.class,
@@ -97,17 +97,12 @@ public class EntityCustomMob extends CompatibleEntityMob
 
     private EntityPlayer customer;
     
-    private int ammo;
-    private int maxAmmo = 30;
-    private int reloadTime = 5000;
-    private long lastReload = System.currentTimeMillis();
-    
+
    
 
     public EntityCustomMob(World worldIn) {
         super(worldIn);
         this.setSize(0.6F, 1.99F);
-        this.ammo = maxAmmo;
     }
 
     @Override
@@ -139,9 +134,7 @@ public class EntityCustomMob extends CompatibleEntityMob
                 getConfiguration().getCollisionAttackDamage());
     }
     
-    public long getLastReload() {
-    	return this.lastReload;
-    }
+
 
     protected void entityInit() {
         super.entityInit();
@@ -184,12 +177,6 @@ public class EntityCustomMob extends CompatibleEntityMob
     public void onLivingUpdate() {
 
     	
-    	if(lastReload != -1 && System.currentTimeMillis() - lastReload > reloadTime) {
-    		ammo = maxAmmo;
-    		lastReload = -1;
-    		
-    		
-    	}
     	
         if (this.isEntityAlive() && getConfiguration().getDelayedAttack() != null) {
 
@@ -691,41 +678,5 @@ public class EntityCustomMob extends CompatibleEntityMob
         }
     }
 
-	@Override
-	public int getAmmo() {
-		
-		return this.ammo;
-	}
 
-	@Override
-	public int getMaxAmmo() {
-		return this.maxAmmo;
-	}
-
-	@Override
-	public void setAmmo(int ammo) {
-		
-		this.ammo = ammo;
-		if(this.ammo == 0) {
-			this.lastReload = System.currentTimeMillis();
-		}
-		
-	}
-
-	@Override
-	public void setMaxAmmo(int maximumAmmo) {
-		this.maxAmmo = maximumAmmo;
-		
-	}
-
-	@Override
-	public int getReloadTime() {
-		return this.reloadTime;
-	}
-
-	@Override
-	public void setReloadTime(int time) {
-		this.reloadTime = time;
-		
-	}
 }

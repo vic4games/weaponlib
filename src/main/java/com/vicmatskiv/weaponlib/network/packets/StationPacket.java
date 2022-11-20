@@ -25,6 +25,7 @@ import org.apache.commons.lang3.RandomUtils;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.vicmatskiv.weaponlib.ClientEventHandler;
+import com.vicmatskiv.weaponlib.ItemBullet;
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.Weapon;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
@@ -211,6 +212,7 @@ public class StationPacket implements CompatibleMessage {
 	            				TileEntityAmmoPress press = (TileEntityAmmoPress) station;
 		            			Item item = CraftingRegistry.getModernCrafting(m.craftingGroup, m.craftingName).getItem();
 		            			ItemStack newStack = new ItemStack(item, m.quantity);
+		            			
 		            			
 		            		
 		            			if(press.hasStack()) {

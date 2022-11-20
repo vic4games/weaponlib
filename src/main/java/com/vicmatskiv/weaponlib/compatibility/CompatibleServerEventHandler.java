@@ -19,6 +19,7 @@ import net.minecraftforge.event.entity.EntityEvent.EntityConstructing;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.living.LivingEquipmentChangeEvent;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerDropsEvent;
@@ -48,6 +49,8 @@ public abstract class CompatibleServerEventHandler {
 		onCompatibleItemToss(itemTossEvent);
 	}
 
+	@SubscribeEvent
+	public void onEquipmentChange(LivingEquipmentChangeEvent e) {}
 	
 	protected abstract void onCompatibleItemToss(ItemTossEvent itemTossEvent);
 	

@@ -38,6 +38,7 @@ import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
+import static net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType.*;
 
 public class CustomGui extends CompatibleGui {
 
@@ -55,6 +56,10 @@ public class CustomGui extends CompatibleGui {
 	
 	public static final ResourceLocation AMMO_COUNTER_TEXTURES = new ResourceLocation("mw:textures/hud/ammoiconsheet.png");
 
+	private static FontRenderer FONT_RENDERER = null;
+	
+	
+	
 	
 	public CustomGui(Minecraft mc, ModContext modContext, WeaponAttachmentAspect attachmentAspect) {
 		this.mc = mc;
@@ -64,77 +69,78 @@ public class CustomGui extends CompatibleGui {
 		
 	}
 	
-
+	public static FontRenderer getFontRenderer() {
+		if(FONT_RENDERER == null) FONT_RENDERER = Minecraft.getMinecraft().fontRenderer;
+		return FONT_RENDERER;
+	}
 	
 	
-
 	@Override
 	public void onCompatibleRenderHud(RenderGameOverlayEvent.Pre event) {
+		handleAnimationModeHUD(event);
+		
+		handleVehicleHUD(event);
+		
+		handleHelmetHUD(event);
 		
 		
-		if(compatibility.getEventType(event) == ElementType.HELMET) {
+		if(modContext.getMainHeldWeapon() != null) {
+			ScaledResolution scaledResolution = new ScaledResolution(Minecraft.getMinecraft());
+			double width = scaledResolution.getScaledWidth_double();
+			double height = scaledResolution.getScaledHeight_double();
 			
 			
+			//handleOpenDoorHUD(event, width, height);
 			
-			
-			//PostProcessPipeline.drawRainBuffer();
-			//System.out.println("hi");
-			//drawString(mc.fontRenderer, "FUCKL", 30, 30, 0xff113a);
-		//	System.out.println("hi");
+			handleModificationHUD(event, modContext.getMainHeldWeapon(), width, height);
 		}
-	//	drawGradientRect(0, 0, 30, 30, 0xdfffff, 0xfffff);
-		
-		//PostProcessPipeline.drawRainBuffer();
-		
-		
-		// animation on
-		if(AnimationModeProcessor.getInstance().getFPSMode()) {
-			event.setCanceled(true);
+	}
+	
 
-			GlStateManager.disableTexture2D();
-		
-			AnimationGUI.getInstance().render();
-			
-			
-			if(AnimationGUI.getInstance().titleSafe.isState()) {
-				DebugRenderer.setupBasicRender();
-				ScaledResolution sr = new ScaledResolution(Minecraft.getMinecraft());
-				DebugRenderer.renderPoint(new Vec3d(sr.getScaledWidth_double()/2, sr.getScaledHeight_double()/2, 0), new Vec3d(1, 0, 0));
+	
+	
+	
+	public void handleAnimationModeHUD(RenderGameOverlayEvent.Pre event) {
+		// animation on
+				if(AnimationModeProcessor.getInstance().getFPSMode()) {
+					event.setCanceled(true);
+
+					GlStateManager.disableTexture2D();
 				
-				DebugRenderer.destructBasicRender();
-			}
-			
-			
-		}
-		
-		/*
-		GlStateManager.disableTexture2D();
-		Tessellator t = Tessellator.getInstance();
-		BufferBuilder bb = t.getBuffer();
-		bb.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION);
-		
-		bb.pos(0, 0, 0).endVertex();
-		bb.pos(0, 50, 0).endVertex();
-		bb.pos(50, 50, 0).endVertex();
-		bb.pos(50, 0, 0).endVertex();
-		
-		t.draw();
-		*/
-		
-		//GlStateManager.color(1f, 0f, 0f, 0f);
+					AnimationGUI.getInstance().render();
+					
+					
+					if(AnimationGUI.getInstance().titleSafe.isState()) {
+						DebugRenderer.setupBasicRender();
+						ScaledResolution sr = new ScaledResolution(Minecraft.getMinecraft());
+						DebugRenderer.renderPoint(new Vec3d(sr.getScaledWidth_double()/2, sr.getScaledHeight_double()/2, 0), new Vec3d(1, 0, 0));
+						
+						DebugRenderer.destructBasicRender();
+					}
+					
+					
+				}
+	}
+	
+	
+	public void handleVehicleHUD(RenderGameOverlayEvent.Pre event) {
+		ElementType eventType = event.getType();
 		
 		
-		
-		
+
 		if(this.mc.player.isRiding() && this.mc.player.getRidingEntity() instanceof EntityVehicle) {
 			EntityVehicle v = (EntityVehicle) this.mc.player.getRidingEntity();
 			
-			if(!Double.isNaN(v.getSolver().getVelocityVector().lengthSquared()) && v.getSolver().getVelocityVector().lengthSquared() != 0.0) {
-				if(event.getType() == RenderGameOverlayEvent.ElementType.CROSSHAIRS) event.setCanceled(true);
-				if(event.getType() == RenderGameOverlayEvent.ElementType.HOTBAR) event.setCanceled(true);
-				if(event.getType() == RenderGameOverlayEvent.ElementType.HEALTH) event.setCanceled(true);
-				if(event.getType() == RenderGameOverlayEvent.ElementType.EXPERIENCE) event.setCanceled(true);
-				if(event.getType() == RenderGameOverlayEvent.ElementType.ARMOR) event.setCanceled(true);
+			
+			
+			if(!Double.isNaN(v.getSolver().getVelocityVector().lengthSquared())
+					&& v.getSolver().getVelocityVector().lengthSquared() != 0.0) {
+				
+				if(eventType == CROSSHAIRS || eventType == HOTBAR || eventType == HEALTH || eventType == EXPERIENCE || eventType == ARMOR) {
+					event.setCanceled(true);
+				}
+				
+				
 				
 			}
 			
@@ -149,9 +155,11 @@ public class CustomGui extends CompatibleGui {
 			EntityVehicle vehicle = (EntityVehicle) this.mc.player.getRidingEntity();
 			vehicleGUIOverlay.renderGUI(vehicle);
 		}
-		
+	}
+	
+	public void handleHelmetHUD(RenderGameOverlayEvent.Pre event) {
 		if(compatibility.getEventType(event) == RenderGameOverlayEvent.ElementType.HELMET) {
-		        
+	        
 			ItemStack helmetStack = compatibility.getHelmet();
 			if(helmetStack != null && mc.gameSettings.thirdPersonView == 0 && helmetStack.getItem() instanceof CustomArmor) {
 			    	            
@@ -200,12 +208,152 @@ public class CustomGui extends CompatibleGui {
 				}
 			}
 		}
-		
-		
-		 //GlStateManager.disableAlpha();
-		 
-	
 	}
+
+	
+	public void handleModificationHUD(RenderGameOverlayEvent.Pre event, PlayerWeaponInstance weaponInstance, double scaledWidth,
+			double scaledHeight) {
+		if (isInAltModifyingState(weaponInstance) || isInModifyingState(weaponInstance)) {
+			ModificationGUI.getInstance().render(modContext);
+		} else {
+			
+			
+			if(ModernConfigManager.enableAmmoCounter) {
+				Message message = modContext.getStatusMessageCenter().nextMessage();
+				String messageText;
+				if(message != null) {
+					messageText = message.getMessage();
+					if(message.isAlert()) {
+					}
+				} else {
+					
+					messageText = getDefaultWeaponMessage(weaponInstance);
+				}
+				
+				if(messageText == null) messageText = "";
+
+				
+				//System.out.println(scaledWidth + " | " + messageText + " | " + FontRenderer);
+				//getStatusBarXPosition((int) scaledWidth, messageText, FONT_RENDERER);
+				//getStatusBarYPosition((int) scaledHeight);
+
+
+				//fontRender.drawStringWithShadow(messageText, x, y, color);
+				
+				GlStateManager.enableBlend();
+				GlStateManager.pushMatrix();
+				double scale = 0.50;
+				GlStateManager.translate((scaledWidth - 256 * scale), (scaledHeight - 128 * scale), 0);
+				GlStateManager.scale(scale, scale, scale);
+				Minecraft.getMinecraft().getTextureManager().bindTexture(AMMO_COUNTER_TEXTURES);
+				
+				// Figure out the firemode, and assign it an ID
+				int firemode = 0;
+				if(weaponInstance.getMaxShots() == Integer.MAX_VALUE) {
+					firemode = 2;
+				} else if(weaponInstance.getMaxShots() == 1) {
+					firemode = 0;
+				} else {
+					firemode = 1;
+				}
+				
+				// Check the total capacity, this allows us to differentiate b/w
+				// cartridge based weapons, and allows us to tell if a weapon has no
+				// magazine in it.
+				ItemMagazine magazine = (ItemMagazine) WeaponAttachmentAspect.getActiveAttachment(AttachmentCategory.MAGAZINE, weaponInstance);
+				int totalCapacity;
+				if(magazine != null) {
+					totalCapacity = magazine.getAmmo();
+				} else {
+					totalCapacity = weaponInstance.getWeapon().getAmmoCapacity();
+				}
+				
+				// If there is no magazine, display two "-"
+				String totalCapaString, currentAmmo;
+				if(weaponInstance.getWeapon().getAmmoCapacity() == 0 && totalCapacity == 0) {
+					totalCapaString = "-";
+					currentAmmo = "-";
+				} else {
+					currentAmmo = weaponInstance.getAmmo() + "";
+					totalCapaString = totalCapacity + "";
+				}
+			
+				String keyNameString = "[" + KeyBindings.fireModeKey.getDisplayName() + "]";
+				double keyNameOffset = getFontRenderer().getStringWidth(keyNameString);
+				
+				// Render main ammo counter body
+				if(ModernConfigManager.enableAmmoCounterBackground) drawTexturedModalRect(0, 0, 0, 0, 256, 53);
+				
+				
+				// Draw the firemode indicator
+				GlStateManager.pushMatrix();
+				GlStateManager.translate(256 - 90 - (keyNameOffset*1.75), 60, 0);
+				GlStateManager.scale(0.7, 0.7, 0.7);
+				GlStateManager.enableBlend();
+				drawTexturedModalRect(0, 0, 146 + 39*(2-firemode), 53, 39, 28);
+				GlStateManager.popMatrix();
+				
+				// Get the weapon name from the localization file
+				String weaponName = new TextComponentTranslation(weaponInstance.getWeapon().getUnlocalizedName() + ".name").getFormattedText();
+
+				
+				
+				String bottomString = "   " + TextFormatting.GRAY + " | " + TextFormatting.WHITE + "" + totalCapaString;
+						double totalLength = 0;
+						
+						
+				
+				// Fixes length in cases of minigun		
+				if(bottomString.length() > 13) {
+					int adjLength = bottomString.length() - 13;
+					totalLength = adjLength*8.5;
+				}
+				
+			
+				//String keyNameString = "[" + KeyBindings.fireModeKey.getDisplayName() + "]";
+						
+				// Draw strings
+				drawScaledString(FONT_RENDERER, weaponName, 126 - FONT_RENDERER.getStringWidth(weaponName), - FONT_RENDERER.FONT_HEIGHT - 2, 2.0, 0xffea8a);
+				drawScaledString(FONT_RENDERER, currentAmmo, 64 + 20 - FONT_RENDERER.getStringWidth(currentAmmo)*2 - totalLength, 53/8.0 - 1, 3.5, 0xffea8a);
+				drawScaledString(FONT_RENDERER, bottomString, 64 - totalLength, 53/8.0, 3.0);
+				drawScaledString(FONT_RENDERER, keyNameString, 105 - keyNameOffset, 30, 2.0, 0xffea8a);
+				
+				
+
+				GlStateManager.popMatrix();
+			
+			}
+            
+            int x = getStatusBarXPosition((int) scaledWidth, "Weapon disabled", FONT_RENDERER);
+			int y = getStatusBarYPosition((int) scaledHeight);
+
+            
+            if(BalancePackManager.isWeaponDisabled(weaponInstance.getWeapon())) {
+            	FONT_RENDERER.drawStringWithShadow("Weapon disabled", x - 5, y + 10, 0xc23616);
+            }
+			event.setCanceled(true);
+		}
+	}
+	
+	public void handleOpenDoorHUD(RenderGameOverlayEvent.Pre event, double scaledWidth, double scaledHeight) {
+		 if(ModernConfigManager.enableOpenDoorDisplay) {
+         	EntityPlayer player = Minecraft.getMinecraft().player;
+             
+             RayTraceResult rtr = player.world.rayTraceBlocks(player.getPositionVector(), player.getPositionVector().addVector(0, player.getEyeHeight(), 0).add(player.getLookVec().scale(5)), false, true, false);
+ 	 		if(rtr != null) {
+ 	 			IBlockState state = player.world.getBlockState(rtr.getBlockPos());
+ 	 			if(state.getBlock() instanceof BlockDoor) {
+ 	 				 int openDoorX = (int) (scaledWidth * 0.2);
+ 	                 int openDoorY = (int) (scaledWidth * 0.5);
+ 	                 drawCenteredString(FONT_RENDERER, "[" + KeyBindings.openDoor.getDisplayName() + "]", openDoorX, openDoorY, 0xff9f43);
+ 	                 drawCenteredString(FONT_RENDERER, net.minecraft.client.resources.I18n.format("overlay.opendoor.name"), openDoorX, openDoorY + 10, 0xffffff);
+ 	                 
+ 	 			}
+ 	 		
+ 	 		}
+         }
+	}
+	
 
 	@Override
 	public void onCompatibleRenderCrosshair(RenderGameOverlayEvent.Pre event) {
@@ -230,8 +378,8 @@ public class CustomGui extends CompatibleGui {
 			if(crosshair != null) {
 				
 				ScaledResolution scaledResolution = compatibility.getResolution(event);
-				int width = scaledResolution.getScaledWidth();
-			    int height = scaledResolution.getScaledHeight();
+				double width = scaledResolution.getScaledWidth_double();
+			    double height = scaledResolution.getScaledHeight_double();
 
 			    FontRenderer fontRender = compatibility.getFontRenderer();
 
@@ -252,180 +400,10 @@ public class CustomGui extends CompatibleGui {
                 
                 
                 
-                if(ModernConfigManager.enableOpenDoorDisplay) {
-                	EntityPlayer player = Minecraft.getMinecraft().player;
-                    
-                    RayTraceResult rtr = player.world.rayTraceBlocks(player.getPositionVector(), player.getPositionVector().addVector(0, player.getEyeHeight(), 0).add(player.getLookVec().scale(5)), false, true, false);
-        	 		if(rtr != null) {
-        	 			IBlockState state = player.world.getBlockState(rtr.getBlockPos());
-        	 			if(state.getBlock() instanceof BlockDoor) {
-        	 				 int openDoorX = (int) (scaledResolution.getScaledWidth() * 0.2);
-        	                 int openDoorY = (int) (scaledResolution.getScaledHeight() * 0.5);
-        	                 drawCenteredString(fontRender, "[" + KeyBindings.openDoor.getDisplayName() + "]", openDoorX, openDoorY, 0xff9f43);
-        	                 drawCenteredString(fontRender, net.minecraft.client.resources.I18n.format("overlay.opendoor.name"), openDoorX, openDoorY + 10, 0xffffff);
-        	                 
-        	 			}
-        	 		
-        	 		}
-                }
+                
+                //handleModificationHUD(event, weaponInstance, width, height);
                 
                 
-               
-                
-                
-                if (isInAltModifyingState(weaponInstance)) {
-
-                	//ModificationGUI.getInstance().setGroup(ModificationGroup.MODIFICATION);
-                	ModificationGUI.getInstance().render(modContext);
-                	
-                	/*
-                    String changeScopeMessage = compatibility.getLocalizedString(
-                            "gui.attachmentMode.changeRailing",
-                            Keyboard.getKeyName(KeyBindings.upArrowKey.getKeyCode()));
-                    fontRender.drawStringWithShadow(changeScopeMessage, width / 2 - 40, 60, color);
-*/
-//                    String changeBarrelRigMessage = compatibility.getLocalizedString(
-//                            "gui.attachmentMode.changeBarrelRig",
-//                            Keyboard.getKeyName(KeyBindings.leftArrowKey.getKeyCode()));
-//                    fontRender.drawStringWithShadow(changeBarrelRigMessage, 10, height / 2 - 10, color);
-//
-//                    String changeCamoMessage = compatibility.getLocalizedString(
-//                            "gui.attachmentMode.changeCamo",
-//                            Keyboard.getKeyName(KeyBindings.rightArrowKey.getKeyCode()));
-//                    fontRender.drawStringWithShadow(changeCamoMessage, width / 2 + 60, height / 2 - 20, color);
-//
-//                    String changeUnderBarrelRig = compatibility.getLocalizedString(
-//                            "gui.attachmentMode.changeUnderBarrelRig",
-//                            Keyboard.getKeyName(KeyBindings.downArrowKey.getKeyCode()));
-//                    fontRender.drawStringWithShadow(changeUnderBarrelRig, 10, height - 40, color);
-//                    
-//                    String applyLaser = compatibility.getLocalizedString(
-//                            "gui.attachmentMode.applyLaser",
-//                            Keyboard.getKeyName(KeyBindings.laserAttachmentKey.getKeyCode()));
-//                    fontRender.drawStringWithShadow(applyLaser, 150, height - 100, color);
-
-                } else if(isInModifyingState(weaponInstance) /*Weapon.isModifying(itemStack)*/ /*weaponItem.getState(weapon) == Weapon.STATE_MODIFYING*/) {
-                	ModificationGUI.getInstance().render(modContext);
-				} else {
-					
-					
-					if(ModernConfigManager.enableAmmoCounter) {
-						Message message = modContext.getStatusMessageCenter().nextMessage();
-						String messageText;
-						if(message != null) {
-							messageText = message.getMessage();
-							if(message.isAlert()) {
-							}
-						} else {
-							
-							messageText = getDefaultWeaponMessage(weaponInstance);
-						}
-
-						getStatusBarXPosition(width, messageText, fontRender);
-						getStatusBarYPosition(height);
-
-
-						//fontRender.drawStringWithShadow(messageText, x, y, color);
-						
-						GlStateManager.enableBlend();
-						
-						// Set up GUI positioning
-						GlStateManager.pushMatrix();
-						double scale = 0.50;
-						GlStateManager.translate((scaledResolution.getScaledWidth_double()-256*scale), (scaledResolution.getScaledHeight_double()-128*scale), 0);
-						GlStateManager.scale(scale, scale, scale);
-						Minecraft.getMinecraft().getTextureManager().bindTexture(AMMO_COUNTER_TEXTURES);
-						
-						// Figure out the firemode, and assign it an ID
-						int firemode = 0;
-						if(weaponInstance.getMaxShots() == Integer.MAX_VALUE) {
-							firemode = 2;
-						} else if(weaponInstance.getMaxShots() == 1) {
-							firemode = 0;
-						} else {
-							firemode = 1;
-						}
-						
-						// Check the total capacity, this allows us to differentiate b/w
-						// cartridge based weapons, and allows us to tell if a weapon has no
-						// magazine in it.
-						ItemMagazine magazine = (ItemMagazine) WeaponAttachmentAspect.getActiveAttachment(AttachmentCategory.MAGAZINE, weaponInstance);
-						int totalCapacity;
-						if(magazine != null) {
-							totalCapacity = magazine.getAmmo();
-						} else {
-							totalCapacity = weaponInstance.getWeapon().getAmmoCapacity();
-						}
-						
-						// If there is no magazine, display two "-"
-						String totalCapaString, currentAmmo;
-						if(weaponInstance.getWeapon().getAmmoCapacity() == 0 && totalCapacity == 0) {
-							totalCapaString = "-";
-							currentAmmo = "-";
-						} else {
-							currentAmmo = weaponInstance.getAmmo() + "";
-							totalCapaString = totalCapacity + "";
-						}
-					
-						String keyNameString = "[" + KeyBindings.fireModeKey.getDisplayName() + "]";
-						double keyNameOffset = fontRender.getStringWidth(keyNameString);
-						
-						// Render main ammo counter body
-						drawTexturedModalRect(0, 0, 0, 0, 256, 53);
-						
-						
-						// Draw the firemode indicator
-						GlStateManager.pushMatrix();
-						GlStateManager.translate(256 - 90 - (keyNameOffset*1.75), 60, 0);
-						GlStateManager.scale(0.7, 0.7, 0.7);
-						drawTexturedModalRect(0, 0, 146 + 39*(2-firemode), 53, 39, 28);
-						GlStateManager.popMatrix();
-						
-						// Get the weapon name from the localization file
-						String weaponName = new TextComponentTranslation(weaponItem.getUnlocalizedName() + ".name").getFormattedText();
-
-						
-						
-						String bottomString = "   " + TextFormatting.GRAY + " | " + TextFormatting.WHITE + "" + totalCapaString;
-								double totalLength = 0;
-								
-								
-						
-						// Fixes length in cases of minigun		
-						if(bottomString.length() > 13) {
-							int adjLength = bottomString.length() - 13;
-							totalLength = adjLength*8.5;
-						}
-						
-					
-						//String keyNameString = "[" + KeyBindings.fireModeKey.getDisplayName() + "]";
-								
-						// Draw strings
-						drawScaledString(fontRender, weaponName, 126 - fontRender.getStringWidth(weaponName), -fontRender.FONT_HEIGHT - 2, 2.0, 0xffea8a);
-						drawScaledString(fontRender, currentAmmo, 64 + 20 - fontRender.getStringWidth(currentAmmo)*2 - totalLength, 53/8.0 - 1, 3.5, 0xffea8a);
-						drawScaledString(fontRender, bottomString, 64 - totalLength, 53/8.0, 3.0);
-						drawScaledString(fontRender, keyNameString, 105 - keyNameOffset, 30, 2.0, 0xffea8a);
-						
-						
-		
-						GlStateManager.popMatrix();
-					
-					}
-	                
-	                int x = getStatusBarXPosition(width, "Weapon disabled", fontRender);
-					int y = getStatusBarYPosition(height);
-
-	                
-	                if(BalancePackManager.isWeaponDisabled(weaponInstance.getWeapon())) {
-	                	fontRender.drawStringWithShadow("Weapon disabled", x - 5, y + 10, 0xc23616);
-						
-	                }
-	                
-	               //GlStateManager.popAttrib();
-	                
-				//	GL11.glPopAttrib();
-					event.setCanceled(true);
-					}
 					
 			}
 		} else if(itemStack.getItem() instanceof ItemMagazine) {

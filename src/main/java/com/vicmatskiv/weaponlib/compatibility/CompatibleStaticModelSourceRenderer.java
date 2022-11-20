@@ -109,6 +109,7 @@ public abstract class CompatibleStaticModelSourceRenderer extends ModelSourceRen
 
 			if (owner != null) {
 				if (transformType == TransformType.THIRD_PERSON_RIGHT_HAND) {
+					
 					if (owner.isSneaking()) GlStateManager.translate(0.0F, -0.2F, 0.0F);
 				}
 			}

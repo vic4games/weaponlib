@@ -2,6 +2,7 @@ package com.vicmatskiv.weaponlib.crafting.base;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
+import com.vicmatskiv.weaponlib.ClientEventHandler;
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleBlockPos;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleBlockState;
@@ -41,6 +42,10 @@ public abstract class BlockStation extends Block {
 	public BlockStation(ModContext context, String name, Material materialIn) {
 		super(materialIn);
 		this.modContext = context;
+		
+		if(context.isClient()) {
+			ClientEventHandler.BLANKMAPPED_LIST.add(this);
+		}
 		setHardness(2.0f);
 		setUnlocalizedName(name);
 		setRegistryName(name);

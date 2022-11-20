@@ -109,7 +109,7 @@ public class CustomTileEntityConfiguration<T extends CustomTileEntityConfigurati
         Class<? extends TileEntity> tileEntityClass = createTileEntityClass();
         
         CustomTileEntityBlock tileEntityBlock = new CustomTileEntityBlock(material, tileEntityClass);
-        ClientEventHandler.BLANKMAPPED_LIST.add(tileEntityBlock);
+        if(modContext.isClient()) ClientEventHandler.BLANKMAPPED_LIST.add(tileEntityBlock);
         tileEntityBlock.setBlockName(modContext.getModId() + "_" + name);
         tileEntityBlock.setHardness(hardness);
         tileEntityBlock.setResistance(resistance);

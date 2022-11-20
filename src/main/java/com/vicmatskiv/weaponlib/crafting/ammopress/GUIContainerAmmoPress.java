@@ -8,6 +8,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
+
+import com.vicmatskiv.weaponlib.ItemBullet;
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.Weapon;
 import com.vicmatskiv.weaponlib.animation.gui.GuiRenderUtil;
@@ -44,7 +46,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.TextFormatting;
+import static net.minecraft.util.text.TextFormatting.*;
 import net.minecraftforge.oredict.OreDictionary;
 import scala.actors.threadpool.Arrays;
 
@@ -194,10 +196,19 @@ public class GUIContainerAmmoPress extends GUIContainerStation<TileEntityAmmoPre
 
 	@Override
 	public void addCraftingInformationToTooltip(ArrayList<String> tooltip) {
-		tooltip.add(TextFormatting.GOLD + "Crafting: " + TextFormatting.WHITE
-				+ I18n.format(tileEntity.getLatestStackInQueue().getUnlocalizedName() + ".name"));
-		tooltip.add(TextFormatting.GOLD + "Quantity: " + TextFormatting.WHITE
-				+ tileEntity.getLatestStackInQueue().getCount());
+		
+		ItemStack stack = tileEntity.getLatestStackInQueue();
+		tooltip.add(GOLD + "Crafting: " + WHITE + format(stack.getUnlocalizedName()));
+		
+
+		if(stack.getItem() instanceof ItemBullet) {
+			tooltip.add(GOLD + "Quantity: " + WHITE
+					+ stack.getCount() + GREEN +  " -> " + (stack.getCount() * TileEntityAmmoPress.BULLETS_CRAFTED_PER_PRESS));
+		} else {
+			tooltip.add(GOLD + "Quantity: " + WHITE + stack.getCount());
+		}
+		
+		
 	}
 
 	
@@ -206,17 +217,36 @@ public class GUIContainerAmmoPress extends GUIContainerStation<TileEntityAmmoPre
 		super.addCustomTooltipInformation(mouseX, mouseY, tooltip);
 		
 		
-		int highlighted = -1;
+		
+
 		if(tileEntity.hasStack()) {
 			if (mouseY >= this.guiTop && mouseY <= this.guiTop + 20) {
 				int id = (mouseX - (this.guiLeft + 200))/20;
 				if(id >= 0 && tileEntity.getCraftingQueue().size() - 1 >= id) {
-					highlighted = id;
-					tooltip.add(format(tileEntity.getCraftingQueue().get(id).getUnlocalizedName()));
-					tooltip.add(TextFormatting.GRAY + "Quantity: " + TextFormatting.GOLD + tileEntity.getCraftingQueue().get(id).getCount());
+					
+					ItemStack stack = tileEntity.getCraftingQueue().get(id);
+					
+				
+					tooltip.add(format(stack.getUnlocalizedName()));
+					if(stack.getItem() instanceof ItemBullet) {
+						tooltip.add(GRAY + "Quantity: " + GOLD +
+								stack.getCount() + GREEN + " -> " + (stack.getCount() * TileEntityAmmoPress.BULLETS_CRAFTED_PER_PRESS));
+					} else {
+						tooltip.add(GRAY + "Quantity: " + GOLD + stack.getCount());
+					}
+					
 				}
 			}
 		}
+		
+		if(hasSelectedCraftingPiece() && getSelectedCraftingPiece().getItem() instanceof ItemBullet && 
+				GUIRenderHelper.checkInBox(mouseX, mouseY, this.guiLeft + 268, this.guiTop + 201, 20, 20)) {
+			
+			tooltip.add(String.format("Amount %d will make %d bullets", getCurrentAmountInQuantityBox(), getCurrentAmountInQuantityBox() * TileEntityAmmoPress.BULLETS_CRAFTED_PER_PRESS));
+		}
+		
+		//GUIRenderHelper.drawScaledString("x" + (getCurrentAmountInQuantityBox() * TileEntityAmmoPress.BULLETS_CRAFTED_PER_PRESS),
+		//		this.guiLeft + 268, this.guiTop + 201, 0.7, GREEN);
 	}
 	
 	@Override
@@ -252,6 +282,13 @@ public class GUIContainerAmmoPress extends GUIContainerStation<TileEntityAmmoPre
 				GUIRenderHelper.drawScaledString("x" + stack.getCount(), this.guiLeft + 212 + i*20, this.guiTop + 16, 0.7, GOLD);
 			}
 			
+			
+			if(hasSelectedCraftingPiece() && getSelectedCraftingPiece().getItem() instanceof ItemBullet) {
+				GUIRenderHelper.drawScaledString("x" + (getCurrentAmountInQuantityBox() * TileEntityAmmoPress.BULLETS_CRAFTED_PER_PRESS),
+						this.guiLeft + 268, this.guiTop + 201, 0.7, GREEN);
+				
+			}
+			
 		}
 		
 		
@@ -260,6 +297,11 @@ public class GUIContainerAmmoPress extends GUIContainerStation<TileEntityAmmoPre
 
 	}
 
+	private int getCurrentAmountInQuantityBox() {
+		if(quantityBox.getText().length() == 0) return 0;
+		return Integer.parseInt(quantityBox.getText());
+	}
+	
 	@Override
 	protected void compatibleMouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
 		super.compatibleMouseClicked(mouseX, mouseY, mouseButton);

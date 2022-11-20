@@ -3,8 +3,6 @@ package com.vicmatskiv.weaponlib.crafting.ammopress.model;
 
 import java.util.Arrays;
 
-import com.vicmatskiv.weaponlib.animation.ClientValueRepo;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelBox;

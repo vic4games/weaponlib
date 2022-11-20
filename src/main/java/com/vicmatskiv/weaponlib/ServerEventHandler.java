@@ -40,18 +40,18 @@ import com.vicmatskiv.weaponlib.network.packets.HeadshotSFXPacket;
 import com.vicmatskiv.weaponlib.tracking.PlayerEntityTracker;
 import com.vicmatskiv.weaponlib.tracking.SyncPlayerEntityTrackerMessage;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
+import net.minecraftforge.event.entity.living.LivingEquipmentChangeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 
 /**
@@ -78,6 +78,18 @@ public class ServerEventHandler extends CompatibleServerEventHandler {
     protected void onCompatibleServerTickEvent(CompatibleServerTickEvent e) {
         CommonModContext.currentContext.set(modContext);
     }
+    
+    @Override
+	public void onEquipmentChange(LivingEquipmentChangeEvent e) {
+    	if(e.getSlot() == EntityEquipmentSlot.MAINHAND
+    			&& e.getFrom() != e.getTo()
+    			&& e.getFrom().getItem() instanceof Weapon) {
+    		
+    		//e.getEntityLiving().entityDropItem(e.getFrom(), 1);
+    	}
+	}
+    
+   
     
     @Override
     protected void onCompatibleLivingUpdateEvent(CompatibleLivingUpdateEvent e) {
