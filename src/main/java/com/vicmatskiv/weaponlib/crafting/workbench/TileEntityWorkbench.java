@@ -1,5 +1,7 @@
 package com.vicmatskiv.weaponlib.crafting.workbench;
 
+import com.vicmatskiv.weaponlib.animation.movement.WeaponRotationHandler;
+import com.vicmatskiv.weaponlib.Weapon;
 import com.vicmatskiv.weaponlib.crafting.CraftingEntry;
 import com.vicmatskiv.weaponlib.crafting.CraftingGroup;
 import com.vicmatskiv.weaponlib.crafting.CraftingRegistry;
@@ -62,11 +64,11 @@ public class TileEntityWorkbench extends TileEntityStation {
 	@Override
 	public void writeBytesForClientSync(ByteBuf buf) {
 		super.writeBytesForClientSync(buf);
-		System.out.println("Writing bytes for client sync, target is currently: " + this.craftingTarget);
+	//	System.out.println("Writing bytes for client sync, target is currently: " + this.craftingTarget);
 		if(this.craftingTarget != null) {
 			buf.writeBoolean(true);
 			ByteBufUtils.writeUTF8String(buf, this.craftingTarget.getItem().getUnlocalizedName());
-			System.out.println("Tile Entity Workbench writing " + this.craftingTarget.getItem().getUnlocalizedName());
+			//System.out.println("Tile Entity Workbench writing " + this.craftingTarget.getItem().getUnlocalizedName());
 		} else {
 			buf.writeBoolean(false);
 		}

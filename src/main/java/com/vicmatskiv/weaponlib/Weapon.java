@@ -1170,6 +1170,10 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable, IModernCraf
     }
     
     private CraftingGroup craftingGroup = CraftingGroup.GUN;
+    
+    public static final int FIREMODE_AUTO = 2;
+    public static final int FIREMODE_SINGLE = 0;
+    public static final int FIREMODE_BURST = 1;
 
     private static final long DEFAULT_RELOADING_TIMEOUT_TICKS = 10;
     private static final long DEFAULT_UNLOADING_TIMEOUT_TICKS = 10;

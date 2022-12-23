@@ -64,6 +64,8 @@ public class GUIRenderHelper {
 	
 	
 	public static void drawScaledString(String text, double x, double y, double scale, int color) {
+	
+		
 		GlStateManager.pushMatrix();
 		GlStateManager.translate(x, y, 0);
 		GlStateManager.scale(scale, scale, scale);

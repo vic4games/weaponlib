@@ -5,13 +5,9 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 import com.vicmatskiv.weaponlib.ClientEventHandler;
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleBlockPos;
-import com.vicmatskiv.weaponlib.compatibility.CompatibleBlockState;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMathHelper;
-import com.vicmatskiv.weaponlib.crafting.workbench.TileEntityWorkbench;
-import com.vicmatskiv.weaponlib.tile.CustomTileEntity;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockFurnace;
 import net.minecraft.block.BlockHorizontal;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.IProperty;
@@ -53,6 +49,47 @@ public abstract class BlockStation extends Block {
 		this.setDefaultState(this.blockState.getBaseState().withProperty(FACING, EnumFacing.NORTH));
 	}
 	
+	/**
+     * Called after the block is set in the Chunk data, but before the Tile Entity is set
+     */
+	@Override
+    public void onBlockAdded(World worldIn, BlockPos pos, IBlockState state)
+    {
+        this.setDefaultFacing(worldIn, pos, state);
+    }
+
+    private void setDefaultFacing(World worldIn, BlockPos pos, IBlockState state)
+    {
+        if (!worldIn.isRemote)
+        {
+            IBlockState iblockstate = worldIn.getBlockState(pos.north());
+            IBlockState iblockstate1 = worldIn.getBlockState(pos.south());
+            IBlockState iblockstate2 = worldIn.getBlockState(pos.west());
+            IBlockState iblockstate3 = worldIn.getBlockState(pos.east());
+            EnumFacing enumfacing = (EnumFacing)state.getValue(FACING);
+
+            if (enumfacing == EnumFacing.NORTH && iblockstate.isFullBlock() && !iblockstate1.isFullBlock())
+            {
+                enumfacing = EnumFacing.SOUTH;
+            }
+            else if (enumfacing == EnumFacing.SOUTH && iblockstate1.isFullBlock() && !iblockstate.isFullBlock())
+            {
+                enumfacing = EnumFacing.NORTH;
+            }
+            else if (enumfacing == EnumFacing.WEST && iblockstate2.isFullBlock() && !iblockstate3.isFullBlock())
+            {
+                enumfacing = EnumFacing.EAST;
+            }
+            else if (enumfacing == EnumFacing.EAST && iblockstate3.isFullBlock() && !iblockstate2.isFullBlock())
+            {
+                enumfacing = EnumFacing.WEST;
+            }
+
+            worldIn.setBlockState(pos, state.withProperty(FACING, enumfacing), 2);
+        }
+    }
+	
+	
 	@Override
 	public abstract TileEntity createTileEntity(World world, IBlockState state);
 	
@@ -63,7 +100,14 @@ public abstract class BlockStation extends Block {
 	
 	@Override
 	public IBlockState getStateFromMeta(int meta) {
-		return this.getDefaultState().withProperty(FACING, EnumFacing.getHorizontal(meta & 3));
+		EnumFacing enumfacing = EnumFacing.getFront(meta);
+
+        if (enumfacing.getAxis() == EnumFacing.Axis.Y)
+        {
+            enumfacing = EnumFacing.NORTH;
+        }
+
+        return this.getDefaultState().withProperty(FACING, enumfacing);
 	}
 	
 	@Override
@@ -88,52 +132,26 @@ public abstract class BlockStation extends Block {
 	@Override
 	public void onBlockPlacedBy(World worldIn, BlockPos pos, IBlockState state, EntityLivingBase placer,
 			ItemStack stack) {
-		TileEntityStation entity = (TileEntityStation) compatibility.getTileEntity(worldIn, new CompatibleBlockPos(pos));
-		if(entity != null) {
-			int side = CompatibleMathHelper.floor_double(placer.rotationYaw/90f + 0.5) & 3;
-			entity.setSide(side);
-		}
+		
 	}
 	
 
 	
 	@Override
 	public int getMetaFromState(IBlockState state) {
-		int i = 0;
-        i = i | ((EnumFacing)state.getValue(FACING)).getHorizontalIndex();
-        return i;
+		return ((EnumFacing)state.getValue(FACING)).getIndex();
 	}
 	
 	@Override
 	public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing facing, float hitX, float hitY,
 			float hitZ, int meta, EntityLivingBase placer, EnumHand hand) {
-		EnumFacing enumfacing = placer.getHorizontalFacing();
-
-        try
-        {
-            return super.getStateForPlacement(world, pos, enumfacing, hitX, hitY, hitZ, meta, placer, hand);
-        }
-        catch (IllegalArgumentException var11)
-        {
-            if (!world.isRemote)
-            {
-                
-                if (placer instanceof EntityPlayer)
-                {
-                    placer.sendMessage(new TextComponentTranslation("Invalid damage property. Please pick in [0, 1, 2]", new Object[0]));
-                }
-            }
-
-            return super.getStateForPlacement(world, pos, enumfacing, hitX, hitY, hitZ, meta, placer, hand);
-        }
+		return this.getDefaultState().withProperty(FACING, placer.getHorizontalFacing().getOpposite());
 	}
 	
+
 	
 	
 	
-	protected BlockStateContainer createBlockState() {
-        return new BlockStateContainer(this, new IProperty[] {FACING});
-    }
 	
 	@Override
 	public EnumBlockRenderType getRenderType(IBlockState state) {
@@ -149,6 +167,11 @@ public abstract class BlockStation extends Block {
 	public boolean isOpaqueCube(IBlockState state) {
 		return false;
 	}
+	
+	protected BlockStateContainer createBlockState()
+    {
+        return new BlockStateContainer(this, new IProperty[] {FACING});
+    }
 	
 
 	

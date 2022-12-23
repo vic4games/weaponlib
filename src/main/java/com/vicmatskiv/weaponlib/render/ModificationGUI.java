@@ -25,6 +25,7 @@ import com.vicmatskiv.weaponlib.debug.SysOutController;
 import com.vicmatskiv.weaponlib.render.gui.ColorPalette;
 import com.vicmatskiv.weaponlib.render.gui.GUIRenderHelper;
 import com.vicmatskiv.weaponlib.render.gui.GUIRenderHelper.StringAlignment;
+import com.vicmatskiv.weaponlib.render.modern.GLStateWrapper;
 import com.vicmatskiv.weaponlib.shader.jim.Shader;
 import com.vicmatskiv.weaponlib.shader.jim.ShaderManager;
 
@@ -32,6 +33,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
@@ -599,17 +601,19 @@ public class ModificationGUI {
 				continue;
 			drawModificationTab(scaledresolution, mt, mouseX, mouseY, modContext.getMainHeldWeapon(), modContext);
 		}
-
 		
-
+	
+		
+		
+		
 		GlStateManager.popMatrix();
 		GlStateManager.pushMatrix();
 		GlStateManager.scale(SIDEBAR_SCALE, SIDEBAR_SCALE, SIDEBAR_SCALE);
-
 		GlStateManager.disableTexture2D();
-		
 		GlStateManager.enableBlend();
 		// Draws background rectangles
+	
+		
 		GUIRenderHelper.drawColoredRectangle(20, 20, 115, 175, SIDEBAR_ALPHA, ColorPalette.BLACK);
 		GUIRenderHelper.drawColoredRectangle(140.5, 20, 7.5, 175, SIDEBAR_ALPHA, ColorPalette.BLACK);
 		GUIRenderHelper.drawColoredRectangle(20, 200, 128, 125, SIDEBAR_ALPHA, ColorPalette.BLACK);
@@ -631,9 +635,21 @@ public class ModificationGUI {
 
 		
 		// Render radar chart on screen
+		
 		GlStateManager.disableTexture2D();
 		radarChart.render(84, 275.5, mouseX, mouseY, SIDEBAR_SCALE);
 		GlStateManager.enableTexture2D();
+		
+		
+		/*
+		GLStateWrapper.run(() -> {
+			GlStateManager.disableTexture2D();
+		}, () -> {
+			GlStateManager.enableTexture2D();
+		}, () -> {
+			radarChart.render(84, 275.5, mouseX, mouseY, SIDEBAR_SCALE);
+		});
+		*/
 		
 		
 		// Write titles in
@@ -770,9 +786,10 @@ public class ModificationGUI {
 				if (!modcontext.getAttachmentAspect().isCompatibleAttachment((ItemAttachment<Weapon>) compat.getAttachment(), pwi))
 					continue;
 
+				modcontext.getAttachmentAspect();
 				// We do want to display if it is a potential attachment
 				// but there are conditions to be met
-				if (!modcontext.getAttachmentAspect().hasRequiredAttachments((ItemAttachment<Weapon>) compat.getAttachment(), pwi)) {
+				if (!WeaponAttachmentAspect.hasRequiredAttachments((ItemAttachment<Weapon>) compat.getAttachment(), pwi)) {
 					flaggedAttachment.setRequiredParts(modcontext.getAttachmentAspect().getRequiredParts((ItemAttachment<Weapon>) compat.getAttachment(), pwi));
 				}
 				
@@ -800,7 +817,8 @@ public class ModificationGUI {
 		GlStateManager.pushMatrix();
 		GlStateManager.translate(x, y, 0.0);
 		GlStateManager.scale(scale, scale, scale);
-
+		
+		
 		// Set color & slight transparency
 		GlStateManager.enableBlend();
 		clearRGB();

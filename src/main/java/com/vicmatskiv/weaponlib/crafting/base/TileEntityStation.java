@@ -67,7 +67,7 @@ public class TileEntityStation extends TileEntity implements ITickable, ISidedIn
 
 	
 	
-	private int side;
+	private EnumFacing facing = null;
 	
 	public TileEntityStation() {
 		
@@ -79,12 +79,16 @@ public class TileEntityStation extends TileEntity implements ITickable, ISidedIn
 		return craftingTimer / (double) craftingDuration;
 	}
 	
-	public void setSide(int side) {
-		this.side = side;
-	}
+
 	
-	public int getSide() {
-		return side;
+	public EnumFacing getFacing() {
+		if(facing == null) {
+			facing = getWorld().getBlockState(getPos()).getValue(BlockStation.FACING);
+		}
+		
+		
+		
+		return facing;
 	}
 	
 

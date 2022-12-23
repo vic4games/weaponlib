@@ -168,7 +168,7 @@ public class ClientValueRepo {
 			jumpingSpring.velocity += MC.player.motionY * JUMP_VELOCITY_MULTIPLIER;
 		if (player.moveForward < 0) {
 			strafe.add(player.moveForward * FORWARD_MOVEMENT_DIVISOR);
-		} else {
+		} else if(!player.isElytraFlying() && !player.capabilities.isFlying) {
 			forward.add(player.moveForward * FORWARD_MOVEMENT_DIVISOR);
 		}
 		strafe.add(player.moveStrafing * STRAFE_MOVEMENT_DIVISOR);
