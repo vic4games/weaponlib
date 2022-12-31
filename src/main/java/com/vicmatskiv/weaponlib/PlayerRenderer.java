@@ -19,6 +19,7 @@ import com.vicmatskiv.weaponlib.animation.MultipartTransition;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleEnumHandSide;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleExtraEntityFlags;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTransformType;
+import com.vicmatskiv.weaponlib.config.novel.ModernConfigManager;
 
 import net.minecraft.client.model.ModelBiped;
 import net.minecraft.entity.Entity;
@@ -167,8 +168,9 @@ public class PlayerRenderer {
             renderingStartTimestamp = System.currentTimeMillis();
         }
         currentPositioner.remove();
-        if(true) { //(newFlags & CompatibleExtraEntityFlags.PRONING) != 0) {
-            renderAnimatedModel(modelPlayer, player, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
+        if(ModernConfigManager.enableThirdPersonAnimations) { //(newFlags & CompatibleExtraEntityFlags.PRONING) != 0) {
+        	//System.out.println("hi");
+        	renderAnimatedModel(modelPlayer, player, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
         } else {
             //currentPositioner.remove();
             renderBipedModel(modelPlayer, player, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);

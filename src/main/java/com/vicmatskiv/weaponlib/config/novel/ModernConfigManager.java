@@ -39,6 +39,7 @@ public class ModernConfigManager {
 	public static final String CATEGORY_RENDERING_SCREENSHADERS = "rendering.screenshaders";
 	public static final String CATEGORY_GAMEPLAY = "gameplay";
 	
+	
 	private static ArrayList<String> categories = new ArrayList<>();
 	
 	
@@ -101,7 +102,14 @@ public class ModernConfigManager {
 	
 	@ConfigSync(category = CATEGORY_GAMEPLAY, comment = "Enables the black background on the ammo counter.")
 	public static boolean enableAmmoCounterBackground = true;
+	
+	@ConfigSync(category = CATEGORY_RENDERING, comment = "Turns on the custom render for third person, may improve compat.")
+	public static boolean enableThirdPersonAnimations = true;
 
+
+	
+	
+	
 	
 	
 	
@@ -115,6 +123,8 @@ public class ModernConfigManager {
 	
 	static {
 		
+		
+		
 		// Register all categories
 		
 	}
@@ -123,7 +133,6 @@ public class ModernConfigManager {
 		
 		// Try to set field
 		try {
-			
 			// Instance is 'null' because all of these
 			// fields are static.
 			f.set(null, value);

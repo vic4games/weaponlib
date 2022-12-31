@@ -58,7 +58,7 @@ public abstract class CompatibleServerEventHandler {
 	public final void onEntityJoinedEvent(EntityJoinWorldEvent evt) {
 		// We are only interested in the player. We also only want to deal with this if the server and the client
 		// are operating off of DIFFERENT file systems (hence the dedicated server check!).
-		if(!(evt.getEntity() instanceof EntityPlayer) || !FMLCommonHandler.instance().getMinecraftServerInstance().isDedicatedServer()) return;
+		if(!(evt.getEntity() instanceof EntityPlayer) || FMLCommonHandler.instance().getMinecraftServerInstance() == null || !FMLCommonHandler.instance().getMinecraftServerInstance().isDedicatedServer()) return;
 		EntityPlayer player = (EntityPlayer) evt.getEntity();
 		
 		// Create a hash stream and make sure it's not null (not errored out)
