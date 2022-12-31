@@ -152,6 +152,8 @@ public class WeaponSpawnEntity extends EntityProjectile {
 	    }
 
 	    
+	    if(true) return;
+	    
 	    
 	    
 	    if(weapon == null) {

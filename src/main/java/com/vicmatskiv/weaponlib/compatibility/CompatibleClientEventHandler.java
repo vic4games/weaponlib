@@ -64,6 +64,7 @@ import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingJumpEvent;
 import net.minecraftforge.event.entity.living.LivingEquipmentChangeEvent;
 import net.minecraftforge.event.entity.living.LivingFallEvent;
+import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -129,6 +130,11 @@ public abstract class CompatibleClientEventHandler {
 
 	}
 	
+	
+	@SubscribeEvent
+	public void livingHurtEvent(LivingHurtEvent event) {
+		System.out.println("chinga su madre " + event.getSource().getImmediateSource() + " | " + event.getSource().getTrueSource());
+	}
 	
 
 	@SubscribeEvent

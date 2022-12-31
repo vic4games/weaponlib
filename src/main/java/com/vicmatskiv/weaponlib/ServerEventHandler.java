@@ -298,7 +298,7 @@ public class ServerEventHandler extends CompatibleServerEventHandler {
         		Vec3d eyes = e.getEntityLiving().getPositionEyes(1.0f);
             	if(hit.hitVec.distanceTo(eyes) < 0.6f) {
             		
-            		//System.out.println("Current headshot multiplier is " + BalancePackManager.getHeadshotMultiplier());
+            		//tSystem.out.println("Current headshot multiplier is " + BalancePackManager.getHeadshotMultiplier());
             		e.setAmount((float) (e.getAmount()*BalancePackManager.getHeadshotMultiplier()));
             		
             		if(e.getDamageSource().getTrueSource() instanceof EntityPlayer) {

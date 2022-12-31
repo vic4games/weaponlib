@@ -161,30 +161,11 @@ public class EntityGrenade extends AbstractEntityGrenade {
         
        
        
-        try {
-        	
-        	System.out.println("HOLAA");
-        	Explosion.createServerSideExplosion(modContext, compatibility.world(this), this,
-                    this.posX, this.posY, this.posZ, explosionStrength, false, true, destroyBlocks, 1f, 1f, 1.5f, 1f, null, null, 
-                    modContext.getExplosionSound());
-      
-        	for(Field m : Explosion.class.getFields()) {
-        		System.out.println(m.getName());
-        	}
-        } catch (SecurityException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (NoClassDefFoundError e) {
-			e.printStackTrace();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-        
-        /*
         Explosion.createServerSideExplosion(modContext, compatibility.world(this), this,
                 this.posX, this.posY, this.posZ, explosionStrength, false, true, destroyBlocks, 1f, 1f, 1.5f, 1f, null, null, 
                 modContext.getExplosionSound());
-        */
+        
+ 
         
         
         

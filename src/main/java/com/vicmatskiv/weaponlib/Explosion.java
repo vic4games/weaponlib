@@ -53,11 +53,8 @@ public class Explosion {
     private final List<CompatibleBlockPos> affectedBlockPositions;
     private final Map<EntityPlayer, CompatibleVec3> playerKnockbackMap;
     private final CompatibleVec3 position;
-    private final float explosionParticleAgeCoefficient;
     private final float smokeParticleAgeCoefficient;
-    private final float explosionParticleScaleCoefficient;
     private final float smokeParticleScaleCoefficient;
-    private String explosionParticleTextureName;
     private String smokeParticleTextureName;
     private CompatibleSound explosionSound;
 
@@ -73,9 +70,11 @@ public class Explosion {
     	
     	
     	
-        Float damageCoefficient = modContext.getConfigurationManager().getExplosions().getDamage();
-      //  explosionStrength *= damageCoefficient;
+        modContext.getConfigurationManager().getExplosions().getDamage();
 
+        
+      //  System.out.println("Explosion Entity: " + entity);
+        
         Explosion explosion = new Explosion(modContext, world, entity, posX, posY, posZ, explosionStrength, isFlaming, 
                 isSmoking, particleAgeCoefficient, smokeParticleAgeCoefficient, explosionParticleScaleCoefficient, smokeParticleScaleCoefficient,
                 explosionParticleTextureName, smokeParticleTextureName, explosionSound);
@@ -87,15 +86,22 @@ public class Explosion {
        net.minecraft.world.Explosion explo = new net.minecraft.world.Explosion(world, entity, posX, posY, posZ, explosionStrength, false, isDestroyingBlocks);
        explo.doExplosionA();
        */
-        world.createExplosion(entity, posX, posY + 0.5, posZ, explosionStrength, isSmoking);
+        
+       
+      // System.out.println("Hola cabron " + entity);
+        //world.createExplosion(entity, posX, posY + 0.5, posZ, explosionStrength, isSmoking);
         
         
-        if(true) return;
+        //if(true) return;
         
        // isDestroyingBlocks = true;
+        
+      //  System.out.println("gamer: " + explosion.getExplosivePlacedBy());
         explosion.doExplosionA();
-        explosion.doExplosionB(false, isDestroyingBlocks);
+        explosion.doExplosionB(true, isDestroyingBlocks);
+       
 
+        /*
         if (!isSmoking) {
             explosion.clearAffectedBlockPositions();
         }
@@ -113,7 +119,7 @@ public class Explosion {
                         modContext.getRegisteredTextureId(smokeParticleTextureName)),
                         (EntityPlayerMP) player);
             }
-        }
+        }*/
     }
 
     // @SideOnly(Side.CLIENT)
@@ -152,11 +158,8 @@ public class Explosion {
         this.isFlaming = flaming;
         this.isSmoking = smoking;
         this.position = new CompatibleVec3(explosionX, explosionY, explosionZ);
-        this.explosionParticleAgeCoefficient = particleAgeCoefficient;
         this.smokeParticleAgeCoefficient = smokeParticleAgeCoefficient;
-        this.explosionParticleScaleCoefficient = explosionParticleScaleCoefficient;
         this.smokeParticleScaleCoefficient = smokeParticleScaleCoefficient;
-        this.explosionParticleTextureName = explosionParticleTextureName;
         this.smokeParticleTextureName = smokeParticleTextureName;
         this.explosionSound = explosionSound;
     }
@@ -188,6 +191,8 @@ public class Explosion {
      * Does the first part of the explosion (destroy blocks)
      */
     public void doExplosionA() {
+    	
+    	
         Set<CompatibleBlockPos> set = Sets.<CompatibleBlockPos>newHashSet();
 
         for (int j = 0; j < 16; ++j) {
@@ -272,8 +277,12 @@ public class Explosion {
                                 compatibility.getBoundingBox(entity), 
                                 (block, blockMetadata) -> canCollideWithBlock(block, blockMetadata));
                         double d10 = (1.0D - d12) * d14;
-                        entity.attackEntityFrom(compatibility.getDamageSource(this),
-                                (float) ((int) ((d10 * d10 + d10) / 2.0D * 7.0D * (double) f3 + 1.0D)));
+                        
+                        //System.out.println();
+                        
+                        
+                      //  entity.attackEntityFrom(compatibility.getDamageSource(this),
+                       //        (float) ((int) ((d10 * d10 + d10) / 2.0D * 7.0D * (double) f3 + 1.0D)));
                         double d11 = 1.0D;
 
                         if (entity instanceof EntityLivingBase) {
@@ -342,6 +351,7 @@ public class Explosion {
                         d5 = d5 * d7;
                         
                         
+                        /*
                         if(blockState.getBlockState().getBlock() != Blocks.AIR) {
                         	Vec3d posVect = new Vec3d((d0 + this.explosionX) / 2.0D,
                                     (d1 + this.explosionY) / 2.0D,
@@ -352,7 +362,7 @@ public class Explosion {
                             
                             for(int n = 0; n < 5; ++n) {
                             	double spread = 0.1;
-                            	Vec3d spreadVector = new Vec3d(RandomUtil.getRandomWithNegatives(spread), RandomUtil.getRandomDoubleInclusive(0.0, spread), RandomUtil.getRandomWithNegatives(spread)).add(directionVector);
+                            	new Vec3d(RandomUtil.getRandomWithNegatives(spread), RandomUtil.getRandomDoubleInclusive(0.0, spread), RandomUtil.getRandomWithNegatives(spread)).add(directionVector);
                             	
                             	//CompatibleDiggingParticle cdp = new CompatibleDiggingParticle(Minecraft.getMinecraft().world, posVect.x, posVect.y, posVect.z,
                                  //       spreadVector.x, spreadVector.y, spreadVector.z, blockState.getBlockState());
@@ -362,7 +372,7 @@ public class Explosion {
                             
                         
                         }
-
+						*/
                         
                         
                         /*
