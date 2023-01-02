@@ -103,8 +103,8 @@ public class ModernConfigManager {
 	@ConfigSync(category = CATEGORY_GAMEPLAY, comment = "Enables the black background on the ammo counter.")
 	public static boolean enableAmmoCounterBackground = true;
 	
-	@ConfigSync(category = CATEGORY_RENDERING, comment = "Turns on the custom render for third person, may improve compat.")
-	public static boolean enableThirdPersonAnimations = true;
+	//@ConfigSync(category = CATEGORY_RENDERING, comment = "Turns on the custom render for third person, may improve compat.")
+	//public static boolean enableThirdPersonAnimations = true;
 
 
 	

@@ -19,7 +19,8 @@ import net.minecraftforge.common.ISpecialArmor;
 
 public class ItemVest extends CompatibleItem implements ISpecialArmor, ModelSource {
         
-    public static class Builder {
+    
+	public static class Builder {
                 
         private String name;
         private CreativeTabs tab;
@@ -190,7 +191,11 @@ public class ItemVest extends CompatibleItem implements ISpecialArmor, ModelSour
             
             if(tab != null) {
                 item.setCreativeTab(tab);
+                
+                
             }
+            
+            item.customEquippedPositioning = customEquippedPositioning;
             
             modContext.registerRenderableItem(name, item, compatibility.isClientSide() ? RendererRegistrationHelper.registerRenderer(this, modContext) : null);
             
@@ -205,6 +210,14 @@ public class ItemVest extends CompatibleItem implements ISpecialArmor, ModelSour
     
     private int durability;
     private double percentDamageBlocked;
+    public BiConsumer<EntityPlayer, ItemStack> customEquippedPositioning;
+
+    
+    public BiConsumer<EntityPlayer, ItemStack> getCustomEquippedPositioning() {
+    	return customEquippedPositioning;
+    }
+
+    
     
     public ItemVest(ModContext context, double percentDamageBlocked, int durability) {
         this.percentDamageBlocked = percentDamageBlocked;

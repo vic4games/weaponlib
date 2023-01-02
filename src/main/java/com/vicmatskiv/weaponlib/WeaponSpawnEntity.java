@@ -13,25 +13,19 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleTargetPoint;
 import com.vicmatskiv.weaponlib.config.Projectiles;
 import com.vicmatskiv.weaponlib.jim.util.HitUtil;
 import com.vicmatskiv.weaponlib.network.packets.BloodPacketClient;
-import com.vicmatskiv.weaponlib.particle.BetterMuzzleSmoke;
-import com.vicmatskiv.weaponlib.particle.SpawnParticleMessage;
-import com.vicmatskiv.weaponlib.render.bgl.PostProcessPipeline;
-
 import io.netty.buffer.ByteBuf;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
-import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.RayTraceResult.Type;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 
 public class WeaponSpawnEntity extends EntityProjectile {
 
@@ -152,7 +146,7 @@ public class WeaponSpawnEntity extends EntityProjectile {
 	    }
 
 	    
-	    if(true) return;
+	  
 	    
 	    
 	    
@@ -160,9 +154,10 @@ public class WeaponSpawnEntity extends EntityProjectile {
 	        return;
 	    }
 
+	 
+	    
 	    if(explosionRadius > 0) {
-	    	
-	    	System.out.println("yo");
+
 	    	//PostProcessPipeline.createDistortionPoint((float) position.getHitVec().getXCoord(),(float)  position.getHitVec().getYCoord(), (float) position.getHitVec().getZCoord(), 2f, 3000);
 	        Explosion.createServerSideExplosion(weapon.getModContext(), compatibility.world(this), this,
 	                position.getHitVec().getXCoord(), position.getHitVec().getYCoord(), position.getHitVec().getZCoord(),

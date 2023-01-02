@@ -192,6 +192,8 @@ public class ItemStorage extends CompatibleItem implements ModelSource {
                 item.setCreativeTab(tab);
             }
             
+            item.customEquippedPositioning = customEquippedPositioning;
+            
             modContext.registerRenderableItem(name, item, compatibility.isClientSide() ? RendererRegistrationHelper.registerRenderer(this, modContext) : null);
             
             return item;
@@ -204,6 +206,13 @@ public class ItemStorage extends CompatibleItem implements ModelSource {
     private ResourceLocation guiTextureLocation;
     private int guiTextureWidth;
     private Predicate<Item> validItemPredicate;
+    
+    private BiConsumer<EntityPlayer, ItemStack> customEquippedPositioning;
+    
+    
+    public BiConsumer<EntityPlayer, ItemStack> getCustomEquippedPositioning() {
+    	return customEquippedPositioning;
+    }
     
     public ItemStorage(ModContext context, int size,
             Predicate<Item> validItemPredicate,

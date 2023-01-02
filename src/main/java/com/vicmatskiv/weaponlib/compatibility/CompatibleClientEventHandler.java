@@ -133,7 +133,7 @@ public abstract class CompatibleClientEventHandler {
 	
 	@SubscribeEvent
 	public void livingHurtEvent(LivingHurtEvent event) {
-		System.out.println("chinga su madre " + event.getSource().getImmediateSource() + " | " + event.getSource().getTrueSource());
+		
 	}
 	
 

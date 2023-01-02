@@ -167,8 +167,10 @@ public class PlayerRenderer {
         if(newFlags != currentFlags) {
             renderingStartTimestamp = System.currentTimeMillis();
         }
+        
+    
         currentPositioner.remove();
-        if(ModernConfigManager.enableThirdPersonAnimations) { //(newFlags & CompatibleExtraEntityFlags.PRONING) != 0) {
+        if(false) { //(newFlags & CompatibleExtraEntityFlags.PRONING) != 0) {
         	//System.out.println("hi");
         	renderAnimatedModel(modelPlayer, player, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
         } else {
@@ -475,6 +477,8 @@ public class PlayerRenderer {
     public boolean renderArmor(ModelBiped modelPlayer, EntityPlayer player, float limbSwing, float limbSwingAmount, 
             float ageInTicks, float netHeadYaw, float headPitch, float scale) {
         
+    	
+    	
         PositionerDescriptor descriptor = currentPositioner.get();
         
         if(descriptor != null) {
