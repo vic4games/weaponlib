@@ -4,6 +4,7 @@ import java.util.function.BiConsumer;
 
 import com.vicmatskiv.weaponlib.ItemStorage;
 import com.vicmatskiv.weaponlib.ItemVest;
+import com.vicmatskiv.weaponlib.KeyBindings;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleCustomPlayerInventoryCapability;
 import com.vicmatskiv.weaponlib.inventory.CustomPlayerInventory;
 
@@ -49,6 +50,7 @@ public class CustomArmorLayer implements LayerRenderer<EntityPlayer> {
         	ModelBase model = (ModelBase) storage.getTexturedModels().get(0).getU();
 			
         	ResourceLocation resource = new ResourceLocation("mw:textures/models/" + storage.getTexturedModels().get(0).getV());
+        	
         	
         	doEquipmentRender(model, player, backpackStack, storage.getCustomEquippedPositioning(), resource, limbSwing, limbSwingAmount, partialTicks, ageInTicks, netHeadYaw, headPitch, scale);
         }

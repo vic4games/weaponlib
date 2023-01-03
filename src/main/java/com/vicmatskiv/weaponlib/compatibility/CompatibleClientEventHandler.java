@@ -126,6 +126,7 @@ public abstract class CompatibleClientEventHandler {
 
 		double fA = (vehicle.getSolver().getSyntheticAcceleration() / 55 + (vehicle.getRealSpeed() / 120)) * 0.2;
 
+		
 		e.setNewfov((float) (e.getFov() + fA));
 
 	}

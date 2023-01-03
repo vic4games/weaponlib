@@ -359,12 +359,13 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
             }
         }
         
-        else if(KeyBindings.proningSwitchKey.isPressed()) {
+       
+        /*else if(KeyBindings.proningSwitchKey.isPressed()) {
         	//EntityPlayer player = Minecraft.getMinecraft().player;
         	
         	
             modContext.getChannel().getChannel().sendToServer(new EntityControlMessage(player, 
                     CompatibleExtraEntityFlags.PRONING | CompatibleExtraEntityFlags.FLIP, 0));
-        }
+        }*/
     }
 }

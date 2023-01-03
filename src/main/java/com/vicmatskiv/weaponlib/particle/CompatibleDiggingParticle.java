@@ -22,6 +22,7 @@ import net.minecraft.client.particle.IParticleFactory;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleDigging;
 import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
@@ -92,6 +93,8 @@ public class CompatibleDiggingParticle extends Particle {
 	        
 	     
 	        this.particleGravity = 1.0f;
+	        
+	      
 	        this.particleRed = 0.6F;
 	        this.particleGreen = 0.6F;
 	        this.particleBlue = 0.6F;
@@ -167,7 +170,8 @@ public class CompatibleDiggingParticle extends Particle {
 		} else {
 			this.axisMomentum *= 0.9999f;
 		}
-
+		
+		
 		rotationMatrix.rotate(this.axisMomentum*0.01f, new Vector3f(currentAxis[0], currentAxis[1], currentAxis[2]));
 		
 	}
@@ -184,10 +188,11 @@ public class CompatibleDiggingParticle extends Particle {
 		float f4 = 0.05F * this.particleScale;
 
 		if (this.particleTexture != null) {
-			f = this.particleTexture.getInterpolatedU((double) (this.particleTextureJitterX / 4.0F * 16.0F));
-			f1 = this.particleTexture.getInterpolatedU((double) ((this.particleTextureJitterX + 1.0F) / 4.0F * 16.0F));
-			f2 = this.particleTexture.getInterpolatedV((double) (this.particleTextureJitterY / 4.0F * 16.0F));
-			f3 = this.particleTexture.getInterpolatedV((double) ((this.particleTextureJitterY + 1.0F) / 4.0F * 16.0F));
+			float pixelSize = 4.0F;
+			f = this.particleTexture.getInterpolatedU((double) (this.particleTextureJitterX / pixelSize * 16.0F));
+			f1 = this.particleTexture.getInterpolatedU((double) ((this.particleTextureJitterX + 1.0F) / pixelSize * 16.0F));
+			f2 = this.particleTexture.getInterpolatedV((double) (this.particleTextureJitterY / pixelSize * 16.0F));
+			f3 = this.particleTexture.getInterpolatedV((double) ((this.particleTextureJitterY + 1.0F) / pixelSize * 16.0F));
 		}
 
 	
@@ -200,13 +205,15 @@ public class CompatibleDiggingParticle extends Particle {
 		float f7 = (float) (this.prevPosZ + (this.posZ - this.prevPosZ) * (double) partialTicks - interpPosZ);
 		
 		int i = this.getBrightnessForRender(partialTicks);
+		
+		
 		int j = i >> 16 & 65535;
 		int k = i & 65535;
 		
+	
 		float size = this.particleScale;
 		
 		
-
 		
 		
 		
@@ -235,6 +242,7 @@ public class CompatibleDiggingParticle extends Particle {
 			float[] vertex = ModelRenderTool.transformViaMatrix(CUBE_VERTICES[n]*size, CUBE_VERTICES[n+1]*size, CUBE_VERTICES[n+2]*size, rotationMatrix);
 		
 			
+			
 			// Add vertex to buffer
 			buffer.pos(f5 + vertex[0], f6 + vertex[1], f7 + vertex[2]).tex(tx, ty).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
 			
@@ -242,63 +250,7 @@ public class CompatibleDiggingParticle extends Particle {
 			c += 1;
 			if(c == 4) c = 0;
 		}
-		
-		
-		
-		/*
-		// Left & right faces
-				buffer.pos(f5 + size, f6 - size, f7 - size).tex(f, f2).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
-				buffer.pos(f5 + size, f6 + size, f7 - size).tex(f1, f2).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
-				buffer.pos(f5 + size, f6 + size, f7 + size).tex(f1, f3).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
-				buffer.pos(f5 + size, f6 - size, f7 + size).tex(f, f3).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
-				
-				buffer.pos(f5 - size, f6 - size, f7 - size).tex(f, f2).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
-				buffer.pos(f5 - size, f6 + size, f7 - size).tex(f1, f2).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
-				buffer.pos(f5 - size, f6 + size, f7 + size).tex(f1, f3).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
-				buffer.pos(f5 - size, f6 - size, f7 + size).tex(f, f3).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
-				
-				*/
-				/*
-				// Up & down faces
-				buffer.pos(f5 + -size, f6 + size, f7 - size).tex(f, f2).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
-				buffer.pos(f5 + size, f6 + size, f7 - size).tex(f1, f2).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
-				buffer.pos(f5 + size, f6 + size, f7 + size).tex(f1, f3).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
-				buffer.pos(f5 + -size, f6 + size, f7 + size).tex(f, f3).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
-				
-				buffer.pos(f5 + -size, f6 - size, f7 - size).tex(f, f2).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
-				buffer.pos(f5 + size, f6 - size, f7 - size).tex(f1, f2).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
-				buffer.pos(f5 + size, f6 - size, f7 + size).tex(f1, f3).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
-				buffer.pos(f5 + -size, f6 - size, f7 + size).tex(f, f3).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
-				*/
-		
-				/*
-				// Forward & backward faceaz
-				buffer.pos(f5 + -size, f6 + -size, f7 + size).tex(f, f2).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
-				buffer.pos(f5 + size, f6 + -size, f7 + size).tex(f1, f2).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
-				buffer.pos(f5 + size, f6 + size, f7 + size).tex(f1, f3).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
-				buffer.pos(f5 + -size, f6 + size, f7 + size).tex(f, f3).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
-				
-				buffer.pos(f5 + -size, f6 + -size, f7 - size).tex(f, f2).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
-				buffer.pos(f5 + size, f6 + -size, f7 - size).tex(f1, f2).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
-				buffer.pos(f5 + size, f6 + size, f7 - size).tex(f1, f3).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
-				buffer.pos(f5 + -size, f6 + size, f7 - size).tex(f, f3).color(1f, 1f, 1f, 1f).lightmap(j, k).endVertex();
-				*/
-				
-		
-		/*
-		buffer.pos((double) (f5 - rotationX * f4 - rotationXY * f4), (double) (f6 - rotationZ * f4),
-				(double) (f7 - rotationYZ * f4 - rotationXZ * f4)).tex((double) f, (double) f3)
-				.color(this.particleRed, this.particleGreen, this.particleBlue, 1.0F).lightmap(j, k).endVertex();
-		buffer.pos((double) (f5 - rotationX * f4 + rotationXY * f4), (double) (f6 + rotationZ * f4),
-				(double) (f7 - rotationYZ * f4 + rotationXZ * f4)).tex((double) f, (double) f2)
-				.color(this.particleRed, this.particleGreen, this.particleBlue, 1.0F).lightmap(j, k).endVertex();
-		buffer.pos((double) (f5 + rotationX * f4 + rotationXY * f4), (double) (f6 + rotationZ * f4),
-				(double) (f7 + rotationYZ * f4 + rotationXZ * f4)).tex((double) f1, (double) f2)
-				.color(this.particleRed, this.particleGreen, this.particleBlue, 1.0F).lightmap(j, k).endVertex();
-		buffer.pos((double) (f5 + rotationX * f4 - rotationXY * f4), (double) (f6 - rotationZ * f4),
-				(double) (f7 + rotationYZ * f4 - rotationXZ * f4)).tex((double) f1, (double) f3)
-				.color(this.particleRed, this.particleGreen, this.particleBlue, 1.0F).lightmap(j, k).endVertex();
-		*/
+	
 	}
 
 	public int getBrightnessForRender(float p_189214_1_) {
@@ -306,9 +258,9 @@ public class CompatibleDiggingParticle extends Particle {
 		int j = 0;
 
 		if (this.world.isBlockLoaded(this.sourcePos)) {
-			j = this.world.getCombinedLight(this.sourcePos, 0);
+			j = this.world.getCombinedLight(new BlockPos(this.posX, this.posY, this.posZ), 0);
 		}
-
+	
 		return i == 0 ? j : i;
 	}
 
