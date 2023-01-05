@@ -72,6 +72,7 @@ public class CustomPlayerInventoryGuiContainer extends CompatibleGuiContainer {
        super.drawScreen(mouseX, mouseY, f);
         xSize_lo = mouseX;
         ySize_lo = mouseY;
+        this.renderHoveredToolTip(mouseX, mouseY);
     }
 
     /**

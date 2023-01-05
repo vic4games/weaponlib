@@ -48,7 +48,7 @@ public class CustomArmorLayer implements LayerRenderer<EntityPlayer> {
         	ItemStack backpackStack = capability.getStackInSlot(0); 
         	
         	ItemStorage storage = (ItemStorage) backpackStack.getItem();
-        	ModelBiped model = (ModelBiped) storage.getTexturedModels().get(0).getU();
+        	ModelBase model = (ModelBase) storage.getTexturedModels().get(0).getU();
 			
         	ResourceLocation resource = new ResourceLocation("mw:textures/models/" + storage.getTexturedModels().get(0).getV());
         	
@@ -62,7 +62,7 @@ public class CustomArmorLayer implements LayerRenderer<EntityPlayer> {
         	
         	
         	ItemVest storage = (ItemVest) vestStack.getItem();
-        	ModelBiped model = (ModelBiped) storage.getTexturedModels().get(0).getU();	
+        	ModelBase model = (ModelBase) storage.getTexturedModels().get(0).getU();	
 			
         	ResourceLocation resource = new ResourceLocation("mw:textures/models/" + storage.getTexturedModels().get(0).getV());
         	
