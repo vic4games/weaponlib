@@ -10,6 +10,7 @@ import com.vicmatskiv.weaponlib.inventory.CustomPlayerInventory;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
+import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.entity.RenderLivingBase;
 import net.minecraft.client.renderer.entity.layers.LayerRenderer;
@@ -47,7 +48,7 @@ public class CustomArmorLayer implements LayerRenderer<EntityPlayer> {
         	ItemStack backpackStack = capability.getStackInSlot(0); 
         	
         	ItemStorage storage = (ItemStorage) backpackStack.getItem();
-        	ModelBase model = (ModelBase) storage.getTexturedModels().get(0).getU();
+        	ModelBiped model = (ModelBiped) storage.getTexturedModels().get(0).getU();
 			
         	ResourceLocation resource = new ResourceLocation("mw:textures/models/" + storage.getTexturedModels().get(0).getV());
         	
@@ -58,8 +59,10 @@ public class CustomArmorLayer implements LayerRenderer<EntityPlayer> {
         if(capability.getStackInSlot(1) != null && !capability.getStackInSlot(1).isEmpty()) {   
         	ItemStack vestStack = capability.getStackInSlot(1); 
         	
+        	
+        	
         	ItemVest storage = (ItemVest) vestStack.getItem();
-        	ModelBase model = (ModelBase) storage.getTexturedModels().get(0).getU();	
+        	ModelBiped model = (ModelBiped) storage.getTexturedModels().get(0).getU();	
 			
         	ResourceLocation resource = new ResourceLocation("mw:textures/models/" + storage.getTexturedModels().get(0).getV());
         	
@@ -81,6 +84,9 @@ public class CustomArmorLayer implements LayerRenderer<EntityPlayer> {
 
     	// Set the model attributes & render.
     	model.setModelAttributes(this.renderer.getMainModel());
+    	
+    	model.setRotationAngles(limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale, player);
+    	
     	model.setLivingAnimations(player, limbSwing, limbSwingAmount, partialTicks);
     	model.render(player, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
     	
