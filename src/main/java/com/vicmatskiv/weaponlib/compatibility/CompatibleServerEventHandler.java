@@ -3,6 +3,7 @@ package com.vicmatskiv.weaponlib.compatibility;
 
 import java.io.ByteArrayOutputStream;
 import com.vicmatskiv.weaponlib.ModContext;
+import com.vicmatskiv.weaponlib.ServerEventHandler;
 import com.vicmatskiv.weaponlib.config.BalancePackManager;
 import com.vicmatskiv.weaponlib.crafting.CraftingFileManager;
 import com.vicmatskiv.weaponlib.jim.util.ByteArrayUtils;
@@ -60,6 +61,7 @@ public abstract class CompatibleServerEventHandler {
 		// are operating off of DIFFERENT file systems (hence the dedicated server check!).
 		if(!(evt.getEntity() instanceof EntityPlayer) || FMLCommonHandler.instance().getMinecraftServerInstance() == null || !FMLCommonHandler.instance().getMinecraftServerInstance().isDedicatedServer()) return;
 		EntityPlayer player = (EntityPlayer) evt.getEntity();
+		
 		
 		// Create a hash stream and make sure it's not null (not errored out)
 		ByteArrayOutputStream baos = ByteArrayUtils.createByteArrayOutputStreamFromBytes(CraftingFileManager.getInstance().getCurrentFileHash());

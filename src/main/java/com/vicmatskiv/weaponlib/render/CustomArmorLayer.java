@@ -82,6 +82,8 @@ public class CustomArmorLayer implements LayerRenderer<EntityPlayer> {
     	// Apply positioning
     	positioning.accept(player, itemStack);
 
+    	//GlStateManager.scale(0.8, 0.8, 0.8);
+    	
     	// Set the model attributes & render.
     	model.setModelAttributes(this.renderer.getMainModel());
     	

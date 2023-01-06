@@ -275,8 +275,10 @@ public class ItemVest extends CompatibleItem implements ISpecialArmor, ModelSour
     @Override
     public ArmorProperties getProperties(EntityLivingBase player, ItemStack vestStack, DamageSource source, double damage,
             int slot) {
-    	System.out.println("% blocked = " + (this.percentDamageBlocked*100));
-        return new ArmorProperties(0, this.percentDamageBlocked, durability);
+    	//System.out.println("% blocked = " + (this.percentDamageBlocked*100));
+    	//this.percentDamageBlocked = 1.0;
+    	//System.out.println(new ArmorProperties(0, this.percentDamageBlocked, durability).applyArmor(entity, inventory, source, damage));
+        return new ArmorProperties(0, this.percentDamageBlocked, 2000);
     }
 
     @Override
@@ -288,8 +290,8 @@ public class ItemVest extends CompatibleItem implements ISpecialArmor, ModelSour
     @Override
     public void damageArmor(EntityLivingBase entity, ItemStack stack, DamageSource source, int damage, int slot) {
       
-    	double absorb = damage * percentDamageBlocked;
-        int itemDamage = (int)(absorb / 25.0 < 1 ? 1 : absorb / 25.0);
-        stack.damageItem(itemDamage, entity);
+    	//double absorb = damage * percentDamageBlocked;
+        //int itemDamage = (int)(absorb / 25.0 < 1 ? 1 : absorb / 25.0);
+        //stack.damageItem(itemDamage, entity);
     }
 }
