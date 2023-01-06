@@ -8,14 +8,18 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleItem;
+import com.vicmatskiv.weaponlib.jim.util.VMWHooksHandler;
 
 import net.minecraft.client.model.ModelBase;
+import net.minecraft.client.model.ModelBiped;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.DamageSource;
 import net.minecraftforge.common.ISpecialArmor;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class ItemVest extends CompatibleItem implements ISpecialArmor, ModelSource {
         
@@ -66,6 +70,22 @@ public class ItemVest extends CompatibleItem implements ISpecialArmor, ModelSour
         public Builder withTab(CreativeTabs tab) {
             this.tab = tab;
             return this;
+        }
+        
+        
+        public Builder withProperModel(String elModel) {
+        	
+        	if(!VMWHooksHandler.isOnServer()) {
+        		
+        		try {
+					this.model = (ModelBase) Class.forName(elModel).newInstance();
+				} catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+					System.err.println("Loading for model " + elModel + " has failed. Please check and try again.");
+				}
+        	}
+        	
+        	
+        	return this;
         }
         
         public Builder withModel(ModelBase model) {
