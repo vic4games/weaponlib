@@ -314,7 +314,8 @@ public class StationPacket implements CompatibleMessage {
 			            		
 		            		}
 		            		
-		            		station.markDirty();
+		            		station.sendUpdate();
+		            		//station.markDirty();
 		            	
 		            		modContext.getChannel().getChannel().sendToAllAround(new StationClientPacket(station.getWorld(), m.teLocation), new TargetPoint(0, m.teLocation.getX(), m.teLocation.getY(), m.teLocation.getZ(), 20));
 		            		

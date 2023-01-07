@@ -171,6 +171,8 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 		
 //if(true) return Collections.emptyList();
 	
+		
+		
 		if (transformType == TransformType.GROUND
 				|| transformType == TransformType.GUI
 				|| transformType == TransformType.FIRST_PERSON_RIGHT_HAND
@@ -206,7 +208,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 				
 				//Bloom.initializeMultisample();
 				renderItem();
-				RenderHelper.enableStandardItemLighting();
+				//RenderHelper.enableStandardItemLighting();
 				//Bloom.unapplyMultisample();
 			} else {
 				GlStateManager.pushMatrix();

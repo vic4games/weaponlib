@@ -3047,7 +3047,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 	@Override
 	public void renderItem(ItemStack weaponItemStack, RenderContext<RenderableState> renderContext,
 			Positioner<Part, RenderContext<RenderableState>> positioner) {
-	    
+		
+		
 //	    if(player.getDistanceSqToEntity(compatibility.clientPlayer()) > 400) {
 //	        return;
 //	    }

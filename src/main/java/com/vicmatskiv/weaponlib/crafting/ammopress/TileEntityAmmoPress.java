@@ -221,7 +221,7 @@ public class TileEntityAmmoPress extends TileEntityStation {
 				
 				
 				addStackToInventoryRange(splitOff, 0, 8);
-				markDirty();
+				sendUpdate();
 			}
 			
 			

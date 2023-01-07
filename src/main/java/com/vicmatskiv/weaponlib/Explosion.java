@@ -68,40 +68,19 @@ public class Explosion {
             String smokeParticleTextureName,
             CompatibleSound explosionSound) {
     	
-    	
-    	
-        modContext.getConfigurationManager().getExplosions().getDamage();
+    	Float damageCoefficient = modContext.getConfigurationManager().getExplosions().getDamage();
+        explosionStrength *= damageCoefficient;
 
-        
-      //  System.out.println("Explosion Entity: " + entity);
-        
         Explosion explosion = new Explosion(modContext, world, entity, posX, posY, posZ, explosionStrength, isFlaming, 
                 isSmoking, particleAgeCoefficient, smokeParticleAgeCoefficient, explosionParticleScaleCoefficient, smokeParticleScaleCoefficient,
                 explosionParticleTextureName, smokeParticleTextureName, explosionSound);
 
         
         
-        
-        /*
-       net.minecraft.world.Explosion explo = new net.minecraft.world.Explosion(world, entity, posX, posY, posZ, explosionStrength, false, isDestroyingBlocks);
-       explo.doExplosionA();
-       */
-        
-       
-      // System.out.println("Hola cabron " + entity);
-        //world.createExplosion(entity, posX, posY + 0.5, posZ, explosionStrength, isSmoking);
-        
-        
-        //if(true) return;
-        
        // isDestroyingBlocks = true;
-        
-      //  System.out.println("gamer: " + explosion.getExplosivePlacedBy());
         explosion.doExplosionA();
-        explosion.doExplosionB(true, isDestroyingBlocks);
-       
+        explosion.doExplosionB(false, isDestroyingBlocks);
 
-        /*
         if (!isSmoking) {
             explosion.clearAffectedBlockPositions();
         }
@@ -119,7 +98,7 @@ public class Explosion {
                         modContext.getRegisteredTextureId(smokeParticleTextureName)),
                         (EntityPlayerMP) player);
             }
-        }*/
+        }
     }
 
     // @SideOnly(Side.CLIENT)
@@ -321,6 +300,8 @@ public class Explosion {
             compatibility.playSound(world, explosionX, explosionY, explosionZ, explosionSound, 4f,
                 (1.0F + (world.rand.nextFloat() - world.rand.nextFloat()) * 0.2F) * 0.7f);
         }
+        
+        
 
         if (this.isSmoking) {
             int counter = 0;

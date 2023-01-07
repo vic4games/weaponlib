@@ -11,11 +11,15 @@ import com.vicmatskiv.weaponlib.crafting.items.CraftingItem;
 import com.vicmatskiv.weaponlib.network.packets.StationPacket;
 
 import io.netty.buffer.ByteBuf;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.ISidedInventory;
+import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.NetworkManager;
+import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ITickable;
@@ -67,10 +71,16 @@ public class TileEntityStation extends TileEntity implements ITickable, ISidedIn
 
 	
 	
+	private boolean shouldUpdate = false;
+	
 	private EnumFacing facing = null;
 	
 	public TileEntityStation() {
 		
+	}
+	
+	public void sendUpdate() {
+		this.shouldUpdate = true;
 	}
 	
 	public double getProgress() {
@@ -79,13 +89,40 @@ public class TileEntityStation extends TileEntity implements ITickable, ISidedIn
 		return craftingTimer / (double) craftingDuration;
 	}
 	
+	public void syncChanges() {
+		world.markBlockRangeForRenderUpdate(pos, pos);
+		world.notifyBlockUpdate(pos, getState(), getState(), 3);
+		world.scheduleBlockUpdate(pos, getBlockType(), 0, 0);
+		markDirty();
+	}
+	
 
+	@Override
+	public NBTTagCompound getUpdateTag() {
+		//System.out.println("GOT UPDATE TAG");
+		return this.writeToNBT(new NBTTagCompound());
+	}
+	
+	@Override
+	public SPacketUpdateTileEntity getUpdatePacket() {
+		return new SPacketUpdateTileEntity(pos, 3, getUpdateTag());
+	}
+	
+	public IBlockState getState() {
+		return world.getBlockState(pos);
+	}
+	
+	@Override
+	public void onDataPacket(NetworkManager net, SPacketUpdateTileEntity pkt) {
+		super.onDataPacket(net, pkt);
+	}
+	
+	
 	
 	public EnumFacing getFacing() {
 		if(facing == null) {
 			facing = getWorld().getBlockState(getPos()).getValue(BlockStation.FACING);
 		}
-		
 		
 		
 		return facing;
@@ -158,13 +195,22 @@ public class TileEntityStation extends TileEntity implements ITickable, ISidedIn
 							}
 							addStackToInventoryRange(itemStack, 13, 22);
 						}
-						markDirty();
+						sendUpdate();
 					}
 					
 				}
 			}
 
 			
+		}
+		
+	//	System.out.println(this.world.isRemote + " | " + this.mainInventory.serializeNBT());
+		
+		//if(!world.isRemote) System.out.println(mainInventory.serializeNBT());
+		
+		if(shouldUpdate) {
+			syncChanges();
+			shouldUpdate = false;
 		}
 		
 	}
@@ -265,6 +311,13 @@ public class TileEntityStation extends TileEntity implements ITickable, ISidedIn
 		}
 		for(int i = 0; i < dismantleDuration.length; ++i) dismantleDuration[i] = buf.readInt();
 		
+		/*
+		int inventorySize = buf.readInt();
+		for(int i = 0; i < inventorySize; ++i) this.mainInventory.setStackInSlot(i, ByteBufUtils.readItemStack(buf));
+		
+		System.out.println("ON CLIENT: " + mainInventory.serializeNBT().toString());
+		*/
+		
 	}
 
 	/**
@@ -277,6 +330,15 @@ public class TileEntityStation extends TileEntity implements ITickable, ISidedIn
 		buf.writeInt(this.craftingDuration);
 		for(int i = 0; i < dismantleStatus.length; ++i) buf.writeInt(dismantleStatus[i]);
 		for(int i = 0; i < dismantleDuration.length; ++i) buf.writeInt(dismantleDuration[i]);
+		
+		// Write inventory
+		/*
+		buf.writeInt(mainInventory.getSlots());
+		for(int i = 0; i < mainInventory.getSlots(); ++i) {
+			ByteBufUtils.writeItemStack(buf, mainInventory.getStackInSlot(i));
+		}*/
+		
+		
 	}
 	
 	@Override
