@@ -169,7 +169,7 @@ public class EntityAIAttackRangedWeapon extends CompatibleEntityAIBase
                             this.entity.attackEntityWithRangedAttack(attackTarget, 0);
                             // TODO: set some distance factor
                         }
-                        this.attackTime = (this.attackCooldown >> 1) + this.entity.getRNG().nextInt(this.attackCooldown << 1);
+                       this.attackTime = (this.attackCooldown >> 1) + this.entity.getRNG().nextInt(this.attackCooldown << 1);
                     }
                 }
             } else if (--this.attackTime <= 0 && this.seeTime >= -60) {
