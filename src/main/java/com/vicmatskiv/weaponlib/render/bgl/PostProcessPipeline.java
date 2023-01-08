@@ -257,7 +257,8 @@ public class PostProcessPipeline {
 	
 	
 	public static boolean shouldDoFog() {
-		return ModernConfigManager.enableAllShaders && ModernConfigManager.enableWorldShaders && getFogIntensity() != 0;
+		return false;
+		//return ModernConfigManager.enableAllShaders && ModernConfigManager.enableWorldShaders && getFogIntensity() != 0;
 	}
 	
 	
