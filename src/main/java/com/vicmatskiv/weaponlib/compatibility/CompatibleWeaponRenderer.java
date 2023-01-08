@@ -378,8 +378,13 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 
 				setupInventoryRendering(INVENTORY_TEXTURE_WIDTH, INVENTORY_TEXTURE_HEIGHT);
 
+				
+			
 			}
+			
 		}
+		
+		
 
 		RenderContext<RenderableState> renderContext = new RenderContext<>(getClientModContext(), player, itemStack);
 
@@ -410,7 +415,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 			
 			GL11.glScaled(1, -1, 1);
 
-			 RenderHelper.enableStandardItemLighting();
+			// RenderHelper.enableStandardItemLighting();
 			
 
 			/*
@@ -454,7 +459,9 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 		//	builder.getInventoryPositioning().accept(itemStack);
 			break;
 		case THIRD_PERSON_RIGHT_HAND:
+			
 		case THIRD_PERSON_LEFT_HAND:
+			//System.out.println("yo");
 			GL11.glScaled(-1F, -1F, 1F);
 			GL11.glScaled(0.4F, 0.4F, 0.4F);
 			GL11.glTranslatef(-1.25f, -2.1f, 0.6f);
@@ -471,6 +478,8 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 
 				renderContext.setTransitionProgress(thirdPersonMultipartPositioning.getProgress());
 
+				renderContext.setCancelBeizer();
+				
 				renderContext.setFromState(thirdPersonMultipartPositioning.getFromState(RenderableState.class));
 
 				renderContext.setToState(thirdPersonMultipartPositioning.getToState(RenderableState.class));
@@ -552,18 +561,14 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 			forLater = MatrixHelper.captureMatrix();
 
 			
-			Transform ads = new Transform()
-					.withPosition(0.412250f, 3.244000f, -2.175000f)
-					.withRotation(-0.262799f, -0.021703f, 0.000000f)
-					.withRotationPoint(-0.100000f, 1.000000f, 0.000000f)
-					.withScale(3.000000f, 3.000000f, 3.000000f);
-			
 			
 			
 			
 			// if(!DebugPositioner.isDebugModeEnabled())
 		   positioner.position(Part.MAIN_ITEM, renderContext);
-			//new Transform().withPosition(-0.5, 0, 0.5).withRotation(15, -5, 15).withScale(1, 1, 1).doGLDirect();
+			
+		   
+		   //new Transform().withPosition(-0.5, 0, 0.5).withRotation(15, -5, 15).withScale(1, 1, 1).doGLDirect();
 			
 			
 			/*
@@ -737,7 +742,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 				
 			}*/
 			
-			this.wrh.run(renderContext, stateDescriptor);
+			wrh.run(renderContext, stateDescriptor);
 			//ads.doGLDirect();
 			// AnimationModeProcessor.instance.applyCameraTransforms();
 			if (DebugPositioner.isDebugModeEnabled()) {

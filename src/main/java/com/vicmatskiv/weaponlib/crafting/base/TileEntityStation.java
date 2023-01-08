@@ -13,6 +13,7 @@ import com.vicmatskiv.weaponlib.network.packets.StationPacket;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Items;
 import net.minecraft.inventory.ISidedInventory;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.Item;
@@ -212,6 +213,13 @@ public class TileEntityStation extends TileEntity implements ITickable, ISidedIn
 			syncChanges();
 			shouldUpdate = false;
 		}
+		
+		//if(!world.isRemote) {
+			//System.out.println("yo");
+			//mainInventory.setStackInSlot(24, new ItemStack(Items.GOLD_INGOT, 24));
+			
+		//}
+		//System.out.println(mainInventory.serializeNBT());
 		
 	}
 	

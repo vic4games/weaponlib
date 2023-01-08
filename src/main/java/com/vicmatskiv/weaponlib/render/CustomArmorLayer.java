@@ -54,6 +54,7 @@ public class CustomArmorLayer implements LayerRenderer<EntityPlayer> {
         	
         	
         	doEquipmentRender(model, player, backpackStack, storage.getCustomEquippedPositioning(), resource, limbSwing, limbSwingAmount, partialTicks, ageInTicks, netHeadYaw, headPitch, scale);
+        	return;
         }
         
         if(capability.getStackInSlot(1) != null && !capability.getStackInSlot(1).isEmpty()) {   
@@ -67,6 +68,7 @@ public class CustomArmorLayer implements LayerRenderer<EntityPlayer> {
         	ResourceLocation resource = new ResourceLocation("mw:textures/models/" + storage.getTexturedModels().get(0).getV());
         	
         	doEquipmentRender(model, player, vestStack, storage.getCustomEquippedPositioning(), resource, limbSwing, limbSwingAmount, partialTicks, ageInTicks, netHeadYaw, headPitch, scale);
+        	return;
         }
 	}
 
@@ -82,14 +84,17 @@ public class CustomArmorLayer implements LayerRenderer<EntityPlayer> {
     	// Apply positioning
     	positioning.accept(player, itemStack);
 
-    	//tGlStateManager.scale(0.8, 0.8, 0.8);
+    	//GlStateManager.scale(0.8, 0.8, 0.8);
     	
     	// Set the model attributes & render.
+    
+    	
     	model.setModelAttributes(this.renderer.getMainModel());
     	
-    	model.setRotationAngles(limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale, player);
+    	//model.setRotationAngles(limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale, player);
     	
     	model.setLivingAnimations(player, limbSwing, limbSwingAmount, partialTicks);
+    	
     	model.render(player, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
     	
     	GlStateManager.popMatrix();

@@ -28,6 +28,7 @@ import org.lwjgl.util.vector.Vector4f;
 
 import com.vicmatskiv.weaponlib.ClientModContext;
 import com.vicmatskiv.weaponlib.DefaultPart;
+import com.vicmatskiv.weaponlib.RenderContext;
 import com.vicmatskiv.weaponlib.RenderableState;
 import com.vicmatskiv.weaponlib.UniversalSoundLookup;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
@@ -300,6 +301,7 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
 								beizer = revertFlag ? targetState.beizer.scale(1.25) : targetState.beizer;
 							}
 							
+							
 							applyOnceNewBeizer(part, context,
 									partData.matrices.get(currentIndex - 1),
 							        partData.matrices.get(currentIndex),
@@ -354,7 +356,9 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
 					
 					boolean revertFlag = (toState == RenderableState.NORMAL && fromState == RenderableState.ZOOMING);
 					
-					if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 0 && part.toString().contains("MAIN_ITEM")
+					boolean cancelBeizer = (context instanceof RenderContext<?>) && ((RenderContext<?>) context).getCancelBeizer();
+					
+					if(!cancelBeizer && Minecraft.getMinecraft().gameSettings.thirdPersonView == 0 && part.toString().contains("MAIN_ITEM")
 							&& ((toState == RenderableState.ZOOMING && fromState == RenderableState.NORMAL) ||
 									(toState == RenderableState.NORMAL && fromState == RenderableState.ZOOMING))) {
 						
@@ -369,7 +373,7 @@ public class MultipartRenderStateManager<State, Part, Context extends PartPositi
 								partData.matrices.get(currentIndex + 1),
 								partData.attachedTo,
 								finalCurrentProgress, beizer, revertFlag, interpolation);
-								
+							
 					} else {
 						
 					

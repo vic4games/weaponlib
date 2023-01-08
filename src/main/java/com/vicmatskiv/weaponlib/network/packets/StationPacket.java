@@ -310,7 +310,6 @@ public class StationPacket implements CompatibleMessage {
 		            			workbench.craftingDuration = m.craftingDuration;
 			            		workbench.craftingTarget = CraftingRegistry.getModernCrafting(m.craftingGroup, m.craftingName);
 
-			            		System.out.printf("Workbench crafting target set to %s", m.craftingName);
 			            		
 		            		}
 		            		

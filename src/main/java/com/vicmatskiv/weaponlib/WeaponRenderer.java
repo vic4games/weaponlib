@@ -3120,7 +3120,6 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			Project.gluProject(-0.2f, -1.4f, 0, MODELVIEW, PROJECTION, VIEWPORT, POSITION);
 		      */
 		
-		
 		//Project.gluProject((float) (100f*Math.random()-100), (float) (100f*Math.random()-100), (float) (100f*Math.random()-100), buf, buf2, buf3, test);
         
 		 
@@ -3274,7 +3273,9 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			if(DebugCommand.debugFlag == 6) return;
 			
 
-		    if(sqDistance < 900) {
+			// NOTE: Removed as the cube count optimization wasn't working due to
+			// Q-renderer.
+		    if(/*sqDistance < 900*/ true) {
 		    	   Interceptors.setRenderVolumeThreshold(volumeThreshold);
 		        if(attachments != null) {
 		       
