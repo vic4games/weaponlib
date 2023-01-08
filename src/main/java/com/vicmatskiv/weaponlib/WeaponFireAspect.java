@@ -434,10 +434,10 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
 
     //(weapon, player) 
     public void serverFire(EntityLivingBase player, ItemStack itemStack, boolean isBurst, boolean isAimed) {
-        serverFire(player, itemStack, null, isBurst, isAimed);
+        serverFire(player, itemStack, null, isBurst, isAimed, 1.0f);
     }
     
-    public void serverFire(EntityLivingBase player, ItemStack itemStack, BiFunction<Weapon, EntityLivingBase, ? extends WeaponSpawnEntity> spawnEntityWith, boolean isBurst, boolean isAimed) {
+    public void serverFire(EntityLivingBase player, ItemStack itemStack, BiFunction<Weapon, EntityLivingBase, ? extends WeaponSpawnEntity> spawnEntityWith, boolean isBurst, boolean isAimed, float damageMultiplier) {
         if(!(itemStack.getItem() instanceof Weapon)) {
             return;
         }
@@ -488,6 +488,8 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
             	damage *= BalancePackManager.getGlobalDamageMultiplier();
             }
        	
+            damage *= damageMultiplier;
+            
            // System.out.println(weapon.getName() + " | " + spawnEntityRocketParticles);
             
            WeaponSpawnEntity bullet = new WeaponSpawnEntity(weapon, compatibility.world(player), player, weapon.getSpawnEntityVelocity(),

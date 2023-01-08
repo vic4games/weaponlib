@@ -87,7 +87,7 @@ public class CustomArmorLayer implements LayerRenderer<EntityPlayer> {
     	
     	if(player.isSneaking()) {
     		GlStateManager.translate(0, .2, -0.1);
-    		GlStateManager.rotate(40f, 1, 0, 0);
+    		GlStateManager.rotate(35f, 1, 0, 0);
     	}
     	//GlStateManager.scale(0.8, 0.8, 0.8);
     	
