@@ -53,6 +53,7 @@ import com.vicmatskiv.weaponlib.render.MuzzleFlashRenderer;
 import com.vicmatskiv.weaponlib.render.Shaders;
 
 import akka.japi.Pair;
+import net.minecraft.block.BlockBanner.BlockBannerHanging;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.renderer.GlStateManager;
@@ -343,6 +344,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		private boolean hasUnload;
 		private boolean hasDraw;
 		private boolean hasInspect; 
+		private boolean hasEjectSpentRound;
+		private boolean hasEjectSpentRoundAimed;
 		
 		
 
@@ -1306,8 +1309,14 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		}
 		
 		public Builder setupModernEjectSpentRoundAllAnimation(ItemAttachment<Weapon> action, String animationFile, String partKey) {
+			hasEjectSpentRound = true;
+			hasEjectSpentRoundAimed = true;
+			
 			setupModernEjectSpentRoundAimedAnimation(action, animationFile, partKey);
 			setupModernEjectSpentRoundAnimation(action, animationFile, partKey);
+			
+			setupCustomKeyedPart(action, animationFile, BBLoader.KEY_BOLT_ACTION);
+			
 			return this;
 		}
 			
@@ -1326,6 +1335,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			this.firstPersonLeftHandPositioningEjectSpentRound = left.getTransitionList(firstPersonLeftHandTransform, BBLoader.HANDDIVISOR);
 			this.firstPersonRightHandPositioningEjectSpentRound = right.getTransitionList(firstPersonRightHandTransform, BBLoader.HANDDIVISOR);
 	
+			
+			
 			return this;
 			
 		}
@@ -1334,16 +1345,23 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			if(VMWHooksHandler.isOnServer()) return this;
 			
 			
+			
+			
 			AnimationData main = BBLoader.getAnimation(animationFile, BBLoader.KEY_EJECT_SPENT_ROUND_AIMED, BBLoader.KEY_MAIN);
 			AnimationData left = BBLoader.getAnimation(animationFile, BBLoader.KEY_EJECT_SPENT_ROUND_AIMED, "lefthand");
 			AnimationData right = BBLoader.getAnimation(animationFile, BBLoader.KEY_EJECT_SPENT_ROUND_AIMED, "righthand");
 						
 			checkDefaults();
 			
+			
+			
 			this.firstPersonPositioningEjectSpentRoundAimed = main.getTransitionList(firstPersonTransform, BBLoader.GENDIVISOR);
 			this.firstPersonLeftHandPositioningEjectSpentRoundAimed = left.getTransitionList(firstPersonLeftHandTransform, BBLoader.HANDDIVISOR);
 			this.firstPersonRightHandPositioningEjectSpentRoundAimed = right.getTransitionList(firstPersonRightHandTransform, BBLoader.HANDDIVISOR);
 	
+			
+			
+			
 			return this;
 			
 		}
@@ -1399,6 +1417,16 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			
 			if(hasUnload && set.getSingleAnimation(BBLoader.KEY_UNLOAD).hasBone(partKey)) {
 				withFirstPersonCustomPositioningUnloading(aR15Action, BBLoader.getAnimation(animationFile, BBLoader.KEY_UNLOAD, partKey)
+						.getTransitionList(Transform.NULL.copy().withRotationPoint(rotPoint.x, rotPoint.y, rotPoint.z), BBLoader.HANDDIVISOR));
+			}
+			
+			if(hasEjectSpentRound && set.getSingleAnimation(BBLoader.KEY_EJECT_SPENT_ROUND).hasBone(partKey)) {
+				withFirstPersonCustomPositioningUnloading(aR15Action, BBLoader.getAnimation(animationFile, BBLoader.KEY_EJECT_SPENT_ROUND, partKey)
+						.getTransitionList(Transform.NULL.copy().withRotationPoint(rotPoint.x, rotPoint.y, rotPoint.z), BBLoader.HANDDIVISOR));
+			}
+			
+			if(hasEjectSpentRoundAimed && set.getSingleAnimation(BBLoader.KEY_EJECT_SPENT_ROUND_AIMED).hasBone(partKey)) {
+				withFirstPersonCustomPositioningUnloading(aR15Action, BBLoader.getAnimation(animationFile, BBLoader.KEY_EJECT_SPENT_ROUND_AIMED, partKey)
 						.getTransitionList(Transform.NULL.copy().withRotationPoint(rotPoint.x, rotPoint.y, rotPoint.z), BBLoader.HANDDIVISOR));
 			}
 			

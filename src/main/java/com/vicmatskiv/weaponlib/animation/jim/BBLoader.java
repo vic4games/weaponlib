@@ -58,6 +58,7 @@ public class BBLoader {
 	public static final String KEY_ANIMATION_LENGTH = "animation_length";
 	public static final String KEY_VERSION = "format_version";
 	public static final String KEY_ACTION = "action";
+	public static final String KEY_BOLT_ACTION = "boltaction";
 
 
 	
