@@ -401,6 +401,11 @@ public class AnimationData {
 
 	@SuppressWarnings("unchecked")
 	public List<Transition<RenderContext<RenderableState>>> getTransitionList(Transform initial, double divisor) {
+		return getTransitionList(initial, divisor, true);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public List<Transition<RenderContext<RenderableState>>> getTransitionList(Transform initial, double divisor, boolean applySwap) {
 		List<Transition<RenderContext<RenderableState>>> transitionList = new ArrayList<>();
 		
 		
@@ -423,8 +428,10 @@ public class AnimationData {
 		
 		// Swaps the last frame of the animation with
 		// the initial position (much smoother lol)
-		long curLength = transitionList.get(transitionList.size()-1).getDuration();
-		transitionList.set(transitionList.size()-1, new Transition<>(initial.getAsPosition(), curLength));
+		if(applySwap) {
+			long curLength = transitionList.get(transitionList.size()-1).getDuration();
+			transitionList.set(transitionList.size()-1, new Transition<>(initial.getAsPosition(), curLength));
+		}
 		
 		
 		/*
