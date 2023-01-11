@@ -92,6 +92,7 @@ import com.vicmatskiv.weaponlib.network.packets.CraftingClientPacket;
 import com.vicmatskiv.weaponlib.network.packets.CraftingServerPacket;
 import com.vicmatskiv.weaponlib.network.packets.GunFXPacket;
 import com.vicmatskiv.weaponlib.network.packets.HeadshotSFXPacket;
+import com.vicmatskiv.weaponlib.network.packets.HighIQPickupPacket;
 import com.vicmatskiv.weaponlib.network.packets.OpenDoorPacket;
 import com.vicmatskiv.weaponlib.network.packets.StationPacket;
 import com.vicmatskiv.weaponlib.network.packets.StationClientPacket;
@@ -412,6 +413,8 @@ public class CommonModContext implements ModContext {
         channel.registerMessage(new CraftingServerPacket.SimplePacketHandler(this),
         		CraftingServerPacket.class, 46, CompatibleSide.SERVER);
         
+        channel.registerMessage(new HighIQPickupPacket.SimplePacketHandler(this),
+        		HighIQPickupPacket.class, 47, CompatibleSide.SERVER);
         
         
 		ServerEventHandler serverHandler = new ServerEventHandler(this, modId);

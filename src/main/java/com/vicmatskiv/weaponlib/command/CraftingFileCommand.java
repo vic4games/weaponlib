@@ -1,6 +1,7 @@
 package com.vicmatskiv.weaponlib.command;
 
 import com.vicmatskiv.weaponlib.crafting.CraftingFileManager;
+import com.vicmatskiv.weaponlib.crafting.CraftingRegistry;
 
 import net.minecraft.command.ICommandSender;
 import net.minecraft.util.text.TextComponentString;
@@ -26,6 +27,7 @@ public class CraftingFileCommand extends TidyCompatibleCommand {
 		switch (mainArgument) {
 		case RELOAD_KEY:
 			sendFormattedMessage(sender, "Reloading crafting file...");
+			CraftingRegistry.clearRegistry();
 			CraftingFileManager.getInstance().loadDirectory();
 			sendFormattedMessage(sender, "Succesfully reloaded crafting file!");
 			return;

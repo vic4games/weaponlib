@@ -13,6 +13,7 @@ import com.vicmatskiv.weaponlib.compatibility.RecoilParam;
 import com.vicmatskiv.weaponlib.numerical.LissajousCurve;
 import com.vicmatskiv.weaponlib.numerical.SpringValue;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.math.Vec3d;
 
@@ -111,6 +112,7 @@ public class WeaponRotationHandler {
 	 */
 	public void run(RenderContext<RenderableState> renderContext, StateDescriptor stateDescriptor) {
 
+		
 		
 		/*
 		 * Prepare values and do calculations

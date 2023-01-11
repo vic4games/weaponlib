@@ -27,6 +27,7 @@ import com.vicmatskiv.weaponlib.render.ModificationGUI;
 import net.minecraft.block.BlockDoor;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -118,11 +119,19 @@ public class WeaponKeyInputHandler extends CompatibleWeaponKeyInputHandler {
 	    
 	    
 	    if(KeyBindings.openDoor.isPressed() && itemStack != null && !itemStack.isEmpty() && itemStack.getItem() instanceof Weapon) {
-			RayTraceResult rtr = player.world.rayTraceBlocks(player.getPositionVector(), player.getPositionVector().addVector(0, player.getEyeHeight(), 0).add(player.getLookVec().scale(5)), false, true, false);
+	    	
+	    	Vec3d origin = player.getPositionVector().addVector(0, player.getEyeHeight(), 0);
+	    	Vec3d direction = player.getLookVec().scale(5);
+	    	
+			RayTraceResult rtr = player.world.rayTraceBlocks(origin, origin.add(direction), false, true, false);
 	 		if(rtr != null) {
 	 			IBlockState state = player.world.getBlockState(rtr.getBlockPos());
 	 			if(state.getBlock() instanceof BlockDoor) {
-	 				modContext.getChannel().getChannel().sendToServer(new OpenDoorPacket(rtr.getBlockPos()));
+	 				
+	 				Minecraft.getMinecraft().playerController.processRightClickBlock(Minecraft.getMinecraft().player, Minecraft.getMinecraft().world, rtr.getBlockPos(), rtr.sideHit, rtr.hitVec, EnumHand.MAIN_HAND);
+	 				//modContext.getChannel().getChannel().sendToServer(new OpenDoorPacket(rtr.getBlockPos()));
+	 				
+	 				
 	 				/*
 	 				BlockDoor door = (BlockDoor) state.getBlock();
 	 				door.onBlockActivated(player.world, rtr.getBlockPos(), state, player, EnumHand.MAIN_HAND, EnumFacing.NORTH, (float) rtr.hitVec.x, (float) rtr.hitVec.y, (float) rtr.hitVec.z);

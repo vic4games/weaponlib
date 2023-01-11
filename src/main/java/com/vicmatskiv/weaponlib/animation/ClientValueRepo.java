@@ -163,22 +163,26 @@ public class ClientValueRepo {
 		// ten times fast!)
 		TICKER.currentValue += TICKER_INCREMENT;
 
-		// Update movement values
-		if (!MC.player.onGround)
-			jumpingSpring.velocity += MC.player.motionY * JUMP_VELOCITY_MULTIPLIER;
-		if (player.moveForward < 0) {
-			strafe.add(player.moveForward * FORWARD_MOVEMENT_DIVISOR);
-		} else if(!player.isElytraFlying() && !player.capabilities.isFlying) {
-			forward.add(player.moveForward * FORWARD_MOVEMENT_DIVISOR);
+		
+		if(!player.capabilities.isFlying && player.onGround) {
+			// Update movement values
+			if (!MC.player.onGround)
+				jumpingSpring.velocity += MC.player.motionY * JUMP_VELOCITY_MULTIPLIER;
+			if (player.moveForward < 0) {
+				strafe.add(player.moveForward * FORWARD_MOVEMENT_DIVISOR);
+			} else if(!player.isElytraFlying() && !player.capabilities.isFlying) {
+				forward.add(player.moveForward * FORWARD_MOVEMENT_DIVISOR);
+			}
+			strafe.add(player.moveStrafing * STRAFE_MOVEMENT_DIVISOR);
+
+			xInertia.velocity += strafe.currentValue;
+
+			// Update running value. Adds the running speed to
+			// it if we are sprinting.
+			if (player.isSprinting())
+				running.add(RUNNING_SPEED_VALUE);
 		}
-		strafe.add(player.moveStrafing * STRAFE_MOVEMENT_DIVISOR);
-
-		xInertia.velocity += strafe.currentValue;
-
-		// Update running value. Adds the running speed to
-		// it if we are sprinting.
-		if (player.isSprinting())
-			running.add(RUNNING_SPEED_VALUE);
+		
 
 		strafe.dampen(STRAFE_MOVEMENT_DAMPEN_VALUE);
 		forward.dampen(FORWARD_MOVEMENT_DAMPEN_VALUE);

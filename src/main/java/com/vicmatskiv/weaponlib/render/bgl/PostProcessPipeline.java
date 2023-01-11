@@ -609,9 +609,18 @@ public class PostProcessPipeline {
 	 * buffer, applies post effects, and renders it back
 	 */
 	public static void doWorldProcessing() {
+		
+		
 
 		
 		if(!ModernConfigManager.enableWorldShaders) return;
+		
+		if(true) {
+			
+			if(ModernConfigManager.enableAllShaders && ModernConfigManager.onScreenRainAndSnow) drawRainBuffer();
+
+			return;
+		}
 		
 		 //if(true) return;
 

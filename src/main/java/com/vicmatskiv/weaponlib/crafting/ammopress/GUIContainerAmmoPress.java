@@ -142,9 +142,9 @@ public class GUIContainerAmmoPress extends GUIContainerStation<TileEntityAmmoPre
 	public void updateScreen() {
 		super.updateScreen();
 		if(this.tileEntity.getCraftingQueue().size() > 9) {
-			craftButton.setDisabled(true);
+			craftButton.setErrored(true);
 		} else {
-			craftButton.setDisabled(false);
+			craftButton.setErrored(false);
 		}
 	}
 

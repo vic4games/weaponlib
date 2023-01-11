@@ -18,7 +18,8 @@ public enum CraftingGroup {
 	ATTACHMENT_NORMAL,
 	ATTACHMENT_MODIFICATION,
 	BULLET,
-	MAGAZINE;
+	MAGAZINE,
+	GEAR;
 	
 	
 	public static CraftingGroup getValue(int id) {
@@ -35,6 +36,8 @@ public enum CraftingGroup {
 				return BULLET;
 			case 5:
 				return MAGAZINE;
+			case 6:
+				return GEAR;
 		}
 	}
 	
@@ -52,6 +55,8 @@ public enum CraftingGroup {
 				return 4;
 			case MAGAZINE:
 				return 5;
+			case GEAR:
+				return 6;
 		}
 	}
 

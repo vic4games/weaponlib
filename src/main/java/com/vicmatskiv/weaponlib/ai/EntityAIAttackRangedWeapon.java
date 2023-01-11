@@ -25,11 +25,15 @@ public class EntityAIAttackRangedWeapon extends CompatibleEntityAIBase
     private Set<Class<?>> attackWithItemType;
     private float secondaryEquipmentUseChance;
     
+    private float lookHeightMultiplier;
+    
     public EntityAIAttackRangedWeapon(EntityCustomMob customMob,
             double speedAmplifier, int delay, float maxDistance,
             Class<?> ...attackWithItemType) {
         this(customMob, speedAmplifier, delay, maxDistance, DEFAULT_SECONDARY_EQUIPMENT_USE_CHANCE, attackWithItemType);
     }
+    
+
 
     public EntityAIAttackRangedWeapon(EntityCustomMob customMob,
             double speedAmplifier, int delay, float maxDistance, float secondaryEquipmentUseChance, 
@@ -103,6 +107,9 @@ public class EntityAIAttackRangedWeapon extends CompatibleEntityAIBase
 
         if (attackTarget != null) {
             
+        	this.entity.getLookHelper().setLookPosition(attackTarget.posX, attackTarget.posY + attackTarget.getEyeHeight() * this.entity.getConfiguration().getLookHeightMultiplier(), attackTarget.posZ, 30f, 30f);
+        	//this.entity.getLookHelper().setLookPositionWithEntity(attackTarget, 30.0F, 30.0F);
+        	
             double d0 = this.entity.getDistanceSq(attackTarget.posX, 
                     compatibility.getBoundingBox(attackTarget).getMinY(), attackTarget.posZ);
             boolean canSeeTarget = this.entity.getEntitySenses().canSee(attackTarget);

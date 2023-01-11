@@ -95,6 +95,8 @@ import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
 public class Interceptors {
 	
+	public static final int OPTIMIZATION_MODE_MIN = 400;
+	
 	public static InertialStabilizer thirdPersonCameraStabilizer = new InertialStabilizer(new Vec3d(1,1,1));
 	
 	public static float authenticFOV = 0f;

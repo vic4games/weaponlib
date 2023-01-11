@@ -9,17 +9,22 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleItem;
+import com.vicmatskiv.weaponlib.crafting.CraftingEntry;
+import com.vicmatskiv.weaponlib.crafting.CraftingGroup;
+import com.vicmatskiv.weaponlib.crafting.IModernCrafting;
 import com.vicmatskiv.weaponlib.inventory.GuiHandler;
 
 import net.minecraft.client.model.ModelBase;
+import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 
-public class ItemStorage extends CompatibleItem implements ModelSource {
+public class ItemStorage extends CompatibleItem implements ModelSource, IModernCrafting {
     
     public static class Builder {
         
@@ -210,6 +215,12 @@ public class ItemStorage extends CompatibleItem implements ModelSource {
     private BiConsumer<EntityPlayer, ItemStack> customEquippedPositioning;
     
     
+ // Modern crafting setup
+    private CraftingEntry[] modernRecipe;
+	private CraftingGroup craftGroup;
+
+    
+    
     public BiConsumer<EntityPlayer, ItemStack> getCustomEquippedPositioning() {
     	return customEquippedPositioning;
     }
@@ -259,6 +270,12 @@ public class ItemStorage extends CompatibleItem implements ModelSource {
         return size;
     }
     
+    @Override
+    public void addInformation(ItemStack itemStack, World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
+    	super.addInformation(itemStack, worldIn, tooltip, flagIn);
+    	tooltip.add(String.format("%sSize:%s %d", TextFormatting.GREEN, TextFormatting.GRAY, this.size));
+    }
+    
     public ResourceLocation getGuiTextureLocation() {
         return guiTextureLocation;
     }
@@ -274,5 +291,30 @@ public class ItemStorage extends CompatibleItem implements ModelSource {
     public Predicate<Item> getValidItemPredicate() {
         return validItemPredicate;
     }
+
+	@Override
+	public CraftingEntry[] getModernRecipe() {
+		return this.modernRecipe;
+	}
+
+	@Override
+	public Item getItem() {
+		return this;
+	}
+
+	@Override
+	public CraftingGroup getCraftingGroup() {
+		return this.craftGroup;
+	}
+
+	@Override
+	public void setCraftingRecipe(CraftingEntry[] recipe) {
+		this.modernRecipe = recipe;
+	}
+
+	@Override
+	public void setCraftingGroup(CraftingGroup group) {
+		this.craftGroup = group;
+	}
     
 }

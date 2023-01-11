@@ -984,7 +984,7 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 		
 		
 		
-		if(AnimationModeProcessor.getInstance().getFPSMode() && !OpenGLSelectionHelper.isInSelectionPass) {
+		if(!AnimationModeProcessor.getInstance().editRotationPointMode && AnimationModeProcessor.getInstance().getFPSMode() && !OpenGLSelectionHelper.isInSelectionPass) {
 			GL11.glPushMatrix();
 			GL11.glLoadMatrix(atlasMatrix);
 			GlStateManager.disableTexture2D();

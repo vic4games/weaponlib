@@ -13,6 +13,10 @@ import java.util.function.Function;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleCustomArmor;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleEntityEquipmentSlot;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
+import com.vicmatskiv.weaponlib.crafting.CraftingEntry;
+import com.vicmatskiv.weaponlib.crafting.CraftingGroup;
+import com.vicmatskiv.weaponlib.crafting.CraftingRegistry;
+import com.vicmatskiv.weaponlib.crafting.IModernCrafting;
 import com.vicmatskiv.weaponlib.model.ModelBaseRendererWrapper;
 import com.vicmatskiv.weaponlib.model.WrappableModel;
 
@@ -29,7 +33,7 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 import net.minecraftforge.common.ISpecialArmor;
 
-public class CustomArmor extends CompatibleCustomArmor implements ExposureProtection , ISpecialArmor {
+public class CustomArmor extends CompatibleCustomArmor implements ExposureProtection , ISpecialArmor, IModernCrafting {
 
     private static final String ACTIVE_ATTACHMENT_TAG = "ActiveAttachments";
 
@@ -323,6 +327,8 @@ public class CustomArmor extends CompatibleCustomArmor implements ExposureProtec
             String unlocalizedHelmetName = unlocalizedName + "_helmet";
             CustomArmor armorHelmet = new CustomArmor(modId, unlocalizedName, material, 4, CompatibleEntityEquipmentSlot.HEAD,
                     unlocalizedHelmetName, textureName, helmetModel, hudTextureName);
+            
+            CraftingRegistry.registerHook(armorHelmet);
 
             armorHelmet.hasNightVision = nightVision;
             armorHelmet.vignetteEnabled = vignetteEnabled;
@@ -356,6 +362,10 @@ public class CustomArmor extends CompatibleCustomArmor implements ExposureProtec
             String unlocalizedChestName = unlocalizedName + "_chest";
             CustomArmor armorChest = new CustomArmor(modId, unlocalizedName, material, 4, CompatibleEntityEquipmentSlot.CHEST,
                     unlocalizedChestName, textureName, chestModel, hudTextureName);
+            
+            CraftingRegistry.registerHook(armorChest);
+            
+            
             if(creativeTab != null) {
                 armorChest.setCreativeTab(creativeTab);
             }
@@ -393,6 +403,9 @@ public class CustomArmor extends CompatibleCustomArmor implements ExposureProtec
             String unlocalizedBootsName = unlocalizedName + "_boots";
             CustomArmor armorBoots = new CustomArmor(modId, unlocalizedName, material, 4, CompatibleEntityEquipmentSlot.FEET,
                     unlocalizedBootsName, textureName, bootsModel, hudTextureName);
+            
+            CraftingRegistry.registerHook(armorBoots);
+            
             if(creativeTab != null) {
                 armorBoots.setCreativeTab(creativeTab);
             }
@@ -432,6 +445,11 @@ public class CustomArmor extends CompatibleCustomArmor implements ExposureProtec
     private double shieldIndicatorHeight;
     private String shieldIndicatorMaskTextureName;
     private String shieldIndicatorProgressBarTextureName;
+    
+ // Modern crafting setup
+    private CraftingEntry[] modernRecipe;
+	private CraftingGroup craftGroup;
+
 
     private CustomArmor(String modId, String unlocalizedArmorSetName, ArmorMaterial material, int renderIndex,
             CompatibleEntityEquipmentSlot armorType, String iconName, String textureName,
@@ -733,4 +751,29 @@ public class CustomArmor extends CompatibleCustomArmor implements ExposureProtec
     public double getShieldIndicatorHeight() {
         return shieldIndicatorHeight;
     }
+
+	@Override
+	public CraftingEntry[] getModernRecipe() {
+		return this.modernRecipe;
+	}
+
+	@Override
+	public Item getItem() {
+		return this;
+	}
+
+	@Override
+	public CraftingGroup getCraftingGroup() {
+		return this.craftGroup;
+	}
+
+	@Override
+	public void setCraftingRecipe(CraftingEntry[] recipe) {
+		this.modernRecipe = recipe;
+	}
+
+	@Override
+	public void setCraftingGroup(CraftingGroup group) {
+		this.craftGroup = group;
+	}
 }

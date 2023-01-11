@@ -75,6 +75,10 @@ public class Explosion {
                 isSmoking, particleAgeCoefficient, smokeParticleAgeCoefficient, explosionParticleScaleCoefficient, smokeParticleScaleCoefficient,
                 explosionParticleTextureName, smokeParticleTextureName, explosionSound);
 
+        world.createExplosion(entity, entity.posX, entity.posY + 1.0f, entity.posZ, 4.0F, true);
+        
+        /*
+        if(true) return;
         
         
         isDestroyingBlocks = true;
@@ -98,7 +102,7 @@ public class Explosion {
                         modContext.getRegisteredTextureId(smokeParticleTextureName)),
                         (EntityPlayerMP) player);
             }
-        }
+        }*/
     }
 
     // @SideOnly(Side.CLIENT)

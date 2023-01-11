@@ -3269,7 +3269,10 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		}
 		double volumeThreshold = sqDistance;
 		
-		Interceptors.setRenderVolumeThreshold(volumeThreshold);
+		
+		
+		if(sqDistance > Interceptors.OPTIMIZATION_MODE_MIN)
+			Interceptors.setRenderVolumeThreshold(volumeThreshold - Interceptors.OPTIMIZATION_MODE_MIN);
 		
 		//Interceptors.setRenderVolumeThreshold(0.0);
 		
@@ -3304,7 +3307,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			// NOTE: Removed as the cube count optimization wasn't working due to
 			// Q-renderer.
 		    if(/*sqDistance < 900*/ true) {
-		    	   Interceptors.setRenderVolumeThreshold(volumeThreshold);
+		    	if(sqDistance > Interceptors.OPTIMIZATION_MODE_MIN)
+		    		Interceptors.setRenderVolumeThreshold(volumeThreshold - Interceptors.OPTIMIZATION_MODE_MIN);
 		        if(attachments != null) {
 		       
 		            renderAttachments(positioner, renderContext, attachments);
@@ -3314,6 +3318,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		    if(DebugCommand.debugFlag == 7) return;
 			
 		} finally {
+			//System.out.println("yo");
 		    Interceptors.setRenderVolumeThreshold(0.0);
 		}
 		

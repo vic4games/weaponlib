@@ -19,6 +19,7 @@ import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.ai.EntityCustomMob;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleParticle.CompatibleParticleBreaking;
 import com.vicmatskiv.weaponlib.inventory.GuiHandler;
+import com.vicmatskiv.weaponlib.melee.ItemMelee;
 import com.vicmatskiv.weaponlib.particle.CompatibleBloodParticle;
 import com.vicmatskiv.weaponlib.particle.CompatibleDiggingParticle;
 import com.vicmatskiv.weaponlib.tile.CustomTileEntityRenderer;
@@ -281,6 +282,9 @@ public class Compatibility1_12_2 implements Compatibility {
 
     @Override
     public void registerItem(Item item, String name) {
+    	
+    	
+    	
         item.setRegistryName("mw", name); // temporary hack
         ForgeRegistries.ITEMS.register(item);
         //GameRegistry.register(item, new ResourceLocation("mw", name)); // temporary hack
@@ -1174,7 +1178,7 @@ public class Compatibility1_12_2 implements Compatibility {
             }
         }
         
-        EntityRegistry.addSpawn(entity, weightedProb, min, max, EnumCreatureType.MONSTER, biomes.toArray(new Biome[0]));
+       EntityRegistry.addSpawn(entity, weightedProb, min, max, EnumCreatureType.MONSTER, biomes.toArray(new Biome[0]));
     }
 
     @Override

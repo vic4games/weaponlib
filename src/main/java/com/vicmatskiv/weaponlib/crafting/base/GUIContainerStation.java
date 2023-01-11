@@ -117,21 +117,27 @@ public abstract class GUIContainerStation<T extends TileEntityStation> extends C
 		this.searchBox.setTextColor(16777215);
 		
 		craftButton = new GUIButtonCustom(GUI_TEX, 0, this.guiLeft + 211, this.guiTop + 179, 53, 17, 480, 370, "CRAFT")
-				.withStandardState(GRAY, 0, 240).withHoveredState(GOLD, 0, 257).withDisabledState(RED, 0, 274)
+				.withStandardState(GRAY, 0, 240).withHoveredState(GOLD, 0, 257).withErroredState(RED, 0, 274)
 				.withPageRestriction(2);
 
-		leftArrow = new GUIButtonCustom(GUI_TEX, 1, 0, this.guiTop + 96, 28, 33, 480, 370, "")
-				.withStandardState(0xFFFFFF, 57, 284).withHoveredState(0xFFFFFF, 85, 284)
+		leftArrow = new GUIButtonCustom(GUI_TEX, 1, this.guiLeft + 318 , this.guiTop, 42, 20, 480, 370, "")
+				.withStandardState(0xFFFFFF, 99, 304)
+				.withHoveredState(0xFFFFFF, 141, 304)
+				.withDisabledState(0xFFFFFF, 57, 304)
 				.withDisabledCheck(() -> this.getPage() == 1);
 
 		rightArrow = new GUIButtonCustom(GUI_TEX, 2,
-				new ScaledResolution(Minecraft.getMinecraft()).getScaledWidth() - 28, this.guiTop + 96, 28, 33, 480,
-				370, "").withStandardState(0xFFFFFF, 57, 317).withHoveredState(0xFFFFFF, 85, 317)
-						.withDisabledCheck(() -> this.getPage() == 2);
+				this.guiLeft + 360, this.guiTop + 0, 42, 20, 480,
+				370, "")
+				.withStandardState(0xFFFFFF, 99, 284)
+				.withHoveredState(0xFFFFFF, 141, 284)
+				//.withDisabledState(0xFFFFFF, u, v)
+				.withDisabledState(0xFFFFFF, 57, 284)
+				.withDisabledCheck(() -> this.getPage() == 2);
 		
 		dismantleButton = new GUIButtonCustom(GUI_INV_TEX, 6, this.guiLeft + 286, this.guiTop + 70, 73, 17, 480, 370,
 				"DISMANTLE").withStandardState(GRAY, 0, 283).withHoveredState(GOLD, 0, 300)
-						.withDisabledState(RED, 0, 317).withPageRestriction(1);
+						.withErroredState(RED, 0, 317).withPageRestriction(1);
 		
 		addButton(craftButton);
 		addButton(leftArrow);
@@ -240,7 +246,7 @@ public abstract class GUIContainerStation<T extends TileEntityStation> extends C
  			
 		}
 
-		if(requiresMaterialsToSubmitCraftRequest()) this.craftButton.setDisabled(!hasRequiredItems);
+		if(requiresMaterialsToSubmitCraftRequest()) this.craftButton.setErrored(!hasRequiredItems);
 
 	}
 	
@@ -269,6 +275,8 @@ public abstract class GUIContainerStation<T extends TileEntityStation> extends C
 	
 	@Override
 	public void updateScreen() {
+		
+		//initGui();
 		super.updateScreen();
 		this.tooltipRenderItem.clear();
 		if (tileEntity.pushInventoryRefresh) {
@@ -522,7 +530,7 @@ public abstract class GUIContainerStation<T extends TileEntityStation> extends C
 			}
 
 			GUIRenderHelper.drawScaledString("INVENTORY", this.guiLeft + 10, this.guiTop + 5, 1.2, BLUE);
-			GUIRenderHelper.drawScaledString("DISMANTLING", this.guiLeft + 255, this.guiTop + 5, 1.2, BLUE);
+			//GUIRenderHelper.drawScaledString("DISMANTLING", this.guiLeft + 255, this.guiTop + 5, 1.2, BLUE);
 			GUIRenderHelper.drawScaledString("Player Inventory", this.guiLeft + 21, this.guiTop + 115, 1.0, LIGHT_GREY);
 
 		} else if(getPage() == 2) {

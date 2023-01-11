@@ -28,14 +28,16 @@ public class GUIButtonCustom extends GuiButton {
 	
 	
 	// Stores the various UVs should they be provided
-	private int standardU, standardV, hoveredU, hoveredV, disabledU, disabledV, toggledU, toggledV;
+	private int standardU, standardV, hoveredU, hoveredV, erroredU, erroredV, toggledU, toggledV, disabledU, disabledV;
 
 	// Gets string color for rendering
-	private int standardStringColor, hoveredStringColor, disabledStringColor, toggleStringColor;
+	private int standardStringColor, hoveredStringColor, erroredStringColor, toggleStringColor, disabledStringColor;
 	
 	
 	// Draws 'disabled' (or inactive) button
-	private boolean isDisabled = false;
+	private boolean isErrored = false;
+	
+	private boolean hasDisabledState = false;
 
 	
 	// Allows the user to supply a condition where
@@ -50,6 +52,7 @@ public class GUIButtonCustom extends GuiButton {
 	
 	private boolean isToggleButton = false;
 	private boolean isToggled = false;
+
 	
 	
 
@@ -120,7 +123,24 @@ public class GUIButtonCustom extends GuiButton {
 	 * @param v - top left coordinate of texture selection (y component)
 	 * @return itself
 	 */
+	public GUIButtonCustom withErroredState(int color, int u, int v) {
+		this.erroredStringColor = color;
+		this.erroredU = u;
+		this.erroredV = v;
+		return this;
+	}
+	
+	/**
+	 * Provides the disabled state UV to the button in order to render
+	 * the button if it is in it's inactive/disabled state.
+	 * 
+	 * @param color - color as a hexidecimal value
+	 * @param u - top left coordinate of texture selection (x component)
+	 * @param v - top left coordinate of texture selection (y component)
+	 * @return itself
+	 */
 	public GUIButtonCustom withDisabledState(int color, int u, int v) {
+		this.hasDisabledState = true;
 		this.disabledStringColor = color;
 		this.disabledU = u;
 		this.disabledV = v;
@@ -178,7 +198,7 @@ public class GUIButtonCustom extends GuiButton {
 	 * @return is the button disabled
 	 */
 	public boolean isDisabled() {
-		return this.isDisabled;
+		return this.isErrored;
 	}
 	
 	/**
@@ -186,8 +206,8 @@ public class GUIButtonCustom extends GuiButton {
 	 * 
 	 * @param is button in disabled state
 	 */
-	public void setDisabled(boolean disable) {
-		this.isDisabled = disable;
+	public void setErrored(boolean disable) {
+		this.isErrored = disable;
 	}
 	
 	/**
@@ -224,7 +244,7 @@ public class GUIButtonCustom extends GuiButton {
 	
 	@Override
 	public void drawButton(Minecraft mc, int mouseX, int mouseY, float partialTicks) {
-		if(!visible || (disabledCheck != null && disabledCheck.get())) return;
+		if(!visible || (disabledCheck != null && disabledCheck.get() && !hasDisabledState)) return;
 		
 		
 		this.hovered = mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height;
@@ -236,9 +256,12 @@ public class GUIButtonCustom extends GuiButton {
 		
 		int stringColor = 0;
 		
-		if(isDisabled) {
+		if(disabledCheck != null && disabledCheck.get()) {
 			GUIRenderHelper.drawTexturedRect(this.x, this.y, this.disabledU, this.disabledV, this.width, this.height, this.texWidth, this.texHeight);
 			stringColor = disabledStringColor;
+		} else if(isErrored) {
+			GUIRenderHelper.drawTexturedRect(this.x, this.y, this.erroredU, this.erroredV, this.width, this.height, this.texWidth, this.texHeight);
+			stringColor = erroredStringColor;
 		} else {
 			if(isToggleButton && isToggled) {
 				GUIRenderHelper.drawTexturedRect(this.x, this.y, this.toggledU, this.toggledV, this.width, this.height, this.texWidth, this.texHeight);

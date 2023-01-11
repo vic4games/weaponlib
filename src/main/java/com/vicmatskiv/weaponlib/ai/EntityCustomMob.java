@@ -52,8 +52,10 @@ import com.vicmatskiv.weaponlib.mission.MissionOffering;
 import com.vicmatskiv.weaponlib.mission.Missions;
 import com.vicmatskiv.weaponlib.mission.ObtainItemAction;
 import com.vicmatskiv.weaponlib.mission.PlayerMissionSyncMessage;
+import com.vicmatskiv.weaponlib.network.packets.HighIQPickupPacket;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.material.EnumPushReaction;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
@@ -61,8 +63,10 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.EnumCreatureAttribute;
 import net.minecraft.entity.IEntityLivingData;
 import net.minecraft.entity.IRangedAttackMob;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -75,7 +79,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class EntityCustomMob extends CompatibleEntityMob
-        implements IRangedAttackMob, Contextual, MissionAssigner, Configurable<EntityConfiguration> {
+        implements IRangedAttackMob, Contextual, Configurable<EntityConfiguration> {
 
     private static final float FLAT_WORLD_SPAWN_CHANCE = 0.01f;
     private static final CompatibleDataManager.Key VARIANT = CompatibleDataManager.createKey(EntityCustomMob.class,
@@ -97,12 +101,17 @@ public class EntityCustomMob extends CompatibleEntityMob
 
     private EntityPlayer customer;
     
-
+  
    
 
     public EntityCustomMob(World worldIn) {
         super(worldIn);
         this.setSize(0.6F, 1.99F);
+      
+    }
+    
+    public String getMobName() {
+    	return configuration.getMobName();
     }
 
     @Override
@@ -509,6 +518,34 @@ public class EntityCustomMob extends CompatibleEntityMob
     }
     
     @Override
+    public void applyEntityCollision(Entity entityIn) {
+    	if(canBePushed()) super.applyEntityCollision(entityIn);
+    }
+    
+    @Override
+    protected void collideWithEntity(Entity entityIn) {
+    	// TODO Auto-generated method stub
+    	if(canBePushed()) super.collideWithEntity(entityIn);
+    	//System.out.println("fuck");
+    }
+    
+    @Override
+    public void onCollideWithPlayer(EntityPlayer entityIn) {
+    	// TODO Auto-generated method stub
+    	super.onCollideWithPlayer(entityIn);
+    }
+    
+    
+    
+    
+    @Override
+    public EnumPushReaction getPushReaction() {
+    	if(canBePushed()) {
+    		return super.getPushReaction();
+    	} else return EnumPushReaction.IGNORE;	
+    }
+    
+    @Override
     public boolean canBePushed() {
         return getConfiguration().isPushable();
     }
@@ -569,10 +606,22 @@ public class EntityCustomMob extends CompatibleEntityMob
         ItemStack itemstack = player.getHeldItem(hand);
         boolean flag = itemstack.getItem() == Items.NAME_TAG;
 
+        
+        if(configuration.getPickupItemID() != -1) {
+        	
+        
+        	
+    
+        	modContext.getChannel().getChannel().sendToServer(new HighIQPickupPacket(player.getEntityId(), getEntityId()));
+        	
+        	return true;
+        }
+        
         if (flag) {
             itemstack.interactWithEntity(player, this, hand);
             return true;
         } else if (this.isEntityAlive() && /*!this.isTrading() &&*/ !player.isSneaking()) {
+        	/*
             // if (this.buyingList == null)
             // {
             // this.populateBuyingList();
@@ -592,11 +641,14 @@ public class EntityCustomMob extends CompatibleEntityMob
             }
 
             return true;
+            */
+        	return false;
         } else {
             return super.processInteract(player, hand);
         }
     }
 
+    /*
     @SideOnly(Side.CLIENT)
     protected void displayTradeGui(EntityPlayer player) {
         Collection<MissionOffering> redeemableMissionOfferings = Missions.getRedeemableMissionOfferings(this, player);
@@ -677,6 +729,6 @@ public class EntityCustomMob extends CompatibleEntityMob
             customer = null;
         }
     }
-
+	*/
 
 }

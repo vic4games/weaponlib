@@ -153,6 +153,19 @@ public class CraftingRegistry {
 		craftingMap.get(crafting.getCraftingGroup()).add(crafting);
 		categoricalLookup.get(crafting.getCraftingGroup()).put(crafting.getItem().getUnlocalizedName(), crafting);
 	}
+
+	public static void clearRegistry() {
+		
+		// Clear out the registry
+		for(CraftingGroup g : CraftingGroup.values()) {
+			craftingMap.get(g).clear();
+			categoricalLookup.get(g).clear();
+		}
+		
+		
+		
+		
+	}
 	
 
 

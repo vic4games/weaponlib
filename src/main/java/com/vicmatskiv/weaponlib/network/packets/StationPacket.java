@@ -238,6 +238,9 @@ public class StationPacket implements CompatibleMessage {
 	            			
 	            			
 	            		
+	            			
+	            			
+	            			//System.out.println(m.craftingGroup + " | " + m.craftingName);
 	            			CraftingEntry[] modernRecipe = CraftingRegistry.getModernCrafting(m.craftingGroup, m.craftingName).getModernRecipe();
 		            		if(modernRecipe == null) return;
 		            		

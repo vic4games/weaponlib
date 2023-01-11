@@ -8,20 +8,28 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleItem;
+import com.vicmatskiv.weaponlib.crafting.CraftingEntry;
+import com.vicmatskiv.weaponlib.crafting.CraftingGroup;
+import com.vicmatskiv.weaponlib.crafting.CraftingRegistry;
+import com.vicmatskiv.weaponlib.crafting.IModernCrafting;
 import com.vicmatskiv.weaponlib.jim.util.VMWHooksHandler;
 
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelBiped;
+import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.text.TextFormatting;
+import net.minecraft.world.World;
 import net.minecraftforge.common.ISpecialArmor;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class ItemVest extends CompatibleItem implements ISpecialArmor, ModelSource {
+public class ItemVest extends CompatibleItem implements ISpecialArmor, ModelSource, IModernCrafting {
         
     
 	public static class Builder {
@@ -34,6 +42,8 @@ public class ItemVest extends CompatibleItem implements ISpecialArmor, ModelSour
         private int durability;
         private int damageReduceAmount;
         private double percentDamageBlocked;
+        
+        
         
         private Consumer<ItemStack> entityPositioning;
         private Consumer<ItemStack> inventoryPositioning;
@@ -201,9 +211,14 @@ public class ItemVest extends CompatibleItem implements ISpecialArmor, ModelSour
 //            ResourceLocation guiTextureLocation = new ResourceLocation(modContext.getModId(), 
 //                    addFileExtension(guiTextureName, ".png"));
             
+            
             ItemVest item = new ItemVest(modContext, percentDamageBlocked, durability);
             
             item.setUnlocalizedName(modContext.getModId() + "_" + name);
+            
+            // Register hook
+            CraftingRegistry.registerHook(item);
+            
             
             if(model != null) {
                 item.texturedModels.add(new Tuple<>(model, addFileExtension(textureName, ".png")));
@@ -231,6 +246,11 @@ public class ItemVest extends CompatibleItem implements ISpecialArmor, ModelSour
     private int durability;
     private double percentDamageBlocked;
     public BiConsumer<EntityPlayer, ItemStack> customEquippedPositioning;
+    
+    
+ // Modern crafting setup
+    private CraftingEntry[] modernRecipe;
+	private CraftingGroup craftGroup;
 
     
     public BiConsumer<EntityPlayer, ItemStack> getCustomEquippedPositioning() {
@@ -243,6 +263,13 @@ public class ItemVest extends CompatibleItem implements ISpecialArmor, ModelSour
         this.percentDamageBlocked = percentDamageBlocked;
         this.damageReduceAmount = 1;
         this.durability = durability;
+    }
+    
+    @Override
+    public void addInformation(ItemStack itemStack, World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
+    	super.addInformation(itemStack, worldIn, tooltip, flagIn);
+    	double formattedDouble = Math.round(this.percentDamageBlocked * 10000) / 100.0;
+    	tooltip.add(String.format("%s%% Damage Blocked:%s %s", TextFormatting.GREEN, TextFormatting.GRAY, formattedDouble));
     }
 
     @Override
@@ -294,4 +321,39 @@ public class ItemVest extends CompatibleItem implements ISpecialArmor, ModelSour
         //int itemDamage = (int)(absorb / 25.0 < 1 ? 1 : absorb / 25.0);
         //stack.damageItem(itemDamage, entity);
     }
+
+
+
+	@Override
+	public CraftingEntry[] getModernRecipe() {
+		return this.modernRecipe;
+	}
+
+
+
+	@Override
+	public Item getItem() {
+		return this;
+	}
+
+
+
+	@Override
+	public CraftingGroup getCraftingGroup() {
+		return this.craftGroup;
+	}
+
+
+
+	@Override
+	public void setCraftingRecipe(CraftingEntry[] recipe) {
+		this.modernRecipe = recipe;
+	}
+
+
+
+	@Override
+	public void setCraftingGroup(CraftingGroup group) {
+		this.craftGroup = group;
+	}
 }

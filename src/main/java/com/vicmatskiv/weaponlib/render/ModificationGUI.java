@@ -1,5 +1,7 @@
 package com.vicmatskiv.weaponlib.render;
 
+import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
+
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.TimerTask;
@@ -16,6 +18,7 @@ import com.vicmatskiv.weaponlib.CompatibleAttachment;
 import com.vicmatskiv.weaponlib.ItemAttachment;
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.PlayerWeaponInstance;
+import com.vicmatskiv.weaponlib.UniversalSoundLookup;
 import com.vicmatskiv.weaponlib.Weapon;
 import com.vicmatskiv.weaponlib.WeaponAttachmentAspect;
 import com.vicmatskiv.weaponlib.WeaponAttachmentAspect.FlaggedAttachment;
@@ -663,7 +666,7 @@ public class ModificationGUI {
 		GUIRenderHelper.drawScaledString(
 				"Damage :: " + TextFormatting.GOLD + weapon.getSpawnEntityDamage(),
 				30, 60, 1, ColorPalette.WHITE);
-		GUIRenderHelper.drawScaledString("Recoil :: " + TextFormatting.GOLD + weapon.getRecoil(),
+		GUIRenderHelper.drawScaledString("Recoil :: " + TextFormatting.GOLD + weaponInstance.getRecoil(),
 				30, 75, 1, ColorPalette.WHITE);
 		GUIRenderHelper.drawScaledString("Firerate :: " + TextFormatting.GOLD + weaponInstance.getFireRate(), 30, 90, 1,
 				ColorPalette.WHITE);
@@ -898,6 +901,8 @@ public class ModificationGUI {
 			}
 
 			if (isInClick) {
+				compatibility.playSound(Minecraft.getMinecraft().player, UniversalSoundLookup.lookupSound("attachmentoff"), 10.0f, 1.0f);
+	        	
 				modcontext.getAttachmentAspect().forceAttachment(category, modcontext.getMainHeldWeapon(),
 						ItemStack.EMPTY);
 
@@ -1071,6 +1076,8 @@ public class ModificationGUI {
 										.getFormattedText());
 
 						if (isInClick) {
+							compatibility.playSound(Minecraft.getMinecraft().player, UniversalSoundLookup.lookupSound("attachmenton"), 10.0f, 1.0f);
+				        	
 							modcontext.getAttachmentAspect().forceAttachment(category, modcontext.getMainHeldWeapon(),
 									flag.getItemStack());
 						}

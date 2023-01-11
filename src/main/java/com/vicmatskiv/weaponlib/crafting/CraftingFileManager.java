@@ -127,17 +127,17 @@ public class CraftingFileManager extends JSONDatabaseManager {
 				// Custom mode
 			
 				FileInputStream fis = new FileInputStream(MAIN_FILE);
-				System.out.println("LOading custom " + fis.available());
+				//System.out.println("LOading custom " + fis.available());
 			
 				int avaliable = fis.available();
-				System.out.printf("Avaliable bytes: %s\n", avaliable);
+				//System.out.printf("Avaliable bytes: %s\n", avaliable);
 				
 				for(int i = 0; i < avaliable; ++i) {
 					baos.write(fis.read());
 				}
 				fis.close();
 				
-				System.out.printf("BAOS: %s\n", baos.size());
+				//System.out.printf("BAOS: %s\n", baos.size());
 			} else if(loadingStatus == 1) {
 				// Default mode
 				InputStream is = getClass().getClassLoader().getResourceAsStream(DEFAULT_CRAFTING_MAPPINGS);
@@ -178,8 +178,13 @@ public class CraftingFileManager extends JSONDatabaseManager {
 				LOGGER.debug("Invalid recipe for recipe {}!", i);
 				continue;
 			}
+			
+			
 
 			String recipeName = recipe.get(NAME_KEY).getAsString();
+			
+			//System.out.println("PICKED UP RECIPE NAME: " + recipeName);
+			
 			CraftingGroup recipeCraftingGroup = CraftingGroup.valueOf(recipe.get(CRAFTING_GROUP_KEY).getAsString());
 
 			// Make sure we actually have a hook for this recipe.
@@ -362,8 +367,6 @@ public class CraftingFileManager extends JSONDatabaseManager {
 	
 	
 	public int loadJSONStore(InputStream io) {
-		
-		System.out.println("Compo ladre como estas");
 		try {
 			initializeJSON(io);
 		} catch(JsonIOException e1) {
