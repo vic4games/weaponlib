@@ -284,7 +284,9 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
         	// Should prevent sound from being one sided
         
         	if(!VMWHooksHandler.isOnServer()) {
-        		PositionedSoundRecord psr = new PositionedSoundRecord(shootSound.getSound(), SoundCategory.PLAYERS, silencerOn ? weapon.getSilencedShootSoundVolume() : weapon.getShootSoundVolume(), 1.0F, Minecraft.getMinecraft().player.getPosition().up(5));
+        		
+        		//
+        		PositionedSoundRecord psr = new PositionedSoundRecord(shootSound.getSound(), SoundCategory.PLAYERS, silencerOn ? weapon.getSilencedShootSoundVolume() * 0.4f : weapon.getShootSoundVolume() * 0.4f, 1.0F, Minecraft.getMinecraft().player.getPosition().up(5));
             	playShootSound(psr);
         		//Minecraft.getMinecraft().getSoundHandler().playSound(psr);
         	}
