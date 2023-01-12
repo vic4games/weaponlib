@@ -5,6 +5,7 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 import org.lwjgl.opengl.GL11;
 
 import com.vicmatskiv.weaponlib.StatusMessageCenter.Message;
+import com.vicmatskiv.weaponlib.ai.EntityCustomMob;
 import com.vicmatskiv.weaponlib.animation.AnimationModeProcessor;
 import com.vicmatskiv.weaponlib.animation.gui.AnimationGUI;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleEntityEquipmentSlot;
@@ -45,6 +46,8 @@ import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import static net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType.*;
+
+import java.util.List;
 
 public class CustomGui extends CompatibleGui {
 
@@ -453,7 +456,14 @@ public class CustomGui extends CompatibleGui {
  	 			}
  	 		
  	 		}
+	 		
+	 		
+	 		
          }
+		 
+		 
+		 
+		 
 	}
 	
 
@@ -479,6 +489,9 @@ public class CustomGui extends CompatibleGui {
 
 		PlayerWeaponInstance weaponInstance = modContext.getMainHeldWeapon();
 
+		
+		
+		
 		if(weaponInstance != null) {
 		    
 			Weapon weaponItem = (Weapon) itemStack.getItem();

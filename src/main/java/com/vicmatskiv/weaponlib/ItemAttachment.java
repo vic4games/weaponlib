@@ -183,6 +183,10 @@ public class ItemAttachment<T> extends CompatibleItem implements ModelSource, IM
 		if(info != null && informationProvider != null) {
 		    info.add(informationProvider.apply(itemStack));
 		}
+		
+//		if(getCategory() == AttachmentCategory.GRIP) {
+			//info.add("Here: " + this.getApply().apply(itemAttachment, target, player);)
+		//}
 	}
 
 	public void setName(String name) {

@@ -79,7 +79,7 @@ public class CustomArmorLayer implements LayerRenderer<EntityPlayer> {
             	ModelBiped biped = GearModelRepository.pull(storage.getModelFileString());
             	ResourceLocation resource = new ResourceLocation("mw:textures/models/" + storage.getProperTextureName());
         		Minecraft.getMinecraft().getTextureManager().bindTexture(resource);
-        		doEquipmentRender(modeld, player, null, (a, b) -> {}, resource, limbSwing, limbSwingAmount, partialTicks, ageInTicks, netHeadYaw, headPitch, scale);
+        		doEquipmentRender(biped, player, null, (a, b) -> {}, resource, limbSwing, limbSwingAmount, partialTicks, ageInTicks, netHeadYaw, headPitch, scale);
             	//System.out.println("yo1");
             	
             	return;
@@ -111,7 +111,7 @@ public class CustomArmorLayer implements LayerRenderer<EntityPlayer> {
             	ModelBiped biped = GearModelRepository.pull(storage.getModelFileString());
             	ResourceLocation resource = new ResourceLocation("mw:textures/models/" + storage.getProperTextureName());
         		Minecraft.getMinecraft().getTextureManager().bindTexture(resource);
-        		doEquipmentRender(modeld, player, null, (a, b) -> {}, resource, limbSwing, limbSwingAmount, partialTicks, ageInTicks, netHeadYaw, headPitch, scale);
+        		doEquipmentRender(biped, player, null, (a, b) -> {}, resource, limbSwing, limbSwingAmount, partialTicks, ageInTicks, netHeadYaw, headPitch, scale);
             	//System.out.println("yo2");
             	
             	/*

@@ -126,6 +126,7 @@ public class EntityCustomMob extends CompatibleEntityMob
 
     @Override
     protected void initEntityAI() {
+    	setSize(getConfiguration().getSizeWidth(), getConfiguration().getSizeHeight());
         getConfiguration().addAiTasks(this, this.tasks);
         getConfiguration().addAiTargetTasks(this, this.targetTasks);
     }

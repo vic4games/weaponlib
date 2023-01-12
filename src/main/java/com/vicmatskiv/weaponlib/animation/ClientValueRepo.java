@@ -174,14 +174,14 @@ public class ClientValueRepo {
 				forward.add(player.moveForward * FORWARD_MOVEMENT_DIVISOR);
 			}
 			strafe.add(player.moveStrafing * STRAFE_MOVEMENT_DIVISOR);
-
+		}
 			xInertia.velocity += strafe.currentValue;
 
 			// Update running value. Adds the running speed to
 			// it if we are sprinting.
 			if (player.isSprinting())
 				running.add(RUNNING_SPEED_VALUE);
-		}
+		
 		
 
 		strafe.dampen(STRAFE_MOVEMENT_DAMPEN_VALUE);

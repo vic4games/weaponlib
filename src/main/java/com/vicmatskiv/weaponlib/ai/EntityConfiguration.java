@@ -176,6 +176,10 @@ public class EntityConfiguration {
         
         private EnumCreatureAttribute creatureAttribute = EnumCreatureAttribute.UNDEFINED;
         
+        
+        private float sizeWidth = 0.6F;
+        private float sizeHeight = 1.99F;
+        
         private double maxHealth = DEFAULT_MAX_HEALTH;
         
         private double maxSpeed = DEFAULT_MAX_SPEED;
@@ -253,6 +257,12 @@ public class EntityConfiguration {
         public Builder withSecondaryEquipmentOption(Item item, EnumDifficulty difficultyLevel, float weight, ItemAttachment<?>...attachments) {
             withEquipmentOption(secondaryEquipmentOptions, item, difficultyLevel, weight, attachments);
             return this;
+        }
+        
+        public Builder withSize(float width, float height) {
+        	this.sizeWidth = width;
+        	this.sizeHeight = height;
+        	return this;
         }
         
         public Builder withLookHeightMulitplier(float multiplier) {
@@ -554,6 +564,9 @@ public class EntityConfiguration {
             
             configuration.pickupItemID = pickupItemID;
             
+            configuration.sizeHeight = this.sizeHeight;
+            configuration.sizeWidth = this.sizeWidth;
+            
             HashMap<UUID, MissionOffering> tmpMap = new LinkedHashMap<>();
             for(MissionOffering missionOffering: missionOfferings) {
                 tmpMap.put(missionOffering.getId(), missionOffering);
@@ -674,6 +687,8 @@ public class EntityConfiguration {
     
     public float lookHeightMultiplier;
 
+    
+    public float sizeWidth, sizeHeight;
 
     private Map<CompatibleEntityEquipmentSlot, CustomArmor> armor;
     private float primaryEquipmentDropChance;
@@ -708,6 +723,14 @@ public class EntityConfiguration {
     
     public WeightedOptions<EnumDifficulty, Equipment> getSecondaryEquipmentOptions() {
         return secondaryEquipmentOptions;
+    }
+    
+    public float getSizeWidth() {
+    	return this.sizeWidth;
+    }
+    
+    public float getSizeHeight() {
+    	return this.sizeHeight;
     }
     
     public int getPickupItemID() {
