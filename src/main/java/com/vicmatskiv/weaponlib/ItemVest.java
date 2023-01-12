@@ -13,6 +13,7 @@ import com.vicmatskiv.weaponlib.crafting.CraftingGroup;
 import com.vicmatskiv.weaponlib.crafting.CraftingRegistry;
 import com.vicmatskiv.weaponlib.crafting.IModernCrafting;
 import com.vicmatskiv.weaponlib.jim.util.VMWHooksHandler;
+import com.vicmatskiv.weaponlib.render.modelrepo.ServerGearModelHookRegistry;
 
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelBiped;
@@ -38,6 +39,9 @@ public class ItemVest extends CompatibleItem implements ISpecialArmor, ModelSour
         private CreativeTabs tab;
         private ModelBase model;
         private String textureName;
+        
+        private String modelFileString;
+        private String properTextureName;
         
         private int durability;
         private int damageReduceAmount;
@@ -83,18 +87,13 @@ public class ItemVest extends CompatibleItem implements ISpecialArmor, ModelSour
         }
         
         
-        public Builder withProperModel(String elModel) {
+        public Builder withProperModel(String elModel, String properTextureName) {
         	
-        	if(!VMWHooksHandler.isOnServer()) {
-        		
-        		try {
-					this.model = (ModelBase) Class.forName(elModel).newInstance();
-				} catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
-					System.err.println("Loading for model " + elModel + " has failed. Please check and try again.");
-				}
-        	}
+        	modelFileString = elModel;
+        	this.properTextureName = properTextureName;
         	
         	
+    
         	return this;
         }
         
@@ -214,6 +213,10 @@ public class ItemVest extends CompatibleItem implements ISpecialArmor, ModelSour
             
             ItemVest item = new ItemVest(modContext, percentDamageBlocked, durability);
             
+            ServerGearModelHookRegistry.modelArray.add(this.modelFileString);
+            
+            item.modelFileString = this.modelFileString;
+            item.properTextureName = this.properTextureName;
             item.setUnlocalizedName(modContext.getModId() + "_" + name);
             
             // Register hook
@@ -221,9 +224,10 @@ public class ItemVest extends CompatibleItem implements ISpecialArmor, ModelSour
             
             
             if(model != null) {
-                item.texturedModels.add(new Tuple<>(model, addFileExtension(textureName, ".png")));
+              //  item.texturedModels.add(new Tuple<>(model, addFileExtension(textureName, ".png")));
             }
             
+           
             if(tab != null) {
                 item.setCreativeTab(tab);
                 
@@ -232,7 +236,7 @@ public class ItemVest extends CompatibleItem implements ISpecialArmor, ModelSour
             
             item.customEquippedPositioning = customEquippedPositioning;
             
-            modContext.registerRenderableItem(name, item, compatibility.isClientSide() ? RendererRegistrationHelper.registerRenderer(this, modContext) : null);
+            modContext.registerRenderableItem(name, item, /*compatibility.isClientSide() ? RendererRegistrationHelper.registerRenderer(this, modContext) :*/ null);
             
             return item;
         }
@@ -248,6 +252,8 @@ public class ItemVest extends CompatibleItem implements ISpecialArmor, ModelSour
     public BiConsumer<EntityPlayer, ItemStack> customEquippedPositioning;
     
     
+    
+    
  // Modern crafting setup
     private CraftingEntry[] modernRecipe;
 	private CraftingGroup craftGroup;
@@ -257,6 +263,17 @@ public class ItemVest extends CompatibleItem implements ISpecialArmor, ModelSour
     	return customEquippedPositioning;
     }
 
+    
+    private String modelFileString;
+    private String properTextureName;
+    
+    public String getModelFileString() {
+    	return this.modelFileString;
+    }
+    
+    public String getProperTextureName() {
+    	return this.properTextureName;
+    }
     
     
     public ItemVest(ModContext context, double percentDamageBlocked, int durability) {

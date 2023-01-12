@@ -8,11 +8,14 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import com.vicmatskiv.weaponlib.ItemVest.Builder;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleItem;
 import com.vicmatskiv.weaponlib.crafting.CraftingEntry;
 import com.vicmatskiv.weaponlib.crafting.CraftingGroup;
+import com.vicmatskiv.weaponlib.crafting.CraftingRegistry;
 import com.vicmatskiv.weaponlib.crafting.IModernCrafting;
 import com.vicmatskiv.weaponlib.inventory.GuiHandler;
+import com.vicmatskiv.weaponlib.render.modelrepo.ServerGearModelHookRegistry;
 
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.util.ITooltipFlag;
@@ -50,6 +53,10 @@ public class ItemStorage extends CompatibleItem implements ModelSource, IModernC
         private String guiTextureName;
         private int guiTextureWidth = DEFAULT_GUI_TEXTURE_WIDTH;
         
+        private String modelFileString;
+        private String properTextureName;
+        
+        
         private Predicate<Item> validItemPredicate = item -> true;
         
         public Builder withName(String name) {
@@ -70,6 +77,16 @@ public class ItemStorage extends CompatibleItem implements ModelSource, IModernC
         public Builder withTab(CreativeTabs tab) {
             this.tab = tab;
             return this;
+        }
+        
+        public Builder withProperModel(String elModel, String properTextureName) {
+        	
+        	modelFileString = elModel;
+        	this.properTextureName = properTextureName;
+        	
+        	
+    
+        	return this;
         }
         
         public Builder withModel(ModelBase model) {
@@ -187,19 +204,28 @@ public class ItemStorage extends CompatibleItem implements ModelSource, IModernC
             
             ItemStorage item = new ItemStorage(modContext, size, validItemPredicate, guiTextureLocation, this.guiTextureWidth);
             
+            ServerGearModelHookRegistry.modelArray.add(this.modelFileString);
+            
+            item.modelFileString = this.modelFileString;
+            item.properTextureName = this.properTextureName;
+            
             item.setUnlocalizedName(modContext.getModId() + "_" + name);
             
             if(model != null) {
-                item.texturedModels.add(new Tuple<>(model, addFileExtension(textureName, ".png")));
+              //  item.texturedModels.add(new Tuple<>(model, addFileExtension(textureName, ".png")));
             }
             
             if(tab != null) {
                 item.setCreativeTab(tab);
             }
             
+            // Register hook
+            CraftingRegistry.registerHook(item);
+            
+            
             item.customEquippedPositioning = customEquippedPositioning;
             
-            modContext.registerRenderableItem(name, item, compatibility.isClientSide() ? RendererRegistrationHelper.registerRenderer(this, modContext) : null);
+            modContext.registerRenderableItem(name, item, /*compatibility.isClientSide() ? RendererRegistrationHelper.registerRenderer(this, modContext) :*/ null);
             
             return item;
         }
@@ -223,6 +249,17 @@ public class ItemStorage extends CompatibleItem implements ModelSource, IModernC
     
     public BiConsumer<EntityPlayer, ItemStack> getCustomEquippedPositioning() {
     	return customEquippedPositioning;
+    }
+    
+    private String modelFileString;
+    private String properTextureName;
+    
+    public String getModelFileString() {
+    	return this.modelFileString;
+    }
+    
+    public String getProperTextureName() {
+    	return this.properTextureName;
     }
     
     public ItemStorage(ModContext context, int size,

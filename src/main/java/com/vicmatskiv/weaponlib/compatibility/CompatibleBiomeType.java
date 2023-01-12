@@ -7,7 +7,8 @@ public enum CompatibleBiomeType {
     PLAINS(BiomeDictionary.Type.PLAINS), 
     HILLS(BiomeDictionary.Type.HILLS), 
     FOREST(BiomeDictionary.Type.FOREST), 
-    SWAMP(BiomeDictionary.Type.SWAMP);
+    SWAMP(BiomeDictionary.Type.SWAMP),
+	SANDY(BiomeDictionary.Type.SANDY);
     
 //    list.add(new BiomeEntry(BiomeGenBase.forest, 10));
 //    list.add(new BiomeEntry(BiomeGenBase.roofedForest, 10));

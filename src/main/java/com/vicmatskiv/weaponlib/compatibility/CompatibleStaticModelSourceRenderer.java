@@ -166,6 +166,7 @@ public abstract class CompatibleStaticModelSourceRenderer extends ModelSourceRen
 	@SideOnly(Side.CLIENT)
 	public void renderItem()
 	{
+		
 		GL11.glPushMatrix();
 
 		GL11.glScaled(-1F, -1F, 1F);
@@ -224,6 +225,7 @@ public abstract class CompatibleStaticModelSourceRenderer extends ModelSourceRen
 			ItemStack itemStack, TransformType type, Entity entity,
 			float f, float f1, float f2, float f3, float f4, float f5) {
 
+		
 		if(!(itemStack.getItem() instanceof ModelSource)) {
 			throw new IllegalArgumentException();
 		}
