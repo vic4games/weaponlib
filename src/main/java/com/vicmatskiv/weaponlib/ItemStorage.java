@@ -210,7 +210,7 @@ public class ItemStorage extends CompatibleItem implements ModelSource, IModernC
             item.modelFileString = this.modelFileString;
             item.properTextureName = this.properTextureName;
             
-            item.setUnlocalizedName(/*modContext.getModId() + "_" + */name);
+            item.setUnlocalizedName(modContext.getModId() + "_" + name);
 
             if(this.modelFileString != null && !VMWHooksHandler.isOnServer()) {
             	

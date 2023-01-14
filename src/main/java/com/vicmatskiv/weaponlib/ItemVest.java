@@ -219,7 +219,7 @@ public class ItemVest extends CompatibleItem implements ISpecialArmor, ModelSour
             
             item.modelFileString = this.modelFileString;
             item.properTextureName = this.properTextureName;
-            item.setUnlocalizedName(/*modContext.getModId() + "_" + */name);
+            item.setUnlocalizedName(modContext.getModId() + "_" + name);
             
             // Register hook
             CraftingRegistry.registerHook(item);
