@@ -232,6 +232,7 @@ public abstract class CompatibleStaticModelSourceRenderer extends ModelSourceRen
 
 		GL11.glPushMatrix();
 
+	
 		ModelSource modelSource = (ModelSource)itemStack.getItem();
         for(Tuple<ModelBase, String> texturedModel: modelSource.getTexturedModels()) {
 			Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(builder.getModId()

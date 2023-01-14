@@ -13,10 +13,10 @@ import com.vicmatskiv.weaponlib.crafting.CraftingGroup;
 import com.vicmatskiv.weaponlib.crafting.CraftingRegistry;
 import com.vicmatskiv.weaponlib.crafting.IModernCrafting;
 import com.vicmatskiv.weaponlib.jim.util.VMWHooksHandler;
+import com.vicmatskiv.weaponlib.render.IHasModel;
 import com.vicmatskiv.weaponlib.render.modelrepo.ServerGearModelHookRegistry;
 
 import net.minecraft.client.model.ModelBase;
-import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.EntityLivingBase;
@@ -27,10 +27,8 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraftforge.common.ISpecialArmor;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class ItemVest extends CompatibleItem implements ISpecialArmor, ModelSource, IModernCrafting {
+public class ItemVest extends CompatibleItem implements ISpecialArmor, ModelSource, IModernCrafting, IHasModel {
         
     
 	public static class Builder {
@@ -211,20 +209,47 @@ public class ItemVest extends CompatibleItem implements ISpecialArmor, ModelSour
 //                    addFileExtension(guiTextureName, ".png"));
             
             
+            
+            
             ItemVest item = new ItemVest(modContext, percentDamageBlocked, durability);
+            
+            
             
             ServerGearModelHookRegistry.modelArray.add(this.modelFileString);
             
             item.modelFileString = this.modelFileString;
             item.properTextureName = this.properTextureName;
-            item.setUnlocalizedName(modContext.getModId() + "_" + name);
+            item.setUnlocalizedName(/*modContext.getModId() + "_" + */name);
             
             // Register hook
             CraftingRegistry.registerHook(item);
             
             
+            
+            if(this.modelFileString != null && !VMWHooksHandler.isOnServer()) {
+            	
+            	try {
+            		System.out.println("FOR ITEM: " + item.getRegistryName() + " | ");
+					ModelBase base = (ModelBase) Class.forName(this.modelFileString).newInstance();
+					item.texturedModels.add(new Tuple<>(base, addFileExtension(this.properTextureName, ".png")));
+					
+					
+				} catch (InstantiationException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IllegalAccessException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (ClassNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+            	
+            	
+            }
+            
             if(model != null) {
-              //  item.texturedModels.add(new Tuple<>(model, addFileExtension(textureName, ".png")));
+                item.texturedModels.add(new Tuple<>(model, addFileExtension(textureName, ".png")));
             }
             
            
@@ -234,9 +259,15 @@ public class ItemVest extends CompatibleItem implements ISpecialArmor, ModelSour
                 
             }
             
+          
+           // lientEventHandler.ITEM_REG.add(item);
+           
+            
             item.customEquippedPositioning = customEquippedPositioning;
             
-            modContext.registerRenderableItem(name, item, /*compatibility.isClientSide() ? RendererRegistrationHelper.registerRenderer(this, modContext) :*/ null);
+            System.out.println("ITem name: " + item.getUnlocalizedName());
+          //  compatibility.registerItem(item, item.getUnlocalizedName());
+            modContext.registerRenderableItem(name, item, compatibility.isClientSide() ? RendererRegistrationHelper.registerRenderer(this, modContext) :null);
             
             return item;
         }
@@ -373,4 +404,12 @@ public class ItemVest extends CompatibleItem implements ISpecialArmor, ModelSour
 	public void setCraftingGroup(CraftingGroup group) {
 		this.craftGroup = group;
 	}
+	
+	@Override
+	public void registerModels() {
+		
+		
+	}
+	
+	
 }

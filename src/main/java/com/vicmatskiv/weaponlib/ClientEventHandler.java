@@ -23,6 +23,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderPlayerPreEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderTickEvent;
 import com.vicmatskiv.weaponlib.perspective.OpticalScopePerspective;
 import com.vicmatskiv.weaponlib.perspective.Perspective;
+import com.vicmatskiv.weaponlib.render.IHasModel;
 import com.vicmatskiv.weaponlib.shader.DynamicShaderContext;
 import com.vicmatskiv.weaponlib.shader.DynamicShaderGroupManager;
 import com.vicmatskiv.weaponlib.shader.DynamicShaderGroupSource;
@@ -82,11 +83,18 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 	
 	public static ArrayList<Block> BLANKMAPPED_LIST = new ArrayList<>();
 	
+	public static ArrayList<IHasModel> ITEM_REG = new ArrayList<>();
+	
 	@SubscribeEvent
 	public void onModelRegistry(ModelRegistryEvent e) {
 		//System.out.println("HOLA CHINGAS " + BLANKMAPPED_LIST);
 		for(Block b : BLANKMAPPED_LIST)
 			ModelLoader.setCustomStateMapper(b, BlankStateMapper.DEFAULT);
+		
+		
+		for(IHasModel ima : ITEM_REG) {
+			ima.registerModels();
+		}
 		
 	}
 
