@@ -229,7 +229,7 @@ public class ItemVest extends CompatibleItem implements ISpecialArmor, ModelSour
             if(this.modelFileString != null && !VMWHooksHandler.isOnServer()) {
             	
             	try {
-            		System.out.println("FOR ITEM: " + item.getRegistryName() + " | ");
+            		//System.out.println("FOR ITEM: " + item.getRegistryName() + " | ");
 					ModelBase base = (ModelBase) Class.forName(this.modelFileString).newInstance();
 					item.texturedModels.add(new Tuple<>(base, addFileExtension(this.properTextureName, ".png")));
 					
@@ -265,7 +265,7 @@ public class ItemVest extends CompatibleItem implements ISpecialArmor, ModelSour
             
             item.customEquippedPositioning = customEquippedPositioning;
             
-            System.out.println("ITem name: " + item.getUnlocalizedName());
+           // System.out.println("ITem name: " + item.getUnlocalizedName());
           //  compatibility.registerItem(item, item.getUnlocalizedName());
             modContext.registerRenderableItem(name, item, compatibility.isClientSide() ? RendererRegistrationHelper.registerRenderer(this, modContext) :null);
             

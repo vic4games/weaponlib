@@ -15,6 +15,7 @@ import com.vicmatskiv.weaponlib.crafting.CraftingGroup;
 import com.vicmatskiv.weaponlib.crafting.CraftingRegistry;
 import com.vicmatskiv.weaponlib.crafting.IModernCrafting;
 import com.vicmatskiv.weaponlib.inventory.GuiHandler;
+import com.vicmatskiv.weaponlib.jim.util.VMWHooksHandler;
 import com.vicmatskiv.weaponlib.render.modelrepo.ServerGearModelHookRegistry;
 
 import net.minecraft.client.model.ModelBase;
@@ -209,14 +210,39 @@ public class ItemStorage extends CompatibleItem implements ModelSource, IModernC
             item.modelFileString = this.modelFileString;
             item.properTextureName = this.properTextureName;
             
-            item.setUnlocalizedName(modContext.getModId() + "_" + name);
-            
-            if(model != null) {
-              //  item.texturedModels.add(new Tuple<>(model, addFileExtension(textureName, ".png")));
+            item.setUnlocalizedName(/*modContext.getModId() + "_" + */name);
+
+            if(this.modelFileString != null && !VMWHooksHandler.isOnServer()) {
+            	
+            	try {
+            		//System.out.println("FOR ITEM: " + item.getRegistryName() + " | ");
+					ModelBase base = (ModelBase) Class.forName(this.modelFileString).newInstance();
+					item.texturedModels.add(new Tuple<>(base, addFileExtension(this.properTextureName, ".png")));
+					
+					
+				} catch (InstantiationException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IllegalAccessException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (ClassNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+            	
+            	
             }
             
+            if(model != null) {
+                item.texturedModels.add(new Tuple<>(model, addFileExtension(textureName, ".png")));
+            }
+            
+           
             if(tab != null) {
                 item.setCreativeTab(tab);
+                
+                
             }
             
             // Register hook
@@ -225,7 +251,7 @@ public class ItemStorage extends CompatibleItem implements ModelSource, IModernC
             
             item.customEquippedPositioning = customEquippedPositioning;
             
-            modContext.registerRenderableItem(name, item, /*compatibility.isClientSide() ? RendererRegistrationHelper.registerRenderer(this, modContext) :*/ null);
+            modContext.registerRenderableItem(name, item, compatibility.isClientSide() ? RendererRegistrationHelper.registerRenderer(this, modContext) : null);
             
             return item;
         }
