@@ -648,6 +648,7 @@ public class EntityConfiguration {
                     context.registerRenderableEntity(entityClass, new RenderCustomMob(model));
                 } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
                     e.printStackTrace();
+                
                 }
             }
         }

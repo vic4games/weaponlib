@@ -73,6 +73,8 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldType;
 import net.minecraftforge.fml.relauncher.Side;
@@ -106,8 +108,17 @@ public class EntityCustomMob extends CompatibleEntityMob
 
     public EntityCustomMob(World worldIn) {
         super(worldIn);
-        this.setSize(0.6F, 1.99F);
+        //System.out.println(getConfiguration());
+        setSize(getConfiguration().getSizeWidth(), getConfiguration().getSizeHeight());
+        
+        //this.setSize(0.6F, 1.99F);
       
+    }
+    
+    @Override
+    public Vec3d getPositionEyes(float partialTicks) {
+    	// TODO Auto-generated method stub
+    	return super.getPositionEyes(partialTicks);
     }
     
     public String getMobName() {
@@ -123,9 +134,28 @@ public class EntityCustomMob extends CompatibleEntityMob
     }
     
     
+    @Override
+    public AxisAlignedBB getCollisionBoundingBox() {
+    	// TODO Auto-generated method stub
+    	return super.getCollisionBoundingBox();
+    }
+    
+    @Override
+    public AxisAlignedBB getEntityBoundingBox() {
+    	// TODO Auto-generated method stub
+    	return super.getEntityBoundingBox();
+    }
+    
+    @Override
+    public void setEntityBoundingBox(AxisAlignedBB bb) {
+    	// TODO Auto-generated method stub
+    	super.setEntityBoundingBox(bb);
+    }
+    
 
     @Override
     protected void initEntityAI() {
+    //	System.out.println("A la verga: " + getConfiguration().getSizeWidth() + " | " + getConfiguration().getSizeHeight());
     	setSize(getConfiguration().getSizeWidth(), getConfiguration().getSizeHeight());
         getConfiguration().addAiTasks(this, this.tasks);
         getConfiguration().addAiTargetTasks(this, this.targetTasks);
@@ -474,7 +504,8 @@ public class EntityCustomMob extends CompatibleEntityMob
 
     @Override
     public float getEyeHeight() {
-        return 1.74F;
+    	return super.getEyeHeight();
+       // return 1.74F;
     }
 
     /**

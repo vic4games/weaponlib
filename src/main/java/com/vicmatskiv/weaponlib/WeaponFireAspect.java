@@ -77,9 +77,16 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
 
     private static Predicate<PlayerWeaponInstance> ejectSpentRoundRequired = instance -> instance.getWeapon().ejectSpentRoundRequired();
 
-    private static Predicate<PlayerWeaponInstance> ejectSpentRoundTimeoutExpired = instance ->
-        System.currentTimeMillis() >= instance.getWeapon().builder.pumpTimeoutMilliseconds + instance.getStateUpdateTimestamp();
+    private static Predicate<PlayerWeaponInstance> ejectSpentRoundTimeoutExpired = instance -> {
+    	
+    	boolean time = System.currentTimeMillis() >= instance.getWeapon().builder.pumpTimeoutMilliseconds + instance.getStateUpdateTimestamp();
 
+    	// HERE
+    
+    	return time;
+    	
+    };
+        
     private static Predicate<PlayerWeaponInstance> alertTimeoutExpired = instance ->
         System.currentTimeMillis() >= ALERT_TIMEOUT + instance.getStateUpdateTimestamp();
 

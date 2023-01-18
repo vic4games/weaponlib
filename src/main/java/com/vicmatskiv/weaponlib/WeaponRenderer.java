@@ -1054,6 +1054,15 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			return this;
 		}
 		
+		public final Builder withFirstPersonCustomPositioningEjectSpentRound(Part part, List<Transition<RenderContext<RenderableState>>> list) {
+			if(part instanceof DefaultPart) {
+				throw new IllegalArgumentException("Part " + part + " is not custom");
+			}
+
+			this.firstPersonCustomPositioningEjectSpentRound.put(part, list);
+			return this;
+		}
+		
 		@SafeVarargs
         public final Builder withFirstPersonCustomPositioningEjectSpentRoundAimed(Part part, Transition<RenderContext<RenderableState>> ...transitions) {
             if(part instanceof DefaultPart) {
@@ -1061,6 +1070,15 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
             }
 
             this.firstPersonCustomPositioningEjectSpentRoundAimed.put(part, Arrays.asList(transitions));
+            return this;
+        }
+		
+		public final Builder withFirstPersonCustomPositioningEjectSpentRoundAimed(Part part, List<Transition<RenderContext<RenderableState>>> list) {
+            if(part instanceof DefaultPart) {
+                throw new IllegalArgumentException("Part " + part + " is not custom");
+            }
+
+            this.firstPersonCustomPositioningEjectSpentRoundAimed.put(part, list);
             return this;
         }
 		
@@ -1263,6 +1281,10 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 				hasUnload = true;
 			}
 			
+			if(set.containsKey(BBLoader.KEY_EJECT_SPENT_ROUND)) hasEjectSpentRound = true;
+			
+			if(set.containsKey(BBLoader.KEY_EJECT_SPENT_ROUND_AIMED)) hasEjectSpentRoundAimed = true;
+			
 			// Check if compound & compound empty should use tactical functionality
 			SingleAnimation compound = set.getSingleAnimation(BBLoader.KEY_COMPOUND_RELOAD);
 			if(compound != null) {
@@ -1302,12 +1324,15 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			if(hasUnload) setupUnload(animationFile, BBLoader.KEY_UNLOAD, mainBoneName, leftBoneName, rightBoneName);
 			if(hasDraw) setupDraw(animationFile, BBLoader.KEY_DRAW, mainBoneName, leftBoneName, rightBoneName);
 			if(hasCompoundReloadEmpty) setupCompoundReloadEmpty(animationFile, BBLoader.KEY_COMPOUND_RELOAD_EMPTY, mainBoneName, leftBoneName, rightBoneName);
+			if(hasEjectSpentRound) setupModernEjectSpentRoundAnimation(animationFile);
+			if(hasEjectSpentRoundAimed) setupModernEjectSpentRoundAimedAnimation(animationFile);
 			
 			setupCustomKeyedPart(aR15Action, animationFile, BBLoader.KEY_ACTION);
 			
 			return this;
 		}
 		
+		/*
 		public Builder setupModernEjectSpentRoundAllAnimation(ItemAttachment<Weapon> action, String animationFile, String partKey) {
 			hasEjectSpentRound = true;
 			hasEjectSpentRoundAimed = true;
@@ -1315,13 +1340,13 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			setupModernEjectSpentRoundAimedAnimation(action, animationFile, partKey);
 			setupModernEjectSpentRoundAnimation(action, animationFile, partKey);
 			
-			setupCustomKeyedPart(action, animationFile, BBLoader.KEY_BOLT_ACTION);
+		//	setupCustomKeyedPart(action, animationFile, BBLoader.KEY_BOLT_ACTION);
 			
 			return this;
-		}
+		}*/
 			
 		
-		public Builder setupModernEjectSpentRoundAnimation(ItemAttachment<Weapon> action, String animationFile, String partKey) {
+		public Builder setupModernEjectSpentRoundAnimation(String animationFile) {
 			if(VMWHooksHandler.isOnServer()) return this;
 			
 			
@@ -1341,17 +1366,19 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			
 		}
 		
-		public Builder setupModernEjectSpentRoundAimedAnimation(ItemAttachment<Weapon> action, String animationFile, String partKey) {
+		public Builder setupModernEjectSpentRoundAimedAnimation(String animationFile) {
 			if(VMWHooksHandler.isOnServer()) return this;
 			
 			
 			
 			
-			AnimationData main = BBLoader.getAnimation(animationFile, BBLoader.KEY_EJECT_SPENT_ROUND_AIMED, BBLoader.KEY_MAIN);
-			AnimationData left = BBLoader.getAnimation(animationFile, BBLoader.KEY_EJECT_SPENT_ROUND_AIMED, "lefthand");
-			AnimationData right = BBLoader.getAnimation(animationFile, BBLoader.KEY_EJECT_SPENT_ROUND_AIMED, "righthand");
+			AnimationData main = BBLoader.getAnimation(animationFile, BBLoader.KEY_EJECT_SPENT_ROUND, BBLoader.KEY_MAIN);
+			AnimationData left = BBLoader.getAnimation(animationFile, BBLoader.KEY_EJECT_SPENT_ROUND, "lefthand");
+			AnimationData right = BBLoader.getAnimation(animationFile, BBLoader.KEY_EJECT_SPENT_ROUND, "righthand");
 						
 			checkDefaults();
+			
+		
 			
 			
 			
@@ -1367,6 +1394,30 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		}
 		
 		
+		public Builder setupBoltActionAnimations(ItemAttachment<Weapon> action, String animationFile, String partKey) {
+			AnimationSet set = BBLoader.getAnimationSet(animationFile);
+			
+			
+			Vec3d rotPoint = action.rotationPoint;
+			
+			Part aR15Action = action.getRenderablePart();
+
+			if(hasEjectSpentRound && set.getSingleAnimation(BBLoader.KEY_EJECT_SPENT_ROUND).hasBone(partKey)) {
+				withFirstPersonCustomPositioningUnloading(aR15Action, BBLoader.getAnimation(animationFile, BBLoader.KEY_EJECT_SPENT_ROUND, partKey)
+						.getTransitionList(Transform.NULL.copy().withRotationPoint(rotPoint.x, rotPoint.y, rotPoint.z), BBLoader.HANDDIVISOR));
+			}
+			
+			if(hasEjectSpentRoundAimed && set.getSingleAnimation(BBLoader.KEY_EJECT_SPENT_ROUND_AIMED).hasBone(partKey)) {
+				withFirstPersonCustomPositioningUnloading(aR15Action, BBLoader.getAnimation(animationFile, BBLoader.KEY_EJECT_SPENT_ROUND_AIMED, partKey)
+						.getTransitionList(Transform.NULL.copy().withRotationPoint(rotPoint.x, rotPoint.y, rotPoint.z), BBLoader.HANDDIVISOR));
+			}
+			
+			return this;
+			
+			
+			
+		}
+		
 		public Builder setupCustomKeyedPart(ItemAttachment<Weapon> action, String animationFile, String partKey) {
 			AnimationSet set = BBLoader.getAnimationSet(animationFile);
 			
@@ -1380,10 +1431,12 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 						.getTransitionList(Transform.NULL.copy().withRotationPoint(rotPoint.x, rotPoint.y, rotPoint.z), BBLoader.HANDDIVISOR));
 			}
 			
+			
 			if(hasUnloadEmpty && set.getSingleAnimation(BBLoader.KEY_UNLOAD_EMPTY).hasBone(partKey)) {
 				withUnloadEmptyCustom(aR15Action, BBLoader.getAnimation(animationFile, BBLoader.KEY_UNLOAD_EMPTY, partKey)
 						.getTransitionList(Transform.NULL.copy().withRotationPoint(rotPoint.x, rotPoint.y, rotPoint.z), BBLoader.HANDDIVISOR));
 			}
+			
 			
 			if(hasCompoundReload && set.getSingleAnimation(BBLoader.KEY_COMPOUND_RELOAD).hasBone(partKey)) {
 				withFirstPersonCustomPositioningCompoundReloading(aR15Action, BBLoader.getAnimation(animationFile, BBLoader.KEY_COMPOUND_RELOAD, partKey)
@@ -1415,19 +1468,31 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 						.getTransitionList(Transform.NULL.copy().withRotationPoint(rotPoint.x, rotPoint.y, rotPoint.z), BBLoader.HANDDIVISOR));
 			}
 			
+			
 			if(hasUnload && set.getSingleAnimation(BBLoader.KEY_UNLOAD).hasBone(partKey)) {
 				withFirstPersonCustomPositioningUnloading(aR15Action, BBLoader.getAnimation(animationFile, BBLoader.KEY_UNLOAD, partKey)
 						.getTransitionList(Transform.NULL.copy().withRotationPoint(rotPoint.x, rotPoint.y, rotPoint.z), BBLoader.HANDDIVISOR));
 			}
 			
+			
+			
 			if(hasEjectSpentRound && set.getSingleAnimation(BBLoader.KEY_EJECT_SPENT_ROUND).hasBone(partKey)) {
-				withFirstPersonCustomPositioningUnloading(aR15Action, BBLoader.getAnimation(animationFile, BBLoader.KEY_EJECT_SPENT_ROUND, partKey)
-						.getTransitionList(Transform.NULL.copy().withRotationPoint(rotPoint.x, rotPoint.y, rotPoint.z), BBLoader.HANDDIVISOR));
+				
+				
+				List<Transition<RenderContext<RenderableState>>> list = BBLoader.getAnimation(animationFile, BBLoader.KEY_EJECT_SPENT_ROUND, partKey)
+						.getTransitionList(Transform.NULL.copy().withRotationPoint(rotPoint.x, rotPoint.y, rotPoint.z), BBLoader.HANDDIVISOR);
+				
+				
+				withFirstPersonCustomPositioningEjectSpentRound(aR15Action, list);
+				//withFirstPersonCustomPositioningUnloading(aR15Action, list);
 			}
 			
 			if(hasEjectSpentRoundAimed && set.getSingleAnimation(BBLoader.KEY_EJECT_SPENT_ROUND_AIMED).hasBone(partKey)) {
-				withFirstPersonCustomPositioningUnloading(aR15Action, BBLoader.getAnimation(animationFile, BBLoader.KEY_EJECT_SPENT_ROUND_AIMED, partKey)
-						.getTransitionList(Transform.NULL.copy().withRotationPoint(rotPoint.x, rotPoint.y, rotPoint.z), BBLoader.HANDDIVISOR));
+				
+				List<Transition<RenderContext<RenderableState>>> list = BBLoader.getAnimation(animationFile, BBLoader.KEY_EJECT_SPENT_ROUND_AIMED, partKey)
+						.getTransitionList(Transform.NULL.copy().withRotationPoint(rotPoint.x, rotPoint.y, rotPoint.z), BBLoader.HANDDIVISOR);
+				
+				withFirstPersonCustomPositioningEjectSpentRoundAimed(aR15Action, list);
 			}
 			
 			return this;
@@ -1435,6 +1500,9 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 			
 			
 		}
+		
+		
+		
 		
 		public Builder setCompoundReloadTacticalFunctionality(boolean normal, boolean empty) {
 			this.compoundReloadUsesTactical = normal;
@@ -1443,6 +1511,8 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		}
 		
 		public Builder setupInspectAnimations(String animationFile, String anim, String mainBoneName, String leftHandBoneName, String rightHandBoneName) {
+			
+			//System.out.println("Attemping fetch @ " + animationFile + ", " + anim + ", " + mainBoneName);
 			AnimationData main = BBLoader.getAnimation(animationFile, anim, mainBoneName);
 			AnimationData left = BBLoader.getAnimation(animationFile, anim, leftHandBoneName);
 			AnimationData right = BBLoader.getAnimation(animationFile, anim, rightHandBoneName);
@@ -2330,11 +2400,16 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		    playerWeaponInstance = (PlayerWeaponInstance) playerItemInstance;
 		}
 
+	
 		if(playerWeaponInstance != null) {
 			AsyncWeaponState asyncWeaponState = getNextNonExpiredState(playerWeaponInstance);
-
-			switch(asyncWeaponState.getState()) {
-
+			//System.out.println(asyncWeaponState.getState());
+			
+			WeaponState renderableState = asyncWeaponState.getState();
+		
+			
+			switch(renderableState) {
+			
 			case RECOILED:
 				
 				if(playerWeaponInstance.isAutomaticModeEnabled() && !hasRecoilPositioning()) {
@@ -2862,7 +2937,7 @@ public class WeaponRenderer extends CompatibleWeaponRenderer {
 		@Override
 		public List<MultipartTransition<Part, RenderContext<RenderableState>>> getTransitions(RenderableState state) {
 			
-			
+		
 			switch(state) {
 			case MODIFYING:
 				return getSimpleTransition(getBuilder().firstPersonPositioningModifying,

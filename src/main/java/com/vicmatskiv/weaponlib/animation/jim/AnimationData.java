@@ -361,6 +361,20 @@ public class AnimationData {
 
 	}
 	
+	public Transition<RenderContext<RenderableState>>[] getTransitionArray() {
+		List<Transition<RenderContext<RenderableState>>> list = getTransitionList();
+		
+		Transition<RenderContext<RenderableState>>[] array = new Transition[list.size()];
+		
+		int count = 1;
+		for(Transition<RenderContext<RenderableState>> t : list) {
+			array[count++] = t;
+			if(count == list.size() - 1) break;
+		}
+		
+		return array;
+	}
+	
 	
 	/**
 	 * Allows for ADS reloads, quite a simple set of logic instructions, basically it'll provide transitions
@@ -410,12 +424,25 @@ public class AnimationData {
 		
 		
 		
+		/*
+		transitionList.add((Transition<RenderContext<RenderableState>>) 
+				
+				new Transition<>(new Transform()
+            			.withScale(3, 3, 3)
+            			.withPosition(-0.3f, 4.75f, -2f)
+            			.withRotation(-10, 0, 0)
+            			.getAsPosition(), 10)
+            			);
+            			*/
 		
 
 		if(!isNull) {
-			
+			int count = 0;
 			for (Entry<Float, BlockbenchTransition> bb : this.bbTransition.entrySet()) {
-				transitionList.add((Transition<RenderContext<RenderableState>>) bb.getValue().createVMWTransition(initial, divisor));
+				Transition<RenderContext<RenderableState>> transition = (Transition<RenderContext<RenderableState>>) bb.getValue().createVMWTransition(initial, divisor);
+				if(count == 0) transition.setDuration(100);
+				transitionList.add(transition);
+				count++;
 			}
 		} else {
 			
@@ -426,6 +453,9 @@ public class AnimationData {
 		}
 		
 		
+		
+		
+		
 		// Swaps the last frame of the animation with
 		// the initial position (much smoother lol)
 		if(applySwap) {
@@ -433,6 +463,9 @@ public class AnimationData {
 			transitionList.set(transitionList.size()-1, new Transition<>(initial.getAsPosition(), curLength));
 		}
 		
+		
+		
+		//System.out.println("yo");
 		
 		/*
 		System.out.println("---End--");

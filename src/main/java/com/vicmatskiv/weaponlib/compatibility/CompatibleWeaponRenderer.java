@@ -190,8 +190,11 @@ public abstract class CompatibleWeaponRenderer extends ModelSourceRenderer imple
 					
 					
 				
-					if (player.isSneaking() && (getClientModContext() != null && getClientModContext().getMainHeldWeapon() != null && getClientModContext().getMainHeldWeapon().isAimed()))
-						GlStateManager.translate(0.0F, 0.2F, 0.0F);
+					/*
+					if (player.isSneaking() && (getClientModContext() != null && getClientModContext().getMainHeldWeapon() != null && getClientModContext().getMainHeldWeapon().isAimed())) {
+						//GlStateManager.translate(0.0F, 0.2F, 0.0F);
+					}*/
+						
 				} else if (transformType == TransformType.FIRST_PERSON_LEFT_HAND
 						|| transformType == TransformType.FIRST_PERSON_RIGHT_HAND) {
 					//

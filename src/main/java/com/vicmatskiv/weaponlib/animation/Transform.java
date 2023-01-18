@@ -1,6 +1,7 @@
 package com.vicmatskiv.weaponlib.animation;
 
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import org.lwjgl.opengl.GL11;
 
@@ -57,6 +58,18 @@ public class Transform {
 		rotation[0] = x;
 		rotation[1] = y;
 		rotation[2] = z;
+		return this;
+	}
+	
+	public Transform addTransformConditional(Supplier<Boolean> condition, double x, double y, double z) {
+		if(!condition.get()) return this;
+		return addTransform(x, y, z);
+	}
+	
+	public Transform addTransform(double x, double y, double z) {
+		position[0] += x;
+		position[1] += y;
+		position[2] += z;
 		return this;
 	}
 	

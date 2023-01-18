@@ -51,6 +51,10 @@ public class Transition<Context> {
 	public Consumer<Context> getItemPositioning() {
 		return itemPositioning;
 	}
+	
+	public void setDuration(long newDuration) {
+		this.duration = newDuration;
+	}
 
 	public long getDuration() {
 		return duration;

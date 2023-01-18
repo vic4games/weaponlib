@@ -297,7 +297,7 @@ public class AnimationModeProcessor {
 			if (transformMode == 1) {
 				float m = 0.2f;
 				
-				if(Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)) {
+				if(Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) {
 					m /= 10;
 				}
 				
@@ -320,44 +320,6 @@ public class AnimationModeProcessor {
 				}
 				
 				
-				
-
-				// Make transforms relative to the axis of the object
-
-				
-				
-				Matrix4f currentMatrix = new Matrix4f(DebugPositioner.rotationMatrix());
-
-				//Matrix4f.mul(currentMatrix, currentPartMatrix, currentMatrix);
-				
-				
-				/*
-				//System.out.println(currentPartMatrix);
-				Matrix4f translation = new Matrix4f();
-
-				translation.m30 = (float) vec.x * m;
-				translation.m31 = (float) vec.y * m;
-				translation.m32 = (float) vec.z * m;
-
-			
-				//translation.invert();
-		
-				Matrix4f.mul(currentMatrix, translation, translation);
-				Position i = DebugPositioner.getCurrentPartPosition();
-
-				// translation.invert();
-
-				Matrix4f result = translation;
-				// Matrix4f.mul(currentMatrix, translation, result);
-
-				// result.invert();
-
-				
-				i.x += result.m30;
-				i.y += result.m31;
-				i.z += result.m32;
-				*/
-				// DebugPositioner.incrementXPosition((float) m, false);
 				boolean modernMode = true;
 				
 				if(CompatibleClientEventHandler.muzzlePositioner) {

@@ -54,6 +54,7 @@ public class StorageItemGuiContainer extends CompatibleGuiContainer {
         super.drawScreen(par1, par2, par3);
         this.xSize_lo = (float) par1;
         this.ySize_lo = (float) par2;
+        this.renderHoveredToolTip(par1, par2);
     }
 
     /**
