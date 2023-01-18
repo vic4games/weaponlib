@@ -22,6 +22,7 @@ import com.vicmatskiv.weaponlib.WeaponState;
 import com.vicmatskiv.weaponlib.animation.AnimationModeProcessor;
 import com.vicmatskiv.weaponlib.animation.ClientValueRepo;
 import com.vicmatskiv.weaponlib.animation.gui.AnimationGUI;
+import com.vicmatskiv.weaponlib.animation.movement.WeaponRotationHandler;
 import com.vicmatskiv.weaponlib.command.DebugCommand;
 import com.vicmatskiv.weaponlib.config.novel.ModernConfigManager;
 import com.vicmatskiv.weaponlib.render.Bloom;
@@ -90,6 +91,9 @@ public abstract class CompatibleClientEventHandler {
 	public static boolean freecamEnabled = false;
 	public static boolean freecamLock = false;
 	public static boolean muzzlePositioner = false;
+	
+	
+	public static boolean cancelSway = false;
 
 	public static double freeYaw = 0;
 	public static double freePitch = 0;
@@ -143,6 +147,7 @@ public abstract class CompatibleClientEventHandler {
 		// This is used to unlock and lock freecam.
 		if (Keyboard.isKeyDown(KeyBindings.freecamLock.getKeyCode()))
 			freecamLock = !freecamLock;
+		
 	}
 
 	@SubscribeEvent

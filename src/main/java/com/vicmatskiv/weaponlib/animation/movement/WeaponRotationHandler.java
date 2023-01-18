@@ -9,6 +9,7 @@ import com.vicmatskiv.weaponlib.animation.ClientValueRepo;
 import com.vicmatskiv.weaponlib.animation.jim.BBLoader;
 import com.vicmatskiv.weaponlib.animation.jim.KeyedAnimation;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleWeaponRenderer.StateDescriptor;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.RecoilParam;
 import com.vicmatskiv.weaponlib.numerical.LissajousCurve;
 import com.vicmatskiv.weaponlib.numerical.SpringValue;
@@ -113,6 +114,7 @@ public class WeaponRotationHandler {
 	public void run(RenderContext<RenderableState> renderContext, StateDescriptor stateDescriptor) {
 
 		
+		if(CompatibleClientEventHandler.cancelSway) return;
 		
 		/*
 		 * Prepare values and do calculations
