@@ -124,10 +124,13 @@ public class HighIQSpawnEgg extends CompatibleItem implements IModernCrafting {
 	public EnumActionResult onItemUse(EntityPlayer player, World worldIn, BlockPos pos, EnumHand hand,
 			EnumFacing facing, float hitX, float hitY, float hitZ) {
 
+
 		if (hand == EnumHand.OFF_HAND)
 			return EnumActionResult.FAIL;
 
 		try {
+			
+			//System.out.println(worldIn.getBlockState(pos).getBlock());
 
 			if (!blockPredicate.test(worldIn.getBlockState(pos).getBlock()))
 				return EnumActionResult.FAIL;
@@ -139,8 +142,8 @@ public class HighIQSpawnEgg extends CompatibleItem implements IModernCrafting {
 
 					NBTTagCompound btc = new NBTTagCompound();
 					btc.setString("id", "mw:" + getEntitySpawnName());
-					Entity entity = AnvilChunkLoader.readWorldEntityPos(btc, worldIn, pos.getX(), pos.getY(),
-							pos.getZ(), true);
+					Entity entity = AnvilChunkLoader.readWorldEntityPos(btc, worldIn, pos.getX() + 0.5, pos.up().getY(),
+							pos.getZ() + 0.5, true);
 
 					entity.setPosition(pos.getX() + 0.5, pos.up().getY(), pos.getZ() + 0.5);
 					

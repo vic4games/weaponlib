@@ -35,9 +35,11 @@ import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.item.EntityBoat;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
 import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
@@ -85,6 +87,8 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 	
 	public static ArrayList<IHasModel> ITEM_REG = new ArrayList<>();
 	
+	public static ArrayList<Item> ITEM_MODEL_REG = new ArrayList<>();
+	
 	@SubscribeEvent
 	public void onModelRegistry(ModelRegistryEvent e) {
 		//System.out.println("HOLA CHINGAS " + BLANKMAPPED_LIST);
@@ -95,6 +99,9 @@ public class ClientEventHandler extends CompatibleClientEventHandler {
 		for(IHasModel ima : ITEM_REG) {
 			ima.registerModels();
 		}
+		
+		for(Item i : ITEM_MODEL_REG)
+			ModelLoader.setCustomModelResourceLocation(i, 0, new ModelResourceLocation(i.getRegistryName(), "inventory"));
 		
 	}
 
