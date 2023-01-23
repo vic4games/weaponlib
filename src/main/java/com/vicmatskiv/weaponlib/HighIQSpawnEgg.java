@@ -77,8 +77,10 @@ public class HighIQSpawnEgg extends CompatibleItem implements IModernCrafting {
 			CraftingRegistry.registerHook(egg);
 
 			ForgeRegistries.ITEMS.register(egg);
+			
+			ClientEventHandler.ITEM_MODEL_REG.add(egg);
 
-			return new HighIQSpawnEgg();
+			return egg;
 		}
 
 		public Builder withID(int i) {
