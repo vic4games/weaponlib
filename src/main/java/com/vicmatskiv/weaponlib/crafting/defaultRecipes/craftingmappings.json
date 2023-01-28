@@ -1,0 +1,15 @@
+{
+  "recipes": [
+    {
+      "entryName": "mw:bullet50ae",
+      "craftingGroup": "BULLET",
+      "recipe": [
+        {
+          "entryName": "minecraft:acacia_fence",
+          "isOreDictionary": false,
+          "count": 4
+        }
+      ]
+    }
+  ]
+}
