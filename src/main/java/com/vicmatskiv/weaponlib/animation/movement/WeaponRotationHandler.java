@@ -35,8 +35,7 @@ public class WeaponRotationHandler {
 
 	
 	// animations
-	public static final KeyedAnimation WALKING_ANIMATION = new KeyedAnimation(
-			BBLoader.getAnimation("universal", "walkforward", "main"));
+	public static final KeyedAnimation WALKING_ANIMATION = new KeyedAnimation(BBLoader.getAnimation("universal", "walkforward", "main"));
 	public static final KeyedAnimation RUNNING_ANIMATION = new KeyedAnimation(BBLoader.getAnimation("universal", "running", "main"));
 	public static final KeyedAnimation STRAFING_ANIMATION = new KeyedAnimation(BBLoader.getAnimation("universal", "walk", "main"));
 
@@ -55,7 +54,7 @@ public class WeaponRotationHandler {
 	
 	
 	private static final float SWAY_AMPLITUDE_NORMAL = 0.15f;
-	private static final float SWAY_AMPLITUDE_OPTICAL_ADS = 0.11f;
+	private static final float SWAY_AMPLITUDE_OPTICAL_ADS = 0.03f;
 	
 	// Divisor multiplier if the player is using an optical scope
 	private static final float DIVISOR_MULTIPLIER_OPTICAL= 0.33f;
