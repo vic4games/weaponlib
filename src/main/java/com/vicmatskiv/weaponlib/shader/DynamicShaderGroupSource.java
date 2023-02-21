@@ -14,6 +14,8 @@ public class DynamicShaderGroupSource {
 
     private ResourceLocation shaderLocation;
 
+    private List<AdvUniform> advUniforms;
+    
     private List<Tuple<String, Function<DynamicShaderContext, Object>>> uniforms;
     private UUID sourceId;
 
@@ -21,6 +23,7 @@ public class DynamicShaderGroupSource {
         this.sourceId = sourceId;
         this.shaderLocation = location;
         this.uniforms = new ArrayList<>();
+        this.advUniforms = new ArrayList<>();
     }
 
     public UUID getSourceId() {
@@ -31,6 +34,11 @@ public class DynamicShaderGroupSource {
         uniforms.add(new Tuple<>(name, value));
         return this;
     }
+    
+    public DynamicShaderGroupSource withAdvUniform(AdvUniform u) {
+    	advUniforms.add(u);
+    	return this;
+    }
 
     public ResourceLocation getShaderLocation() {
         return shaderLocation;
@@ -38,5 +46,9 @@ public class DynamicShaderGroupSource {
 
     public List<Tuple<String, Function<DynamicShaderContext, Object>>> getUniforms(DynamicShaderContext context) {
         return Collections.unmodifiableList(uniforms);
+    }
+    
+    public static interface AdvUniform {
+    	public void apply(DynamicShaderGroupSource src);
     }
 }

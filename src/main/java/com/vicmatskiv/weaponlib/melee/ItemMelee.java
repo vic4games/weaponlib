@@ -267,7 +267,7 @@ PlayerItemInstanceFactory<PlayerMeleeInstance, MeleeState>, AttachmentContainer,
 
             } else {
                 //throw new IllegalStateException("No recipe defined for attachment " + name);
-                System.err.println("!!!No recipe defined for melee weapon " + name);
+                //System.err.println("!!!No recipe defined for melee weapon " + name);
             }
             return itemMelee;
         }

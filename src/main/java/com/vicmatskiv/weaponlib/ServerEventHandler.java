@@ -24,9 +24,11 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleServerEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleServerTickEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleStartTrackingEvent;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleStopTrackingEvent;
+import com.vicmatskiv.weaponlib.config.BalancePackManager;
 import com.vicmatskiv.weaponlib.electronics.ItemHandheld;
 import com.vicmatskiv.weaponlib.inventory.CustomPlayerInventory;
 import com.vicmatskiv.weaponlib.inventory.EntityInventorySyncMessage;
+import com.vicmatskiv.weaponlib.jim.util.HitUtil;
 import com.vicmatskiv.weaponlib.mission.EntityMissionOfferingSyncMessage;
 import com.vicmatskiv.weaponlib.mission.GoToLocationAction;
 import com.vicmatskiv.weaponlib.mission.KillEntityAction;
@@ -34,6 +36,7 @@ import com.vicmatskiv.weaponlib.mission.MissionManager;
 import com.vicmatskiv.weaponlib.mission.MissionOfferingSyncMessage;
 import com.vicmatskiv.weaponlib.mission.Missions;
 import com.vicmatskiv.weaponlib.mission.PlayerMissionSyncMessage;
+import com.vicmatskiv.weaponlib.network.packets.HeadshotSFXPacket;
 import com.vicmatskiv.weaponlib.tracking.PlayerEntityTracker;
 import com.vicmatskiv.weaponlib.tracking.SyncPlayerEntityTrackerMessage;
 
@@ -41,10 +44,14 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
+import net.minecraftforge.event.entity.living.LivingEquipmentChangeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 
 /**
@@ -73,8 +80,25 @@ public class ServerEventHandler extends CompatibleServerEventHandler {
     }
     
     @Override
+	public void onEquipmentChange(LivingEquipmentChangeEvent e) {
+    	if(e.getSlot() == EntityEquipmentSlot.MAINHAND
+    			&& e.getFrom() != e.getTo()
+    			&& e.getFrom().getItem() instanceof Weapon) {
+    		
+    		//e.getEntityLiving().entityDropItem(e.getFrom(), 1);
+    	}
+	}
+    
+   
+    
+    @Override
     protected void onCompatibleLivingUpdateEvent(CompatibleLivingUpdateEvent e) {
         
+    	
+    	if(!compatibility.world(e.getEntity()).isRemote && e.getEntityLiving() instanceof EntityPlayer) {
+    		//modContext.getChannel().getChannel().sendTo(new HeadshotSFXPacket(), (EntityPlayerMP) e.getEntityLiving());
+    	}
+    	
         if(!compatibility.world(e.getEntity()).isRemote) {
 //            if(e.getEntity() instanceof EntityPlayer) {
 //                System.out.println(System.currentTimeMillis() + ": " + compatibility.world(e.getEntity()).getTotalWorldTime());
@@ -258,12 +282,40 @@ public class ServerEventHandler extends CompatibleServerEventHandler {
 
     @Override
     protected void onCompatibleLivingHurtEvent(CompatibleLivingHurtEvent e) {
+    	
+    	
+    	
         CustomPlayerInventory inventory = CompatibleCustomPlayerInventoryCapability
                 .getInventory(e.getEntityLiving());
         if (inventory != null && inventory.getStackInSlot(1) != null) {
             compatibility.applyArmor(e, e.getEntityLiving(),
                     new ItemStack[] { inventory.getStackInSlot(1) }, e.getDamageSource(), e.getAmount());
         }
+        
+        if(e.getDamageSource().getImmediateSource() instanceof EntityProjectile) {
+        	RayTraceResult hit = HitUtil.traceProjectilehit(e.getDamageSource().getImmediateSource(), e.getEntityLiving());
+        	if(hit != null) {
+        		Vec3d eyes = e.getEntityLiving().getPositionEyes(1.0f);
+            	if(hit.hitVec.distanceTo(eyes) < 0.6f) {
+            		
+            		//tSystem.out.println("Current headshot multiplier is " + BalancePackManager.getHeadshotMultiplier());
+            		e.setAmount((float) (e.getAmount()*BalancePackManager.getHeadshotMultiplier()));
+            		
+            		if(e.getDamageSource().getTrueSource() instanceof EntityPlayer) {
+            			//System.out.println(e.getDamageSource().getTrueSource());
+            			modContext.getChannel().getChannel().sendTo(new HeadshotSFXPacket(), (EntityPlayerMP) e.getDamageSource().getTrueSource());
+            		}
+                	
+            		
+            	}
+        	}
+        	
+        	
+        	
+        }
+        
+       
+        
     }
 
     @Override
@@ -306,6 +358,7 @@ public class ServerEventHandler extends CompatibleServerEventHandler {
     protected void onCompatiblePlayerLoggedIn(PlayerLoggedInEvent e) {
         MissionManager missionManager = modContext.getMissionManager();
         if(missionManager != null ) {
+        	
             modContext.getChannel().getChannel().sendTo(
                     new MissionOfferingSyncMessage(missionManager.getOfferings()), (EntityPlayerMP)e.player);
             modContext.getChannel().getChannel().sendTo(

@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -22,28 +23,55 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.vicmatskiv.weaponlib.animation.ScreenShakingAnimationManager;
+import com.vicmatskiv.weaponlib.animation.SpecialAttachments;
+import com.vicmatskiv.weaponlib.BulletHoleRenderer.BulletHole;
 import com.vicmatskiv.weaponlib.animation.ScreenShakeAnimation;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleBlockState;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleItem;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleReflection;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTargetPoint;
+import com.vicmatskiv.weaponlib.compatibility.RecoilParam;
+import com.vicmatskiv.weaponlib.config.BalancePackManager;
 import com.vicmatskiv.weaponlib.config.Gun;
+import com.vicmatskiv.weaponlib.config.BalancePackManager.GunConfigurationGroup;
 import com.vicmatskiv.weaponlib.crafting.CraftingComplexity;
+import com.vicmatskiv.weaponlib.crafting.CraftingEntry;
+import com.vicmatskiv.weaponlib.crafting.CraftingGroup;
+import com.vicmatskiv.weaponlib.crafting.CraftingRegistry;
+import com.vicmatskiv.weaponlib.crafting.IModernCrafting;
 import com.vicmatskiv.weaponlib.crafting.OptionsMetadata;
+import com.vicmatskiv.weaponlib.jim.util.VMWHooksHandler;
 import com.vicmatskiv.weaponlib.model.Shell;
+import com.vicmatskiv.weaponlib.render.ModificationGUI;
+import com.vicmatskiv.weaponlib.render.WeaponSpritesheetBuilder;
+import com.vicmatskiv.weaponlib.render.shells.ShellParticleSimulator.Shell.Type;
 
+import akka.japi.Pair;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.common.registry.GameRegistry.ObjectHolder;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
+import scala.tools.nsc.typechecker.MethodSynthesis.MethodSynth.LazyValGetter.ChangeOwnerAndModuleClassTraverser;
 
 public class Weapon extends CompatibleItem implements PlayerItemInstanceFactory<PlayerWeaponInstance, WeaponState>, 
-AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
+AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable, IModernCrafting {
 
     private static final Logger logger = LogManager.getLogger(Weapon.class);
 
@@ -63,8 +91,10 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
     }
 
     public static class Builder {
+    	
+    	public static int noRecipe = 0;
 
-        private static final float DEFAULT_SPAWN_ENTITY_SPEED = 120f;
+        private static final float DEFAULT_SPAWN_ENTITY_SPEED = 150f;
         private static final float DEFAULT_INACCURACY = 0f;
         private static final String DEFAULT_SHELL_CASING_TEXTURE_NAME = "weaponlib:/com/vicmatskiv/weaponlib/resources/shell.png";
         private static final float DEFAULT_SHELL_CASING_VELOCITY = 0.1f;
@@ -77,6 +107,8 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         int ammoCapacity = 0;
         float recoil = 1.0F;
 
+        private boolean hasFlashPedals = false;
+        
         private String shootSound;
         private String silencedShootSound;
         private String reloadSound;
@@ -89,6 +121,10 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         private String endOfShootSound;
         private String burstShootSound;
         private String silencedBurstShootSound;
+        
+        private GunConfigurationGroup configGroup = GunConfigurationGroup.NONE;
+        
+        private Vec3d muzzlePosition = new Vec3d(-.3, -1.0, -5.3);
 
         @SuppressWarnings("unused")
         private String exceededMaxShotsSound;
@@ -104,6 +140,7 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         BiFunction<Weapon, EntityLivingBase, ? extends WeaponSpawnEntity> spawnEntityWith;
         BiFunction<PlayerWeaponInstance, EntityLivingBase, ? extends EntityShellCasing> spawnShellWith;
         private float spawnEntityDamage;
+        private boolean spawnEntityRocketParticles;
         private float spawnEntityExplosionRadius;
         private boolean isDestroyingBlocks = true;
         private float spawnEntityGravityVelocity;
@@ -111,14 +148,18 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         private float spawnEntitySmokeParticleAgeCoefficient = 1f;
         private float spawnEntityExplosionParticleScaleCoefficient = 1.5f;
         private float spawnEntitySmokeParticleScaleCoefficient = 1f;
-        long reloadingTimeout = Weapon.DEFAULT_RELOADING_TIMEOUT_TICKS;
+        public long reloadingTimeout = Weapon.DEFAULT_RELOADING_TIMEOUT_TICKS;
         long loadIterationTimeout = Weapon.DEFAULT_LOAD_ITERATION_TIMEOUT_TICKS;
 
+        
+        
         private String modId;
 
         boolean crosshairFullScreen = false;
         boolean crosshairZoomedFullScreen = false;
 
+        
+        
         Map<ItemAttachment<Weapon>, CompatibleAttachment<Weapon>> compatibleAttachments = new HashMap<>();
         ModelBase ammoModel;
         String ammoModelTextureName;
@@ -166,6 +207,8 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         private CraftingComplexity craftingComplexity;
 
         private Object[] craftingMaterials;
+        
+        private String gunType = "Gun";
 
         private float shellCasingForwardOffset = Weapon.DEFAULT_SHELL_CASING_FORWARD_OFFSET;
 
@@ -177,6 +220,8 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
 
         public boolean shellCasingEjectEnabled = true;
         
+        public RecoilParam recoilParam = new RecoilParam();
+        
         private boolean hasIteratedLoad;
 
         private ShellCasingEjectDirection shellCasingEjectDirection = ShellCasingEjectDirection.RIGHT;
@@ -184,12 +229,26 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         private float silencedShootSoundVolume = Weapon.DEFAULT_SILENCED_SHOOT_SOUND_VOLUME;
         private float shootSoundVolume = Weapon.DEFAULT_SHOOT_SOUND_VOLUME;
         private Object[] craftingRecipe;
+        private CraftingEntry[] modernCraftingRecipe;
         public boolean isOneClickBurstAllowed;
         String flashTexture;
+        
+        
+        private com.vicmatskiv.weaponlib.render.shells.ShellParticleSimulator.Shell.Type shellType = Type.ASSAULT;
         
         private Set<AttachmentCategory> unremovableAttachmentCategories = new HashSet<>();
 //        private Map<RenderableState, ScreenShaking> screenShakings = new HashMap<>();
         private Map<RenderableState, ScreenShakeAnimation.Builder> screenShakingBuilders = new HashMap<>();
+        
+        private float zoom;
+        
+        
+        protected Pair<Double, Double> screenShakingParameters = new Pair<Double, Double>(100.0, 1.0);
+        
+        private boolean newSys = false;
+        
+        private int[][] guiPositions = new int[][] {{-43, 86},{97, 96},{92, 34},{14, -55},{164, -26},{145, 67},{60, 110},{0, -50},{-100, -50},{-29, 44},{50, 100}};
+    		
         
         public Builder() {
             ScreenShakeAnimation.Builder defaultShootingStateScreenShakingBuilder = new ScreenShakeAnimation.Builder()
@@ -199,6 +258,57 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
                 .withZRotationCoefficient(2f)
                 .withTransitionDuration(50);
             screenShakingBuilders.put(RenderableState.SHOOTING, defaultShootingStateScreenShakingBuilder);
+        }
+        
+        public Builder withConfigGroup(GunConfigurationGroup group) {
+        	this.configGroup = group;
+			return this;
+        }
+        
+        public Builder withWeaponType(String type) {
+        	this.gunType = type;
+        	return this;
+        }
+        
+        public String getWeaponType() {
+        	return this.gunType;
+        }
+        
+        
+        public Builder hasGUIPositions(int[][] gp) {
+        	this.guiPositions = gp;
+        	return this;
+        }
+        
+        public List<Integer> getMaxShots() {
+        	return this.maxShots;
+        }
+        
+        public int[][] getGUIPositions() {
+        	return this.guiPositions;
+        }
+        
+        public float getFirerate() {
+        	return this.fireRate;
+        }
+        
+        public Builder hasFlashPedals() {
+        	this.hasFlashPedals = true;
+        	return this;
+        }
+        
+        public Builder useNewSystem() {
+        	this.newSys = true;
+        	return this;
+        }
+        
+        public Builder withShellType(Type type) {
+        	this.shellType = type;
+			return this;
+        }
+        
+        public boolean isUsingNewSystem() {
+        	return this.newSys;
         }
         
         public Builder withModId(String modId) {
@@ -211,8 +321,9 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
             return this;
         }
 
+        @Deprecated
         public Builder withInformationProvider(Function<ItemStack, List<String>> informationProvider) {
-            this.informationProvider = informationProvider;
+           // this.informationProvider = informationProvider;
             return this;
         }
 
@@ -229,6 +340,11 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         public Builder withName(String name) {
             this.name = name;
             return this;
+        }
+        
+        public Builder withRecoilParam(RecoilParam param) {
+        	this.recoilParam = param;
+        	return this;
         }
 
         public Builder withAmmoCapacity(int ammoCapacity) {
@@ -251,9 +367,9 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
             return this;
         }
 
-        @Deprecated
+        
         public Builder withZoom(float zoom) {
-            //this.zoom = zoom;
+            this.zoom = zoom;
             return this;
         }
 
@@ -261,7 +377,10 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
             this.ammo = ammo;
             return this;
         }
+        
 
+
+ 
         public Builder withMaxShots(int... maxShots) {
             for(int m: maxShots) {
                 this.maxShots.add(m);
@@ -333,6 +452,14 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
             this.crosshairZoomed = modId + ":" + "textures/crosshairs/" + crosshairZoomed.toLowerCase() + ".png";
             this.crosshairZoomedFullScreen = fullScreen;
             return this;
+        }
+        
+        public Builder withMuzzlePosition(Vec3d pos) {
+        	 if (modId == null) {
+                 throw new IllegalStateException("ModId is not set");
+             }
+        	this.muzzlePosition = pos;
+        	return this;
         }
 
         public Builder withShootSound(String shootSound) {
@@ -454,6 +581,12 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
             return this;
         }
 
+        
+        public Builder withSpawnEntityRocketParticles() {
+        	this.spawnEntityRocketParticles = true;
+        	return this;
+        }
+        
         public Builder withSpawnEntityDamage(float spawnEntityDamage) {
             this.spawnEntityDamage = spawnEntityDamage;
             return this;
@@ -504,7 +637,9 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
             return this;
         }
 
+        
         public Builder withRenderer(WeaponRenderer renderer) {
+        	//if(VMWHooksHandler.isOnServer()) return this;
             this.renderer = renderer;
             return this;
         }
@@ -679,6 +814,8 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
             return this;
         }
 
+        
+        @Deprecated
         public Builder withCrafting(CraftingComplexity craftingComplexity, Object...craftingMaterials) {
             if(craftingComplexity == null) {
                 throw new IllegalArgumentException("Crafting complexity not set");
@@ -689,6 +826,18 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
             this.craftingComplexity = craftingComplexity;
             this.craftingMaterials = craftingMaterials;
             return this;
+        }
+        
+        
+        
+        public Builder withTest() {
+        	return this;
+        }
+        
+        
+        public Builder withModernRecipe(CraftingEntry...itemStacks) {
+        	this.modernCraftingRecipe = itemStacks;
+        	return this;
         }
 
         public Builder withCraftingRecipe(Object...craftingRecipe) {
@@ -732,6 +881,11 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
                     .withTransitionDuration(50);
             screenShakingBuilders.put(RenderableState.SHOOTING, defaultShootingStateScreenShakingBuilder);
             return this;
+        }
+        
+        public Builder withModernScreenShaking(double intensity, double speedModifier) {
+        	this.screenShakingParameters = new Pair<Double, Double>(intensity, speedModifier);
+        	return this;
         }
         
         public Builder withScreenShaking(RenderableState state, float xRotationCoefficient, float yRotationCoefficient, float zRotationCoefficient) {
@@ -782,15 +936,40 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
                 spawnEntityClass = WeaponSpawnEntity.class;
             }
 
+            
+            for(ItemSkin skin : CommonRegistry.gunSkins) {
+            	 withCompatibleAttachment(skin, (c) -> {});
+            }
+            
+           
+            
             if (spawnEntityWith == null) {
                 
 
                 int explosionParticleTextureId = modContext.registerTexture(explosionParticleTexture);
                 int smokeParticleTextureId = modContext.registerTexture(smokeParticleTexture);
+                
+               
+                
+                
                 spawnEntityWith = (weapon, player) -> {
+                	
+                	
+                	
+                	
+                	
+                	 double damage = spawnEntityDamage;
+                     if(BalancePackManager.hasActiveBalancePack()) {
+                     	if(BalancePackManager.shouldChangeWeaponDamage(weapon)) damage = BalancePackManager.getNewWeaponDamage(weapon);
+                     	damage *= BalancePackManager.getGroupDamageMultiplier(weapon.getConfigurationGroup());
+                     	damage *= BalancePackManager.getGlobalDamageMultiplier();
+                     }
+                	
+                    // System.out.println(weapon.getName() + " | " + spawnEntityRocketParticles);
+                     
                     WeaponSpawnEntity bullet = new WeaponSpawnEntity(weapon, compatibility.world(player), player, spawnEntitySpeed,
-                            spawnEntityGravityVelocity, inaccuracy, spawnEntityDamage, spawnEntityExplosionRadius, 
-                            isDestroyingBlocks, spawnEntityParticleAgeCoefficient, spawnEntitySmokeParticleAgeCoefficient,
+                            spawnEntityGravityVelocity, inaccuracy, (float) damage, spawnEntityExplosionRadius, 
+                            isDestroyingBlocks, spawnEntityRocketParticles, spawnEntityParticleAgeCoefficient, spawnEntitySmokeParticleAgeCoefficient,
                             spawnEntityExplosionParticleScaleCoefficient, spawnEntitySmokeParticleScaleCoefficient,
                             explosionParticleTextureId, 
                             smokeParticleTextureId);
@@ -798,6 +977,15 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
                     return bullet;
                 };
             }
+            
+         //  System.out.println("ARE WE ON SERVER SIDE: " + CompatibleReflection.isOnServer());
+            if(!CompatibleReflection.isOnServer()) {
+            	// Register in spritesheet builder
+                WeaponSpritesheetBuilder.registerSprite(this.name);
+                this.renderer.name = this.name;
+            }
+            
+           
 
             if(shellCasingModel == null) {
                 shellCasingModel = new Shell();
@@ -836,7 +1024,7 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
                         CompatibleTargetPoint point = new CompatibleTargetPoint(entity.dimension,
                                 position.getBlockPosX(), position.getBlockPosY(), position.getBlockPosZ(), 100);
                         modContext.getChannel().sendToAllAround(
-                                new BlockHitMessage(position.getBlockPosX(), position.getBlockPosY(), position.getBlockPosZ(), position.getSideHit()), point);
+                                new BlockHitMessage(position.getBlockPos().getBlockPos(), position.getHitVec().getXCoord(), position.getHitVec().getYCoord(), position.getHitVec().getZCoord(), position.getSideHit()), point);
                         
                         MaterialImpactSound materialImpactSound = modContext.getMaterialImpactSound(blockState, entity);
                         if(materialImpactSound != null) {
@@ -862,6 +1050,8 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
                 weapon.endOfShootSound = modContext.registerSound(this.endOfShootSound);
             }
             
+            weapon.muzzlePosition = this.muzzlePosition;
+            
             weapon.burstShootSound = modContext.registerSound(this.burstShootSound);
             weapon.silencedBurstShootSound = modContext.registerSound(this.silencedBurstShootSound);
 
@@ -884,8 +1074,12 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
                 ammo.addCompatibleWeapon(weapon);
             }
 
+            // Add the magic mag
+            withCompatibleAttachment(SpecialAttachments.MagicMag, true, (model) -> {});
+            
             for (ItemAttachment<Weapon> attachment : this.compatibleAttachments.keySet()) {
-                attachment.addCompatibleWeapon(weapon);
+            	
+            	attachment.addCompatibleWeapon(weapon);
             }
 
             if(gunConfig == null || gunConfig.isEnabled()) {
@@ -914,14 +1108,72 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
                     }
 
                 } else {
-                    System.err.println("!!!No recipe defined for weapon " + name);
+                	noRecipe += 1;
+                    //System.err.println("!!!No recipe defined for weapon " + name);
                 }
             }
+            
+            
+         weapon.modernRecipe = modernCraftingRecipe;
+            
+            this.informationProvider = (stack) -> {
+            	
+            	
+            	TextFormatting plate = TextFormatting.GREEN;
+            	TextFormatting plain = TextFormatting.GRAY;
+            	
+            	ArrayList<String> descriptionBuilder = new ArrayList<>();
+            	
+            	
+            	descriptionBuilder.add(plate + "Type: " + plain + this.gunType);
+            	descriptionBuilder.add(plate + "Damage: " + plain + (BalancePackManager.getNetGunDamage(weapon)));
+            	descriptionBuilder.add(plate + "Firerate: " + plain + Math.round(BalancePackManager.getFirerate(weapon)*100) + "/100");
+            	
+                
+            	boolean cartridgeDriven = false;
+            	String catridgeName = "";
+            	for(Entry<ItemAttachment<Weapon>, CompatibleAttachment<Weapon>> i : compatibleAttachments.entrySet()) {
+            		if(i.getValue().getAttachment().getCategory() == AttachmentCategory.BULLET) {
+            			cartridgeDriven = true;
+            			catridgeName = new TextComponentTranslation(i.getValue().getAttachment().getUnlocalizedName() + ".name").getFormattedText();
+            		}
+            	}
+            	
+            	if(!cartridgeDriven) {
+            		descriptionBuilder.add(plate + "Magazines:");
+            		ArrayList<ItemMagazine> mags = new ArrayList<>();
+                    weapon.getCompatibleAttachments(AttachmentCategory.MAGAZINE).forEach(c -> mags.add((ItemMagazine) c.getAttachment()));
+                    mags.sort((a, b) -> a.getAmmo()-b.getAmmo());
+                  
+                    mags.forEach(c -> descriptionBuilder.add(plain + (I18n.format(c.getUnlocalizedName() + ".name"))));
+            	} else {
+            		descriptionBuilder.add(plate + "Cartridge: " + plain + catridgeName);
+            	}
+            	
+            	
+                //mags.sort((a, b) -> a
+                 
+                 
+              // descriptionBuilder.add(plain + (I18n.format(ca.getAttachment().getUnlocalizedName() + ".name")));
+                 
+            	
+                 return descriptionBuilder;
+            };
 
+            
+            // Do not register weapons to the registry if they do not
+            // have a crafting recipe.
+            CraftingRegistry.registerHook(weapon);
 
             return weapon;
         }
     }
+    
+    private CraftingGroup craftingGroup = CraftingGroup.GUN;
+    
+    public static final int FIREMODE_AUTO = 2;
+    public static final int FIREMODE_SINGLE = 0;
+    public static final int FIREMODE_BURST = 1;
 
     private static final long DEFAULT_RELOADING_TIMEOUT_TICKS = 10;
     private static final long DEFAULT_UNLOADING_TIMEOUT_TICKS = 10;
@@ -943,10 +1195,14 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
     private static final float DEFAULT_SILENCED_SHOOT_SOUND_VOLUME = 0.7f;
     private static final float DEFAULT_SHOOT_SOUND_VOLUME = 10f;
 
-    Builder builder;
+    public Builder builder;
 
     private ModContext modContext;
 
+    private Vec3d muzzlePosition;
+    
+    private CraftingEntry[] modernRecipe;
+    
     private CompatibleSound shootSound;
     private CompatibleSound endOfShootSound;
     private CompatibleSound silencedShootSound;
@@ -971,7 +1227,25 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
     public String getName() {
         return builder.name;
     }
+    
+    
+    @Override
+    public CraftingGroup getCraftingGroup() {
+    	return this.craftingGroup;
+    }
+    
+    @Override
+    public Item getItem() {
+    	return this;
+    }
 
+    @Override
+    public CraftingEntry[] getModernRecipe() {
+    	return this.modernRecipe;
+    	//return CraftingRegistry.getDatabaseRecipe(this);
+    }
+    
+    
     public CompatibleSound getShootSound() {
         return shootSound;
     }
@@ -1020,6 +1294,10 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
     public CompatibleSound getEjectSpentRoundSound() {
         return ejectSpentRoundSound;
     }
+    
+    public Vec3d getMuzzlePosition() {
+    	return this.muzzlePosition;
+    }
 
     @Override
     public boolean onEntitySwing(EntityLivingBase entityLiving, ItemStack itemStack) {
@@ -1027,7 +1305,9 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
     }
 
     void toggleAiming() {
+    	
         PlayerWeaponInstance mainHandHeldWeaponInstance = modContext.getMainHeldWeapon();
+        
         if(mainHandHeldWeaponInstance != null
                 && (mainHandHeldWeaponInstance.getState() == WeaponState.READY
                 || mainHandHeldWeaponInstance.getState() == WeaponState.PAUSED
@@ -1118,7 +1398,18 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
     }
 
     void onSpawnEntityBlockImpact(World world, EntityPlayer player, WeaponSpawnEntity entity, CompatibleRayTraceResult position) {
-        if(builder.blockImpactHandler != null) {
+   
+    	if(world.isRemote) {
+    		EnumFacing facing = EnumFacing.valueOf(position.getSideHit().toString());
+        	CompatibleClientEventHandler.BULLET_HOLE_RENDERER.addBulletHole(new BulletHole(new Vec3d(position.getHitVec().getXCoord(), position.getHitVec().getYCoord(), position.getHitVec().getZCoord()), facing, 0.05));
+        	
+        	
+        	
+        	
+    	}
+    	
+    	if(builder.blockImpactHandler != null) {
+       
             builder.blockImpactHandler.onImpact(world, player, entity, position);
         }
     }
@@ -1196,6 +1487,7 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         PlayerWeaponInstance instance = new PlayerWeaponInstance(slot, player, itemStack);
         //state.setAmmo(Tags.getAmmo(itemStack)); // TODO: get ammo properly
         instance.setState(WeaponState.READY);
+    
         instance.setRecoil(builder.recoil);
         instance.setMaxShots(builder.maxShots.get(0));
 
@@ -1222,16 +1514,22 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
 
     void changeFireMode(PlayerWeaponInstance instance) {
         int result;
-        Iterator<Integer> it = builder.maxShots.iterator();
+        
+        
+        List<Integer> maxShotsList = BalancePackManager.getFiremodeListForWeapon(instance.getWeapon());
+        
+        Iterator<Integer> it = maxShotsList.iterator();
+      //  Iterator<Integer> it = builder.maxShots.iterator();
         while(it.hasNext()) {
             if(instance.getMaxShots() == it.next()) {
                 break;
             }
         }
+       
         if(it.hasNext()) {
             result = it.next();
         } else {
-            result = builder.maxShots.get(0);
+            result = maxShotsList.get(0);
         }
 
         instance.setMaxShots(result);
@@ -1250,10 +1548,14 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
 
         compatibility.playSound(instance.getPlayer(),  modContext.getChangeFireModeSound(), 1F, 1F);
     }
+    
+   
 
     public long getTotalReloadingDuration() {
+    	
+		return builder.renderer.getTotalReloadingDuration();
         //logger.debug("Total load duration " + builder.renderer.getTotalReloadingDuration());
-        return builder.renderer.getTotalReloadingDuration();
+        
     }
     
     public long getPrepareFirstLoadIterationAnimationDuration() {
@@ -1279,13 +1581,26 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
     public boolean hasRecoilPositioning() {
         return builder.renderer.hasRecoilPositioning();
     }
+    
+    /**
+     * Only for debugging purposes
+     * @param param
+     * @return
+     */
+    public void setRecoilParameters(RecoilParam param) {
+    	this.builder.recoilParam = param;
+    }
+    
+    public RecoilParam getRecoilParameters() {
+    	return builder.recoilParam;
+    }
 
     void incrementZoom(PlayerWeaponInstance instance) {
         Item scopeItem = instance.getAttachmentItemWithCategory(AttachmentCategory.SCOPE);
         if(scopeItem instanceof ItemScope && ((ItemScope) scopeItem).isOptical()) {
             float minZoom = ((ItemScope) scopeItem).getMinZoom();
             float maxZoom = ((ItemScope) scopeItem).getMaxZoom();
-            float increment = (minZoom - maxZoom) / 20f;
+            float increment = (minZoom - maxZoom) / 7.5f;
             float zoom = instance.getZoom();
 
             if(zoom > maxZoom) {
@@ -1310,7 +1625,7 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         if(scopeItem instanceof ItemScope && ((ItemScope) scopeItem).isOptical()) {
             float minZoom = ((ItemScope) scopeItem).getMinZoom();
             float maxZoom = ((ItemScope) scopeItem).getMaxZoom();
-            float increment = (minZoom - maxZoom) / 20f;
+            float increment = (minZoom - maxZoom) / 7.5f;
             float zoom = instance.getZoom();
 
             if(zoom < minZoom) {
@@ -1366,6 +1681,10 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
     public float getShellCasingForwardOffset() {
         return builder.shellCasingForwardOffset;
     }
+    
+    public Type getShellType() {
+    	return builder.shellType;
+    }
 
     public float getShellCasingSideOffset() {
         return builder.shellCasingSideOffset;
@@ -1389,6 +1708,14 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
 
     public float getShootSoundVolume() {
         return builder.shootSoundVolume;
+    }
+    
+    public boolean hasFlashPedals() {
+    	return builder.hasFlashPedals;
+    }
+    
+    public GunConfigurationGroup getConfigurationGroup() {
+    	return builder.configGroup;
     }
 
     public boolean hasIteratedLoad() {
@@ -1418,7 +1745,31 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
     public boolean isCategoryRemovable(AttachmentCategory category) {
         return !builder.unremovableAttachmentCategories.contains(category);
     }
+    
+    public float getADSZoom() {
+    	return builder.zoom;
+    }
 
+    public boolean isDestroyingBlocks() {
+    	return builder.isDestroyingBlocks;
+    }
+    
+    public float getSmokeParticleAgeCoefficient() {
+    	return builder.spawnEntitySmokeParticleAgeCoefficient;
+    }
+    
+    public float getSmokeParticleScaleCoefficient() {
+    	return builder.spawnEntitySmokeParticleScaleCoefficient;
+    }
+    
+    public float getParticleAgeCoefficient() {
+    	return builder.spawnEntityParticleAgeCoefficient;
+    }
+    
+    public float getExplosionScaleCoefficient() {
+    	return builder.spawnEntityExplosionParticleScaleCoefficient;
+    }
+    
     public boolean isSmokeEnabled() {
         return builder.smokeEnabled;
     }
@@ -1427,11 +1778,29 @@ AttachmentContainer, Reloadable, Inspectable, Modifiable, Updatable {
         return builder.bleedingCoefficient;
     }
     
+    public boolean hasRocketParticles() {
+    	return builder.spawnEntityRocketParticles;
+    }
+    
 //    public ScreenShaking getScreenShaking(RenderableState state) {
 //        return builder.screenShakings.get(state);
 //    }
     
+    public Pair<Double, Double> getModernScreenShakeParameters() {
+    	return this.builder.screenShakingParameters;
+    }
+    
     public ScreenShakeAnimation.Builder getScreenShakeAnimationBuilder(RenderableState renderableState) {
         return builder.screenShakingBuilders.get(renderableState);
     }
+
+	@Override
+	public void setCraftingRecipe(CraftingEntry[] recipe) {
+		this.modernRecipe = recipe;
+	}
+
+	@Override
+	public void setCraftingGroup(CraftingGroup group) {
+		this.craftingGroup = group;
+	}
 }

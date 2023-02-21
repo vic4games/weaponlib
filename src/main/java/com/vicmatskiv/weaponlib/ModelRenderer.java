@@ -45,8 +45,8 @@ public class ModelRenderer extends net.minecraft.client.model.ModelRenderer
     public float offsetX;
     public float offsetY;
     public float offsetZ;
-    private float maxVolume;
-
+    
+    
     public ModelRenderer(ModelBase model, String boxNameIn)
     {
         super(model, boxNameIn);

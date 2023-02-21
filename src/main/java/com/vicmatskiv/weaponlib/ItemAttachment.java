@@ -6,14 +6,19 @@ import java.util.List;
 import java.util.function.Function;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleItem;
+import com.vicmatskiv.weaponlib.crafting.CraftingEntry;
+import com.vicmatskiv.weaponlib.crafting.CraftingGroup;
+import com.vicmatskiv.weaponlib.crafting.CraftingRegistry;
+import com.vicmatskiv.weaponlib.crafting.IModernCrafting;
 import com.vicmatskiv.weaponlib.melee.PlayerMeleeInstance;
 
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.math.Vec3d;
 
-public class ItemAttachment<T> extends CompatibleItem implements ModelSource {
+public class ItemAttachment<T> extends CompatibleItem implements ModelSource, IModernCrafting {
 
 	private AttachmentCategory category;
 	private String crosshair;
@@ -24,13 +29,16 @@ public class ItemAttachment<T> extends CompatibleItem implements ModelSource {
 	protected MeleeWeaponApplyHandler<T> apply3;
 	protected MeleeWeaponApplyHandler<T> remove3;
 	private List<Tuple<ModelBase, String>> texturedModels = new ArrayList<>();
-	private CustomRenderer<?> postRenderer;
+	private List<CustomRenderer<?>> postRenderer = new ArrayList<>();
 	private CustomRenderer<?> preRenderer;
 	private Part renderablePart;
 	private String name;
 	private Function<ItemStack, String> informationProvider;
 	protected int maxStackSize = 1;
 
+	private CraftingEntry[] modernRecipe;
+	private CraftingGroup craftGroup;
+	
 	private List<CompatibleAttachment<T>> attachments = new ArrayList<>();
 
 	private List<Weapon> compatibleWeapons = new ArrayList<>();
@@ -38,6 +46,9 @@ public class ItemAttachment<T> extends CompatibleItem implements ModelSource {
 	private List<ItemAttachment<T>> requiredAttachments = new ArrayList<>();
 
 	protected String textureName;
+	
+	public Vec3d rotationPoint = Vec3d.ZERO;
+	
 
 	public static interface ApplyHandler<T> {
 		public void apply(ItemAttachment<T> itemAttachment, T target, EntityLivingBase player);
@@ -81,6 +92,20 @@ public class ItemAttachment<T> extends CompatibleItem implements ModelSource {
 	public Item setTextureName(String name) {
 		return this;
 	}
+	
+	@Override
+	public CraftingGroup getCraftingGroup() {
+		return this.craftGroup;
+	}
+	
+	public void setCraftingGroup(CraftingGroup cg) {
+		this.craftGroup = cg;
+	}
+	
+	public void setModernRecipe(CraftingEntry...is) {
+		this.modernRecipe = is;
+	}
+
 
 	public Part getRenderablePart() {
 		return renderablePart;
@@ -128,6 +153,14 @@ public class ItemAttachment<T> extends CompatibleItem implements ModelSource {
 	public List<Tuple<ModelBase, String>> getTexturedModels() {
 		return texturedModels;
 	}
+	
+	/**
+	 * For use with the "magic mag"
+	 * @param model
+	 */
+	public void setFirstModel(ItemAttachment<Weapon> model) {
+		texturedModels.set(0, model.getTexturedModels().get(0));
+	}
 
 	public String getCrosshair() {
 		return crosshair;
@@ -150,17 +183,27 @@ public class ItemAttachment<T> extends CompatibleItem implements ModelSource {
 		if(info != null && informationProvider != null) {
 		    info.add(informationProvider.apply(itemStack));
 		}
+		
+//		if(getCategory() == AttachmentCategory.GRIP) {
+			//info.add("Here: " + this.getApply().apply(itemAttachment, target, player);)
+		//}
 	}
 
 	public void setName(String name) {
 		this.name = name;
 	}
 
-	public void setPostRenderer(CustomRenderer<?> postRenderer) {
-		this.postRenderer = postRenderer;
+	public void setPostRenderers(List<CustomRenderer<?>> postRenderer) {
+		postRenderer = postRenderer;
 	}
 
+
+	@Override
 	public CustomRenderer<?> getPostRenderer() {
+		return postRenderer.isEmpty() ? null : postRenderer.get(0);
+	}
+	
+	public List<CustomRenderer<?>> getAllPostRenderers() {
 		return postRenderer;
 	}
 
@@ -200,5 +243,25 @@ public class ItemAttachment<T> extends CompatibleItem implements ModelSource {
     public MeleeWeaponApplyHandler<T> getRemove3() {
         return remove3;
     }
+
+	public void setPostRenderer(List<CustomRenderer<?>> postRenderer2) {
+		this.postRenderer = postRenderer2;
+		
+	}
+	
+	@Override
+	public Item getItem() {
+		return this;
+	}
+
+	@Override
+	public CraftingEntry[] getModernRecipe() {
+		return this.modernRecipe;
+	}
+
+	@Override
+	public void setCraftingRecipe(CraftingEntry[] recipe) {
+		this.modernRecipe = recipe;
+	}
 
 }

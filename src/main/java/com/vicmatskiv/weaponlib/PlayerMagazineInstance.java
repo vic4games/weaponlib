@@ -19,6 +19,12 @@ public class PlayerMagazineInstance extends PlayerItemInstance<MagazineState> {
 		super();
 	}
 
+	@Override
+	public boolean shouldHaveInstanceTags() {
+		return false;
+	}
+	
+	
 	public PlayerMagazineInstance(int itemInventoryIndex, EntityLivingBase player, ItemStack itemStack) {
 		super(itemInventoryIndex, player, itemStack);
 	}

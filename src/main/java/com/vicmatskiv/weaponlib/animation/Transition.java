@@ -3,6 +3,9 @@ package com.vicmatskiv.weaponlib.animation;
 import java.util.function.Consumer;
 
 import com.vicmatskiv.weaponlib.Part;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
+
+import net.minecraft.util.SoundEvent;
 
 public class Transition<Context> {
 
@@ -19,6 +22,8 @@ public class Transition<Context> {
 	private Part attachedTo;
 	private boolean animated;
 
+	private CompatibleSound evt;
+	
 	public Transition(Consumer<Context> itemPositioning, Part attachedTo, boolean animated) {
         this(itemPositioning, 0, 0);
         this.animated = animated;
@@ -31,6 +36,10 @@ public class Transition<Context> {
 	public Transition(Consumer<Context> itemPositioning, long duration, long pause) {
         this(itemPositioning, duration, pause, null);
     }
+	
+	public void setSound(CompatibleSound event) {
+		this.evt = event;
+	}
 
 	public Transition(Consumer<Context> itemPositioning, long duration, long pause, Part attachedTo) {
 		this.itemPositioning = itemPositioning;
@@ -42,9 +51,17 @@ public class Transition<Context> {
 	public Consumer<Context> getItemPositioning() {
 		return itemPositioning;
 	}
+	
+	public void setDuration(long newDuration) {
+		this.duration = newDuration;
+	}
 
 	public long getDuration() {
 		return duration;
+	}
+	
+	public CompatibleSound getSound() {
+		return this.evt;
 	}
 
 	public long getPause() {

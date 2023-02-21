@@ -2,28 +2,39 @@ package com.vicmatskiv.weaponlib;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleAxisAlignedBB;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleBlockPos;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleBlockState;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleEnumFacing;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleIEntityAdditionalSpawnData;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMathHelper;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTraceResult;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRayTracing;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleTargetPoint;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleVec3;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.block.Block;
+import net.minecraft.block.material.Material;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.IProjectile;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.EnumParticleTypes;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.math.Vec3d;
 //import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
+import net.minecraft.world.gen.layer.GenLayerAddSnow;
 
 public abstract class EntityProjectile extends Entity implements IProjectile, CompatibleIEntityAdditionalSpawnData {
 
@@ -55,6 +66,8 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
     private long timestamp;
     
     private double aimTan;
+    
+    public Vec3d origin;
 
     protected long maxLifetime = DEFAULT_MAX_LIFETIME;
 
@@ -66,6 +79,7 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
 
     public EntityProjectile(World world, EntityLivingBase thrower, float velocity, float gravityVelocity, float inaccuracy) {
         this(world);
+   
         this.thrower = thrower;
         this.velocity = velocity;
         this.gravityVelocity = gravityVelocity;
@@ -88,11 +102,16 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
         this.setLocationAndAngles(thrower.posX, thrower.posY + (double) thrower.getEyeHeight(),
                 thrower.posZ, compatibility.getCompatibleAimingRotationYaw(thrower), thrower.rotationPitch);
 
+       
+        
         this.posX -= (double) (CompatibleMathHelper.cos(this.rotationYaw / 180.0F * (float) Math.PI) * 0.16F);
         this.posY -= 0.10000000149011612D;
         this.posZ -= (double) (CompatibleMathHelper.sin(this.rotationYaw / 180.0F * (float) Math.PI) * 0.16F);
         this.setPosition(this.posX, this.posY, this.posZ);
 
+        
+        this.origin = new Vec3d(this.posX, this.posY, this.posZ);
+        
         //this.yOffset = 0.0F; TODO: verify how this works in 1.7.10
         float f = velocity; //0.4F;
         this.motionX = (double) (-CompatibleMathHelper.sin(this.rotationYaw / 180.0F * (float) Math.PI)
@@ -182,8 +201,15 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
      * Called to update the entity's position/logic.
      */
     public void onUpdate() {
+    	//System.out.println("hi?");
+    
+    	
+    	
+    	
+    	
+    	
         if(ticksExisted > MAX_TICKS) {
-            setDead();
+            //setDead();
             return;
         }
         this.lastTickPosX = this.posX;
@@ -206,6 +232,8 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
 //
 //                return;
 //            }
+        	
+        	
 
             this.inGround = false;
             this.motionX *= (double) (this.rand.nextFloat() * 0.2F);
@@ -221,10 +249,72 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
         CompatibleVec3 vec31 = new CompatibleVec3(this.posX + this.motionX, this.posY + this.motionY,
                 this.posZ + this.motionZ);
 
+        List<BlockPos> possibleCollisions = new ArrayList<>();
+    
+        /*
+        CompatibleRayTraceResult movingobjectposition = CompatibleRayTracing.rayTraceBlocksExtraInformation(compatibility.world(this),
+                vec3, vec31,
+                (block, blockMetadata) -> canCollideWithBlock(possibleCollisions, block, blockMetadata.first(), blockMetadata.second()));
+        */
+        
         CompatibleRayTraceResult movingobjectposition = CompatibleRayTracing.rayTraceBlocks(compatibility.world(this),
                 vec3, vec31,
-                (block, blockMetadata) -> canCollideWithBlock(block, blockMetadata));
+                (block, blockMetadata) -> canCollideWithBlock(null, block, null, blockMetadata));
+      
+      
+        /*
+         *  GLASS BREAK CHECK
+         */
+        
+       
+        if(!world.isRemote) {
+        	 Vec3d motion = new Vec3d(this.motionX, this.motionY, this.motionZ);
+             Vec3d start = new Vec3d(this.prevPosX, this.prevPosY, this.prevPosZ);
+             Vec3d end = new Vec3d(this.posX, this.posY, this.posZ).add(motion);
 
+             RayTraceResult rtr = compatibility.world(this).rayTraceBlocks(start, end, false, true, false);
+
+            
+             if(rtr != null) {
+             	IBlockState state = compatibility.world(this).getBlockState(rtr.getBlockPos());
+             	if(state.getMaterial() == Material.GLASS) {
+             		this.world.destroyBlock(rtr.getBlockPos(), true);
+             	
+             		
+       
+             		if(CommonModContext.getContext() != null) {
+             			CommonModContext.getContext().getChannel().sendToAllAround(new BlockHitMessage(rtr.getBlockPos(), rtr.hitVec.x, rtr.hitVec.y, rtr.hitVec.z, CompatibleEnumFacing.valueOf(rtr.sideHit)), new CompatibleTargetPoint(this.dimension, this.posX, this.posY, this.posZ, 20.0));
+                 		
+             		}
+             		/*
+             		modContext.getChannel().sendToAllAround(
+                             new BlockHitMessage(position.getBlockPos().getBlockPos(), position.getHitVec().getXCoord(), position.getHitVec().getYCoord(), position.getHitVec().getZCoord(), position.getSideHit()), point);
+                     */
+             	}
+             }
+        }
+       
+        
+       
+      
+       
+        /*
+        
+        if(this.world != null && movingobjectposition != null && CommonModContext.getContext() != null && CommonModContext.getContext().getConfigurationManager().getProjectiles().isDestroyGlassBlocks()) {
+        	for(BlockPos pos : movingobjectposition.getPassThrus()) {
+        		IBlockState state =  this.world.getBlockState(pos);
+        		if(state.getMaterial() == Material.GLASS) {
+        			
+        			
+        			
+        			//this.world.destroyBlock(pos, false);
+        		}
+        	}
+        }
+        */
+      
+        
+       
         vec3 = new CompatibleVec3(this.posX, this.posY, this.posZ);
         vec31 = new CompatibleVec3(this.posX + this.motionX, this.posY + this.motionY, this.posZ + this.motionZ);
 
@@ -236,14 +326,14 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
             Entity entity = getRayTraceEntities(vec3, vec31);
 
             if (entity != null) {
-                movingobjectposition = new CompatibleRayTraceResult(entity);
+               movingobjectposition = new CompatibleRayTraceResult(entity);
             }
         }
 
         if (movingobjectposition != null) {
             this.onImpact(movingobjectposition);
         }
-
+		
         this.posX += this.motionX;
         this.posY += this.motionY;
         this.posZ += this.motionZ;
@@ -301,7 +391,17 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
         for (int j = 0; j < list.size(); ++j) {
             Entity entity1 = (Entity) list.get(j);
 
-            if (entity1.canBeCollidedWith() && (entity1 != entitylivingbase || this.ticksInAir >= 5)) {
+           
+            
+            // Fix for issue in the mod where a dying entity could
+            // block bullets.
+            boolean flag = true;
+            if(entity1 instanceof EntityLivingBase) {
+            	EntityLivingBase elb = (EntityLivingBase) entity1;
+            	flag = elb.deathTime == 0;
+            }
+            
+            if (flag && entity1.canBeCollidedWith() && (entity1 != entitylivingbase || this.ticksInAir >= 5)) {
                 float f = 0.3F;
                 CompatibleAxisAlignedBB axisalignedbb = compatibility.expandEntityBoundingBox(entity1, (double) f,
                         (double) f, (double) f);
@@ -317,6 +417,7 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
                 }
             }
         }
+        //System.out.println("Picked " + entityCollisionReduction.d);
         return entity;
     }
 
@@ -417,7 +518,9 @@ public abstract class EntityProjectile extends Entity implements IProjectile, Co
         return p_70112_1_ < d1 * d1;
     }
 
-    public boolean canCollideWithBlock(Block block, CompatibleBlockState metadata) {
+    public boolean canCollideWithBlock(List<BlockPos> violators, Block block, BlockPos pos, CompatibleBlockState metadata) {
+    	
+    	
         return compatibility.canCollideCheck(block, metadata, false);
     }
 }

@@ -8,18 +8,27 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import com.vicmatskiv.weaponlib.ItemVest.Builder;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleItem;
+import com.vicmatskiv.weaponlib.crafting.CraftingEntry;
+import com.vicmatskiv.weaponlib.crafting.CraftingGroup;
+import com.vicmatskiv.weaponlib.crafting.CraftingRegistry;
+import com.vicmatskiv.weaponlib.crafting.IModernCrafting;
 import com.vicmatskiv.weaponlib.inventory.GuiHandler;
+import com.vicmatskiv.weaponlib.jim.util.VMWHooksHandler;
+import com.vicmatskiv.weaponlib.render.modelrepo.ServerGearModelHookRegistry;
 
 import net.minecraft.client.model.ModelBase;
+import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 
-public class ItemStorage extends CompatibleItem implements ModelSource {
+public class ItemStorage extends CompatibleItem implements ModelSource, IModernCrafting {
     
     public static class Builder {
         
@@ -45,6 +54,10 @@ public class ItemStorage extends CompatibleItem implements ModelSource {
         private String guiTextureName;
         private int guiTextureWidth = DEFAULT_GUI_TEXTURE_WIDTH;
         
+        private String modelFileString;
+        private String properTextureName;
+        
+        
         private Predicate<Item> validItemPredicate = item -> true;
         
         public Builder withName(String name) {
@@ -65,6 +78,16 @@ public class ItemStorage extends CompatibleItem implements ModelSource {
         public Builder withTab(CreativeTabs tab) {
             this.tab = tab;
             return this;
+        }
+        
+        public Builder withProperModel(String elModel, String properTextureName) {
+        	
+        	modelFileString = elModel;
+        	this.properTextureName = properTextureName;
+        	
+        	
+    
+        	return this;
         }
         
         public Builder withModel(ModelBase model) {
@@ -182,15 +205,51 @@ public class ItemStorage extends CompatibleItem implements ModelSource {
             
             ItemStorage item = new ItemStorage(modContext, size, validItemPredicate, guiTextureLocation, this.guiTextureWidth);
             
+            ServerGearModelHookRegistry.modelArray.add(this.modelFileString);
+            
+            item.modelFileString = this.modelFileString;
+            item.properTextureName = this.properTextureName;
+            
             item.setUnlocalizedName(modContext.getModId() + "_" + name);
+
+            if(this.modelFileString != null && !VMWHooksHandler.isOnServer()) {
+            	
+            	try {
+            		//System.out.println("FOR ITEM: " + item.getRegistryName() + " | ");
+					ModelBase base = (ModelBase) Class.forName(this.modelFileString).newInstance();
+					item.texturedModels.add(new Tuple<>(base, addFileExtension(this.properTextureName, ".png")));
+					
+					
+				} catch (InstantiationException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IllegalAccessException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (ClassNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+            	
+            	
+            }
             
             if(model != null) {
                 item.texturedModels.add(new Tuple<>(model, addFileExtension(textureName, ".png")));
             }
             
+           
             if(tab != null) {
                 item.setCreativeTab(tab);
+                
+                
             }
+            
+            // Register hook
+            CraftingRegistry.registerHook(item);
+            
+            
+            item.customEquippedPositioning = customEquippedPositioning;
             
             modContext.registerRenderableItem(name, item, compatibility.isClientSide() ? RendererRegistrationHelper.registerRenderer(this, modContext) : null);
             
@@ -204,6 +263,30 @@ public class ItemStorage extends CompatibleItem implements ModelSource {
     private ResourceLocation guiTextureLocation;
     private int guiTextureWidth;
     private Predicate<Item> validItemPredicate;
+    
+    private BiConsumer<EntityPlayer, ItemStack> customEquippedPositioning;
+    
+    
+ // Modern crafting setup
+    private CraftingEntry[] modernRecipe;
+	private CraftingGroup craftGroup;
+
+    
+    
+    public BiConsumer<EntityPlayer, ItemStack> getCustomEquippedPositioning() {
+    	return customEquippedPositioning;
+    }
+    
+    private String modelFileString;
+    private String properTextureName;
+    
+    public String getModelFileString() {
+    	return this.modelFileString;
+    }
+    
+    public String getProperTextureName() {
+    	return this.properTextureName;
+    }
     
     public ItemStorage(ModContext context, int size,
             Predicate<Item> validItemPredicate,
@@ -250,6 +333,12 @@ public class ItemStorage extends CompatibleItem implements ModelSource {
         return size;
     }
     
+    @Override
+    public void addInformation(ItemStack itemStack, World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
+    	super.addInformation(itemStack, worldIn, tooltip, flagIn);
+    	tooltip.add(String.format("%sSize:%s %d", TextFormatting.GREEN, TextFormatting.GRAY, this.size));
+    }
+    
     public ResourceLocation getGuiTextureLocation() {
         return guiTextureLocation;
     }
@@ -265,5 +354,30 @@ public class ItemStorage extends CompatibleItem implements ModelSource {
     public Predicate<Item> getValidItemPredicate() {
         return validItemPredicate;
     }
+
+	@Override
+	public CraftingEntry[] getModernRecipe() {
+		return this.modernRecipe;
+	}
+
+	@Override
+	public Item getItem() {
+		return this;
+	}
+
+	@Override
+	public CraftingGroup getCraftingGroup() {
+		return this.craftGroup;
+	}
+
+	@Override
+	public void setCraftingRecipe(CraftingEntry[] recipe) {
+		this.modernRecipe = recipe;
+	}
+
+	@Override
+	public void setCraftingGroup(CraftingGroup group) {
+		this.craftGroup = group;
+	}
     
 }

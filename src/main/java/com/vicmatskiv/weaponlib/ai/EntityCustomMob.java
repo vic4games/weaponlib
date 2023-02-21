@@ -52,8 +52,10 @@ import com.vicmatskiv.weaponlib.mission.MissionOffering;
 import com.vicmatskiv.weaponlib.mission.Missions;
 import com.vicmatskiv.weaponlib.mission.ObtainItemAction;
 import com.vicmatskiv.weaponlib.mission.PlayerMissionSyncMessage;
+import com.vicmatskiv.weaponlib.network.packets.HighIQPickupPacket;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.material.EnumPushReaction;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
@@ -61,21 +63,25 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.EnumCreatureAttribute;
 import net.minecraft.entity.IEntityLivingData;
 import net.minecraft.entity.IRangedAttackMob;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldType;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class EntityCustomMob extends CompatibleEntityMob
-        implements IRangedAttackMob, Contextual, MissionAssigner, Configurable<EntityConfiguration> {
+        implements IRangedAttackMob, Contextual, Configurable<EntityConfiguration> {
 
     private static final float FLAT_WORLD_SPAWN_CHANCE = 0.01f;
     private static final CompatibleDataManager.Key VARIANT = CompatibleDataManager.createKey(EntityCustomMob.class,
@@ -96,10 +102,27 @@ public class EntityCustomMob extends CompatibleEntityMob
     private int delayedAttackTimer;
 
     private EntityPlayer customer;
+    
+  
+   
 
     public EntityCustomMob(World worldIn) {
         super(worldIn);
-        this.setSize(0.6F, 1.99F);
+        //System.out.println(getConfiguration());
+        setSize(getConfiguration().getSizeWidth(), getConfiguration().getSizeHeight());
+        
+        //this.setSize(0.6F, 1.99F);
+      
+    }
+    
+    @Override
+    public Vec3d getPositionEyes(float partialTicks) {
+    	// TODO Auto-generated method stub
+    	return super.getPositionEyes(partialTicks);
+    }
+    
+    public String getMobName() {
+    	return configuration.getMobName();
     }
 
     @Override
@@ -109,9 +132,31 @@ public class EntityCustomMob extends CompatibleEntityMob
         }
         return configuration;
     }
+    
+    
+    @Override
+    public AxisAlignedBB getCollisionBoundingBox() {
+    	// TODO Auto-generated method stub
+    	return super.getCollisionBoundingBox();
+    }
+    
+    @Override
+    public AxisAlignedBB getEntityBoundingBox() {
+    	// TODO Auto-generated method stub
+    	return super.getEntityBoundingBox();
+    }
+    
+    @Override
+    public void setEntityBoundingBox(AxisAlignedBB bb) {
+    	// TODO Auto-generated method stub
+    	super.setEntityBoundingBox(bb);
+    }
+    
 
     @Override
     protected void initEntityAI() {
+    //	System.out.println("A la verga: " + getConfiguration().getSizeWidth() + " | " + getConfiguration().getSizeHeight());
+    	setSize(getConfiguration().getSizeWidth(), getConfiguration().getSizeHeight());
         getConfiguration().addAiTasks(this, this.tasks);
         getConfiguration().addAiTargetTasks(this, this.targetTasks);
     }
@@ -128,6 +173,8 @@ public class EntityCustomMob extends CompatibleEntityMob
         compatibility.setEntityAttribute(this, CompatibleSharedMonsterAttributes.ATTACK_DAMAGE,
                 getConfiguration().getCollisionAttackDamage());
     }
+    
+
 
     protected void entityInit() {
         super.entityInit();
@@ -169,6 +216,8 @@ public class EntityCustomMob extends CompatibleEntityMob
      */
     public void onLivingUpdate() {
 
+    	
+    	
         if (this.isEntityAlive() && getConfiguration().getDelayedAttack() != null) {
 
             if (isDelayedAttackStarted()) {
@@ -390,13 +439,13 @@ public class EntityCustomMob extends CompatibleEntityMob
                                                                                         // 3f;
                 WeaponSpawnEntity bullet = new WeaponSpawnEntity(weapon, compatibility.world(player), player,
                         weapon.getSpawnEntityVelocity(), weapon.getSpawnEntityGravityVelocity(), inaccuracy,
-                        weapon.getSpawnEntityDamage(), weapon.getSpawnEntityExplosionRadius(), false, 1f, 1f, 1.5f, 1f,
+                        weapon.getSpawnEntityDamage() * 0.01f * 0.2f, weapon.getSpawnEntityExplosionRadius(), false, false, 1f, 1f, 1.5f, 1f,
                         -1, -1);
                 bullet.setPositionAndDirection();
                 return bullet;
             };
 
-            fireAspect.serverFire(this, itemStack, spawnEntityWith, false);
+            fireAspect.serverFire(this, itemStack, spawnEntityWith, false, false, 0.2f);
         } else if (itemStack.getItem() instanceof ItemGrenade) {
             float rotationPitchAdjustment = 20f;
             this.rotationPitch -= rotationPitchAdjustment;
@@ -455,7 +504,8 @@ public class EntityCustomMob extends CompatibleEntityMob
 
     @Override
     public float getEyeHeight() {
-        return 1.74F;
+    	return super.getEyeHeight();
+       // return 1.74F;
     }
 
     /**
@@ -497,6 +547,34 @@ public class EntityCustomMob extends CompatibleEntityMob
     @Override
     protected boolean canDespawn() {
         return getConfiguration().isDespawnable();
+    }
+    
+    @Override
+    public void applyEntityCollision(Entity entityIn) {
+    	if(canBePushed()) super.applyEntityCollision(entityIn);
+    }
+    
+    @Override
+    protected void collideWithEntity(Entity entityIn) {
+    	// TODO Auto-generated method stub
+    	if(canBePushed()) super.collideWithEntity(entityIn);
+    	//System.out.println("fuck");
+    }
+    
+    @Override
+    public void onCollideWithPlayer(EntityPlayer entityIn) {
+    	// TODO Auto-generated method stub
+    	super.onCollideWithPlayer(entityIn);
+    }
+    
+    
+    
+    
+    @Override
+    public EnumPushReaction getPushReaction() {
+    	if(canBePushed()) {
+    		return super.getPushReaction();
+    	} else return EnumPushReaction.IGNORE;	
     }
     
     @Override
@@ -560,10 +638,22 @@ public class EntityCustomMob extends CompatibleEntityMob
         ItemStack itemstack = player.getHeldItem(hand);
         boolean flag = itemstack.getItem() == Items.NAME_TAG;
 
+        
+        if(configuration.getPickupItemID() != -1) {
+        	
+        
+        	
+    
+        	modContext.getChannel().getChannel().sendToServer(new HighIQPickupPacket(player.getEntityId(), getEntityId()));
+        	
+        	return true;
+        }
+        
         if (flag) {
             itemstack.interactWithEntity(player, this, hand);
             return true;
         } else if (this.isEntityAlive() && /*!this.isTrading() &&*/ !player.isSneaking()) {
+        	/*
             // if (this.buyingList == null)
             // {
             // this.populateBuyingList();
@@ -583,11 +673,14 @@ public class EntityCustomMob extends CompatibleEntityMob
             }
 
             return true;
+            */
+        	return false;
         } else {
             return super.processInteract(player, hand);
         }
     }
 
+    /*
     @SideOnly(Side.CLIENT)
     protected void displayTradeGui(EntityPlayer player) {
         Collection<MissionOffering> redeemableMissionOfferings = Missions.getRedeemableMissionOfferings(this, player);
@@ -668,4 +761,6 @@ public class EntityCustomMob extends CompatibleEntityMob
             customer = null;
         }
     }
+	*/
+
 }

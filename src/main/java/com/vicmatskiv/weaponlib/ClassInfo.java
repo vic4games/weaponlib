@@ -3,6 +3,8 @@ package com.vicmatskiv.weaponlib;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.vicmatskiv.weaponlib.compatibility.CompatibleClassInfoProvider;
+
 public class ClassInfo {
 
     private static class MethodSignature {
@@ -85,7 +87,11 @@ public class ClassInfo {
     }
 
     public boolean classMatches(String className) {
-        String normalizedClassName = className.replace('.', '/');
+    	String normalizedClassName = "";
+    	if(!className.equals("paulscode.sound.libraries.SourceLWJGLOpenAL")) {
+    		normalizedClassName = className.replace('.', '/');
+    	} else normalizedClassName = className;
+        
         return mcpClassName.equals(normalizedClassName) || notchClassName.equals(normalizedClassName);
     }
 
@@ -96,19 +102,38 @@ public class ClassInfo {
             String methodName,
             String methodSignature)
     {
+    	
+    
+    	
+    	/*
+    	System.out.println("Checking @ " + methodName + " w/ expected  " + expectedMcpMethodName + " w/ expected sig " + expectedMcpMethodSignature);
+    	System.out.println("Virtual method names & sigs -> " + methodName + " -> " + methodSignature);
+    	System.out.println("MCP Class name: " + mcpClassName + " vs. " + methodOwnerClassName);
+    	System.out.println("Notch class names: " + notchClassName + " vs. " + methodOwnerClassName);
+       	*/
         if(!expectedMcpMethodSignature.equals(methodSignature) 
                 && !methodSignature.equals(notchSignatureMap.get(new MethodSignature(expectedMcpMethodName, expectedMcpMethodSignature)))) {
             return false;
         }
+        
+  
+      //  System.out.println("Passed first flag.");
+        
 
         if(mcpClassName.equals(methodOwnerClassName)) {
             return expectedMcpMethodName.equals(methodName) 
                     || methodName.equals(mcpMethodInfoMap.get(new MethodSignature(expectedMcpMethodName, expectedMcpMethodSignature)));
         }
+        
+      //  System.out.println("Passed second flag.");
+        
 
         if(!notchClassName.equals(methodOwnerClassName)) {
             return false;
         }
+        
+       // System.out.println("Passed third flag.");
+        
 
         String notchMethodName = notchMethodInfoMap.get(new MethodSignature(expectedMcpMethodName, expectedMcpMethodSignature));
         return notchMethodName != null && methodName.equals(notchMethodName);

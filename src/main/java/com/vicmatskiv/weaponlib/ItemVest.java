@@ -8,26 +8,44 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleItem;
+import com.vicmatskiv.weaponlib.crafting.CraftingEntry;
+import com.vicmatskiv.weaponlib.crafting.CraftingGroup;
+import com.vicmatskiv.weaponlib.crafting.CraftingRegistry;
+import com.vicmatskiv.weaponlib.crafting.IModernCrafting;
+import com.vicmatskiv.weaponlib.jim.util.VMWHooksHandler;
+import com.vicmatskiv.weaponlib.render.IHasModel;
+import com.vicmatskiv.weaponlib.render.modelrepo.ServerGearModelHookRegistry;
 
 import net.minecraft.client.model.ModelBase;
+import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.text.TextFormatting;
+import net.minecraft.world.World;
 import net.minecraftforge.common.ISpecialArmor;
 
-public class ItemVest extends CompatibleItem implements ISpecialArmor, ModelSource {
+public class ItemVest extends CompatibleItem implements ISpecialArmor, ModelSource, IModernCrafting, IHasModel {
         
-    public static class Builder {
+    
+	public static class Builder {
                 
         private String name;
         private CreativeTabs tab;
         private ModelBase model;
         private String textureName;
         
+        private String modelFileString;
+        private String properTextureName;
+        
         private int durability;
         private int damageReduceAmount;
+        private double percentDamageBlocked;
+        
+        
         
         private Consumer<ItemStack> entityPositioning;
         private Consumer<ItemStack> inventoryPositioning;
@@ -51,6 +69,11 @@ public class ItemVest extends CompatibleItem implements ISpecialArmor, ModelSour
             return this;
         }
         
+        public Builder withPercentDamageBlocked(double ratio) {
+        	this.percentDamageBlocked = ratio;
+        	return this;
+        }
+        
         public Builder withDurability(int durability) {
             this.durability = durability;
             return this;
@@ -59,6 +82,17 @@ public class ItemVest extends CompatibleItem implements ISpecialArmor, ModelSour
         public Builder withTab(CreativeTabs tab) {
             this.tab = tab;
             return this;
+        }
+        
+        
+        public Builder withProperModel(String elModel, String properTextureName) {
+        	
+        	modelFileString = elModel;
+        	this.properTextureName = properTextureName;
+        	
+        	
+    
+        	return this;
         }
         
         public Builder withModel(ModelBase model) {
@@ -174,19 +208,66 @@ public class ItemVest extends CompatibleItem implements ISpecialArmor, ModelSour
 //            ResourceLocation guiTextureLocation = new ResourceLocation(modContext.getModId(), 
 //                    addFileExtension(guiTextureName, ".png"));
             
-            ItemVest item = new ItemVest(modContext, damageReduceAmount, durability);
             
+            
+            
+            ItemVest item = new ItemVest(modContext, percentDamageBlocked, durability);
+            
+            
+            
+            ServerGearModelHookRegistry.modelArray.add(this.modelFileString);
+            
+            item.modelFileString = this.modelFileString;
+            item.properTextureName = this.properTextureName;
             item.setUnlocalizedName(modContext.getModId() + "_" + name);
+            
+            // Register hook
+            CraftingRegistry.registerHook(item);
+            
+            
+            
+            if(this.modelFileString != null && !VMWHooksHandler.isOnServer()) {
+            	
+            	try {
+            		//System.out.println("FOR ITEM: " + item.getRegistryName() + " | ");
+					ModelBase base = (ModelBase) Class.forName(this.modelFileString).newInstance();
+					item.texturedModels.add(new Tuple<>(base, addFileExtension(this.properTextureName, ".png")));
+					
+					
+				} catch (InstantiationException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IllegalAccessException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (ClassNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+            	
+            	
+            }
             
             if(model != null) {
                 item.texturedModels.add(new Tuple<>(model, addFileExtension(textureName, ".png")));
             }
             
+           
             if(tab != null) {
                 item.setCreativeTab(tab);
+                
+                
             }
             
-            modContext.registerRenderableItem(name, item, compatibility.isClientSide() ? RendererRegistrationHelper.registerRenderer(this, modContext) : null);
+          
+           // lientEventHandler.ITEM_REG.add(item);
+           
+            
+            item.customEquippedPositioning = customEquippedPositioning;
+            
+           // System.out.println("ITem name: " + item.getUnlocalizedName());
+          //  compatibility.registerItem(item, item.getUnlocalizedName());
+            modContext.registerRenderableItem(name, item, compatibility.isClientSide() ? RendererRegistrationHelper.registerRenderer(this, modContext) :null);
             
             return item;
         }
@@ -198,10 +279,45 @@ public class ItemVest extends CompatibleItem implements ISpecialArmor, ModelSour
     private final int damageReduceAmount;
     
     private int durability;
+    private double percentDamageBlocked;
+    public BiConsumer<EntityPlayer, ItemStack> customEquippedPositioning;
     
-    public ItemVest(ModContext context, int damageReduceAmount, int durability) {
-        this.damageReduceAmount = damageReduceAmount;
+    
+    
+    
+ // Modern crafting setup
+    private CraftingEntry[] modernRecipe;
+	private CraftingGroup craftGroup;
+
+    
+    public BiConsumer<EntityPlayer, ItemStack> getCustomEquippedPositioning() {
+    	return customEquippedPositioning;
+    }
+
+    
+    private String modelFileString;
+    private String properTextureName;
+    
+    public String getModelFileString() {
+    	return this.modelFileString;
+    }
+    
+    public String getProperTextureName() {
+    	return this.properTextureName;
+    }
+    
+    
+    public ItemVest(ModContext context, double percentDamageBlocked, int durability) {
+        this.percentDamageBlocked = percentDamageBlocked;
+        this.damageReduceAmount = 1;
         this.durability = durability;
+    }
+    
+    @Override
+    public void addInformation(ItemStack itemStack, World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
+    	super.addInformation(itemStack, worldIn, tooltip, flagIn);
+    	double formattedDouble = Math.round(this.percentDamageBlocked * 10000) / 100.0;
+    	tooltip.add(String.format("%s%% Damage Blocked:%s %s", TextFormatting.GREEN, TextFormatting.GRAY, formattedDouble));
     }
 
     @Override
@@ -234,18 +350,66 @@ public class ItemVest extends CompatibleItem implements ISpecialArmor, ModelSour
     @Override
     public ArmorProperties getProperties(EntityLivingBase player, ItemStack vestStack, DamageSource source, double damage,
             int slot) {
-        return new ArmorProperties(0, damageReduceAmount / 25.0, durability);
+    	//System.out.println("% blocked = " + (this.percentDamageBlocked*100));
+    	//this.percentDamageBlocked = 1.0;
+    	//System.out.println(new ArmorProperties(0, this.percentDamageBlocked, durability).applyArmor(entity, inventory, source, damage));
+        return new ArmorProperties(0, this.percentDamageBlocked, 2000);
     }
 
     @Override
     public int getArmorDisplay(EntityPlayer player, ItemStack armor, int slot) {
-        return damageReduceAmount;
+
+        return (int) (this.percentDamageBlocked*10);
     }
 
     @Override
     public void damageArmor(EntityLivingBase entity, ItemStack stack, DamageSource source, int damage, int slot) {
-        double absorb = damage * (this.damageReduceAmount / 25.0);
-        int itemDamage = (int)(absorb / 25.0 < 1 ? 1 : absorb / 25.0);
-        stack.damageItem(itemDamage, entity);
+      
+    	//double absorb = damage * percentDamageBlocked;
+        //int itemDamage = (int)(absorb / 25.0 < 1 ? 1 : absorb / 25.0);
+        //stack.damageItem(itemDamage, entity);
     }
+
+
+
+	@Override
+	public CraftingEntry[] getModernRecipe() {
+		return this.modernRecipe;
+	}
+
+
+
+	@Override
+	public Item getItem() {
+		return this;
+	}
+
+
+
+	@Override
+	public CraftingGroup getCraftingGroup() {
+		return this.craftGroup;
+	}
+
+
+
+	@Override
+	public void setCraftingRecipe(CraftingEntry[] recipe) {
+		this.modernRecipe = recipe;
+	}
+
+
+
+	@Override
+	public void setCraftingGroup(CraftingGroup group) {
+		this.craftGroup = group;
+	}
+	
+	@Override
+	public void registerModels() {
+		
+		
+	}
+	
+	
 }

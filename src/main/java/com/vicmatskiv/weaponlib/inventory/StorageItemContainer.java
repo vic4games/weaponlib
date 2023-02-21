@@ -5,14 +5,20 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import com.vicmatskiv.weaponlib.compatibility.CompatibleContainer;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleEntityEquipmentSlot;
 
+import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemArmor;
 import net.minecraft.item.ItemStack;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class StorageItemContainer extends CompatibleContainer {
     /**
@@ -89,11 +95,53 @@ public class StorageItemContainer extends CompatibleContainer {
     }
 
     protected List<Slot> createArmorSlots(EntityPlayer player, InventoryPlayer inventoryPlayer) {
-        List<Slot> slots = new ArrayList<>();
+        /*
+    	List<Slot> slots = new ArrayList<>();
         int i;
         for (i = 0; i < 4; ++i) {
             slots.add(new ArmorSlot(player, inventoryPlayer, inventoryPlayer.getSizeInventory() - 1 - i,
                     8, 8 + i * 18, CompatibleEntityEquipmentSlot.valueOf(i)));
+        }*/
+    	List<Slot> slots = new ArrayList<>();
+        int i;
+        for (i = 0; i < 4; ++i) {
+        	final EntityEquipmentSlot entityequipmentslot = new EntityEquipmentSlot[] {EntityEquipmentSlot.HEAD, EntityEquipmentSlot.CHEST, EntityEquipmentSlot.LEGS, EntityEquipmentSlot.FEET}[i];
+            this.addSlotToContainer(new Slot(inventoryPlayer, inventoryPlayer.getSizeInventory() - 1 - i - 1,
+                            8, 8 + i * 18)
+            {
+                /**
+                 * Returns the maximum stack size for a given slot (usually the same as getInventoryStackLimit(), but 1
+                 * in the case of armor slots)
+                 */
+                public int getSlotStackLimit()
+                {
+                    return 1;
+                }
+                /**
+                 * Check if the stack is allowed to be placed in this slot, used for armor slots as well as furnace
+                 * fuel.
+                 */
+                public boolean isItemValid(ItemStack stack)
+                {
+                    return stack.getItem().isValidArmor(stack, entityequipmentslot, player);
+                }
+                /**
+                 * Return whether this slot's stack can be taken from this slot.
+                 */
+                public boolean canTakeStack(EntityPlayer playerIn)
+                {
+                    ItemStack itemstack = this.getStack();
+                    return !itemstack.isEmpty() && !playerIn.isCreative() && EnchantmentHelper.hasBindingCurse(itemstack) ? false : super.canTakeStack(playerIn);
+                }
+                @Nullable
+                @SideOnly(Side.CLIENT)
+                public String getSlotTexture()
+                {
+                    return ItemArmor.EMPTY_SLOT_NAMES[entityequipmentslot.getIndex()];
+                }
+            });
+            //slots.add(new ArmorSlot(player, inventoryPlayer, inventoryPlayer.getSizeInventory() - 1 - i - 1,
+            //        8, 8 + i * 18, CompatibleEntityEquipmentSlot.valueOf(i)));
         }
         return slots;
     }
@@ -127,6 +175,24 @@ public class StorageItemContainer extends CompatibleContainer {
             // Item is in inventory / hotbar, try to place in custom inventory
             // or armor slots
             else {
+            	
+            		if (itemstack1.getItem() instanceof ItemArmor) {
+                    
+                	ItemArmor armor = ((ItemArmor) itemstack1.getItem());
+                	int ordinal = 4 - armor.getEquipmentSlot().getSlotIndex();
+            		if (!this.mergeItemStack(itemstack1, armorSlotStartIndex + ordinal, armorSlotStartIndex + ordinal + 1, false)) {
+
+                        if (!this.mergeItemStack(itemstack1, 0, inventorySlots.size()-1, false))
+                        {
+                            return ItemStack.EMPTY;
+                        }
+            			
+            			return ItemStack.EMPTY;
+                    }
+            	
+                }
+            	
+            	
                 /**
                  * Implementation number 1: Shift-click into your custom
                  * inventory
@@ -145,6 +211,9 @@ public class StorageItemContainer extends CompatibleContainer {
                         return compatibility.stackForEmptySlot();
                     }
                 }
+                
+                
+                
                 
                 /**
                  * Implementation number 2: Shift-click items between action bar
@@ -166,7 +235,7 @@ public class StorageItemContainer extends CompatibleContainer {
             }
 
             if (compatibility.getStackSize(itemstack1) == 0) {
-                slot.putStack((ItemStack) null);
+                slot.putStack(ItemStack.EMPTY);
             } else {
                 slot.onSlotChanged();
             }

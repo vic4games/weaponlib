@@ -7,19 +7,17 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import com.vicmatskiv.weaponlib.ClientEventHandler;
 import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMaterial;
+import com.vicmatskiv.weaponlib.jim.util.VMWHooksHandler;
 
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
-import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.item.Item;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraftforge.client.model.ModelLoader;
 
 public class CustomTileEntityConfiguration<T extends CustomTileEntityConfiguration<T>> {
     
@@ -107,6 +105,9 @@ public class CustomTileEntityConfiguration<T extends CustomTileEntityConfigurati
         Class<? extends TileEntity> tileEntityClass = createTileEntityClass();
         
         CustomTileEntityBlock tileEntityBlock = new CustomTileEntityBlock(material, tileEntityClass);
+        if(!VMWHooksHandler.isOnServer()) {
+        	ClientEventHandler.BLANKMAPPED_LIST.add(tileEntityBlock);
+        }
         tileEntityBlock.setBlockName(modContext.getModId() + "_" + name);
         tileEntityBlock.setHardness(hardness);
         tileEntityBlock.setResistance(resistance);
@@ -115,7 +116,9 @@ public class CustomTileEntityConfiguration<T extends CustomTileEntityConfigurati
         ResourceLocation textureResource = new ResourceLocation(modContext.getModId(), textureName);
         tileEntityBlock.setBlockTextureName(textureResource.toString());
         compatibility.registerTileEntity(tileEntityClass, "tile" + name);
-                    
+        
+        //System.out.println("RUNNING!");
+               
         compatibility.registerBlock(modContext, tileEntityBlock, name);
         
         if(compatibility.isClientSide()) {

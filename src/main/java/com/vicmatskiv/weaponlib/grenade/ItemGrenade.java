@@ -41,7 +41,7 @@ PlayerItemInstanceFactory<PlayerGrenadeInstance, GrenadeState>, AttachmentContai
 
     public static final float DEFAULT_GRAVITY_VELOCITY = 0.06f;
     public static final float DEFAULT_FAR_VELOCITY = 1.3f;
-    public static final float DEFAULT_VELOCITY = 1.0f;
+    public static final float DEFAULT_VELOCITY = 1.5f;
     public static final float DEFAULT_ROTATION_SLOWDOWN_FACTOR = 0.99f;
 
     public static final float DEFAULT_EFFECTIVE_RADIUS = 20f;
@@ -384,7 +384,7 @@ PlayerItemInstanceFactory<PlayerGrenadeInstance, GrenadeState>, AttachmentContai
                 }
             } else {
                 //throw new IllegalStateException("No recipe defined for attachment " + name);
-                System.err.println("!!!No recipe defined for grenade " + name);
+                //System.err.println("!!!No recipe defined for grenade " + name);
             }
 
             return grenade;

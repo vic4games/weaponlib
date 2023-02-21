@@ -80,6 +80,9 @@ public final class Tags {
 	}
 
 	public static void setInstance(ItemStack itemStack, PlayerItemInstance<?> instance) {
+	
+	
+		
 		if(itemStack == null) return;
 		compatibility.ensureTagCompound(itemStack);
 		ByteBuf buf = Unpooled.buffer();
@@ -107,6 +110,8 @@ public final class Tags {
 	}
 	
 	public static void setInstanceUuid(ItemStack itemStack, UUID uuid) {
+	
+			
 	    if(itemStack == null) return;
         compatibility.ensureTagCompound(itemStack);
         NBTTagCompound tagCompound = compatibility.getTagCompound(itemStack);

@@ -8,11 +8,14 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 
+
 import com.vicmatskiv.weaponlib.MagazineReloadAspect.LoadPermit;
 import com.vicmatskiv.weaponlib.WeaponAttachmentAspect.ChangeAttachmentPermit;
 import com.vicmatskiv.weaponlib.WeaponAttachmentAspect.EnterAttachmentModePermit;
 import com.vicmatskiv.weaponlib.WeaponAttachmentAspect.ExitAttachmentModePermit;
+import com.vicmatskiv.weaponlib.WeaponReloadAspect.CompoundPermit;
 import com.vicmatskiv.weaponlib.WeaponReloadAspect.UnloadPermit;
+import com.vicmatskiv.weaponlib.command.BalancePackCommand;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleBlockState;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleChannel;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleCustomPlayerInventoryCapability;
@@ -26,7 +29,12 @@ import com.vicmatskiv.weaponlib.compatibility.CompatiblePlayerEntityTrackerProvi
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSide;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 import com.vicmatskiv.weaponlib.config.ConfigurationManager;
+import com.vicmatskiv.weaponlib.config.novel.ModernConfigManager;
 import com.vicmatskiv.weaponlib.crafting.RecipeManager;
+import com.vicmatskiv.weaponlib.crafting.ammopress.BlockAmmoPress;
+import com.vicmatskiv.weaponlib.crafting.ammopress.TileEntityAmmoPress;
+import com.vicmatskiv.weaponlib.crafting.workbench.TileEntityWorkbench;
+import com.vicmatskiv.weaponlib.crafting.workbench.WorkbenchBlock;
 import com.vicmatskiv.weaponlib.electronics.EntityWirelessCamera;
 import com.vicmatskiv.weaponlib.electronics.HandheldState;
 import com.vicmatskiv.weaponlib.electronics.PlayerHandheldInstance;
@@ -77,6 +85,17 @@ import com.vicmatskiv.weaponlib.mission.PlayerMissionSyncMessage;
 import com.vicmatskiv.weaponlib.network.NetworkPermitManager;
 import com.vicmatskiv.weaponlib.network.PermitMessage;
 import com.vicmatskiv.weaponlib.network.TypeRegistry;
+import com.vicmatskiv.weaponlib.network.packets.BalancePackClient;
+import com.vicmatskiv.weaponlib.network.packets.BloodPacketClient;
+import com.vicmatskiv.weaponlib.network.packets.BulletShellClient;
+import com.vicmatskiv.weaponlib.network.packets.CraftingClientPacket;
+import com.vicmatskiv.weaponlib.network.packets.CraftingServerPacket;
+import com.vicmatskiv.weaponlib.network.packets.GunFXPacket;
+import com.vicmatskiv.weaponlib.network.packets.HeadshotSFXPacket;
+import com.vicmatskiv.weaponlib.network.packets.HighIQPickupPacket;
+import com.vicmatskiv.weaponlib.network.packets.OpenDoorPacket;
+import com.vicmatskiv.weaponlib.network.packets.StationPacket;
+import com.vicmatskiv.weaponlib.network.packets.StationClientPacket;
 import com.vicmatskiv.weaponlib.particle.SpawnParticleMessage;
 import com.vicmatskiv.weaponlib.particle.SpawnParticleMessageHandler;
 import com.vicmatskiv.weaponlib.state.Permit;
@@ -84,14 +103,26 @@ import com.vicmatskiv.weaponlib.state.StateManager;
 import com.vicmatskiv.weaponlib.tracking.SyncPlayerEntityTrackerMessage;
 import com.vicmatskiv.weaponlib.tracking.SyncPlayerEntityTrackerMessageMessageHandler;
 import com.vicmatskiv.weaponlib.vehicle.EntityVehicle;
+import com.vicmatskiv.weaponlib.vehicle.network.VehicleClientPacket;
+import com.vicmatskiv.weaponlib.vehicle.network.VehicleClientPacketHandler;
+import com.vicmatskiv.weaponlib.vehicle.network.VehicleControlPacket;
+import com.vicmatskiv.weaponlib.vehicle.network.VehicleControlPacketHandler;
+import com.vicmatskiv.weaponlib.vehicle.network.VehicleInteractPHandler;
+import com.vicmatskiv.weaponlib.vehicle.network.VehicleInteractPacket;
 
+import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.fml.common.Mod.EventHandler;
+import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 
 public class CommonModContext implements ModContext {
 
+	
+	
     static {
         TypeRegistry.getInstance().register(LoadPermit.class);
         TypeRegistry.getInstance().register(MagazineState.class);
@@ -103,6 +134,7 @@ public class CommonModContext implements ModContext {
         TypeRegistry.getInstance().register(EnterAttachmentModePermit.class);
         TypeRegistry.getInstance().register(ExitAttachmentModePermit.class);
         TypeRegistry.getInstance().register(ChangeAttachmentPermit.class);
+        TypeRegistry.getInstance().register(CompoundPermit.class);
         TypeRegistry.getInstance().register(UnloadPermit.class);
         TypeRegistry.getInstance().register(LoadPermit.class);
         TypeRegistry.getInstance().register(PlayerWeaponInstance.class);
@@ -222,6 +254,9 @@ public class CommonModContext implements ModContext {
     
     protected static ThreadLocal<ModContext> currentContext = new ThreadLocal<>();
 
+    
+    
+    
 	@Override
     public void preInit(Object mod, String modId, ConfigurationManager configurationManager,
             CompatibleFmlPreInitializationEvent event, CompatibleChannel channel) {
@@ -270,7 +305,13 @@ public class CommonModContext implements ModContext {
         magazineReloadAspect.setStateManager(magazineStateManager);
 
 		this.recipeManager = new RecipeManager();
+		
+		
+		// Initiate config
+		ModernConfigManager.init();
+		
 
+		
 		channel.registerMessage(new TryFireMessageHandler(weaponFireAspect),
 				TryFireMessage.class, 11, CompatibleSide.SERVER);
 
@@ -337,6 +378,45 @@ public class CommonModContext implements ModContext {
         channel.registerMessage(new EntityMissionOfferingSyncHandler(this),
                 EntityMissionOfferingSyncMessage.class, 33, CompatibleSide.CLIENT);
 		
+        channel.registerMessage(new VehicleControlPacketHandler(this),
+        		VehicleControlPacket.class, 34, CompatibleSide.SERVER);
+        
+        channel.registerMessage(new VehicleClientPacketHandler(this),
+        		VehicleClientPacket.class, 35, CompatibleSide.CLIENT);
+        
+        channel.registerMessage(new VehicleInteractPHandler(this),
+        		VehicleInteractPacket.class, 36, CompatibleSide.SERVER);
+        
+        channel.registerMessage(new GunFXPacket.GunFXPacketHandler(),
+        		GunFXPacket.class, 37, CompatibleSide.CLIENT);
+        
+        channel.registerMessage(new BulletShellClient.GunFXPacketHandler(),
+        		BulletShellClient.class, 38, CompatibleSide.CLIENT);
+        
+        channel.registerMessage(new BalancePackClient.BalancePacketHandler(), BalancePackClient.class, 39, CompatibleSide.CLIENT);
+        channel.registerMessage(new HeadshotSFXPacket.GunFXPacketHandler(), HeadshotSFXPacket.class, 40, CompatibleSide.CLIENT);
+        channel.registerMessage(new BloodPacketClient.BalancePacketHandler(this),
+        		BloodPacketClient.class, 41, CompatibleSide.CLIENT);
+        
+        channel.registerMessage(new OpenDoorPacket.OpenDoorPacketHandler(this),
+        		OpenDoorPacket.class, 42, CompatibleSide.SERVER);
+
+        channel.registerMessage(new StationPacket.WorkbenchPacketHandler(this),
+        		StationPacket.class, 43, CompatibleSide.SERVER);
+        
+        channel.registerMessage(new StationClientPacket.WorkshopClientPacketHandler(this),
+        		StationClientPacket.class, 44, CompatibleSide.CLIENT);
+        
+        channel.registerMessage(new CraftingClientPacket.SimplePacketHandler(this),
+        		CraftingClientPacket.class, 45, CompatibleSide.CLIENT);
+        
+        channel.registerMessage(new CraftingServerPacket.SimplePacketHandler(this),
+        		CraftingServerPacket.class, 46, CompatibleSide.SERVER);
+        
+        channel.registerMessage(new HighIQPickupPacket.SimplePacketHandler(this),
+        		HighIQPickupPacket.class, 47, CompatibleSide.SERVER);
+        
+        
 		ServerEventHandler serverHandler = new ServerEventHandler(this, modId);
         compatibility.registerWithFmlEventBus(serverHandler);
         compatibility.registerWithEventBus(serverHandler);
@@ -361,7 +441,7 @@ public class CommonModContext implements ModContext {
 
         compatibility.registerModEntity(EntitySpreadable.class, "EntitySpreadable" + modEntityID, modEntityID++, mod, modId, 64, 3, false);
 
-        compatibility.registerModEntity(EntityVehicle.class, "EntityVehicle" + modEntityID, modEntityID++, mod, modId, 64, 3, false);
+        //compatibility.registerModEntity(EntityVehicle.class, "EntityVehicle" + modEntityID, modEntityID++, mod, modId, 64, 3, false);
 
 //        compatibility.registerModEntity(EntityCustomMob.class, "CustomMob" + modEntityID, modEntityID++, mod, modId, 64, 3, true);
 //
@@ -384,10 +464,26 @@ public class CommonModContext implements ModContext {
 //        CriteriaTriggers.INVENTORY_CHANGED.addListener(
 //                null, new ICriterionTrigger.Listener(inventoryChangeTriggerInstance, null, "Custom inventory change"));
         
-        File missionsDir = new File(new File(event.getEvent().getSuggestedConfigurationFile().getParent(), "mw"), "missions");
-        File entityMissionFile = new File(new File(event.getEvent().getSuggestedConfigurationFile().getParent(), "mw"), "entity_mission_offerings.json");
+     //   File missionsDir = new File(new File(event.getEvent().getSuggestedConfigurationFile().getParent(), "mw"), "missions");
+       // File entityMissionFile = new File(new File(event.getEvent().getSuggestedConfigurationFile().getParent(), "mw"), "entity_mission_offerings.json");
 
-        this.missionManager = new MissionManager(modId, missionsDir, entityMissionFile);
+        
+       
+        
+     
+       // compatibility.registerBlock(this, new WorkbenchBlock("workbench", Material.ROCK), "workbench");
+        
+       // this.missionManager = new MissionManager(modId, missionsDir, entityMissionFile);
+	}
+	
+	@Override
+	public void preInitEnd(Object mod, String modId, ConfigurationManager configurationManager,
+			CompatibleFmlPreInitializationEvent event, CompatibleChannel channel) {
+		compatibility.registerTileEntity(TileEntityWorkbench.class, "mw:tileworkbench");
+		compatibility.registerBlock(this, new WorkbenchBlock(this, "weapon_workbench", Material.WOOD), "weapon_workbench");
+		
+		compatibility.registerTileEntity(TileEntityAmmoPress.class, "mw:tileammopress");
+		compatibility.registerBlock(this, new BlockAmmoPress(this, "ammo_press", Material.IRON), "ammo_press");	
 	}
 	
 	@Override

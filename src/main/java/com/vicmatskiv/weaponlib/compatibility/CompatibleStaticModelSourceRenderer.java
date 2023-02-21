@@ -109,6 +109,7 @@ public abstract class CompatibleStaticModelSourceRenderer extends ModelSourceRen
 
 			if (owner != null) {
 				if (transformType == TransformType.THIRD_PERSON_RIGHT_HAND) {
+					
 					if (owner.isSneaking()) GlStateManager.translate(0.0F, -0.2F, 0.0F);
 				}
 			}
@@ -165,6 +166,7 @@ public abstract class CompatibleStaticModelSourceRenderer extends ModelSourceRen
 	@SideOnly(Side.CLIENT)
 	public void renderItem()
 	{
+		
 		GL11.glPushMatrix();
 
 		GL11.glScaled(-1F, -1F, 1F);
@@ -223,12 +225,14 @@ public abstract class CompatibleStaticModelSourceRenderer extends ModelSourceRen
 			ItemStack itemStack, TransformType type, Entity entity,
 			float f, float f1, float f2, float f3, float f4, float f5) {
 
+		
 		if(!(itemStack.getItem() instanceof ModelSource)) {
 			throw new IllegalArgumentException();
 		}
 
 		GL11.glPushMatrix();
 
+	
 		ModelSource modelSource = (ModelSource)itemStack.getItem();
         for(Tuple<ModelBase, String> texturedModel: modelSource.getTexturedModels()) {
 			Minecraft.getMinecraft().renderEngine.bindTexture(new ResourceLocation(builder.getModId()

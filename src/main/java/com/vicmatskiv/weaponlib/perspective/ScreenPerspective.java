@@ -17,6 +17,7 @@ public abstract class ScreenPerspective extends Perspective<RenderableState> {
 
     @Override
     public void update(CompatibleRenderTickEvent event) {
+    	//if(true) return;
         int originalFramebufferId = Framebuffers.getCurrentFramebuffer();
         
         GL11.glPushMatrix();

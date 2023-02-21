@@ -51,8 +51,9 @@ public class Missions {
 
     public static void update(EntityPlayer player, Action action, ModContext modContext) {
         Set<Mission> missions = CompatibleMissionCapability.getMissions(player);
-        
+       
         for(Mission mission: missions) {
+        	
             if(!mission.isCompleted(player) && mission.update(action, player)) {
                 if(mission.isCompleted(player)) {
                     modContext.getStatusMessageCenter().addAlertMessage(

@@ -103,6 +103,7 @@ public class ScreenShakingAnimationManager {
     
     public void update(EntityPlayer player, PlayerWeaponInstance weaponInstance, RenderableState weaponState) {
         State targetState = toManagedState(weaponState);
+        
 //        System.out.println("Target state: " + targetState + ", render state: " + weaponState);
         PlayerAnimation activeAnimation = activeAnimations.get(player);
 //        activeAnimations.clear();
@@ -114,13 +115,19 @@ public class ScreenShakingAnimationManager {
         } else {
             State currentAnimationState = activeAnimation.getState();
 //            System.out.println("Current state: " + currentState);
+            
+           // System.out.println(currentAnimationState.getPriority() + " | " + targetState.getPriority());
+            
+           
             if(currentAnimationState == targetState) {
+            	
                 if(targetState != lastTargetState) {
 //                    System.out.println("Target state: " + targetState + ", last: " + lastTargetState + ", resetting...");
                     activeAnimation.reset(player, false);
                 }
-            } else if(currentAnimationState.getPriority() < targetState.getPriority() || activeAnimation.isCompleted()) {
-                activeAnimation = getAnimationForManagedState(player, weaponInstance, targetState);
+            }  else if(currentAnimationState.getPriority() < targetState.getPriority() || activeAnimation.isCompleted()) {
+                
+            	activeAnimation = getAnimationForManagedState(player, weaponInstance, targetState);
                 activeAnimation.reset(player, true);
                 activeAnimations.put(player, activeAnimation);
             }
@@ -157,7 +164,8 @@ public class ScreenShakingAnimationManager {
     }
     
     private PlayerAnimation createAnimationForManagedState(EntityPlayer player, State managedState, Weapon weapon) {
-        PlayerAnimation animation;
+    	
+    	PlayerAnimation animation;
         switch(managedState) {
         case AIMING:
             animation = new PlayerRawPitchAnimation(managedState)

@@ -10,6 +10,7 @@ public class CompatibleChannel {
 	}
 
 	public SimpleNetworkWrapper getChannel() {
+		//System.out.println("Getting");
 		return channel;
 	}
 

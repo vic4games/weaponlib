@@ -19,6 +19,9 @@ import com.vicmatskiv.weaponlib.ModContext;
 import com.vicmatskiv.weaponlib.ai.EntityCustomMob;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleParticle.CompatibleParticleBreaking;
 import com.vicmatskiv.weaponlib.inventory.GuiHandler;
+import com.vicmatskiv.weaponlib.melee.ItemMelee;
+import com.vicmatskiv.weaponlib.particle.CompatibleBloodParticle;
+import com.vicmatskiv.weaponlib.particle.CompatibleDiggingParticle;
 import com.vicmatskiv.weaponlib.tile.CustomTileEntityRenderer;
 
 import net.minecraft.block.Block;
@@ -76,6 +79,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.EnumDifficulty;
@@ -278,6 +282,9 @@ public class Compatibility1_12_2 implements Compatibility {
 
     @Override
     public void registerItem(Item item, String name) {
+    	
+    	
+    	
         item.setRegistryName("mw", name); // temporary hack
         ForgeRegistries.ITEMS.register(item);
         //GameRegistry.register(item, new ResourceLocation("mw", name)); // temporary hack
@@ -300,6 +307,8 @@ public class Compatibility1_12_2 implements Compatibility {
             }
             item.setRegistryName(modId, registryName);
         }
+        
+        //System.out.println("REGISTRY: " + item.getRegistryName());
         //GameRegistry.register(item);
         ForgeRegistries.ITEMS.register(item);
     }
@@ -322,6 +331,7 @@ public class Compatibility1_12_2 implements Compatibility {
     @SideOnly(Side.CLIENT)
     public void registerRenderingRegistry(CompatibleRenderingRegistry rendererRegistry) {
         //MinecraftForge.EVENT_BUS.register(rendererRegistry);
+    	
         //ModelLoaderRegistry.registerLoader(rendererRegistry);
     }
 
@@ -436,12 +446,12 @@ public class Compatibility1_12_2 implements Compatibility {
 
     @Override
     public float getEffectOffsetX() {
-		return -0.02f;
+		return -0.1f;
     }
 
     @Override
     public float getEffectOffsetY() {
-		return -1.65f;
+		return -1.7f;
     }
 
     @Override
@@ -559,6 +569,8 @@ public class Compatibility1_12_2 implements Compatibility {
         ForgeRegistries.BLOCKS.register(block);
         ItemBlock itemBlock = new ItemBlock(block);
         // TODO: introduce registerItem()
+        
+      // System.out.println("Debug Out: " + block.getRegistryName() + " | Item Block: " + itemBlock + " | Provided name: " + name);
         context.registerRenderableItem(block.getRegistryName(), itemBlock, null);
         //GameRegistry.register(itemBlock.setRegistryName(block.getRegistryName()));
 //        itemBlock.setRegistryName(block.getRegistryName());
@@ -648,11 +660,60 @@ public class Compatibility1_12_2 implements Compatibility {
     }
 
     @Override
-    public void addBlockHitEffect(int x, int y, int z, CompatibleEnumFacing sideHit) {
-        for(int i = 0; i < 6; i++) {
-            Minecraft.getMinecraft().effectRenderer.addBlockHitEffects(
-                    new BlockPos(x, y, z), sideHit.getEnumFacing());
-        }
+    @SideOnly(Side.CLIENT)
+    public void addBlockHitEffect(BlockPos pos, double x, double y, double z, CompatibleEnumFacing sideHit) {
+    	
+    	IBlockState hitBlock = Minecraft.getMinecraft().world.getBlockState(pos);
+    	
+    	if(hitBlock.getMaterial() == Material.GLASS) {
+    		// Get direction
+        	Vec3d speedVec = CompatibleRayTracing.directionFromEnumFacing(sideHit.getEnumFacing()).scale(0.3);
+        	
+            for(int i = 0; i < 36; i++) {
+        
+            	double sX = pos.getX() + Math.random();
+            	double sY = pos.getY() + Math.random();
+            	double sZ = pos.getZ() + Math.random();
+            	
+            	Vec3d modifiedSpeedVec = speedVec.scale(new Vec3d(sX, sY, sZ).squareDistanceTo(new Vec3d(x, y, z))*2);
+            	
+            	CompatibleDiggingParticle cdp = new CompatibleDiggingParticle(Minecraft.getMinecraft().world, sX, sY, sZ, modifiedSpeedVec.x, modifiedSpeedVec.y, modifiedSpeedVec.z, hitBlock);
+        		cdp.setBlockPos(new BlockPos(x, y, z));
+        		Minecraft.getMinecraft().effectRenderer.addEffect(cdp);
+                        
+            }
+    	} else {
+    		// Get direction
+        	Vec3d speedVec = CompatibleRayTracing.directionFromEnumFacing(sideHit.getEnumFacing()).scale(0.3);
+            for(int i = 0; i < 12; i++) {
+            	
+            	
+            	
+            	Vec3d spreadVector = new Vec3d(Math.random() - 0.5, Math.random()*0.5, Math.random() - 0.5).scale(0.05);
+            	Vec3d individualVector = speedVec.add(spreadVector);
+            	
+            	
+            	CompatibleDiggingParticle cdp = new CompatibleDiggingParticle(Minecraft.getMinecraft().world, x, y, z, individualVector.x, individualVector.y, individualVector.z, hitBlock);
+        		cdp.setBlockPos(new BlockPos(x, y, z));
+        		Minecraft.getMinecraft().effectRenderer.addEffect(cdp);
+        	
+        		
+        		 if(Math.random() < 0.5 && i <= 2) {
+        	        	Minecraft.getMinecraft().world.spawnParticle(EnumParticleTypes.SMOKE_NORMAL, x, y, z, 0, 0, 0, new int[0]);
+        	            
+        	        }
+            	
+        		/*
+            	Minecraft.getMinecraft().effectRenderer.addBlockHitEffects(
+                        new BlockPos(x, y, z), sideHit.getEnumFacing());
+                        */
+                        
+            }
+    	}
+    	
+    	
+        
+       
     }
 
     @Override
@@ -662,6 +723,17 @@ public class Compatibility1_12_2 implements Compatibility {
         CompatibleParticleBreaking particle = CompatibleParticle.createParticleBreaking(
                 modContext, world(clientPlayer()), x, y + yOffset, z);
         Minecraft.getMinecraft().effectRenderer.addEffect(particle);
+    }
+    
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void addBloodParticle(ModContext modContext, double x, double y, double z, double velX, double velY, double velZ) {
+    
+    	
+    	CompatibleBloodParticle cdp = new CompatibleBloodParticle(modContext, Minecraft.getMinecraft().world, x, y, z, velX, velY, velZ);
+    
+		Minecraft.getMinecraft().effectRenderer.addEffect(cdp);
+
     }
 
     @Override
@@ -784,6 +856,8 @@ public class Compatibility1_12_2 implements Compatibility {
     @Override
     public void spawnParticle(World world, String particleName, double xCoord, double yCoord, double zCoord,
             double xSpeed, double ySpeed, double zSpeed) {
+    	
+    	
         EnumParticleTypes particleType = EnumParticleTypes.getByName(particleName);
         if(particleType != null) {
             world.spawnParticle(particleType, xCoord, yCoord, zCoord, xSpeed, ySpeed, zSpeed);
@@ -812,34 +886,20 @@ public class Compatibility1_12_2 implements Compatibility {
                 || block == Blocks.LEAVES
                 || block == Blocks.LEAVES2
                 || block == Blocks.FIRE
-                || block == Blocks.HAY_BLOCK
                 || block == Blocks.DOUBLE_PLANT
                 || block == Blocks.WEB
-                || block == Blocks.ACACIA_FENCE
-                || block == Blocks.ACACIA_FENCE_GATE
-                || block == Blocks.ACACIA_STAIRS
                 || block == Blocks.BARRIER
                 || block == Blocks.BEETROOTS
-                || block == Blocks.BIRCH_FENCE
-                || block == Blocks.BIRCH_FENCE_GATE
-                || block == Blocks.BIRCH_STAIRS
                 || block == Blocks.CAKE
                 || block == Blocks.CARPET
                 || block == Blocks.CARROTS
                 || block == Blocks.COCOA
-                || block == Blocks.DARK_OAK_FENCE
-                || block == Blocks.DARK_OAK_FENCE_GATE
-                || block == Blocks.DARK_OAK_STAIRS
                 || block == Blocks.GLASS
                 || block == Blocks.GLASS_PANE
                 || block == Blocks.GLOWSTONE
                 || block == Blocks.IRON_BARS
                 || block == Blocks.LADDER
                 || block == Blocks.LEVER
-                || block == Blocks.OAK_FENCE
-                || block == Blocks.OAK_FENCE_GATE
-                || block == Blocks.OAK_STAIRS
-                || block == Blocks.PLANKS
                 || block == Blocks.POTATOES
                 || block == Blocks.REDSTONE_TORCH
                 || block == Blocks.SAPLING
@@ -849,7 +909,6 @@ public class Compatibility1_12_2 implements Compatibility {
                 || block == Blocks.WALL_BANNER
                 || block == Blocks.WALL_SIGN
                 || block == Blocks.WATERLILY
-                || block == Blocks.WOODEN_SLAB
                 || block == Blocks.DOUBLE_WOODEN_SLAB
                 || block == Blocks.WHEAT;
     }
@@ -861,6 +920,9 @@ public class Compatibility1_12_2 implements Compatibility {
 
     @Override
     public boolean canCollideCheck(Block block, CompatibleBlockState metadata, boolean hitIfLiquid) {
+    	//return false;
+    	
+    //	return block == Blocks.STAINED_GLASS;
         return block.canCollideCheck(metadata.getBlockState(), hitIfLiquid);
     }
 
@@ -1116,7 +1178,7 @@ public class Compatibility1_12_2 implements Compatibility {
             }
         }
         
-        EntityRegistry.addSpawn(entity, weightedProb, min, max, EnumCreatureType.MONSTER, biomes.toArray(new Biome[0]));
+       EntityRegistry.addSpawn(entity, weightedProb, min, max, EnumCreatureType.MONSTER, biomes.toArray(new Biome[0]));
     }
 
     @Override
@@ -1415,7 +1477,14 @@ private Optional<Field> shadersEnabledFieldOptional;
         for(int i = 0; i < itemStacks.length; i++) {
             stackList.add(itemStacks[i]);
         }
-        ArmorProperties.applyArmor(entityLiving, stackList, damageSource, amount);
+
+    
+        float amt = ArmorProperties.applyArmor(entityLiving, stackList, damageSource, amount);
+        event.setAmount(amt);
+        
+       
+        //event.setAmount(amount);
+        //ArmorProperties.applyArmor(entityLiving, stackList, damageSource, amount);
     }
 
     @Override
@@ -1483,4 +1552,30 @@ private Optional<Field> shadersEnabledFieldOptional;
     public ItemStack stackForEmptySlot() {
         return new ItemStack(Items.AIR);
     }
+
+	@Override
+	public ItemStack findNextBestItem(Collection<? extends Item> compatibleItems, Comparator<ItemStack> comparator,
+			EntityPlayer player) {
+		
+		        int maxSize = 1;
+//		        if(maxSize <= 0) {
+//		            return null;
+//		        }
+
+		        int i = findGreatesItemIndex(compatibleItems, comparator, player);
+
+		        if (i < 0) {
+		            return null;
+		        } else {
+		            ItemStack stackInSlot = player.inventory.getStackInSlot(i).copy();
+		            int consumedStackSize = maxSize >= getStackSize(stackInSlot) ? getStackSize(stackInSlot) : maxSize;
+		            ItemStack result = stackInSlot.splitStack(consumedStackSize);
+		            //if (getStackSize(stackInSlot) <= 0) {
+		               // player.inventory.removeStackFromSlot(i);
+		            //}
+		            return result;
+		        }
+		    
+		
+	}
 }

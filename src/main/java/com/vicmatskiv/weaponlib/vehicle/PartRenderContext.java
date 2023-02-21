@@ -5,6 +5,7 @@ import org.lwjgl.util.vector.Matrix4f;
 import com.vicmatskiv.weaponlib.animation.PartPositionProvider;
 
 import net.minecraft.entity.Entity;
+import net.minecraft.util.ResourceLocation;
 
 public class PartRenderContext<State> implements PartPositionProvider {
     
@@ -17,11 +18,32 @@ public class PartRenderContext<State> implements PartPositionProvider {
     private Entity entity;
     private State state;
     private float progress;
+    
+    /**
+     * ALTERNATE TEX RENDERINGS
+     */
+    private boolean shouldAlternateTexture = false;
+    private ResourceLocation alternateTexture = null;
 
     @Override
     public Matrix4f getPartPosition(Object part) {
+    	
         // TODO Auto-generated method stub
         return null;
+    }
+    
+    
+    public void renderAlternateTexture(ResourceLocation loc) {
+    	this.alternateTexture = loc;
+    	this.shouldAlternateTexture = true;
+    }
+    
+    public boolean shouldRenderAlternateTexture() {
+    	return this.shouldAlternateTexture;
+    }
+    
+    public ResourceLocation getAlternateTexture() {
+    	return this.alternateTexture;
     }
     
     public void setState(State state) {

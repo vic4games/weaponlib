@@ -17,6 +17,8 @@ import com.vicmatskiv.weaponlib.vehicle.HierarchicalPartRenderer.SinglePart;
 
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class HierarchicalRendererBuilder<Part, State extends RenderState> {
 
@@ -138,16 +140,20 @@ public class HierarchicalRendererBuilder<Part, State extends RenderState> {
         PartConfiguration partConfiguration = partConfigurations.computeIfAbsent(part, p -> new PartConfiguration());
         List<HierarchicalRendererBuilder<Part, State>.TransitionDescriptor> partStateDescriptors = partConfiguration.transitionDescriptors.computeIfAbsent(state, s -> new ArrayList<>());
         partStateDescriptors.add(new TransitionDescriptor(positionFunction, duration));
+        
         //        List<MultipartTransition<SinglePart, PartRenderContext<State>>> singleStateTransitions = partConfiguration.transitions.computeIfAbsent(state, s -> new ArrayList<>());
         //        MultipartTransition<SinglePart, PartRenderContext<State>> mt = new MultipartTransition<>(duration);
         //        mt.withPartPositionFunction(SinglePart.MAIN, positionFunction);
         //        singleStateTransitions.add(mt);
         return this;
     }
+    
+    
 
-    public HierarchicalRendererBuilder<Part, State> withPartPosition(Part part, 
+    public HierarchicalRendererBuilder<Part, State> withPartPosition( Part part, 
             Consumer<PartRenderContext<State>> positionFunction, 
             @SuppressWarnings("unchecked") State...states)  {
+    	
         for(State state: states) {
             withPartPosition(part, state, positionFunction, DEFAULT_DURATION);
         }
@@ -156,10 +162,11 @@ public class HierarchicalRendererBuilder<Part, State extends RenderState> {
 
     protected void prebuild() {}
 
+    
     public StatefulRenderer<State> build(ModContext modContext, Part mainPart) {
 
         prebuild();
-
+        
         Map<Part, HierarchicalPartRenderer<Part, State>> partRenderers = new HashMap<>();
 
         partConfigurations.forEach((part, partConfiguration) -> {
@@ -183,6 +190,8 @@ public class HierarchicalRendererBuilder<Part, State extends RenderState> {
                     return transitions.get(state);
                 }
             };
+            
+            
 
             ResourceLocation textureResource = new ResourceLocation(modContext.getModId(), 
                     "textures/entity/" + partConfiguration.textureName + ( partConfiguration.textureName.endsWith(".png") ? "" : ".png"));

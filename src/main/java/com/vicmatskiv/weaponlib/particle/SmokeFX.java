@@ -2,12 +2,15 @@ package com.vicmatskiv.weaponlib.particle;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
+import java.util.Random;
+
 import org.lwjgl.opengl.GL11;
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleParticle;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTessellator;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
@@ -41,8 +44,7 @@ public class SmokeFX extends CompatibleParticle {
 		this.particleBlue = 1.0F;
 		this.particleAlpha = 0.0F;
 		this.particleScale *= scale;
-		this.particleMaxAge = 50 + (int)(this.rand.nextFloat() * 30);
-
+		this.particleMaxAge = 50;
         this.imageIndex = this.rand.nextInt() % imagesPerRow;
 	}
 
@@ -60,9 +62,9 @@ public class SmokeFX extends CompatibleParticle {
         this.motionY += 0.0005D;
         compatibility.moveParticle(this, this.motionX, this.motionY, this.motionZ);
 
-        this.motionX *= 0.599999785423279D;
+        this.motionX *= 0.999999785423279D;
         this.motionY *= 0.9999999785423279D;
-        this.motionZ *= 0.599999785423279D;
+        this.motionZ *= 0.999999785423279D;
 
         double alphaRadians = Math.PI / 4f + Math.PI * (float)this.particleAge / (float)this.particleMaxAge;
         this.particleAlpha = 0.2f * (float) Math.sin(alphaRadians > Math.PI ? Math.PI : alphaRadians);
@@ -79,7 +81,44 @@ public class SmokeFX extends CompatibleParticle {
     @Override
     public void renderParticle(CompatibleTessellator tessellator, float partialTicks, float par3, float par4, float par5, float par6, float par7) {
 
-    	Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation(SMOKE_TEXTURE));
+    	
+    	
+    	Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mw" + ":" + "textures/smokes/smokesheet.png"));
+
+    	Random urandom = new Random(333);
+		
+    	BufferBuilder buffer = tessellator.getBuffer();
+    	double rotationX = 0;
+    	double rotationXY = 0;
+    	
+		
+		 this.particleRed = this.particleGreen = this.particleBlue = urandom.nextFloat() * 0.5F + 0.4F;
+	       
+	        int j = this.getBrightnessForRender(partialTicks);
+	        int k = j >> 16 & 65535;
+	        int l = j & 65535;
+	        
+			float scale = this.particleScale;
+			float pX = (float)(this.prevPosX + (this.posX - this.prevPosX) * (double)partialTicks - interpPosX);
+	        float pY = (float)(this.prevPosY + (this.posY - this.prevPosY) * (double)partialTicks - interpPosY);
+	        float pZ = (float)(this.prevPosZ + (this.posZ - this.prevPosZ) * (double)partialTicks - interpPosZ);
+	        
+	        double minX = particleTexture.getMinU() + ((particleTexture.getMaxU()-particleTexture.getMinU()) * (particleTextureIndexX/8f));
+	        double minY = particleTexture.getMinV() + ((particleTexture.getMaxV()-particleTexture.getMinV()) * (particleTextureIndexY/8f));
+	        double mU = (particleTexture.getMaxU()-particleTexture.getMinU())/8;
+	        double mV = (particleTexture.getMaxV()-particleTexture.getMinV())/8;
+	        
+	        float rotationYZ = 0;
+			float rotationZ = 0;
+			float rotationXZ = 0;
+			buffer.pos((double)(pX - rotationX * scale - rotationXY * scale), (double)(pY - rotationZ * scale), (double)(pZ - rotationYZ * scale - rotationXZ * scale)).tex(minX+mU, minY+mV).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).lightmap(k, l).endVertex();
+			buffer.pos((double)(pX - rotationX * scale + rotationXY * scale), (double)(pY + rotationZ * scale), (double)(pZ - rotationYZ * scale + rotationXZ * scale)).tex(minX+mU, minY).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).lightmap(k, l).endVertex();
+			buffer.pos((double)(pX + rotationX * scale + rotationXY * scale), (double)(pY + rotationZ * scale), (double)(pZ + rotationYZ * scale + rotationXZ * scale)).tex(minX, minY).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).lightmap(k, l).endVertex();
+			buffer.pos((double)(pX + rotationX * scale - rotationXY * scale), (double)(pY - rotationZ * scale), (double)(pZ + rotationYZ * scale - rotationXZ * scale)).tex(minX, minY+mV).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).lightmap(k, l).endVertex();
+		
+    	
+    	if(1+1==2) return;    	
+    	//Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation(SMOKE_TEXTURE));
 
 		GL11.glPushMatrix();
 		GL11.glPushAttrib(GL11.GL_ENABLE_BIT);
@@ -101,8 +140,8 @@ public class SmokeFX extends CompatibleParticle {
         tessellator.setColorRgba(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha);
 
         int i = this.getBrightnessForRender(partialTicks); // or simply set it to 200?
-        int j = i >> 16 & 65535;
-        int k = i & 65535;
+        j = i >> 16 & 65535;
+        k = i & 65535;
         tessellator.setLightMap(j, k);
 
         RenderHelper.disableStandardItemLighting();

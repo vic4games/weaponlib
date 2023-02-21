@@ -2,42 +2,124 @@ package com.vicmatskiv.weaponlib.vehicle;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
+import java.io.BufferedReader;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
+import javax.swing.border.MatteBorder;
+import javax.vecmath.Matrix3d;
+import javax.vecmath.Matrix4d;
+import javax.vecmath.Quat4d;
+import javax.vecmath.Quat4f;
+import javax.vecmath.Vector2d;
+import javax.vecmath.Vector3d;
+
+import org.apache.logging.log4j.core.Core;
+import org.lwjgl.input.Keyboard;
+import org.lwjgl.openal.AL10;
+import org.lwjgl.openal.EFX10;
+import org.lwjgl.util.vector.Quaternion;
+import org.objectweb.asm.Opcodes;
 
 import com.google.common.collect.Lists;
+import com.mojang.authlib.minecraft.MinecraftProfileTexture;
+import com.mojang.realmsclient.dto.UploadInfo;
+import com.vicmatskiv.weaponlib.CommonModContext;
 import com.vicmatskiv.weaponlib.Configurable;
+import com.vicmatskiv.weaponlib.Contextual;
+import com.vicmatskiv.weaponlib.CustomGui;
 import com.vicmatskiv.weaponlib.EntityClassFactory;
+import com.vicmatskiv.weaponlib.KeyBindings;
+import com.vicmatskiv.weaponlib.ModContext;
+import com.vicmatskiv.weaponlib.TryFireMessage;
 import com.vicmatskiv.weaponlib.animation.Randomizer;
+import com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMathHelper;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMovingSound;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleParticle;
+import com.vicmatskiv.weaponlib.compatibility.CompatiblePositionedSound;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleVec3;
+import com.vicmatskiv.weaponlib.compatibility.RevSound;
+import com.vicmatskiv.weaponlib.compatibility.sound.AdvCompatibleMovingSound;
+import com.vicmatskiv.weaponlib.compatibility.sound.DriftMovingSound;
+import com.vicmatskiv.weaponlib.compatibility.sound.EngineMovingSound;
+import com.vicmatskiv.weaponlib.particle.DriftCloudFX;
+import com.vicmatskiv.weaponlib.particle.DriftSmokeFX;
+import com.vicmatskiv.weaponlib.particle.ParticleExSmoke;
+import com.vicmatskiv.weaponlib.particle.vehicle.DriftCloudParticle;
+import com.vicmatskiv.weaponlib.particle.vehicle.ExhaustParticle;
+import com.vicmatskiv.weaponlib.particle.vehicle.TireTracks;
+import com.vicmatskiv.weaponlib.particle.vehicle.TurbulentSmokeParticle;
+import com.vicmatskiv.weaponlib.particle.vehicle.VehicleExhaustFlameParticle;
 import com.vicmatskiv.weaponlib.state.ExtendedState;
+import com.vicmatskiv.weaponlib.vehicle.VehiclePart.Wheel;
+import com.vicmatskiv.weaponlib.vehicle.collisions.AABBTool;
+import com.vicmatskiv.weaponlib.vehicle.collisions.GJKResult;
+import com.vicmatskiv.weaponlib.vehicle.collisions.IDynamicCollision;
+import com.vicmatskiv.weaponlib.vehicle.collisions.OBBCollider;
+import com.vicmatskiv.weaponlib.vehicle.collisions.OreintedBB;
+import com.vicmatskiv.weaponlib.vehicle.collisions.RigidBody;
+import com.vicmatskiv.weaponlib.vehicle.jimphysics.Engine;
+import com.vicmatskiv.weaponlib.vehicle.jimphysics.InterpolationKit;
+import com.vicmatskiv.weaponlib.vehicle.jimphysics.QuatUtil;
+import com.vicmatskiv.weaponlib.vehicle.jimphysics.Transmission;
+
+import com.vicmatskiv.weaponlib.vehicle.jimphysics.solver.VehiclePhysicsSolver;
+import com.vicmatskiv.weaponlib.vehicle.jimphysics.solver.WheelSolver;
+import com.vicmatskiv.weaponlib.vehicle.network.VehicleClientPacket;
+import com.vicmatskiv.weaponlib.vehicle.network.VehicleClientPacketHandler;
+import com.vicmatskiv.weaponlib.vehicle.network.VehicleControlPacket;
+import com.vicmatskiv.weaponlib.vehicle.network.VehicleControlPacketHandler;
+import com.vicmatskiv.weaponlib.vehicle.network.VehicleDataContainer;
+import com.vicmatskiv.weaponlib.vehicle.network.VehicleDataSerializer;
+import com.vicmatskiv.weaponlib.vehicle.network.VehiclePacketLatencyTracker;
+import com.vicmatskiv.weaponlib.vehicle.network.VehiclePhysSerializer;
+import com.vicmatskiv.weaponlib.vehicle.network.VehicleSmoothShell;
+import com.vicmatskiv.weaponlib.vehicle.smoothlib.PTIVal;
+import com.vicmatskiv.weaponlib.vehicle.smoothlib.PTIVec;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockCarpet;
 import net.minecraft.block.BlockFence;
 import net.minecraft.block.BlockFenceGate;
+import net.minecraft.block.BlockGlass;
 import net.minecraft.block.BlockLiquid;
+import net.minecraft.block.BlockPane;
 import net.minecraft.block.BlockPlanks;
+import net.minecraft.block.BlockSlab;
+import net.minecraft.block.BlockSnow;
+import net.minecraft.block.BlockSnowBlock;
 import net.minecraft.block.BlockWall;
+import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.audio.ISound;
 import net.minecraft.client.audio.MovingSound;
+import net.minecraft.client.audio.MovingSoundMinecart;
+import net.minecraft.client.audio.PositionedSound;
+import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.audio.SoundHandler;
+import net.minecraft.client.renderer.vertex.VertexBuffer;
+import net.minecraft.client.resources.data.PackMetadataSection;
 import net.minecraft.crash.CrashReport;
 import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.EntityTracker;
 import net.minecraft.entity.MoverType;
 import net.minecraft.entity.item.EntityBoat;
 import net.minecraft.entity.passive.EntityAnimal;
+import net.minecraft.entity.passive.EntityPig;
 import net.minecraft.entity.passive.EntityWaterMob;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.init.SoundEvents;
@@ -47,2000 +129,2849 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.network.play.client.CPacketPlayer;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EntityDamageSourceIndirect;
 import net.minecraft.util.EntitySelectors;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.ReportedException;
+import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
+import net.minecraftforge.common.util.FakePlayer;
+import net.minecraftforge.common.util.FakePlayerFactory;
+import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
+import net.minecraftforge.fml.common.registry.EntityRegistry;
+import net.minecraftforge.fml.common.registry.EntityRegistry.EntityRegistration;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import paulscode.sound.libraries.SourceLWJGLOpenAL;
+import scala.actors.threadpool.Arrays;
+import scala.reflect.NameTransformer.OpCodes;
+import scala.reflect.internal.Trees.This;
 
-public class EntityVehicle extends Entity implements Configurable<EntityVehicleConfiguration>, ExtendedState<VehicleState>
-{
-    private static enum DriverInteractionEvent {
-        NONE, ENTER, EXIT, DRIVING, OUT
-    }
-    
-    private static final DataParameter<Integer> TIME_SINCE_HIT = EntityDataManager.<Integer>createKey(EntityBoat.class, DataSerializers.VARINT);
-    private static final DataParameter<Integer> FORWARD_DIRECTION = EntityDataManager.<Integer>createKey(EntityBoat.class, DataSerializers.VARINT);
-    private static final DataParameter<Float> DAMAGE_TAKEN = EntityDataManager.<Float>createKey(EntityBoat.class, DataSerializers.FLOAT);
-    private static final DataParameter<Integer> BOAT_TYPE = EntityDataManager.<Integer>createKey(EntityBoat.class, DataSerializers.VARINT);
-    private static final DataParameter<Boolean>[] DATA_ID_PADDLE = new DataParameter[] {EntityDataManager.createKey(EntityBoat.class, DataSerializers.BOOLEAN), EntityDataManager.createKey(EntityBoat.class, DataSerializers.BOOLEAN)};
-    private final float[] paddlePositions;
-    /** How much of current speed to retain. Value zero to one. */
-    private float momentum;
-    private float outOfControlTicks;
-    private float deltaRotation;
-    private int lerpSteps;
-    private double boatPitch;
-    private double lerpY;
-    private double lerpZ;
-    private double boatYaw;
-    private double lerpXRot;
-    private boolean leftInputDown;
-    private boolean rightInputDown;
-    private boolean forwardInputDown;
-    private boolean backInputDown;
-    private double waterLevel;
-    /**
-     * How much the boat should glide given the slippery blocks it's currently gliding over.
-     * Halved every tick.
-     */
-    private float boatGlide;
-    private EntityVehicle.Status status;
-    private EntityVehicle.Status previousStatus;
-    private double lastYd;
-    
-    private double inclineX;
-    private double inclineZ;
-    
-    private double speed;
-    
-    private EntityVehicleConfiguration configuration;
-    
-    private VehicleState vehicleState = VehicleState.IDLE;
-    private VehicleDrivingAspect drivingAspect = new VehicleDrivingAspect();
-    private long stateUpdateTimestamp;
-    private double lastYawDelta;
-    private Randomizer randomizer;
-    
-    private DriverInteractionEvent driverInteractionEvent = DriverInteractionEvent.NONE;
-    private boolean wasPreviouslyRidden;
-    
-    private MovingSound drivingSound;
-    private MovingSound idleSound;
-    
-    private int enterSoundDelay = this.getSoundLoopDelay();
-    
-    private float wheelRotationAngle;
-    
-    private Supplier<CompatibleVec3> soundPositionProvider = () -> new CompatibleVec3(posX, posY, posZ);
-    
-    private Supplier<Float> drivingSoundVolumeProvider = () -> {
-        float volume;
-        if (isBeingRidden() && enterSoundDelay <= 0) {
-            //double vehicleSpeed = (double) MathHelper.sqrt_double(motionX * motionX + motionZ * motionZ);
-            
-            double averageSpeed = speed; //interpolatedSpeed.getAverage();
-            if(averageSpeed > 0) {
-                averageSpeed = Math.log10(averageSpeed * 20) / 2;
-            }
-            
-            volume = (float) averageSpeed * 0.9F * ((float) Math.abs(enterSoundDelay) / 20f);
-//            System.out.println("Sound volume: " + volume + ", speed: " + speed);
-        } else {
-            volume = 0.0f;
-        }
-        return volume;
-    };
+/*   __      __  _     _      _           
+	 \ \    / / | |   (_)    | |          
+	  \ \  / /__| |__  _  ___| | ___  ___ 
+	   \ \/ / _ \ '_ \| |/ __| |/ _ \/ __|
+	    \  /  __/ | | | | (__| |  __/\__ \
+	     \/ \___|_| |_|_|\___|_|\___||___/       
+	     
+	   ~ by Victor Matskiv and Jim Holden ~
+ * 
+ */
 
-    private Supplier<Boolean> donePlayingSoundProvider = () -> this.isDead;
-    
-    private Supplier<Float> idleSoundVolumeProvider = () -> {
-        float volume;
-        //if (riddenByEntity != null && enterSoundDelay <= 0) {
-        volume = (float) (speed < 0.09 ? 0.07f : 0f) * ((float) Math.abs(enterSoundDelay) / 20f);
-        return volume;
-    };
+public class EntityVehicle extends Entity implements Configurable<EntityVehicleConfiguration>,
+		ExtendedState<VehicleState>, IDynamicCollision, Contextual {
 
-    public EntityVehicle(World worldIn)
-    {
-        super(worldIn);
-        this.paddlePositions = new float[2];
-        this.preventEntitySpawning = true;
-        this.setSize(1.375F, 0.5625F);
-    }
+	private static enum DriverInteractionEvent {
+		NONE, ENTER, EXIT, DRIVING, OUT
+	}
 
-    public EntityVehicle(World worldIn, double x, double y, double z)
-    {
-        this(worldIn);
-        this.setPosition(x, y, z);
-        this.motionX = 0.0D;
-        this.motionY = 0.0D;
-        this.motionZ = 0.0D;
-        this.prevPosX = x;
-        this.prevPosY = y;
-        this.prevPosZ = z;
-    }
-    
-    
-    
-    @Override
-    public EntityVehicleConfiguration getConfiguration() {
-        if(configuration == null) {
-            configuration = (EntityVehicleConfiguration) EntityClassFactory.getInstance().getConfiguration(getClass());
-        }
-        return configuration;
-    }
-    
-    protected int getSoundLoopDelay() {
-        return 10;
-    }
+	public boolean vehicleIsRunning = false;
 
-    /**
-     * returns if this entity triggers Block.onEntityWalking on the blocks they walk on. used for spiders and wolves to
-     * prevent them from trampling crops
-     */
-    protected boolean canTriggerWalking()
-    {
-        return false;
-    }
+	/*
+	 * GENERIC VARIABLES (misc variables)
+	 */
+	private EntityVehicleConfiguration configuration;
+	private VehicleState vehicleState = VehicleState.IDLE;
+	private VehicleDrivingAspect drivingAspect = new VehicleDrivingAspect();
+	private DriverInteractionEvent driverInteractionEvent = DriverInteractionEvent.NONE;
+	private long stateUpdateTimestamp;
+	private Randomizer randomizer;
+	public float outOfControlTicks = 0.0F;
+	private int lerpSteps;
 
-    protected void entityInit()
-    {
-        this.dataManager.register(TIME_SINCE_HIT, Integer.valueOf(0));
-        this.dataManager.register(FORWARD_DIRECTION, Integer.valueOf(1));
-        this.dataManager.register(DAMAGE_TAKEN, Float.valueOf(0.0F));
-        this.dataManager.register(BOAT_TYPE, Integer.valueOf(EntityBoat.Type.OAK.ordinal()));
+	public float deltaRotation;
 
-        for (DataParameter<Boolean> dataparameter : DATA_ID_PADDLE)
-        {
-            this.dataManager.register(dataparameter, Boolean.valueOf(false));
-        }
-    }
+	//
+	private double boatPitch;
+	private double lerpY;
+	private double lerpZ;
+	private double boatYaw;
+	private double lerpXRot;
 
-    /**
-     * Returns a boundingBox used to collide the entity with other entities and blocks. This enables the entity to be
-     * pushable on contact, like boats or minecarts.
-     */
-    @Nullable
-    public AxisAlignedBB getCollisionBox(Entity entityIn)
-    {
-        return entityIn.canBePushed() ? entityIn.getEntityBoundingBox() : null;
-    }
+	public static final DataParameter<VehicleDataSerializer> VEHICLE_DAT = EntityDataManager
+			.createKey(EntityVehicle.class, VehicleDataSerializer.SERIALIZER);
+	public static final DataParameter<VehiclePhysSerializer> SOLVER_DAT = EntityDataManager
+			.createKey(EntityVehicle.class, VehiclePhysSerializer.SERIALIZER);
 
-    /**
-     * Returns the collision bounding box for this entity
-     */
-    @Nullable
-    public AxisAlignedBB getCollisionBoundingBox()
-    {
-        return this.getEntityBoundingBox();
-    }
+	public ModContext context;
 
-    /**
-     * Returns true if this entity should push and be pushed by other entities when colliding.
-     */
-    public boolean canBePushed()
-    {
-        return true;
-    }
+	public float prevLiftOffset = 0.0f;
+	public float liftOffset = 0.0f;
 
-    /**
-     * Returns the Y offset from the entity's position for any entity riding this one.
-     */
-    public double getMountedYOffset()
-    {
-        return 0.3; //-0.1D;
-    }
+	/*
+	 * SOUND DECLARATIONS/VARIABLES
+	 */
 
-    /**
-     * Called when the entity is attacked.
-     */
-    public boolean attackEntityFrom(DamageSource source, float amount)
-    {
-        if (this.isEntityInvulnerable(source))
-        {
-            return false;
-        }
-        else if (!this.world.isRemote && !this.isDead)
-        {
-            if (source instanceof EntityDamageSourceIndirect && source.getTrueSource() != null && this.isPassenger(source.getTrueSource()))
-            {
-                return false;
-            }
-            else
-            {
-                this.setForwardDirection(-this.getForwardDirection());
-                this.setTimeSinceHit(10);
-                this.setDamageTaken(this.getDamageTaken() + amount * 10.0F);
-                this.setBeenAttacked();
-                boolean flag = source.getTrueSource() instanceof EntityPlayer && ((EntityPlayer)source.getTrueSource()).capabilities.isCreativeMode;
+	private Supplier<CompatibleVec3> soundPositionProvider = () -> new CompatibleVec3(posX, posY, posZ);
+	private Supplier<Boolean> donePlayingSoundProvider = () -> isDead;
+	private Supplier<Boolean> isDorifto = () -> !getSolver().isDrifting;
+	private Supplier<Float> doriftoSoundProvider = () -> 1.0f;
 
-                if (flag || this.getDamageTaken() > 40.0F)
-                {
-                    if (!flag && this.world.getGameRules().getBoolean("doEntityDrops"))
-                    {
-//                        this.dropItemWithOffset(this.getItemBoat(), 1, 0.0F);
-                    }
+	/*
+	 * Key Inputs
+	 */
+	private boolean leftInputDown;
+	private boolean rightInputDown;
+	private boolean forwardInputDown;
+	private boolean backInputDown;
 
-                    this.setDead();
-                }
+	/*
+	 * PHYSICS + COLLISION VARIABLES
+	 */
+	public OreintedBB oreintedBoundingBox;
 
-                return true;
-            }
-        }
-        else
-        {
-            return true;
-        }
-    }
+	// rot
+	public float wheelRotationAngle;
+	public float prevWheelRotationAngle;
 
-    /**
-     * Applies a velocity to the entities, to push them away from eachother.
-     */
-    public void applyEntityCollision(Entity entityIn)
-    {
-        if (entityIn instanceof EntityBoat)
-        {
-            if (entityIn.getEntityBoundingBox().minY < this.getEntityBoundingBox().maxY)
-            {
-                super.applyEntityCollision(entityIn);
-            }
-        }
-        else if (entityIn.getEntityBoundingBox().minY <= this.getEntityBoundingBox().minY)
-        {
-            super.applyEntityCollision(entityIn);
-        }
-    }
+	public VehiclePhysicsSolver solver;
+	//public double mass = 1352;
+//	public Engine engine = new EvoIVEngine("Evo IV Engine", "Mitsubishi Motors");
+	public double steerangle;
+	public double throttle = 0;
+	public double angularvelocity = 0;
 
-//    public Item getItemBoat()
-//    {
-//        switch (this.getBoatType())
-//        {
-//            case OAK:
-//            default:
-//                return Items.BOAT;
-//            case SPRUCE:
-//                return Items.SPRUCE_BOAT;
-//            case BIRCH:
-//                return Items.BIRCH_BOAT;
-//            case JUNGLE:
-//                return Items.JUNGLE_BOAT;
-//            case ACACIA:
-//                return Items.ACACIA_BOAT;
-//            case DARK_OAK:
-//                return Items.DARK_OAK_BOAT;
-//        }
-//    }
+	public double forwardLean = 0.0;
+	public double sideLean = 0.0;
 
-    /**
-     * Setups the entity to do the hurt animation. Only used by packets in multiplayer.
-     */
-    @SideOnly(Side.CLIENT)
-    public void performHurtAnimation()
-    {
-        this.setForwardDirection(-this.getForwardDirection());
-        this.setTimeSinceHit(10);
-        this.setDamageTaken(this.getDamageTaken() * 11.0F);
-    }
+	public double prevSideLean;
 
-    /**
-     * Returns true if other Entities should be prevented from moving through this Entity.
-     */
-    public boolean canBeCollidedWith()
-    {
-        return !this.isDead;
-    }
+	public double driftTuner = 0.0;
+	public boolean isBraking = false;
 
-    /**
-     * Set the position and rotation values directly without any clamping.
-     */
-    @SideOnly(Side.CLIENT)
-    public void setPositionAndRotationDirect(double x, double y, double z, float yaw, float pitch, int posRotationIncrements, boolean teleport)
-    {
-        this.boatPitch = x;
-        this.lerpY = y;
-        this.lerpZ = z;
-        this.boatYaw = (double)yaw;
-        this.lerpXRot = (double)pitch;
-        this.lerpSteps = 10;
-    }
+	public double rideOffset = 0.0;
 
-    /**
-     * Gets the horizontal facing direction of this Entity, adjusted to take specially-treated entity types into
-     * account.
-     */
-    public EnumFacing getAdjustedHorizontalFacing()
-    {
-        return this.getHorizontalFacing().rotateY();
-    }
+	public float rotationRoll = 0.0f;
+	public float prevRotationRoll = 0.0f;
 
-    /**
-     * Called to update the entity's position/logic.
-     */
-    public void onUpdate()
-    {
-        
-        updateDriverInteractionEvent();
-        
-        this.previousStatus = this.status;
-        this.status = this.getBoatStatus();
+	public float rotationRollH = 0.0f;
+	public float prevRotationRollH = 0.0f;
 
-        if (this.status != EntityVehicle.Status.UNDER_WATER && this.status != EntityVehicle.Status.UNDER_FLOWING_WATER)
-        {
-            this.outOfControlTicks = 0.0F;
-        }
-        else
-        {
-            ++this.outOfControlTicks;
-        }
+	public double prevLastYawDelta = 0.0;
+	public double lastYawDelta = 0.0;
 
-        if (!this.world.isRemote && this.outOfControlTicks >= 60.0F)
-        {
-            this.removePassengers();
-        }
+	public boolean isReversing = false;
+	private float nextStepDistance;
+	private float nextFlap;
+	private int fire;
 
-        if (this.getTimeSinceHit() > 0)
-        {
-            this.setTimeSinceHit(this.getTimeSinceHit() - 1);
-        }
+	public boolean reverseLockout = true;
 
-        if (this.getDamageTaken() > 0.0F)
-        {
-            this.setDamageTaken(this.getDamageTaken() - 1.0F);
-        }
+	/*
+	 * Animations
+	 */
+	public PTIVec smoothShift = new PTIVec();
 
-        this.prevPosX = this.posX;
-        this.prevPosY = this.posY;
-        this.prevPosZ = this.posZ;
-        super.onUpdate();
-        
-//        System.out.println("Rendering pitch post super.onUpdate " + rotationPitch);
-        
-        this.tickLerp();
-        
-//        System.out.println("Rendering pitch post tickLerp " + rotationPitch);
+	/*
+	 * Sounds
+	 */
 
+	public MovingSound drivingSound;
+	public MovingSound driftingSound;
 
-        if (this.canPassengerSteer())
-        {
-            if (this.getPassengers().isEmpty() || !(this.getPassengers().get(0) instanceof EntityPlayer))
-            {
-                this.setPaddleState(false, false);
-            }
+	/*
+	 * CONSTRUCTORS
+	 */
+	
+	public VehicleSmoothShell smoothShell;
+	
+	public int clutchTimer = 0;
 
-            this.updateMotion();
+	public List<Entity> riddenByEntities = Lists.<Entity>newArrayList();
 
-            if (this.world.isRemote)
-            {
-                this.controlBoat();
-//                this.world.sendPacketToServer(new CPacketSteerBoat(this.getPaddleState(0), this.getPaddleState(1)));
-            }
+	public EntityVehicle(World worldIn) {
+		super(worldIn);
+		
+		
+		this.ignoreFrustumCheck = true;
+		
+		this.smoothShell = new VehicleSmoothShell(this);
+		//this.setSize(0.2F, 0.1f);
+		this.setSize(0.2f, 0.5f);
+		
+		//this.setSize(0.2F, 0.4f);
+		//this.setSize(1.4F, 1.5f);
+		// this.setSize(1.375F, 0.5625F);
+		this.oreintedBoundingBox = new OreintedBB(getConfiguration().getAABBforOBB());
+	}
+	
+	
 
-            this.move(MoverType.SELF, this.motionX, this.motionY, this.motionZ);
-//            System.out.println("Rendering pitch post move " + rotationPitch);
-        }
-        else
-        {
-            this.motionX = 0.0D;
-            this.motionY = 0.0D;
-            this.motionZ = 0.0D;
-        }
+	public EntityVehicle(World worldIn, double x, double y, double z) {
+		this(worldIn);
+		this.setPosition(x, y, z);
 
-        for (int i = 0; i <= 1; ++i)
-        {
-            if (this.getPaddleState(i))
-            {
-                if (!this.isSilent() && (double)(this.paddlePositions[i] % ((float)Math.PI * 2F)) <= (Math.PI / 4D) && ((double)this.paddlePositions[i] + 0.39269909262657166D) % (Math.PI * 2D) >= (Math.PI / 4D))
-                {
-                    SoundEvent soundevent = this.getPaddleSound();
+		this.motionX = 0.0D;
+		this.motionY = 0.0D;
+		this.motionZ = 0.0D;
+		this.prevPosX = x;
+		this.prevPosY = y;
+		this.prevPosZ = z;
+	}
 
-                    if (soundevent != null)
-                    {
-                        Vec3d vec3d = this.getLook(1.0F);
-                        double d0 = i == 1 ? -vec3d.z : vec3d.z;
-                        double d1 = i == 1 ? vec3d.x : -vec3d.x;
-                        this.world.playSound((EntityPlayer)null, this.posX + d0, this.posY, this.posZ + d1, soundevent, this.getSoundCategory(), 1.0F, 0.8F + 0.4F * this.rand.nextFloat());
-                    }
-                }
+	/**
+	 * Initializes the vehicle.
+	 */
+	@Override
+	protected void entityInit() {
 
-                this.paddlePositions[i] = (float)((double)this.paddlePositions[i] + 0.39269909262657166D);
-            }
-            else
-            {
-                this.paddlePositions[i] = 0.0F;
-            }
-        }
+		getDataManager().register(VEHICLE_DAT, new VehicleDataSerializer(this));
+		getDataManager().register(SOLVER_DAT, new VehiclePhysSerializer(getSolver()));
+	}
 
-        this.doBlockCollisions();
-        List<Entity> list = this.world.getEntitiesInAABBexcluding(this, this.getEntityBoundingBox().grow(0.20000000298023224D, -0.009999999776482582D, 0.20000000298023224D), EntitySelectors.getTeamCollisionPredicate(this));
+	/*
+	 * Data manager
+	 */
 
-        if (!list.isEmpty())
-        {
-            boolean flag = !this.world.isRemote && !(this.getControllingPassenger() instanceof EntityPlayer);
+	/*
+	 * IMPORTANT GETTERS
+	 */
 
-            for (int j = 0; j < list.size(); ++j)
-            {
-                Entity entity = list.get(j);
+	public int getCurrentRiders() {
+		return this.getPassengers().size();
+	}
 
-                if (!entity.isPassenger(this))
-                {
-                    if (flag && this.getPassengers().size() < 2 && !entity.isRiding() && entity.width < this.width && entity instanceof EntityLivingBase && !(entity instanceof EntityWaterMob) && !(entity instanceof EntityPlayer))
-                    {
-                        entity.startRiding(this);
-                    }
-                    else
-                    {
-//                        this.applyEntityCollision(entity);
-                    }
-                }
-            }
-        }
-        
-        if(this.world.isRemote) {
-            drivingAspect.onUpdate(this);
-            getSuspensionStrategy().update(speed, lastYawDelta);
-            handleLoopingSoundEffects();
-            
-//            Entity driver = this.getControllingPassenger();
-//            if (driver instanceof EntityPlayer && Minecraft.getMinecraft().gameSettings.thirdPersonView == 0) {
-//                driver.rotationPitch = this.rotationPitch;
-//            }
-        } else {
-            handleServerSounds();
-        }
-        
-//        System.out.println("Rendering pitch post onUpdate " + rotationPitch);
+	public int getCarMaxPersonnel() {
+		return getConfiguration().getSeats().size();
+	}
 
-    }
-    
-    public void handleLoopingSoundEffects() {
+	public VehiclePhysicsSolver getSolver() {
+		updateSolver();
+		return solver;
+	}
 
-        SoundHandler soundHandler = Minecraft.getMinecraft().getSoundHandler();
-        CompatibleSound drivingSound = getConfiguration().getRunSound();
-        CompatibleSound idleSound = getConfiguration().getRunSound();
+	@Override
+	public EntityVehicleConfiguration getConfiguration() {
+		if (configuration == null) {
+			configuration = (EntityVehicleConfiguration) EntityClassFactory.getInstance().getConfiguration(getClass());
+		}
+		return configuration;
+	}
 
-        if (this.drivingSound == null && driverInteractionEvent == DriverInteractionEvent.DRIVING 
-                && getState() != VehicleState.IDLE
-                && drivingSound != null && soundHandler != null) {
-            this.drivingSound = new CompatibleMovingSound(drivingSound, soundPositionProvider, drivingSoundVolumeProvider, donePlayingSoundProvider);
-            soundHandler.playSound(this.drivingSound);
-        }
-        
-        if (this.idleSound == null && driverInteractionEvent == DriverInteractionEvent.DRIVING 
-                && getState() == VehicleState.IDLE
-                && idleSound != null && soundHandler != null) {
-            this.idleSound = new CompatibleMovingSound(idleSound, soundPositionProvider, idleSoundVolumeProvider, donePlayingSoundProvider);
-            soundHandler.playSound(this.idleSound);
-        }
-        
-        if (isBeingRidden() && this.enterSoundDelay > -20) {
-            --this.enterSoundDelay;
-        }
+	@Override
+	public OreintedBB getOreintedBoundingBox() {
+		if (oreintedBoundingBox == null)
+			this.oreintedBoundingBox = new OreintedBB(getConfiguration().getAABBforOBB());
+		return this.oreintedBoundingBox;
+	}
 
-        if (!isBeingRidden() && this.enterSoundDelay != this.getSoundLoopDelay()) {
-            this.enterSoundDelay = this.getSoundLoopDelay();
-        }
-    }
-    
-    private void updateDriverInteractionEvent() {
-        boolean isBeingRidden = isBeingRidden();
-        if (isBeingRidden) {
-            if(!wasPreviouslyRidden) {
-                driverInteractionEvent = DriverInteractionEvent.ENTER;
-            } else {
-                driverInteractionEvent = DriverInteractionEvent.DRIVING;
-            }
-        } else {
-            if(!wasPreviouslyRidden) {
-                driverInteractionEvent = DriverInteractionEvent.OUT;
-            } else {
-                driverInteractionEvent = DriverInteractionEvent.EXIT;
-            }
-        }
-        wasPreviouslyRidden = isBeingRidden;
-    }
-    
-    private void handleServerSounds() {
-        switch (driverInteractionEvent) {
-        case ENTER:
-            compatibility.playSoundAtEntity(this, getConfiguration().getEnterSound(), 1f, 1f);
-            break;
-        case EXIT:
-            compatibility.playSoundAtEntity(this, getConfiguration().getExitSound(), 1f, 1f);
-            break;
-        default:
-        }
-    }
+	public float getInterpolatedWheelRotation() {
+		return (float) InterpolationKit.interpolateValue(prevWheelRotationAngle, wheelRotationAngle,
+				Minecraft.getMinecraft().getRenderPartialTicks());
+	}
 
-    @Nullable
-    protected SoundEvent getPaddleSound()
-    {
-        switch (this.getBoatStatus())
-        {
-            case IN_WATER:
-            case UNDER_WATER:
-            case UNDER_FLOWING_WATER:
-                return SoundEvents.ENTITY_BOAT_PADDLE_WATER;
-            case ON_LAND:
-                return SoundEvents.ENTITY_BOAT_PADDLE_LAND;
-            case IN_AIR:
-            default:
-                return null;
-        }
-    }
+	public float getWheelRotationAngle() {
+		return this.wheelRotationAngle;
+	}
 
-    private void tickLerp()
-    {
-        if (this.lerpSteps > 0 && !this.canPassengerSteer())
-        {
-            double d0 = this.posX + (this.boatPitch - this.posX) / (double)this.lerpSteps;
-            double d1 = this.posY + (this.lerpY - this.posY) / (double)this.lerpSteps;
-            double d2 = this.posZ + (this.lerpZ - this.posZ) / (double)this.lerpSteps;
-            double d3 = MathHelper.wrapDegrees(this.boatYaw - (double)this.rotationYaw);
-            this.rotationYaw = (float)((double)this.rotationYaw + d3 / (double)this.lerpSteps);
+	public float getInterpolatedYawDelta() {
+		return (float) InterpolationKit.interpolateValue(prevLastYawDelta, lastYawDelta,
+				Minecraft.getMinecraft().getRenderPartialTicks());
+	}
+
+	public double getLastYawDelta() {
+		return this.lastYawDelta;
+	}
+
+	public double getSpeed() {
+		updateSolver();
+		return solver.synthAccelFor;
+	}
+
+	@Override
+	public VehicleState getState() {
+		return vehicleState;
+	}
+
+	@Override
+	public long getStateUpdateTimestamp() {
+		return stateUpdateTimestamp;
+	}
+
+	public Randomizer getRandomizer() {
+		if (randomizer == null) {
+			randomizer = new Randomizer();
+		}
+		return randomizer;
+	}
+
+	public VehicleSuspensionStrategy getSuspensionStrategy() {
+		return getConfiguration().getSuspensionStrategy();
+	}
+
+	@Nullable
+	public Entity getControllingPassenger() {
+		List<Entity> list = this.getPassengers();
+		return list.isEmpty() ? null : (Entity) list.get(0);
+	}
+
+	/*
+	 * LOGIC
+	 */
+
+	@Override
+	public void updatePassenger(Entity passenger) {
+	
+		
+		if (this.isPassenger(passenger)) {
+			
+			
+			if(passenger.motionY == 0) passenger.motionY = 0.00001;
+			float f = 0.0F;
+			float f1 = (float) ((this.isDead ? 0.009999999776482582D : this.getMountedYOffset())
+					+ passenger.getYOffset());
+
+			int i = this.getPassengers().indexOf(passenger);
+			Vec3d seatOffset = getConfiguration().getSeatAtIndex(i).getSeatPosition();
+			//System.out.println(passenger + " | " + i);
+			if(i==1)	seatOffset = new Vec3d(-1, -0.3, -1);
+			
+			
+			if (this.getPassengers().size() > 1) {
+
+				if (i == 0) {
+					f = 0.2F;
+				} else {
+					f = -0.6F;
+				}
+
+				if (passenger instanceof EntityAnimal) {
+					f = (float) ((double) f + 0.2D);
+				}
+			}
+
+			// Vec3d vec3d = Vec3d.ZERO;
+			Vec3d vec3d = (new Vec3d((double) f, 0.0D, 0.0D))
+					.rotateYaw(-this.rotationYaw * 0.017453292F - ((float) Math.PI / 2F));
+
+			/*
+			 * float muRoll = (float) ((1 -
+			 * Math.cos(Minecraft.getMinecraft().getRenderPartialTicks() * Math.PI)) / 2f);
+			 * float roll = (prevRotationRollH+prevRotationRoll) +
+			 * ((rotationRoll+rotationRollH)-(prevRotationRoll+prevRotationRollH))*muRoll;
+			 * 
+			 * rotationYaw = 0; rotationRoll = 45f; rotationRollH = 0f;
+			 * 
+			 * 
+			 * 
+			 * 
+			 * double interpH = 1.0*(roll/45f); if(!world.isRemote) {
+			 * System.out.println("Interpolated: " + interpH); }
+			 * 
+			 * double h = interpH * Math.signum(roll); float aPRX = (float)
+			 * -(Math.cos(Math.toRadians(roll))*h); float aPRY = (float)
+			 * -(Math.sin(Math.toRadians(roll))*h);
+			 * 
+			 * System.out.println(rotationYaw-130);
+			 * 
+			 * //Vec3d apr = new Vec3d(aPRX/2, aPRY, aPRX); Vec3d apr = new Vec3d(-aPRX,
+			 * aPRY, 10.0); if(aPRX == 1.0f || aPRX == -1.0f) aPRX = 0.0f;
+			 */
+
+			float mu = (float) ((1 - Math.cos(0.5f * Math.PI)) / 2f);
+			float iRoll = (prevRotationRollH + prevRotationRoll)
+					+ ((rotationRoll + rotationRollH) - (prevRotationRoll + prevRotationRollH)) * mu;
+			float iPitch = prevRotationPitch + (rotationPitch - prevRotationPitch) * mu;
+
+			// rotationRoll = 30f;
+
+			Vec3d apr = new Vec3d(this.posX /* + vec3d.x + seatOffset.x */, this.posY /* + (double)f1 + seatOffset.y */,
+					this.posZ /* + vec3d.z + seatOffset.z */);
+
+			// double iH = 0.3;
+			// double iX = Math.sin(Math.toRadians(rotationPitch))*iH;
+			// double iY = Math.cos(Math.toRadians(rotationPitch))*iH;
+
+			// this.rotationPitch = 10f;
+
+			// this.rotationPitch = (float) (45.0f*((ticksExisted%200)/200.0));
+
+			float nin = (float) Math.toRadians(90);
+			Vec3d tBro = new Vec3d(seatOffset.x, seatOffset.y, seatOffset.z).rotatePitch((float) Math.toRadians(iPitch))
+					.rotateYaw((float) Math.toRadians(-rotationYaw));
+			// Vec3d tBro = new Vec3d(seatOffset.x, seatOffset.y,
+			// seatOffset.z).rotateYaw(nin).rotatePitch((float)
+			// Math.toRadians(-rotationRoll)).rotateYaw(-nin).rotateYaw((float)
+			// Math.toRadians(-rotationYaw));
+
+			// Vec3d posExhaust = new Vec3d(0, -0.5, 0.0).rotatePitch((float)
+			// Math.toRadians(rotationPitch)).rotateYaw((float)
+			// Math.toRadians(-rotationYaw)).add(getPositionVector());
+
+			// passenger.setPosition(posExhaust.x, posExhaust.y, posExhaust.z);
+
+			passenger.setPosition(apr.x + tBro.x, apr.y + tBro.y, apr.z + tBro.z);
+
+			// passenger.setPosition(this.posX + vec3d.x + seatOffset.x+apr.x, this.posY +
+			// (double)f1 + seatOffset.y + apr.y, this.posZ + vec3d.z + seatOffset.z +
+			// apr.x);
+
+			// passenger.setPosition(this.posX + seatOffset.x, this.posY + seatOffset.y,
+			// this.posZ + seatOffset.z);
+
+			passenger.rotationYaw += this.deltaRotation;
+			passenger.setRotationYawHead(passenger.getRotationYawHead() + this.deltaRotation);
+
+			this.applyYawToEntity(passenger);
+
+			if (passenger instanceof EntityAnimal && this.getPassengers().size() > 1) {
+				int j = passenger.getEntityId() % 2 == 0 ? 90 : 270;
+				passenger.setRenderYawOffset(((EntityAnimal) passenger).renderYawOffset + (float) j);
+				passenger.setRotationYawHead(passenger.getRotationYawHead() + (float) j);
+			}
+		}
+
+	}
+
+	protected void applyYawToEntity(Entity entityToUpdate) {
+		entityToUpdate.setRenderYawOffset(this.rotationYaw);
+		float f = MathHelper.wrapDegrees(entityToUpdate.rotationYaw - this.rotationYaw);
+		float f1 = MathHelper.clamp(f, -105.0F, 105.0F);
+		entityToUpdate.prevRotationYaw += f1 - f;
+		entityToUpdate.rotationYaw += f1 - f;
+		entityToUpdate.setRotationYawHead(entityToUpdate.rotationYaw);
+	}
+	
+	
+
+	@Override
+	protected void removePassenger(Entity passenger) {
+
+		Vec3d p = (new Vec3d(2, 0, 1)).rotatePitch((float) Math.toRadians(rotationPitch))
+				.rotateYaw((float) Math.toRadians(-rotationYaw));
+		passenger.move(MoverType.SELF, p.x, p.y, p.z);
+		
+		
+		Vec3d speed = getSolver().getVelocityVector().scale(0.5);
+		double bruh = 0.0;
+		if(speed.lengthVector() != 0.0) {
+			bruh = 0.3;
+		}
+		passenger.addVelocity(speed.x, speed.y, speed.z);
+		
+		super.removePassenger(passenger);
+
+	}
+
+	public boolean processInitialInteract(EntityPlayer player, EnumHand hand) {
+		
+	
+		
+		if (player.isSneaking()) {
+			return false;
+		} else {
+			if (!this.world.isRemote && this.outOfControlTicks < 60.0F && canFitPassenger(player)) {
+				player.startRiding(this);
+			}
+
+			return true;
+		}
+	}
+
+	public boolean canFitPassenger(Entity passenger) {
+		return getCurrentRiders() + 1 <= getCarMaxPersonnel();
+	}
+
+	public boolean isSteeredForward() {
+		return !isReversing;
+	}
+
+	public boolean isSteeredBackward() {
+		return isReversing;
+	}
+
+	@Override
+	public boolean canBeCollidedWith() {
+		return !this.isDead;
+	}
+
+	@SideOnly(Side.CLIENT)
+	public void updateInputs(boolean left, boolean right, boolean forward, boolean back) {
+		this.leftInputDown = left;
+		this.rightInputDown = right;
+		this.forwardInputDown = forward;
+		this.backInputDown = back;
+	}
+
+	@Override
+	public boolean setState(VehicleState vehicleState) {
+		this.vehicleState = vehicleState;
+
+		// DEBUG: System.out.println("State changed to " + vehicleState);
+
+		stateUpdateTimestamp = System.currentTimeMillis();
+		return false;
+	}
+
+	@Override
+	public void updateOBB() {
+		Vec3d d = getSolver().getPhysConf().dimensions;
+		Vec3d corDim = new Vec3d(d.y, d.z, d.x);
+		
+		
+		AxisAlignedBB bb = AABBTool.createAABB(corDim.scale(-0.5), corDim.scale(0.5));
+		bb = bb.offset(0.5, 1.0, 0.0).grow(0.0, -0.2, 0.0);
+		this.oreintedBoundingBox = this.oreintedBoundingBox.fromAABB(bb, getPositionVector());
+		//System.out.println(bb);
+	//	System.out.println("con");
+		//this.oreintedBoundingBox = this.oreintedBoundingBox.fromAABB(bb);
+		
+		//this.oreintedBoundingBox = this.oreintedBoundingBox.fromAABB(
+		//		AABBTool.createAABB(new Vec3d(-0.75, 0.2, -2.9), new Vec3d(1.90, 1.2, 3.2)), getPositionVector());
+		//System.out.println(AABBTool.createAABB(new Vec3d(-0.75, 0.2, -2.9), new Vec3d(1.90, 1.2, 3.2)));
+		this.oreintedBoundingBox.setPosition(posX, posY, posZ);
+		this.oreintedBoundingBox.setRotation(Math.toRadians(180 - rotationYaw), Math.toRadians(this.rotationPitch),
+				Math.toRadians(rotationRoll+rotationRollH));
+		
+		//System.out.println(this.oreintedBoundingBox.c);
+		//this.oreintedBoundingBox.axis.setIdentity();
+	
+	}
+
+	public void updateSolver() {
+		if (solver == null) {
+			solver = getConfiguration().getPhysicsConfig().getPhysicsSolver().clone();
+			
+			if(solver.vehicle == null) {
+				solver.activate(this);
+			}
+		}
+	}
+
+	private void tickLerp() {
+		if (this.lerpSteps > 0 && !this.canPassengerSteer()) {
+			double d0 = this.posX + (this.boatPitch - this.posX) / (double) this.lerpSteps;
+			double d1 = this.posY + (this.lerpY - this.posY) / (double) this.lerpSteps;
+			double d2 = this.posZ + (this.lerpZ - this.posZ) / (double) this.lerpSteps;
+			double d3 = MathHelper.wrapDegrees(this.boatYaw - (double) this.rotationYaw);
+			this.rotationYaw = (float) ((double) this.rotationYaw + d3 / (double) this.lerpSteps);
 //            this.rotationPitch = (float)((double)this.rotationPitch + (this.lerpXRot - (double)this.rotationPitch) / (double)this.lerpSteps);
-            --this.lerpSteps;
-            this.setPosition(d0, d1, d2);
-            this.setRotation(this.rotationYaw, this.rotationPitch);
-        }
-    }
+			--this.lerpSteps;
+			this.setPosition(d0, d1, d2);
+			this.setRotation(this.rotationYaw, this.rotationPitch);
+		}
+	}
 
-    public void setPaddleState(boolean left, boolean right)
-    {
-        this.dataManager.set(DATA_ID_PADDLE[0], Boolean.valueOf(left));
-        this.dataManager.set(DATA_ID_PADDLE[1], Boolean.valueOf(right));
-    }
+	@SideOnly(Side.CLIENT)
+	public void setPositionAndRotationDirect(double x, double y, double z, float yaw, float pitch,
+			int posRotationIncrements, boolean teleport) {
+		this.boatPitch = x;
+		this.lerpY = y;
+		this.lerpZ = z;
+		this.boatYaw = (double) yaw;
+		this.lerpXRot = (double) pitch;
+		this.lerpSteps = 10;
+	}
 
-    @SideOnly(Side.CLIENT)
-    public float getRowingTime(int side, float limbSwing)
-    {
-        return this.getPaddleState(side) ? (float)MathHelper.clampedLerp((double)this.paddlePositions[side] - 0.39269909262657166D, (double)this.paddlePositions[side], (double)limbSwing) : 0.0F;
-    }
-
-    /**
-     * Determines whether the boat is in water, gliding on land, or in air
-     */
-    private EntityVehicle.Status getBoatStatus()
-    {
-        EntityVehicle.Status entityboat$status = this.getUnderwaterStatus();
-
-        if (entityboat$status != null)
+	@Override
+	protected void addPassenger(Entity passenger) {
+		super.addPassenger(passenger);
+		/*
+		if (passenger.getRidingEntity() != this)
         {
-            this.waterLevel = this.getEntityBoundingBox().maxY;
-            return entityboat$status;
-        }
-        else if (this.checkInWater())
-        {
-//            this.waterLevel = this.getEntityBoundingBox().maxY; // TODO: handle water level
-            return EntityVehicle.Status.IN_WATER;
+            throw new IllegalStateException("Use x.startRiding(y), not y.addPassenger(x)");
         }
         else
         {
-            float f = this.getBoatGlide();
-
-            if (f > 0.0F)
+            if (!this.world.isRemote && passenger instanceof EntityPlayer && !(this.getControllingPassenger() instanceof EntityPlayer))
             {
-                this.boatGlide = f;
-                return EntityVehicle.Status.ON_LAND;
+                this.riddenByEntities.add(0, passenger);
             }
             else
             {
-                return EntityVehicle.Status.IN_AIR;
+                this.riddenByEntities.add(passenger);
             }
-        }
-    }
-
-    public float getWaterLevelAbove()
-    {
-        AxisAlignedBB axisalignedbb = this.getEntityBoundingBox();
-        int i = MathHelper.floor(axisalignedbb.minX);
-        int j = MathHelper.ceil(axisalignedbb.maxX);
-        int k = MathHelper.floor(axisalignedbb.maxY);
-        int l = MathHelper.ceil(axisalignedbb.maxY - this.lastYd);
-        int i1 = MathHelper.floor(axisalignedbb.minZ);
-        int j1 = MathHelper.ceil(axisalignedbb.maxZ);
-        BlockPos.PooledMutableBlockPos blockpos$pooledmutableblockpos = BlockPos.PooledMutableBlockPos.retain();
-
-        try
-        {
-            label108:
-
-            for (int k1 = k; k1 < l; ++k1)
-            {
-                float f = 0.0F;
-                int l1 = i;
-
-                while (true)
-                {
-                    if (l1 >= j)
-                    {
-                        if (f < 1.0F)
-                        {
-                            float f2 = (float)blockpos$pooledmutableblockpos.getY() + f;
-                            return f2;
-                        }
-
-                        break;
-                    }
-
-                    for (int i2 = i1; i2 < j1; ++i2)
-                    {
-                        blockpos$pooledmutableblockpos.setPos(l1, k1, i2);
-                        IBlockState iblockstate = this.world.getBlockState(blockpos$pooledmutableblockpos);
-
-                        if (iblockstate.getMaterial() == Material.WATER)
-                        {
-                            f = Math.max(f, BlockLiquid.getBlockLiquidHeight(iblockstate, this.world, blockpos$pooledmutableblockpos));
-                        }
-
-                        if (f >= 1.0F)
-                        {
-                            continue label108;
-                        }
-                    }
-
-                    ++l1;
-                }
-            }
-
-            float f1 = (float)(l + 1);
-            return f1;
-        }
-        finally
-        {
-            blockpos$pooledmutableblockpos.release();
-        }
-    }
-
-    /**
-     * Decides how much the boat should be gliding on the land (based on any slippery blocks)
-     */
-    public float getBoatGlide()
-    {
-        AxisAlignedBB axisalignedbb = this.getEntityBoundingBox();
-        AxisAlignedBB axisalignedbb1 = new AxisAlignedBB(axisalignedbb.minX, axisalignedbb.minY - 0.001D, axisalignedbb.minZ, axisalignedbb.maxX, axisalignedbb.minY, axisalignedbb.maxZ);
-        int i = MathHelper.floor(axisalignedbb1.minX) - 1;
-        int j = MathHelper.ceil(axisalignedbb1.maxX) + 1;
-        int k = MathHelper.floor(axisalignedbb1.minY) - 1;
-        int l = MathHelper.ceil(axisalignedbb1.maxY) + 1;
-        int i1 = MathHelper.floor(axisalignedbb1.minZ) - 1;
-        int j1 = MathHelper.ceil(axisalignedbb1.maxZ) + 1;
-        List<AxisAlignedBB> list = Lists.<AxisAlignedBB>newArrayList();
-        float f = 0.0F;
-        int k1 = 0;
-        BlockPos.PooledMutableBlockPos blockpos$pooledmutableblockpos = BlockPos.PooledMutableBlockPos.retain();
-
-        try
-        {
-            for (int l1 = i; l1 < j; ++l1)
-            {
-                for (int i2 = i1; i2 < j1; ++i2)
-                {
-                    int j2 = (l1 != i && l1 != j - 1 ? 0 : 1) + (i2 != i1 && i2 != j1 - 1 ? 0 : 1);
-
-                    if (j2 != 2)
-                    {
-                        for (int k2 = k; k2 < l; ++k2)
-                        {
-                            if (j2 <= 0 || k2 != k && k2 != l - 1)
-                            {
-                                blockpos$pooledmutableblockpos.setPos(l1, k2, i2);
-                                IBlockState iblockstate = this.world.getBlockState(blockpos$pooledmutableblockpos);
-                                iblockstate.addCollisionBoxToList(this.world, blockpos$pooledmutableblockpos, axisalignedbb1, list, this, false);
-
-                                if (!list.isEmpty())
-                                {
-                                    f += iblockstate.getBlock().getSlipperiness(iblockstate, this.world, blockpos$pooledmutableblockpos, this);
-                                    ++k1;
-                                }
-
-                                list.clear();
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        finally
-        {
-            blockpos$pooledmutableblockpos.release();
-        }
-
-        return f / (float)k1;
-    }
-
-    private boolean checkInWater()
-    {
-        if(true) return true;
-        AxisAlignedBB axisalignedbb = this.getEntityBoundingBox();
-        int i = MathHelper.floor(axisalignedbb.minX);
-        int j = MathHelper.ceil(axisalignedbb.maxX);
-        int k = MathHelper.floor(axisalignedbb.minY);
-        int l = MathHelper.ceil(axisalignedbb.minY + 0.001D);
-        int i1 = MathHelper.floor(axisalignedbb.minZ);
-        int j1 = MathHelper.ceil(axisalignedbb.maxZ);
-        boolean flag = false;
-        this.waterLevel = Double.MIN_VALUE;
-        BlockPos.PooledMutableBlockPos blockpos$pooledmutableblockpos = BlockPos.PooledMutableBlockPos.retain();
-
-        try
-        {
-            for (int k1 = i; k1 < j; ++k1)
-            {
-                for (int l1 = k; l1 < l; ++l1)
-                {
-                    for (int i2 = i1; i2 < j1; ++i2)
-                    {
-                        blockpos$pooledmutableblockpos.setPos(k1, l1, i2);
-                        IBlockState iblockstate = this.world.getBlockState(blockpos$pooledmutableblockpos);
-
-                        if (iblockstate.getMaterial() == Material.WATER)
-                        {
-                            float f = BlockLiquid.getLiquidHeight(iblockstate, this.world, blockpos$pooledmutableblockpos);
-                            this.waterLevel = Math.max((double)f, this.waterLevel);
-                            flag |= axisalignedbb.minY < (double)f;
-                        }
-                    }
-                }
-            }
-        }
-        finally
-        {
-            blockpos$pooledmutableblockpos.release();
-        }
-
-        return flag;
-    }
-
-    /**
-     * Decides whether the boat is currently underwater.
-     */
-    @Nullable
-    private EntityVehicle.Status getUnderwaterStatus()
-    {
-        AxisAlignedBB axisalignedbb = this.getEntityBoundingBox();
-        double d0 = axisalignedbb.maxY + 0.001D;
-        int i = MathHelper.floor(axisalignedbb.minX);
-        int j = MathHelper.ceil(axisalignedbb.maxX);
-        int k = MathHelper.floor(axisalignedbb.maxY);
-        int l = MathHelper.ceil(d0);
-        int i1 = MathHelper.floor(axisalignedbb.minZ);
-        int j1 = MathHelper.ceil(axisalignedbb.maxZ);
-        boolean flag = false;
-        BlockPos.PooledMutableBlockPos blockpos$pooledmutableblockpos = BlockPos.PooledMutableBlockPos.retain();
-
-        try
-        {
-            for (int k1 = i; k1 < j; ++k1)
-            {
-                for (int l1 = k; l1 < l; ++l1)
-                {
-                    for (int i2 = i1; i2 < j1; ++i2)
-                    {
-                        blockpos$pooledmutableblockpos.setPos(k1, l1, i2);
-                        IBlockState iblockstate = this.world.getBlockState(blockpos$pooledmutableblockpos);
-
-                        if (iblockstate.getMaterial() == Material.WATER && d0 < (double)BlockLiquid.getLiquidHeight(iblockstate, this.world, blockpos$pooledmutableblockpos))
-                        {
-                            if (((Integer)iblockstate.getValue(BlockLiquid.LEVEL)).intValue() != 0)
-                            {
-                                EntityVehicle.Status entityboat$status = EntityVehicle.Status.UNDER_FLOWING_WATER;
-                                return entityboat$status;
-                            }
-
-                            flag = true;
-                        }
-                    }
-                }
-            }
-        }
-        finally
-        {
-            blockpos$pooledmutableblockpos.release();
-        }
-
-        return flag ? EntityVehicle.Status.UNDER_WATER : null;
-    }
-
-    /**
-     * Update the boat's speed, based on momentum.
-     */
-    private void updateMotion()
-    {
-        double d0 = -0.03999999910593033D;
-        double d1 = this.hasNoGravity() ? 0.0D : -0.03999999910593033D;
-        double d2 = 0.0D;
-        this.momentum = 0.05F;
-
-        if (this.previousStatus == EntityVehicle.Status.IN_AIR && this.status != EntityVehicle.Status.IN_AIR && this.status != EntityVehicle.Status.ON_LAND)
-        {
-            this.waterLevel = this.getEntityBoundingBox().minY + (double)this.height;
-            this.setPosition(this.posX, (double)(this.getWaterLevelAbove() - this.height) + 0.101D, this.posZ);
-            this.motionY = 0.0D;
-            this.lastYd = 0.0D;
-            this.status = EntityVehicle.Status.IN_WATER;
-        }
-        else
-        {
-            if (this.status == EntityVehicle.Status.IN_WATER)
-            {
-                //d2 = (this.waterLevel - this.getEntityBoundingBox().minY) / (double)this.height;
-                d2 = (4.5 /*this.waterLevel*/ - this.getEntityBoundingBox().minY) / (double)this.height;
-                this.momentum = 0.9F;
-            }
-            else if (this.status == EntityVehicle.Status.UNDER_FLOWING_WATER)
-            {
-                d1 = -7.0E-4D;
-                this.momentum = 0.9F;
-            }
-            else if (this.status == EntityVehicle.Status.UNDER_WATER)
-            {
-                d2 = 0.009999999776482582D;
-                this.momentum = 0.45F;
-            }
-            else if (this.status == EntityVehicle.Status.IN_AIR)
-            {
-                this.momentum = 0.9F;
-            }
-            else if (this.status == EntityVehicle.Status.ON_LAND)
-            {
-                this.momentum = this.boatGlide;
-
-                if (this.getControllingPassenger() instanceof EntityPlayer)
-                {
-                    this.boatGlide /= 2.0F;
-                }
-            }
-
-//            System.out.println("Momentum: " + this.momentum);
-            this.motionX *= (double)this.momentum;
-            this.motionZ *= (double)this.momentum;
-            this.deltaRotation *= this.momentum;
-            this.motionY += d1;
-
-            if (d2 > 0.0D)
-            {
-                double d3 = 0.65D;
-                this.motionY += d2 * 0.06153846016296973D;
-                double d4 = 0.75D;
-                this.motionY *= 0.75D;
-            }
-            
-            
-        }
-        
-        // Added motionY to speed, see what happens
-        speed = Math.sqrt((this.motionX * this.motionX) + (this.motionZ * this.motionZ) + (this.motionY * this.motionY));
-        
-        wheelRotationAngle += -(float)speed /* Math.signum(getVelocity())*/ * 1.4f * 50f;
-        wheelRotationAngle = wheelRotationAngle >= 360 ? wheelRotationAngle - 360 : wheelRotationAngle;
-        wheelRotationAngle = wheelRotationAngle < 0 ? wheelRotationAngle + 360 : wheelRotationAngle;
-//        System.out.println("Wheel rotation angle: " + wheelRotationAngle);
-    }
-
-    private void controlBoat()
-    {
-        if (this.isBeingRidden())
-        {
-            float f = 0.0F;
-
-//            if (this.rightInputDown != this.leftInputDown && !this.forwardInputDown && !this.backInputDown)
-//            {
-//                f += 0.005F;
-//            }
-            /*
-             * forwardInputDown -> accelerate 
-             *   v = v0 + at
-             * a = F/m = (F_engine - F_friction)/m = (F_engine - F_gravity * M_friction)/m 
-             *  = (a_engine * m - m * g * M_friction)/m = a_engine - g * M_friction
-             * 
-             * a = a_engine - g * M_friction
-             * 
-             * a = (F_engine - m * g * M_friction)/m
-             * 
-             */
-
-            if (this.forwardInputDown)
-            {
-//                f += 0.04F;
-                f += 0.1F;
-            }
-
-            if (this.backInputDown)
-            {
-                f -= 0.01F;
-            }
-            
-            double sqVelocity = motionX * motionX + motionZ * motionZ;
-            
-            Entity driver = this.getControllingPassenger();
-            
-            double riderYawDelta = 0.0;
-            if(driver instanceof EntityPlayer) {
-                riderYawDelta = CompatibleMathHelper.wrapAngleTo180Double(driver.rotationYaw - rotationYaw);
-            }
-            
-            double handlingFactor = onGround ? getConfiguration().getHandling().apply(speed)
-                    : getConfiguration().getOffGroundHandling().apply(speed);
-            
-            riderYawDelta *= handlingFactor;
-            
-//            if (this.leftInputDown)
-//            {
-//                this.deltaRotation -= 3.0f * sqVelocity;
-//            }
-//
-//            if (this.rightInputDown)
-//            {
-//                this.deltaRotation += 3.0f * sqVelocity;
-//            }
-            
-//            System.out.println("Motion x: " + motionX + ", motion z: " + motionZ);
-            
-//            this.rotationYaw += this.deltaRotation;
-            
-            rotationYaw += riderYawDelta;
-
-            this.lastYawDelta = this.lastYawDelta + (riderYawDelta - this.lastYawDelta) * 0.1;
-            
-//            System.out.println("F: " + f);
-
-            this.motionX += (double)(MathHelper.sin(-this.rotationYaw * 0.017453292F) * f);
-            this.motionZ += (double)(MathHelper.cos(this.rotationYaw * 0.017453292F) * f);
-//            this.setPaddleState(this.rightInputDown && !this.leftInputDown || this.forwardInputDown, this.leftInputDown && !this.rightInputDown || this.forwardInputDown);
-        }
-    }
-
-    public void updatePassenger(Entity passenger)
-    {
-        if (this.isPassenger(passenger))
-        {
-            float f = 0.0F;
-            float f1 = (float)((this.isDead ? 0.009999999776482582D : this.getMountedYOffset()) + passenger.getYOffset());
-
-            if (this.getPassengers().size() > 1)
-            {
-                int i = this.getPassengers().indexOf(passenger);
-
-                if (i == 0)
-                {
-                    f = 0.2F;
-                }
-                else
-                {
-                    f = -0.6F;
-                }
-
-                if (passenger instanceof EntityAnimal)
-                {
-                    f = (float)((double)f + 0.2D);
-                }
-            }
-
-            Vec3d vec3d = (new Vec3d((double)f, 0.0D, 0.0D)).rotateYaw(-this.rotationYaw * 0.017453292F - ((float)Math.PI / 2F));
-            passenger.setPosition(this.posX + vec3d.x, this.posY + (double)f1, this.posZ + vec3d.z);
-            passenger.rotationYaw += this.deltaRotation;
-            passenger.setRotationYawHead(passenger.getRotationYawHead() + this.deltaRotation);
-            this.applyYawToEntity(passenger);
-
-            if (passenger instanceof EntityAnimal && this.getPassengers().size() > 1)
-            {
-                int j = passenger.getEntityId() % 2 == 0 ? 90 : 270;
-                passenger.setRenderYawOffset(((EntityAnimal)passenger).renderYawOffset + (float)j);
-                passenger.setRotationYawHead(passenger.getRotationYawHead() + (float)j);
-            }
-        }
-    }
-
-    /**
-     * Applies this boat's yaw to the given entity. Used to update the orientation of its passenger.
-     */
-    protected void applyYawToEntity(Entity entityToUpdate)
-    {
-        entityToUpdate.setRenderYawOffset(this.rotationYaw);
-        float f = MathHelper.wrapDegrees(entityToUpdate.rotationYaw - this.rotationYaw);
-        float f1 = MathHelper.clamp(f, -105.0F, 105.0F);
-        entityToUpdate.prevRotationYaw += f1 - f;
-        entityToUpdate.rotationYaw += f1 - f;
-        entityToUpdate.setRotationYawHead(entityToUpdate.rotationYaw);
-    }
-
-    /**
-     * Applies this entity's orientation (pitch/yaw) to another entity. Used to update passenger orientation.
-     */
-    @SideOnly(Side.CLIENT)
-    public void applyOrientationToEntity(Entity entityToUpdate)
-    {
-        this.applyYawToEntity(entityToUpdate);
-    }
-
-    /**
-     * (abstract) Protected helper method to write subclass entity data to NBT.
-     */
-    protected void writeEntityToNBT(NBTTagCompound compound)
-    {
-        compound.setString("Type", this.getBoatType().getName());
-    }
-
-    /**
-     * (abstract) Protected helper method to read subclass entity data from NBT.
-     */
-    protected void readEntityFromNBT(NBTTagCompound compound)
-    {
-        if (compound.hasKey("Type", 8))
-        {
-            this.setBoatType(EntityVehicle.Type.getTypeFromString(compound.getString("Type")));
-        }
-    }
-
-    public boolean processInitialInteract(EntityPlayer player, EnumHand hand)
-    {
-        if (player.isSneaking())
-        {
-            return false;
-        }
-        else
-        {
-            if (!this.world.isRemote && this.outOfControlTicks < 60.0F)
-            {
-                player.startRiding(this);
-            }
-
-            return true;
-        }
-    }
-
-    protected void updateFallState(double y, boolean onGroundIn, IBlockState state, BlockPos pos)
-    {
-        this.lastYd = this.motionY;
-
-        if (!this.isRiding())
-        {
-            if (onGroundIn)
-            {
-                if (this.fallDistance > 3.0F)
-                {
-                    if (this.status != EntityVehicle.Status.ON_LAND)
-                    {
-                        this.fallDistance = 0.0F;
-                        return;
-                    }
-
-                    this.fall(this.fallDistance, 1.0F);
-
-                    if (!this.world.isRemote && !this.isDead)
-                    {
-                        this.setDead();
-
-                        if (this.world.getGameRules().getBoolean("doEntityDrops"))
-                        {
-                            for (int i = 0; i < 3; ++i)
-                            {
-                                this.entityDropItem(new ItemStack(Item.getItemFromBlock(Blocks.PLANKS), 1, this.getBoatType().getMetadata()), 0.0F);
-                            }
-
-                            for (int j = 0; j < 2; ++j)
-                            {
-                                this.dropItemWithOffset(Items.STICK, 1, 0.0F);
-                            }
-                        }
-                    }
-                }
-
-                this.fallDistance = 0.0F;
-            }
-            else if (this.world.getBlockState((new BlockPos(this)).down()).getMaterial() != Material.WATER && y < 0.0D)
-            {
-                this.fallDistance = (float)((double)this.fallDistance - y);
-            }
-        }
-    }
-
-    public boolean getPaddleState(int side)
-    {
-        return ((Boolean)this.dataManager.get(DATA_ID_PADDLE[side])).booleanValue() && this.getControllingPassenger() != null;
-    }
-
-    /**
-     * Sets the damage taken from the last hit.
-     */
-    public void setDamageTaken(float damageTaken)
-    {
-        this.dataManager.set(DAMAGE_TAKEN, Float.valueOf(damageTaken));
-    }
-
-    /**
-     * Gets the damage taken from the last hit.
-     */
-    public float getDamageTaken()
-    {
-        return ((Float)this.dataManager.get(DAMAGE_TAKEN)).floatValue();
-    }
-
-    /**
-     * Sets the time to count down from since the last time entity was hit.
-     */
-    public void setTimeSinceHit(int timeSinceHit)
-    {
-        this.dataManager.set(TIME_SINCE_HIT, Integer.valueOf(timeSinceHit));
-    }
-
-    /**
-     * Gets the time since the last hit.
-     */
-    public int getTimeSinceHit()
-    {
-        return ((Integer)this.dataManager.get(TIME_SINCE_HIT)).intValue();
-    }
-
-    /**
-     * Sets the forward direction of the entity.
-     */
-    public void setForwardDirection(int forwardDirection)
-    {
-        this.dataManager.set(FORWARD_DIRECTION, Integer.valueOf(forwardDirection));
-    }
-
-    /**
-     * Gets the forward direction of the entity.
-     */
-    public int getForwardDirection()
-    {
-        return ((Integer)this.dataManager.get(FORWARD_DIRECTION)).intValue();
-    }
-
-    public void setBoatType(EntityVehicle.Type boatType)
-    {
-        this.dataManager.set(BOAT_TYPE, Integer.valueOf(boatType.ordinal()));
-    }
-
-    public EntityBoat.Type getBoatType()
-    {
-        return EntityBoat.Type.byId(((Integer)this.dataManager.get(BOAT_TYPE)).intValue());
-    }
-
-    protected boolean canFitPassenger(Entity passenger)
-    {
-        return this.getPassengers().size() < 2;
-    }
-
-    /**
-     * For vehicles, the first passenger is generally considered the controller and "drives" the vehicle. For example,
-     * Pigs, Horses, and Boats are generally "steered" by the controlling passenger.
-     */
-    @Nullable
-    public Entity getControllingPassenger()
-    {
-        List<Entity> list = this.getPassengers();
-        return list.isEmpty() ? null : (Entity)list.get(0);
-    }
-
-    @SideOnly(Side.CLIENT)
-    public void updateInputs(boolean p_184442_1_, boolean p_184442_2_, boolean p_184442_3_, boolean p_184442_4_)
-    {
-        this.leftInputDown = p_184442_1_;
-        this.rightInputDown = p_184442_2_;
-        this.forwardInputDown = p_184442_3_;
-        this.backInputDown = p_184442_4_;
-    }
-
-    public static enum Status
-    {
-        IN_WATER,
-        UNDER_WATER,
-        UNDER_FLOWING_WATER,
-        ON_LAND,
-        IN_AIR;
-    }
-
-    public static enum Type
-    {
-        OAK(BlockPlanks.EnumType.OAK.getMetadata(), "oak"),
-        SPRUCE(BlockPlanks.EnumType.SPRUCE.getMetadata(), "spruce"),
-        BIRCH(BlockPlanks.EnumType.BIRCH.getMetadata(), "birch"),
-        JUNGLE(BlockPlanks.EnumType.JUNGLE.getMetadata(), "jungle"),
-        ACACIA(BlockPlanks.EnumType.ACACIA.getMetadata(), "acacia"),
-        DARK_OAK(BlockPlanks.EnumType.DARK_OAK.getMetadata(), "dark_oak");
-
-        private final String name;
-        private final int metadata;
-
-        private Type(int metadataIn, String nameIn)
-        {
-            this.name = nameIn;
-            this.metadata = metadataIn;
-        }
-
-        public String getName()
-        {
-            return this.name;
-        }
-
-        public int getMetadata()
-        {
-            return this.metadata;
-        }
-
-        public String toString()
-        {
-            return this.name;
-        }
-
-        /**
-         * Get a boat type by it's enum ordinal
-         */
-        public static EntityVehicle.Type byId(int id)
-        {
-            if (id < 0 || id >= values().length)
-            {
-                id = 0;
-            }
-
-            return values()[id];
-        }
-
-        public static EntityVehicle.Type getTypeFromString(String nameIn)
-        {
-            for (int i = 0; i < values().length; ++i)
-            {
-                if (values()[i].getName().equals(nameIn))
-                {
-                    return values()[i];
-                }
-            }
-
-            return values()[0];
-        }
-    }
-
-    // Forge: Fix MC-119811 by instantly completing lerp on board
-    @Override
-    protected void addPassenger(Entity passenger)
-    {
-        super.addPassenger(passenger);
-        if(this.canPassengerSteer() && this.lerpSteps > 0)
-        {
-            this.lerpSteps = 0;
-            this.posX = this.boatPitch;
-            this.posY = this.lerpY;
-            this.posZ = this.lerpZ;
-            this.rotationYaw = (float)this.boatYaw;
-            this.rotationPitch = (float)this.lerpXRot;
-        }
-    }
-
-    public float getWheelRotationAngle() {
-        return wheelRotationAngle; //throw new UnsupportedOperationException("Implement me");
-    }
-
-    public double getLastYawDelta() {
-        return lastYawDelta;
-    }
-
-    @Override
-    public VehicleState getState() {
-        return vehicleState;
-    }
-
-    public float getRotatePassengerFrame() {
-        // TODO Auto-generated method stub
-        return 0f;
-    }
-
-    @Override
-    public boolean setState(VehicleState vehicleState) {
-        this.vehicleState = vehicleState;
-        System.out.println("State changed to " + vehicleState);
-        stateUpdateTimestamp = System.currentTimeMillis();
-        return false;
-    }
-
-    @Override
-    public long getStateUpdateTimestamp() {
-        return stateUpdateTimestamp;
-    }
-
-    @Override
-    public <E extends ExtendedState<VehicleState>> void prepareTransaction(E finallyUpdateToState) {
-        
-    }
-
-    public double getSpeed() {
-        return speed;
-    }
+        }*/
+		if (this.canPassengerSteer() && this.lerpSteps > 0) {
+			this.lerpSteps = 0;
+			this.posX = this.boatPitch;
+			this.posY = this.lerpY;
+			this.posZ = this.lerpZ;
+			this.rotationYaw = (float) this.boatYaw;
+			this.rotationPitch = (float) this.lerpXRot;
+		}
+	}
+
+	/*
+	 * CONTROLLING
+	 */
+
+	public void keyBasedSteering() {
+
+		double angle = Math.toDegrees(steerangle);
+		double sensitivity = 5;
+		if (KeyBindings.vehicleTurnLeft.isKeyDown()) {
+			angle -= sensitivity;
+		}
+
+		if (KeyBindings.vehicleTurnRight.isKeyDown()) {
+			angle += sensitivity;
+		}
+
+		if (angle < -45.0F) {
+			angle = -45.0F;
+		}
+		if (angle > 45.0F) {
+			angle = 45.0F;
+		}
+
+		steerangle = Math.toRadians(angle);
+		
+		
+		
+
+	}
+
+	/**
+	 * Unless you are trying to add self-driven vehicles, please keep this on client
+	 */
+	public void updateSteering(EntityPlayer driver) {
+
+		float yaw = driver.rotationYaw;
+		float pitch = driver.rotationPitch;
+
+		float f = 1.0f;
+		double motionX = (double) (-MathHelper.sin(yaw / 180.0F * (float) Math.PI)
+				* MathHelper.cos(pitch / 180.0F * (float) Math.PI) * f);
+		double motionZ = (double) (MathHelper.cos(yaw / 180.0F * (float) Math.PI)
+				* MathHelper.cos(pitch / 180.0F * (float) Math.PI) * f);
+		double motionY = (double) (-MathHelper.sin((pitch) / 180.0F * (float) Math.PI) * f);
+		Vec3d dirVec = new Vec3d(motionX, 0, motionZ);
+		Vec3d oreintVec = Vec3d.fromPitchYaw(this.rotationPitch, this.rotationYaw);
+
+		double det = dirVec.crossProduct(oreintVec).y;
+		if (det > 0) {
+			det = 1;
+		} else {
+			det = -1;
+		}
+		Vector3d dir = new Vector3d(dirVec.x, dirVec.y, dirVec.z);
+		Vector3d ore = new Vector3d(oreintVec.x, oreintVec.y, oreintVec.z);
+		double aT = Math.toDegrees(dir.angle(ore)) / 2;
+		double steeringAngle = aT * det * -1;
+		if (aT < -45.0F) {
+			aT = -45.0F;
+		}
+		if (aT > 45.0F) {
+			aT = 45.0F;
+		}
+		steerangle = Math.toRadians(-steeringAngle);
+
+	}
+
+	public boolean isVehicleRunning() {
+		return this.vehicleIsRunning;
+	}
+
+	/**
+	 * Updates the vehicles controls, like throttle, braking, handbraking,
+	 * drift-tuning, etc.
+	 */
+	@SideOnly(Side.CLIENT)
+	public void updateControls() {
+		
+
+		
+		
+		
+	
+		
+		
+		//this.solver.activate(this);
+	//	System.out.println(isVehicleRunning());
+		Transmission trans = getSolver().transmission;
+
+		/*
+		if(clutchTimer < 60) {
+		//	System.out.println(clutchTimer);
+			if(throttle < 0.3) throttle = 0.3;
+			double step = (1.0-trans.getClutch().engagementPoint)/60;
+			trans.getClutch().removePressure(step);
+		//	System.out.println(trans.getClutch().pedalPressure + " | " + trans.getClutch().getSlippage());
+			clutchTimer++;
+			
+		}
+		
+		*/
+		if (KeyBindings.vehicleTurnOff.isPressed()) {
+			if (isVehicleRunning()) {
+				
+				vehicleIsRunning = false;
+				this.drivingSound = null;
+				CustomGui.vehicleGUIOverlay.keyAnimator.removeKey();
+			} else {
+				
+				vehicleIsRunning = true;
+				this.drivingSound = null;
+				CustomGui.vehicleGUIOverlay.keyAnimator.turnKey();
+			}
+		}
+
+		if (!trans.isReverseGear) {
+			/*
+			 * HOW THE CONTROLS WORK UNDER NORMAL CONDITIONS (NO REVERSING!)
+			 */
+			if(isVehicleRunning()) {
+				if (KeyBindings.vehicleThrottle.isKeyDown()) {
+					reverseLockout = true;
+					if (throttle < 1)
+						throttle += 0.1;
+				} else {
+					if (throttle > 0)
+						throttle -= 0.1;
+				}
+				
+				if (getSolver().getVelocityVector().lengthVector() < 0.5 && !KeyBindings.vehicleBrake.isKeyDown()) {
+					reverseLockout = false;
+				}
+			}
+			
+			
+			
+			
+
+			if (KeyBindings.vehicleBrake.isKeyDown()) {
+
+				// REVERSE LOCKOUT ALLOWS THE PROCESS TO BE SMOOTHER;
+				// YOU HAVE TO LET GO OF THE BRAKE TO ENTER REVERSE.
+				if(isVehicleRunning()) {
+					if (getSolver().getVelocityVector().lengthVector() < 0.5 && !reverseLockout) {
+						trans.enterReverse();
+					}
+				}
+				
+
+				isBraking = true;
+			} else
+				isBraking = false;
+
+		} else if(isVehicleRunning()) {
+			/*
+			 * HOW THE CONTROLS WORK UNDER REVERSE CONDITIONS
+			 */
+
+			if (KeyBindings.vehicleThrottle.isKeyDown()) {
+
+				if (getSolver().getVelocityVector().lengthVector() < 2.5) {
+					trans.exitReverse();
+				}
+
+				isBraking = true;
+			} else
+				isBraking = false;
+
+			if (KeyBindings.vehicleBrake.isKeyDown()) {
+				if (throttle < 1)
+					throttle += 0.1;
+			} else {
+				if (throttle > 0)
+					throttle -= 0.1;
+			}
+
+		}
+
+		if (throttle < 0)
+			throttle = 0;
+		if (throttle > 1)
+			throttle = 1;
+
+		if (!isVehicleRunning()) {
+			//throttle = 0;
+		}
+
+		if (isVehicleRunning()) {
+			if (KeyBindings.vehicleHandbrake.isKeyDown()) {
+				solver.applyHandbrake();
+			} else {
+				solver.releaseHandbrake();
+			}
+		}
+		
+		//driftTuner = 0;
+		
+
+		if (KeyBindings.vehicleClutch.isKeyDown()) {
+			getSolver().transmission.declutch();
+		} else
+			getSolver().transmission.clutch();
+
+		
+		if(!KeyBindings.vehicleTurnLeft.isKeyDown() && !KeyBindings.vehicleTurnRight.isKeyDown()) {
+			steerangle *= 0.6;
+		} else {
+			steerangle *= 0.8;
+		}
+       
+		// MOUSE BASED steerangle *= 0.5;
+		int mA = 45;
+
+		// Code below fixes bug where players are unable
+		// to become Takumi Fujiwara, even when listening to
+		// EuroBeat. This allows you to do the C-121, so you
+		// will win the Usui Pass Battle.
+		/*
+		 * if(Keyboard.isKeyDown(Keyboard.KEY_A)) { driftTuner -= 5; if(driftTuner <
+		 * -mA) driftTuner = -mA; } else if( Keyboard.isKeyDown(Keyboard.KEY_D) ) {
+		 * driftTuner += 5; if(driftTuner > mA) driftTuner = mA; } else { double newTune
+		 * = ((Math.abs(driftTuner) - 5))*Math.signum(driftTuner); driftTuner = newTune;
+		 * if(driftTuner < -mA) driftTuner = -mA;
+		 * 
+		 * }
+		 */
+
+		double maxSteerAngle = 35;
+		double dSA = Math.toDegrees(steerangle);
+		if (dSA > maxSteerAngle)
+			steerangle = Math.toRadians(maxSteerAngle);
+		if (dSA < -maxSteerAngle)
+			steerangle = Math.toRadians(-maxSteerAngle);
+		prevLastYawDelta = lastYawDelta;
+		lastYawDelta = steerangle;
+
+		prevWheelRotationAngle = wheelRotationAngle;
+		double angVel = getRealSpeed();
+		wheelRotationAngle += angVel % 360; // wheelRotationAngle = 0.0f;
+		// wheelRotationAngle -= (float) solver.velocity.lengthVector();
+
+	}
+
+	/*
+	 * COLLISIONS
+	 */
+	
+	
+	
+	/**
+	 * https://research.ncl.ac.uk/game/mastersdegree/gametechnologies/physicstutorials/5collisionresponse/Physics%20-%20Collision%20Response.pdf
+	 */
+	@Override
+	public void doOBBCollision() {
+		OreintedBB obb = getOreintedBoundingBox();
+		//if(1+1==2) return;
+		
+		
+		if(Math.abs(rotationPitch) < 0.0000001) {
+			List<AxisAlignedBB> list3 = this.world.getCollisionBoxes(this, this.getEntityBoundingBox().grow(3).expand(1, 1, 1));
+		    
+	        OreintedBB bb = this.getOreintedBoundingBox();
+	        GJKResult bestResult = new GJKResult();
+	         
+	         for(AxisAlignedBB aabb : list3) {
+	             Vec3d pos = new Vec3d(aabb.maxX-0.5, aabb.maxY-0.5, aabb.maxZ-0.5);
+	             AxisAlignedBB fixedBB = aabb.offset(pos.scale(-1));
+	             
+	             GJKResult result = OBBCollider.areColliding(bb, OreintedBB.fromAABB(fixedBB, pos));
+	             if(result.status == GJKResult.Status.COLLIDING && result.penetrationDepth > bestResult.penetrationDepth) {
+	                 bestResult = result;
+	             }
+	             
+	         }
+	         
+	        if(bestResult == null || bestResult.status != GJKResult.Status.COLLIDING) return;
+	        
+	        Vec3d normal = bestResult.separationVector;
+	        
+	        double yawInertia = 1/getSolver().getPhysConf().getVehicleMassObject().inertia.m11;
+	        
+	        // PROJECTION
+	        double a = 1;
+	        
+	        /*
+	        double cD = Math.abs(bestResult.contactPointA.subtract(bestResult.contactPointB).lengthVector());
+	        if(Math.abs(bestResult.penetrationDepth) > cD) {
+	        	bestResult.penetrationDepth = cD*Math.signum(bestResult.penetrationDepth);
+	        	
+	        }
+	        System.out.println(bestResult.penetrationDepth);*/
+	        //if(solver.velocity.lengthVector() > 15) a = 0.5;
+	        Vec3d aSep = normal.scale(-bestResult.penetrationDepth*a);
+	        this.prevPosX = this.posX;
+	        this.prevPosY = this.posY;
+	        this.prevPosZ = this.posZ;
+	        if(aSep.lengthVector() > 0.1) aSep = aSep.scale(1/(aSep.lengthVector()/0.1));
+	       // System.out.println(aSep.lengthVector());
+	        setPosition(this.posX+aSep.x, this.posY/*+aSep.y*/, this.posZ+aSep.z);
+       	 
+	        
+	        
+	        double totalMass = 1/getSolver().getPhysConf().getVehicleMassObject().mass;
+	        Vec3d relativeA = bestResult.contactPointA.subtract(getPositionVector()).rotateYaw((float) Math.toRadians(rotationYaw));
+	        
+	        Vec3d angularVelocityA = new Vec3d(0.0, getSolver().angularVelocity, 0.0).crossProduct(relativeA);
+	        
+	        Vec3d fullVelocityA = getSolver().velocity.add(angularVelocityA);
+	        
+	        Vec3d contactVelocity = fullVelocityA.scale(-1);
+	        
+	        double impulseForce = contactVelocity.dotProduct(normal);
+	        
+	        Vec3d inertiaA = relativeA.crossProduct(normal).scale(yawInertia).crossProduct(relativeA);
+	        
+	        double angularEffect = inertiaA.dotProduct(normal);
+	        
+	        double restitution = 0.30;
+	        
+	        double j = (-(1.0 + restitution)*impulseForce)/(totalMass+angularEffect);
+	        
+	        Vec3d fullImpulse = normal.scale(j);
+	        
+	        getSolver().velocity = getSolver().velocity.add(fullImpulse.scale(-1).scale(totalMass));
+	        
+	        Vec3d angularImpulse = relativeA.crossProduct(fullImpulse).scale(-1);
+	        getSolver().angularVelocity += angularImpulse.scale(yawInertia).y*0.02;
+	        
+	        
+	        
+		}
+		
+		
+		
+	}
+	
+	@Override
+	public AxisAlignedBB getCollisionBoundingBox() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	public void oldCollisions() {
+
+		// DO BLOCK SHIT
+		OreintedBB carBound = getOreintedBoundingBox();
+		
+		/*
+		List<AxisAlignedBB> list1 = this.world.getCollisionBoxes(this, this.getEntityBoundingBox().expand(2, 1, 2));
+		for(AxisAlignedBB box : list1) {
+			
+			GJKResult result = OBBCollider.areColliding(carBound, OreintedBB.fromAABB(box));
+			if(result.status == GJKResult.Status.COLLIDING) {
+				Vec3d d = result.separationVector.scale(-result.penetrationDepth);
+				System.out.println(d);
+				move(MoverType.SELF, d.x, d.y, d.z);
+				
+				
+				//getSolver().velocity = getSolver().velocity.add();
+			}
+		}*/
+	
+		/* functional
+		if(Math.abs(rotationPitch) < 0.0000001) {
+			List<AxisAlignedBB> list3 = this.world.getCollisionBoxes(this, this.getEntityBoundingBox().grow(3).expand(1, 1, 1));
+		    
+	        OreintedBB bb = this.getOreintedBoundingBox();
+	        GJKResult bestResult = new GJKResult();
+	         
+	         for(AxisAlignedBB aabb : list3) {
+	             
+	             Vec3d pos = new Vec3d(aabb.maxX-0.5, aabb.maxY-0.5, aabb.maxZ-0.5);
+	             AxisAlignedBB fixedBB = aabb.offset(pos.scale(-1));
+	             
+	             GJKResult result = OBBCollider.areColliding(bb, OreintedBB.fromAABB(fixedBB, pos));
+	             if(result.status == GJKResult.Status.COLLIDING && result.penetrationDepth > bestResult.penetrationDepth) {
+	                 bestResult = result;
+	             }
+	             
+	         }
+	         
+	         Vec3d aSep = Vec3d.ZERO;
+	         if(bestResult.penetrationDepth != 0.0) {
+	        	
+	             aSep = bestResult.separationVector.scale(-bestResult.penetrationDepth);
+	             aSep = new Vec3d(aSep.x, 0.0, aSep.z);
+	             
+	         }
+	        // System.out.println(aSep);
+	         if(aSep.lengthVector() != 0.0) {
+
+	        	 Vec3d rC = bestResult.contactPointA.subtract(getPositionVector()).rotateYaw((float) Math.toRadians(rotationYaw));
+	        	 Vec3d coG = getSolver().getPhysConf().getVehicleMassObject().centerOfGravity;
+	        	 
+	        	 Vec3d cross = rC.crossProduct(coG);
+	        	 
+	        	 double momentum = getSolver().getPhysConf().vehicleMass*getRealSpeed()/50;
+	        	 
+	 
+	        	
+	 		
+	        	 
+	        	 getSolver().collisionTorque += momentum*cross.y;
+	        	 
+	        	 //System.out.println("septes"  + aSep.y);
+	        	 
+	        	 getSolver().velocity = getSolver().velocity.add(aSep.scale(1/0.1));
+	        	 setPosition(this.posX+aSep.x, this.posY+aSep.y, this.posZ+aSep.z);
+	        	 updateOBB();
+	        	//  move(MoverType.SELF, aSep.x, aSep.y, aSep.z);
+	         }
+		}
+		*/
+       
+         
+        /// Vec3d p3 = getPositionVector();
+        // setPosition(p3.x + aSep.x, p3.y + aSep.y, p3.z + aSep.z);
     
-    protected boolean isSteeredForward() {
-        return forwardInputDown;
-    }
-    
-    protected boolean isSteeredBackward() {
-        return backInputDown;
-    }
+		
+       // System.out.println("bruh");
+		
+         
+		List<Entity> list = this.world.getEntitiesInAABBexcluding(this, this.getEntityBoundingBox().grow(10.0),
+				EntitySelectors.IS_ALIVE);
+		
+	
 
-    public VehicleSuspensionStrategy getSuspensionStrategy() {
-        return getConfiguration().getSuspensionStrategy();
-    }
-    
-    public Randomizer getRandomizer() {
-        if(randomizer == null) {
-            randomizer = new Randomizer();
+		list.removeIf((e) -> this.isPassenger(e));
+
+		for (Entity ent : list) {
+			
+			AxisAlignedBB cEnt = ent.getEntityBoundingBox();
+			AxisAlignedBB aabbEnt = new AxisAlignedBB(cEnt.minX - ent.posX, cEnt.minY - ent.posY, cEnt.minZ - ent.posZ,
+					cEnt.maxX - ent.posX, cEnt.maxY - ent.posY, cEnt.maxZ - ent.posZ);
+
+			GJKResult result = OBBCollider.areColliding(getOreintedBoundingBox(),
+					OreintedBB.fromAABB(aabbEnt, ent.getPositionVector()));
+			if (result.status == GJKResult.Status.COLLIDING) {
+				//System.out.println("COLLISION DETECTED!");
+
+				Vec3d shoot = result.separationVector.scale(result.penetrationDepth);
+				Vec3d p = ent.getPositionVector();
+				if (ent instanceof EntityPlayer) {
+					if (this.world.isRemote) {
+						ent.setPosition(p.x + shoot.x, p.y + shoot.y, p.z + shoot.z);
+
+						
+						EntityPlayer player = (EntityPlayer) ent;
+						
+					//	Minecraft.getMinecraft().getConnection().sendPacket(new CPacketPlayer.PositionRotation(this.motionX, -999.0D, this.motionZ, this.rotationYaw, this.rotationPitch, true));
+			               //player.onGround = true;
+						
+						//player.fallDistance = 0.0f;
+						
+						
+						if(!player.onGround) {
+							
+							player.motionY += 0.08D;
+							player.motionX *= 0.9;
+							player.motionZ *= 0.9;
+						}
+						
+						
+		        
+					}
+				} else {
+					applyEntityCollision(ent);
+					ent.setPosition(p.x + shoot.x, p.y + shoot.y, p.z + shoot.z);
+
+				}
+				
+				
+				
+				//((EntityPlayer) ent).onGround = true;
+
+				/*
+				 * Vec3d shoot = result.separationVector.scale(result.penetrationDepth*5.0);
+				 * ent.addVelocity(shoot.x, shoot.y+1, shoot.z);
+				 */
+
+			}
+
+		}
+
+	}
+	
+	
+
+	@Override
+	protected void doBlockCollisions() {
+		
+		
+		
+		//super.doBlockCollisions();
+	}
+
+	@Override
+	public void move(MoverType type, double x, double y, double z) {
+		
+		
+		if (this.noClip) {
+			this.setEntityBoundingBox(this.getEntityBoundingBox().offset(x, 0.0, z));
+			this.resetPositionToBB();
+		} else {
+
+			this.world.profiler.startSection("move");
+			double d10 = this.posX;
+			double d11 = this.posY;
+			double d1 = this.posZ;
+
+			if (this.isInWeb) {
+				this.isInWeb = false;
+				x *= 0.25D;
+				y *= 0.05000000074505806D;
+				z *= 0.25D;
+				this.motionX = 0.0D;
+				this.motionY = 0.0D;
+				this.motionZ = 0.0D;
+			}
+
+			double d2 = x;
+			double d3 = y;
+			double d4 = z;
+
+			if ((type == MoverType.SELF || type == MoverType.PLAYER) && this.onGround && this.isSneaking()) {
+				for (double d5 = 0.05D; x != 0.0D && this.world
+						.getCollisionBoxes(this,
+								this.getEntityBoundingBox().offset(x, (double) (-this.stepHeight), 0.0D))
+						.isEmpty(); d2 = x) {
+					if (x < 0.05D && x >= -0.05D) {
+						x = 0.0D;
+					} else if (x > 0.0D) {
+						x -= 0.05D;
+					} else {
+						x += 0.05D;
+					}
+				}
+
+				for (; z != 0.0D && this.world
+						.getCollisionBoxes(this,
+								this.getEntityBoundingBox().offset(0.0D, (double) (-this.stepHeight), z))
+						.isEmpty(); d4 = z) {
+					if (z < 0.05D && z >= -0.05D) {
+						z = 0.0D;
+					} else if (z > 0.0D) {
+						z -= 0.05D;
+					} else {
+						z += 0.05D;
+					}
+				}
+				
+				
+
+				for (; x != 0.0D && z != 0.0D
+						&& this.world
+								.getCollisionBoxes(this,
+										this.getEntityBoundingBox().offset(x, (double) (-this.stepHeight), z))
+								.isEmpty(); d4 = z) {
+					if (x < 0.05D && x >= -0.05D) {
+						x = 0.0D;
+					} else if (x > 0.0D) {
+						x -= 0.05D;
+					} else {
+						x += 0.05D;
+					}
+
+					d2 = x;
+
+					if (z < 0.05D && z >= -0.05D) {
+						z = 0.0D;
+					} else if (z > 0.0D) {
+						z -= 0.05D;
+					} else {
+						z += 0.05D;
+					}
+				}
+			}
+
+			List<AxisAlignedBB> list1 = this.world.getCollisionBoxes(this, this.getEntityBoundingBox().expand(x, y, z));
+			AxisAlignedBB axisalignedbb = this.getEntityBoundingBox();
+
+			/*
+			 * Le magique
+			 */
+
+			ArrayList<AxisAlignedBB> rList = new ArrayList<>();
+			for (int q = 0; q < list1.size(); ++q) {
+				AxisAlignedBB item = list1.get(q);
+
+				Vec3d centerOfPos = new Vec3d(item.minX + (item.maxX - item.minX) * 0.5D, item.minY + (item.maxY - item.minY) * 0.5D, item.minZ + (item.maxZ - item.minZ) * 0.5D);
+				
+				BlockPos pos = new BlockPos(centerOfPos);
+				IBlockState state = this.world.getBlockState(pos);
+				
+				if (state.getBlock() instanceof BlockCarpet /*|| state.getBlock() instanceof BlockSnow*/) {
+				
+					IBlockState below = world.getBlockState(getPosition().down());
+					AxisAlignedBB bb = below.getCollisionBoundingBox(world, getPosition().down());
+					rList.add(item);
+					
+					
+
+					bb = new AxisAlignedBB(0, 0, 0, 1, 1, 1);
+					list1.add(bb.offset(getPosition().down()));
+				}
+			}
+
+			for (AxisAlignedBB bruh : rList) {
+			
+				list1.remove(bruh);
+			}
+			
+			
+			IBlockState below = world.getBlockState(getPosition().down());
+			AxisAlignedBB bb = below.getCollisionBoundingBox(world, getPosition().down());
+			if (bb != null) {
+				if (bb.maxY >= 0.75 && bb.maxY < 1.0) {
+					// System.out.println(bb.maxY);
+					bb = new AxisAlignedBB(0, 0, 0, 1, 1, 1);
+					list1.add(bb.offset(getPosition().down()));
+				}
+			}
+
+			if (y != 0.0D) {
+				int k = 0;
+
+				for (int l = list1.size(); k < l; ++k) {
+					y = ((AxisAlignedBB) list1.get(k)).calculateYOffset(this.getEntityBoundingBox(), y);
+				}
+
+				this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0D, y, 0.0D));
+			}
+
+			if (x != 0.0D) {
+				int j5 = 0;
+
+				for (int l5 = list1.size(); j5 < l5; ++j5) {
+					x = ((AxisAlignedBB) list1.get(j5)).calculateXOffset(this.getEntityBoundingBox(), x);
+				}
+
+				if (x != 0.0D) {
+					this.setEntityBoundingBox(this.getEntityBoundingBox().offset(x, 0.0D, 0.0D));
+				}
+			}
+
+			if (z != 0.0D) {
+				int k5 = 0;
+
+				for (int i6 = list1.size(); k5 < i6; ++k5) {
+					z = ((AxisAlignedBB) list1.get(k5)).calculateZOffset(this.getEntityBoundingBox(), z);
+				}
+
+				if (z != 0.0D) {
+					this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0D, 0.0D, z));
+				}
+			}
+		
+		
+		
+
+			boolean flag = this.onGround || d3 != y && d3 < 0.0D;
+
+			if (this.stepHeight > 0.0F && flag && (d2 != x || d4 != z)) {
+				double d14 = x;
+				double d6 = y;
+				double d7 = z;
+				AxisAlignedBB axisalignedbb1 = this.getEntityBoundingBox();
+				this.setEntityBoundingBox(axisalignedbb);
+				y = (double) this.stepHeight;
+				List<AxisAlignedBB> list = this.world.getCollisionBoxes(this,
+						this.getEntityBoundingBox().expand(d2, y, d4));
+				AxisAlignedBB axisalignedbb2 = this.getEntityBoundingBox();
+				AxisAlignedBB axisalignedbb3 = axisalignedbb2.expand(d2, 0.0D, d4);
+				double d8 = y;
+				int j1 = 0;
+
+				for (int k1 = list.size(); j1 < k1; ++j1) {
+					d8 = ((AxisAlignedBB) list.get(j1)).calculateYOffset(axisalignedbb3, d8);
+				}
+
+				axisalignedbb2 = axisalignedbb2.offset(0.0D, d8, 0.0D);
+				double d18 = d2;
+				int l1 = 0;
+
+				for (int i2 = list.size(); l1 < i2; ++l1) {
+					d18 = ((AxisAlignedBB) list.get(l1)).calculateXOffset(axisalignedbb2, d18);
+				}
+
+				axisalignedbb2 = axisalignedbb2.offset(d18, 0.0D, 0.0D);
+				double d19 = d4;
+				int j2 = 0;
+
+				for (int k2 = list.size(); j2 < k2; ++j2) {
+					d19 = ((AxisAlignedBB) list.get(j2)).calculateZOffset(axisalignedbb2, d19);
+				}
+
+				axisalignedbb2 = axisalignedbb2.offset(0.0D, 0.0D, d19);
+				AxisAlignedBB axisalignedbb4 = this.getEntityBoundingBox();
+				double d20 = y;
+				int l2 = 0;
+
+				for (int i3 = list.size(); l2 < i3; ++l2) {
+					d20 = ((AxisAlignedBB) list.get(l2)).calculateYOffset(axisalignedbb4, d20);
+				}
+
+				axisalignedbb4 = axisalignedbb4.offset(0.0D, d20, 0.0D);
+				double d21 = d2;
+				int j3 = 0;
+
+				for (int k3 = list.size(); j3 < k3; ++j3) {
+					d21 = ((AxisAlignedBB) list.get(j3)).calculateXOffset(axisalignedbb4, d21);
+				}
+
+				axisalignedbb4 = axisalignedbb4.offset(d21, 0.0D, 0.0D);
+				double d22 = d4;
+				int l3 = 0;
+
+				for (int i4 = list.size(); l3 < i4; ++l3) {
+					d22 = ((AxisAlignedBB) list.get(l3)).calculateZOffset(axisalignedbb4, d22);
+				}
+
+				axisalignedbb4 = axisalignedbb4.offset(0.0D, 0.0D, d22);
+				double d23 = d18 * d18 + d19 * d19;
+				double d9 = d21 * d21 + d22 * d22;
+
+				if (d23 > d9) {
+					x = d18;
+					z = d19;
+					y = -d8;
+					this.setEntityBoundingBox(axisalignedbb2);
+				} else {
+					x = d21;
+					z = d22;
+					y = -d20;
+					this.setEntityBoundingBox(axisalignedbb4);
+				}
+
+				int j4 = 0;
+
+				for (int k4 = list.size(); j4 < k4; ++j4) {
+					y = ((AxisAlignedBB) list.get(j4)).calculateYOffset(this.getEntityBoundingBox(), y);
+				}
+
+				this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0D, y, 0.0D));
+
+				if (d14 * d14 + d7 * d7 >= x * x + z * z) {
+					x = d14;
+					y = d6;
+					z = d7;
+					this.setEntityBoundingBox(axisalignedbb1);
+				}
+			}
+
+			this.world.profiler.endSection();
+			this.world.profiler.startSection("rest");
+			this.resetPositionToBB();
+			this.isCollidedHorizontally = d2 != x || d4 != z;
+			this.isCollidedVertically = d3 != y;
+			this.onGround = this.isCollidedVertically && d3 < 0.0D;
+			this.isCollided = this.isCollidedHorizontally || this.isCollidedVertically;
+			int j6 = MathHelper.floor(this.posX);
+			int i1 = MathHelper.floor(this.posY - 0.20000000298023224D);
+			int k6 = MathHelper.floor(this.posZ);
+			BlockPos blockpos = new BlockPos(j6, i1, k6);
+			IBlockState iblockstate = this.world.getBlockState(blockpos);
+
+			if (iblockstate.getMaterial() == Material.AIR) {
+				BlockPos blockpos1 = blockpos.down();
+				IBlockState iblockstate1 = this.world.getBlockState(blockpos1);
+				Block block1 = iblockstate1.getBlock();
+
+				if (block1 instanceof BlockFence || block1 instanceof BlockWall || block1 instanceof BlockFenceGate) {
+					iblockstate = iblockstate1;
+					blockpos = blockpos1;
+				}
+			}
+
+			this.updateFallState(y, this.onGround, iblockstate, blockpos);
+
+			if (d2 != x) {
+				this.motionX = 0.0D;
+			}
+
+			if (d4 != z) {
+				this.motionZ = 0.0D;
+			}
+
+			Block block = iblockstate.getBlock();
+
+			if (d3 != y) {
+				block.onLanded(this.world, this);
+			}
+
+			if (this.canTriggerWalking() && (!this.onGround || !this.isSneaking() || !this.isRiding())) {
+				double d15 = this.posX - d10;
+				double d16 = this.posY - d11;
+				double d17 = this.posZ - d1;
+
+				if (block != Blocks.LADDER) {
+					d16 = 0.0D;
+				}
+
+				if (block != null && this.onGround) {
+					block.onEntityWalk(this.world, blockpos, this);
+				}
+
+				this.distanceWalkedModified = (float) ((double) this.distanceWalkedModified
+						+ (double) MathHelper.sqrt(d15 * d15 + d17 * d17) * 0.6D);
+				this.distanceWalkedOnStepModified = (float) ((double) this.distanceWalkedOnStepModified
+						+ (double) MathHelper.sqrt(d15 * d15 + d16 * d16 + d17 * d17) * 0.6D);
+
+				if (this.distanceWalkedOnStepModified > (float) this.nextStepDistance
+						&& iblockstate.getMaterial() != Material.AIR) {
+					this.nextStepDistance = (int) this.distanceWalkedOnStepModified + 1;
+
+					if (this.isInWater()) {
+						Entity entity = this.isBeingRidden() && this.getControllingPassenger() != null
+								? this.getControllingPassenger()
+								: this;
+						float f = entity == this ? 0.35F : 0.4F;
+						float f1 = MathHelper.sqrt(
+								entity.motionX * entity.motionX * 0.20000000298023224D + entity.motionY * entity.motionY
+										+ entity.motionZ * entity.motionZ * 0.20000000298023224D)
+								* f;
+
+						if (f1 > 1.0F) {
+							f1 = 1.0F;
+						}
+
+						this.playSound(this.getSwimSound(), f1,
+								1.0F + (this.rand.nextFloat() - this.rand.nextFloat()) * 0.4F);
+					} else {
+						this.playStepSound(blockpos, block);
+					}
+				} else if (this.distanceWalkedOnStepModified > this.nextFlap && this.makeFlySound()
+						&& iblockstate.getMaterial() == Material.AIR) {
+					this.nextFlap = this.playFlySound(this.distanceWalkedOnStepModified);
+				}
+			}
+
+			try {
+				this.doBlockCollisions();
+			} catch (Throwable throwable) {
+				CrashReport crashreport = CrashReport.makeCrashReport(throwable, "Checking entity block collision");
+				CrashReportCategory crashreportcategory = crashreport
+						.makeCategory("Entity being checked for collision");
+				this.addEntityCrashInfo(crashreportcategory);
+				throw new ReportedException(crashreport);
+			}
+
+			boolean flag1 = this.isWet();
+
+			if (this.world.isFlammableWithin(this.getEntityBoundingBox().shrink(0.001D))) {
+				this.dealFireDamage(1);
+
+				if (!flag1) {
+					++this.fire;
+
+					if (this.fire == 0) {
+						this.setFire(8);
+					}
+				}
+			} else if (this.fire <= 0) {
+				this.fire = -this.getFireImmuneTicks();
+			}
+
+			if (flag1 && this.isBurning()) {
+				this.playSound(SoundEvents.ENTITY_GENERIC_EXTINGUISH_FIRE, 0.7F,
+						1.6F + (this.rand.nextFloat() - this.rand.nextFloat()) * 0.4F);
+				this.fire = -this.getFireImmuneTicks();
+			}
+
+			this.world.profiler.endSection();
+		}
+	}
+
+	public float getInterpolatedLiftOffset() {
+		return (float) InterpolationKit.interpolateValue((double) prevLiftOffset, (double) liftOffset,
+				(double) Minecraft.getMinecraft().getRenderPartialTicks());
+	}
+
+	public void oldHC() {
+
+		float targetDown = 0.0f;
+		float targetUp = 0.0f;
+
+		double dist = 0.0f;
+		double forwardNess = 2.0;
+		Vec3d sDown = new Vec3d(-0.5, 0.0, forwardNess).rotateYaw((float) Math.toRadians(-rotationYaw))
+				.add(getPositionVector());
+		Vec3d eDown = new Vec3d(-0.5, -10, forwardNess).rotateYaw((float) Math.toRadians(-rotationYaw))
+				.add(getPositionVector());
+		RayTraceResult rayDown = world.rayTraceBlocks(sDown, eDown);
+		if (rayDown != null) {
+			dist = rayDown.hitVec.subtract(sDown).lengthVector();
+			float newPitch = (float) -Math.toDegrees(Math.atan(dist / (2.5)));
+			targetDown = newPitch;
+
+		}
+
+		Vec3d start = new Vec3d(-0.5, 0.0, 0.0).rotateYaw((float) Math.toRadians(-rotationYaw))
+				.add(getPositionVector());
+		Vec3d end = new Vec3d(-0.5, 0.0, 5.75).rotateYaw((float) Math.toRadians(-rotationYaw))
+				.rotateYaw((float) -solver.getSideSlipAngle()).add(getPositionVector());
+		RayTraceResult ray = world.rayTraceBlocks(start, end);
+
+		if (ray != null) {
+
+			IBlockState b = this.world.getBlockState(ray.getBlockPos().up());
+
+			if (b.causesSuffocation())
+				return;
+
+			Vec3d hitVec = ray.hitVec;
+			Vec3d ab = hitVec.subtract(getPositionVector());
+
+			double distance = ab.lengthSquared();
+
+			double upMag = 0.0;
+
+			if (distance > 15.5) {
+				upMag = 0.25;
+
+			} else if (distance > 1.0) {
+
+				upMag = 0.5;
+
+			} else {
+				upMag = 1.5;
+
+			}
+
+			double liftPush = 0.0;
+
+			IBlockState bL = this.world.getBlockState(ray.getBlockPos());
+			if (!bL.isFullBlock()) {
+				upMag /= 2;
+				liftPush = 0.1;
+			}
+
+			//
+			/*
+			 * Vec3d lift = new Vec3d(0.0, upMag, 0.5+liftPush).rotateYaw((float)
+			 * Math.toRadians(-rotationYaw)); this.move(MoverType.SELF, lift.x, lift.y,
+			 * lift.z);
+			 */
+
+			BlockPos bTC = ray.getBlockPos();
+			Vec3d sB = new Vec3d(bTC.getX(), bTC.getY() - 1.0, bTC.getZ());
+			Vec3d eB = new Vec3d(bTC.getX(), bTC.getY(), bTC.getZ());
+
+			RayTraceResult heightRay = this.world.rayTraceBlocks(sB, eB);
+
+			double opp = 0.0;
+			double adj = 0.0;
+
+			if (heightRay != null) {
+
+				opp = heightRay.hitVec.y - getPositionVector().y;
+				adj = heightRay.hitVec.subtract(ray.hitVec).lengthVector();
+				// double hyp = Math.sqrt(Math.pow(opp, 2) + Math.pow(opp, 2));
+
+				// System.out.println(opp + " | " + adj);
+
+			}
+
+			//System.out.println("sped" + getSpeed());
+			float t = 1.0f;
+			float mu2 = (float) ((1 - Math.cos(t * Math.PI)) / 2f);
+			Vec3d lift = new Vec3d(0.0, upMag + 0.2, 0.7 + liftPush).rotateYaw((float) Math.toRadians(-rotationYaw))
+					.scale(mu2);
+			this.move(MoverType.SELF, lift.x, lift.y, lift.z);
+
+			// test block behind & up
+			/*
+			 * Vec3d blockV = new Vec3d(ray.getBlockPos().getX(), ray.getBlockPos().getY(),
+			 * ray.getBlockPos().getZ()); Vec3d abV =
+			 * blockV.subtract(getPositionVector()).scale(2.5).add(getPositionVector());
+			 * BlockPos pos = new BlockPos(abV.x, abV.y, abV.z);
+			 * 
+			 * if(this.world.getBlockState(pos.up()).causesSuffocation()) {
+			 * 
+			 * upMag += 0.5; }
+			 */
+
+			float newPitch = (float) Math.toDegrees(Math.atan(upMag / (2.5)));
+			targetUp = newPitch;
+
+			/*
+			 * double diff = Math.abs(Math.abs(rotationPitch)-Math.abs(newPitch)); //
+			 * System.out.println("diff: " + diff); if(diff > 6) { rotationPitch += (float)
+			 * diff/(diff/2.5f); } else { rotationPitch = newPitch; }
+			 */
+
+			// System.out.println(rotationPitch);
+
+		} else {
+			// rotationPitch = 0;
+		}
+
+		/*
+		 * PITCH SMOOTHING
+		 */
+
+		float adjT = 0.0f;
+		if (targetDown == 0.0) {
+			adjT = targetUp;
+		} else if (targetUp == 0.0) {
+			adjT = targetDown;
+		} else {
+			adjT = (targetDown + targetUp) / 2.0f;
+		}
+
+		// calculate difference from current pitch
+
+		if (dist > 0.5) {
+			if (adjT < rotationPitch) {
+				rotationPitch -= Math.abs(adjT) * 0.05;
+			} else {
+				rotationPitch += Math.abs(adjT) * 0.3;
+			}
+		} else {
+
+			if (adjT == 0.0) {
+				adjT = -rotationPitch;
+			}
+
+			if (adjT < rotationPitch) {
+				rotationPitch -= Math.abs(adjT) * 0.5;
+			} else {
+				rotationPitch += Math.abs(adjT) * 0.3;
+			}
+
+		}
+
+		/*
+		 * double diff = Math.abs(Math.abs(rotationPitch)-Math.abs(adjT));
+		 * 
+		 * if(diff > 10) { rotationPitch = adjT/1.75f; } else if(diff > 6) {
+		 * rotationPitch = adjT/1.25f; } else if(diff > 3) { rotationPitch = adjT/1.1f;
+		 * } else { rotationPitch += adjT; }
+		 */
+
+		// System.out.println("CurrentPitch: " + rotationPitch + " | " + adjT);
+		/*
+		 * double diff = Math.abs(Math.abs(rotationPitch)-Math.abs(adjT));
+		 * 
+		 * if(diff > 10) { rotationPitch = adjT/1.75f; } else if(diff > 6) {
+		 * rotationPitch = adjT/1.25f; } else if(diff > 3) { rotationPitch = adjT/1.1f;
+		 * } else { rotationPitch += adjT; }
+		 */
+
+		/*
+		 * World world = this.world; RayTraceResult ray = world.rayTraceBlocks(start,
+		 * end); if(ray != null) { this.move(MoverType.SELF, 0.0, 0.6, 0.0);
+		 * 
+		 * }
+		 */
+
+		/*
+		 * Vec3d rearTestingPoint = new Vec3d(-0.5, 0.5, -2.75).rotateYaw((float)
+		 * Math.toRadians(-rotationYaw)).add(getPositionVector()); Vec3d
+		 * frontTestingPoint = new Vec3d(-0.5, 0.5, 4.75).rotateYaw((float)
+		 * Math.toRadians(-rotationYaw)).add(getPositionVector());
+		 * 
+		 * 
+		 * RayTraceResult rRay = world.rayTraceBlocks(rearTestingPoint,
+		 * rearTestingPoint.subtract(0.0, 2.0, 0.0)); RayTraceResult fRay =
+		 * world.rayTraceBlocks(frontTestingPoint, frontTestingPoint.subtract(0.0, 4.0,
+		 * 0.0));
+		 * 
+		 * 
+		 * if(rRay != null && fRay != null) {
+		 * 
+		 * float heightDiff = (float) (fRay.hitVec.y - rRay.hitVec.y);
+		 * 
+		 * if(heightDiff == 0) { heightDiff = fRay.getBlockPos().getY() -
+		 * rRay.getBlockPos().getY(); }
+		 * 
+		 * 
+		 * 
+		 * float angle = (float) Math.atan(heightDiff/(3.5)); rotationPitch = (float)
+		 * Math.toDegrees(angle); //System.out.println(rotationPitch);
+		 * 
+		 * 
+		 * }
+		 */
+
+		// rotationPitch = 0;
+
+	}
+	
+	@Override
+	public void applyEntityCollision(Entity entityIn) {
+		
+		Vec3d speed = getSolver().velocity.scale(0.5);
+		
+		entityIn.addVelocity(speed.x, speed.y+1.0, speed.z);
+		entityIn.attackEntityFrom(DamageSource.ANVIL, (float) speed.lengthSquared());
+
+		
+		super.applyEntityCollision(entityIn);
+	}
+
+	@Override
+	public boolean shouldRenderInPass(int pass) {
+		// System.out.println("AC360 " + super.shouldRenderInPass(pass) + " " + pass);
+		return true;
+	}
+
+	public void handleHillClimbing() {
+
+	//	if(1+1==2) return;		
+		/*
+		 * if(liftOffset == 0 && ticksExisted % 3 == 0) { prevLiftOffset = liftOffset; }
+		 * else { prevLiftOffset = liftOffset; }
+		 * 
+		 * if(prevLiftOffset == liftOffset) liftOffset = 0;
+		 */
+
+		
+		if(this.world.getBlockState(getPosition().up()).getMaterial().isLiquid()) {
+			vehicleIsRunning = false;
+			CustomGui.vehicleGUIOverlay.keyAnimator.removeKey();
+		}
+		
+		double wheelbase = 2.85;
+
+		// IF WE ARE BRAKING, WE DO NOT
+		// HAVE ANY INTENT TO GO UP A HILL.
+
+		/*
+		 * ROLL HANDLER
+		 */
+
+		double sideScan = 1.0;
+		Vec3d rollSA = new Vec3d(sideScan, 2.0, 0.0).rotateYaw((float) Math.toRadians(-rotationYaw))
+				.add(getPositionVector());
+		Vec3d rollEA = new Vec3d(sideScan, -10, 0.0).rotateYaw((float) Math.toRadians(-rotationYaw))
+				.add(getPositionVector());
+		RayTraceResult rollRA = world.rayTraceBlocks(rollSA, rollEA, false, true, false);
+
+		Vec3d rollSB = new Vec3d(-sideScan, 2.0, 0.0).rotateYaw((float) Math.toRadians(-rotationYaw))
+				.add(getPositionVector());
+		Vec3d rollEB = new Vec3d(-sideScan, -10, 0.0).rotateYaw((float) Math.toRadians(-rotationYaw))
+				.add(getPositionVector());
+		RayTraceResult rollRB = world.rayTraceBlocks(rollSB, rollEB, false, true, false);
+
+		double rollHA = 0.0;
+		double rollHB = 0.0;
+
+		if (rollRA == null) {
+			rollHA = 5;
+		} else
+			rollHA = rollRA.hitVec.subtract(rollSA).lengthVector();
+		if (rollRB == null) {
+			rollHB = 5;
+		} else
+			rollHB = rollRB.hitVec.subtract(rollSB).lengthVector();
+
+		double sideWidth = 1.847;
+
+		double ang = Math.asin((rollHB - rollHA) / sideWidth);
+		double rollTarget = (float) Math.toDegrees(-ang);
+
+		if (Double.isNaN(rollTarget))
+			rollTarget = 0.0;
+
+		double rollDist = Math.abs(rotationRollH) - Math.abs(rollTarget);
+
+		// System.out.println("Roll target: " + rollTarget + " | " + rotationRollH);
+
+		// System.out.println("bruh: " +
+		// getConfiguration().getSeatAtIndex(0).seatPosition);
+
+		if (rollDist > 0.5) {
+
+			if (rollTarget == 0.0 || rollTarget < 0) {
+				// rollTarget = -rotationRollH;
+
+			}
+
+			/*
+			 * if(Math.abs(rollTarget-rotationRollH) < 2) {
+			 * 
+			 * } else
+			 */ if (rollTarget < rotationRollH) {
+				// System.out.println("BRUH: " + rotationRollH + " | " + rollDist) ;
+				rotationRollH -= Math.abs(rollDist) * 0.68;
+
+			} else {
+
+				// System.out.println("DECRERASING " + (rollTarget+rotationRollH));
+				double bruh = rotationRollH + rollTarget;
+
+				rotationRollH += Math.abs(rollTarget + rotationRollH) * 0.9;
+			}
+		} else {
+
+			if (rollTarget == 0.0) {
+
+				rollTarget = -rotationRollH;
+			}
+			// System.out.println(rollTarget + " | " + rotationRollH);
+
+			/*
+			 * if(Math.abs(rollTarget)- Math.abs(rotationRollH) < 0.01) {
+			 * 
+			 * }else
+			 */ if (rollTarget < rotationRollH) {
+				// System.out.println("main");
+
+				rotationRollH -= Math.abs(rollTarget) * 0.03;
+			} else {
+
+				// System.out.println("Adjustment: " + bruh + " | " + rollTarget);
+				rotationRollH += Math.abs(rollTarget) * 0.08;
+			}
+		}
+		
+		
+
+		// rotationRoll = -35f;
+		// rotationRoll = (float) ((ticksExisted/75.0)*45f);
+		// rotationRoll = (float) (new InterpolationKit()).interpolateValue(-35, 35,
+		// ticksExisted/200.0);
+		// rotationRollH = 0;
+		// rotationRoll = (float) ((ticksExisted/200.0)*35);
+		// rotationRoll = (float) rollTarget;
+
+		/*
+		 * END ROLL HANDLER
+		 */
+
+		float targetDown = 0.0f;
+		float targetUp = 0.0f;
+
+		/*
+		 * DOWNWARDS HILL HANDLING
+		 */
+
+		/*
+		 * double dist = 0.0f; double forwardNess = 2.0; Vec3d sDown = new Vec3d(-0.5,
+		 * 0.0, forwardNess).rotateYaw((float)
+		 * Math.toRadians(-rotationYaw)).add(getPositionVector()); Vec3d eDown = new
+		 * Vec3d(-0.5, -10, forwardNess).rotateYaw((float)
+		 * Math.toRadians(-rotationYaw)).add(getPositionVector()); RayTraceResult
+		 * rayDown = world.rayTraceBlocks(sDown, eDown, false, true, false); if(rayDown
+		 * != null) { dist = rayDown.hitVec.subtract(sDown).lengthVector(); float
+		 * newPitch = (float) -Math.toDegrees(Math.atan(dist/(2.5))); targetDown =
+		 * newPitch; }
+		 */
+
+		// roll
+
+		double dist = 0.0f;
+		double forwardNess = 2.0;
+		Vec3d sDown = new Vec3d(-0.5, 0.0, forwardNess).rotateYaw((float) Math.toRadians(-rotationYaw))
+				.add(getPositionVector());
+		Vec3d eDown = new Vec3d(-0.5, -10, forwardNess).rotateYaw((float) Math.toRadians(-rotationYaw))
+				.add(getPositionVector());
+
+		RayTraceResult rayDown = world.rayTraceBlocks(sDown, eDown, false, true, false);
+
+		Vec3d sDown2 = new Vec3d(-0.5, 0.0, -forwardNess + 0.5).rotateYaw((float) Math.toRadians(-rotationYaw))
+				.add(getPositionVector());
+		Vec3d eDown2 = new Vec3d(-0.5, -10, -forwardNess + 0.5).rotateYaw((float) Math.toRadians(-rotationYaw))
+				.add(getPositionVector());
+		RayTraceResult rayDown2 = world.rayTraceBlocks(sDown2, eDown2, false, true, false);
+		
+		
+		double hF = 0.0;
+		double hB = 0.0;
+		
+		
+		if(rayDown2 == null) {
+		//	System.out.println("In Freefall");
+			rotationPitch *= 1.2;
+			rotationRoll *= 1.2;
+		} else {
+			hB = rayDown2.hitVec.subtract(sDown2).lengthVector();
+		}
+		
+		if(rayDown != null) {
+			hF = rayDown.hitVec.subtract(sDown).lengthVector();
+		}
+		
+	
+	
+
+		// System.out.println("front vector: " + hF);
+
+		double hillAngle = Math.toDegrees(Math.asin((hF - hB) / wheelbase));
+		if (hillAngle != 0.0)
+			// System.out.println("Hill Angle: " + hillAngle);
+
+			/*
+			 * if(hF-hB != 0.0) { System.out.println("FE: " + hF + " | RE: " + hB +
+			 * " | DIFF: " + (hF-hB)); }
+			 */
+
+			if (rayDown != null && (hF - hB) >= 0) {
+				dist = rayDown.hitVec.subtract(sDown).lengthVector();
+
+				getSolver().velocity = getSolver().getVelocityVector().scale(1.005);
+				float newPitch = (float) -Math.toDegrees(Math.atan(dist / (wheelbase)));
+				targetDown = newPitch;
+			}
+
+		double SSAng = Math.abs(Math.toDegrees(getSolver().getSideSlipAngle()));
+		double mult = 1.0 - (0.3 * Math.min(SSAng / 30.0, 1.0));
+
+		if (rotationPitch < 3)
+			mult *= 0.5;
+
+		// NOMINAL REACH: 8.75, MODIFIED FOR SMOOTHNESS TO 10.75
+		
+		// new was 5.75
+		double baseReach = 14.75 * (Math.min(getRealSpeed() / 25.0, 1.0)) * mult;
+		// System.out.println(baseReach);
+
+		if (!onGround || rotationPitch > 5) {
+			baseReach += 3;
+		}
+
+		boolean flagOne = false;
+		if (isBraking || getSolver().getVelocityVector().lengthVector() < 0.3
+				|| (throttle == 0 && getSolver().getVelocityVector().lengthVector() < 25)) {
+			flagOne = true;
+		}
+		//System.out.println(flagOne);
+
+		
+		
+		Vec3d start = new Vec3d(-0.5, 0.1, 0.0).rotateYaw((float) Math.toRadians(-rotationYaw))
+				.add(getPositionVector());
+		Vec3d end = new Vec3d(-0.5, 0.1, baseReach).rotateYaw((float) Math.toRadians(-rotationYaw))
+				.rotateYaw((float) -solver.getSideSlipAngle()).add(getPositionVector());
+		RayTraceResult ray = world.rayTraceBlocks(start, end, false, true, false);
+		if (ray != null && !flagOne) {
+
+			
+			/*
+			 * CHECK IF VEHICLE IS ABOVE RAY
+			 */
+			// System.out.println( + " | " + posY);
+
+			IBlockState below = this.world.getBlockState(getPosition().down());
+			IBlockState bOfCar = this.world.getBlockState(getPosition());
+
+			IBlockState b = this.world.getBlockState(ray.getBlockPos().up());
+			
+			
+			double upMag = 0.0;
+			
+			/*
+			if (b.getBlock() instanceof BlockSnow) {
+
+				if (b.getValue(BlockSnow.LAYERS).intValue() > 2)
+					return;
+				upMag += 0.5;
+			} else*/ if (/*b.causesSuffocation() ||*/ b.getBlock() instanceof BlockPane || b.getBlock() instanceof BlockSlab || b.getBlock() instanceof BlockGlass)
+				return;
+			Vec3d hitVec = ray.hitVec;
+			Vec3d ab = hitVec.subtract(getPositionVector());
+			double distance = ab.lengthSquared();
+
+			if (distance > 15.5) {
+				upMag = 0.25;
+			} else if (distance > 1.0) {
+				upMag = 0.5;
+			} else {
+				upMag = 1.5;
+
+			}
+			double liftPush = 0.0;
+			IBlockState bL = this.world.getBlockState(ray.getBlockPos());
+			//System.out.println(bL.getBlock());
+			
+			if(bL.getBlock() instanceof BlockFence || bL.getBlock() instanceof BlockWall) {
+				return;
+			}
+				
+			boolean snowFlag = false;
+			int layers = 0;
+			if(bL.getBlock() instanceof BlockSnow) {
+				snowFlag = true;
+				
+				layers = bL.getValue(BlockSnow.LAYERS).intValue();
+			}
+
+			// if((below instanceof BlockCarpet || bOfCar.getBlock() instanceof BlockCarpet)
+			// && bL.getBlock() instanceof BlockCarpet) return;
+
+			// System.out.println("HIT: " + bL.getBlock().getLocalizedName());
+
+			AxisAlignedBB ablf = bL.getCollisionBoundingBox(world, ray.getBlockPos());
+			double blockHeight = (ablf.maxY - ablf.minY);
+			
+			
+		
+			/*
+			 * if(!bL.isFullBlock()) { upMag = blockHeight+0.01; liftPush =
+			 * Math.sqrt((blockHeight*blockHeight));
+			 * 
+			 * 
+			 * 
+			 * }
+			 */
+
+			/*
+			if (bL.getBlock() instanceof BlockSnow || bL.getBlock() instanceof BlockSnowBlock) {
+				upMag += 0.45;
+			}*/
+
+			BlockPos bTC = ray.getBlockPos();
+			Vec3d sB = new Vec3d(bTC.getX(), bTC.getY() - 1.0, bTC.getZ());
+			Vec3d eB = new Vec3d(bTC.getX(), bTC.getY(), bTC.getZ());
+
+			RayTraceResult heightRay = this.world.rayTraceBlocks(sB, eB, false, true, false);
+
+			double opp = 0.0;
+			double adj = 0.0;
+
+			if (heightRay != null) {
+				opp = heightRay.hitVec.y - getPositionVector().y;
+				adj = heightRay.hitVec.subtract(ray.hitVec).lengthVector();
+			}
+			float t = 1.0f;
+			float mu2 = (float) ((1 - Math.cos(t * Math.PI)) / 2f);
+
+			Vec3d lift = new Vec3d(0.0, upMag + 0.55, 0.05 + liftPush).rotateYaw((float) Math.toRadians(-rotationYaw))
+					.scale(mu2);
+
+			// getSolver().velocity = getSolver().getVelocityVector().addVector(0.0,
+			// lift.y/100, 0.0);
+			getSolver().velocity = getSolver().getVelocityVector().scale(0.95);
+
+			// System.out.println("lifting");
+			// DEBUG //
+
+			// liftOffset += (float) lift.y/2;
+
+			double targetTopHeight = ray.getBlockPos().getY() + 1.0;
+			if(snowFlag) {
+				if(layers == 0) {
+					targetTopHeight = ray.getBlockPos().getY()+0.3;
+				} else {
+					targetTopHeight = ray.getBlockPos().getY() + 0.7;
+				}
+				
+			}
+			double heightDifference = (lift.y + getPositionVector().y) - targetTopHeight;
+			if (heightDifference > 0) {
+				double correction = lift.y - heightDifference;
+
+				lift = new Vec3d(lift.x, correction, lift.z);
+				// double hd2 = (correction + getPositionVector().y)-targetTopHeight;
+				// System.out.println("Height Difference: " + heightDifference + " | Corrected
+				// Difference: " + hd2);
+
+			}
+
+			float newPitch = (float) Math.toDegrees(Math.atan(upMag / (wheelbase)));
+			
+			
+			if(rotationPitch < 55f) {
+				this.move(MoverType.SELF, lift.x, lift.y, lift.z);
+				
+				// DEBUG //
+				newPitch += -hillAngle;
+				//newPitch /= 2;
+
+				// snow
+				if(snowFlag) newPitch *= 0.2;
+				
+			
+				targetUp = newPitch;
+			}
+			
+			
+			
+			
+		
+
+		}
+
+		/*
+		 * Calculates the pitch target by blending the up & down targets
+		 */
+
+		float adjT = 0.0f;
+		if (targetDown == 0.0) {
+			adjT = targetUp;
+		} else if (targetUp == 0.0) {
+			adjT = targetDown;
+		} else {
+			adjT = (targetDown + targetUp) / 2.0f;
+		}
+
+		// DEBUG //
+		// adjT = (float) -hillAngle;
+
+		/*
+		 * This code actually applies pitch, it ensures the "momentum" of the rotation
+		 * is actually kept.
+		 */
+
+		if (dist > 0.5) {
+
+			// DOWN PITCHING //
+
+			if (Math.abs(adjT - rotationPitch) < 0.55) {
+
+			} else if (adjT < rotationPitch) {
+
+				rotationPitch -= Math.abs(adjT) * 0.05;
+			} else {
+
+				rotationPitch += Math.abs(adjT) * 0.5;
+			}
+		} else {
+
+			// UP PITCHING //
+
+			if (adjT == 0.0) {
+				adjT = -rotationPitch;
+			}
+			if (adjT < rotationPitch) {
+				// System.out.println("force adj.");
+				rotationPitch -= Math.abs(adjT) * 0.3;
+			} else {
+				rotationPitch += Math.abs(adjT) * 0.1;
+			}
+
+		}
+
+		/*
+		 * if(this.rotationPitch < 0) { Vec3d pitching =
+		 * getSolver().getOreintationVector().scale(-1); this.move(MoverType.SELF,
+		 * pitching.x, pitching.y, pitching.z); }
+		 */
+
+		doBlockCollisions();
+
+	}
+
+	public RayTraceResult castFromEntity(Vec3d direction) {
+		Vec3d start = getPositionVector();
+		Vec3d end = direction.normalize().add(start);
+		return world.rayTraceBlocks(start, end, false, true, false);
+	}
+
+	public void stabilizeRotation() {
+		double mag = 2.5;
+
+		double boost = 0.25;
+		
+		
+		if(getRealSpeed()*3.6 > 30) {
+			boost = 0.35;
+		}
+		RayTraceResult r1 = castFromEntity(new Vec3d(1 * mag, 0, 1 * mag));
+		RayTraceResult r2 = castFromEntity(new Vec3d(-1 * mag, 0, -1 * mag));
+		RayTraceResult r3 = castFromEntity(new Vec3d(-1 * mag, 0, 1 * mag));
+		RayTraceResult r4 = castFromEntity(new Vec3d(1 * mag, 0, -1 * mag));
+		RayTraceResult r5 = null;
+
+		if (rotationPitch > 5) {
+
+			// r5 = castFromEntity(new Vec3d(0, -1*mag, 0));
+
+		}
+
+		if (r1 != null || r2 != null || r3 != null || r4 != null || r5 != null) {
+
+			
+			getSolver().frontAxel.applyBrakingForce(1.0);
+			getSolver().rearAxel.applyBrakingForce(1.0);
+			
+			if (r1 != null) {
+
+				if (getBlockAt(r1.getBlockPos()) instanceof BlockCarpet)
+					return;
+				move(MoverType.SELF, -1 * boost, 0.0, -1 * boost);
+			}
+
+			if (r2 != null) {
+				if (getBlockAt(r2.getBlockPos()) instanceof BlockCarpet)
+					return;
+				move(MoverType.SELF, 1 * boost, 0.0, 1 * boost);
+			}
+
+			if (r3 != null) {
+				if (getBlockAt(r3.getBlockPos()) instanceof BlockCarpet)
+					return;
+				move(MoverType.SELF, 1 * boost, 0.0, -1.0 * boost);
+			}
+
+			if (r4 != null) {
+				if (getBlockAt(r4.getBlockPos()) instanceof BlockCarpet)
+					return;
+				move(MoverType.SELF, -1 * boost, 0.0, 1.0 * boost);
+			}
+
+			if (r5 != null) {
+				if (getBlockAt(r5.getBlockPos()) instanceof BlockCarpet)
+					return;
+				move(MoverType.SELF, 0, 1 * boost, 0);
+			}
+		}
+
+		/*
+		 * if(1+1==2) return; Quat4d bruh = QuatUtil.rotate(Math.toRadians(rotationYaw),
+		 * Math.toRadians(rotationPitch), Math.toRadians(rotationRoll));
+		 * bruh.normalize(); Vec3d v = QuatUtil.set(bruh, 0.0, 0.0, 0.0);
+		 * 
+		 * rotationYaw = (float) Math.toDegrees(v.x); rotationPitch =
+		 * (float)Math.toDegrees(v.y); rotationRoll = (float) Math.toDegrees(v.z);
+		 */
+
+	}
+
+	public Block getBlockAt(BlockPos pos) {
+		return this.world.getBlockState(pos).getBlock();
+	}
+
+	public Vec3d[] calculateTerrainPlane() {
+		Vec3d one = getWheelPlanePoint(new Vec3d(-1.7, 0.0, 1.75));
+		Vec3d two = getWheelPlanePoint(new Vec3d(0.5, 0.0, 1.75));
+		Vec3d three = getWheelPlanePoint(new Vec3d(-1.7, 0.0, -1.75));
+		Vec3d four = getWheelPlanePoint(new Vec3d(0.5, 0.0, -1.75));
+		return new Vec3d[] { one, two, three, four };
+	}
+
+	public Vec3d getWheelPlanePoint(Vec3d wheelPos) {
+		Vec3d realPos = wheelPos.rotateYaw((float) Math.toRadians(-rotationYaw)).add(getPositionVector());
+		Vec3d endVec = realPos.subtract(0.0, 2.5, 0.0);
+
+		RayTraceResult result = this.world.rayTraceBlocks(realPos, endVec, false, true, false);
+		if (result != null) {
+			return result.hitVec.subtract(getPositionVector());
+		}
+		return null;
+	}
+
+	/*
+	 * PARTICLES
+	 */
+	@SideOnly(Side.CLIENT)
+	public void handleDriveParticles() {
+		
+		boolean b = world.getBlockState(getPosition()).getMaterial().isLiquid();
+		
+		
+		if(!this.world.getBlockState(getPosition().up()).getMaterial().isLiquid() && b) {
+			for (int x = 0; x < 60; ++x) {
+				Vec3d pos = getPositionVector();
+				
+				this.world.spawnParticle(EnumParticleTypes.WATER_BUBBLE, pos.x + rand.nextGaussian(), pos.y + 1.0+ rand.nextGaussian()/2, pos.z + rand.nextGaussian(),
+						0, 0.3, 0.0,
+						Block.getStateId(world.getBlockState(this.getPosition())));
+				
+				this.world.spawnParticle(EnumParticleTypes.BLOCK_DUST, pos.x + rand.nextGaussian(), pos.y + 1.0+ rand.nextGaussian()/2, pos.z + rand.nextGaussian(),
+						0, 0.3, 0.0,
+						Block.getStateId(world.getBlockState(this.getPosition())));
+			}
+		}
+		
+		
+
+		if (isVehicleRunning()) {
+			doExhaustParticles(true, new Vec3d(0.25, 0.5, -3.25), 0.5);
+			doExhaustParticles(true, new Vec3d(-1.45, 0.5, -3.25), 0.5);
+
+		}
+
+		for (WheelSolver w : getSolver().wheels) {
+			doWheelParticles(w);
+		}
+
+	}
+
+	double prevDist = 0.0;
+	double dist = 0.0;
+
+	public double getRealSpeed() {
+		
+		
+		return this.dist * 20.0;
+	}
+
+	@SideOnly(Side.CLIENT)
+	public void doExhaustParticles(boolean spitFire, Vec3d exhaustPosition, double exhaustWidth) {
+		// exhaust particles
+
+		Vec3d posExhaust = exhaustPosition.rotatePitch((float) Math.toRadians(rotationPitch))
+				.rotateYaw((float) Math.toRadians(-rotationYaw)).add(getPositionVector());
+		Vec3d partDirExhaust = new Vec3d(0.0, 0.3, -1).rotateYaw((float) Math.toRadians(-rotationYaw))
+				.rotatePitch((float) Math.toRadians(rotationPitch)).scale(0.1);
+
+		for (int x = 0; x < 2 + (solver.synthAccelFor / 2); ++x) {
+			Minecraft.getMinecraft().effectRenderer.addEffect(new ExhaustParticle(this.world, posExhaust.x,
+					posExhaust.y, posExhaust.z, partDirExhaust.x, partDirExhaust.y, partDirExhaust.z, 2));
+
+		}
+
+		int max = 1000;
+		int min = 0;
+
+		int mult = 20;
+		Vec3d partDirExhaust2 = new Vec3d(0.0, 0.3, -1).rotateYaw((float) Math.toRadians(-rotationYaw))
+				.rotatePitch((float) Math.toRadians(rotationPitch)).scale(2.0);
+		int ran = (int) Math.floor(Math.random() * (max - min + 1) + min);
+		if (ran < 1) {
+
+			PositionedSound ps = new PositionedSoundRecord(getConfiguration().getBackfireSound().getSound(),
+					SoundCategory.MASTER, 1.5f, 1.0f, (float) posX, (float) posY, (float) posZ);
+			Minecraft.getMinecraft().getSoundHandler().playSound(ps);
+
+			for (int x = 0; x < 20 + (solver.synthAccelFor); ++x) {
+				// Vec3d pE =
+				// posExhaust.subtract(getPositionVector()).scale(1.0f+(Math.random()*0.5)).add(getPositionVector());
+				Vec3d pE = posExhaust;
+				Minecraft.getMinecraft().effectRenderer.addEffect(new VehicleExhaustFlameParticle(this.world, pE.x,
+						pE.y, pE.z, partDirExhaust2.x * mult, 0, partDirExhaust2.z * mult));
+
+				// this.world.spawnParticle(EnumParticleTypes.FLAME, posExhaust.x, posExhaust.y,
+				// posExhaust.z, partDirExhaust.x, partDirExhaust.y, partDirExhaust.z,
+				// Block.getStateId(world.getBlockState(this.getPosition().down())));
+
+			}
+		}
+
+		// PAPAPPAPA
+	}
+
+	@SideOnly(Side.CLIENT)
+	public void doWheelParticles(WheelSolver wSolve) {
+
+		Vec3d wheelPosition = wSolve.relativePosition;
+		boolean isDriveWheel = wSolve.isDriveWheel();
+		float wheelAngle = (float) wSolve.wheelAngle;
+
+		Vec3d realPos = wheelPosition.rotateYaw((float) Math.toRadians(-rotationYaw)).add(getPositionVector());
+		Vec3d direction = new Vec3d(0.0, 0.3, -1.0).rotateYaw(-wheelAngle)
+				.rotateYaw((float) Math.toRadians(-rotationYaw)).scale(0.1);
+		double variation = 5;
+
+		double reducer = 1;
+		if (!isDriveWheel) {
+			reducer = 2;
+		}
+		
+		int amount = (int) Math.min((wSolve.wheelAngularVelocity*wSolve.getRadius())/8, 8);
+		//System.out.println(amount);
+
+		for (int x = 0; x < amount; ++x) {
+			this.world.spawnParticle(EnumParticleTypes.BLOCK_DUST, realPos.x + rand.nextGaussian() / (variation * 12),
+					realPos.y + rand.nextGaussian() / variation, realPos.z + rand.nextGaussian() / variation,
+					direction.x, direction.y + 0.1, direction.z,
+					Block.getStateId(world.getBlockState(this.getPosition().down())));
+		}
+		
+		
+		if(wSolve.isDriveWheel()) {
+            if(Math.abs(Math.toDegrees(getSolver().getSideSlipAngle())) > 3) {
+            	Minecraft.getMinecraft().effectRenderer.addEffect(new TireTracks(Minecraft.getMinecraft().getTextureManager(),
+        				this.world, realPos.x, realPos.y+0.001, realPos.z, -rotationYaw+Math.toDegrees(getSolver().getSideSlipAngle())));
+
+            }
         }
-        return randomizer;
-    }
-    
-    
-//    @Override
-    public void move(MoverType type, double x, double y, double z)
-    {
-//        System.out.println("Rendering pitch pre move " + rotationPitch);
-        if (this.noClip)
-        {
-            this.setEntityBoundingBox(this.getEntityBoundingBox().offset(x, y, z));
-            this.resetPositionToBB();
-        }
-        else
-        {
-            this.world.profiler.startSection("move");
-            
-//            System.out.println("Yaw: " + this.rotationYaw);
-
-            double requestedXOffset = x;
-            double requestedYOffset = y;
-            double requestedZOffset = z;
-
-            List<AxisAlignedBB> expandedCollisionBoxes = this.world.getCollisionBoxes(this, this.getEntityBoundingBox().expand(x, y, z));
-            AxisAlignedBB preMoveEntityBoundingBox = this.getEntityBoundingBox();
-
-            if (y != 0.0D)
-            {
-//                int k = 0;
-                
-                for(AxisAlignedBB expandedCollisionBox: expandedCollisionBoxes) {
-                    y = expandedCollisionBox.calculateYOffset(this.getEntityBoundingBox(), y);
-                }
-
-//                for (int l = expandedCollisionBoxes.size(); k < l; ++k)
-//                {
-//                    y = ((AxisAlignedBB)expandedCollisionBoxes.get(k)).calculateYOffset(this.getEntityBoundingBox(), y);
-//                }
-                
-//                System.out.println("Adjusted pre-step y: " + y + ", requested: " + requestedYOffset);
-
-                this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0D, y, 0.0D));
-            }
-
-            if (x != 0.0D)
-            {
-//                int j5 = 0;
-
-                for(AxisAlignedBB expandedCollisionBox: expandedCollisionBoxes) {
-                    x = expandedCollisionBox.calculateXOffset(this.getEntityBoundingBox(), x);
-                }
-                
-//                for (int l5 = expandedCollisionBoxes.size(); j5 < l5; ++j5)
-//                {
-//                    x = ((AxisAlignedBB)expandedCollisionBoxes.get(j5)).calculateXOffset(this.getEntityBoundingBox(), x);
-//                }
-
-                if (x != 0.0D)
-                {
-                    this.setEntityBoundingBox(this.getEntityBoundingBox().offset(x, 0.0D, 0.0D));
-                }
-            }
-
-            if (z != 0.0D)
-            {
-//                int k5 = 0;
-                
-                for(AxisAlignedBB expandedCollisionBox: expandedCollisionBoxes) {
-                    z = expandedCollisionBox.calculateZOffset(this.getEntityBoundingBox(), z);
-                }
-
-//                for (int i6 = expandedCollisionBoxes.size(); k5 < i6; ++k5)
-//                {
-//                    z = ((AxisAlignedBB)expandedCollisionBoxes.get(k5)).calculateZOffset(this.getEntityBoundingBox(), z);
-//                }
-
-                if (z != 0.0D)
-                {
-                    this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0D, 0.0D, z));
-                }
-            }
-            
-//            double debugX = requestedXOffset - x;
-//            double debugY = requestedYOffset - y;
-//            double debugZ = requestedZOffset - z;
-//            System.out.println("Adjusted deltas: " + debugX + ", " + debugY + ", " + debugZ);
-//            System.out.println("Requested Y offset: " + requestedYOffset);
-            /*
-             * At this point this entity bounding box has been adjusted to a "projected" shape based on collisions.
-             */
-
-            boolean flag = this.onGround || requestedYOffset != y && requestedYOffset < 0.0D;
-
-            this.stepHeight = 1f;
-            if (this.isSteeredForward() && this.stepHeight > 0.0F && (flag || true)  && (requestedXOffset != x || requestedZOffset != z))
-            {
-                double originalX = x;
-                double originalY = y;
-                double originalZ = z;
-                AxisAlignedBB preStepEntityBoundingBox = this.getEntityBoundingBox();
-                
-                this.setEntityBoundingBox(preMoveEntityBoundingBox);
-//                System.out.println("Pre-move box: " + this.getEntityBoundingBox());
-                y = (double)this.stepHeight;
-                
-                AxisAlignedBB upExpandedBoundingBox = this.getEntityBoundingBox().expand(requestedXOffset, y, requestedZOffset);
-//                System.out.println("Pre-move expanded box: " + upExpandedBoundingBox);                
-              
-                List<AxisAlignedBB> stepExpandedCollisionBoxes = this.world.getCollisionBoxes(this, upExpandedBoundingBox);
-                
-                AxisAlignedBB downOnlyExpandedBoundingBox = this.getEntityBoundingBox().expand(0, -this.stepHeight, 0);
-                List<AxisAlignedBB> downOnlyExpandedCollisionBoxes = this.world.getCollisionBoxes(this, downOnlyExpandedBoundingBox);
-
-                /*
-                 * Compare step expanded collision boxes and XZ-expanded original bounding box.
-                 * 
-                 * If collisions were created as a result of the projected move,
-                 * it's likely calculateOffset methods will have to compare the projected move
-                 * and offsets in the respective directions.
-                 * 
-                 * For example, if the projected XZ-move results in collisions,
-                 * calculateYOffset will likely return a minimum y-offset to jump a step (potentially smaller than step height).
-                 * This is required not to overshoot the step: if the entity y-position, say, is already 1/2 block up,
-                 * calculateYOffset will be at the top of the block instead of top + 1/2.
-                 * 
-                 */
-                AxisAlignedBB axisalignedbb2 = this.getEntityBoundingBox();
-                
-                AxisAlignedBB requestedXZExpandedBoundingBox = axisalignedbb2.expand(requestedXOffset, 0.0D, requestedZOffset);
-
-                double anotherYOffset = y;
-                int j1 = 0;
-
-                for (int k1 = stepExpandedCollisionBoxes.size(); j1 < k1; ++j1)
-                {
-                    anotherYOffset = ((AxisAlignedBB)stepExpandedCollisionBoxes.get(j1)).calculateYOffset(requestedXZExpandedBoundingBox, anotherYOffset);
-                }
-                
-//                System.out.println("Alt y offset: " + anotherYOffset);
-
-                axisalignedbb2 = axisalignedbb2.offset(0.0D, anotherYOffset, 0.0D);
-                
-                double yDownOverlap = 0;
-                for(AxisAlignedBB downOnlyExpandedCollisionBox: downOnlyExpandedCollisionBoxes) {
-                    double newYOverlap = calculateYOverlap(downOnlyExpandedCollisionBox, downOnlyExpandedBoundingBox);
-                    if(Math.abs(newYOverlap) > yDownOverlap) {
-                        yDownOverlap = Math.abs(newYOverlap);
-                    }
-                }
-                
-                double yGap = yDownOverlap - this.stepHeight + 0.13;
-                System.out.println("Y gap: " + yGap);
-                
-                double anotherXOffset = requestedXOffset;
-                int l1 = 0;
-
-                for (int i2 = stepExpandedCollisionBoxes.size(); l1 < i2; ++l1)
-                {
-                    anotherXOffset = ((AxisAlignedBB)stepExpandedCollisionBoxes.get(l1)).calculateXOffset(axisalignedbb2, anotherXOffset);
-                }
-                
-//                System.out.println("Alt x offset: " + anotherXOffset + ", requested: " + requestedXOffset);
-
-                axisalignedbb2 = axisalignedbb2.offset(anotherXOffset, 0.0D, 0.0D);
-                
-                
-                double anotherZOffset = requestedZOffset;
-                int j2 = 0;
-
-                for (int k2 = stepExpandedCollisionBoxes.size(); j2 < k2; ++j2)
-                {
-                    anotherZOffset = ((AxisAlignedBB)stepExpandedCollisionBoxes.get(j2)).calculateZOffset(axisalignedbb2, anotherZOffset);
-                }
-                
-//                System.out.println("Alt z offset: " + anotherZOffset + ", requested: " + requestedZOffset);
-
-                axisalignedbb2 = axisalignedbb2.offset(0.0D, 0.0D, anotherZOffset);
-                
-                /*
-                 * Now compare the step expanded collision boxes and the original bounding box.
-                 * 
-                 * If collisions were created only as a result of the projected move,
-                 * all calculateOffset methods should return the second argument, essentially:
-                 *   calcYOffset = step
-                 *   calcXOffset = requestedXOffset
-                 *   calcZOffset = requestedZOffset
-                 */
-                AxisAlignedBB axisalignedbb4 = this.getEntityBoundingBox();
-                double calcYOffset = y;
-                int l2 = 0;
-
-                for (int i3 = stepExpandedCollisionBoxes.size(); l2 < i3; ++l2)
-                {
-                    calcYOffset = ((AxisAlignedBB)stepExpandedCollisionBoxes.get(l2)).calculateYOffset(axisalignedbb4, calcYOffset);
-                }
-
-//                System.out.println("Alt2 y offset: " + calcYOffset);
-                axisalignedbb4 = axisalignedbb4.offset(0.0D, calcYOffset, 0.0D);
-                
-                
-                double calcXOffset = requestedXOffset;
-                int j3 = 0;
-
-                for (int k3 = stepExpandedCollisionBoxes.size(); j3 < k3; ++j3)
-                {
-                    calcXOffset = ((AxisAlignedBB)stepExpandedCollisionBoxes.get(j3)).calculateXOffset(axisalignedbb4, calcXOffset);
-                }
-
-//                System.out.println("Alt2 x offset: " + calcXOffset + ", requested: " + requestedXOffset);
-                axisalignedbb4 = axisalignedbb4.offset(calcXOffset, 0.0D, 0.0D);
-                
-                
-                double calcZOffset = requestedZOffset;
-                int l3 = 0;
-
-                for (int i4 = stepExpandedCollisionBoxes.size(); l3 < i4; ++l3)
-                {
-                    calcZOffset = ((AxisAlignedBB)stepExpandedCollisionBoxes.get(l3)).calculateZOffset(axisalignedbb4, calcZOffset);
-                }
-
-//                System.out.println("Alt2 z offset: " + calcZOffset + ", requested: " + requestedZOffset);
-                axisalignedbb4 = axisalignedbb4.offset(0.0D, 0.0D, calcZOffset);
-                
-                
-                double anotherSqDistance = anotherXOffset * anotherXOffset + anotherZOffset * anotherZOffset;
-                double calcSqDistance = calcXOffset * calcXOffset + calcZOffset * calcZOffset;
-
-                /*
-                 * Give priority to a farthest horizontal move.
-                 */
-                if (anotherSqDistance > calcSqDistance)
-                {
-//                    System.out.println("Option 1");
-                    x = anotherXOffset;
-                    z = anotherZOffset;
-                    y = -anotherYOffset;
-                    this.setEntityBoundingBox(axisalignedbb2);
-                }
-                else
-                {
-//                    System.out.println("Option 2");
-                    x = calcXOffset;
-                    z = calcZOffset;
-                    y = -calcYOffset;
-                    this.setEntityBoundingBox(axisalignedbb4);
-                }
-
-                int j4 = 0;
-
-                /*
-                 * Now again make sure we aren't overshooting the step.
-                 */
-                for (int k4 = stepExpandedCollisionBoxes.size(); j4 < k4; ++j4)
-                {
-                    y = ((AxisAlignedBB)stepExpandedCollisionBoxes.get(j4)).calculateYOffset(this.getEntityBoundingBox(), y);
-                }
-                
-                y *= 0.5;
-//                System.out.println("Final projected offset y: " + y);
-
-//                this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0D, y, 0.0D));
-                
-                x = originalX * 0.99;
-                z = originalZ * 0.99;
-                
-//                motionX = x;
-//                motionZ = z;
-                
-                double climbStep = 0.1;
-                this.setEntityBoundingBox(preMoveEntityBoundingBox.offset(x, climbStep /*-y*/, z));
-                
-                double boxHeight = preMoveEntityBoundingBox.maxY - preMoveEntityBoundingBox.minY;
-                double boxLength = preMoveEntityBoundingBox.maxX - preMoveEntityBoundingBox.minX;
-                
-//                double incline = 360 / Math.PI * Math.asin((-2 * yGap + boxHeight) / boxLength);
-                double inclineCos = (-2 * yGap + boxHeight) / boxLength;
-                if(inclineCos > 1) {
-                    inclineCos = 1;
-                }
-                double incline = 180 / Math.PI * Math.acos(inclineCos);
-                double adjustement = 180 / Math.PI * Math.atan(boxHeight / boxLength);
-                double finalIncline = 90 - incline - adjustement;
-                this.rotationPitch = (float) finalIncline * 0.25f;
-                System.out.println("Final incline: " + finalIncline + ", incline: " + incline + ", adjustment: " + adjustement);
-                
-
-//                
-//                motionX = 0;
-//                motionZ = 0;
-                
-//                /*
-//                 * Compare step and step-less horizontal move.
-//                 * Select overall 3-d move based on a farthest horizontal move
-//                 */
-//                if (originalX * originalX + originalZ * originalZ >= x * x + z * z)
-//                {
-//                    System.out.println("Restore original pre-step bounding box");
-//                    x = originalX;
-//                    y = originalY;
-//                    z = originalZ;
-//                    this.setEntityBoundingBox(preStepEntityBoundingBox);
-//                }
-            } else {
-                
-                double vehicleLength = 1.5;
-                double offset = vehicleLength / 2;
-                double offsetX = -offset * MathHelper.sin((float)(rotationYaw / 360f * Math.PI * 2.0));
-                double offsetZ = offset * MathHelper.cos((float)(rotationYaw / 360f * Math.PI * 2.0));
-
-                double frontBoxPosX = posX + offsetX;
-                double frontBoxPosZ = posZ + offsetZ;
-                double frontBoxPosY = posY;
-                
-                boolean frontBoxOnGround = world.getBlockState((new BlockPos(frontBoxPosX, frontBoxPosY, frontBoxPosZ)).down()).getMaterial() != Material.AIR;
-                if(!frontBoxOnGround) {
-                    System.out.println("Front box is in the air! ");
-                }
-                
-                double rearBoxPosX = posX - offsetX;
-                double rearBoxPosZ = posZ - offsetZ;
-                double rearBoxPosY = posY;
-                
-                boolean rearBoxOnGround = world.getBlockState((new BlockPos(rearBoxPosX, rearBoxPosY, rearBoxPosZ)).down()).getMaterial() != Material.AIR;
-                if(!rearBoxOnGround) {
-                    System.out.println("Rear box is in the air! ");
-                }
-                
-                if(!frontBoxOnGround && rearBoxOnGround && (requestedXOffset * requestedXOffset + requestedZOffset * requestedZOffset) > 0.01) {
-                    rotationPitch -= 5f;
-                } else if(rotationPitch > 0f) {
-                    rotationPitch -= rotationPitch * 0.2f;
-                } else {
-                    rotationPitch = 0f;
-                }
-                
-            }
-
-            this.world.profiler.endSection();
-            this.world.profiler.startSection("rest");
-            this.resetPositionToBB();
-//            System.out.println("Rendering pitch post resetPositionToBB " + rotationPitch);
-            this.isCollidedHorizontally = requestedXOffset != x || requestedZOffset != z;
-            this.isCollidedVertically = requestedYOffset != y;
-            this.onGround = this.isCollidedVertically && requestedYOffset < 0.0D;
-            this.isCollided = this.isCollidedHorizontally || this.isCollidedVertically;
-            int j6 = MathHelper.floor(this.posX);
-            int i1 = MathHelper.floor(this.posY - 0.20000000298023224D);
-            int k6 = MathHelper.floor(this.posZ);
-            BlockPos blockpos = new BlockPos(j6, i1, k6);
-            IBlockState iblockstate = this.world.getBlockState(blockpos);
-
-            if (iblockstate.getMaterial() == Material.AIR)
-            {
-                BlockPos blockpos1 = blockpos.down();
-                IBlockState iblockstate1 = this.world.getBlockState(blockpos1);
-                Block block1 = iblockstate1.getBlock();
-
-                if (block1 instanceof BlockFence || block1 instanceof BlockWall || block1 instanceof BlockFenceGate)
-                {
-                    iblockstate = iblockstate1;
-                    blockpos = blockpos1;
-                }
-            }
-
-            this.updateFallState(y, this.onGround, iblockstate, blockpos);
-
-            if (requestedXOffset != x && rotationPitch == 0)
-            {
-                this.motionX = 0.0D;
-//                System.out.println("Cancelling motionX");
-            }
-
-            if (requestedZOffset != z && rotationPitch == 0)
-            {
-                this.motionZ = 0.0D;
-//                System.out.println("Cancelling motionZ");
-            }
-
-            Block block = iblockstate.getBlock();
-
-            if (requestedYOffset != y)
-            {
-                block.onLanded(this.world, this);
-            }
-
-//            try
-//            {
-//                this.doBlockCollisions();
-//            }
-//            catch (Throwable throwable)
-//            {
-//                CrashReport crashreport = CrashReport.makeCrashReport(throwable, "Checking entity block collision");
-//                CrashReportCategory crashreportcategory = crashreport.makeCategory("Entity being checked for collision");
-//                this.addEntityCrashInfo(crashreportcategory);
-//                throw new ReportedException(crashreport);
-//            }
-
-            this.world.profiler.endSection();
-        }
-    }
-    
-    public static double calculateYOverlap(AxisAlignedBB box1, AxisAlignedBB box2) {
-        double overlap = 0;
-        double maxDiff = box1.maxY - box2.maxY;
-        if(maxDiff >= 0 && box2.maxY >= box1.minY) {
-            overlap = box2.maxY - box1.minY;
-        } else if(maxDiff <= 0 && box1.maxY >= box2.minY) {
-            overlap = -(box1.maxY - box2.minY);
-        }
-        
-        return overlap;
-
-    }
-    
-    // MC Heli try
-    
-    public static List<AxisAlignedBB> getCollidingBoundingBoxes(Entity par1Entity, AxisAlignedBB par2AxisAlignedBB) {
-        ArrayList<AxisAlignedBB> collidingBoundingBoxes = new ArrayList<>();
-        collidingBoundingBoxes.clear();
-        int i = MathHelper.floor(par2AxisAlignedBB.minX);
-        int j = MathHelper.floor(par2AxisAlignedBB.maxX + 1.0D);
-        int k = MathHelper.floor(par2AxisAlignedBB.minY);
-        int l = MathHelper.floor(par2AxisAlignedBB.maxY + 1.0D);
-        int i1 = MathHelper.floor(par2AxisAlignedBB.minZ);
-        int j1 = MathHelper.floor(par2AxisAlignedBB.maxZ + 1.0D);
-
-        MutableBlockPos mbs = new MutableBlockPos();
-        for (int d0 = i; d0 < j; ++d0) {
-            for (int l1 = i1; l1 < j1; ++l1) {
-                
-                if (par1Entity.world.isBlockLoaded(mbs.setPos(d0, 64, l1))) {
-                    for (int list = k - 1; list < l; ++list) {
-//                        compatibility.getBlockAtPosition(world, blockPos)
-                        
-                        mbs.setPos(d0, list, l1);
-                        IBlockState blockState = par1Entity.world.getBlockState(mbs);
-//                        Block block = par1Entity.world.getBlock(par1Entity.world, d0, list, l1);
-                        if (blockState != null) {
-                            blockState.addCollisionBoxToList(par1Entity.world, 
-                                    mbs, par2AxisAlignedBB, collidingBoundingBoxes, par1Entity, false);
-//                            block.addCollisionBoxesToList(par1Entity.world, d0, list, l1, par2AxisAlignedBB,
-//                                    collidingBoundingBoxes, par1Entity);
-                        }
-                    }
-                }
-            }
-        }
-
-        double arg14 = 0.25D;
-        List<Entity> arg15 = par1Entity.world.getEntitiesWithinAABBExcludingEntity(par1Entity,
-                par2AxisAlignedBB.expand(arg14, arg14, arg14));
-
-        for (int arg16 = 0; arg16 < arg15.size(); ++arg16) {
-            Entity entity = (Entity) arg15.get(arg16);
-            if (!(entity instanceof EntityLivingBase) /*&& !(entity instanceof MCH_EntitySeat)
-                    && !(entity instanceof MCH_EntityHitBox)*/) {
-                AxisAlignedBB axisalignedbb1 = entity.getEntityBoundingBox();
-                if (axisalignedbb1 != null && axisalignedbb1.intersects(par2AxisAlignedBB)) {
-                    collidingBoundingBoxes.add(axisalignedbb1);
-                }
-
-                axisalignedbb1 = par1Entity.getCollisionBox(entity);
-                if (axisalignedbb1 != null && axisalignedbb1.intersects(par2AxisAlignedBB)) {
-                    collidingBoundingBoxes.add(axisalignedbb1);
-                }
-            }
-        }
-
-        return collidingBoundingBoxes;
-      
-    }
-    
-//    @Override
-    public void moveNew(MoverType type, double moveX, double moveY, double moveZ) {
-        if (true /*this.getAcInfo() != null*/) {
-            
-            if(true) return;
-            
-            this.world.profiler.startSection("move");
-            this.height *= 0.4F;
-            
-            double originalPosX = this.posX;
-            double originalPosY = this.posY;
-            double originalPosZ = this.posZ;
-            
-            double requestedMoveX = moveX;
-            double requestedMoveY = moveY;
-            double requestedMoveZ = moveZ;
-            
-            AxisAlignedBB axisalignedbb = this.getEntityBoundingBox().offset(0, 0, 0); //.copy();
-            List<AxisAlignedBB> collidingBoxes = getCollidingBoundingBoxes(this, 
-                    this.getEntityBoundingBox().offset(moveX, moveY, moveZ));
-
-            for (int i = 0; i < collidingBoxes.size(); ++i) {
-                moveY = ((AxisAlignedBB) collidingBoxes.get(i)).calculateYOffset(this.getEntityBoundingBox(), moveY);
-            }
-
-//            this.boundingBox.offset(0.0D, moveY, 0.0D);
-            this.setEntityBoundingBox(getEntityBoundingBox().offset(0.0D, moveY, 0.0D));
-//            if (!this.field_70135_K && requestedMoveY != moveY) {
-//                moveZ = 0.0D;
-//                moveY = 0.0D;
-//                moveX = 0.0D;
-//            }
-
-            boolean yAdjustmentRequired = this.onGround || requestedMoveY != moveY && requestedMoveY < 0.0D;
-
-            for (int j = 0; j < collidingBoxes.size(); ++j) {
-                moveX = ((AxisAlignedBB) collidingBoxes.get(j)).calculateXOffset(this.getEntityBoundingBox(), moveX);
-            }
-
-            this.setEntityBoundingBox(this.getEntityBoundingBox().offset(moveX, 0.0D, 0.0D));
-//            if (!this.field_70135_K && requestedMoveX != moveX) {
-//                moveZ = 0.0D;
-//                moveY = 0.0D;
-//                moveX = 0.0D;
-//            }
-
-            for (int j = 0; j < collidingBoxes.size(); ++j) {
-                moveZ = ((AxisAlignedBB) collidingBoxes.get(j)).calculateZOffset(this.getEntityBoundingBox(), moveZ);
-            }
-
-            this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0D, 0.0D, moveZ));
-//            if (!this.field_70135_K && requestedMoveZ != moveZ) {
-//                moveZ = 0.0D;
-//                moveY = 0.0D;
-//                moveX = 0.0D;
-//            }
-
-            if (this.stepHeight > 0.0F && yAdjustmentRequired && this.height < 0.05F && (requestedMoveX != moveX || requestedMoveZ != moveZ)) {
-                double preStepMoveX = moveX;
-                double preStepMoveY = moveY;
-                double preStepMoveZ = moveZ;
-                moveX = requestedMoveX;
-                moveY = (double) this.stepHeight;
-                moveZ = requestedMoveZ;
-                AxisAlignedBB throwable = this.getEntityBoundingBox().offset(0, 0, 0); //this.boundingBox.copy();
-//                this.boundingBox.setBB(axisalignedbb);
-                this.setEntityBoundingBox(axisalignedbb);
-                collidingBoxes = getCollidingBoundingBoxes(this, this.getEntityBoundingBox().offset(requestedMoveX, moveY, requestedMoveZ));
-
-                for (int k = 0; k < collidingBoxes.size(); ++k) {
-                    moveY = ((AxisAlignedBB) collidingBoxes.get(k)).calculateYOffset(this.getEntityBoundingBox(), moveY);
-                }
-
-                this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0D, moveY, 0.0D));
-//                if (!this.field_70135_K && requestedMoveY != moveY) {
-//                    moveZ = 0.0D;
-//                    moveY = 0.0D;
-//                    moveX = 0.0D;
-//                }
-
-                for (int k = 0; k < collidingBoxes.size(); ++k) {
-                    moveX = ((AxisAlignedBB) collidingBoxes.get(k)).calculateXOffset(this.getEntityBoundingBox(), moveX);
-                }
-
-                this.setEntityBoundingBox(this.getEntityBoundingBox().offset(moveX, 0.0D, 0.0D));
-//                if (!this.field_70135_K && requestedMoveX != moveX) {
-//                    moveZ = 0.0D;
-//                    moveY = 0.0D;
-//                    moveX = 0.0D;
-//                }
-
-                for (int k = 0; k < collidingBoxes.size(); ++k) {
-                    moveZ = ((AxisAlignedBB) collidingBoxes.get(k)).calculateZOffset(this.getEntityBoundingBox(), moveZ);
-                }
-
-                this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0D, 0.0D, moveZ));
-//                if (!this.field_70135_K && requestedMoveZ != moveZ) {
-//                    moveZ = 0.0D;
-//                    moveY = 0.0D;
-//                    moveX = 0.0D;
-//                }
-
-//                if (!this.field_70135_K && requestedMoveY != moveY) {
-//                    moveZ = 0.0D;
-//                    moveY = 0.0D;
-//                    moveX = 0.0D;
-//                } else 
-                
-                {
-                    moveY = (double) (-this.stepHeight);
-
-                    for (int k = 0; k < collidingBoxes.size(); ++k) {
-                        moveY = ((AxisAlignedBB) collidingBoxes.get(k)).calculateYOffset(this.getEntityBoundingBox(), moveY);
-                    }
-
-                    this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0D, moveY, 0.0D));
-                }
-
-                if (preStepMoveX * preStepMoveX + preStepMoveZ * preStepMoveZ >= moveX * moveX + moveZ * moveZ) {
-                    moveX = preStepMoveX;
-                    moveY = preStepMoveY;
-                    moveZ = preStepMoveZ;
-//                    this.boundingBox.setBB(throwable);
-                    this.setEntityBoundingBox(throwable);
-                }
-            }
-
-            this.world.profiler.endSection();
-            this.world.profiler.startSection("rest");
-            this.posX = (this.getEntityBoundingBox().minX + this.getEntityBoundingBox().maxX) / 2.0D;
-            this.posY = this.getEntityBoundingBox().minY + (double) this.getYOffset()
-                    - (double) this.height;
-            this.posZ = (this.getEntityBoundingBox().minZ + this.getEntityBoundingBox().maxZ) / 2.0D;
-            this.isCollidedHorizontally = requestedMoveX != moveX || requestedMoveZ != moveZ;
-            this.isCollidedVertically = requestedMoveY != moveY;
-            this.onGround = requestedMoveY != moveY && requestedMoveY < 0.0D;
-            this.isCollided = this.isCollidedHorizontally || this.isCollidedVertically;
-            
-            int j6 = MathHelper.floor(this.posX);
-            int i1 = MathHelper.floor(this.posY - 0.20000000298023224D);
-            int k6 = MathHelper.floor(this.posZ);
-            BlockPos blockpos = new BlockPos(j6, i1, k6);
-            IBlockState iblockstate = this.world.getBlockState(blockpos);
-
-            if (iblockstate.getMaterial() == Material.AIR)
-            {
-                BlockPos blockpos1 = blockpos.down();
-                IBlockState iblockstate1 = this.world.getBlockState(blockpos1);
-                Block block1 = iblockstate1.getBlock();
-
-                if (block1 instanceof BlockFence || block1 instanceof BlockWall || block1 instanceof BlockFenceGate)
-                {
-                    iblockstate = iblockstate1;
-                    blockpos = blockpos1;
-                }
-            }
-
-//            this.updateFallState(y, this.onGround, iblockstate, blockpos);
-            
-            this.updateFallState(moveY, this.onGround, iblockstate, blockpos);
-            
-            if (requestedMoveX != moveX) {
-                this.motionX = 0.0D;
-            }
-
-            if (requestedMoveY != moveY) {
-                this.motionY = 0.0D;
-            }
-
-            if (requestedMoveZ != moveZ) {
-                this.motionZ = 0.0D;
-            }
-
-            // Unused code?
-//            double arg9999 = this.posX - originalPosX;
-//            arg9999 = this.posY - originalPosY;
-//            arg9999 = this.posZ - originalPosZ;
-
-            try {
-                this.doBlockCollisions();
-            } catch (Throwable arg32) {
-                CrashReport crashreport = CrashReport.makeCrashReport(arg32, "Checking entity tile collision");
-                CrashReportCategory crashreportcategory = crashreport
-                        .makeCategory("Entity being checked for collision");
-                this.addEntityCrashInfo(crashreportcategory);
-                throw new ReportedException(crashreport);
-            }
-
-            this.world.profiler.endSection();
-        }
-    }
-
-    private Object getAcInfo() {
-        // TODO Auto-generated method stub
-        return null;
-    }
+		
+	
+		/*
+		for (int x = 0; x < 1; ++x) {
+			this.world.spawnParticle(EnumParticleTypes.FOOTSTEP, realPos.x,
+					realPos.y+0.1, realPos.z,
+					0.0, 0.0, 0.0,
+					Block.getStateId(world.getBlockState(this.getPosition().down())));
+		}*/
+
+		if (!isDriveWheel)
+			return;
+		// System.out.println(solver.getSideSlipAngle());
+
+		if (/* solver.rearAxel.isHandbraking */ Math.abs(solver.getSideSlipAngle()) > 0.1) {
+			Random rand = new Random();
+			for (int x = 0; x < (4 + ((int) Math.floor(Math.abs(solver.getSideSlipAngle()) * 4))); ++x) {
+				double gaus = rand.nextGaussian() / 2;
+
+				int id = 2;
+				if (getSolver().materialBelow != Material.ROCK)
+					id = 1;
+				if (getSolver().materialBelow == Material.SAND)
+					id = 4;
+				Minecraft.getMinecraft().effectRenderer.addEffect(new DriftCloudParticle(this.world, realPos.x + gaus,
+						realPos.y + gaus+0.2, realPos.z + gaus, direction.x, direction.y, direction.z, id));
+
+			}
+		}
+
+	}
+
+	/**
+	 * Easier to run, lighter load on computer.
+	 */
+	@SideOnly(Side.CLIENT)
+	public void doGeneralParticles() {
+		Vec3d partDir = new Vec3d(-steerangle * 20, 0.3, -1).rotateYaw((float) Math.toRadians(-rotationYaw)).scale(0.1);
+		Vec3d posDir = new Vec3d(0, 0, -1).rotateYaw((float) Math.toRadians(-rotationYaw)).add(getPositionVector());
+		// drift particles
+		if (solver.rearAxel.isHandbraking) {
+			Random rand = new Random();
+			for (int x = 0; x < 4; ++x) {
+				double gaus = rand.nextGaussian() / 2;
+				Minecraft.getMinecraft().effectRenderer.addEffect(new DriftSmokeFX(this.world, posDir.x + gaus,
+						posDir.y + gaus, posDir.z + gaus, partDir.x, partDir.y, partDir.z));
+
+			}
+		}
+
+		// drive dust
+		for (int x = 0; x < ((int) solver.synthAccelFor); ++x) {
+			this.world.spawnParticle(EnumParticleTypes.BLOCK_DUST, posDir.x + rand.nextGaussian() / 2,
+					posDir.y + rand.nextGaussian() / 15, posDir.z + rand.nextGaussian() / 2, partDir.x, partDir.y + 0.1,
+					partDir.z, Block.getStateId(world.getBlockState(this.getPosition().down())));
+		}
+	}
+
+	public boolean isShifting = false;
+	public int tickShiftAnim = 0;
+
+	public void notifyOfShift(int toGear) {
+		this.motionX = 0.0;
+		this.isShifting = true;
+		this.tickShiftAnim = 0;
+		// setState(VehicleState.SHIFTING);
+	}
+
+	public boolean isInShift() {
+		return this.isShifting;
+	}
+
+	public void tickShiftAnim() {
+		tickShiftAnim += 1;
+	}
+
+	public RigidBody body;
+
+	public void updateSuspension(WheelSolver solver) {
+		Vec3d realPos = solver.relativePosition.rotatePitch((float) Math.toRadians(rotationPitch))
+				.rotateYaw((float) Math.toRadians(-rotationYaw)).add(getPositionVector())
+				.addVector(0.0, this.rideOffset, 0.0);
+		RayTraceResult result = world.rayTraceBlocks(realPos.addVector(0.0, 3.0, 0.0), realPos.subtract(0.0, 8.0, 0.0));
+		// System.out.println(result.hitVec);
+
+		if (result != null) {
+
+			double h = Math.min(Math.abs((realPos.y - result.hitVec.y)) - solver.getRadius() + 0.4, 1);
+
+			// h = -0.2;
+			if (solver.actualRideHeight == 0.0) {
+				solver.actualRideHeight = h;
+			} else {
+				solver.rideHeight = h;
+			}
+
+		}
+
+	}
+	
+	public double tV;
+	public double prevtV;
+
+	@Override
+	public boolean isInRangeToRenderDist(double distance) {
+		// TODO Auto-generated method stub
+		return true;
+	}
+	
+	
+	@Override
+	protected boolean pushOutOfBlocks(double x, double y, double z) {
+		System.out.println("FUICK?");
+		return super.pushOutOfBlocks(x, y, z);
+	}
+	
+	/**
+	 * onUpdate handles the following: physics, control events, syncing, and overall
+	 * is the 'nucleus' of the vehicle class. (this is my favorite method!)
+	 */
+	@Override
+	public void onUpdate() {
+		
+		this.stepHeight = 0.3f;
+		if(!this.world.isRemote) {
+	
+			
+			//System.out.println("fuck");
+			/*
+			EntityPlayerMP player = null;
+			if(!this.world.getMinecraftServer().getPlayerList().getPlayers().isEmpty()) {
+				player = this.world.getMinecraftServer().getPlayerList().getPlayers().get(0);
+				
+			}
+			if(player == null) return;
+			
+			List<EntityPig> i = player.world.getEntitiesWithinAABB(EntityPig.class, 
+	    			new AxisAlignedBB(player.getPosition()).grow(6));
+			
+			if(!i.isEmpty() && this.getPassengers().isEmpty()) {
+				i.get(0).startRiding(this);
+			}*/
+		}
+	
+		
+		
+		//if(1+1==2) return;
+		
+		
+		//EntityRegistration er = EntityRegistry.instance().lookupModSpawn(getClass(), true);
+		
+		//System.out.println(this.isInRangeToRenderDist(64));
+		//System.out.println(er.getTrackingRange() + " | " + this.getRenderDistanceWeight());
+
+		try {
+			
+			//this.setSize(0.02F, 0.04f);
+			//this.setSize(1.4F, 1.5f);
+			/*
+			if(this.getPassengers() == null || this.getPassengers().isEmpty()) {
+				if(this.width != 1.4F) {
+					this.setSize(1.4F, 1.5f);
+				}
+			} else if(this.width != 0.2F) {
+				this.setSize(0.2F, 0.4f);
+			}*/
+			
+
+			/*
+			if(getSolver().velocity.lengthVector() == 0.0) {
+				setSize(1.5f, 1.4f);
+			} else setSize(0.4f, 0.4f);
+			*/
+			
+			this.prevRotationRoll = rotationRoll;
+			this.prevRotationRollH = rotationRollH;
+
+			
+
+			updateOBB();
+			
+			oldCollisions();
+			//doOBBCollision();
+
+	
+
+			if (this.world.isRemote) {
+				/*
+				 * CLIENT SIDE
+				 */
+
+				
+			//this.oreintedBoundingBox.previousEuler = this.oreintedBoundingBox.matrixToEuler(this.oreintedBoundingBox.axis);
+				
+				
+				for(WheelSolver ws : getSolver().wheels) {
+					ws.prevWheelRot = ws.wheelRot;
+				}
+				
+			
+				
+				// get the controlling passenger
+				if (!this.isBeingRidden())
+					return;
+				if(!(getControllingPassenger() instanceof EntityPlayer)) return;
+				EntityPlayer player = (EntityPlayer) getControllingPassenger();
+				if (player == null) {
+					return;
+				}
+
+				handleGeneralSound();
+
+				// do particles
+				handleDriveParticles();
+
+				
+				
+				if (Minecraft.getMinecraft().player == player) {
+					/*
+					 * DRIVER SIDE
+					 */
+					
+					GearShiftPattern pattern = this.getSolver().getPhysConf().getShiftPattern();
+            		
+					if(!(getState() == VehicleState.STARTING_TO_SHIFT || getState() == VehicleState.SHIFTING || getState() == VehicleState.FINISHING_SHIFT)) {
+						if(this.smoothShift.get().lengthVector() != 0.0) {
+							this.smoothShift.set(pattern.quickDoAnimation(this.getSolver().transmission).scale(0.3));
+						}
+						this.smoothShift.updatePrev();
+						
+						
+					}
+					
+					
+					doOBBCollision();
+
+					// update steering
+					// updateSteering((EntityPlayer) player);
+					keyBasedSteering();
+
+					// update controls
+					updateControls();
+					
+				
+
+					/*
+					 * this.rotationYaw += driftTuner/10; if(Keyboard.isKeyDown(Keyboard.KEY_W)) {
+					 * Vec3d v = new Vec3d(0, 0, 3.0).rotateYaw((float)
+					 * Math.toRadians(-rotationYaw)); this.move(MoverType.SELF, v.x, v.y, v.z); }
+					 */
+
+					// run block collisions
+					tickLerp();
+					super.onUpdate();
+					//doBlockCollisions();
+
+					drivingAspect.onUpdate(this);
+					getSuspensionStrategy().update(getSpeed(), lastYawDelta);
+
+					if (isEntityInsideOpaqueBlock()) {
+						System.out.println("REPORT!");
+					}
+
+					// System.out.println(isCollided + " | " + isCollidedHorizontally + " | " +
+					// isCollidedVertically);
+
+					//doBlockCollisions();
+
+					getSolver().activate(this);
+					
+					// run the physics solver
+					Vec3d oldPos = getPositionVector();
+					
+					// for interpolation purposes
+					solver.engineSolver.previousRPM = solver.getCurrentRPM();
+					try {
+						for (int x = 0; x < 50; ++x) {
+							getSolver().updatePhysics();
+						}
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					
+					getSolver().resetStep();
+
+					//doBlockCollisions();
+
+					Vec3d newPos = getPositionVector();
+					
+					this.prevDist = dist;
+					
+					
+					
+					this.dist = newPos.subtract(oldPos).lengthVector();
+
+					
+					this.prevtV = tV;
+					this.tV = ((dist*20)-(prevtV*20))/20;
+					//System.out.println(this.dist*20);
+					
+				//	getSolver().accelerationValue = ((dist*20)-(prevDist*20))/2.0;
+					// hil
+					handleHillClimbing();
+					// oldHC();
+
+					// System.out.println("ID: " + getEntityId());
+					context.getChannel().getChannel()
+							.sendToServer(new VehicleControlPacket(new VehicleDataContainer(this)));
+					
+					// doNetworking(false);
+
+					stabilizeRotation();
+
+				} else {
+					
+					
+					// USE SMOOTHSHELL!
+					this.smoothShell.update();
+					
+					//System.out.println("Last update: " + VehiclePacketLatencyTracker.getLastDelta(this) + "ms");
+					// doNetworking(true);
+
+				}
+
+			} else {
+				// doNetworking(true);
+			}
+
+			if (this.world.isRemote) {
+
+				if (this.motionX <= 2.0) {
+					this.motionX += 1.0;
+				} else
+					this.motionX = 0;
+
+				this.drivingAspect = new VehicleDrivingAspect();
+
+				if (this.motionX == 3.0) {
+					if (this.isShifting)
+						this.isShifting = false;
+				}
+
+			}
+
+			// this.vehicleState = VehicleState.SHIFTING;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public Material current;
+	public Supplier<Integer> currentMaterial = () -> {
+		
+		if(current == Material.GRASS || current == Material.GROUND || current == Material.CLAY || current == Material.SAND) return 0;
+		return 1;
+		
+	};
+
+	@SideOnly(Side.CLIENT)
+	public void handleGeneralSound() {
+		Material mat = this.world.getBlockState(getPosition().down()).getMaterial();
+
+		
+		// PLAY SHIFTING SOUND
+		if (isInShift()) {
+			PositionedSound ps = new PositionedSoundRecord(getConfiguration().getShiftSound().getSound(),
+					SoundCategory.MASTER, 1.5f, 1.0f, (float) posX, (float) posY, (float) posZ);
+			Minecraft.getMinecraft().getSoundHandler().playSound(ps);
+		}
+
+		
+		// NULLIFY SOUNDS IF THEY ARE DONE
+		if (this.drivingSound != null) if (this.drivingSound.isDonePlaying() || !this.isVehicleRunning()) this.drivingSound = null;
+		if (this.driftingSound != null) if (this.driftingSound.isDonePlaying()) this.driftingSound = null;
+		if (current != mat) this.driftingSound = null;
+			
+		
+
+		
+		// INITIATE A DRIVING SOUND
+		if (this.drivingSound == null && this.isVehicleRunning()) {
+			
+				this.drivingSound = new EngineMovingSound(getConfiguration().getRunSound(), soundPositionProvider, donePlayingSoundProvider,
+					this, false);
+
+			Minecraft.getMinecraft().getSoundHandler().playSound(this.drivingSound);
+		}
+
+		
+
+		// INITIATE A DRIFTING SOUND
+		if (this.driftingSound == null) {
+/*
+			int sMat = 0;
+			
+			CompatibleSound chosen = null;
+
+			if (mat == Material.GRASS || mat == Material.GROUND || mat == Material.CLAY || mat == Material.SAND) {
+				current = mat;
+				sMat = 0;
+				chosen = GeneralVehicleSounds.driftGround1;
+			} else if (mat == Material.ROCK) {
+				sMat = 1;
+				current = mat;
+				chosen = GeneralVehicleSounds.driftConcrete1;
+			} else {
+				chosen = GeneralVehicleSounds.driftConcrete1;
+			}
+
+			this.driftingSound = new DriftMovingSound(chosen, soundPositionProvider, isDorifto, this, false, sMat, this.currentMaterial);
+			Minecraft.getMinecraft().getSoundHandler().playSound(this.driftingSound);
+		*/
+		}
+
+	}
+	// Anata no haka ni kansei dorifuto
+
+	@Override
+	protected void playStepSound(BlockPos pos, Block blockIn) {
+
+	}
+
+	@Override
+	public <E extends ExtendedState<VehicleState>> void prepareTransaction(E finallyUpdateToState) {
+		// TODO Auto-generated method stub
+
+	}
+
+	/*
+	 * Non Binary Tag Compound Read & Writing
+	 */
+
+	@Override
+	protected void readEntityFromNBT(NBTTagCompound compound) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	protected void writeEntityToNBT(NBTTagCompound compound) {
+		// TODO Auto-generated method stub
+
+	}
+
+	/**
+	 * The holiest method which allows client comput'rs to abs'rb the holy knowledge
+	 * of the vehicle simulation did create on the mast'r comput'r. Unf'rtunately,
+	 * th're art so many issues in h're, despite me being a cryptology fanatic! how
+	 * ironic!
+	 * 
+	 * @param slave
+	 */
+	public void doNetworking(boolean slave) {
+		try {
+			if (!slave) {
+				// master's work uwu :3
+
+				VehiclePhysicsSolver s = getSolver();
+
+				getDataManager().get(VEHICLE_DAT).setData(getPositionVector(), throttle, driftTuner, isBraking,
+						forwardLean, sideLean, wheelRotationAngle, steerangle);
+				getDataManager().get(SOLVER_DAT).setData(s.synthAccelFor, s.synthAccelSide, s.velocity);
+
+				getDataManager().setDirty(VEHICLE_DAT);
+				getDataManager().setDirty(SOLVER_DAT);
+			} else {
+
+				// System.out.println("je suis le slave! " + this.world.isRemote);
+
+				// master please update me
+				getDataManager().get(VEHICLE_DAT).updateVehicle(this);
+				getDataManager().get(SOLVER_DAT).updateSolver(this.solver);
+
+			}
+		} catch (Exception e) {
+		}
+		;
+
+	}
+
+	@Override
+	public void setContext(ModContext modContext) {
+		this.context = modContext;
+
+	}
+
+	@Override
+	public boolean attackEntityFrom(DamageSource source, float amount) {
+		
+		if (source.isCreativePlayer()) {
+			this.solver = null;
+			
+			setDead();
+
+		}
+		return super.attackEntityFrom(source, amount);
+	}
+
 }

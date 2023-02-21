@@ -29,6 +29,7 @@ public class RenderContext<RS> implements PartPositionProvider {
 	private RS toState;
 	private ModContext modContext;
 	private PlayerItemInstance<?> playerItemInstance;
+	private boolean cancelBeizer;
 
 	private Map<Part, Matrix4f> attachablePartPositions;
 
@@ -41,6 +42,14 @@ public class RenderContext<RS> implements PartPositionProvider {
 
 	public ModContext getModContext() {
 		return modContext;
+	}
+	
+	public void setCancelBeizer() {
+		cancelBeizer = true;
+	}
+	
+	public boolean getCancelBeizer() {
+		return cancelBeizer;
 	}
 
 	public float getLimbSwing() {

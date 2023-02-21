@@ -10,6 +10,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+
 import com.vicmatskiv.weaponlib.animation.ScreenShakingAnimationManager;
 import com.vicmatskiv.weaponlib.command.DebugCommand;
 import com.vicmatskiv.weaponlib.command.MainCommand;
@@ -18,6 +19,8 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleFmlPreInitializationEven
 import com.vicmatskiv.weaponlib.compatibility.CompatibleMessageContext;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleRenderingRegistry;
 import com.vicmatskiv.weaponlib.config.ConfigurationManager;
+import com.vicmatskiv.weaponlib.crafting.ammopress.GUIContainerAmmoPress;
+import com.vicmatskiv.weaponlib.crafting.workbench.GUIContainerWorkbench;
 import com.vicmatskiv.weaponlib.electronics.EntityWirelessCamera;
 import com.vicmatskiv.weaponlib.electronics.WirelessCameraRenderer;
 import com.vicmatskiv.weaponlib.grenade.EntityFlashGrenade;
@@ -32,9 +35,6 @@ import com.vicmatskiv.weaponlib.melee.ItemMelee;
 import com.vicmatskiv.weaponlib.melee.MeleeRenderer;
 import com.vicmatskiv.weaponlib.melee.PlayerMeleeInstance;
 import com.vicmatskiv.weaponlib.perspective.PerspectiveManager;
-import com.vicmatskiv.weaponlib.vehicle.EntityVehicle;
-import com.vicmatskiv.weaponlib.vehicle.RenderVehicle;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.IReloadableResourceManager;
 import net.minecraft.client.resources.IResourceManager;
@@ -85,9 +85,10 @@ public class ClientModContext extends CommonModContext {
 		aspectRatio = (float)Minecraft.getMinecraft().displayWidth / Minecraft.getMinecraft().displayHeight;
 
 		ClientCommandHandler.instance.registerCommand(new DebugCommand(modId));
-
+		
 		ClientCommandHandler.instance.registerCommand(new MainCommand(modId, this));
-
+		
+		
 		this.statusMessageCenter = new StatusMessageCenter();
 
 		rendererRegistry = new CompatibleRenderingRegistry(modId);
@@ -129,15 +130,23 @@ public class ClientModContext extends CommonModContext {
 
 		this.playerRawPitchAnimationManager = new ScreenShakingAnimationManager();
 		
+		GUIContainerWorkbench.setModContext(this);
+		GUIContainerAmmoPress.setModContext(this);
+		
+		
 		
 	}
+	
+
+
+	
 	
 	@Override
 	public void init(Object mod, String modid) {
 	    super.init(mod, modid);
 	    
 	    //compatibility.registerRenderingRegistry(rendererRegistry);
-
+	 
 	    rendererRegistry.registerEntityRenderingHandler(WeaponSpawnEntity.class, new SpawnEntityRenderer());
 	    rendererRegistry.registerEntityRenderingHandler(EntityWirelessCamera.class, new WirelessCameraRenderer(modId));
 	    rendererRegistry.registerEntityRenderingHandler(EntityShellCasing.class, new ShellCasingRenderer());
@@ -146,7 +155,7 @@ public class ClientModContext extends CommonModContext {
 	    rendererRegistry.registerEntityRenderingHandler(EntityGasGrenade.class, new EntityGrenadeRenderer());
 	    rendererRegistry.registerEntityRenderingHandler(EntityFlashGrenade.class, new EntityGrenadeRenderer());
 	    rendererRegistry.registerEntityRenderingHandler(EntitySpreadable.class, new InvisibleEntityRenderer());
-	    rendererRegistry.registerEntityRenderingHandler(EntityVehicle.class, new RenderVehicle());
+	    //rendererRegistry.registerEntityRenderingHandler(EntityVehicle.class, new RenderVehicle());
 
 	    rendererRegistry.processDelayedRegistrations();
 	}

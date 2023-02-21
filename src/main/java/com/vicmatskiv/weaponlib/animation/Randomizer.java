@@ -95,6 +95,9 @@ public final class Randomizer {
 	}
 
 	public Matrix4f update(float rate, float amplitude) {
+		
+		if(AnimationModeProcessor.getInstance().getFPSMode()) return new Matrix4f();
+		
 		reconfigure(rate, amplitude);
 
 		if(rate == 0f || amplitude == 0f) {
@@ -122,8 +125,8 @@ public final class Randomizer {
 		//float progress = (float)(System.currentTimeMillis() - startTime) / (float)duration;
 		Matrix4f currentTransformMatrix = MatrixHelper.captureMatrix();
 
-		Matrix4f m1 = MatrixHelper.interpolateMatrix(beforeMatrix, 1 - progress); //start * (1 - progress)
-		Matrix4f m2 = MatrixHelper.interpolateMatrix(afterMatrix, progress);
+		Matrix4f m1 = MatrixHelper.interpolateMatrix(beforeMatrix, 1 - progress, Interpolation.SMOOTHSTEP); //start * (1 - progress)
+		Matrix4f m2 = MatrixHelper.interpolateMatrix(afterMatrix, progress, Interpolation.SMOOTHSTEP);
 
 		currentMatrix = Matrix4f.add(m1, m2, null);
 

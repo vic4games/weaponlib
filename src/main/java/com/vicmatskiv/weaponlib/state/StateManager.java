@@ -175,6 +175,9 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 				TransitionRule<S, E> requestPermitRule = new TransitionRule<>(effectiveFromState, toState.permitRequestedPhase(), 
 						effectivePredicate, 
 						(s, f, t, p) -> {
+							
+							//System.out.println("hi gamers " + (p != null));
+							//System.out.println(t);
 							permitManager.request(
 								p != null ? p : permitProvider.apply(t, safeCast(s)), s, this::applyPermit);
 								return null;
@@ -201,6 +204,8 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 		private void applyPermit(Permit<S> processedPermit, E updatedState) {
 			// This is a permit granted callback which sets state to the final toState
 			
+			
+			
 			S updateToState = processedPermit.getStatus() == Status.GRANTED ? toState : fromState;
 			logger.debug("Applying permit with status {} to {}, changing state to {}", 
 			        processedPermit.getStatus(), updatedState, toState);
@@ -212,6 +217,7 @@ public class StateManager<S extends ManagedState<S>, E extends ExtendedState<S>>
 			//TODO: changeState(aspect, updatedState);
 		}
 	}
+	
 
 	
 	public static interface StateComparator<S extends ManagedState<S>> {

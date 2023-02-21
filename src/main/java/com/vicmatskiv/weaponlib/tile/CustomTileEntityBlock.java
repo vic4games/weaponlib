@@ -64,13 +64,19 @@ public class CustomTileEntityBlock extends CompatibleBlockContainer {
     
     @Override
     public CompatibleBlockRenderType getRenderType(CompatibleBlockState state) {
-        return CompatibleBlockRenderType.INVISIBLE;
+        return CompatibleBlockRenderType.ENTITYBLOCK_ANIMATED;
     }
+    
+    
+    
+    
 
     @Override
     public boolean isOpaqueCube(CompatibleBlockState state) {
         return false;
     }
+    
+    
     
     @Override
     public TileEntity createNewTileEntity(World world, int p_149915_2_) {
@@ -86,6 +92,8 @@ public class CustomTileEntityBlock extends CompatibleBlockContainer {
             EntityPlayer player, CompatibleEnumHand hand, CompatibleEnumFacing facing, float hitX, float hitY,
             float hitZ) {
         
+    	//System.out.println("Hola que pasa? " + getRenderType(getDefaultState()));
+    	
         CustomTileEntity<?> entity = (CustomTileEntity<?>)compatibility.getTileEntity(world, pos);
         
         if(entity != null) {
@@ -143,4 +151,6 @@ public class CustomTileEntityBlock extends CompatibleBlockContainer {
             return super.getStateForPlacement(worldIn, pos, facing, hitX, hitY, hitZ, 0, placer).withProperty(FACING, enumfacing);
         }
     }
+
+	
 }

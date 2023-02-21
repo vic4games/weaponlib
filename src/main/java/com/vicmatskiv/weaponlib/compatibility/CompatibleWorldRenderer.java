@@ -298,6 +298,8 @@ public class CompatibleWorldRenderer extends EntityRenderer
      */
     public void updateRenderer()
     {
+    	
+    	
         if (OpenGlHelper.shadersSupported && ShaderLinkHelper.getStaticShaderLinkHelper() == null)
         {
             ShaderLinkHelper.setNewStaticShaderLinkHelper();
@@ -310,7 +312,11 @@ public class CompatibleWorldRenderer extends EntityRenderer
 
         if (true) // this.mc.gameSettings.smoothCamera)
         {
+        	
             float f = this.mc.gameSettings.mouseSensitivity * 0.6F + 0.2F;
+            
+           
+            
             float f1 = f * f * f * 8.0F;
             this.smoothCamFilterX = this.mouseFilterXAxis.smooth(this.smoothCamYaw, 0.05F * f1);
             this.smoothCamFilterY = this.mouseFilterYAxis.smooth(this.smoothCamPitch, 0.05F * f1);
@@ -561,6 +567,7 @@ public class CompatibleWorldRenderer extends EntityRenderer
 
     private void hurtCameraEffect(float partialTicks)
     {
+    	
         if (this.mc.getRenderViewEntity() instanceof EntityLivingBase)
         {
             EntityLivingBase entitylivingbase = (EntityLivingBase)this.mc.getRenderViewEntity();
@@ -1039,6 +1046,8 @@ public class CompatibleWorldRenderer extends EntityRenderer
 
     public void updateCameraAndRender(float partialTicks, long nanoTime)
     {
+    	
+    	
         boolean flag = Display.isActive();
 
         if (!flag && this.mc.gameSettings.pauseOnLostFocus && (!this.mc.gameSettings.touchscreen || !Mouse.isButtonDown(1)))
@@ -1067,6 +1076,9 @@ public class CompatibleWorldRenderer extends EntityRenderer
             this.mc.mouseHelper.mouseXYChange();
             this.mc.getTutorial().handleMouse(this.mc.mouseHelper);
             float f = this.mc.gameSettings.mouseSensitivity * 0.6F + 0.2F;
+            
+            
+            
             float f1 = f * f * f * 8.0F;
             float f2 = (float)this.mc.mouseHelper.deltaX * f1;
             float f3 = (float)this.mc.mouseHelper.deltaY * f1;
@@ -1286,6 +1298,7 @@ public class CompatibleWorldRenderer extends EntityRenderer
 
     public void renderWorld(float partialTicks, long finishTimeNano)
     {
+    	
         this.updateLightmap(partialTicks);
 
         if (this.mc.getRenderViewEntity() == null)
@@ -1321,6 +1334,7 @@ public class CompatibleWorldRenderer extends EntityRenderer
                     GlStateManager.matrixMode(5890);
                     GlStateManager.pushMatrix();
                     GlStateManager.loadIdentity();
+                    
                     this.shaderGroup.render(partialTicks);
                     GlStateManager.popMatrix();
                 }
@@ -1334,6 +1348,7 @@ public class CompatibleWorldRenderer extends EntityRenderer
 
     private void renderWorldPass(int pass, float partialTicks, long finishTimeNano)
     {
+    	
         RenderGlobal renderglobal = this.mc.renderGlobal;
         ParticleManager particlemanager = this.mc.effectRenderer;
         boolean flag = this.isDrawBlockOutline();

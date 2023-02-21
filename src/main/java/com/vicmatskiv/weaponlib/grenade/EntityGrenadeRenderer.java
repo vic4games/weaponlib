@@ -6,6 +6,7 @@ import com.vicmatskiv.weaponlib.compatibility.CompatibleEntityRenderer;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
 
@@ -52,8 +53,10 @@ public class EntityGrenadeRenderer extends CompatibleEntityRenderer {
 
         renderer.getThrownEntityPositioning().run();
 
-        model.render(entity, 0.0F, 0.3F, 0.0F, 0.0F, 0.0F, 0.08F);
-        GL11.glPopMatrix();
+        GlStateManager.disableCull();
+       model.render(entity, 0.0F, 0.3F, 0.0F, 0.0F, 0.0F, 0.08F);
+       
+       GL11.glPopMatrix();
     }
 
     @Override
