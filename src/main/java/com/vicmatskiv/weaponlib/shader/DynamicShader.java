@@ -23,9 +23,12 @@ class DynamicShader extends CompatibleShader {
 
     @Override
     public void render(float partialTicks) {
+    	
         shaderGroup.getUniforms().forEach((name, value) -> {
+        
             ShaderUniform uniform = compatibility.getShaderUniform(getShaderManager(), name);
             if(uniform != null) {
+            	// System.out.println(value);
                 if(value instanceof Float) {
                     compatibility.setUniform(uniform, (float)value);
                 } else if(value instanceof float[]) {
@@ -50,10 +53,17 @@ class DynamicShader extends CompatibleShader {
                     } else if(values.length == 4) {
                         compatibility.setUniform(uniform, values[0], values[1], values[2], values[3]);
                     }
+                } else {
+                	
                 }
+               
             }
         });
 
         super.render(partialTicks);
+    }
+    
+    public int getShaderId() {
+    	return this.getShaderManager().getProgram();
     }
 }

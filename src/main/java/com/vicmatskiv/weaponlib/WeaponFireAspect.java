@@ -12,14 +12,28 @@ import java.util.function.Predicate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.vicmatskiv.weaponlib.animation.ClientValueRepo;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
+import com.vicmatskiv.weaponlib.config.BalancePackManager;
+import com.vicmatskiv.weaponlib.jim.util.VMWHooksHandler;
+import com.vicmatskiv.weaponlib.network.packets.BulletShellClient;
+import com.vicmatskiv.weaponlib.network.packets.GunFXPacket;
+import com.vicmatskiv.weaponlib.render.shells.ShellParticleSimulator.Shell;
 import com.vicmatskiv.weaponlib.state.Aspect;
 import com.vicmatskiv.weaponlib.state.PermitManager;
 import com.vicmatskiv.weaponlib.state.StateManager;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.SoundCategory;
+import net.minecraft.util.math.Vec3d;
+import net.minecraftforge.fml.common.network.NetworkRegistry.TargetPoint;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 
 /*
@@ -30,7 +44,7 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
     @SuppressWarnings("unused")
     private static final Logger logger = LogManager.getLogger(WeaponFireAspect.class);
 
-    private static final float FLASH_X_OFFSET_ZOOMED = 0;
+    private static final float FLASH_X_OFFSET_ZOOMED = -0.03f;
 
     private static final long ALERT_TIMEOUT = 500;
     
@@ -43,7 +57,9 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
 //    }
 
     private static Predicate<PlayerWeaponInstance> readyToShootAccordingToFireRate = instance ->
-        System.currentTimeMillis() - instance.getLastFireTimestamp() >= 50f / instance.getWeapon().builder.fireRate;
+    System.currentTimeMillis() - instance.getLastFireTimestamp() >= 50f / BalancePackManager.getFirerate(instance.getWeapon());
+        
+    //System.currentTimeMillis() - instance.getLastFireTimestamp() >= 50f / instance.getWeapon().builder.fireRate;
         
     private static Predicate<PlayerWeaponInstance> postBurstTimeoutExpired = instance ->
         System.currentTimeMillis() - instance.getLastBurstEndTimestamp()
@@ -61,9 +77,16 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
 
     private static Predicate<PlayerWeaponInstance> ejectSpentRoundRequired = instance -> instance.getWeapon().ejectSpentRoundRequired();
 
-    private static Predicate<PlayerWeaponInstance> ejectSpentRoundTimeoutExpired = instance ->
-        System.currentTimeMillis() >= instance.getWeapon().builder.pumpTimeoutMilliseconds + instance.getStateUpdateTimestamp();
+    private static Predicate<PlayerWeaponInstance> ejectSpentRoundTimeoutExpired = instance -> {
+    	
+    	boolean time = System.currentTimeMillis() >= instance.getWeapon().builder.pumpTimeoutMilliseconds + instance.getStateUpdateTimestamp();
 
+    	// HERE
+    
+    	return time;
+    	
+    };
+        
     private static Predicate<PlayerWeaponInstance> alertTimeoutExpired = instance ->
         System.currentTimeMillis() >= ALERT_TIMEOUT + instance.getStateUpdateTimestamp();
 
@@ -165,6 +188,7 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
     void onFireButtonDown(EntityPlayer player) {
         PlayerWeaponInstance weaponInstance = modContext.getPlayerItemInstanceRegistry().getMainHandItemInstance(player, PlayerWeaponInstance.class);
         if(weaponInstance != null) {
+        	
             stateManager.changeStateFromAnyOf(this, weaponInstance, allowedFireOrEjectFromStates, WeaponState.FIRING, WeaponState.EJECTING, WeaponState.ALERT);
         }
     }
@@ -185,6 +209,7 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
     }
 
     private void cannotFire(PlayerWeaponInstance weaponInstance) {
+  
         if(weaponInstance.getAmmo() == 0 || Tags.getAmmo(weaponInstance.getItemStack()) == 0) {
             String message;
             if(weaponInstance.getWeapon().getAmmoCapacity() == 0
@@ -200,15 +225,35 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
         }
     }
 
+    @SideOnly(Side.CLIENT)
+    private void playShootSound(PositionedSoundRecord psr) {
+    	Minecraft.getMinecraft().getSoundHandler().playSound(psr);
+    }
+    
+    
     private void fire(PlayerWeaponInstance weaponInstance) {
+    	
+    	
+    
+    	
         EntityLivingBase player = weaponInstance.getPlayer();
         Weapon weapon = (Weapon) weaponInstance.getItem();
         Random random = player.getRNG();
 
+        
+       
+        //System.out.println(weaponInstance.getWeapon().getName());
+        
+        
+        //if(true) return;
         modContext.getChannel().getChannel().sendToServer(new TryFireMessage(true, 
-                oneClickBurstEnabled.test(weaponInstance) && weaponInstance.getSeriesShotCount() ==  0));
+                oneClickBurstEnabled.test(weaponInstance) && weaponInstance.getSeriesShotCount() ==  0, weaponInstance.isAimed()));
 
+        
+    	
         boolean silencerOn = modContext.getAttachmentAspect().isSilencerOn(weaponInstance);
+        
+        
         
         CompatibleSound shootSound = null;
         /*
@@ -236,37 +281,146 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
         }
         
         if(shootSound != null) {
-            compatibility.playSound(player, shootSound,
+        	/*
+        	try {
+        		JSoundEngine.getInstance().playSound();
+        	} catch(Exception e) {
+        		e.printStackTrace();
+        	}*/
+        	
+        	// Should prevent sound from being one sided
+        
+        	if(!VMWHooksHandler.isOnServer()) {
+        		
+        		//
+        		PositionedSoundRecord psr = new PositionedSoundRecord(shootSound.getSound(), SoundCategory.PLAYERS, silencerOn ? weapon.getSilencedShootSoundVolume() * 0.4f : weapon.getShootSoundVolume() * 0.4f, 1.0F, Minecraft.getMinecraft().player.getPosition().up(5));
+            	playShootSound(psr);
+        		//Minecraft.getMinecraft().getSoundHandler().playSound(psr);
+        	}
+        	
+        	
+        	
+        	
+        	//Minecraft.getMinecraft().getSoundHandler().playSound(new PositionedSoundRecord(shootSound.getSound(), SoundCategory.PLAYERS,silencerOn ? weapon.getSilencedShootSoundVolume() : weapon.getShootSoundVolume(), 1f, Minecraft.getMinecraft().player.getPosition()));
+            /*
+        	compatibility.playSound(player, shootSound,
                     silencerOn ? weapon.getSilencedShootSoundVolume() : weapon.getShootSoundVolume(), 1F);
+                    */
         }
         
         int currentAmmo = weaponInstance.getAmmo();
-        if(currentAmmo == 1 && weapon.getEndOfShootSound() != null) {
-            compatibility.playSound(player, weapon.getEndOfShootSound(), 1F, 1F);
+        if(currentAmmo == 1 && weapon.getEndOfShootSound() != null && !VMWHooksHandler.isOnServer()) {
+        	PositionedSoundRecord psr = new PositionedSoundRecord(weapon.getEndOfShootSound().getSound(), SoundCategory.PLAYERS, 1.0F, 1.0F, Minecraft.getMinecraft().player.getPosition().up(5));
+        	playShootSound(psr);
+        	//Minecraft.getMinecraft().getSoundHandler().playSound(psr);
+          
+           
         }
         
-        player.rotationPitch = player.rotationPitch - weaponInstance.getRecoil();
+       
+        if(currentAmmo == 1) {
+        	 weaponInstance.setSlideLock(true);
+        }
+        
+        
+        float recoilAmount = weaponInstance.getRecoil();
+       
+        if(BalancePackManager.shouldChangeWeaponRecoil(weapon)) recoilAmount = (float) BalancePackManager.getNewWeaponRecoil(weapon);
+        recoilAmount *= BalancePackManager.getGlobalRecoilMultiplier();
+        recoilAmount *= BalancePackManager.getGroupRecoilMultiplier(weapon.getConfigurationGroup());
+        
+        player.rotationPitch = player.rotationPitch - recoilAmount * 0.7f;
         float rotationYawFactor = -1.0f + random.nextFloat() * 2.0f;
-        player.rotationYaw = player.rotationYaw + weaponInstance.getRecoil() * rotationYawFactor;
+        
+        player.rotationYaw = player.rotationYaw + recoilAmount * rotationYawFactor * 0.4f;
+		
+        ClientValueRepo.recoilWoundY += recoilAmount * 0.7f;
+        
 
         Boolean muzzleFlash = modContext.getConfigurationManager().getProjectiles().isMuzzleEffects();
         if(muzzleFlash == null || muzzleFlash) {
-            if(weapon.builder.flashIntensity > 0) {
-                modContext.getEffectManager().spawnFlashParticle(player, weapon.builder.flashIntensity,
-                        weapon.builder.flashScale.get(),
-                        weaponInstance.isAimed() ? FLASH_X_OFFSET_ZOOMED : compatibility.getEffectOffsetX()
-                                + weapon.builder.flashOffsetX.get(),
-                                compatibility.getEffectOffsetY() + weapon.builder.flashOffsetY.get(),
-                        weapon.builder.flashTexture);
+            if(weapon.builder.flashIntensity > 0 ) {
+            	
+            	
+            	
+            		modContext.getEffectManager().spawnFlashParticle(player, weapon.builder.flashIntensity,
+                            weapon.builder.flashScale.get(),
+                            weaponInstance.isAimed() ? FLASH_X_OFFSET_ZOOMED : compatibility.getEffectOffsetX()
+                                    + weapon.builder.flashOffsetX.get(),
+                                    weaponInstance.isAimed() ? -1.55f :
+                                    compatibility.getEffectOffsetY() + weapon.builder.flashOffsetY.get(),
+                            weapon.builder.flashTexture);
+            	
+            	
+                
             }  
         }
         
+       
+        //ClientValueRepo.gunPow.prevPosition = ClientValueRepo.gunPow.position;
+        ClientValueRepo.fireWeapon(weaponInstance);
+       // System.out.println("Gun tick added @ " + Minecraft.getMinecraft().player.ticksExisted);
+        //System.out.println("WFA: " + System.currentTimeMillis());
+
         if(weapon.isSmokeEnabled()) {
+        	
             modContext.getEffectManager().spawnSmokeParticle(player, compatibility.getEffectOffsetX()
                     + weapon.builder.smokeOffsetX.get(),
-                    compatibility.getEffectOffsetY() + weapon.builder.smokeOffsetY.get());
+                    compatibility.getEffectOffsetY() + weapon.builder.smokeOffsetY.get()+0.3f);
         }
 
+        if(weapon.isShellCasingEjectEnabled() && weaponInstance != null)  {
+        	
+        	
+        	float fovMult = 0.0f;
+        	if(Minecraft.getMinecraft().gameSettings.fovSetting < 70f) {
+        		fovMult = (Minecraft.getMinecraft().gameSettings.fovSetting/50);
+        	} else {
+        		fovMult = -(Minecraft.getMinecraft().gameSettings.fovSetting/200f);
+            	
+        	}
+        	//System.out.println(fovMult);
+        	
+        	
+        	Vec3d pos = player.getPositionEyes(1.0f);
+        	Vec3d weaponDir = new Vec3d(0, -0.1, 1.0 + fovMult).rotatePitch((float) Math.toRadians(-player.rotationPitch)).rotateYaw((float) Math.toRadians(-player.rotationYaw));
+        	
+        	Vec3d velocity = new Vec3d(-0.3, 0.1, 0.0);
+    		velocity = velocity.rotateYaw((float) Math.toRadians(-player.rotationYaw));
+    		Shell shell = new Shell(weapon.getShellType(), pos.add(weaponDir), new Vec3d(-90, 0, 180 + player.rotationYaw), velocity);
+        	CompatibleClientEventHandler.SHELL_MANAGER.enqueueShell(shell);
+    	
+        	//Shell
+        	
+        	/*
+        	
+        	// Change the raw position
+        	Vec3d rawPosition = new Vec3d(CompatibleClientEventHandler.NEW_POS.get(0), CompatibleClientEventHandler.NEW_POS.get(1), CompatibleClientEventHandler.NEW_POS.get(2));
+        	
+        	
+        	// Calculate the final position of the bullet spawn point
+        	// by changing it's position along its own vector
+        	double distance = 0.5;
+			Vec3d eyePos = Minecraft.getMinecraft().player.getPositionEyes(1.0f);
+			Vec3d finalPosition = rawPosition.subtract(eyePos).normalize().scale(distance).add(eyePos);
+			
+        	// Calculate velocity as 90 degrees to player
+			Vec3d velocity = new Vec3d(-0.3, 0.1, 0.0);
+    		velocity = velocity.rotateYaw((float) Math.toRadians(-Minecraft.getMinecraft().player.rotationYaw));
+    		
+    		// Spawn in shell
+    		Shell shell = new Shell(weaponInstance.getWeapon().getShellType(), new Vec3d(finalPosition.x, finalPosition.y, finalPosition.z), new Vec3d(90, 0, 90), velocity);
+        	CompatibleClientEventHandler.shellManager.enqueueShell(shell);
+        	*/
+        	
+        	
+        	
+        	
+        	
+        }
+        
+       
+        
         int seriesShotCount = weaponInstance.getSeriesShotCount();
         if(seriesShotCount == 0) {
             weaponInstance.setSeriesResetAllowed(false);
@@ -278,6 +432,8 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
         }
         weaponInstance.setLastFireTimestamp(System.currentTimeMillis());
         weaponInstance.setAmmo(currentAmmo - 1);
+        
+        
     }
 
     private void ejectSpentRound(PlayerWeaponInstance weaponInstance) {
@@ -286,14 +442,18 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
     }
 
     //(weapon, player) 
-    public void serverFire(EntityLivingBase player, ItemStack itemStack, boolean isBurst) {
-        serverFire(player, itemStack, null, isBurst);
+    public void serverFire(EntityLivingBase player, ItemStack itemStack, boolean isBurst, boolean isAimed) {
+        serverFire(player, itemStack, null, isBurst, isAimed, 1.0f);
     }
     
-    public void serverFire(EntityLivingBase player, ItemStack itemStack, BiFunction<Weapon, EntityLivingBase, ? extends WeaponSpawnEntity> spawnEntityWith, boolean isBurst) {
+    public void serverFire(EntityLivingBase player, ItemStack itemStack, BiFunction<Weapon, EntityLivingBase, ? extends WeaponSpawnEntity> spawnEntityWith, boolean isBurst, boolean isAimed, float damageMultiplier) {
         if(!(itemStack.getItem() instanceof Weapon)) {
             return;
         }
+        
+        TargetPoint tp = new TargetPoint(player.dimension, player.posX, player.posY, player.posZ, 100);
+        modContext.getChannel().getChannel().sendToAllAround(new GunFXPacket(player.getEntityId()), tp);
+        
 
         Weapon weapon = (Weapon) itemStack.getItem();
         
@@ -310,19 +470,70 @@ public class WeaponFireAspect implements Aspect<WeaponState, PlayerWeaponInstanc
             spawnEntityWith = weapon.builder.spawnEntityWith;
         }
         
+        //System.out.println(isAimed);
+      
+        /*
+        int itemIndex = 0;
+        EntityPlayer realPlayer = (EntityPlayer) player;
+        for(int i = 0; i < realPlayer.inventory.getSizeInventory(); ++i) {
+        	if(ItemStack.areItemStacksEqual(realPlayer.inventory.getStackInSlot(i), itemStack)) {
+        		itemIndex = i;
+        	}
+        }
+        
+        
+        
+        PlayerWeaponInstance pwi = new PlayerWeaponInstance(itemIndex, player, itemStack);
+        System.out.println(pwi.isAimed());
+            	*/
+        
+        
+        
         for(int i = 0; i < weapon.builder.pellets; i++) {
+        	double damage = weapon.getSpawnEntityDamage();
+            if(BalancePackManager.hasActiveBalancePack()) {
+            	if(BalancePackManager.shouldChangeWeaponDamage(weapon)) damage = BalancePackManager.getNewWeaponDamage(weapon);
+            	damage *= BalancePackManager.getGroupDamageMultiplier(weapon.getConfigurationGroup());
+            	damage *= BalancePackManager.getGlobalDamageMultiplier();
+            }
+       	
+            damage *= damageMultiplier;
+            
+           // System.out.println(weapon.getName() + " | " + spawnEntityRocketParticles);
+            
+           WeaponSpawnEntity bullet = new WeaponSpawnEntity(weapon, compatibility.world(player), player, weapon.getSpawnEntityVelocity(),
+                   weapon.getSpawnEntityGravityVelocity(), weapon.getInaccuracy() + (isAimed ? 0.0f : 2.6f), (float) damage, weapon.getSpawnEntityExplosionRadius(), 
+                   weapon.isDestroyingBlocks(), weapon.hasRocketParticles(), weapon.getParticleAgeCoefficient(), weapon.getSmokeParticleAgeCoefficient(),
+                   weapon.getExplosionScaleCoefficient(), weapon.getSmokeParticleScaleCoefficient(),
+                   0, 
+                   0);
+           bullet.setPositionAndDirection();
+           compatibility.spawnEntity(player, bullet);
+          // return bullet;
+           /*
             WeaponSpawnEntity spawnEntity = spawnEntityWith.apply(weapon, player);
             compatibility.spawnEntity(player, spawnEntity);
+            */
         }
 
         PlayerWeaponInstance playerWeaponInstance = Tags.getInstance(itemStack, PlayerWeaponInstance.class);
 
-        if(weapon.isShellCasingEjectEnabled() && playerWeaponInstance != null)  {
-            EntityShellCasing entityShellCasing = weapon.builder.spawnShellWith.apply(playerWeaponInstance, player);
-            if(entityShellCasing != null) {
-                compatibility.spawnEntity(player, entityShellCasing);
-            }
+        if(playerWeaponInstance != null) {
+        	
+        	Vec3d pos = player.getPositionEyes(1.0f);
+        	Vec3d weaponDir = new Vec3d(0, -0.1, 1).rotatePitch((float) Math.toRadians(-player.rotationPitch)).rotateYaw((float) Math.toRadians(-player.rotationYaw));
+        	
+        	Vec3d velocity = new Vec3d(-0.3, 0.1, 0.0);
+    		velocity = velocity.rotateYaw((float) Math.toRadians(-player.rotationYaw));
+        	modContext.getChannel().getChannel().sendToAllAround(new BulletShellClient(player.getEntityId(), playerWeaponInstance.getWeapon().getShellType(), pos.add(weaponDir), velocity), tp);
+           
+
         }
+        
+       
+        
+        
+        
         
         CompatibleSound shootSound = null;
         

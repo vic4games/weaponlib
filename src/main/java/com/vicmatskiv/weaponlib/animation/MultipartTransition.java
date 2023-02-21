@@ -4,6 +4,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import com.vicmatskiv.weaponlib.compatibility.CompatibleSound;
+
+import net.minecraft.client.audio.ISound;
+import net.minecraft.util.SoundEvent;
+import net.minecraft.util.math.Vec3d;
+
 public class MultipartTransition<Part, Context> {
 
     private static final Consumer<?> DEFAULT_POSITION = c -> {};
@@ -13,10 +19,17 @@ public class MultipartTransition<Part, Context> {
         return (Consumer<Context>) DEFAULT_POSITION;
     }
 
+    public Context cont;
+    
     private Map<Part, Consumer<Context>> multipartPositionFunctions = new HashMap<>();
 	private Map<Part, Part> attachedTo = new HashMap<>();
 	private long duration;
 	private long pause;
+	
+	public CompatibleSound sound;
+	
+	public Vec3d beizer;
+	public Interpolation interp = Interpolation.SMOOTHSTEP;
 	
 	public MultipartTransition(Part part, Consumer<Context> positionFunction, long duration, long pause) {
 		this.duration = duration;
@@ -31,6 +44,26 @@ public class MultipartTransition<Part, Context> {
 	public MultipartTransition(long duration, long pause) {
 		this.duration = duration;
 		this.pause = pause;
+	}
+	
+	public MultipartTransition(long duration, long pause, Interpolation interp) {
+		this.duration = duration;
+		this.pause = pause;
+		this.interp = interp;
+	}
+	
+	public MultipartTransition(long duration, long pause, Vec3d beizer) {
+		this.duration = duration;
+		this.pause = pause;
+		this.beizer = beizer;
+	}
+	
+	public boolean animationUsesBeizer() {
+		return this.beizer != null;
+	}
+	
+	public Interpolation getInterpolationType() {
+		return this.interp;
 	}
 
 	public MultipartTransition(long duration) {
@@ -48,6 +81,7 @@ public class MultipartTransition<Part, Context> {
 	}
 
 	public void position(Part part, Context context) {
+		
 		Consumer<Context> positionFunction = multipartPositionFunctions.get(part);
 		if(positionFunction == null) {
 //			throw new IllegalArgumentException("Don't know anything about part " + part);
@@ -58,6 +92,10 @@ public class MultipartTransition<Part, Context> {
 
 	public Consumer<Context> getPositioning(Part part) {
 	    return multipartPositionFunctions.get(part);
+	}
+	
+	public Context getContext() {
+		return this.cont;
 	}
 
 	public long getDuration() {

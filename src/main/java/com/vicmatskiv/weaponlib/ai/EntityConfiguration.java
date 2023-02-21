@@ -22,6 +22,7 @@ import org.apache.logging.log4j.Logger;
 import com.vicmatskiv.weaponlib.CustomArmor;
 import com.vicmatskiv.weaponlib.ItemAttachment;
 import com.vicmatskiv.weaponlib.ModContext;
+import com.vicmatskiv.weaponlib.SecondaryEntityRegistry;
 import com.vicmatskiv.weaponlib.WeightedOptions;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleBiomeType;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleEntityEquipmentSlot;
@@ -73,6 +74,7 @@ public class EntityConfiguration {
         ResourceLocation textureResource;
     }
 
+	
     public static class Builder {
 
         private static class Spawn {
@@ -174,6 +176,10 @@ public class EntityConfiguration {
         
         private EnumCreatureAttribute creatureAttribute = EnumCreatureAttribute.UNDEFINED;
         
+        
+        private float sizeWidth = 0.6F;
+        private float sizeHeight = 1.99F;
+        
         private double maxHealth = DEFAULT_MAX_HEALTH;
         
         private double maxSpeed = DEFAULT_MAX_SPEED;
@@ -206,7 +212,12 @@ public class EntityConfiguration {
         private String dialogBackground;
         private String rewardsBackground;
         private String missionSelectionBackground;
-
+        
+        private float lookHeightMultiplier;
+        
+        private int pickupItemID = -1;
+        
+       
         
         public Builder withName(String name) {
             this.name = name;
@@ -216,6 +227,11 @@ public class EntityConfiguration {
         public Builder withBaseClass(Class<? extends Entity> baseClass) {
             this.baseClass = baseClass;
             return this;
+        }
+        
+        public Builder withPickupItemID(int item) {
+        	this.pickupItemID = item;
+        	return this;
         }
         
         public Builder withCreatureAttribute(EnumCreatureAttribute creatureAttribute) {
@@ -241,6 +257,17 @@ public class EntityConfiguration {
         public Builder withSecondaryEquipmentOption(Item item, EnumDifficulty difficultyLevel, float weight, ItemAttachment<?>...attachments) {
             withEquipmentOption(secondaryEquipmentOptions, item, difficultyLevel, weight, attachments);
             return this;
+        }
+        
+        public Builder withSize(float width, float height) {
+        	this.sizeWidth = width;
+        	this.sizeHeight = height;
+        	return this;
+        }
+        
+        public Builder withLookHeightMulitplier(float multiplier) {
+        	this.lookHeightMultiplier = multiplier;
+        	return this;
         }
 
         private Builder withEquipmentOption(Map<EquipmentKey, EquipmentValue> equipmentOptions, Item item, 
@@ -455,6 +482,7 @@ public class EntityConfiguration {
             configuration.aiTargetTasks = aiTargetTasks;
             configuration.collisionAttack = collisionAttack;
             configuration.delayedAttack = delayedAttack;
+            configuration.mobName = name;
             
             int modEntityId = entityIdSupplier.get();
             String entityName = name != null ? name : baseClass.getSimpleName() + "Ext" + modEntityId;
@@ -495,6 +523,8 @@ public class EntityConfiguration {
                     
                 });
                 
+               
+                
                 equipmentOptions.forEach((key, value) -> {
                     equipmentOptionsBuilder.withOption(value.equipment, key.difficulty, value.weight);
                 });
@@ -530,6 +560,13 @@ public class EntityConfiguration {
             configuration.isInvulnerable = isInvulnerable;
             configuration.isCollidable = isCollidable;
             configuration.isDespawnable = isDespawnable;
+            configuration.lookHeightMultiplier = lookHeightMultiplier;
+            
+            configuration.pickupItemID = pickupItemID;
+            
+            configuration.sizeHeight = this.sizeHeight;
+            configuration.sizeWidth = this.sizeWidth;
+            
             HashMap<UUID, MissionOffering> tmpMap = new LinkedHashMap<>();
             for(MissionOffering missionOffering: missionOfferings) {
                 tmpMap.put(missionOffering.getId(), missionOffering);
@@ -561,16 +598,27 @@ public class EntityConfiguration {
             Class<? extends Entity> entityClass = EntityClassFactory.getInstance()
                     .generateEntitySubclass(baseClass, modEntityId, configuration);
             
+            
+            SecondaryEntityRegistry.map.put(name, entityClass);
+            
             compatibility.registerModEntity(entityClass, entityName, 
                     modEntityId, context.getMod(), context.getModId(), trackingRange, updateFrequency, sendVelocityUpdates);
+            
+            
             
             if(spawnEgg) {
                 compatibility.registerEgg(context, entityClass, entityName, primaryEggColor, secondaryEggColor);
             }
             
+          
+            
+            
             for(Spawn spawn: spawns) {
+            	//int weightedProb = spawn.weightedProb;
                 int weightedProb = entityConfig != null ? (int)(entityConfig.getSpawn() * spawn.weightedProb) : spawn.weightedProb;
+                //System.out.println("All you hoes need to rememeber who you're talking to: " + this.name + " -> " + weightedProb);
                 if(weightedProb > 0) {
+                	  
                     compatibility.addSpawn(safeCast(entityClass), weightedProb, 
                             spawn.min, spawn.max, spawn.biomeTypes);
                 }
@@ -600,6 +648,7 @@ public class EntityConfiguration {
                     context.registerRenderableEntity(entityClass, new RenderCustomMob(model));
                 } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
                     e.printStackTrace();
+                
                 }
             }
         }
@@ -636,6 +685,11 @@ public class EntityConfiguration {
     private boolean isDespawnable;
     
     private Map<UUID, MissionOffering> missionOfferings;
+    
+    public float lookHeightMultiplier;
+
+    
+    public float sizeWidth, sizeHeight;
 
     private Map<CompatibleEntityEquipmentSlot, CustomArmor> armor;
     private float primaryEquipmentDropChance;
@@ -652,8 +706,17 @@ public class EntityConfiguration {
     private ResourceLocation dialogBackground;
     private ResourceLocation rewardsBackground;
     private ResourceLocation missionSelectionBackground;
+    
+    private String mobName;
+    
+    
+    private int pickupItemID = -1;
 
     protected EntityConfiguration() {}
+    
+    public String getMobName() {
+    	return this.mobName;
+    }
     
     public WeightedOptions<EnumDifficulty, Equipment> getEquipmentOptions() {
         return equipmentOptions;
@@ -663,12 +726,28 @@ public class EntityConfiguration {
         return secondaryEquipmentOptions;
     }
     
+    public float getSizeWidth() {
+    	return this.sizeWidth;
+    }
+    
+    public float getSizeHeight() {
+    	return this.sizeHeight;
+    }
+    
+    public int getPickupItemID() {
+    	return this.pickupItemID;
+    }
+    
     public void addAiTasks(EntityLiving e, EntityAITasks tasks) {
         aiTasks.stream().forEach(t -> tasks.addTask(t.priority, t.taskSupplier.apply(e)));
     }
     
     public void addAiTargetTasks(EntityLiving e, EntityAITasks tasks) {
         aiTargetTasks.stream().forEach(t -> tasks.addTask(t.priority, t.taskSupplier.apply(e)));
+    }
+    
+    public float getLookHeightMultiplier() {
+    	return this.lookHeightMultiplier;
     }
 
     public CompatibleSound getAmbientSound() {

@@ -2,11 +2,14 @@ package com.vicmatskiv.weaponlib.grenade;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.function.BiPredicate;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.objectweb.asm.ClassReader;
 
 import com.vicmatskiv.weaponlib.Explosion;
 import com.vicmatskiv.weaponlib.ModContext;
@@ -106,6 +109,7 @@ public class EntityGrenade extends AbstractEntityGrenade {
 
     private EntityGrenade(ModContext modContext, ItemGrenade itemGrenade, EntityLivingBase thrower, float velocity, float gravityVelocity, float rotationSlowdownFactor) {
         super(modContext, itemGrenade, thrower, velocity, gravityVelocity, rotationSlowdownFactor);
+        
     }
 
     public EntityGrenade(World world) {
@@ -132,9 +136,11 @@ public class EntityGrenade extends AbstractEntityGrenade {
 
     @Override
     public void onGrenadeUpdate() {
+    	  
         if (!compatibility.world(this).isRemote && explosionTimeout > 0
                 && System.currentTimeMillis() > activationTimestamp + explosionTimeout) {
-            explode();
+        
+          explode();
             return;
         }
     }
@@ -150,12 +156,19 @@ public class EntityGrenade extends AbstractEntityGrenade {
 
     private void explode() {
 
+    		
         logger.debug("Exploding {}", this);
-
+        
+       
+       
         Explosion.createServerSideExplosion(modContext, compatibility.world(this), this,
                 this.posX, this.posY, this.posZ, explosionStrength, false, true, destroyBlocks, 1f, 1f, 1.5f, 1f, null, null, 
                 modContext.getExplosionSound());
-
+        
+ 
+        
+        
+        
         List<?> nearbyEntities = compatibility.getEntitiesWithinAABBExcludingEntity(compatibility.world(this), this,
                 compatibility.getBoundingBox(this).expand(5, 5, 5));
 
@@ -169,6 +182,7 @@ public class EntityGrenade extends AbstractEntityGrenade {
             double x = (rand.nextDouble() - 0.5) * 2;
             double y = (rand.nextDouble() - 0.5) * 2;
             double z = (rand.nextDouble() - 0.5) * 2;
+            
             double d2 = x * x + y * y + z * z;
             if(d2 == 0) {
                 logger.debug("Ignoring zero distance index {}", i);

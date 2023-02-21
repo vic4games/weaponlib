@@ -83,14 +83,19 @@ public EntityVehicle vehicle;
 		v.wheelRotationAngle = (float) this.wheelRotationAngle;
 		v.steerangle = this.steerangle;
 		
+		
+		
+		
 		v.prevPosX = v.posX;
 		v.prevPosY = v.posY;
 		v.prevPosZ = v.posZ;
 		
 		
-		v.posX = this.position.x;
-		v.posY = this.position.y;
-		v.posZ = this.position.z;
+		
+		v.setPosition(this.position.x, this.position.y, this.position.z);
+		//v.posX = this.position.x;
+		//v.posY = this.position.y;
+		//v.posZ = this.position.z;
 		
 		v.prevRotationRoll = v.rotationRoll;
 		v.prevRotationPitch = v.rotationPitch;

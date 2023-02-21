@@ -19,6 +19,7 @@ import com.vicmatskiv.weaponlib.animation.MultipartTransition;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleEnumHandSide;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleExtraEntityFlags;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleTransformType;
+import com.vicmatskiv.weaponlib.config.novel.ModernConfigManager;
 
 import net.minecraft.client.model.ModelBiped;
 import net.minecraft.entity.Entity;
@@ -161,14 +162,17 @@ public class PlayerRenderer {
     }
 
     public void renderModel(ModelBiped modelPlayer, EntityPlayer player, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scale) {
-    	
+     
     	newFlags = CompatibleExtraEntityFlags.getFlags(player);
         if(newFlags != currentFlags) {
             renderingStartTimestamp = System.currentTimeMillis();
         }
+        
+    
         currentPositioner.remove();
-        if(true) { //(newFlags & CompatibleExtraEntityFlags.PRONING) != 0) {
-            renderAnimatedModel(modelPlayer, player, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
+        if(false) { //(newFlags & CompatibleExtraEntityFlags.PRONING) != 0) {
+        	//System.out.println("hi");
+        	renderAnimatedModel(modelPlayer, player, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
         } else {
             //currentPositioner.remove();
             renderBipedModel(modelPlayer, player, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
@@ -473,6 +477,8 @@ public class PlayerRenderer {
     public boolean renderArmor(ModelBiped modelPlayer, EntityPlayer player, float limbSwing, float limbSwingAmount, 
             float ageInTicks, float netHeadYaw, float headPitch, float scale) {
         
+    	
+    	
         PositionerDescriptor descriptor = currentPositioner.get();
         
         if(descriptor != null) {

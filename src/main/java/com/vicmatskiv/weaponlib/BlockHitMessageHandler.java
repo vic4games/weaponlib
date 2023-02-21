@@ -21,7 +21,9 @@ public class BlockHitMessageHandler implements CompatibleMessageHandler<BlockHit
     public <T extends CompatibleMessage> T onCompatibleMessage(BlockHitMessage message, CompatibleMessageContext ctx) {
         if(!ctx.isServerSide()) {
             compatibility.runInMainClientThread(() -> {
-                compatibility.addBlockHitEffect(message.getPosX(), message.getPosY(), message.getPosZ(), message.getSideHit());
+            	//BulletHoleRenderer
+            
+                compatibility.addBlockHitEffect(message.getBlockPos(), message.getPosX(), message.getPosY(), message.getPosZ(), message.getSideHit());
             });
         }
         return null;

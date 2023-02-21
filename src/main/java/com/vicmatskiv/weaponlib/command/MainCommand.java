@@ -10,14 +10,27 @@ import java.util.Map;
 
 import com.vicmatskiv.weaponlib.AttachmentCategory;
 import com.vicmatskiv.weaponlib.AttachmentContainer;
+import com.vicmatskiv.weaponlib.ClientModContext;
+import com.vicmatskiv.weaponlib.CommonModContext;
 import com.vicmatskiv.weaponlib.CompatibleAttachment;
+import com.vicmatskiv.weaponlib.ItemAttachment;
 import com.vicmatskiv.weaponlib.ModContext;
+import com.vicmatskiv.weaponlib.PlayerWeaponInstance;
+import com.vicmatskiv.weaponlib.Weapon;
+import com.vicmatskiv.weaponlib.WeaponAttachmentAspect;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleCommand;
+import com.vicmatskiv.weaponlib.crafting.CraftingEntry;
+import com.vicmatskiv.weaponlib.crafting.items.CraftingItem;
 
 import net.minecraft.block.Block;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.text.TextFormatting;
+import scala.actors.threadpool.Arrays;
 
 public class MainCommand extends CompatibleCommand {
 
@@ -53,6 +66,13 @@ public class MainCommand extends CompatibleCommand {
 
     @Override
     public void execCommand(ICommandSender sender, String[] args) {
+    	
+    	
+    	if(args[0].equals("nosway")) {
+    		CompatibleClientEventHandler.cancelSway = !CompatibleClientEventHandler.cancelSway;
+    		
+    	}
+    	
         if (args.length > 0) {
             if(ARG_SHOW.indexOf(args[0].toLowerCase()) == 0) {
                 processShowSubCommand(args);
@@ -139,17 +159,39 @@ public class MainCommand extends CompatibleCommand {
     }
 
     private void showRecipe(Item item) {
-        if(item != null) {
-            compatibility.addChatMessage(compatibility.clientPlayer(), "");
-            compatibility.addChatMessage(compatibility.clientPlayer(),
-                    "Recipe for " + item.getItemStackDisplayName(null));
+        if(item != null && (item instanceof Weapon)) {
+           // compatibility.addChatMessage(compatibility.clientPlayer(), "");
+            compatibility.addChatMessage(compatibility.clientPlayer(), TextFormatting.GOLD +
+                    "-- Recipe for " + TextFormatting.GRAY +  item.getItemStackDisplayName(null) + TextFormatting.GOLD + "--");
+           
+            CraftingEntry[] modernRecipe = ((Weapon) item).getModernRecipe();
+            if(modernRecipe == null) {
+            	return;
+            }
+            for(CraftingEntry stack : modernRecipe) {
+            	
+            	
+            	String toPrint = "> " + stack.getCount() + "x " + TextFormatting.WHITE + I18n.format(stack.getItem().getUnlocalizedName() + ".name");
+            	
+            	// Appends the disassembly to the end of the string
+            	if(stack.getItem() instanceof CraftingItem) {
+            		CraftingItem craftingItem = (CraftingItem) stack.getItem();
+            		System.out.println(craftingItem.getRecoveryScrap());
+            		toPrint += " -> " + (stack.getCount()*craftingItem.getRecoveryPercentage()) + "x " + I18n.format(craftingItem.getRecoveryScrap().getUnlocalizedName() + ".name");
+            	}
+            	
+            	compatibility.addChatMessage(compatibility.clientPlayer(), TextFormatting.GOLD + toPrint);
+                 
+            }
+             
+            /*
             List<Object> recipe = modContext.getRecipeManager().getRecipe(item);
             if(recipe != null) {
                 formatRecipe(recipe);
             } else {
                 compatibility.addChatMessage(compatibility.clientPlayer(),
                         "Recipe for " + item.getItemStackDisplayName(null) + " not found");
-            }
+            }*/
         }
     }
 

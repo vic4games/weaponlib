@@ -44,6 +44,11 @@ public class Configuration {
     protected Projectiles projectiles;
     protected Gui gui;
     protected AI ai;
+    
+    
+    
+    
+    
 
     /**
      * Gets the value of the ores property.

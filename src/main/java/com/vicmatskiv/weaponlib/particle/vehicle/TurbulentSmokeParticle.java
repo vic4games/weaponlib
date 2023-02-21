@@ -44,6 +44,7 @@ public class TurbulentSmokeParticle extends ParticleCloud {
 		super(worldIn, xCoordIn, yCoordIn, zCoordIn, p_i1221_8_, p_i1221_10_, p_i1221_12_);
 		setParticleTexture(CompatibleClientEventHandler.carParticles);
 		particleScale = 0.5f;
+		
 		this.particleTextureIndexY = indexY;
 		
 	}
@@ -58,6 +59,9 @@ public class TurbulentSmokeParticle extends ParticleCloud {
 	public void renderParticle(BufferBuilder buffer, Entity entityIn, float partialTicks, float rotationX,
 			float rotationZ, float rotationYZ, float rotationXY, float rotationXZ) {
 		
+		
+		//rotationX = 0f;
+		//rotationXZ = 30f;
 			
 			Random urandom = new Random(333);
 			
@@ -104,7 +108,7 @@ public class TurbulentSmokeParticle extends ParticleCloud {
 
         
         Random rand = new Random();
-        
+       
         this.move(this.motionX, this.motionY, this.motionZ);
         
        
@@ -151,11 +155,11 @@ public class TurbulentSmokeParticle extends ParticleCloud {
        
         
         this.motionX *= 0.9599999785423279D;
-        this.motionY *= 0.9599999785423279D;
+        this.motionY *= 0.9499999785423279D;
         this.motionZ *= 0.9599999785423279D;
         
      
-        
+     
         EntityPlayer entityplayer = this.world.getClosestPlayer(this.posX, this.posY, this.posZ, 2.0D, false);
 
         if (entityplayer != null)
@@ -174,6 +178,7 @@ public class TurbulentSmokeParticle extends ParticleCloud {
         
         if (this.onGround)
         {
+        	this.setExpired();
             this.motionX *= 0.699999988079071D;
             this.motionZ *= 0.699999988079071D;
         }

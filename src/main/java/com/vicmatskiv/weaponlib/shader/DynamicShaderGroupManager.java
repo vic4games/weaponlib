@@ -115,6 +115,7 @@ public class DynamicShaderGroupManager {
             }
         });
         if(l != null && l.group != null) {
+        	
             source.getUniforms(context).forEach(u -> {l.group.setUniform(u.getU(), u.getV().apply(context));});
             context.getPhase().apply(context, l.group);
         }

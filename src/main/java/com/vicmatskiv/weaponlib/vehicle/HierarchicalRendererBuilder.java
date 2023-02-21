@@ -150,7 +150,7 @@ public class HierarchicalRendererBuilder<Part, State extends RenderState> {
     
     
 
-    public HierarchicalRendererBuilder<Part, State> withPartPosition(Part part, 
+    public HierarchicalRendererBuilder<Part, State> withPartPosition( Part part, 
             Consumer<PartRenderContext<State>> positionFunction, 
             @SuppressWarnings("unchecked") State...states)  {
     	

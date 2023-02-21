@@ -15,6 +15,8 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 
 public class ItemMagazine extends ItemAttachment<Weapon> implements PlayerItemInstanceFactory<PlayerMagazineInstance, MagazineState>, 
@@ -27,14 +29,23 @@ Reloadable, Updatable, Part {
 		private long reloadingTimeout = DEFAULT_RELOADING_TIMEOUT_TICKS;
 		private Set<ItemBullet> compatibleBullets = new HashSet<>();
 		private String reloadSound;
+		private String unloadSound;
+		
+
 		
 		public Builder withAmmo(int ammo) {
 			this.ammo = ammo;
 			return this;
 		}
-		
+		 
+
 		public Builder withReloadingTimeout(int reloadingTimeout) {
 			this.reloadingTimeout = reloadingTimeout;
+			return this;
+		}
+		
+		public Builder withUnloadSound(String unloadSound) {
+			this.unloadSound = unloadSound;
 			return this;
 		}
 		
@@ -48,16 +59,20 @@ Reloadable, Updatable, Part {
 			return this;
 		}
 		
+		
+		
 		@Override
 		protected ItemAttachment<Weapon> createAttachment(ModContext modContext) {
 			ItemMagazine magazine = new ItemMagazine(getModId(), getModel(), getTextureName(), ammo);
 			magazine.reloadingTimeout = reloadingTimeout;
+	
 			magazine.compatibleBullets = new ArrayList<>(compatibleBullets);
 			if(reloadSound != null) {
 				magazine.reloadSound = modContext.registerSound(reloadSound);
+				magazine.unloadSound = modContext.registerSound(unloadSound);
 			}
 			magazine.modContext = modContext;
-			withInformationProvider((stack) -> "Ammo: " + Tags.getAmmo(stack) + "/" + ammo);
+			withInformationProvider((stack) -> TextFormatting.RED + "Ammo: " + TextFormatting.GRAY + Tags.getAmmo(stack) + "/" + ammo);
 			return magazine;
 		}
 	}
@@ -68,11 +83,15 @@ Reloadable, Updatable, Part {
 	private long reloadingTimeout;
 	private List<ItemBullet> compatibleBullets;
 	private CompatibleSound reloadSound;
+	private CompatibleSound unloadSound;
 	private ModContext modContext;
+	private Vec3d rotPoint;
 	
 	ItemMagazine(String modId, ModelBase model, String textureName, int ammo) {
 		this(modId, model, textureName, ammo, null, null);
 	}
+	
+	
 
 	ItemMagazine(String modId, ModelBase model, String textureName, int ammo,
 			com.vicmatskiv.weaponlib.ItemAttachment.ApplyHandler<Weapon> apply,
@@ -81,6 +100,8 @@ Reloadable, Updatable, Part {
 		this.ammo = ammo;
 		setMaxStackSize(DEFAULT_MAX_STACK_SIZE);
 	}
+	
+
 	
 	ItemStack createItemStack() {
 		ItemStack attachmentItemStack = new ItemStack(this);
@@ -124,6 +145,10 @@ Reloadable, Updatable, Part {
 	public CompatibleSound getReloadSound() {
 		return reloadSound;
 	}
+	
+	public CompatibleSound getUnloadSound() {
+		return unloadSound;
+	}
 
 	public long getReloadTimeout() {
 		return reloadingTimeout;
@@ -153,7 +178,7 @@ Reloadable, Updatable, Part {
 
     @Override
     public void unloadMainHeldItemForPlayer(EntityPlayer player) {
-        // TODO Auto-generated method stub
+    	modContext.getMagazineReloadAspect().unloadMainHeldItem(player);
     }
 	
 }

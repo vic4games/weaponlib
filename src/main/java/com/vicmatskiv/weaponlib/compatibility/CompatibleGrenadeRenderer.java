@@ -238,6 +238,7 @@ public abstract class CompatibleGrenadeRenderer extends ModelSourceRenderer impl
 
         case FIRST_PERSON_RIGHT_HAND: case FIRST_PERSON_LEFT_HAND:
 
+        	
             CompatibleWeaponRenderer.fixVersionSpecificFirstPersonPositioning(transformType);
 
             GL11.glScaled(-1F, -1F, 1F);

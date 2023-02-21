@@ -38,6 +38,7 @@ class PipelineShaderGroupSourceProvider implements DynamicShaderGroupSourceProvi
                 .withUniform("BlurEnabled", context -> blurEnabled ? 1.0f : 0.0f)
                 .withUniform("BlurVignetteRadius", context -> 0.0f)
                 .withUniform("Radius", context -> 10f)
+                .withUniform("sussus", context -> 10f)
                 .withUniform("Progress", context -> spreadableExposureProgress)
                 .withUniform("VignetteEnabled", context -> vignetteEnabled ? 1.0f : 0.0f)
                 .withUniform("VignetteRadius", context -> vignetteRadius)

@@ -21,7 +21,7 @@ public enum CompatibleEnumFacing {
         return enumFacing;
     }
     
-    static CompatibleEnumFacing valueOf(EnumFacing enumFacing) {
+    public static CompatibleEnumFacing valueOf(EnumFacing enumFacing) {
         CompatibleEnumFacing result = null;
         switch(enumFacing) {
         case UP:

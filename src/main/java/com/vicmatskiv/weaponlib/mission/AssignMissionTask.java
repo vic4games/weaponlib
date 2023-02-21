@@ -25,7 +25,10 @@ public class AssignMissionTask extends CompatibleEntityAIBase {
             return false;
         } else if (this.merchant.velocityChanged) {
             return false;
+            
         } else {
+        	return false;
+        	/*
             EntityPlayer entityplayer = this.merchant.getCustomer();
 
             if (entityplayer == null) {
@@ -34,7 +37,7 @@ public class AssignMissionTask extends CompatibleEntityAIBase {
                 return false;
             } else {
                 return entityplayer.openContainer != null;
-            }
+            }*/
         }
     }
 
@@ -50,6 +53,6 @@ public class AssignMissionTask extends CompatibleEntityAIBase {
      * another one
      */
     public void resetTask() {
-        this.merchant.setCustomer((EntityPlayer) null);
+       // this.merchant.setCustomer((EntityPlayer) null);
     }
 }

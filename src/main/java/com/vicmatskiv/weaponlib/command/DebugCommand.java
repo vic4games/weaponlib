@@ -2,14 +2,32 @@ package com.vicmatskiv.weaponlib.command;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+
+import com.vicmatskiv.weaponlib.ClientModContext;
 import com.vicmatskiv.weaponlib.ItemAttachment;
 import com.vicmatskiv.weaponlib.Part;
+import com.vicmatskiv.weaponlib.animation.AnimationModeProcessor;
 import com.vicmatskiv.weaponlib.animation.DebugPositioner;
+import com.vicmatskiv.weaponlib.animation.Transform;
+import com.vicmatskiv.weaponlib.animation.jim.BBLoader;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleCommand;
+import com.vicmatskiv.weaponlib.compatibility.graph.CompatibilityClassGenerator;
+import com.vicmatskiv.weaponlib.render.ModificationGUI;
+import com.vicmatskiv.weaponlib.render.WeaponSpritesheetBuilder;
 import com.vicmatskiv.weaponlib.vehicle.VehiclePart;
 
+import akka.japi.Pair;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.item.Item;
+import net.minecraft.util.text.TextFormatting;
 
 public class DebugCommand extends CompatibleCommand {
 
@@ -25,7 +43,16 @@ public class DebugCommand extends CompatibleCommand {
     private static final String DEBUG_ARG_WATCH = "watch";
     private static final String DEBUG_ARG_STEP = "step";
     private static final String DEBUG_ARG_AUTOROTATE = "ar";
+    private static final String DEBUG_ANIM_MODE = "anim";
+    private static final String DEBUG_WEAPON = "weapon";
+    
+    private static final String DEBUG_FREECAM = "freecam";
+    private static final String DEBUG_MUZZLE_POS = "muzzle";
+    private static final String DEBUG_COMPAT = "compat";
 
+    
+    public static int debugFlag = 0;
+    
     private String modId;
 
     public DebugCommand(String modId) {
@@ -36,12 +63,24 @@ public class DebugCommand extends CompatibleCommand {
     public String getCompatibleName() {
         return COMMAND_DEBUG;
     }
+    
+    public String getDebugPrefix() {
+    	return TextFormatting.GOLD + "[" + TextFormatting.DARK_GRAY + "VMW DEBUG" + TextFormatting.GOLD + "] ";
+    }
+    
+    public String getDefaultPrefix() {
+    	return TextFormatting.BOLD + "" + TextFormatting.GOLD + "(" + TextFormatting.DARK_GRAY + "MW" + TextFormatting.GOLD + ") ";
+    }
 
     @Override
     public String getCompatibleUsage(ICommandSender sender) {
-        return "/" + COMMAND_DEBUG + "<options>";
+        return getDebugPrefix() + "/" + COMMAND_DEBUG + " (options) or type /wdb help";
     }
 
+    public void sendDebugMessage(String message) {
+    	compatibility.addChatMessage(compatibility.clientPlayer(), getDebugPrefix() + message);
+    }
+    
     private String getSubCommandDebugUsage() {
         return "/" + COMMAND_DEBUG + " <" + DEBUG_ARG_ON + "|" + DEBUG_ARG_OFF + ">";
     }
@@ -80,6 +119,7 @@ public class DebugCommand extends CompatibleCommand {
 
     @Override
     public void execCommand(ICommandSender sender, String[] args) {
+    	
         if (args.length > 0) {
             switch(args[0].toLowerCase()) {
             case DEBUG_ARG_ON:
@@ -112,12 +152,223 @@ public class DebugCommand extends CompatibleCommand {
             case DEBUG_ARG_AUTOROTATE:
                 processAutorotateSubCommand(args);
                 break;
+            case DEBUG_FREECAM:
+            	processFreecamAndMuzzleSubCommands(args);
+            	break;
+            case DEBUG_MUZZLE_POS:
+            	processFreecamAndMuzzleSubCommands(args);
+            	break;
+            case DEBUG_ANIM_MODE:
+            	processAnimMode(args);
+            	break;
+            case DEBUG_COMPAT:
+            	processCompatMode(args);
+            	break;
+            case DEBUG_WEAPON:
+            	processWeapon(args);
+            	break;
             default:
                 compatibility.addChatMessage(compatibility.clientPlayer(), getCompatibleUsage(sender));
             }
         } else {
             compatibility.addChatMessage(compatibility.clientPlayer(), getCompatibleUsage(sender));
         }
+    }
+    
+    public CompatibilityClassGenerator ccg = new CompatibilityClassGenerator();
+    public ArrayList<String> compatList = new ArrayList<>();
+    
+    private static boolean isInfiniteAmmo;
+    private static boolean isDebuggingActionPosition;
+    private static boolean isWorkingOnScreenShake;
+    private static boolean isForceLiveRenderGUI;
+    private static boolean isEditingGUI;
+    public static Transform debugSlideTransform = new Transform();
+    public static Pair<Double, Double> screenShakeParam = new Pair<Double, Double>(0.0, 0.0);
+    
+    public static boolean isDebuggingActionPosition() {
+    	return isDebuggingActionPosition;
+    }
+    
+    public static boolean isWorkingOnScreenShake() {
+    	return isWorkingOnScreenShake;
+    }
+    
+    public static boolean isInfiniteAmmo() {
+    	return isInfiniteAmmo;
+    }
+    
+    public static boolean isEditingGUI() {
+    	return isEditingGUI;
+    }
+    
+    public static boolean isForceLiveRenderGUI() {
+    	return isForceLiveRenderGUI;
+    }
+    
+    private void processWeapon(String[] args) {
+    	if(args[1].equals("infinite")) {
+    		isInfiniteAmmo = !isInfiniteAmmo;
+    		compatibility.addChatMessage(compatibility.clientPlayer(), getDebugPrefix() + " Infinite ammo mode is " + (isInfiniteAmmo ? "on" : "off"));
+        	
+    	} else if(args[1].equals("slide")) {
+    		if(args[2].equals("edit")) {
+    			isDebuggingActionPosition = !isDebuggingActionPosition;
+    			compatibility.addChatMessage(compatibility.clientPlayer(), getDebugPrefix() + " Slide editor mode is " + (isDebuggingActionPosition ? "on" : "off"));
+            	
+    		}else if(args[2].equals("setpos")) {
+    			double x = Double.parseDouble(args[3]);
+    			double y = Double.parseDouble(args[4]);
+    			double z = Double.parseDouble(args[5]);
+    			debugSlideTransform.withPosition(x, y, z);
+    		}
+    	} else if(args[1].equals("shake")) {
+    		if(args[2].equals("edit")) {
+    			isWorkingOnScreenShake = !isWorkingOnScreenShake;
+    			compatibility.addChatMessage(compatibility.clientPlayer(), getDebugPrefix() + " Shake editor mode is " + (isWorkingOnScreenShake ? "on" : "off"));
+    		} else if(args[2].equals("set")) {
+    			double intensity = Double.parseDouble(args[3]);
+    			double lengthModifier = Double.parseDouble(args[4]);
+    			screenShakeParam = new Pair<Double, Double>(intensity, lengthModifier);
+    		}
+    	} else if(args[1].equals("buildsheet")) {
+    		
+    		sendDebugMessage("Checking to see if a sprite sheet can be built...");
+    		
+    		WeaponSpritesheetBuilder.build();
+    		
+    		sendDebugMessage("Generating icon sheet as... " + TextFormatting.GREEN + " guniconsheet.png");
+    	
+    		
+    	} else if(args[1].equals("liverender")) {
+    		if(args[2].equals("toggle")) {
+    			isForceLiveRenderGUI = !isForceLiveRenderGUI;
+    			sendDebugMessage("Live render is now " + TextFormatting.DARK_GRAY + (isForceLiveRenderGUI ? "on" : "off"));
+    		} else if(args[2].equals("?")) {
+    			sendDebugMessage("Live render causes weapons to switch off of the icon sheet and directly render into the inventory. This should only ever be used for debugging.");
+    			//LayerBipedArmor
+    		}
+    		
+    	} else if(args[1].equals("gui")) {
+    		if(args[2].equals("print")) {
+    			sendDebugMessage("Printing locations to console (or log)");
+    			
+    			 ModificationGUI.getInstance().printTabLocations();
+    		} else {
+    			isEditingGUI = !isEditingGUI;
+        		sendDebugMessage("GUI editing mode: " + TextFormatting.DARK_GRAY + (isEditingGUI ? "on" : "off"));
+    			
+    		}
+    		
+    	} else if(args[1].equals("debugFlag")) {
+    		debugFlag = Integer.parseInt(args[2]);
+    	}
+    }
+    
+    private void processCompatMode(String[] args) {
+    	if(args[1].equals("new")) {
+    		compatList.clear();
+    		ccg.setup();
+    		compatibility.addChatMessage(compatibility.clientPlayer(), getDebugPrefix() + " Started writing new compat method set");
+    	} else if(args[1].equals("add")) {
+    		ArrayList<Pair<Class<?>, Method>> list = ccg.findStandardOpenGLMethod(args[2]);
+    		for(Pair<Class<?>, Method> pair : list) {
+    			//ccg.buildOutMethod(original, searchTerm)
+    			compatList.add(ccg.buildOutMethod(pair, args[2]).toString());
+    		}
+    	} else if(args[1].equals("build")) {
+    		File f = new File("debugcompat\\output.txt");
+    		System.out.println(f.getAbsolutePath());
+    		try {
+				f.createNewFile();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+    		f.mkdirs();
+    		try {
+				f.createNewFile();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+    		try {
+				BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(f));
+				for(String s : compatList) {
+					bos.write(s.getBytes());
+				}
+				bos.close();
+				
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+    	}
+    }
+    
+    private void processAnimMode(String[] args) {
+    	if(args[1].equals("on")) {
+    		
+    		if(!AnimationModeProcessor.getInstance().isLegacyMode()) {
+    			AnimationModeProcessor.getInstance().setFPSMode(true);
+    		
+    		} else {
+    			compatibility.addChatMessage(compatibility.clientPlayer(), getDebugPrefix() + " You cannot enter animation mode with a legacy gun!");
+    	    	
+    			
+    		}
+    		
+    	} else if(args[1].equals("off")) {
+    		AnimationModeProcessor.getInstance().setFPSMode(false);
+    	} else if(args[1].equals("dh")) {
+    		BBLoader.HANDDIVISOR = Double.parseDouble(args[2]);
+    		compatibility.addChatMessage(compatibility.clientPlayer(), "Hand divisor set to " + BBLoader.HANDDIVISOR);
+    	}else if(args[1].equals("dg")) {
+    		BBLoader.GENDIVISOR = Double.parseDouble(args[2]);
+    		compatibility.addChatMessage(compatibility.clientPlayer(), "General divisor set to " + BBLoader.GENDIVISOR);
+    	} else if(args[1].equals("as")) {
+    		double x = Double.parseDouble(args[2]);
+    		double y = Double.parseDouble(args[3]);
+    		double z = Double.parseDouble(args[4]);
+    		
+    		ClientModContext.getContext().getMainHeldWeapon().getWeapon().getRenderer().getWeaponRendererBuilder().firstPersonLeftHandTransform.withScale(x, y, z);
+    	
+    }
+     }
+    
+    private void processFreecamAndMuzzleSubCommands(String[] args) {
+    	switch(args[0].toLowerCase()) {
+    	case DEBUG_FREECAM:
+    		if(args.length > 1 && args[1].equals("lock")) {
+    			CompatibleClientEventHandler.freecamLock = !CompatibleClientEventHandler.freecamLock;
+    			sendDebugMessage("Freecam lock " + TextFormatting.DARK_GRAY + (CompatibleClientEventHandler.freecamLock ? "enabled" : "disabled"));
+    			
+    		} else {
+    			
+    			CompatibleClientEventHandler.freecamEnabled = !CompatibleClientEventHandler.freecamEnabled;
+    			sendDebugMessage("Freecam " + TextFormatting.DARK_GRAY + (CompatibleClientEventHandler.freecamEnabled ? "enabled" : "disabled"));
+    			
+    		
+    		}
+    		
+    		 
+    		break;
+    	case DEBUG_MUZZLE_POS:
+    		 
+    		if(CompatibleClientEventHandler.muzzlePositioner) {
+    			compatibility.addChatMessage(compatibility.clientPlayer(), getDebugPrefix() + "Exiting muzzle debug...");
+    			CompatibleClientEventHandler.muzzlePositioner = false;
+      	      
+    		} else {
+    			compatibility.addChatMessage(compatibility.clientPlayer(), getDebugPrefix() + "Entering muzzle debug... a point will display.");
+      	      	CompatibleClientEventHandler.muzzlePositioner = true;
+    		}
+    		
+    		 break;
+    	}
     }
 
     private void processDebugModeSubCommand(String[] args) {
@@ -132,7 +383,7 @@ public class DebugCommand extends CompatibleCommand {
         }
         if(debugMode != null) {
             DebugPositioner.setDebugMode(debugMode);
-            compatibility.addChatMessage(compatibility.clientPlayer(), "Debug mode " + args[0].toLowerCase());
+            compatibility.addChatMessage(compatibility.clientPlayer(), getDebugPrefix() + "Debug mode " + args[0].toLowerCase());
         } else {
             compatibility.addChatMessage(compatibility.clientPlayer(), getSubCommandDebugUsage());
         }
@@ -252,7 +503,12 @@ public class DebugCommand extends CompatibleCommand {
             compatibility.addChatMessage(compatibility.clientPlayer(), getSubCommandShowUsage());
             return;
         }
-
+        
+        
+        if(CompatibleClientEventHandler.muzzlePositioner) {
+        	compatibility.addChatMessage(compatibility.clientPlayer(), getDebugPrefix() + "Muzzle Position: " + CompatibleClientEventHandler.debugmuzzlePosition);
+            return;
+        }
         if(DebugPositioner.getDebugPart() == null) {
             compatibility.addChatMessage(compatibility.clientPlayer(), "Debug part not selected");
             return;

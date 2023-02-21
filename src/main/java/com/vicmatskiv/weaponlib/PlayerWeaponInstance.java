@@ -9,7 +9,15 @@ import java.util.concurrent.LinkedBlockingDeque;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.lwjgl.opengl.GL13;
+import org.lwjgl.opengl.GL20;
 
+import com.vicmatskiv.weaponlib.animation.AnimationModeProcessor;
+import com.vicmatskiv.weaponlib.animation.gui.AnimationGUI;
+import com.vicmatskiv.weaponlib.command.DebugCommand;
+import com.vicmatskiv.weaponlib.compatibility.CompatibleClientEventHandler;
+import com.vicmatskiv.weaponlib.compatibility.RecoilParam;
+import com.vicmatskiv.weaponlib.config.BalancePackManager;
 import com.vicmatskiv.weaponlib.network.TypeRegistry;
 import com.vicmatskiv.weaponlib.perspective.OpticalScopePerspective;
 import com.vicmatskiv.weaponlib.perspective.Perspective;
@@ -17,8 +25,10 @@ import com.vicmatskiv.weaponlib.shader.DynamicShaderGroupSource;
 import com.vicmatskiv.weaponlib.shader.DynamicShaderGroupSourceProvider;
 import com.vicmatskiv.weaponlib.shader.DynamicShaderPhase;
 
+import akka.japi.Pair;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -54,7 +64,17 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 
     public final DynamicShaderGroupSource VIGNETTE_SOURCE = new DynamicShaderGroupSource(VIGNETTE_SOURCE_UUID,
             new ResourceLocation("weaponlib:/com/vicmatskiv/weaponlib/resources/vignette.json"))
-            .withUniform("Radius", context -> getOpticScopeVignetteRadius(context.getPartialTicks()));
+            .withUniform("Radius", context -> getOpticScopeVignetteRadius(context.getPartialTicks()))
+           // .withUniform("Velocity", context -> new float[]{CompatibleClientEventHandler.scopeVelX, CompatibleClientEventHandler.scopeVelY})
+            .withUniform("Reticle", context -> {
+            	
+            	GlStateManager.setActiveTexture(GL13.GL_TEXTURE0+4);
+            	Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("mw" + ":" + "textures/hud/reticle1.png"));
+            	GlStateManager.setActiveTexture(GL13.GL_TEXTURE0);
+            	
+            	return 4;
+            });
+         
 
     private static final long AIM_CHANGE_DURATION = 1200;
 
@@ -75,7 +95,15 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 	
 	private int loadIterationCount;
 	private boolean loadAfterUnloadEnabled;
+	private boolean isDelayCompoundEnd = true;
+	
+	private long stateReloadUpdateTimestamp;
+	private boolean isAwaitingCompoundInstructions = false;
 
+	
+	public boolean isSlideInLock = false;
+	
+	
 	/*
 	 * Upon adding an element to the head of the queue, all existing elements with lower priority are removed
 	 * from the queue. Elements with the same priority are not removed.
@@ -90,6 +118,9 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 	}
 
 
+	
+	
+	
     public PlayerWeaponInstance(int itemInventoryIndex, EntityLivingBase player, ItemStack itemStack) {
 		super(itemInventoryIndex, player, itemStack);
 	}
@@ -101,6 +132,20 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 	@Override
 	protected int getSerialVersion() {
 		return SERIAL_VERSION;
+	}
+	
+	public RecoilParam getRecoilParameters() {
+		if(AnimationModeProcessor.getInstance().getFPSMode()) {
+			return AnimationGUI.getInstance().getRecoilParams();
+		}
+		return getWeapon().builder.recoilParam;
+	}
+	
+	public Pair<Double, Double> getScreenShakeParameters() {
+		if(DebugCommand.isWorkingOnScreenShake()) {
+			return DebugCommand.screenShakeParam;
+		}
+		return getWeapon().getModernScreenShakeParameters();
 	}
 
 	private void addStateToHistory(WeaponState state) {
@@ -128,9 +173,53 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 		}
 		filteredStateQueue.addFirst(new AsyncWeaponState(state, this.stateUpdateTimestamp, expirationTimeout));
 	}
+	
+	
+	public long getAnimationDuration() {
+		
+		// Give the old animations
+		if(!getWeapon().builder.isUsingNewSystem()) {
+			logger.debug("Weapon is using the old system, returning standard value");
+			return getWeapon().getTotalReloadingDuration();
+		}
+		
+		return getAnimationDuration(getState());
+
+		
+	}
+	
+	public long getAnimationDuration(WeaponState state) {
+		
+		//System.out.println(getWeapon().getRenderer().getWeaponRendererBuilder().getTacticalReloadDuration());
+		
+		switch(state) {
+		
+		case LOAD:
+			return getWeapon().getTotalReloadingDuration();
+		case UNLOAD:
+			return getWeapon().getTotalUnloadingDuration();
+		case DRAWING:
+			return getWeapon().getTotalDrawingDuration();
+		case COMPOUND_RELOAD:
+			return getWeapon().getRenderer().getWeaponRendererBuilder().getCompoundReloadDuration()/2;
+		case COMPOUND_RELOAD_EMPTY:
+			//System.out.println(getWeapon().getRenderer().getWeaponRendererBuilder().getCompoundReloadEmptyDuration());
+			//return getWeapon().getRenderer().getWeaponRendererBuilder().getCompoundReloadEmptyDuration();
+			return getWeapon().getRenderer().getWeaponRendererBuilder().getCompoundReloadEmptyDuration();
+		case TACTICAL_RELOAD:
+			
+			return getWeapon().getRenderer().getWeaponRendererBuilder().getTacticalReloadDuration();
+		case COMPOUND_RELOAD_FINISHED:
+			return getWeapon().getRenderer().getWeaponRendererBuilder().getCompoundReloadDuration();
+			
+		}
+		
+	return 100L;
+	}
 
 	@Override
 	public boolean setState(WeaponState state) {
+	
 		boolean result = super.setState(state);
 		addStateToHistory(state);
 		return result;
@@ -146,6 +235,14 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 
 	public int getAmmo() {
 		return ammo;
+	}
+	
+	public boolean isSlideLocked() {
+		return this.isSlideInLock;
+	}
+	
+	public void setSlideLock(boolean state) {
+		this.isSlideInLock = state;
 	}
 
 	public void setAmmo(int ammo) {
@@ -234,6 +331,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 		setSelectedAttachmentIndexes(otherWeaponInstance.selectedAttachmentIndexes);
 		setActiveAttachmentIds(otherWeaponInstance.activeAttachmentIds);
 		setActiveTextureIndex(otherWeaponInstance.activeTextureIndex);
+		//setSlideLock(otherWeaponInstance.isSlideInLock);
 		setLaserOn(otherWeaponInstance.laserOn);
 		setMaxShots(otherWeaponInstance.maxShots);
 		setLoadIterationCount(otherWeaponInstance.loadIterationCount);
@@ -253,6 +351,17 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 			this.recoil = recoil;
 			markDirty();
 		}
+	}
+	
+	public boolean isDelayCompoundEnd() {
+		return isDelayCompoundEnd;
+	}
+	
+	public void setDelayCompoundEnd(boolean bool) {
+		if(!bool) {
+			stateReloadUpdateTimestamp = System.currentTimeMillis();
+		}
+		this.isDelayCompoundEnd = bool;
 	}
 	
 	public boolean isLoadAfterUnloadEnabled() {
@@ -321,7 +430,8 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 //    }
 
 	public float getFireRate() {
-		return getWeapon().builder.fireRate;
+		return BalancePackManager.getFirerate(getWeapon());
+		//return getWeapon().builder.fireRate;
 	}
 	
     public boolean isOneClickBurstAllowed() {
@@ -391,13 +501,21 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 		}
 		return null;
 	}
+	
+	public boolean isAwaitingCompoundInstructions() {
+		return this.isAwaitingCompoundInstructions;
+	}
+	
+	public void setIsAwaitingCompoundInstructions(boolean state) {
+		this.isAwaitingCompoundInstructions = state;
+	}
 
 	public float getZoom() {
 		return zoom;
 	}
 
 	public void setZoom(float zoom) {
-		if(this.zoom != zoom) {
+		if(this.zoom != zoom && zoom > 0) {
 			this.zoom = zoom;
 			markDirty();
 		}
@@ -442,7 +560,7 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 	@Override
 	public Class<? extends Perspective<?>> getRequiredPerspectiveType() {
 	    Class<? extends Perspective<?>> result = null;
-	    if(isAimed()) {
+	    if(isAimed() || !isAimed()) {
 	        ItemAttachment<Weapon> scope = getAttachmentItemWithCategory(AttachmentCategory.SCOPE);
 	        if(scope instanceof ItemScope && ((ItemScope) scope).isOptical()) {
 	            result = OpticalScopePerspective.class;
@@ -468,7 +586,8 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 //        float f = player.distanceWalkedModified - player.prevDistanceWalkedModified;
 //        float f1 = -(player.distanceWalkedModified + f * partialTicks);
         float f2 = player.prevCameraYaw + (player.cameraYaw - player.prevCameraYaw) * partialTicks;
-        return -2f * f2 + 0.55f;
+       // return -2f * f2 + 0.55f;
+        return 0.55f;
     }
 
     private float getAimChangeProgress() {
@@ -485,6 +604,8 @@ public class PlayerWeaponInstance extends PlayerItemInstance<WeaponState> implem
 	    if(isAimed() && phase == DynamicShaderPhase.POST_WORLD_OPTICAL_SCOPE_RENDER) {
 	        ItemScope scope = getScope();
 	        if(scope.isOptical()) {
+	        	
+	        	
 	            return scope.hasNightVision() && nightVisionOn ? NIGHT_VISION_SOURCE 
 	                    : VIGNETTE_SOURCE;
 	        }

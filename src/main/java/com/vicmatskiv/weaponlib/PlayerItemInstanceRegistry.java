@@ -76,7 +76,7 @@ public class PlayerItemInstanceRegistry {
 			result = createItemInstance(player, slot);
 			if(result != null) {
 			    ItemStack slotItemStack = compatibility.getInventoryItemStack(player, slot);
-			    if(slotItemStack != null) {
+			    if(slotItemStack != null && result.shouldHaveInstanceTags()) {
 			        Tags.setInstanceUuid(slotItemStack, result.getUuid());
 			    }
 				slotInstances.put(slot, result);
@@ -94,7 +94,7 @@ public class PlayerItemInstanceRegistry {
 				syncManager.unwatch(result);
 				result = createItemInstance(player, slot);
 				if(result != null) {
-				    Tags.setInstanceUuid(slotItemStack, result.getUuid());
+				    if(result.shouldHaveInstanceTags()) Tags.setInstanceUuid(slotItemStack, result.getUuid());
 					slotInstances.put(slot, result);
 					syncManager.watch(result);
 					if(result.getUpdateId() == 0) { // sync to server if newly created
@@ -122,7 +122,7 @@ public class PlayerItemInstanceRegistry {
 	
 	@SuppressWarnings("unchecked")
 	public <S extends ManagedState<S>, T extends PlayerItemInstance<S>> boolean update(S newManagedState, T extendedStateToMerge) {
-		
+	
 		Map<Integer, PlayerItemInstance<?>> slotContexts = registry.get(extendedStateToMerge.getPlayer().getUniqueID());
 		
 		boolean result = false;
@@ -135,6 +135,7 @@ public class PlayerItemInstanceRegistry {
 				 * If input.managedState has a transactional component, set current.managedState = input.managedState only,
 				 * do not update the entire state
 				 */
+				
 				extendedStateToMerge.setState(newManagedState); // why do we set it here?
 				if(newManagedState.commitPhase() != null) {
 					currentState.prepareTransaction(extendedStateToMerge);

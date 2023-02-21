@@ -1,5 +1,9 @@
 package com.vicmatskiv.weaponlib.core;
 
+import java.io.File;
+import java.io.PrintWriter;
+import java.lang.reflect.Method;
+
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
@@ -7,12 +11,23 @@ import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.InsnList;
+import org.objectweb.asm.tree.MethodInsnNode;
+import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.tree.VarInsnNode;
+import org.objectweb.asm.util.Textifier;
+import org.objectweb.asm.util.TraceClassVisitor;
 
 import com.vicmatskiv.weaponlib.ClassInfo;
 import com.vicmatskiv.weaponlib.OptimizedCubeList;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleClassInfoProvider;
 
 import net.minecraft.client.audio.SoundManager;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.renderer.EntityRenderer;
+import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.launchwrapper.IClassTransformer;
 
@@ -71,7 +86,7 @@ public class WeaponlibClassTransformer implements IClassTransformer {
         
         @Override
         public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
-            if (entityPlayerSPClassInfo.methodMatches("turn", "(FF)V", owner, name, desc)) {
+        	if (entityPlayerSPClassInfo.methodMatches("turn", "(FF)V", owner, name, desc)) {
                 mv.visitMethodInsn(Opcodes.INVOKESTATIC, 
                         "com/vicmatskiv/weaponlib/compatibility/Interceptors", "turn", 
                         "(Lnet/minecraft/entity/player/EntityPlayer;FF)V", false);
@@ -81,7 +96,181 @@ public class WeaponlibClassTransformer implements IClassTransformer {
         }
     }
     
+    public static void collideWithPlayer(Entity entityIn) {
+    	System.out.println("Swapped");
+    }
+    
+    private static class TestVisitor extends MethodVisitor {
+        
+     
+        public TestVisitor(MethodVisitor mv) {
+            super(Opcodes.ASM4, mv);
+            System.out.println("HI I AM TEST VISIRO!");
+        }
+        
+        @Override
+        public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
+        	super.visitMethodInsn(opcode, owner, name, desc, itf);
+        	
+        	/*
+        	Method other = null;
+			try {
+				other = WeaponlibClassTransformer.class.getDeclaredMethod("collideWithPlayer", Entity.class);
+			} catch (NoSuchMethodException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (SecurityException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			System.out.println("OTHER: " + other);
+			
+		
+			
+        	mv.visitMethodInsn(Opcodes.INVOKESTATIC, 
+        			Type.getInternalName(WeaponlibClassTransformer.class), other.getName(), 
+        			Type.getMethodDescriptor(other), false);
+        			*/
+
+        }
+        
+        @Override
+        public void visitLineNumber(int line, Label start) {
+        	if(line == 2167) {
+        		
+        		mv.visitVarInsn(Opcodes.ALOAD, 0);
+        		mv.visitInsn(Opcodes.DUP);
+        		mv.visitFieldInsn(Opcodes.GETFIELD, "net/minecraft/entity/EntityLivingBase", "motionY", "D");
+        		//mv.visit
+        		mv.visitLdcInsn(0.07);
+        		mv.visitInsn(Opcodes.DADD);
+        		mv.visitFieldInsn(Opcodes.PUTFIELD, "net/minecraft/entity/EntityLivingBase", "motionY", "D");
+        		//mv.visitVarInsn(Opcodes.GOTO, 77);
+        		//mv.visitVarInsn(Opcodes.LDC, 0.1);
+        		// net/minecraft/entity/EntityLivingBase
+        		
+        		//	mv.visitVarInsn(Opcodes.DUP, 0);
+        		//System.out.println("Found line!");
+        		//super.visitLineNumber(line, start);
+        	} else {
+        		super.visitLineNumber(line, start);
+        	}
+        	
+        	//System.out.println(line);
+        }
+        
+        @Override
+        public void visitJumpInsn(int opcode, Label label) {
+            super.visitJumpInsn(opcode, label);
+           
+        }
+    }
+    
+    public static void debugPrint(String fileName, String classFile, byte[] byteCode) {
+    	ClassReader reader = new ClassReader(byteCode);
+    	
+    	File f = new File(fileName);
+    	try {
+    		f.createNewFile();
+    	} catch(Exception e) {}
+    	
+    	PrintWriter pw = null;
+    	try {
+    		pw = new PrintWriter(f);
+    	} catch(Exception e) {}
+    	
+    	TraceClassVisitor tcv = new TraceClassVisitor(pw);
+    	reader.accept(tcv, 0);
+    	
+    	
+    }
+    
     public byte[] transform(String par1, String className, byte[] bytecode) {
+    	
+    	
+    	
+    	
+    	// https://blog.techno.fish/minecraft-forge-coremod-tutorial/
+    	// https://github.com/CreativeMD/CreativeCore/blob/1.12/src/main/java/com/creativemd/creativecore/transformer/CreativeTransformer.java
+    	/*
+    	if(className.equals("net.minecraft.entity.player.EntityPlayer")) {
+    		ClassReader cr = new ClassReader(bytecode);
+            ClassWriter cw = new ClassWriter(cr, 1);
+            CVTransform cv = new CVTransform(cw);
+            cr.accept(cv, 0);
+    		
+    	}*/
+    	
+    	/*
+    	if(className.equals("net.minecraft.entity.player.EntityPlayer")) {
+    		System.out.println("FOUND ENTITY PLAYER CLASS!");
+    		ClassNode node = new ClassNode();
+    		ClassReader reader = new ClassReader(bytecode);
+    		reader.accept(node, 0);
+    		
+    		for (MethodNode method : node.methods) {
+    			if(method.name.equals("collideWithPlayer")) {
+    				
+    				
+    				
+    				
+    				
+    				//method.lin
+    				
+    				System.out.println("FOUND COLLIDE W/ PLAYER METHOD!");
+    				InsnList payload = new InsnList();
+    			
+    				//payload.add(new VarInsnNode(Opcodes.ALOAD, 1));
+    				//v.visitVarInsn(Opcodes.FLOAD, 1);
+    				
+    				//payload.add(new VarInsnNode(Opcodes.FLOAD, 1));
+    				Method other = null;
+    				try {
+						other = getClass().getDeclaredMethod("collideWithPlayer", Entity.class);
+					} catch (NoSuchMethodException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (SecurityException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+    				
+    				System.out.println("Payload intl. name: " + Type.getInternalName(getClass()));
+    				System.out.println("Payload method descriptor: " + Type.getMethodDescriptor(other));
+    				
+    				payload.add(new MethodInsnNode(Opcodes.INVOKESTATIC,
+    						Type.getInternalName(getClass()), other.getName(),
+    						Type.getMethodDescriptor(other), false));
+    				//payload.add(new VarInsnNode(Opcodes.ASTORE, 1));
+    				
+    				
+    				//method.instructions.clear();
+    				method.
+    				//method.instructions.insert(payload);
+    				
+    			}
+    		}
+    		
+    		
+    		try {
+				//Textifier.main(new String[] {className});
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+    		
+    		//TraceClassVisitor cw = new TraceClassVisitor(new PrintWriter(System.out));
+    		//cw.
+    		//cw.p.print(new PrintWriter(System.out));
+    		
+    		
+    		ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
+    		node.accept(writer);
+    		return writer.toByteArray();
+    		
+    	}*/
+    	
     	/*
     	if(par1.contains("SoundSystemStarterThread")) {
     		System.out.println("ALERT: " + par1);
@@ -102,7 +291,7 @@ public class WeaponlibClassTransformer implements IClassTransformer {
     		
     	}*/
     	
-        if (entityRendererClassInfo.classMatches(className) || 
+        if ("net.minecraft.entity.EntityLivingBase".equals(className) || entityRendererClassInfo.classMatches(className) || 
                 (renderBipedClassInfo != null && renderBipedClassInfo.classMatches(className)) ||
                 (modelBipedClassInfo != null && modelBipedClassInfo.classMatches(className)) ||
                 (modelPlayerClassInfo != null && modelPlayerClassInfo.classMatches(className)) ||
@@ -118,7 +307,13 @@ public class WeaponlibClassTransformer implements IClassTransformer {
             ClassWriter cw = new ClassWriter(cr, 1);
             CVTransform cv = new CVTransform(cw);
             cr.accept(cv, 0);
-            return cw.toByteArray();
+            byte[] array = cw.toByteArray();
+            
+            if(className.equals("net.minecraft.entity.EntityLivingBase")) {
+        	//	debugPrint("joe.txt", className, array);
+        	}
+            
+            return array;
         } else {
             return bytecode;
         }
@@ -150,7 +345,7 @@ public class WeaponlibClassTransformer implements IClassTransformer {
         public SoundInterceptorMethodVistor(MethodVisitor mv) {
         	
             super(Opcodes.ASM4, mv);
-            System.out.println("wassup bro");
+
         }
         
         @Override
@@ -197,6 +392,8 @@ public class WeaponlibClassTransformer implements IClassTransformer {
             }
         }
     }
+    
+    
 
     private static class SetupCameraTransformMethodVisitor extends MethodVisitor {
 
@@ -376,6 +573,8 @@ public class WeaponlibClassTransformer implements IClassTransformer {
             super.visitFieldInsn(opcode, owner, name, desc);
             if(opcode == Opcodes.GETFIELD && (owner.equals("bnl") || owner.equals("net/minecraft/util/MovementInput"))
                     && (name.equals("jump") || name.equals("g"))) {
+            	
+            	
                 Label l6 = new Label();
                 mv.visitJumpInsn(Opcodes.IFEQ, l6);
                 mv.visitVarInsn(Opcodes.ALOAD, 0);
@@ -519,6 +718,9 @@ public class WeaponlibClassTransformer implements IClassTransformer {
 //            if(entityRendererClassInfo.classMatches(name)) {
 //                
 //            }
+            
+            //System.out.println("VISIT LOL");
+            
             this.cv.visit(version, access, name, signature, superName, interfaces);
         }
         
@@ -550,14 +752,12 @@ public class WeaponlibClassTransformer implements IClassTransformer {
 
         public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
         	
-        	if(classname.equals("paulscode/sound/libraries/SourceLWJGLOpenAL")) {
-        		if(name.equals("play")) {
-        			System.out.println("SIG: " + desc);
-        			System.out.println("CI: " + playSoundClassInfo);
-        			boolean f = playSoundClassInfo.methodMatches("play", "(Lpaulscode/sound/Channel;)V", classname, name, desc);
-        			System.out.println("RESULT: " + f);
-        		}
+        	  //System.out.println("VISIT LOL 2");
+        	
+        	if(name.equals("travel")) {
+        	//	return new TestVisitor(cv.visitMethod(access, name, desc, signature, exceptions));
         	}
+
         	
             if(entityRendererClassInfo.methodMatches("setupCameraTransform", "(FI)V", classname, name, desc)) {
                 return new SetupCameraTransformMethodVisitor(cv.visitMethod(access, name, desc, signature, exceptions));
@@ -577,13 +777,15 @@ public class WeaponlibClassTransformer implements IClassTransformer {
             } */ /*else if(modelPlayerClassInfo != null 
                     && modelPlayerClassInfo.methodMatches("render", "(Lnet/minecraft/entity/Entity;FFFFFF)V", classname, name, desc)) {
                 return new RenderMethodVisitor(cv.visitMethod(access, name, desc, signature, exceptions));
-            } */ else if(renderLivingBaseClassInfo != null 
+            } */
+            /*
+            else if(renderLivingBaseClassInfo != null 
                     && renderLivingBaseClassInfo.methodMatches("renderModel", "(Lnet/minecraft/entity/EntityLivingBase;FFFFFF)V", classname, name, desc)) {
                 return new RenderModelMethodVisitor(cv.visitMethod(access, name, desc, signature, exceptions));
             } else if(layerArmorBaseClassInfo != null 
                     && layerArmorBaseClassInfo.methodMatches("renderArmorLayer", "(Lnet/minecraft/entity/EntityLivingBase;FFFFFFFLnet/minecraft/inventory/EntityEquipmentSlot;)V", classname, name, desc)) {
                 return new RenderArmorLayerMethodVisitor(cv.visitMethod(access, name, desc, signature, exceptions));
-            } else if(layerHeldItemClassInfo != null 
+            } */ else if(layerHeldItemClassInfo != null 
                     && layerHeldItemClassInfo.methodMatches("renderHeldItem", "(Lnet/minecraft/entity/EntityLivingBase;Lnet/minecraft/item/ItemStack;Lnet/minecraft/client/renderer/block/model/ItemCameraTransforms$TransformType;Lnet/minecraft/util/EnumHandSide;)V", classname, name, desc)) {
                 return new RenderHeldItemMethodVisitor(cv.visitMethod(access, name, desc, signature, exceptions),
                         !name.equals("renderHeldItem"));
@@ -609,9 +811,9 @@ public class WeaponlibClassTransformer implements IClassTransformer {
                     && modelRendererClassInfo.methodMatches("render", "(F)V", classname, name, desc)) {
                 return new ModelRendererRenderMethodVisitor(
                         cv.visitMethod(access, name, desc, signature, exceptions), !name.equals("render"));
-            } else if(playSoundClassInfo != null && playSoundClassInfo.methodMatches("play", "(Lpaulscode/sound/Channel;)V", classname, name, desc)) {
+            } /*else if(playSoundClassInfo != null && playSoundClassInfo.methodMatches("play", "(Lpaulscode/sound/Channel;)V", classname, name, desc)) {
                 return new SoundInterceptorMethodVistor(cv.visitMethod(access, name, desc, signature, exceptions));
-            }
+            }*/
 
             return this.cv.visitMethod(access, name, desc, signature, exceptions);
         }

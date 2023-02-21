@@ -333,6 +333,10 @@ public class ConfigurationManager {
         }
     }
 
+    public boolean doFilmGrain() {
+    	return false;
+    }
+    
     public Explosions getExplosions() {
         return config.getExplosions();
     }

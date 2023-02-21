@@ -2,19 +2,31 @@ package com.vicmatskiv.weaponlib.compatibility;
 
 import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compatibility;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.FloatBuffer;
+import java.time.temporal.WeekFields;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import org.apache.logging.log4j.core.lookup.Interpolator;
 import org.lwjgl.BufferUtils;
+import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL12;
+import org.lwjgl.opengl.GL13;
+import org.lwjgl.opengl.GL30;
+import org.lwjgl.opengl.GLSync;
 import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
 
 import com.vicmatskiv.weaponlib.OptimizedCubeList;
 import com.vicmatskiv.weaponlib.ClientModContext;
+import com.vicmatskiv.weaponlib.CustomGui;
 import com.vicmatskiv.weaponlib.KeyBindings;
 import com.vicmatskiv.weaponlib.Part;
 import com.vicmatskiv.weaponlib.PlayerRenderer;
@@ -23,24 +35,44 @@ import com.vicmatskiv.weaponlib.RenderContext;
 import com.vicmatskiv.weaponlib.RenderableState;
 import com.vicmatskiv.weaponlib.SpreadableExposure;
 import com.vicmatskiv.weaponlib.Weapon;
+import com.vicmatskiv.weaponlib.WeaponState;
+import com.vicmatskiv.weaponlib.animation.AnimationModeProcessor;
+import com.vicmatskiv.weaponlib.animation.ClientValueRepo;
 import com.vicmatskiv.weaponlib.animation.MatrixHelper;
 import com.vicmatskiv.weaponlib.animation.MultipartRenderStateManager;
 import com.vicmatskiv.weaponlib.animation.ScreenShakingAnimationManager;
+import com.vicmatskiv.weaponlib.config.novel.ModernConfigManager;
 import com.vicmatskiv.weaponlib.inventory.CustomPlayerInventory;
+import com.vicmatskiv.weaponlib.jim.util.HitUtil;
+import com.vicmatskiv.weaponlib.numerical.LissajousCurve;
+import com.vicmatskiv.weaponlib.render.Bloom;
+import com.vicmatskiv.weaponlib.render.NewScreenshakingManager;
+import com.vicmatskiv.weaponlib.render.Shaders;
+import com.vicmatskiv.weaponlib.render.bgl.PostProcessPipeline;
+import com.vicmatskiv.weaponlib.render.cam.NaturalCamera;
+import com.vicmatskiv.weaponlib.shader.jim.Shader;
+import com.vicmatskiv.weaponlib.shader.jim.ShaderManager;
 import com.vicmatskiv.weaponlib.vehicle.EntityVehicle;
 import com.vicmatskiv.weaponlib.vehicle.RenderVehicle2;
 import com.vicmatskiv.weaponlib.vehicle.VehicleSuspensionStrategy;
 import com.vicmatskiv.weaponlib.vehicle.jimphysics.InterpolationKit;
 import com.vicmatskiv.weaponlib.vehicle.jimphysics.stability.InertialStabilizer;
+import com.vicmatskiv.weaponlib.vehicle.smoothlib.QPTI;
+import com.vicmatskiv.weaponlib.vehicle.smoothlib.VehicleRFCam;
 
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.model.ModelBox;
+import net.minecraft.client.model.ModelIllager;
 import net.minecraft.client.model.ModelPlayer;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms.TransformType;
 import net.minecraft.client.renderer.entity.RenderLivingBase;
+import net.minecraft.client.renderer.entity.layers.LayerHeldItem;
+import net.minecraft.client.renderer.entity.layers.LayerRenderer;
+import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
@@ -48,25 +80,55 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 //import net.minecraft.util.MathHelper;
 import net.minecraft.util.EnumHandSide;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.gen.NoiseGeneratorImproved;
+import net.minecraft.world.gen.NoiseGeneratorOctaves;
+import net.minecraft.world.gen.NoiseGeneratorPerlin;
+import net.minecraft.world.gen.NoiseGeneratorSimplex;
 import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.event.EntityViewRenderEvent.CameraSetup;
+import net.minecraftforge.common.util.FakePlayer;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
+
 
 public class Interceptors {
 	
+	public static final int OPTIMIZATION_MODE_MIN = 400;
+	
 	public static InertialStabilizer thirdPersonCameraStabilizer = new InertialStabilizer(new Vec3d(1,1,1));
 	
+	public static float authenticFOV = 0f;
+	
+	public static VehicleRFCam firstPersonCamera = new VehicleRFCam();
     
     public static boolean is3dRenderableItem(Item item) {
         return compatibility.is3dRenderable(item);
     }
+    
+    public static NaturalCamera nc = new NaturalCamera();
 
     public static void setupCameraTransformAfterHurtCameraEffect(float partialTicks) {
-       
+    	//if(1+1==2) return;
+    	
+    	//if(true) return;
+    	
+    	
+    	//GlStateManager.rotate((float) -ClientValueRepo.walkingGun.getLerpedPosition()*4, 0, 0, 1);
+    	
+    	
     	PlayerWeaponInstance weaponInstance = getPlayerWeaponInstance();
         EntityPlayer player = compatibility.getClientPlayer();
     	
+        
+        
+        	if(authenticFOV != 0.0f && Minecraft.getMinecraft().gameSettings.fovSetting == 80.0f) {
+        		Minecraft.getMinecraft().gameSettings.fovSetting = authenticFOV;
+        		authenticFOV = 0.0f;
+        	}
+        
+        	
         
         if(player.isRiding() && player.getRidingEntity() instanceof EntityVehicle && Minecraft.getMinecraft().gameSettings.thirdPersonView == 0) {
         	EntityVehicle vehicle = (EntityVehicle) player.getRidingEntity();
@@ -77,31 +139,81 @@ public class Interceptors {
         	
         	//Minecraft.getMinecraft().setRenderViewEntity(vehicle);
         	
+        	
+        	
         	if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 0) {
+        		
+        		if(Minecraft.getMinecraft().gameSettings.fovSetting != 80.0f) {
+        			authenticFOV = Minecraft.getMinecraft().gameSettings.fovSetting;
+        			Minecraft.getMinecraft().gameSettings.fovSetting = 80.0f;
+        		}
+        		
         		
         		//MatrixHelper.applyMatrix(RenderVehicle2.tm);
         		//vehicle.rotationPitch = 0;
+        		float mu = (float) ((1 - Math.cos(Minecraft.getMinecraft().getRenderPartialTicks() * Math.PI)) / 2f);
+        		
+        		/*
+        		 * BEGIN YAW & PITCH
+        		 */
         		
         		
-        		player.rotationYaw = vehicle.rotationYaw;
-        		player.prevRotationYaw = vehicle.prevRotationYaw;
+        		if(vehicle.getRealSpeed() != 0.0 && vehicle.getPassengers().indexOf(player) == 0) {
+        			player.rotationYaw = vehicle.rotationYaw;
+            		player.prevRotationYaw = vehicle.prevRotationYaw;
+            		
+            		
+            		player.rotationPitch = -vehicle.rotationPitch;
+            		player.prevRotationPitch = -vehicle.prevRotationPitch;
+        		}
         		
         		
-        		player.rotationPitch = -vehicle.rotationPitch;
-        		player.prevRotationPitch = -vehicle.prevRotationPitch;
+        		
+        		
+        		/*
+        		 * END YAW & PITCH
+        		 */
         		
         		
         		
-        		double dist = vehicle.rotationPitch;
+        		//player.rotationYaw = vehicle.rotationYaw;
+        		//player.prevRotationYaw = vehicle.prevRotationYaw;
+        		
+        		
+        		//player.rotationPitch = -vehicle.rotationPitch;
+        		//player.prevRotationPitch = -vehicle.prevRotationPitch;
+        		
+        		
+        		double dist = vehicle.prevRotationPitch + (vehicle.rotationPitch-vehicle.prevRotationPitch)*mu;
+        		float roll = (vehicle.prevRotationRollH+vehicle.prevRotationRoll) + ((vehicle.rotationRoll+vehicle.rotationRollH)-(vehicle.prevRotationRoll+vehicle.prevRotationRollH))*mu;
+        		
+        		
+        		
+        		if(Double.isNaN(dist)) dist = 0;
+        		if(Double.isNaN(roll)) roll = 0;
+        		
         		
         		GL11.glTranslated(0.0, 0.0, -dist*0.025);
         		//GL11.glTranslated(0.0, Math.abs(0.8*(vehicle.rotationPitch/45)), 0.0);
+
         		
-        		float muRoll = (float) ((1 - Math.cos(Minecraft.getMinecraft().getRenderPartialTicks() * Math.PI)) / 2f);
-        		float roll = (vehicle.prevRotationRollH+vehicle.prevRotationRoll) + ((vehicle.rotationRoll+vehicle.rotationRollH)-(vehicle.prevRotationRoll+vehicle.prevRotationRollH))*muRoll;
+        		GL11.glTranslated(roll*0.025, 0.0, 0.0);
+            	
         		GL11.glRotatef(-roll, 0.0f, 0.0f, 1.0f);
         		
-        	}
+        		
+        		
+        		double iSL = QPTI.pti(vehicle.prevSideLean, vehicle.sideLean);
+        		
+        		if(Double.isNaN(iSL)) iSL = 0.0;
+        		GL11.glRotated(iSL*2, 0.0, 0.0, 1.0);
+        		
+        		GL11.glTranslated(iSL/100, 0, -Math.min(vehicle.getRealSpeed()/150, 0.6));
+        		
+        		
+        		//GL11.glRotated(Math.toDegrees(vehicle.steerangle)/2, 0.0, 0.0, 1.0);
+        		
+        		}
 
         }
         
@@ -157,7 +269,15 @@ public class Interceptors {
     			}
     		}*/
     		
-    		GL11.glTranslated(-0.525, 1.0 /*+ vehicle.getInterpolatedLiftOffset()/2*/, -4.0);
+    		if(!vehicle.getConfiguration().shiftWithRight() ) {
+    			GL11.glTranslated(-0.3, 1.0 /*+ vehicle.getInterpolatedLiftOffset()/2*/, -4.0);
+        		
+    		} else {
+    			GL11.glTranslated(-0.525, 1.0 /*+ vehicle.getInterpolatedLiftOffset()/2*/, -4.0);
+        		
+    		}
+    		
+    		//GL11.glTranslated(-0.525, 1.0 /*+ vehicle.getInterpolatedLiftOffset()/2*/, -4.0);
     		GL11.glTranslated(0.0, 0.5, -2.5);
     		
     		
@@ -199,19 +319,23 @@ public class Interceptors {
     		*/
     		
     		
-    		double diff = player.rotationYaw - vehicle.rotationYaw;
+    		
+    		double targ = vehicle.rotationYaw;
+    		double diff = player.rotationYaw - targ;
     		if(diff != 0.0) {
     			double mod = 0.12*(Math.min(vehicle.getRealSpeed()/60.0, 1.0));
     			if(vehicle.getRealSpeed() > 5) {
+
     				
     				if(Math.abs(diff) > 120) mod = 1;
     				
     			}
-    			if(player.rotationYaw < vehicle.rotationYaw) {
+    			if(player.rotationYaw < targ) {
     				
     				player.rotationYaw -= diff*mod;
-    			} else if(player.rotationYaw > vehicle.rotationYaw) {
+    			} else if(player.rotationYaw > targ) {
     				
+
     				player.rotationYaw -= diff*mod;
     			}
     		}
@@ -223,22 +347,22 @@ public class Interceptors {
     		//player.prevRotationYaw = vehicle.prevRotationYaw;
     		
     		
-    		double targ = -vehicle.rotationPitch + 15;
+    		double targ2 = -vehicle.rotationPitch + 15;
     		
-    		double pitchDiff = player.rotationPitch - targ;
+    		double pitchDiff = player.rotationPitch - targ2;
     		if(pitchDiff != 0.0) {
     			double mod = 0.12*(Math.min(vehicle.getRealSpeed()/60.0, 1.0));
     			if(vehicle.getRealSpeed() > 5) {
     				if(Math.abs(diff) > 90) mod = 1;
     			}
-    			if(player.rotationPitch < targ) {
+    			if(player.rotationPitch < targ2) {
     				player.rotationPitch -= pitchDiff*mod;
-    			} else if(player.rotationPitch > targ) {
+    			} else if(player.rotationPitch > targ2) {
     				player.rotationPitch -= pitchDiff*mod;
     			}
     		}
     		player.prevRotationPitch = player.rotationPitch;
-    		
+    	
     		
     		//player.rotationPitch = 15;
     		//player.prevRotationPitch = 15;
@@ -247,24 +371,32 @@ public class Interceptors {
     	}
     	
         
-        if(weaponInstance != null ) {
-            ClientModContext context = (ClientModContext) weaponInstance.getWeapon().getModContext();
-            MultipartRenderStateManager<RenderableState, Part, RenderContext<RenderableState>> stateManager = weaponInstance.getWeapon().getRenderer().getStateManager(player);
-//            if(stateManager != null) {
-//                RenderableState lastState = stateManager.getLastState();
-//                if(lastState != RenderableState.NORMAL && lastState != RenderableState.ZOOMING) {
-//                    System.out.println("Last state " + lastState);
-//                }
-//            }
-            ScreenShakingAnimationManager yawPitchAnimationManager = context.getPlayerRawPitchAnimationManager();
-            yawPitchAnimationManager.update(player, weaponInstance, stateManager != null ? stateManager.getLastState() : null);
-//            if(weaponInstance.isAimed() && !isProning(player)) {
-//                yawPitchAnimationManager.update(player, stateManager != null ? stateManager.getLastState() : null);
-////                GL11.glRotatef(5f * partialTicks, 1.0F, 0.0F, 1.0F);
-//            } else {
-//                yawPitchAnimationManager.reset(player, stateManager != null ? stateManager.getLastState() : null);
-//            }
-        }
+    	//GlStateManager.rotate(10f, 0, 1, 0);
+       
+    	
+    	if(weaponInstance != null) {
+    		if(weaponInstance.getState() != WeaponState.READY) {
+    			
+    		}
+    	
+    		//nc.update();
+    	}
+    	
+   	nsm.applyWorld();
+    	
+    	/*
+    	if(weaponInstance != null) {
+      		   ClientModContext context = (ClientModContext) weaponInstance.getWeapon().getModContext();
+              MultipartRenderStateManager<RenderableState, Part, RenderContext<RenderableState>> stateManager = weaponInstance.getWeapon().getRenderer().getStateManager(player);
+             
+              ScreenShakingAnimationManager yawPitchAnimationManager = context.getPlayerRawPitchAnimationManager();
+              yawPitchAnimationManager.update(player, weaponInstance, stateManager != null ? stateManager.getLastState() : null);
+         }
+    		*/
+    	
+    	
+    	
+    	
     }
     
     private static PlayerWeaponInstance getPlayerWeaponInstance() {
@@ -284,23 +416,107 @@ public class Interceptors {
     
     public static boolean setupViewBobbing(float partialTicks) {
     	
+    	/*
+    	GlStateManager.translate(2.0, 0.0, 0.0);
+    	GlStateManager.rotate(45f, 0, 1, 0);
+    	*/
+    	if(AnimationModeProcessor.getInstance().getFPSMode()) {
+    		AnimationModeProcessor.getInstance().applyCameraTransforms();
+        	
+    	}
     	
-        
+    
+    	if(ClientModContext.getContext() != null && ClientModContext.getContext().getMainHeldWeapon() != null) {
+    		PlayerWeaponInstance pwi = ClientModContext.getContext().getMainHeldWeapon();
+    		
+    	
+    		
+    		nc.update();
+    		
+    		//System.out.println(ClientModContext.getContext());
+    	}
+    	
+    	
+    	//GlStateManager.translate(0, ClientValueRepo.rise, 0);
+    	
+    	GlStateManager.rotate((float) ClientValueRepo.jumpingSpring.getLerpedPosition(), 1, 0, 0);
         if(!(compatibility.getRenderViewEntity() instanceof EntityPlayer)) {
             return true;
         }
         
+        float scalar = 0.0f;
+     
+        /*
+        if(ClientValueRepo.gunPow > 30) {
+        	scalar = (float) (ClientValueRepo.gunPow-30)/50f;
+        }
+        */
+        
+        GlStateManager.rotate(-2f*scalar, 0, 0, 1);
+       // System.out.println(scalar);
+       // GlStateManager.translate(0.0, 0.0, -0.2*scalar);
+        
+       //GlStateManager.rotate(3f*scalar, 0, 1, 0);
+      // GlStateManager.rotate(2f*scalar, 1, 0, 0);
+       
         EntityPlayer entityplayer = (EntityPlayer)compatibility.getRenderViewEntity();
 
-        {
+        //ClientValueRepo.forward += Minecraft.getMinecraft().player.moveForward/25f;
+        
+        
+        PlayerWeaponInstance pwi = ClientModContext.getContext().getMainHeldWeapon();
+        
+        
+        
+      
+        
+        if(pwi == null || !pwi.isAimed()) {
+        	
+        	
+        	float sMult = 1.0f;
+        	float speed = sMult/1.0f;
+        	
+        	float f =entityplayer.distanceWalkedModified - entityplayer.prevDistanceWalkedModified;
+            float f1 = -(entityplayer.distanceWalkedModified + f * partialTicks);
+            float f2 = entityplayer.prevCameraYaw + (entityplayer.cameraYaw - entityplayer.prevCameraYaw) * partialTicks;
+            float f3 = entityplayer.prevCameraPitch + (entityplayer.cameraPitch - entityplayer.prevCameraPitch) * partialTicks;
+            
+            float xWiggle = (float) LissajousCurve.getXOffsetOnCurve(3, 1, 2, Math.PI, f1);
+            
+            GL11.glTranslatef(CompatibleMathHelper.sin(f1 * (float)Math.PI*speed) * f2 * 0.5F, -Math.abs(CompatibleMathHelper.cos(f1 * (float)Math.PI) * f2)*0.5f, 0.0F);
+            GL11.glRotatef(CompatibleMathHelper.sin(f1 * (float)Math.PI*speed) * f2 * 3.0F*sMult, 0.0F, 0.0F, 1.0F);
+            GL11.glRotatef(Math.abs(CompatibleMathHelper.cos((f1 * (float)Math.PI - 0.2F)*speed) * f2) * 5.0F, 1.0F, 0.0F, 0.0F);
+            GL11.glRotatef(f3*sMult, 1.0F, 0.0F, 0.0F);
+        	
+        	/*
             float f =entityplayer.distanceWalkedModified - entityplayer.prevDistanceWalkedModified;
             float f1 = -(entityplayer.distanceWalkedModified + f * partialTicks);
             float f2 = entityplayer.prevCameraYaw + (entityplayer.cameraYaw - entityplayer.prevCameraYaw) * partialTicks;
             float f3 = entityplayer.prevCameraPitch + (entityplayer.cameraPitch - entityplayer.prevCameraPitch) * partialTicks;
-            GL11.glTranslatef(CompatibleMathHelper.sin(f1 * (float)Math.PI) * f2 * 0.5F, -Math.abs(CompatibleMathHelper.cos(f1 * (float)Math.PI) * f2), 0.0F);
-            GL11.glRotatef(CompatibleMathHelper.sin(f1 * (float)Math.PI) * f2 * 3.0F, 0.0F, 0.0F, 1.0F);
-            GL11.glRotatef(Math.abs(CompatibleMathHelper.cos(f1 * (float)Math.PI - 0.2F) * f2) * 5.0F, 1.0F, 0.0F, 0.0F);
-            GL11.glRotatef(f3, 1.0F, 0.0F, 0.0F);
+            
+            float xWiggle = (float) LissajousCurve.getXOffsetOnCurve(3, 1, 2, Math.PI, f1);
+            
+            GL11.glTranslatef(CompatibleMathHelper.sin(f1 * (float)Math.PI*speed) * f2 * 0.5F, -Math.abs(CompatibleMathHelper.cos(f1 * (float)Math.PI) * f2)*0.5f, 0.0F);
+            GL11.glRotatef(CompatibleMathHelper.sin(f1 * (float)Math.PI*speed) * f2 * 3.0F*sMult, 0.0F, 0.0F, 1.0F);
+            GL11.glRotatef(Math.abs(CompatibleMathHelper.cos((f1 * (float)Math.PI - 0.2F)*speed) * f2) * 5.0F, 1.0F, 0.0F, 0.0F);
+            GL11.glRotatef(f3*sMult, 1.0F, 0.0F, 0.0F);
+            */
+        } else {
+        	
+        	
+        	
+        		
+        			 float f =entityplayer.distanceWalkedModified - entityplayer.prevDistanceWalkedModified;
+                     float f1 = -(entityplayer.distanceWalkedModified + f * partialTicks);
+                     float f2 = entityplayer.prevCameraYaw + (entityplayer.cameraYaw - entityplayer.prevCameraYaw) * partialTicks;
+                     float f3 = entityplayer.prevCameraPitch + (entityplayer.cameraPitch - entityplayer.prevCameraPitch) * partialTicks;
+                     GL11.glTranslatef(CompatibleMathHelper.sin(f1 * (float)Math.PI) * f2 * 0.2F, -Math.abs(CompatibleMathHelper.cos(f1 * (float)Math.PI) * f2)*0.2f, 0.0F);
+                     GL11.glRotatef(CompatibleMathHelper.sin(f1 * (float)Math.PI) * f2 * 3.0F, 0.0F, 0.0F, 1.0F);
+                     GL11.glRotatef(Math.abs(CompatibleMathHelper.cos(f1 * (float)Math.PI - 0.2F) * f2) * 5.0F, 1.0F, 0.0F, 0.0F);
+                    
+                     GL11.glRotatef(f3, 1.0F, 0.0F, 0.0F);
+        		
+        	
         }
         
         
@@ -325,9 +541,12 @@ public class Interceptors {
             }
         }
         
+        
+        
         if(entityplayer.getRidingEntity() instanceof EntityVehicle) {
         	//if(1+1==2) return false;
             EntityVehicle vehicle = (EntityVehicle) entityplayer.getRidingEntity();
+            if(vehicle.getControllingPassenger() != entityplayer) return false;
             double lastYawDelta = vehicle.getLastYawDelta();
             double speed = vehicle.getSpeed();
             
@@ -338,7 +557,7 @@ public class Interceptors {
             
             // jim hack
             
-            float amplitude = 0.03f;
+            float amplitude = 0.02f;
             float frequency = 15f;
             
             double hillFrac = (vehicle.getSolver().getVelocityVector().lengthVector()*(vehicle.rotationPitch/2))/20;
@@ -359,12 +578,25 @@ public class Interceptors {
             float appliedAmplitude = 0.0f;
             if(Minecraft.getMinecraft().gameSettings.thirdPersonView != 0) {
             	appliedAmplitude = amplitude;
-            } else appliedAmplitude = amplitude/10.0f;
+            } else appliedAmplitude = amplitude/7.5f;
             
+            if(vehicle.getSolver().velocity.lengthVector() > 10) {
+            	appliedAmplitude += vehicle.getSolver().getSideSlipAngle()/45;
+            }
             
+           // System.out.println(vehicle.getSolver().getVelocityVector().lengthVector());
             
+            if(vehicle.getSolver().getVelocityVector().lengthVector() != 0.0) {
+            	  NoiseGeneratorPerlin ngo = new NoiseGeneratorPerlin(new Random(45302), 1);
+                  double val = ngo.getValue(vehicle.posX, vehicle.posZ)/25;
+                 // System.out.println(val);
+                  appliedAmplitude += val;
+                  frequency += val*2;
+            }
+          
+           
             
-            Matrix4f transformMatrix = vehicle.getRandomizer().update(frequency,  appliedAmplitude);
+            Matrix4f transformMatrix = vehicle.getRandomizer().update(frequency,  appliedAmplitude*0.8f);
            //
             
             //RenderVehicle2.captureCameraTransform(transformMatrix);
@@ -375,17 +607,47 @@ public class Interceptors {
               //  GL11.glRotatef(-(float)lastYawDelta * 2f, 0.0F, 1.0f, 0.0f);
             }
         } else {
+        	
             RenderVehicle2.captureCameraTransform(null);
         }
         
+        
+        nsm.applyHead();
+        //nsm.update();
+        
+        
+      // if(true) return false;
+        
+       
+     
+        if(ModernConfigManager.enableAllShaders && ModernConfigManager.enableScreenShaders) {
+        	GlStateManager.disableLighting();
+    		GlStateManager.disableBlend();
+    		
+    		//GlStateManager.enableBlend();
+    		
+    		PostProcessPipeline.doPostProcess();
+    		
+    		GlStateManager.enableDepth();
+        }
+		
+      //  System.out.println("hi");
         return false;
     }
     
+    public static void renderLastEvent() {
+    	
+    }
+    
+    public static NewScreenshakingManager nsm = new NewScreenshakingManager();
+    
     public static boolean hurtCameraEffect(float partialTicks) {
-        
+//	    if(1+1==2) return false;  
         if(!(compatibility.getRenderViewEntity() instanceof EntityPlayer)) {
             return true;
         }
+        
+        
         
         boolean allowDefaultEffect = false;
 
@@ -444,10 +706,12 @@ public class Interceptors {
     private static Map<Entity, PlayerRenderer> renderers = new HashMap<>();
     
     public static PlayerRenderer getPlayerRenderer(Entity entity) {
+    	
         return renderers.get(entity);
     }
     
     public static void render2(ModelBase modelBase, Entity entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scale) {
+    	//if(1+1==2) return;
     	
     	
     	
@@ -458,6 +722,7 @@ public class Interceptors {
     			if(b != 39.0) return;    			
     		}
     	}
+    	
     	
         if(entityIn instanceof EntityPlayer && modelBase instanceof ModelPlayer) {
             
@@ -524,9 +789,49 @@ public class Interceptors {
             modelBase.render(entityIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
         }
     }
+    
+    public static boolean layerRendererHookSetup = false;
+    public static Field layerRendererField;
+    public static Method translateItemField;
+    public static HashMap<RenderLivingBase<?>, LayerHeldItem> sidePositioningMap = new HashMap<>();
+    
+    public static void checkLayerRenderersHooks() {
+    	layerRendererHookSetup = true;
+    	
+    	layerRendererField = CompatibleReflection.findField(RenderLivingBase.class, "layerRenderers", "field_177097_h");
+    	translateItemField = CompatibleReflection.findMethod(LayerHeldItem.class, "translateToHand", "func_191361_a", EnumHandSide.class);
+		 }
+    
+    @SuppressWarnings("unchecked")
+	public static LayerHeldItem extractLayerHeldItem(RenderLivingBase<?> rlb) {
+    	List<LayerRenderer<?>> list = null;
+    	
+    	try {
+			list = (List<LayerRenderer<?>>) layerRendererField.get(rlb);
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+			return null;
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+			return null;
+		}
+    	
+    	for(LayerRenderer<?> lr : list) {
+    		if(lr instanceof LayerHeldItem) {
+    		
+    			return (LayerHeldItem) lr;
+    		}
+    	}
+    	
+    	// If nothing above works
+    	return null;
+    	
+    }
+   
 
     public static void positionItemSide(RenderLivingBase<?> livingEntityRenderer, EntityLivingBase entity,
             ItemStack itemStack, TransformType transformType, EnumHandSide handSide) {
+    	
     	
         if(entity instanceof EntityPlayer /* && isProning((EntityPlayer) entity)*/) { 
             PlayerRenderer playerRenderer = renderers.get(entity);
@@ -536,7 +841,51 @@ public class Interceptors {
                 ((ModelBiped)livingEntityRenderer.getMainModel()).postRenderArm(0.0625F, handSide);
             }
         } else {
-            ((ModelBiped)livingEntityRenderer.getMainModel()).postRenderArm(0.0625F, handSide);
+        	
+        	/*
+        	 * This is a pretty complex fix, essentially this method replaces something that can be
+        	 * overriden in a few small cases, and the fix that was here before was to cast it to a (ModelBiped) and
+        	 * call the postRenderArm method. Unfortunately- the illager does not abide by that fix. To actually fix it,
+        	 * what we do is we find the layerRenderers method from RenderLivingBase, and use it to get the LayerHeldItem
+        	 * which we can then invoke. This fix is complex because this entire method is based around ASM.
+        	 */
+        	
+        	if(!layerRendererHookSetup) {
+        		checkLayerRenderersHooks();
+        	}
+        	
+        	
+        	if(!sidePositioningMap.containsKey(livingEntityRenderer)) {
+        		LayerHeldItem lhi = extractLayerHeldItem(livingEntityRenderer);
+        		if(lhi == null) {
+        			((ModelBiped) livingEntityRenderer.getMainModel()).postRenderArm(0.0625F, handSide);
+        		}
+        		
+        		sidePositioningMap.put(livingEntityRenderer, lhi);
+        		
+        		
+        		
+        	}
+        	
+        	
+        
+        	if(sidePositioningMap.containsKey(livingEntityRenderer)) {
+        		try {
+					translateItemField.invoke(sidePositioningMap.get(livingEntityRenderer), handSide);
+				} catch (IllegalAccessException e) {
+					((ModelBiped) livingEntityRenderer.getMainModel()).postRenderArm(0.0625F, handSide);
+			          
+					e.printStackTrace();
+				} catch (IllegalArgumentException e) {
+					((ModelBiped) livingEntityRenderer.getMainModel()).postRenderArm(0.0625F, handSide);
+			          
+					e.printStackTrace();
+				} catch (InvocationTargetException e) {
+					((ModelBiped) livingEntityRenderer.getMainModel()).postRenderArm(0.0625F, handSide);
+			          
+					e.printStackTrace();
+				}
+        	}
         }
     }
     
@@ -551,8 +900,113 @@ public class Interceptors {
                 + player.getEyeHeight() * 1.6f : position;
     }
     
+
+    
     public static void turn(EntityPlayer player, float yawDelta, float pitchDelta) {
-        float originalPitch = player.rotationPitch;
+    	//if(1+1==2) return;'
+    	
+    	if(ClientModContext.getContext() != null && ClientModContext.getContext().getMainHeldWeapon() != null) {
+    		PlayerWeaponInstance pwi = ClientModContext.getContext().getMainHeldWeapon();
+    		if(CustomGui.isInModifyingState(pwi) || CustomGui.isInAltModifyingState(pwi)) {
+    			yawDelta *= 0.01f;
+    			pitchDelta *= 0.01f;
+    		}
+    	}
+    	
+    	//Animation mdoe on
+    	if(AnimationModeProcessor.getInstance().getFPSMode() && Mouse.isButtonDown(0)) {
+    		Mouse.getEventDWheel();
+    		AnimationModeProcessor amp = AnimationModeProcessor.getInstance();
+    		amp.rot = amp.rot.addVector(pitchDelta, yawDelta, 0);
+    		yawDelta = 0;
+        	pitchDelta = 0;
+    	}
+    	
+    
+    	
+    	if(ClientValueRepo.recoilWoundY > 0) {
+    		ClientValueRepo.recoilWoundY -= Math.abs(pitchDelta) * 0.15;
+    		if(ClientValueRepo.recoilWoundY < 0) {
+    			ClientValueRepo.recoilWoundY = 0;
+    		}
+    	}
+    	
+    //	System.out.println(ClientValueRepo.recoilWoundY);
+    //	ClientValueRepo.recoilWoundY -= pitchDelta*0.2;
+    	
+    	
+    	//ClientValueRepo.gunPow.velocity += yawDelta*0.02;
+    	
+    	//compatibility.addChatMessage(Minecraft.getMinecraft().player, "Working " + Minecraft.getMinecraft().player.ticksExisted);
+    	
+    	
+    	
+    	float yawAddition = -yawDelta * 1.5f;
+    	float pitchAddition = pitchDelta * 2.5f;
+    	
+    	/*
+    	if(Math.abs(Math.abs(yawAddition) - Math.abs(previousYawAddition)) > 1.0) yawAddition = (float) InterpolationKit.interpolateValue(previousYawAddition, yawAddition, 0.3f);
+    	if(Math.abs(Math.abs(pitchAddition) - Math.abs(previousPitchAddition)) > 1.0) pitchAddition = (float) InterpolationKit.interpolateValue(previousPitchAddition, pitchAddition, 0.3f);
+    	*/
+    	//System.out.println(Math.abs(yawAddition) - Math.abs(previousYawAddition));
+    	
+    
+    	ClientValueRepo.xInertia.velocity += yawAddition;
+    	ClientValueRepo.yInertia.velocity += pitchAddition;
+    	
+    
+    	
+    	//ClientValueRepo.xInertia += yawDelta*0.02;
+    	//ClientValueRepo.yInertia += pitchDelta*0.04;
+    	
+    	//ClientValueRepo.scopeX += (yawDelta*(0.01));
+    	//ClientValueRepo.scopeY += pitchDelta*(0.01);
+    	
+    	
+    	// Scope sensitivity adjustment
+    	PlayerWeaponInstance weaponInstance = ClientModContext.getContext().getMainHeldWeapon();
+    	if(weaponInstance != null && weaponInstance.isAimed() && weaponInstance.getScope() != null && weaponInstance.getScope().isOptical()) {
+    		
+    		//System.out.println(weaponInstance.getZoom());
+    		
+    		
+    		
+    		
+    		double scalar = 0.001*(1-weaponInstance.getZoom());
+    		
+    		/*
+    		ClientValueRepo.scopeX += (yawDelta*(0.005+scalar));
+    		ClientValueRepo.scopeY += pitchDelta*(0.005+scalar);
+        	*/
+    		
+    		ClientValueRepo.scopeX.add((yawDelta*(0.001+scalar)));
+    		ClientValueRepo.scopeY.add(pitchDelta*(0.001+scalar));
+    		
+        	if(weaponInstance.getZoom() < 0.2f) {
+    			yawDelta *= weaponInstance.getZoom()*3;
+            	pitchDelta *= weaponInstance.getZoom()*3;
+    		}
+    	} else {
+    		/*
+    		ClientValueRepo.scopeX += (yawDelta*(0.005));
+    		ClientValueRepo.scopeY += pitchDelta*(0.005);
+    		*/
+    		ClientValueRepo.scopeX.add(yawDelta*(0.005));
+    		ClientValueRepo.scopeY.add(pitchDelta*(0.005));
+    		
+    	}
+    	
+    	
+    	
+    	
+    	
+    	if(Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) && CompatibleClientEventHandler.freecamEnabled) {
+    		CompatibleClientEventHandler.yawDelta = yawDelta;
+        	CompatibleClientEventHandler.pitchDelta = pitchDelta;
+    		return;
+    	}
+    	
+    	float originalPitch = player.rotationPitch;
         float originalYaw = player.rotationYaw;
         //System.out.println("Yaw delta: " + yawDelta);
         

@@ -4,8 +4,15 @@ import static com.vicmatskiv.weaponlib.compatibility.CompatibilityProvider.compa
 
 import com.vicmatskiv.weaponlib.compatibility.CompatibleCustomPlayerInventoryCapability;
 import com.vicmatskiv.weaponlib.compatibility.CompatibleGuiHandler;
+import com.vicmatskiv.weaponlib.crafting.ammopress.ContainerAmmoPress;
+import com.vicmatskiv.weaponlib.crafting.ammopress.GUIContainerAmmoPress;
+import com.vicmatskiv.weaponlib.crafting.ammopress.TileEntityAmmoPress;
+import com.vicmatskiv.weaponlib.crafting.workbench.ContainerWorkbench;
+import com.vicmatskiv.weaponlib.crafting.workbench.GUIContainerWorkbench;
+import com.vicmatskiv.weaponlib.crafting.workbench.TileEntityWorkbench;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -14,6 +21,8 @@ public class GuiHandler extends CompatibleGuiHandler {
 
     public static final int STORAGE_ITEM_INVENTORY_GUI_ID = 1;
     public static final int CUSTOM_PLAYER_INVENTORY_GUI_ID = 2;
+    public static final int WORKBENCH_GUI_ID = 3;
+    public static final int AMMOPRESS_GUI_ID = 4;
 //    public static final int MISSIONS_MENU_GUI_ID = 3;
 
     @Override
@@ -33,6 +42,12 @@ public class GuiHandler extends CompatibleGuiHandler {
             container = new CustomPlayerInventoryContainer(player, player.inventory,
                     CompatibleCustomPlayerInventoryCapability.getInventory(player));
             break;
+        case WORKBENCH_GUI_ID:
+        	container = new ContainerWorkbench(player, player.inventory, (TileEntityWorkbench) world.getTileEntity(new BlockPos(x, y, z)));
+        	break;
+        case AMMOPRESS_GUI_ID:
+        	container = new ContainerAmmoPress(player, player.inventory, (TileEntityAmmoPress) world.getTileEntity(new BlockPos(x, y, z)));
+        	break;
         }
         return container;
     }
@@ -57,7 +72,15 @@ public class GuiHandler extends CompatibleGuiHandler {
 //        case MISSIONS_MENU_GUI_ID:
 //            guiContainer = new MissionsMenuGui();
 //            break;
+        case WORKBENCH_GUI_ID:
+        	guiContainer = new GUIContainerWorkbench(player, player.inventory, (TileEntityWorkbench) world.getTileEntity(new BlockPos(x, y, z)));
+        	
+        	break;
+        case AMMOPRESS_GUI_ID:
+        	guiContainer = new GUIContainerAmmoPress(player, player.inventory, (TileEntityAmmoPress) world.getTileEntity(new BlockPos(x, y, z)));
+        	break;
         }
+        
         
         return guiContainer;
     }

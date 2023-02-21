@@ -17,21 +17,36 @@ public class WheelAxel implements IEncodable<WheelAxel> {
 	public boolean isDriveWheel;
 	public double COGoffset;
 	public boolean isHandbraking;
+	public double tractionTorque;
 	
-	public WheelAxel(VehiclePhysicsSolver solver, double offsetFromCOG, boolean isDriveWheel) {
-		this.solver = solver;
+	public WheelAxel(double offsetFromCOG, boolean isDriveWheel) {
 		this.isDriveWheel = isDriveWheel;
 		this.COGoffset = offsetFromCOG;
+	}
+	
+	public WheelAxel newInstance() {
+		WheelAxel newAxel = new WheelAxel(this.COGoffset, this.isDriveWheel);
+		newAxel.withWheels(this.leftWheel.newInstance(), this.rightWheel.newInstance());
+		
+		return newAxel;
 	}
 	
 	public void addWheels(WheelSolver left, WheelSolver right) {
 		this.leftWheel = left;
 		this.rightWheel = right;
 		
-		this.solver.wheels.add(left);
-		this.solver.wheels.add(right);
+		
 	}
 	
+	public void assignSolver(VehiclePhysicsSolver solver) {
+		this.solver = solver;
+		
+		this.leftWheel.assignSolver(solver);
+		this.rightWheel.assignSolver(solver);
+		
+		this.solver.wheels.add(this.leftWheel);
+		this.solver.wheels.add(this.rightWheel);
+	}
 	
 	public void applyHandbrake() {
 		this.isHandbraking = true;
@@ -48,8 +63,11 @@ public class WheelAxel implements IEncodable<WheelAxel> {
 	 *  lower values mean higher braking.
 	 */
 	public void applyBrakingForce(double magnitude) {
-		leftWheel.applyBrake(0.3);
-		rightWheel.applyBrake(0.3);
+		
+		leftWheel.driveTorque += -magnitude;
+		rightWheel.driveTorque += -magnitude;
+		//leftWheel.applyBrake(100);
+		//rightWheel.applyBrake(100);
 	}
 	
 	public void setSteeringAngle(double angle) {
@@ -101,21 +119,28 @@ public class WheelAxel implements IEncodable<WheelAxel> {
 	}
 	
 	public void doPhysics() {
+		
+		
+		
 		leftWheel.doPhysics();
 		rightWheel.doPhysics();
 		
 		double drTorque = leftWheel.driveTorque + rightWheel.driveTorque;
 		
 		
+		tractionTorque = leftWheel.tractionTorque + rightWheel.tractionTorque;
+
+	
+		double totalTorque = drTorque + tractionTorque;
 		
-		
-		double totalTorque = drTorque + leftWheel.tractionTorque + rightWheel.tractionTorque;
+	
 		
 	
 		
 		double inertia = leftWheel.wheelInertia + rightWheel.wheelInertia;
 		double angularAccel = totalTorque/inertia;
 		
+		//System.out.println("Angular Acceleration: " + angularAccel);
 		
 		leftWheel.wheelAngularAcceleration = angularAccel;
 		rightWheel.wheelAngularAcceleration = angularAccel;
@@ -127,6 +152,16 @@ public class WheelAxel implements IEncodable<WheelAxel> {
 		rightWheel.driveTorque = 0;
 		
 		
+	}
+	
+	public WheelAxel withWheels(WheelSolver left, WheelSolver right) {
+		left.axel = this;
+		
+		right.axel = this;
+		
+		
+		this.addWheels(left, right);
+		return this;
 	}
 
 	@Override

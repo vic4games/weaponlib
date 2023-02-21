@@ -34,8 +34,12 @@ public class VehiclePhysUtil {
 	 * RESISTIVE FORCES
 	 */
 	
+	public static double calculateLift(float coF, double longitudinalSpeed, double areaOfCar) {
+		return 0.5*1.225*areaOfCar*coF*(longitudinalSpeed*longitudinalSpeed);
+	}
+	
 	public static Vec3d realDrag(float coF, Vec3d speed, double areaOfCar) {
-		return speed.scale(0.5).scale(-coF).scale(1.29).scale(speed.lengthSquared());
+		return speed.scale(0.5).scale(-coF).scale(/*1.225*/0.20).scale(speed.lengthSquared());
 	}
 	
 	public static Vec3d simpleDragForce(float dragC, Vec3d motionVector) {

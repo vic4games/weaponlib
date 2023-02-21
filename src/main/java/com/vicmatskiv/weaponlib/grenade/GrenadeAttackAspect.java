@@ -20,6 +20,7 @@ import com.vicmatskiv.weaponlib.state.StateManager;
 
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.DamageSource;
 
 
 /*
@@ -184,6 +185,8 @@ public class GrenadeAttackAspect implements Aspect<GrenadeState, PlayerGrenadeIn
                 if(remainingTimeUntilExplosion < 0) {
                     remainingTimeUntilExplosion = 0;
                 }
+                
+                
                 String message = compatibility.getLocalizedString("gui.grenadeExplodes",
                         Math.round(remainingTimeUntilExplosion / 1000f));
                 modContext.getStatusMessageCenter().addAlertMessage(message, 1, 1000, 0);
@@ -195,7 +198,7 @@ public class GrenadeAttackAspect implements Aspect<GrenadeState, PlayerGrenadeIn
 
     public void serverThrowGrenade(EntityPlayer player, PlayerGrenadeInstance instance, long activationTimestamp) {
         logger.debug("Throwing grenade");
-        
+       
         //boolean isSmokeGrenade = instance.getWeapon().isSmokeOnly();
         
         serverThrowGrenade(modContext, player, instance, activationTimestamp);
@@ -205,9 +208,11 @@ public class GrenadeAttackAspect implements Aspect<GrenadeState, PlayerGrenadeIn
 
     public static void serverThrowGrenade(ModContext modContext, EntityLivingBase player, PlayerGrenadeInstance instance,
             long activationTimestamp) {
+    	
+    
         if(activationTimestamp == 0 && instance.getWeapon().getType() == Type.REGULAR) {
             // explode immediately
-
+        	player.attackEntityFrom(DamageSource.causeExplosionDamage(player), 500f);
             Explosion.createServerSideExplosion(modContext, compatibility.world(player), null,
                     player.posX, player.posY, player.posZ, instance.getWeapon().getExplosionStrength(), false, true,
                     instance.getWeapon().isDestroyingBlocks(), 1f, 1f, 1.5f, 1f, null, null, modContext.getExplosionSound());

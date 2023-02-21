@@ -34,7 +34,7 @@ public class CustomTileEntity<T extends CustomTileEntityConfiguration<T>> extend
         this.side = side;
     }
     
-    protected int getSide() {
+    public int getSide() {
         return side;
     }
 

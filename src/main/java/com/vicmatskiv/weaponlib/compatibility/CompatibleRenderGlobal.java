@@ -373,6 +373,7 @@ public class CompatibleRenderGlobal extends RenderGlobal
 
     private void renderSky(BufferBuilder worldRendererIn, float posY, boolean reverseX)
     {
+    	
         int i = 64;
         int j = 6;
         worldRendererIn.begin(7, DefaultVertexFormats.POSITION);

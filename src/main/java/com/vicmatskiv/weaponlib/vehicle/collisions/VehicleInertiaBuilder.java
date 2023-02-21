@@ -4,6 +4,9 @@ import java.util.ArrayList;
 
 import javax.vecmath.Matrix3f;
 
+import com.vicmatskiv.weaponlib.vehicle.jimphysics.Chassis;
+import com.vicmatskiv.weaponlib.vehicle.jimphysics.Dimensions;
+
 import net.minecraft.client.renderer.Vector3d;
 import net.minecraft.util.math.Vec3d;
 
@@ -30,15 +33,76 @@ public class VehicleInertiaBuilder {
 	 * High level constructions
 	 */
 	
-	public void basicSedanConstruct(Vec3d d, float heightOffGround, float wheelBase, float wheelRadius, float wheelThickness) {
+	public VehicleInertiaBuilder basicConstructor(Chassis chassis, Dimensions d/*, float hOG, float wB, float wR, float wT*/) {
 		
 		
-		addBasicBody(new Vec3d(d.x, d.y/2, d.z), heightOffGround, 0.5f, 0.5f, 5.05f);
-		addTop(new Vec3d(d.x, d.y/2, d.z), heightOffGround, (float) (d.y/2f), 0.5f, 0.2f, 3.03f);
-		addWheelAssembly(2, heightOffGround, wheelBase, wheelRadius, wheelThickness, (float) d.x, 3.03f);
-		addPowerLine(d.scale(0.2), wheelBase, heightOffGround, 0.1f);
+		// 3-BODY (dim, a, d, c, e, b)
+		
+		// 2-BODY (dim, a, d, c)
+		switch(chassis) {
+		case SEDAN:
+			return threeBody(d, 0.6, 0.25, 0.5, 0.25, 0.6);
+		case SPORT:
+			return threeBody(d, 0.5, 0.5, 0.35, 0.25, 0.6);
+		case COUPE:
+			return threeBody(d, 0.45, 0.275, 0.5, 0.225, 0.55);
+		case HATCHBACK:
+			return twoBody(d, 0.4, 0.3, 0.7);
+		case WAGON:
+			return twoBody(d, 0.6, 0.36, 0.74);
+		case SUV:
+			return twoBody(d, 0.4, 0.4, 0.6);
+		case VAN:
+			return twoBody(d, 0.5, 0.2, 0.8);
+		case TRUCK:
+			return threeBody(d, 0.5, 0.15, 0.3, 0.55, 0.5);
+		}
+		
+		return null;
+		
+	}
+	
+	public VehicleInertiaBuilder basicSedanConstruct(Vec3d d, float heightOffGround, float wheelBase, float wheelRadius, float wheelThickness) {
 		
 		
+		//addBasicBody(new Vec3d(d.x, d.y/2, d.z), heightOffGround, 0.5f, 0.5f, 5.05f);
+		//addTop(new Vec3d(d.x, d.y/2, d.z), heightOffGround, (float) (d.y/2f), 0.5f, 0.2f, 3.03f);
+		//addWheelAssembly(2, heightOffGround, wheelBase, wheelRadius, wheelThickness, (float) d.x, 3.03f);
+		//addPowerLine(d.scale(0.2), wheelBase, heightOffGround, 0.1f);
+		
+		return this;
+	}
+	
+	public VehicleInertiaBuilder twoBody(Dimensions rd, double a, double d, double c) {
+		
+		double w = rd.width;
+		
+		a *= rd.height;
+		d *= rd.length;
+		c *= rd.length;
+		
+		addCube(new Vec3d(0, 0, d), new Dimensions(d, w, a), 1.0);
+		addCube(new Vec3d(0, 0, -c), new Dimensions(c, w, (1.0*rd.height)), 1.0);
+		return this;
+	}
+	
+	public VehicleInertiaBuilder threeBody(Dimensions rd, double a, double d, double c, double e, double b) {
+		
+		double w = rd.width;
+		
+		a *= rd.height;
+		b *= rd.height;
+		
+		d *= rd.length;
+		c*= rd.length;
+		e *= rd.length;
+		
+		// VEC3D (height, width, length)
+		
+		addCube(new Vec3d(0, 0, d+(c/2)), new Dimensions(d, w, a), 1.0);
+		addCube(Vec3d.ZERO, new Dimensions(c, w, (1.0*rd.height)), 1.0);
+		addCube(new Vec3d(0, 0, (-d) - (c/2)), new Dimensions(e, w, b), 1.0);
+		return this;
 	}
 	
 	/*
@@ -49,24 +113,26 @@ public class VehicleInertiaBuilder {
 	/*
 	 * Advanced constructions
 	 */
-	
+	/*
 	
 	/**
 	 * adds top
 	 */
+	
+	/*
 	public void addTop(Vec3d bodyDimensions, float bodyHeight, float topHeight, float a, float b, float density) {
 		Vec3d topDim = new Vec3d(bodyDimensions.x, topHeight, bodyDimensions.z-a-b);
 		addCube(new Vec3d(0.0, bodyHeight+bodyDimensions.y, bodyDimensions.z-a), topDim, density);
 	}
 	
-	/**
+	
 	 * Adds a basic body with weight distribution
 	 * @param dimensions
 	 * @param height
 	 * @param rearDistro
 	 * @param frontDistro
 	 * @param density
-	 */
+	 
 	public void addBasicBody(Vec3d dimensions, float height, float rearDistro, float frontDistro, float density) {
 		Vec3d halvedDim = new Vec3d(dimensions.x, dimensions.y, dimensions.z/2);
 		addCube(new Vec3d(0.0, height, dimensions.z/2), halvedDim, density*frontDistro);
@@ -81,7 +147,7 @@ public class VehicleInertiaBuilder {
 	 * @param wheelBase
 	 * @param height
 	 * @param flywheelRadius
-	 */
+	 
 	public void addPowerLine(Vec3d engineDimensions, float wheelBase, float height, float flywheelRadius) {
 		
 		double sP = wheelBase/2;
@@ -120,7 +186,7 @@ public class VehicleInertiaBuilder {
 		
 		
 	}
-	
+	*/
 	
 	/**
 	 * Adds a wheel assembly
@@ -173,9 +239,9 @@ public class VehicleInertiaBuilder {
 	 * @param volume
 	 * @param density
 	 */
-	public void addCube(Vec3d offset, Vec3d dimensions, double density) {
-		double volume = dimensions.x*dimensions.y*dimensions.z;
-		Matrix3f tens = InertiaKit.inertiaTensorCube(1.0f, (float) dimensions.x, (float) dimensions.y, (float) dimensions.z);
+	public void addCube(Vec3d offset, Dimensions dim, double density) {
+		double volume = dim.getVolume();
+		Matrix3f tens = InertiaKit.inertiaTensorCube(1.0f, (float) dim.height, (float) dim.width, (float) dim.length);
 		inertiaObjectList.add(new InertiaObject(offset, tens, 0.0, volume, density));
 	}
 	
@@ -206,7 +272,7 @@ public class VehicleInertiaBuilder {
  	}
 	
 	
-	public Matrix3f build() {
+	public VehicleMassObject build() {
 		
 		assignMass();
 		
@@ -242,7 +308,8 @@ public class VehicleInertiaBuilder {
 		
 		
 		
-		return tensor;
+		
+		return new VehicleMassObject(mass, tensor, local);
 		
 	}
 	

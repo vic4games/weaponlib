@@ -26,6 +26,8 @@ import org.lwjgl.opengl.GL44;
 import com.vicmatskiv.weaponlib.animation.DebugPositioner;
 import com.vicmatskiv.weaponlib.animation.MultipartPositioning;
 import com.vicmatskiv.weaponlib.animation.MultipartPositioning.Positioner;
+import com.vicmatskiv.weaponlib.vehicle.jimphysics.InterpolationKit;
+import com.vicmatskiv.weaponlib.vehicle.network.VehicleClientPacket;
 import com.vicmatskiv.weaponlib.animation.MultipartRenderStateManager;
 
 import net.minecraft.client.Minecraft;
@@ -77,6 +79,7 @@ final class HierarchicalPartRenderer<Part, State> implements StatefulRenderer<St
         
         stateSetter.accept(stateManager, context);
         MultipartPositioning<SinglePart, PartRenderContext<State>> multipartPositioning = stateManager.nextPositioning();
+       // System.out.println(multipartPositioning.getProgress());
         Positioner<SinglePart, PartRenderContext<State>> positioner = multipartPositioning.getPositioner();
         
         
@@ -101,7 +104,9 @@ final class HierarchicalPartRenderer<Part, State> implements StatefulRenderer<St
         
         try {
         	
-        	
+        	 EntityVehicle v = (EntityVehicle) context.getEntity();
+             VehicleState state = (v).getState();
+             
         	
         	
             positioner.position(SinglePart.MAIN, context);
@@ -110,42 +115,103 @@ final class HierarchicalPartRenderer<Part, State> implements StatefulRenderer<St
                 DebugPositioner.position(part, context);
             }
     
-            if(part == VehiclePart.WINDOWS) {
-            	 GlStateManager.enableBlend();
-            	 float transparency = 0.5f;
-            	 if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 0) {
-            		 transparency = 0.2f;
-            	 }
-            	// transparency = 0.13f;
-            	// GlStateManager.color(0.0f, 0f, 0f);
-            	 
-            	 GlStateManager.color(0.1f, 0.1f, 0.15f, transparency);
-                 
-            	// GlStateManager.blendFunc(GL11.GL_ONE, GL11.GL_ONE);
-            	 //GlStateManager.glBlendEquation(GL14.GL_MIN);
-            	 
-            	 //GlStateManager.glBlendEquation(GL14.GL_MIN);
-            	 
-            	 
-            	 //GlStateManager.glBlendEquation(GL14.GL_MIN);
-            	 
-                // GlStateManager.color(0.2f, 0.2f, 0.25f, transparency);
+            int pass = net.minecraftforge.client.MinecraftForgeClient.getRenderPass();
+            
+            
+            double susRoll = InterpolationKit.interpolateValue(v.getSolver().prevSuspensionRoll, v.getSolver().suspensionRoll, Minecraft.getMinecraft().getRenderPartialTicks());
+            double susPitch = InterpolationKit.interpolateValue(v.getSolver().prevSuspensionPitch, v.getSolver().suspensionPitch, Minecraft.getMinecraft().getRenderPartialTicks());
+            
+           // System.out.println(susPitch);
+            if(pass == 0 && part != VehiclePart.WINDOWS) {
+            	
+            	if(part == VehiclePart.MAIN) {
+            		
+            		GL11.glRotated(susRoll, 0, 0, 1);
+            		GL11.glRotated(susPitch, 1, 0, 0);
+            		modelRenderer.render(context);
+            		GL11.glRotated(-susPitch, 1, 0, 0);
+            		GL11.glRotated(-susRoll, 0, 0, 1);
+            		
+            	} else {
+            		modelRenderer.render(context);
+            	}
+            
+               
+            } else if(pass == 1 && part == VehiclePart.WINDOWS) {
+            	if(part == VehiclePart.WINDOWS) {
+                  	 GlStateManager.enableBlend();
+                  	 float transparency = 0.5f;
+                  	 if(Minecraft.getMinecraft().gameSettings.thirdPersonView == 0) {
+                  		 transparency = 0.2f;
+                  	 }
+                  	 GlStateManager.color(0.1f, 0.1f, 0.15f, transparency);
+                  }
+            	modelRenderer.render(context);
             }
+            
            
-            modelRenderer.render(context);
+          
             
-            if(part == VehiclePart.WINDOWS) {
-           	 GlStateManager.enableBlend();
-           	 float transparency = 0.5f;
-           	 //GlStateManager.blendFunc(GL11.GL_ONE, GL11.GL_ONE);
-           	 GlStateManager.glBlendEquation(GL14.GL_FUNC_ADD);
-        
-            }
-            
+           boolean shiftState = (state == VehicleState.STARTING_TO_SHIFT || state == VehicleState.SHIFTING || state == VehicleState.FINISHING_SHIFT);
+          
             if(part instanceof PartContainer) {
+            	
+            	
+            	
+            	
+            	
                 for(Part renderablePart: ((PartContainer<Part>)part).getChildParts()) {
                     HierarchicalPartRenderer<Part, State> partRenderer = partRenderers.get(renderablePart);
                     if(partRenderer != null) {
+                    	
+                    	
+                    	
+                    	//System.out.println(partRenderer.);
+                    	
+
+  
+                    	if(v.getConfiguration().performShiftAnimation()) {
+                    		if(v.getConfiguration().shiftWithRight()) {
+                    			if(renderablePart == VehiclePart.RIGHT_HAND) {
+                    				
+                            		if(part == VehiclePart.MAIN && !shiftState) {
+                            			continue;
+                            		}
+                            		if(part == VehiclePart.STEERING_WHEEL && shiftState) {
+                            	
+                            			continue;
+                            		}
+                            	}
+                    		} else {
+                    			if(renderablePart == VehiclePart.LEFT_HAND) {
+                    				
+                            		if(part == VehiclePart.MAIN && !shiftState) {
+                            			continue;
+                            		}
+                            		if(part == VehiclePart.STEERING_WHEEL && shiftState) {
+                            			continue;
+                            		}
+                            	}
+                    		}
+                    	} else {
+                    		
+                    	}
+                    	
+                    	if(renderablePart == VehiclePart.RIGHT_HAND && (!v.getConfiguration().shiftWithRight() || !v.getConfiguration().performShiftAnimation())
+                    			&& part == VehiclePart.MAIN) {
+                    		continue;
+                    		
+                    	}
+                    	
+                    	if(renderablePart == VehiclePart.LEFT_HAND && (v.getConfiguration().shiftWithRight() || !v.getConfiguration().performShiftAnimation())
+                    			&& part == VehiclePart.MAIN) {
+                    		continue;
+                    		
+                    	}
+                    	
+                    	
+                    	
+                    	
 //                        System.out.println("Rendering part " + renderablePart);
                         partRenderer.render(context);
                     }
